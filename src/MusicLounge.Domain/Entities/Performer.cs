@@ -1,11 +1,11 @@
 using MusicLounge.Domain.Common;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
 public class Performer : BaseEntity<int>
 {
-    // solo or band
-    public string Type { get; set; } = string.Empty;
+    public PerformerType Type { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string? Bio { get; set; }
     public string? PhotoUrl { get; set; }
