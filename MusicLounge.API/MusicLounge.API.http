@@ -1,0 +1,6 @@
+@MusicLounge.API_HostAddress = http://localhost:5157
+
+GET {{MusicLounge.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

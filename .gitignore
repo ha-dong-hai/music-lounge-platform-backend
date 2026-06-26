@@ -1,0 +1,36 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Local database files
+*.mdf
+*.ldf
+*.db
+*.sqlite
+
+# Sensitive local config
+appsettings.Development.json
+
+# Environment files
+.env
+.env.local
+
+# NuGet
+packages/
+*.nupkg

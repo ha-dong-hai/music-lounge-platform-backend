@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.28" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MusicLounge.Domain\MusicLounge.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
