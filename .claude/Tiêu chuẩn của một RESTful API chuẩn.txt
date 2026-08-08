@@ -1,0 +1,89 @@
+Tiêu chuẩn của một RESTful API chuẩn (theo Roy Fielding)
+1. Kiến trúc Client-Server (Client-Server Architecture)
+Tách biệt rõ ràng giữa client (giao diện, trải nghiệm người dùng) và server (lưu trữ dữ liệu, xử lý logic)
+Client và server có thể phát triển độc lập miễn là interface không đổi
+2. Stateless (Không trạng thái)
+Mỗi request từ client đến server phải chứa đầy đủ thông tin cần thiết để server hiểu và xử lý
+Server không lưu trạng thái phiên làm việc (session) của client giữa các request
+Mọi thông tin về session, nếu cần, phải do client quản lý và gửi kèm (ví dụ: token)
+3. Cacheable (Có thể cache)
+Response phải được đánh dấu rõ là có thể cache hay không (qua header như Cache-Control, ETag)
+Giúp cải thiện hiệu năng, giảm tải cho server và độ trễ cho client
+4. Uniform Interface (Giao diện đồng nhất)
+
+Đây là nguyên tắc quan trọng nhất, gồm 4 ràng buộc con:
+
+a. Định danh tài nguyên (Resource Identification)
+
+Mỗi tài nguyên được định danh duy nhất qua URI (ví dụ: /users/123)
+
+b. Thao tác qua đại diện (Manipulation through Representations)
+
+Client thao tác với tài nguyên thông qua representation (thường là JSON/XML), không thao tác trực tiếp
+
+c. Thông điệp tự mô tả (Self-descriptive Messages)
+
+Mỗi message chứa đủ thông tin để mô tả cách xử lý nó (Content-Type, method, status code...)
+
+d. HATEOAS (Hypermedia as the Engine of Application State)
+
+Response nên chứa các liên kết (links) hướng dẫn client các hành động tiếp theo có thể thực hiện
+5. Layered System (Hệ thống phân lớp)
+Client không cần biết mình đang kết nối trực tiếp với server hay qua các lớp trung gian (load balancer, proxy, gateway...)
+Các lớp có thể được thêm vào mà không ảnh hưởng đến tương tác client-server
+6. Code on Demand (Tùy chọn - Optional)
+Server có thể mở rộng chức năng client bằng cách gửi code thực thi được (ví dụ: JavaScript)
+Đây là ràng buộc duy nhất không bắt buộc
+Các quy tắc thực hành (Best Practices) thường đi kèm
+Về thiết kế URI
+Nguyên tắc	Ví dụ đúng	Ví dụ sai
+Dùng danh từ, không dùng động từ	/users	/getUsers
+Dùng số nhiều	/products	/product
+Phân cấp lồng nhau hợp lý	/users/123/orders	/getUserOrders?id=123
+Không dùng chữ hoa	/user-profile	/UserProfile
+Dùng dấu gạch ngang, không gạch dưới	/user-profile	/user_profile
+Về HTTP Methods (đúng chức năng)
+Method	Ý nghĩa	Idempotent
+GET	Lấy dữ liệu	Có
+POST	Tạo mới	Không
+PUT	Cập nhật toàn bộ (thay thế)	Có
+PATCH	Cập nhật một phần	Không (thường)
+DELETE	Xóa	Có
+Về HTTP Status Code
+200 OK – Thành công
+201 Created – Tạo mới thành công
+204 No Content – Thành công, không trả dữ liệu
+400 Bad Request – Request sai cú pháp
+401 Unauthorized – Chưa xác thực
+403 Forbidden – Không có quyền
+404 Not Found – Không tìm thấy tài nguyên
+409 Conflict – Xung đột dữ liệu
+422 Unprocessable Entity – Dữ liệu không hợp lệ
+500 Internal Server Error – Lỗi server
+Về Versioning (Quản lý phiên bản)
+Qua URI: /api/v1/users
+Qua Header: Accept: application/vnd.company.v1+json
+Qua Query param: /users?version=1
+Về Filtering, Sorting, Pagination
+GET /products?category=electronics&sort=-price&page=2&limit=20
+Về Bảo mật
+Luôn dùng HTTPS
+Xác thực qua Token (JWT, OAuth2)
+Rate limiting để chống lạm dụng
+Validate và sanitize input đầu vào
+Về Response Format
+Nhất quán cấu trúc (thường dùng JSON)
+Có định dạng lỗi rõ ràng, ví dụ:
+json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Email không hợp lệ",
+    "field": "email"
+  }
+}
+Về Tài liệu (Documentation)
+Sử dụng OpenAPI/Swagger để mô tả API
+Cung cấp ví dụ request/response rõ ràng
+
+Lưu ý: 6 nguyên tắc đầu tiên là tiêu chuẩn kiến trúc bắt buộc để một API được gọi là "RESTful" theo đúng định nghĩa gốc. Phần còn lại là best practices giúp API dễ dùng, bảo trì và mở rộng hơn, nhưng không phải API nào vi phạm chúng cũng bị coi là "không phải REST".
