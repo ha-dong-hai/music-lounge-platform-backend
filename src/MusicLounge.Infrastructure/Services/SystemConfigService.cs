@@ -37,6 +37,12 @@ internal sealed class SystemConfigService : ISystemConfigService
             : fallback;
     }
 
+    public async Task<bool> GetBoolAsync(string key, bool fallback, CancellationToken ct = default)
+    {
+        var raw = await GetRawAsync(key, ct);
+        return raw is not null && bool.TryParse(raw, out var value) ? value : fallback;
+    }
+
     private async Task<string?> GetRawAsync(string key, CancellationToken ct)
         => await _cache.GetOrCreateAsync($"syscfg:{key}", async entry =>
         {

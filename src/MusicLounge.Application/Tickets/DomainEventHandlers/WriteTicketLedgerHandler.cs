@@ -25,6 +25,17 @@ internal sealed class WriteTicketLedgerHandler : INotificationHandler<TicketPaym
         var payment = await _uow.Repository<Payment, int>().GetByIdAsync(notification.PaymentId, ct);
         if (payment is null) return;
 
+        // Cash (walk-in/box-office) payments never actually flow through the platform's own
+        // gateway account — the venue's own staff collect the cash directly. Writing a Gateway-debit
+        // journal here would falsely claim the platform received money it never touched, and
+        // (combined with ScheduleSettlementHandler below) would schedule a REAL bank payout of the
+        // owner's share for cash the owner already has in hand — paying them twice. Off by default
+        // (product decision 2026-08-09) — see ConfigKeys.WalkInCommissionEnabled for what turning
+        // this on does and does not cover.
+        if (payment.Method == PaymentMethod.Cash
+            && !await _config.GetBoolAsync(ConfigKeys.WalkInCommissionEnabled, false, ct))
+            return;
+
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
         var taxRate = await _config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
 

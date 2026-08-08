@@ -23,6 +23,16 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         var payment = await _uow.Repository<Payment, int>().GetByIdAsync(notification.PaymentId, ct);
         if (payment is null || notification.OwnerId == 0) return;
 
+        // Cash (walk-in/box-office) sales must not get a settlement schedule by default — the owner
+        // already holds 100% of the cash from the moment of sale, so a scheduled payout here would be
+        // a real second (duplicate) bank transfer for money the platform never collected. Same
+        // ConfigKeys.WalkInCommissionEnabled gate as WriteTicketLedgerHandler — keep both in sync,
+        // since a ledger journal with no matching settlement (or vice versa) breaks the invariant
+        // that payment.NetAmount always equals what the owner is actually scheduled to receive.
+        if (payment.Method == PaymentMethod.Cash
+            && !await _config.GetBoolAsync(ConfigKeys.WalkInCommissionEnabled, false, ct))
+            return;
+
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
         var taxRate = await _config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
         var partialPct = await _config.GetDecimalAsync(ConfigKeys.SettlementPartialPct, 0.70m, ct);
