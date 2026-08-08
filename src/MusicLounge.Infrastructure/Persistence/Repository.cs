@@ -35,6 +35,10 @@ internal class Repository<T, TKey> : IRepository<T, TKey>
     public async Task<decimal> SumAsync(
         Expression<Func<T, bool>> predicate, Expression<Func<T, decimal>> selector, CancellationToken ct = default)
     {
+        // EF Core's native SumAsync(selector) — the SQL-side aggregate — throws under the SQLite
+        // test provider (confirmed empirically: switching to it broke GetPlatform_AsAdmin_Returns200
+        // et al. with a 500). Narrow projection + client-side Sum() keeps this correct on both
+        // providers at the cost of transferring one column instead of computing the total in SQL.
         var values = await Set.AsNoTracking().Where(predicate).Select(selector).ToListAsync(ct);
         return values.Sum();
     }

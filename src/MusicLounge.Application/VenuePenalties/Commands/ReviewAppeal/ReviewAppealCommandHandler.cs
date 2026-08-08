@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -12,13 +13,16 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ILogger<ReviewAppealCommandHandler> _logger;
 
     public ReviewAppealCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications)
+        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
+        ILogger<ReviewAppealCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(ReviewAppealCommand request, CancellationToken ct)
@@ -65,6 +69,10 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Penalty appeal reviewed: PenaltyId={PenaltyId} LoungeId={LoungeId} Decision={Decision} by AdminUserId={AdminUserId} at {At}",
+            penalty.Id, penalty.LoungeId, decision, _currentUser.UserId, now);
 
         await _notifications.NotifyAsync(
             lounge.OwnerId,

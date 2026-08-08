@@ -71,6 +71,7 @@ public sealed class LivestreamsController : ControllerBase
     /// <summary>Staff/Admin của venue xem RTMP URL + Stream Key để cắm OBS. Không lộ ra viewer.</summary>
     [HttpGet("{id:int}/credentials")]
     [Microsoft.AspNetCore.Authorization.Authorize(Policy = Policies.RequireVenueOperator)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType<ApiResponse<LivestreamCredentialsDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

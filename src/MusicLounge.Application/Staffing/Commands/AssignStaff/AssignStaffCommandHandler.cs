@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -12,11 +13,14 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILogger<AssignStaffCommandHandler> _logger;
 
-    public AssignStaffCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public AssignStaffCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<AssignStaffCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _logger = logger;
     }
 
     public async Task<int> Handle(AssignStaffCommand request, CancellationToken ct)
@@ -62,6 +66,10 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
 
         staffRepo.Add(assignment);
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Staff assigned: TargetUserId={TargetUserId} to LoungeId={LoungeId} by OwnerId={OwnerId} at {At}",
+            request.UserId, request.LoungeId, _currentUser.UserId, DateTimeOffset.UtcNow);
 
         return assignment.Id;
     }

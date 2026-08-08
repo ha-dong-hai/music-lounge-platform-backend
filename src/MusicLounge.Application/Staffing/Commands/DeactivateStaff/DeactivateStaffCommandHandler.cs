@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -12,11 +13,14 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILogger<DeactivateStaffCommandHandler> _logger;
 
-    public DeactivateStaffCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public DeactivateStaffCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<DeactivateStaffCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(DeactivateStaffCommand request, CancellationToken ct)
@@ -55,6 +59,11 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Staff deactivated: TargetUserId={TargetUserId} LoungeStaffId={LoungeStaffId} LoungeId={LoungeId} by OwnerId={OwnerId} at {At}",
+            assignment.UserId, request.LoungeStaffId, assignment.LoungeId, _currentUser.UserId, DateTimeOffset.UtcNow);
+
         return Unit.Value;
     }
 }

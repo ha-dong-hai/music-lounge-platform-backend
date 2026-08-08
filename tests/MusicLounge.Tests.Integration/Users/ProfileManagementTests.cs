@@ -183,6 +183,8 @@ public sealed class ProfileManagementTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
+        res.Headers.CacheControl!.NoStore.Should().BeTrue(
+            "CCCD photos must never be cached client-side/by an intermediary proxy");
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Auth.DTOs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -18,17 +19,20 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IAuthAttemptTracker _authAttemptTracker;
+    private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         IUnitOfWork uow,
         IPasswordHasher passwordHasher,
         IJwtTokenService jwtTokenService,
-        IAuthAttemptTracker authAttemptTracker)
+        IAuthAttemptTracker authAttemptTracker,
+        ILogger<LoginCommandHandler> logger)
     {
         _uow = uow;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
         _authAttemptTracker = authAttemptTracker;
+        _logger = logger;
     }
 
     public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken ct)
@@ -41,8 +45,12 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
         {
             var lockoutRemaining = await _authAttemptTracker.GetLockoutRemainingAsync(user.Id, ct);
             if (lockoutRemaining is not null)
+            {
+                _logger.LogWarning(
+                    "Login rejected — account locked: UserId={UserId} at {At}", user.Id, DateTimeOffset.UtcNow);
                 throw new UnauthorizedException(
                     $"Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau {Math.Ceiling(lockoutRemaining.Value.TotalMinutes)} phút.");
+            }
         }
 
         _dummyHash ??= _passwordHasher.Hash("timing-normalization-dummy");
@@ -51,7 +59,18 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
         if (user is null || user.PasswordHash is null || !passwordValid)
         {
             if (user is not null)
+            {
                 await _authAttemptTracker.RecordFailureAsync(user.Id, ct);
+                _logger.LogWarning(
+                    "Login failed — wrong password: UserId={UserId} at {At}", user.Id, DateTimeOffset.UtcNow);
+            }
+            else
+            {
+                // Email logged (not sensitive, unlike the password) — lets an operator spot
+                // credential-stuffing against a specific address even when it isn't registered.
+                _logger.LogWarning(
+                    "Login failed — unknown email: Email={Email} at {At}", request.Email, DateTimeOffset.UtcNow);
+            }
             throw new UnauthorizedException("Email hoặc mật khẩu không đúng.");
         }
 
@@ -72,6 +91,9 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
         }
 
         var (token, expiresAt) = _jwtTokenService.GenerateToken(user, loungeId);
+
+        _logger.LogInformation(
+            "Login succeeded: UserId={UserId} Role={Role} at {At}", user.Id, user.Role, DateTimeOffset.UtcNow);
 
         return new AuthResultDto(token, expiresAt, user.Id, user.Email, user.FullName, user.Role.ToString(), loungeId);
     }

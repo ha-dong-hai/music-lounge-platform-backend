@@ -96,6 +96,7 @@ public sealed class AdminController : ControllerBase
 
     /// <summary>Admin xem ảnh CCCD/CMND của user để xác thực danh tính — file nằm ngoài wwwroot, không đoán URL được.</summary>
     [HttpGet("users/{id:int}/citizen-card/{side}")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserCitizenCardImage(int id, string side, CancellationToken ct = default)

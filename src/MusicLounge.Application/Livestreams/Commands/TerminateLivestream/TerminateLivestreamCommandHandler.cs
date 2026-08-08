@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -13,17 +14,20 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamServiceFactory _factory;
     private readonly ILivestreamHubService _hubService;
+    private readonly ILogger<TerminateLivestreamCommandHandler> _logger;
 
     public TerminateLivestreamCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         ILivestreamServiceFactory factory,
-        ILivestreamHubService hubService)
+        ILivestreamHubService hubService,
+        ILogger<TerminateLivestreamCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _factory = factory;
         _hubService = hubService;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(TerminateLivestreamCommand request, CancellationToken ct)
@@ -63,6 +67,10 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Livestream terminated: LivestreamId={LivestreamId} ShowId={ShowId} Reason={Reason} by UserId={UserId} at {At}",
+            request.LivestreamId, livestream.LoungeShowId, request.Reason, _currentUser.UserId, now);
 
         // Notify all connected viewers so their clients stop retrying the HLS endpoint
         await _hubService.BroadcastLivestreamTerminatedAsync(request.LivestreamId, request.Reason, ct);

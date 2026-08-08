@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -13,17 +14,20 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     private readonly ICurrentUserService _currentUser;
     private readonly ILedgerService _ledger;
     private readonly IPaymentRepository _paymentRepo;
+    private readonly ILogger<ProcessRefundRequestCommandHandler> _logger;
 
     public ProcessRefundRequestCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         ILedgerService ledger,
-        IPaymentRepository paymentRepo)
+        IPaymentRepository paymentRepo,
+        ILogger<ProcessRefundRequestCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _ledger = ledger;
         _paymentRepo = paymentRepo;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(ProcessRefundRequestCommand request, CancellationToken ct)
@@ -43,6 +47,11 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             refund.Status = RefundRequestStatus.Rejected;
             refundRepo.Update(refund);
             await _uow.SaveChangesAsync(ct);
+
+            _logger.LogWarning(
+                "Refund request rejected: RefundRequestId={RefundRequestId} PaymentId={PaymentId} by AdminUserId={AdminUserId} at {At}",
+                refund.Id, refund.PaymentId, _currentUser.UserId, DateTimeOffset.UtcNow);
+
             return Unit.Value;
         }
 
@@ -129,6 +138,11 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Refund request approved: RefundRequestId={RefundRequestId} PaymentId={PaymentId} AmountApproved={AmountApproved} by AdminUserId={AdminUserId} at {At}",
+            refund.Id, refund.PaymentId, amountApproved, _currentUser.UserId, DateTimeOffset.UtcNow);
+
         return Unit.Value;
     }
 }
