@@ -96,6 +96,22 @@ public sealed class SubscriptionsController : ControllerBase
             : Redirect(_settings.PaymentFailedUrl);
     }
 
+    // Register this URL (not vnpay-return) as the order's IPN URL in the VNPay merchant portal —
+    // see PaymentsController.VnPayIpn for why the browser-redirect endpoint above isn't a reliable
+    // substitute for it.
+    [HttpGet("vnpay-ipn")]
+    [AllowAnonymous]
+    [ProducesResponseType<VnPayIpnResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> VnPayIpn(CancellationToken ct = default)
+    {
+        var queryParams = HttpContext.Request.Query
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
+        var success = await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct);
+        return Ok(success
+            ? new VnPayIpnResponse("00", "Confirm Success")
+            : new VnPayIpnResponse("99", "Unknown error"));
+    }
+
     [HttpGet("my")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<MySubscriptionDto>>(StatusCodes.Status200OK)]

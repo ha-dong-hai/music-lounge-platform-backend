@@ -95,6 +95,12 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
 
         // Subscription la doanh thu 100% cua platform (khong chia se voi owner/khong tru thue
         // ho ben thu 3 nhu ve/donate) - khac voi J1 ticket journal co 3 ben.
+        //
+        // Book payment.GrossAmount (the snapshot taken at checkout, already verified above against
+        // VNPay's callback amount) — NOT package.Price. package is re-fetched fresh here, so if an
+        // admin edits SubscriptionPackage.Price while this payment is in flight (between checkout
+        // and VNPay confirming), package.Price would silently diverge from what VNPay actually
+        // collected, permanently misstating booked revenue for this transaction.
         var journalId = Guid.NewGuid().ToString("N");
         await _ledger.WriteJournalAsync(
             journalId,
@@ -103,9 +109,9 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             payment.Id,
             new LedgerLine[]
             {
-                new(AccountType.Gateway, null, package.Price, IsDebit: true,
+                new(AccountType.Gateway, null, payment.GrossAmount, IsDebit: true,
                     Description: $"Subscription payment #{payment.Id}"),
-                new(AccountType.Platform, null, package.Price, IsDebit: false,
+                new(AccountType.Platform, null, payment.GrossAmount, IsDebit: false,
                     Description: $"Subscription payment #{payment.Id}")
             }, ct);
 

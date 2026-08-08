@@ -67,6 +67,22 @@ public sealed class DonationsController : ControllerBase
             : Redirect(_settings.PaymentFailedUrl);
     }
 
+    // Register this URL (not vnpay-return) as the order's IPN URL in the VNPay merchant portal —
+    // see PaymentsController.VnPayIpn for why the browser-redirect endpoint above isn't a reliable
+    // substitute for it.
+    [HttpGet("vnpay-ipn")]
+    [AllowAnonymous]
+    [ProducesResponseType<VnPayIpnResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> VnPayIpn(CancellationToken ct = default)
+    {
+        var queryParams = HttpContext.Request.Query
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
+        var success = await _sender.Send(new ProcessDonationPaymentCommand(queryParams), ct);
+        return Ok(success
+            ? new VnPayIpnResponse("00", "Confirm Success")
+            : new VnPayIpnResponse("99", "Unknown error"));
+    }
+
     /// <summary>Audience — xem lịch sử donate của chính mình (mọi trạng thái).</summary>
     [HttpGet("my")]
     [Authorize(Policy = Policies.RequireAuthenticated)]
