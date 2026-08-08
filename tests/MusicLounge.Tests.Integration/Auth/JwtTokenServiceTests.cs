@@ -17,6 +17,10 @@ namespace MusicLounge.Tests.Integration.Auth;
 /// TestAuthHandler for every other test in this project — this is the only place the claim side of
 /// that contract gets verified.
 /// </summary>
+// No ApiFactory/DB access today, but marked into the shared collection anyway (xunit runs
+// [Collection]-less classes in parallel with everything else by default) so a future edit adding
+// either doesn't silently start racing the rest of the suite's shared SQLite connection.
+[Collection("Integration")]
 public sealed class JwtTokenServiceTests
 {
     private static JwtTokenService CreateService() => new(Options.Create(new JwtSettings

@@ -15,6 +15,10 @@ namespace MusicLounge.Tests.Integration.Uploads;
 /// fidelity to Kestrel's actual body-size enforcement isn't guaranteed, so asserting the attribute
 /// itself is present with the right value is the deterministic way to verify this fix.
 /// </summary>
+// No ApiFactory/DB access today, but marked into the shared collection anyway (xunit runs
+// [Collection]-less classes in parallel with everything else by default) so a future edit adding
+// either doesn't silently start racing the rest of the suite's shared SQLite connection.
+[Collection("Integration")]
 public sealed class UploadsControllerTests
 {
     [Fact]

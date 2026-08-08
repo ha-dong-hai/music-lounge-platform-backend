@@ -1,5 +1,6 @@
 using Hangfire;
 using Hangfire.SqlServer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,7 +74,25 @@ public static class DependencyInjection
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEmailService, SmtpEmailService>();
-        services.AddDataProtection();
+        // Default key ring (%LOCALAPPDATA%\ASP.NET\DataProtection-Keys, protected via per-user
+        // DPAPI) is fine for a single interactive dev session but is a real risk for this app's
+        // actual self-hosted deployment: it's tied to whichever Windows user profile the process
+        // happens to run under, so a service-account change, a different machine, or profile loss
+        // silently makes every already-encrypted CitizenCardNumber (IPiiEncryptionService) and any
+        // in-flight Hangfire job argument (ISecretProtector) permanently undecryptable. Persisting
+        // to a fixed path on disk with machine-level (not user-profile-level) DPAPI protection
+        // survives all of that as long as it's the same machine. Scoped to this project's current
+        // single-machine deployment — horizontal scaling to multiple instances/containers would
+        // need a shared key store (e.g. a network share or blob storage) instead.
+        var dataProtection = services.AddDataProtection()
+            .SetApplicationName("MusicLounge")
+            .PersistKeysToFileSystem(new DirectoryInfo(
+                Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "dataprotection-keys")));
+        // Machine-level DPAPI is Windows-only (this app's actual deployment) — guarded rather than
+        // called unconditionally so this doesn't crash if ever run on Linux; falls back to Data
+        // Protection's own OS-appropriate default key protection there instead.
+        if (OperatingSystem.IsWindows())
+            dataProtection.ProtectKeysWithDpapi(protectToLocalMachine: true);
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
         services.AddSingleton<IPiiEncryptionService, PiiEncryptionService>();
         services.AddScoped<IAuthAttemptTracker, AuthAttemptTracker>();
@@ -83,6 +102,7 @@ public static class DependencyInjection
         services.AddSingleton<IChatRateLimiter, ChatRateLimiter>();
         services.AddScoped<ReleaseExpiredHoldsJob>();
         services.AddScoped<RefreshRecommendationsJob>();
+        services.AddScoped<RefreshUserRecommendationJob>();
         services.AddScoped<AutoConfirmDonationsJob>();
         services.AddScoped<ExpireStuckDonationsJob>();
         services.AddScoped<CancelAbandonedPaymentsJob>();

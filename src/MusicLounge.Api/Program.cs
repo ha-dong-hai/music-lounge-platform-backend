@@ -158,7 +158,11 @@ try
                 ValidIssuer = jwtSection["Issuer"],
                 ValidAudience = jwtSection["Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(jwtSection["Secret"]!))
+                    Encoding.UTF8.GetBytes(jwtSection["Secret"]!)),
+                // Library default is 5 minutes if left unset — silently extends every token's
+                // effective lifetime by ~8% on top of AccessTokenExpiryMinutes (60). Set explicitly
+                // so it's a deliberate, documented choice rather than an implicit one.
+                ClockSkew = TimeSpan.FromMinutes(1)
             };
             // SignalR sends JWT via query string for WebSocket connections
             opt.Events = new JwtBearerEvents
@@ -297,6 +301,13 @@ try
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
 
+    // As close to the front as possible (right after ForwardedHeaders, which has to be earlier
+    // still — see its own comment) so it wraps every other middleware below, including Swagger/
+    // HSTS/the header-appending middleware. Registered later, an exception thrown inside any of
+    // those would bypass GlobalExceptionHandler entirely and return a raw non-JSON 500, breaking
+    // the {success,message,errors} shape this API otherwise guarantees for every error.
+    app.UseExceptionHandler();
+
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -323,7 +334,6 @@ try
         await next();
     });
 
-    app.UseExceptionHandler();
     app.UseSerilogRequestLogging();
     app.UseResponseCompression();
     app.UseHttpsRedirection();

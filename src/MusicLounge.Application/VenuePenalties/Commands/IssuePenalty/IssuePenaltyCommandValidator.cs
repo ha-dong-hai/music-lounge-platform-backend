@@ -11,6 +11,7 @@ public sealed class IssuePenaltyCommandValidator : AbstractValidator<IssuePenalt
     public IssuePenaltyCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.LoungeId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0).WithMessage("LoungeId không hợp lệ.")
             .MustAsync(async (loungeId, ct) =>
                 await uow.Repository<MusicLoungeEntity, int>().AnyAsync(l => l.Id == loungeId, ct))

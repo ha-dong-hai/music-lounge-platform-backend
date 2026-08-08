@@ -9,6 +9,7 @@ internal sealed class RateShowCommandValidator : AbstractValidator<RateShowComma
     public RateShowCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.ShowId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0).WithMessage("ShowId không hợp lệ.")
             .MustAsync(async (showId, ct) => await uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == showId, ct))
             .WithMessage("ShowId không tồn tại.");

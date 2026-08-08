@@ -12,6 +12,10 @@ namespace MusicLounge.Tests.Integration.Auth;
 /// this test host (ApiFactory deliberately omits AddHangfireServer), so this is the only place the
 /// Protect/Unprotect round trip itself gets exercised.
 /// </summary>
+// No ApiFactory/DB access today, but marked into the shared collection anyway (xunit runs
+// [Collection]-less classes in parallel with everything else by default) so a future edit adding
+// either doesn't silently start racing the rest of the suite's shared SQLite connection.
+[Collection("Integration")]
 public sealed class DataProtectionSecretProtectorTests
 {
     private static DataProtectionSecretProtector CreateProtector()

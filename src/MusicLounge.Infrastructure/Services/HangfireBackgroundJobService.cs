@@ -3,6 +3,7 @@ using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
 using MusicLounge.Domain.Enums;
+using MusicLounge.Infrastructure.Jobs;
 
 namespace MusicLounge.Infrastructure.Services;
 
@@ -18,8 +19,8 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
             j => j.ExecuteAsync(userId, showId, action));
 
     public void EnqueueRecommendationRefresh(int userId)
-        => BackgroundJob.Enqueue<IAIRecommendationService>(
-            s => s.TriggerRecommendationRefreshAsync(userId, CancellationToken.None));
+        => BackgroundJob.Enqueue<RefreshUserRecommendationJob>(
+            j => j.ExecuteAsync(userId, JobCancellationToken.Null));
 
     public void EnqueueFcmNotification(int userId, string title, string body)
         => BackgroundJob.Enqueue<IFcmService>(

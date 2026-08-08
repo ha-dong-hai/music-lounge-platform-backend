@@ -57,6 +57,7 @@ public sealed class SettlementReleaseJob
                 if (!completionOk)
                 {
                     settlement.Status = SettlementStatus.PendingReview;
+                    await _ctx.SaveChangesAsync(ct);
                     continue;
                 }
             }
@@ -80,6 +81,17 @@ public sealed class SettlementReleaseJob
             settlement.ReleasedAt = now;
             settlement.LedgerJournalId = journalId;
 
+            // Commit THIS settlement's own release before enqueuing its notification, not once at
+            // the end of the whole batch — NotifyAsync's FCM push enqueues directly and durably to
+            // Hangfire's own storage (IBackgroundJobService), independent of this DbContext's
+            // transaction. With a single trailing SaveChangesAsync, a later settlement in the same
+            // run throwing would leave this one's Release un-persisted while its push notification
+            // had already fired; Hangfire's automatic retry would then re-process this
+            // still-"Scheduled" settlement from scratch, sending a second "payment released"
+            // notification for it. Saving per-item makes each settlement's release+notify atomic
+            // and the loop safely resumable.
+            await _ctx.SaveChangesAsync(ct);
+
             await _notifications.NotifyAsync(
                 settlement.OwnerId,
                 NotificationType.SettlementReleased,
@@ -88,9 +100,13 @@ public sealed class SettlementReleaseJob
                 referenceType: "settlement",
                 referenceId: settlement.Id.ToString(),
                 ct: ct);
-        }
 
-        await _ctx.SaveChangesAsync(ct);
+            // NotifyAsync only staged a Notification row (Add()) — flush that too before moving on,
+            // so it isn't silently rolled into whatever the NEXT settlement's SaveChangesAsync
+            // happens to touch (harmless today since Notification is its own row, but keeps this
+            // settlement's unit of work fully self-contained).
+            await _ctx.SaveChangesAsync(ct);
+        }
     }
 
     /// <summary>

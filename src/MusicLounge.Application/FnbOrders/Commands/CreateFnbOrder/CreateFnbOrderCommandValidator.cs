@@ -12,6 +12,7 @@ public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnb
     public CreateFnbOrderCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.LoungeId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0)
             .MustAsync(async (loungeId, ct) =>
                 await uow.Repository<MusicLoungeEntity, int>().AnyAsync(l => l.Id == loungeId, ct))

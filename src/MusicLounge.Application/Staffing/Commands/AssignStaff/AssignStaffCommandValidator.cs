@@ -10,12 +10,14 @@ public sealed class AssignStaffCommandValidator : AbstractValidator<AssignStaffC
     public AssignStaffCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.LoungeId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0)
             .MustAsync(async (loungeId, ct) =>
                 await uow.Repository<MusicLoungeEntity, int>().AnyAsync(l => l.Id == loungeId, ct))
             .WithMessage("LoungeId không tồn tại.");
 
         RuleFor(x => x.UserId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0)
             .MustAsync(async (userId, ct) => await uow.Repository<User, int>().AnyAsync(u => u.Id == userId, ct))
             .WithMessage("UserId không tồn tại.");

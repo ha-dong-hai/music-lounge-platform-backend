@@ -9,6 +9,7 @@ public sealed class CreateDonationCommandValidator : AbstractValidator<CreateDon
     public CreateDonationCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.PerformanceId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0).WithMessage("PerformanceId không hợp lệ.")
             .MustAsync(async (performanceId, ct) =>
                 await uow.Repository<Performance, int>().AnyAsync(p => p.Id == performanceId, ct))

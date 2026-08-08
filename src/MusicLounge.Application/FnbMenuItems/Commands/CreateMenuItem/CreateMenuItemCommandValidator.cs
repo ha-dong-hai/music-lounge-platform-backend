@@ -9,6 +9,7 @@ public sealed class CreateMenuItemCommandValidator : AbstractValidator<CreateMen
     public CreateMenuItemCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.MenuId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0)
             .MustAsync(async (menuId, ct) => await uow.Repository<FnbMenu, int>().AnyAsync(m => m.Id == menuId, ct))
             .WithMessage("MenuId không tồn tại.");

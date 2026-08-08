@@ -9,6 +9,7 @@ public sealed class SubscribeToPackageCommandValidator : AbstractValidator<Subsc
     public SubscribeToPackageCommandValidator(IUnitOfWork uow)
     {
         RuleFor(x => x.PackageId)
+            .Cascade(CascadeMode.Stop)
             .GreaterThan(0)
             .MustAsync(async (packageId, ct) =>
                 await uow.Repository<SubscriptionPackage, int>().AnyAsync(p => p.Id == packageId, ct))

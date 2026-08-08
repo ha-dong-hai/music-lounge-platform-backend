@@ -20,6 +20,10 @@ namespace MusicLounge.Tests.Integration.CF3;
 /// methods — the algorithm is small, stable, and documented in VnPayService's own comments as
 /// confirmed live against a real sandbox callback.
 /// </summary>
+// No ApiFactory/DB access today, but marked into the shared collection anyway (xunit runs
+// [Collection]-less classes in parallel with everything else by default) so a future edit adding
+// either doesn't silently start racing the rest of the suite's shared SQLite connection.
+[Collection("Integration")]
 public sealed class VnPayServiceTests
 {
     private const string HashSecret = "TEST-HASH-SECRET-NOT-REAL-1234567890";
