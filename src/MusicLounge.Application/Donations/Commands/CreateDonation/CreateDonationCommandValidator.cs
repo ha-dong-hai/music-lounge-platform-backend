@@ -1,12 +1,18 @@
 using FluentValidation;
+using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Domain.Entities;
 
 namespace MusicLounge.Application.Donations.Commands.CreateDonation;
 
 public sealed class CreateDonationCommandValidator : AbstractValidator<CreateDonationCommand>
 {
-    public CreateDonationCommandValidator()
+    public CreateDonationCommandValidator(IUnitOfWork uow)
     {
-        RuleFor(x => x.PerformanceId).GreaterThan(0).WithMessage("PerformanceId không hợp lệ.");
+        RuleFor(x => x.PerformanceId)
+            .GreaterThan(0).WithMessage("PerformanceId không hợp lệ.")
+            .MustAsync(async (performanceId, ct) =>
+                await uow.Repository<Performance, int>().AnyAsync(p => p.Id == performanceId, ct))
+            .WithMessage("PerformanceId không tồn tại.");
 
         RuleFor(x => x.Amount)
             .GreaterThan(0).WithMessage("Số tiền tối thiểu là 1đ.")

@@ -15,8 +15,9 @@ public sealed class AutoConfirmDonationsJob
     public AutoConfirmDonationsJob(ApplicationDbContext ctx) => _ctx = ctx;
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var cutoff = DateTimeOffset.UtcNow.AddHours(-24);
 
         // Use PaymentConfirmedAt (not CreatedAt) so the 24h window starts when VNPay confirmed,

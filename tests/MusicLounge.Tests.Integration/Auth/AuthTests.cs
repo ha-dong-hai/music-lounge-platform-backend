@@ -142,6 +142,53 @@ public sealed class AuthTests
     }
 
     [Fact]
+    public async Task VerifyEmail_NonExistentEmailAndWrongCodeForRealEmail_ReturnIdenticalMessages()
+    {
+        // Enumeration resistance (OWASP ASVS V2.1), matching LoginCommandHandler's pattern: a
+        // nonexistent email must be indistinguishable from a real email with a wrong code — not
+        // just by status code, but by message content too (previously "Mã xác thực không đúng."
+        // vs "Email hoặc mã xác thực không đúng." leaked which case was which regardless of timing).
+        var client = _factory.CreateClient();
+        var realEmail = UniqueEmail();
+        await RegisterAsync(client, realEmail, "P@ssword123");
+
+        var nonExistentRes = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
+            new { Email = UniqueEmail(), Code = "000000" });
+        var wrongCodeRes = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
+            new { Email = realEmail, Code = "000000" });
+
+        nonExistentRes.StatusCode.Should().Be(wrongCodeRes.StatusCode);
+        var nonExistentBody = await nonExistentRes.Content.ReadAsStringAsync();
+        var wrongCodeBody = await wrongCodeRes.Content.ReadAsStringAsync();
+        nonExistentBody.Should().Be(wrongCodeBody);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_FifthConsecutiveWrongCode_LocksAccount()
+    {
+        // A 6-digit OTP only has 1,000,000 possible values — IAuthAttemptTracker's lockout is what
+        // actually makes brute-forcing it impractical instead of just a few minutes of guessing.
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAsync(client, email, "P@ssword123");
+
+        HttpResponseMessage last = null!;
+        for (var i = 0; i < 5; i++)
+        {
+            last = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
+                new { Email = email, Code = "000000" });
+        }
+        last.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        var lockedOutRes = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
+            new { Email = email, Code = "000000" });
+
+        lockedOutRes.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var body = await lockedOutRes.Content.ReadAsStringAsync();
+        body.Should().Contain("khóa");
+    }
+
+    [Fact]
     public async Task VerifyEmail_ExpiredCode_Returns401()
     {
         var client = _factory.CreateClient();
@@ -283,6 +330,61 @@ public sealed class AuthTests
         res.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    [Fact]
+    public async Task Login_FifthConsecutiveWrongPassword_LocksAccount()
+    {
+        // IAuthAttemptTracker locks the account after 5 consecutive failures — the 6th attempt,
+        // even with the CORRECT password, must still be rejected while the lockout is active.
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+
+        HttpResponseMessage last = null!;
+        for (var i = 0; i < 5; i++)
+        {
+            last = await client.PostAsJsonAsync("/api/v1/auth/login",
+                new { Email = email, Password = "WrongPassword!" });
+        }
+        last.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        var lockedOutRes = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { Email = email, Password = "P@ssword123" });
+
+        lockedOutRes.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var body = await lockedOutRes.Content.ReadAsStringAsync();
+        body.Should().Contain("khóa", "the lockout message must be distinguishable from a plain wrong-password message");
+    }
+
+    [Fact]
+    public async Task Login_SuccessAfterFailures_ResetsFailureCounter()
+    {
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+
+        for (var i = 0; i < 3; i++)
+        {
+            await client.PostAsJsonAsync("/api/v1/auth/login",
+                new { Email = email, Password = "WrongPassword!" });
+        }
+
+        var successRes = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { Email = email, Password = "P@ssword123" });
+        successRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 2 more wrong attempts after the reset (would be attempts #4-5 of the original streak if
+        // the counter hadn't been cleared) must NOT trigger a lockout.
+        for (var i = 0; i < 2; i++)
+        {
+            await client.PostAsJsonAsync("/api/v1/auth/login",
+                new { Email = email, Password = "WrongPassword!" });
+        }
+
+        var stillUnlockedRes = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { Email = email, Password = "P@ssword123" });
+        stillUnlockedRes.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
     // ─── Forgot / reset password ────────────────────────────────────────────
 
     [Fact]
@@ -326,6 +428,7 @@ public sealed class AuthTests
         // cách tự chọn 1 token rồi ghi thẳng hash tương ứng vào DB, giống hệt những gì handler thật
         // sẽ làm khi gửi email.
         var rawToken = "test-token-" + Guid.NewGuid().ToString("N");
+        Guid stampBefore;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -334,6 +437,7 @@ public sealed class AuthTests
             user.PasswordResetTokenExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30);
             user.EmailVerifiedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
+            stampBefore = user.SecurityStamp;
         }
 
         var resetRes = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
@@ -347,6 +451,14 @@ public sealed class AuthTests
         var loginNew = await client.PostAsJsonAsync("/api/v1/auth/login",
             new { Email = email, Password = "NewPassword456" });
         loginNew.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Rotated so any JWT issued before the reset — e.g. one an attacker already stole — fails
+        // the OnTokenValidated check (Program.cs) on its very next request instead of staying
+        // valid until it naturally expires.
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var verifiedUser = await verifyDb.Users.SingleAsync(u => u.Email == email);
+        verifiedUser.SecurityStamp.Should().NotBe(stampBefore);
     }
 
     [Fact]

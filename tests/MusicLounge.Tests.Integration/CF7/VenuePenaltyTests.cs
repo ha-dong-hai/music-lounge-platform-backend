@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -121,6 +122,22 @@ public sealed class VenuePenaltyTests
     }
 
     [Fact]
+    public async Task Issue_NonExistentLounge_Returns400()
+    {
+        // IssuePenaltyCommandValidator now checks LoungeId existence up front (master-backend-techlead
+        // review — FK existence checks belong in the Validator, not discovered deep in the handler).
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await client.PostAsJsonAsync("/api/v1/venue-penalties", new
+        {
+            LoungeId = 999_999_999, PenaltyType = "Warning", Reason = "test", EvidenceRef = (string?)null,
+            SuspensionDays = (int?)null
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Issue_Warning_AppliesLoungeStatusImmediately()
     {
         var (_, loungeId, _) = await CreateFreshOwnerLoungeSubscriptionAsync();
@@ -177,7 +194,7 @@ public sealed class VenuePenaltyTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<ApplyDuePenaltiesJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using var verifyScope = _factory.Services.CreateScope();
@@ -199,7 +216,7 @@ public sealed class VenuePenaltyTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<ApplyDuePenaltiesJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using var db2Scope = _factory.Services.CreateScope();
@@ -239,8 +256,8 @@ public sealed class VenuePenaltyTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<ApplyDuePenaltiesJob>();
-            await job.ExecuteAsync();
-            await job.ExecuteAsync(); // simulates an overlapping/retried Hangfire run
+            await job.ExecuteAsync(new JobCancellationToken(false));
+            await job.ExecuteAsync(new JobCancellationToken(false)); // simulates an overlapping/retried Hangfire run
         }
 
         using var verifyScope = _factory.Services.CreateScope();
@@ -358,7 +375,7 @@ public sealed class VenuePenaltyTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<AutoApproveOverdueAppealsJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using var verifyScope = _factory.Services.CreateScope();

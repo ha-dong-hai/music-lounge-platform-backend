@@ -13,8 +13,9 @@ public sealed class CancelAbandonedPaymentsJob
 
     // VNPay retries the callback for ~15 minutes. We wait 30 minutes before declaring a payment abandoned.
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var cutoff = DateTimeOffset.UtcNow.AddMinutes(-30);
 
         // Combining the Status equality with the CreatedAt comparison in one Where doesn't

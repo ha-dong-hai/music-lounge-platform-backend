@@ -37,14 +37,15 @@ internal sealed class GetFnbOrdersQueryHandler
             Enum.TryParse<FnbOrderStatus>(request.Status, true, out var parsed))
             statusFilter = parsed;
 
-        var orders = await _uow.Repository<FnbOrder, int>().FindAsync(
-            o => o.LoungeId == request.LoungeId && (!statusFilter.HasValue || o.Status == statusFilter.Value), ct);
-
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
-        var ordered = orders.OrderByDescending(o => o.CreatedAt).ToList();
-        var total = ordered.Count;
-        var pageItems = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        // Order by Id (auto-increment, so it's already insertion/CreatedAt order) rather than
+        // CreatedAt itself — SQLite's EF Core provider flatly refuses to translate ORDER BY on a
+        // DateTimeOffset column ("SQLite does not support expressions of type 'DateTimeOffset' in
+        // ORDER BY clauses"), a hard limitation independent of the rest of the query shape.
+        var (pageItems, total) = await _uow.Repository<FnbOrder, int>().GetPagedAsync(
+            o => o.LoungeId == request.LoungeId && (!statusFilter.HasValue || o.Status == statusFilter.Value),
+            o => o.Id, page, pageSize, ct);
 
         var orderIds = pageItems.Select(o => o.Id).ToList();
         var items = await _uow.Repository<OrderItem, int>().FindAsync(i => orderIds.Contains(i.FnbOrderId), ct);

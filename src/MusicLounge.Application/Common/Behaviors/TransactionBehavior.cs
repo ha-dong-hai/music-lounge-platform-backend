@@ -15,6 +15,9 @@ internal sealed class TransactionBehavior<TRequest, TResponse>
     public async Task<TResponse> Handle(
         TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
+        if (request is INoTransactionCommand)
+            return await next();
+
         await _uow.BeginTransactionAsync(ct);
         try
         {

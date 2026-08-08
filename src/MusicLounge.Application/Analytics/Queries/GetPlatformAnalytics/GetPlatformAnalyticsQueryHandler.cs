@@ -28,13 +28,13 @@ internal sealed class GetPlatformAnalyticsQueryHandler
         var totalTicketsSold = await _uow.Repository<Ticket, Guid>()
             .CountAsync(t => t.Status == TicketStatus.Confirmed, ct);
 
-        var confirmedPayments = await _uow.Repository<Payment, int>()
-            .FindAsync(p => p.Status == PaymentStatus.Confirmed && p.ReferenceType == "TicketHold", ct);
-        var totalGmv = confirmedPayments.Sum(p => p.GrossAmount);
+        var totalGmv = await _uow.Repository<Payment, int>().SumAsync(
+            p => p.Status == PaymentStatus.Confirmed && p.ReferenceType == "TicketHold",
+            p => p.GrossAmount, ct);
 
-        var donations = await _uow.Repository<Donation, int>().FindAsync(
-            d => d.Status != DonationStatus.PendingPayment && d.Status != DonationStatus.Cancelled, ct);
-        var totalDonationVolume = donations.Sum(d => d.Gross);
+        var totalDonationVolume = await _uow.Repository<Donation, int>().SumAsync(
+            d => d.Status != DonationStatus.PendingPayment && d.Status != DonationStatus.Cancelled,
+            d => d.Gross, ct);
 
         var pendingModerations = await _uow.Repository<EventModeration, int>()
             .CountAsync(m => m.AdminDecision == null, ct);

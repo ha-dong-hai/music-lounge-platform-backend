@@ -21,8 +21,9 @@ public sealed class SubscriptionExpiryWarningJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
         // Combining the Status equality with the ExpiresAt comparison in one Where doesn't

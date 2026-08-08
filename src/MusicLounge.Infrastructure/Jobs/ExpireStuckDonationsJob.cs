@@ -16,8 +16,9 @@ public sealed class ExpireStuckDonationsJob
     public ExpireStuckDonationsJob(ApplicationDbContext ctx) => _ctx = ctx;
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var cutoff = DateTimeOffset.UtcNow.AddHours(-2);
 
         // Combining the Status equality with the CreatedAt comparison in one Where doesn't

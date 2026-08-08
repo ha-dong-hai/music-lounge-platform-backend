@@ -22,8 +22,9 @@ public sealed class EventReminderJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var reminderHours = await _config.GetIntAsync(ConfigKeys.EventReminderHours, 24, ct);
         var now = DateTimeOffset.UtcNow;
         var windowEnd = now.AddHours(reminderHours);

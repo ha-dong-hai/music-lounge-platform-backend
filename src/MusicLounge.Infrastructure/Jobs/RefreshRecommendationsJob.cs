@@ -17,8 +17,9 @@ public sealed class RefreshRecommendationsJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var userIds = await _ctx.Users
             .AsNoTracking()
             .Where(u => u.AiConsent)

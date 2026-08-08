@@ -8,6 +8,9 @@ obj/
 src/MusicLounge.Api/wwwroot/uploads/*
 !src/MusicLounge.Api/wwwroot/uploads/.gitkeep
 
+# Private uploads (citizen card images etc.) — outside wwwroot on purpose, never commit real PII
+src/MusicLounge.Api/App_Data/
+
 # Logs
 logs/
 *.log

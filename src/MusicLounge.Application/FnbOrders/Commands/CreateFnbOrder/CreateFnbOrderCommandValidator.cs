@@ -1,4 +1,7 @@
 using FluentValidation;
+using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Domain.Entities;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.FnbOrders.Commands.CreateFnbOrder;
 
@@ -6,9 +9,25 @@ public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnb
 {
     private static readonly string[] ValidMethods = ["Gateway", "Cash"];
 
-    public CreateFnbOrderCommandValidator()
+    public CreateFnbOrderCommandValidator(IUnitOfWork uow)
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId)
+            .GreaterThan(0)
+            .MustAsync(async (loungeId, ct) =>
+                await uow.Repository<MusicLoungeEntity, int>().AnyAsync(l => l.Id == loungeId, ct))
+            .WithMessage("LoungeId không tồn tại.");
+
+        RuleFor(x => x.ZoneId)
+            .MustAsync(async (zoneId, ct) =>
+                await uow.Repository<SeatingZone, int>().AnyAsync(z => z.Id == zoneId!.Value, ct))
+            .When(x => x.ZoneId.HasValue)
+            .WithMessage("ZoneId không tồn tại.");
+
+        RuleFor(x => x.ShowId)
+            .MustAsync(async (showId, ct) =>
+                await uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == showId!.Value, ct))
+            .When(x => x.ShowId.HasValue)
+            .WithMessage("ShowId không tồn tại.");
 
         RuleFor(x => x.PaymentMethod)
             .Must(m => ValidMethods.Contains(m, StringComparer.OrdinalIgnoreCase))

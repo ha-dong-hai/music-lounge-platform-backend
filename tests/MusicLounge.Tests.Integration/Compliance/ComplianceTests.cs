@@ -56,6 +56,27 @@ public sealed class ComplianceTests
     }
 
     [Fact]
+    public async Task CreateComplaint_NonExistentTarget_Returns400()
+    {
+        // AllowAnonymous — TargetId used to only be checked for > 0, so anyone (no login required)
+        // could point a complaint at a show/venue/donation/penalty that doesn't exist, leaving
+        // Admin with an unresolvable dangling reference.
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/v1/complaints", new
+        {
+            TargetType = "venue",
+            TargetId = 999_999_999,
+            Category = "VenueConduct",
+            Description = "Complaint against a venue that doesn't exist",
+            EvidenceUrls = (string?)null,
+            ContactPhone = "0911111111"
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task CreateComplaint_AsAuthenticatedUser_ThenGetMy_ReturnsOwnOnly()
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");

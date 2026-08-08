@@ -62,6 +62,60 @@ public sealed class PaginationClampTests
         body!.Data.PageSize.Should().Be(10, "normal, in-bounds requests must pass through unchanged");
     }
 
+    // ─── "limit" (suggestions/trending/recommendations — unlike page/pageSize, these return a
+    // bare list with no echoed limit/page metadata, so the only externally observable behavior of
+    // an unclamped value is a raw 500 from LINQ's Take() rejecting a negative/absurd count) ──────
+
+    [Fact]
+    public async Task GetSuggestions_HugeLimit_DoesNotThrow()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.GetAsync("/api/v1/lounge-shows/suggestions?q=test&limit=999999999");
+
+        res.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task GetSuggestions_NegativeLimit_DoesNotThrow()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.GetAsync("/api/v1/lounge-shows/suggestions?q=test&limit=-5");
+
+        res.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task GetTrending_HugeLimit_DoesNotThrow()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.GetAsync("/api/v1/lounge-shows/trending?limit=999999999");
+
+        res.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task GetTrending_NegativeLimit_DoesNotThrow()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.GetAsync("/api/v1/lounge-shows/trending?limit=-5");
+
+        res.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task GetRecommendations_HugeLimit_DoesNotThrow()
+    {
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.GetAsync("/api/v1/recommendations?limit=999999999");
+
+        res.EnsureSuccessStatusCode();
+    }
+
     private sealed record PaginatedResponse(bool Success, PaginatedData Data);
     private sealed record PaginatedData(int Page, int PageSize, int TotalCount);
 }

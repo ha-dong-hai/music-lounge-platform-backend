@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Tickets.Events;
@@ -145,7 +146,7 @@ public sealed class SettlementTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using (var scope = _factory.Services.CreateScope())
@@ -176,7 +177,7 @@ public sealed class SettlementTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using (var scope = _factory.Services.CreateScope())
@@ -235,7 +236,7 @@ public sealed class SettlementTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using (var scope = _factory.Services.CreateScope())
@@ -255,7 +256,7 @@ public sealed class SettlementTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");

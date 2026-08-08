@@ -13,6 +13,7 @@ using MusicLounge.Application.Refunds.Queries.GetPendingRefundRequests;
 using MusicLounge.Application.Users.Commands.DeactivateUserAccount;
 using MusicLounge.Application.Users.Commands.ReactivateUserAccount;
 using MusicLounge.Application.Users.DTOs;
+using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetUserDetail;
 using MusicLounge.Application.Users.Queries.GetUsers;
 using MusicLounge.Domain.Enums;
@@ -91,6 +92,16 @@ public sealed class AdminController : ControllerBase
     {
         var result = await _sender.Send(new GetUserDetailQuery(id), ct);
         return Ok(ApiResponse<UserAdminDto>.Ok(result));
+    }
+
+    /// <summary>Admin xem ảnh CCCD/CMND của user để xác thực danh tính — file nằm ngoài wwwroot, không đoán URL được.</summary>
+    [HttpGet("users/{id:int}/citizen-card/{side}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserCitizenCardImage(int id, string side, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetCitizenCardImageQuery(id, side), ct);
+        return File(result.Content, result.ContentType);
     }
 
     [HttpPost("users/{id:int}/deactivate")]

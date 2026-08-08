@@ -160,7 +160,12 @@ Trước khi coi 1 endpoint là xong, tự tick đủ danh sách này:
 - [ ] Danh sách trả `PaginatedResult<T>`, nhận `page`/`pageSize` qua query, không tự chế tên field
       phân trang khác (`total`, `count`, `pages`...).
 - [ ] `[Authorize(Policy = Policies.X)]` đúng vai trò yêu cầu — kiểm tra chéo với bảng phân quyền
-      hiện có trong `Authorization/Policies.cs`, không tạo policy string mới nếu 1 trong 4 policy có
-      sẵn (`RequireAuthenticated`/`RequireStaff`/`RequireOwner`/`RequireAdmin`) đã đủ dùng.
+      hiện có trong `Authorization/Policies.cs`, không tạo policy string mới nếu 1 trong 5 policy có
+      sẵn (`RequireAuthenticated`/`RequireStaff`/`RequireOwner`/`RequireAdmin`/`RequireVenueOperator`)
+      đã đủ dùng. `RequireVenueOperator` (Staff/Owner/Admin) riêng cho hành động vận hành venue theo
+      ngày (check-in, bán vé quầy, đổi trạng thái F&B, start/end show, điều khiển livestream) — venue
+      nhỏ Owner tự làm không thuê Staff riêng vẫn gọi được, khác `RequireOwner` (quản lý venue: sửa
+      lounge, staffing, ticket tier). Handler vẫn phải tự check resource thuộc đúng venue của caller
+      (xem `VenueOperatorAccess.CanOperate` trong `Application/Common/`) — policy chỉ xác nhận role.
 - [ ] Đã có test tích hợp: 1 test role đúng → thành công, 1 test role sai → 401/403 (xem CF1-CF7 làm
       mẫu trong `tests/MusicLounge.Tests.Integration/`).

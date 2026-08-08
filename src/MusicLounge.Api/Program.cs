@@ -2,13 +2,18 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Middleware;
 using MusicLounge.Application;
 using MusicLounge.Infrastructure;
 using MusicLounge.Infrastructure.Hubs;
+using MusicLounge.Infrastructure.Persistence;
 using Serilog;
+using System.IO.Compression;
+using System.Security.Claims;
 using System.Text;
 
 Log.Logger = new LoggerConfiguration()
@@ -78,6 +83,20 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    // JSON API responses (analytics/list endpoints in particular) compress well — cuts bytes over
+    // the wire for mobile clients on the FE's data plan. EnableForHttps is safe here: this is a
+    // pure JSON REST API, not an HTML page reflecting user input alongside an embedded secret
+    // (anti-forgery token etc.) in the same response, which is the actual precondition for a
+    // BREACH-style attack that HTTPS compression advice usually warns about.
+    builder.Services.AddResponseCompression(opt =>
+    {
+        opt.EnableForHttps = true;
+        opt.Providers.Add<BrotliCompressionProvider>();
+        opt.Providers.Add<GzipCompressionProvider>();
+    });
+    builder.Services.Configure<BrotliCompressionProviderOptions>(opt => opt.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(opt => opt.Level = CompressionLevel.Fastest);
+
     builder.Services.AddApiVersioning(opt =>
     {
         opt.DefaultApiVersion = new ApiVersion(1, 0);
@@ -109,6 +128,24 @@ try
             "Set it via appsettings.{Environment}.Local.json (gitignored), an environment " +
             "variable, or a secret manager — never a real value in the tracked appsettings.json.");
 
+    // Same fail-fast reasoning as Jwt:Secret above. These six used to default to a hardcoded
+    // "https://musiclounge.vn/..." URL baked into BusinessSettings — a deployment that forgot to
+    // configure them would silently send real users/VNPay redirects to that URL instead of
+    // failing loudly, and a future domain change would need a code change instead of a config one.
+    var businessSection = builder.Configuration.GetSection("Business");
+    string[] requiredBusinessUrlKeys =
+    [
+        "TicketPaymentReturnUrl", "DonationPaymentReturnUrl", "SubscriptionPaymentReturnUrl",
+        "PaymentSuccessUrl", "PaymentFailedUrl", "PasswordResetUrl"
+    ];
+    var missingBusinessUrls = requiredBusinessUrlKeys
+        .Where(key => string.IsNullOrWhiteSpace(businessSection[key]))
+        .ToArray();
+    if (missingBusinessUrls.Length > 0)
+        throw new InvalidOperationException(
+            $"Business:{{{string.Join(", ", missingBusinessUrls)}}} is missing. Set them via " +
+            "appsettings.{Environment}.json or .Local.json for this environment.");
+
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opt =>
         {
@@ -135,6 +172,34 @@ try
                         context.Token = accessToken;
                     }
                     return Task.CompletedTask;
+                },
+                // JWTs are stateless and otherwise stay valid until they naturally expire — without
+                // this check, ResetPassword (or an Admin deactivating a bad-actor account) had no
+                // way to actually cut off a token an attacker already holds; the user could reset
+                // their password and the stolen session would keep working for up to
+                // Jwt:AccessTokenExpiryMinutes more. Re-checking against the DB on every request
+                // costs one indexed PK lookup, projected down to just the two columns needed.
+                OnTokenValidated = async context =>
+                {
+                    var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var stampClaim = context.Principal?.FindFirstValue("sec_stamp");
+                    if (!int.TryParse(userIdClaim, out var userId) || string.IsNullOrEmpty(stampClaim))
+                    {
+                        context.Fail("Token không hợp lệ.");
+                        return;
+                    }
+
+                    var db = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+                    var current = await db.Users
+                        .Where(u => u.Id == userId)
+                        .Select(u => new { u.SecurityStamp, u.IsActive })
+                        .FirstOrDefaultAsync();
+
+                    if (current is null || !current.IsActive ||
+                        !current.SecurityStamp.ToString().Equals(stampClaim, StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Fail("Token đã bị thu hồi — vui lòng đăng nhập lại.");
+                    }
                 }
             };
         });
@@ -246,11 +311,21 @@ try
         ctx.Response.Headers.Append("X-Content-Type-Options", "nosniff");
         ctx.Response.Headers.Append("X-Frame-Options", "DENY");
         ctx.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+        // Every real response here is JSON — no script/style/image/frame is ever legitimately
+        // needed, so deny all of it outright rather than trying to enumerate an allow-list.
+        // frame-ancestors duplicates X-Frame-Options above (CSP's modern equivalent) — kept both
+        // since browser support differs. Skipped under /swagger: Swagger UI's own bundled HTML
+        // ships inline scripts/styles that this policy would break, and it's Development-only
+        // tooling, never a real API response a browser needs protecting on.
+        if (!ctx.Request.Path.StartsWithSegments("/swagger"))
+            ctx.Response.Headers.Append(
+                "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
         await next();
     });
 
     app.UseExceptionHandler();
     app.UseSerilogRequestLogging();
+    app.UseResponseCompression();
     app.UseHttpsRedirection();
     // .glb/.gltf khong nam trong FileExtensionContentTypeProvider mac dinh — khong khai bao thi
     // StaticFileMiddleware tra 404 cho moi file model 3D du duong dan/file deu dung (ServeUnknownFileTypes
@@ -270,6 +345,14 @@ try
     app.MapHub<LivestreamHub>("/hubs/livestream");
     app.MapHealthChecks("/health");
 
+    // Can't call this any earlier — JobStorage.Current (which RecurringJob.AddOrUpdate needs)
+    // isn't actually initialized until Hangfire Server's hosted service starts, which only
+    // happens once the host itself starts (inside app.Run()), confirmed by trying to move it
+    // earlier: that throws "Current JobStorage instance has not been initialized yet." The
+    // ApplicationStarted race this used to worry about (a job signature changed in code racing a
+    // stale definition already in SQL Server storage) is Hangfire's own concern to self-heal —
+    // it already retries a failed recurring-job trigger automatically, and this call rewrites the
+    // stored definition with the current signature within that same retry window.
     app.Lifetime.ApplicationStarted.Register(
         MusicLounge.Infrastructure.DependencyInjection.ConfigureRecurringJobs);
 

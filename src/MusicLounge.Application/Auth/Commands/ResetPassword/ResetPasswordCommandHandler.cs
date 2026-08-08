@@ -32,6 +32,10 @@ internal sealed class ResetPasswordCommandHandler : IRequestHandler<ResetPasswor
         // Xoa token ngay sau khi dung — token 1 lan, khong the tai su dung du chua het han.
         user.PasswordResetTokenHash = null;
         user.PasswordResetTokenExpiresAt = null;
+        // Rotate the security stamp so every JWT issued before this reset — e.g. one an attacker
+        // who prompted the reset already stole — fails OnTokenValidated on its very next request,
+        // instead of staying valid for up to AccessTokenExpiryMinutes more.
+        user.SecurityStamp = Guid.NewGuid();
 
         userRepo.Update(user);
         await _uow.SaveChangesAsync(ct);

@@ -2519,8 +2519,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("CitizenCardNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CitizenCardNumberHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset?>("CitizenCardSubmittedAt")
                         .HasColumnType("datetimeoffset");
@@ -2549,6 +2553,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("EmailVerifiedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -2562,6 +2571,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<DateTimeOffset?>("LockedUntil")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
@@ -2586,6 +2598,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -2594,9 +2609,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CitizenCardNumber")
+                    b.HasIndex("CitizenCardNumberHash")
                         .IsUnique()
-                        .HasFilter("[CitizenCardNumber] IS NOT NULL");
+                        .HasFilter("[CitizenCardNumberHash] IS NOT NULL");
 
                     b.HasIndex("Email")
                         .IsUnique();

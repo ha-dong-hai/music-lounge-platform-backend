@@ -105,8 +105,6 @@ public sealed class LoungesController : ControllerBase
     public async Task<IActionResult> LookupUserByEmail([FromQuery] string email, CancellationToken ct = default)
     {
         var result = await _sender.Send(new FindUserByEmailQuery(email), ct);
-        if (result is null)
-            return NotFound(ApiResponse<object>.Fail("Không tìm thấy tài khoản với email này."));
         return Ok(ApiResponse<UserLookupDto>.Ok(result));
     }
 

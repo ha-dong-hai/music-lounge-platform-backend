@@ -30,8 +30,9 @@ public sealed class ApplyDuePenaltiesJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
         // Filter by Status server-side, then filter EffectiveAt client-side — same pattern as

@@ -24,8 +24,9 @@ public sealed class DonationOverdueCheckJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
         var sevenDaysAgo = now.AddDays(-7);
         var fourteenDaysAgo = now.AddDays(-14);

@@ -23,8 +23,9 @@ public sealed class AutoApproveOverdueAppealsJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
         var appealed = await _ctx.VenuePenalties

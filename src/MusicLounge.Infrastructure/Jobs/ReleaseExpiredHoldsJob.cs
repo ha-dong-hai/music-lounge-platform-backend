@@ -17,8 +17,9 @@ public sealed class ReleaseExpiredHoldsJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var expiredIds = await _ctx.TicketHolds
             .Where(h => h.ExpiresAt <= DateTimeOffset.UtcNow)
             .Select(h => h.Id)

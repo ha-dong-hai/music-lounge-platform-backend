@@ -11,29 +11,50 @@ internal sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCom
 {
     private readonly IUnitOfWork _uow;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IAuthAttemptTracker _authAttemptTracker;
 
-    public VerifyEmailCommandHandler(IUnitOfWork uow, IJwtTokenService jwtTokenService)
+    public VerifyEmailCommandHandler(
+        IUnitOfWork uow, IJwtTokenService jwtTokenService, IAuthAttemptTracker authAttemptTracker)
     {
         _uow = uow;
         _jwtTokenService = jwtTokenService;
+        _authAttemptTracker = authAttemptTracker;
     }
 
     public async Task<AuthResultDto> Handle(VerifyEmailCommand request, CancellationToken ct)
     {
         var userRepo = _uow.Repository<User, int>();
         var users = await userRepo.FindAsync(u => u.Email == request.Email, ct);
-        var user = users.FirstOrDefault()
-            ?? throw new UnauthorizedException("Email hoặc mã xác thực không đúng.");
+        var user = users.FirstOrDefault();
 
-        if (user.EmailVerifiedAt is not null)
-            throw new ConflictException("Tài khoản đã được xác thực, vui lòng đăng nhập.");
+        if (user is not null)
+        {
+            if (user.EmailVerifiedAt is not null)
+                throw new ConflictException("Tài khoản đã được xác thực, vui lòng đăng nhập.");
 
+            var lockoutRemaining = await _authAttemptTracker.GetLockoutRemainingAsync(user.Id, ct);
+            if (lockoutRemaining is not null)
+                throw new UnauthorizedException(
+                    $"Tài khoản tạm thời bị khóa do nhập sai mã xác thực nhiều lần. Vui lòng thử lại sau {Math.Ceiling(lockoutRemaining.Value.TotalMinutes)} phút.");
+        }
+
+        // Luon hash request.Code du email co ton tai hay khong — tranh lo timing side-channel cho
+        // phep do email da dang ky hay chua (OWASP ASVS V2.1 - account enumeration), giong pattern
+        // da dung o LoginCommandHandler cho mat khau.
         var codeHash = PasswordResetTokenHasher.Hash(request.Code);
-        if (user.EmailVerificationCodeHash is null || user.EmailVerificationCodeHash != codeHash)
-            throw new UnauthorizedException("Mã xác thực không đúng.");
+        var codeValid = user?.EmailVerificationCodeHash is not null && user.EmailVerificationCodeHash == codeHash;
+
+        if (user is null || !codeValid)
+        {
+            if (user is not null)
+                await _authAttemptTracker.RecordFailureAsync(user.Id, ct);
+            throw new UnauthorizedException("Email hoặc mã xác thực không đúng.");
+        }
 
         if (user.EmailVerificationCodeExpiresAt is null || user.EmailVerificationCodeExpiresAt < DateTimeOffset.UtcNow)
             throw new UnauthorizedException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại mã.");
+
+        await _authAttemptTracker.ResetAsync(user.Id, ct);
 
         user.EmailVerifiedAt = DateTimeOffset.UtcNow;
         user.EmailVerificationCodeHash = null;

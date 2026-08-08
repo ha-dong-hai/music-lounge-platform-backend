@@ -23,7 +23,8 @@ internal sealed class JwtTokenService : IJwtTokenService
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Role, user.Role.ToString()),
-            new(ClaimTypes.Email, user.Email)
+            new(ClaimTypes.Email, user.Email),
+            new("sec_stamp", user.SecurityStamp.ToString())
         };
 
         if (loungeId.HasValue)

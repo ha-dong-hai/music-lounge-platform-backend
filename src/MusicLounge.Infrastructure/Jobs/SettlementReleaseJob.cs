@@ -31,8 +31,9 @@ public sealed class SettlementReleaseJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
         // Filter by Status server-side, then filter ScheduledAt client-side — combining an

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -468,6 +469,37 @@ public sealed class EventManagementTests
             reverted.Role.Should().Be(UserRole.Audience);
         }
     }
+
+    [Fact]
+    public async Task LookupUserByEmail_ExistingEmail_Returns200()
+    {
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+
+        var res = await ownerClient.GetAsync($"/api/v1/lounges/staff/lookup?email=audience@test.com");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await res.Content.ReadFromJsonAsync<DataResponse<UserLookupData>>();
+        body!.Data.Id.Should().Be(SeedHelper.AudienceId);
+    }
+
+    [Fact]
+    public async Task LookupUserByEmail_NonExistentEmail_Returns404WithStandardShape()
+    {
+        // Previously a hand-rolled `NotFound(ApiResponse<object>.Fail(...))` in the controller —
+        // {success,data:null,message}, missing the `errors` field every other 404 in this API has
+        // via GlobalExceptionHandler/NotFoundException ({success,message,errors}). Moved the throw
+        // into the handler so this endpoint's error shape matches everything else.
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+
+        var res = await ownerClient.GetAsync($"/api/v1/lounges/staff/lookup?email=no-such-user@test.com");
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var body = await res.Content.ReadFromJsonAsync<JsonElement>();
+        body.TryGetProperty("errors", out _).Should().BeTrue(
+            "the response shape must match every other NotFoundException-driven 404 in this API");
+    }
+
+    private sealed record UserLookupData(int Id, string FullName, string Email);
 
     // ─── GET /lounge-shows?mine=true ────────────────────────────────────────
     // Owner self-service lookup for Draft shows added during REST-standards review — the only

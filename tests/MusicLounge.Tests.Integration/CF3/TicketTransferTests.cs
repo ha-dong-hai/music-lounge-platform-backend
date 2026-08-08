@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Hangfire;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Jobs;
@@ -237,7 +238,7 @@ public sealed class TicketTransferTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<TicketTransferExpiryJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using var verifyScope = _factory.Services.CreateScope();
@@ -258,7 +259,7 @@ public sealed class TicketTransferTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<TicketTransferExpiryJob>();
-            await job.ExecuteAsync();
+            await job.ExecuteAsync(new JobCancellationToken(false));
         }
 
         using var verifyScope = _factory.Services.CreateScope();

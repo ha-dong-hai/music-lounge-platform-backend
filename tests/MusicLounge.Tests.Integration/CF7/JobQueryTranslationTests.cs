@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -56,7 +57,7 @@ public sealed class JobQueryTranslationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<CancelAbandonedPaymentsJob>();
-            var act = () => job.ExecuteAsync();
+            var act = () => job.ExecuteAsync(new JobCancellationToken(false));
             await act.Should().NotThrowAsync();
         }
 
@@ -87,7 +88,7 @@ public sealed class JobQueryTranslationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<ExpireStuckDonationsJob>();
-            var act = () => job.ExecuteAsync();
+            var act = () => job.ExecuteAsync(new JobCancellationToken(false));
             await act.Should().NotThrowAsync();
         }
 
@@ -133,7 +134,7 @@ public sealed class JobQueryTranslationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<ExpireSubscriptionsJob>();
-            var act = () => job.ExecuteAsync();
+            var act = () => job.ExecuteAsync(new JobCancellationToken(false));
             await act.Should().NotThrowAsync();
         }
 
@@ -175,7 +176,7 @@ public sealed class JobQueryTranslationTests
 
         using var jobScope = _factory.Services.CreateScope();
         var job = jobScope.ServiceProvider.GetRequiredService<SubscriptionExpiryWarningJob>();
-        var act = () => job.ExecuteAsync();
+        var act = () => job.ExecuteAsync(new JobCancellationToken(false));
         await act.Should().NotThrowAsync();
     }
 
@@ -201,7 +202,7 @@ public sealed class JobQueryTranslationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<AutoConfirmDonationsJob>();
-            var act = () => job.ExecuteAsync();
+            var act = () => job.ExecuteAsync(new JobCancellationToken(false));
             await act.Should().NotThrowAsync();
         }
 
@@ -234,7 +235,7 @@ public sealed class JobQueryTranslationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var job = scope.ServiceProvider.GetRequiredService<DonationOverdueCheckJob>();
-            var act = () => job.ExecuteAsync();
+            var act = () => job.ExecuteAsync(new JobCancellationToken(false));
             await act.Should().NotThrowAsync();
         }
 
@@ -273,7 +274,7 @@ public sealed class JobQueryTranslationTests
 
         using var jobScope = _factory.Services.CreateScope();
         var job = jobScope.ServiceProvider.GetRequiredService<EventReminderJob>();
-        var act = () => job.ExecuteAsync();
+        var act = () => job.ExecuteAsync(new JobCancellationToken(false));
         await act.Should().NotThrowAsync();
     }
 }

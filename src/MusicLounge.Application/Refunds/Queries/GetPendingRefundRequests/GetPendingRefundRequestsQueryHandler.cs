@@ -20,18 +20,15 @@ internal sealed class GetPendingRefundRequestsQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        var pending = await _uow.Repository<RefundRequest, int>()
-            .FindAsync(r => r.Status == RefundRequestStatus.Pending, ct);
+        var (pending, total) = await _uow.Repository<RefundRequest, int>().GetPagedAsync(
+            r => r.Status == RefundRequestStatus.Pending, r => r.Id, page, size, ct);
 
-        var ordered = pending.OrderByDescending(r => r.Id).ToList();
-        var items = ordered
-            .Skip((page - 1) * size)
-            .Take(size)
+        var items = pending
             .Select(r => new RefundRequestDto(
                 r.Id, r.PaymentId, r.RequestedBy, r.Reason, r.AmountRequested,
                 r.AmountApproved, r.RefundPercentage, r.Status, r.CreatedAt, r.ResolvedAt))
             .ToList();
 
-        return new PaginatedResult<RefundRequestDto>(items, page, size, ordered.Count);
+        return new PaginatedResult<RefundRequestDto>(items, page, size, total);
     }
 }

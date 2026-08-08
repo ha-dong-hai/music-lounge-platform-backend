@@ -65,12 +65,14 @@ public sealed class ProfileManagementTests
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var cardNumber = UniqueCardNumber();
+        var frontUrl = CreateFakeUploadedImage();
+        var backUrl = CreateFakeUploadedImage();
 
         var res = await client.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
             CitizenCardNumber = cardNumber,
-            FrontImageUrl = "/uploads/front.png",
-            BackImageUrl = "/uploads/back.png"
+            FrontImageUrl = frontUrl,
+            BackImageUrl = backUrl
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -78,10 +80,26 @@ public sealed class ProfileManagementTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var user = await db.Users.SingleAsync(u => u.Id == SeedHelper.AudienceId);
-        user.CitizenCardNumber.Should().Be(cardNumber);
-        user.CitizenCardFrontImageUrl.Should().Be("/uploads/front.png");
-        user.CitizenCardBackImageUrl.Should().Be("/uploads/back.png");
+        // Encrypted at rest (IPiiEncryptionService) — the stored value is ciphertext, never the
+        // raw number; CitizenCardNumberHash (deterministic) is what proves the right value made it in.
+        user.CitizenCardNumber.Should().NotBeNullOrEmpty().And.NotBe(cardNumber);
+        user.CitizenCardNumberHash.Should().Be(
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(cardNumber))));
+        var decrypted = scope.ServiceProvider.GetRequiredService<MusicLounge.Application.Common.Interfaces.IPiiEncryptionService>()
+            .Decrypt(user.CitizenCardNumber!);
+        decrypted.Should().Be(cardNumber);
+        // Relocated out of the public wwwroot/uploads tree — the stored value is now an opaque
+        // private reference, never the original publicly-guessable URL.
+        user.CitizenCardFrontImageUrl.Should().NotBeNullOrEmpty().And.NotBe(frontUrl);
+        user.CitizenCardBackImageUrl.Should().NotBeNullOrEmpty().And.NotBe(backUrl);
         user.CitizenCardSubmittedAt.Should().NotBeNull();
+
+        // The public file must have been moved (not copied) out of wwwroot/uploads...
+        File.Exists(PublicUploadPath(frontUrl)).Should().BeFalse();
+        // ...and be readable back only through the authenticated self-service endpoint.
+        var getRes = await client.GetAsync("/api/v1/me/citizen-card/front");
+        getRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        getRes.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
     }
 
     [Fact]
@@ -93,8 +111,8 @@ public sealed class ProfileManagementTests
         var first = await client.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
             CitizenCardNumber = cardNumber,
-            FrontImageUrl = "/uploads/front.png",
-            BackImageUrl = "/uploads/back.png"
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage()
         });
         first.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -102,8 +120,8 @@ public sealed class ProfileManagementTests
         var second = await client.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
             CitizenCardNumber = cardNumber,
-            FrontImageUrl = "/uploads/front-v2.png",
-            BackImageUrl = "/uploads/back-v2.png"
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage()
         });
         second.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
@@ -117,11 +135,13 @@ public sealed class ProfileManagementTests
         var ownerRes = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
             CitizenCardNumber = cardNumber,
-            FrontImageUrl = "/uploads/front.png",
-            BackImageUrl = "/uploads/back.png"
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage()
         });
         ownerRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
+        // Rejected on the uniqueness check before any file is touched, so the audience's URLs
+        // never need to resolve to a real file.
         var audienceClient = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var audienceRes = await audienceClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
@@ -131,6 +151,59 @@ public sealed class ProfileManagementTests
         });
 
         audienceRes.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task GetMyCitizenCardImage_NotSubmittedYet_Returns404()
+    {
+        // Dedicated user (not shared seed data) — other tests in this suite submit a citizen
+        // card for the shared Audience/Owner seed users, so only a fresh user is guaranteed clean.
+        var userId = await CreateDedicatedUserAsync();
+        var client = _factory.CreateAuthenticatedClient(userId, "Audience");
+
+        var res = await client.GetAsync("/api/v1/me/citizen-card/front");
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetCitizenCardImage_AsAdmin_CanViewAnyUsersImage()
+    {
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var submit = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
+        {
+            CitizenCardNumber = UniqueCardNumber(),
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage()
+        });
+        submit.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.GetAsync($"/api/v1/admin/users/{SeedHelper.OwnerId}/citizen-card/front");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        res.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
+    }
+
+    [Fact]
+    public async Task GetMyCitizenCardImage_AnotherUsersImage_IsNotExposedViaSelfEndpoint()
+    {
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var submit = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
+        {
+            CitizenCardNumber = UniqueCardNumber(),
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage()
+        });
+        submit.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // The self-service endpoint has no target-user parameter to abuse — a different (and
+        // itself CCCD-less) user calling it can only ever resolve their own card, never Owner's.
+        var otherUserId = await CreateDedicatedUserAsync();
+        var otherClient = _factory.CreateAuthenticatedClient(otherUserId, "Audience");
+        var res = await otherClient.GetAsync("/api/v1/me/citizen-card/front");
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     // ─── DeactivateMyAccount ─────────────────────────────────────────────────
@@ -154,6 +227,23 @@ public sealed class ProfileManagementTests
 
     private static string UniqueCardNumber()
         => Random.Shared.NextInt64(100_000_000, 999_999_999).ToString();
+
+    /// <summary>
+    /// SubmitCitizenCard relocates its input off disk (LocalFileStorageService.RelocateToPrivateAsync),
+    /// so it needs a real file already sitting in wwwroot/uploads — mirroring what a prior
+    /// POST /uploads/images call would have produced — rather than a fictional URL string.
+    /// </summary>
+    private static string CreateFakeUploadedImage()
+    {
+        var fileName = $"{Guid.NewGuid():N}.png";
+        var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        Directory.CreateDirectory(uploadsDir);
+        File.WriteAllBytes(Path.Combine(uploadsDir, fileName), [0x89, 0x50, 0x4E, 0x47]);
+        return $"/uploads/{fileName}";
+    }
+
+    private static string PublicUploadPath(string publicUrl)
+        => Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", publicUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
     private async Task<int> CreateDedicatedUserAsync()
     {

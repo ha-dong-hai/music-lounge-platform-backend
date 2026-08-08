@@ -3,9 +3,11 @@ using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
 using MusicLounge.Infrastructure.Hubs;
 using MusicLounge.Infrastructure.Jobs;
 using MusicLounge.Infrastructure.Persistence;
@@ -54,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ILedgerEntryRepository, LedgerEntryRepository>();
 
         // Services
         services.AddHttpContextAccessor();
@@ -70,6 +73,10 @@ public static class DependencyInjection
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddDataProtection();
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+        services.AddSingleton<IPiiEncryptionService, PiiEncryptionService>();
+        services.AddScoped<IAuthAttemptTracker, AuthAttemptTracker>();
         // Singleton: the per-show semaphore dictionary must be shared process-wide, not per-request.
         services.AddSingleton<IShowBookingLock, ShowBookingLock>();
         services.AddSingleton<IAsyncKeyedLock, AsyncKeyedLock>();
@@ -91,6 +98,16 @@ public static class DependencyInjection
         // checks in production. Found by empirically exercising every job under test.
         services.AddScoped<EventReminderJob>();
         services.AddScoped<DonationOverdueCheckJob>();
+        // Same class of bug as EventReminderJob/DonationOverdueCheckJob above — LogUserBehaviourJob
+        // is enqueued via BackgroundJob.Enqueue<LogUserBehaviourJob> but was never registered, so
+        // Hangfire's activator would throw "No service for type... has been registered" the first
+        // time it tried to run, silently breaking AI-recommendation behaviour logging in production
+        // (never noticed because it's fire-and-forget from GetLoungeShowDetail/GetRecommendedLoungeShows,
+        // with nothing surfacing the failure to a caller). SendPasswordResetEmailJob/
+        // SendEmailVerificationCodeJob registered alongside since they're new as of this fix.
+        services.AddScoped<LogUserBehaviourJob>();
+        services.AddScoped<SendPasswordResetEmailJob>();
+        services.AddScoped<SendEmailVerificationCodeJob>();
 
         // Livestream provider abstraction
         // Explicit timeout — HttpClient's default is 100s, long enough that one slow/hanging
@@ -127,67 +144,67 @@ public static class DependencyInjection
     {
         RecurringJob.AddOrUpdate<ReleaseExpiredHoldsJob>(
             "release-expired-holds",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
 
         RecurringJob.AddOrUpdate<RefreshRecommendationsJob>(
             "refresh-recommendations",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         RecurringJob.AddOrUpdate<AutoConfirmDonationsJob>(
             "auto-confirm-donations",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         RecurringJob.AddOrUpdate<ExpireStuckDonationsJob>(
             "expire-stuck-donations",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         RecurringJob.AddOrUpdate<CancelAbandonedPaymentsJob>(
             "cancel-abandoned-payments",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
 
         RecurringJob.AddOrUpdate<SettlementReleaseJob>(
             "release-due-settlements",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         RecurringJob.AddOrUpdate<EventReminderJob>(
             "send-event-reminders",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         RecurringJob.AddOrUpdate<DonationOverdueCheckJob>(
             "check-overdue-donations",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         RecurringJob.AddOrUpdate<TicketTransferExpiryJob>(
             "expire-ticket-transfers",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         RecurringJob.AddOrUpdate<SubscriptionExpiryWarningJob>(
             "warn-expiring-subscriptions",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         RecurringJob.AddOrUpdate<ExpireSubscriptionsJob>(
             "expire-subscriptions",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         RecurringJob.AddOrUpdate<ApplyDuePenaltiesJob>(
             "apply-due-venue-penalties",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         RecurringJob.AddOrUpdate<AutoApproveOverdueAppealsJob>(
             "auto-approve-overdue-appeals",
-            j => j.ExecuteAsync(CancellationToken.None),
+            j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
     }
 }

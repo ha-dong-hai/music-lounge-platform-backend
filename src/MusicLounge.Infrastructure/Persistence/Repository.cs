@@ -32,6 +32,30 @@ internal class Repository<T, TKey> : IRepository<T, TKey>
         Expression<Func<T, bool>> predicate, CancellationToken ct = default)
         => Set.CountAsync(predicate, ct);
 
+    public async Task<decimal> SumAsync(
+        Expression<Func<T, bool>> predicate, Expression<Func<T, decimal>> selector, CancellationToken ct = default)
+    {
+        var values = await Set.AsNoTracking().Where(predicate).Select(selector).ToListAsync(ct);
+        return values.Sum();
+    }
+
+    public async Task<(IReadOnlyList<T> Items, int TotalCount)> GetPagedAsync<TOrderKey>(
+        Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TOrderKey>> orderByDescending,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        var query = Set.AsNoTracking().Where(predicate);
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(orderByDescending)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+        return (items, total);
+    }
+
     public void Add(T entity) => Set.Add(entity);
 
     public void AddRange(IEnumerable<T> entities) => Set.AddRange(entities);

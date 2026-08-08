@@ -22,8 +22,9 @@ public sealed class TicketTransferExpiryJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(CancellationToken ct = default)
+    public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
+        var ct = cancellationToken.ShutdownToken;
         var cutoff = DateTimeOffset.UtcNow.AddHours(-ExpiryHours);
 
         // Same SQLite-translation limitation documented throughout this codebase: combining a

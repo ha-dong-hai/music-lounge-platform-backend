@@ -17,15 +17,18 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
     private readonly IUnitOfWork _uow;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IAuthAttemptTracker _authAttemptTracker;
 
     public LoginCommandHandler(
         IUnitOfWork uow,
         IPasswordHasher passwordHasher,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IAuthAttemptTracker authAttemptTracker)
     {
         _uow = uow;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
+        _authAttemptTracker = authAttemptTracker;
     }
 
     public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken ct)
@@ -34,11 +37,25 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
             .FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault();
 
+        if (user is not null)
+        {
+            var lockoutRemaining = await _authAttemptTracker.GetLockoutRemainingAsync(user.Id, ct);
+            if (lockoutRemaining is not null)
+                throw new UnauthorizedException(
+                    $"Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau {Math.Ceiling(lockoutRemaining.Value.TotalMinutes)} phút.");
+        }
+
         _dummyHash ??= _passwordHasher.Hash("timing-normalization-dummy");
         var passwordValid = _passwordHasher.Verify(user?.PasswordHash ?? _dummyHash, request.Password);
 
         if (user is null || user.PasswordHash is null || !passwordValid)
+        {
+            if (user is not null)
+                await _authAttemptTracker.RecordFailureAsync(user.Id, ct);
             throw new UnauthorizedException("Email hoặc mật khẩu không đúng.");
+        }
+
+        await _authAttemptTracker.ResetAsync(user.Id, ct);
 
         if (!user.IsActive)
             throw new UnauthorizedException("Tài khoản đã bị khóa do vi phạm quy định sử dụng. Vui lòng liên hệ hỗ trợ nếu bạn cho rằng đây là nhầm lẫn.");

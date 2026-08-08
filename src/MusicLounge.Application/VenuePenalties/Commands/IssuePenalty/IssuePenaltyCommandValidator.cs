@@ -1,4 +1,6 @@
 using FluentValidation;
+using MusicLounge.Application.Common.Interfaces;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.VenuePenalties.Commands.IssuePenalty;
 
@@ -6,9 +8,13 @@ public sealed class IssuePenaltyCommandValidator : AbstractValidator<IssuePenalt
 {
     private static readonly string[] ValidTypes = ["Warning", "Suspension", "Ban"];
 
-    public IssuePenaltyCommandValidator()
+    public IssuePenaltyCommandValidator(IUnitOfWork uow)
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0).WithMessage("LoungeId không hợp lệ.");
+        RuleFor(x => x.LoungeId)
+            .GreaterThan(0).WithMessage("LoungeId không hợp lệ.")
+            .MustAsync(async (loungeId, ct) =>
+                await uow.Repository<MusicLoungeEntity, int>().AnyAsync(l => l.Id == loungeId, ct))
+            .WithMessage("LoungeId không tồn tại.");
 
         RuleFor(x => x.PenaltyType)
             .NotEmpty()
