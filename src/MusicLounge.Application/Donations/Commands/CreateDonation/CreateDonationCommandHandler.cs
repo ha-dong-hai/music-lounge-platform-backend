@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Donations.DTOs;
@@ -55,12 +56,15 @@ internal sealed class CreateDonationCommandHandler
             displayName = donor?.FullName;
         }
 
-        // Gross = amount Audience pays. Net = amount Performer receives (after platform commission + tax)
+        // Gross = amount Audience pays. Net = amount Performer receives (after platform commission +
+        // tax) — just an ESTIMATE at this rate/moment; ProcessDonationPaymentCommandHandler
+        // overwrites it with the authoritative figure once VNPay actually confirms (rates can change
+        // in between). Uses PaymentFeeCalculator.Split — the same single source of truth as the
+        // ticket/settlement journals — instead of an independent copy of the same rounding math, so
+        // this estimate can't silently drift from the real formula if it's ever tweaked.
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
         var taxRate = await _config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
-        var platformFee = Math.Round(request.Amount * commissionRate, 2);
-        var tax = Math.Round(request.Amount * taxRate, 2);
-        var net = request.Amount - platformFee - tax;
+        var net = PaymentFeeCalculator.Split(request.Amount, commissionRate, taxRate).OwnerNet;
 
         var orderId = $"DON-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
 

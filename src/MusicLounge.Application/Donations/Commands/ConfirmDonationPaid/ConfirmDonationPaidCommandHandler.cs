@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -13,17 +14,20 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
     private readonly IDonationRepository _donationRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly ILedgerService _ledger;
+    private readonly ILogger<ConfirmDonationPaidCommandHandler> _logger;
 
     public ConfirmDonationPaidCommandHandler(
         IUnitOfWork uow,
         IDonationRepository donationRepo,
         ICurrentUserService currentUser,
-        ILedgerService ledger)
+        ILedgerService ledger,
+        ILogger<ConfirmDonationPaidCommandHandler> logger)
     {
         _uow = uow;
         _donationRepo = donationRepo;
         _currentUser = currentUser;
         _ledger = ledger;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(ConfirmDonationPaidCommand request, CancellationToken ct)
@@ -69,6 +73,11 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
             }, ct);
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Donation payout to performer confirmed: DonationId={DonationId} Net={Net} OwnerId={OwnerId} PerformerId={PerformerId} PaymentRef={PaymentRef}",
+            donation.Id, donation.Net, ownership.OwnerId, ownership.PerformerId, request.PaymentRef);
+
         return Unit.Value;
     }
 }

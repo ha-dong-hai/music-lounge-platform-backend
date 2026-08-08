@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -17,10 +18,12 @@ internal sealed class ProcessDonationPaymentCommandHandler
     private readonly ILedgerService _ledger;
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ILogger<ProcessDonationPaymentCommandHandler> _logger;
 
     public ProcessDonationPaymentCommandHandler(
         IUnitOfWork uow, IVnPayService vnPay, IDonationRepository donationRepo, INotificationService notifications,
-        ILedgerService ledger, ISystemConfigService config, IAsyncKeyedLock @lock)
+        ILedgerService ledger, ISystemConfigService config, IAsyncKeyedLock @lock,
+        ILogger<ProcessDonationPaymentCommandHandler> logger)
     {
         _uow = uow;
         _vnPay = vnPay;
@@ -29,6 +32,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
         _ledger = ledger;
         _config = config;
         _lock = @lock;
+        _logger = logger;
     }
 
     public async Task<bool> Handle(ProcessDonationPaymentCommand request, CancellationToken ct)
@@ -36,7 +40,13 @@ internal sealed class ProcessDonationPaymentCommandHandler
         var callbackResult = _vnPay.VerifyCallback(request.QueryParams);
 
         // Reject tampered/forged callbacks immediately — do NOT modify any data
-        if (!callbackResult.IsSignatureValid) return false;
+        if (!callbackResult.IsSignatureValid)
+        {
+            request.QueryParams.TryGetValue("vnp_TxnRef", out var rejectedTxnRef);
+            _logger.LogWarning(
+                "VNPay donation callback rejected: invalid signature. TxnRef={TxnRef}", rejectedTxnRef);
+            return false;
+        }
 
         request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRef);
 
@@ -62,7 +72,12 @@ internal sealed class ProcessDonationPaymentCommandHandler
         // expect — a same-day forged/replayed txnRef with a different vnp_Amount would otherwise
         // still pass. Fail closed (treat as unconfirmed) on mismatch rather than trust it.
         if (callbackResult.IsSuccess && callbackResult.Amount != donation.Gross)
+        {
+            _logger.LogWarning(
+                "VNPay donation callback amount mismatch: DonationId={DonationId} Expected={Expected} Actual={Actual}",
+                donation.Id, donation.Gross, callbackResult.Amount);
             return false;
+        }
 
         if (callbackResult.IsSuccess)
         {
@@ -74,6 +89,9 @@ internal sealed class ProcessDonationPaymentCommandHandler
         {
             // VNPay reported failure — cancel donation so it doesn't stay stuck
             donation.Status = DonationStatus.Cancelled;
+            _logger.LogWarning(
+                "VNPay donation payment failed: DonationId={DonationId} ResponseCode={ResponseCode}",
+                donation.Id, callbackResult.ResponseCode);
         }
 
         _uow.Repository<Donation, int>().Update(donation);
@@ -128,6 +146,10 @@ internal sealed class ProcessDonationPaymentCommandHandler
                     referenceType: "donation",
                     referenceId: donation.Id.ToString(),
                     ct: ct);
+
+                _logger.LogInformation(
+                    "Donation payment confirmed: DonationId={DonationId} Gross={Gross} OwnerNet={OwnerNet} OwnerId={OwnerId}",
+                    donation.Id, donation.Gross, fees.OwnerNet, info.OwnerId);
             }
         }
 
