@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
@@ -354,6 +355,15 @@ try
     app.MapControllers();
     app.MapHub<LivestreamHub>("/hubs/livestream");
     app.MapHealthChecks("/health");
+
+    // Configured (appsettings.json DashboardPath) but never actually mounted before this fix — see
+    // HangfireDashboardAdminFilter for why it's gated to Admin-only rather than left unauthenticated.
+    // Must come after UseAuthentication/UseAuthorization above so HttpContext.User is populated when
+    // the filter runs.
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireDashboardAdminFilter()]
+    });
 
     // Can't call this any earlier — JobStorage.Current (which RecurringJob.AddOrUpdate needs)
     // isn't actually initialized until Hangfire Server's hosted service starts, which only

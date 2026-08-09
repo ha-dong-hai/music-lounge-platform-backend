@@ -113,6 +113,8 @@ public static class DependencyInjection
         services.AddScoped<ExpireSubscriptionsJob>();
         services.AddScoped<ApplyDuePenaltiesJob>();
         services.AddScoped<AutoApproveOverdueAppealsJob>();
+        services.AddScoped<ModerationSlaBreachAlertJob>();
+        services.AddScoped<ComplaintSlaBreachAlertJob>();
         // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing
         // from DI — Hangfire would throw InvalidOperationException ("No service for type...")
         // the first time either fired, silently breaking event reminders and overdue-donation
@@ -227,6 +229,16 @@ public static class DependencyInjection
 
         RecurringJob.AddOrUpdate<AutoApproveOverdueAppealsJob>(
             "auto-approve-overdue-appeals",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<ModerationSlaBreachAlertJob>(
+            "alert-moderation-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<ComplaintSlaBreachAlertJob>(
+            "alert-complaint-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
     }

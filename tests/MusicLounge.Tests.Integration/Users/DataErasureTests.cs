@@ -35,7 +35,7 @@ public sealed class DataErasureTests
         var client = _factory.CreateClient();
         await client.PostAsJsonAsync("/api/v1/auth/register", new
         {
-            Email = email, Password = password, FullName = "Erase Me", Phone = (string?)null
+            Email = email, Password = password, FullName = "Erase Me", Phone = (string?)null, AcceptTerms = true
         });
 
         using var scope = _factory.Services.CreateScope();

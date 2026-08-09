@@ -32,7 +32,7 @@ public sealed class AuthTests
     private async Task RegisterAsync(HttpClient client, string email, string password)
         => await client.PostAsJsonAsync("/api/v1/auth/register", new
         {
-            Email = email, Password = password, FullName = "Test User", Phone = (string?)null
+            Email = email, Password = password, FullName = "Test User", Phone = (string?)null, AcceptTerms = true
         });
 
     /// <summary>Đăng ký rồi đánh dấu email đã xác thực thẳng trong DB — dùng cho các test không
@@ -61,7 +61,8 @@ public sealed class AuthTests
             Email = email,
             Password = "P@ssword123",
             FullName = "Test User",
-            Phone = (string?)null
+            Phone = (string?)null,
+            AcceptTerms = true
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -86,7 +87,8 @@ public sealed class AuthTests
             Email = email,
             Password = "P@ssword123",
             FullName = "Test User",
-            Phone = (string?)null
+            Phone = (string?)null,
+            AcceptTerms = true
         };
 
         await client.PostAsJsonAsync("/api/v1/auth/register", payload);

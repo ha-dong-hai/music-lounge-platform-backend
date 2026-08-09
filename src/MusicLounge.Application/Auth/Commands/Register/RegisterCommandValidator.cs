@@ -26,5 +26,10 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
         RuleFor(x => x.Role)
             .Must(r => r is "Audience" or "Owner")
             .WithMessage("Role tự đăng ký chỉ có thể là 'Audience' hoặc 'Owner'.");
+
+        // Luật 91/2025/QH15 lawful-basis requirement — must be an explicit, affirmative choice from
+        // the client (a checkbox the user actually ticks), never a pre-checked/defaulted-true value.
+        RuleFor(x => x.AcceptTerms)
+            .Equal(true).WithMessage("Bạn cần đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để đăng ký.");
     }
 }

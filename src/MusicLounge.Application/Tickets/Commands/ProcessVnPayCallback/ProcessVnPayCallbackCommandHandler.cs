@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Tickets.Events;
@@ -17,6 +18,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
     private readonly ITicketRepository _ticketRepo;
     private readonly IPublisher _publisher;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ILogger<ProcessVnPayCallbackCommandHandler> _logger;
 
     public ProcessVnPayCallbackCommandHandler(
         IUnitOfWork uow,
@@ -25,7 +27,8 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         ILivestreamRepository livestreamRepo,
         ITicketRepository ticketRepo,
         IPublisher publisher,
-        IAsyncKeyedLock @lock)
+        IAsyncKeyedLock @lock,
+        ILogger<ProcessVnPayCallbackCommandHandler> logger)
     {
         _uow = uow;
         _vnPay = vnPay;
@@ -34,16 +37,28 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         _ticketRepo = ticketRepo;
         _publisher = publisher;
         _lock = @lock;
+        _logger = logger;
     }
 
     public async Task<bool> Handle(ProcessVnPayCallbackCommand request, CancellationToken ct)
     {
         var result = _vnPay.VerifyCallback(request.QueryParams);
+        request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRefForLogging);
 
-        // Reject tampered/forged callbacks immediately — do NOT modify any data
-        if (!result.IsSignatureValid) return false;
+        // Reject tampered/forged callbacks immediately — do NOT modify any data. Logged distinctly
+        // from every other rejection below (previously this whole handler had zero logging — a
+        // forged signature, an already-processed replay, and a genuinely-confirmed payment were all
+        // indistinguishable from log output alone for this codebase's single highest-stakes inbound
+        // integration).
+        if (!result.IsSignatureValid)
+        {
+            _logger.LogWarning(
+                "VNPay ticket callback rejected — invalid signature: TxnRef={TxnRef} at {At}",
+                txnRefForLogging, DateTimeOffset.UtcNow);
+            return false;
+        }
 
-        request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRef);
+        var txnRef = txnRefForLogging;
 
         // Same VNPay retry-storm hazard as donations/subscriptions — without this lock, 2
         // near-simultaneous callbacks both read Status==Pending before either commits, both
@@ -54,17 +69,33 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         var payments = await paymentRepo.FindAsync(p => p.OrderId == txnRef, ct);
 
         var payment = payments.FirstOrDefault();
-        if (payment is null) return false;
+        if (payment is null)
+        {
+            _logger.LogWarning(
+                "VNPay ticket callback rejected — no Payment found for TxnRef={TxnRef} at {At}",
+                txnRef, DateTimeOffset.UtcNow);
+            return false;
+        }
 
         // Idempotency: VNPay có thể gọi lại nhiều lần. Nếu đã xử lý rồi thì bỏ qua
         // để tránh overwrite QrCode và tạo trùng LivestreamTicketDetail.
         if (payment.Status != PaymentStatus.Pending)
+        {
+            _logger.LogInformation(
+                "VNPay ticket callback replay — PaymentId={PaymentId} TxnRef={TxnRef} already {Status} at {At}",
+                payment.Id, txnRef, payment.Status, DateTimeOffset.UtcNow);
             return payment.Status == PaymentStatus.Confirmed;
+        }
 
         // Signature only proves VNPay sent this callback, not that it's for the amount we asked
         // for — fail closed on mismatch instead of confirming tickets for an unexpected amount.
         if (result.IsSuccess && result.Amount != payment.GrossAmount)
+        {
+            _logger.LogWarning(
+                "VNPay ticket callback rejected — amount mismatch: PaymentId={PaymentId} TxnRef={TxnRef} Expected={Expected} Received={Received} at {At}",
+                payment.Id, txnRef, payment.GrossAmount, result.Amount, DateTimeOffset.UtcNow);
             return false;
+        }
 
         var ticketRepo = _uow.Repository<Ticket, Guid>();
         var tickets = await ticketRepo.FindAsync(t => t.PaymentId == payment.Id, ct);
@@ -123,6 +154,10 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 OwnerId: ownerId,
                 TicketIds: tickets.Select(t => t.Id).ToArray(),
                 LivestreamId: null), ct);
+
+            _logger.LogInformation(
+                "VNPay ticket callback confirmed: PaymentId={PaymentId} TxnRef={TxnRef} TicketCount={TicketCount} at {At}",
+                payment.Id, txnRef, tickets.Count, DateTimeOffset.UtcNow);
         }
         else
         {
@@ -138,6 +173,10 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             }
 
             await _uow.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "VNPay ticket callback failed at gateway: PaymentId={PaymentId} TxnRef={TxnRef} ResponseCode={ResponseCode} at {At}",
+                payment.Id, txnRef, result.ResponseCode, DateTimeOffset.UtcNow);
         }
 
         return result.IsSuccess;

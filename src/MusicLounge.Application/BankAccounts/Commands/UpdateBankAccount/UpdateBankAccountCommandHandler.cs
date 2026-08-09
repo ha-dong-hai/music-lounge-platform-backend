@@ -9,11 +9,14 @@ internal sealed class UpdateBankAccountCommandHandler : IRequestHandler<UpdateBa
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IPiiEncryptionService _piiEncryption;
 
-    public UpdateBankAccountCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public UpdateBankAccountCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IPiiEncryptionService piiEncryption)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _piiEncryption = piiEncryption;
     }
 
     public async Task<Unit> Handle(UpdateBankAccountCommand request, CancellationToken ct)
@@ -35,10 +38,16 @@ internal sealed class UpdateBankAccountCommandHandler : IRequestHandler<UpdateBa
                 other.IsDefault = false;
                 repo.Update(other);
             }
+            // Commit the unset in its own round-trip before this row flips to the new default — see
+            // the identical comment in CreateBankAccountCommandHandler. Two sibling UPDATEs to the
+            // same table have no FK-driven ordering guarantee from EF within one SaveChangesAsync;
+            // the filtered unique index is checked per-statement, not deferred to commit.
+            if (others.Count > 0)
+                await _uow.SaveChangesAsync(ct);
         }
 
         account.BankName = request.BankName;
-        account.AccountNumber = request.AccountNumber;
+        account.AccountNumber = _piiEncryption.Encrypt(request.AccountNumber);
         account.AccountHolder = request.AccountHolder;
         account.IsDefault = request.IsDefault;
         // Any change to the account's own identifying details invalidates a prior manual

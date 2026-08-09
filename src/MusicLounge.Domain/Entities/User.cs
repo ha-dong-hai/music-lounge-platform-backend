@@ -25,6 +25,14 @@ public sealed class User : Common.AuditableEntity<int>
     public DateTimeOffset? PhoneVerificationCodeExpiresAt { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public bool AiConsent { get; set; } = false;
+    // Luật 91/2025/QH15's lawful-basis requirement for the DSAR machinery above — was previously
+    // entirely absent (no field, no document, no endpoint) despite erasure/export being implemented
+    // carefully. Set only on explicit, non-pre-ticked affirmative consent at registration (both
+    // local and Google sign-up), never defaulted true. TermsVersion snapshots which version was
+    // agreed to (system_config current_terms_version) so a later document change doesn't silently
+    // retroact onto users who agreed to an earlier one.
+    public DateTimeOffset? TermsAcceptedAt { get; set; }
+    public string? TermsVersion { get; set; }
     public string? PasswordResetTokenHash { get; set; }        // SHA256 hex cua token thô gửi qua email — không lưu token thô
     public DateTimeOffset? PasswordResetTokenExpiresAt { get; set; }
     public DateTimeOffset? EmailVerifiedAt { get; set; }

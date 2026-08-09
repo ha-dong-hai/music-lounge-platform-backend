@@ -18,5 +18,7 @@ public enum NotificationType
     PenaltyIssued,
     AppealResolved,
     ComplaintUpdate,
-    SubscriptionExpiring    // D14: 30/7/1 day before expiry
+    SubscriptionExpiring,   // D14: 30/7/1 day before expiry
+    DuplicatePaymentDetected, // owner double-submitted Subscribe and both VNPay payments succeeded
+    ModerationSlaBreached   // NĐ 147/2024: flagged content past its review deadline, still undecided
 }

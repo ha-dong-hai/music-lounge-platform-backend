@@ -49,7 +49,7 @@ public sealed class OwnerGoldenPathTests
         var registerRes = await anon.PostAsJsonAsync("/api/v1/auth/register", new
         {
             Email = email, Password = "P@ssword123", FullName = "Golden Path Owner",
-            Phone = (string?)null, Role = "Owner"
+            Phone = (string?)null, Role = "Owner", AcceptTerms = true
         });
         registerRes.StatusCode.Should().Be(HttpStatusCode.OK, "register with Role=Owner must be accepted");
 

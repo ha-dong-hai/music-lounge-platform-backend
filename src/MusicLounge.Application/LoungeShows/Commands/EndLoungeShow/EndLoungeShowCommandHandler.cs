@@ -16,13 +16,16 @@ internal sealed class EndLoungeShowCommandHandler : IRequestHandler<EndLoungeSho
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamRepository _livestreamRepo;
+    private readonly ISystemConfigService _config;
 
     public EndLoungeShowCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, ILivestreamRepository livestreamRepo)
+        IUnitOfWork uow, ICurrentUserService currentUser, ILivestreamRepository livestreamRepo,
+        ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
         _livestreamRepo = livestreamRepo;
+        _config = config;
     }
 
     public async Task<Unit> Handle(EndLoungeShowCommand request, CancellationToken ct)
@@ -45,9 +48,10 @@ internal sealed class EndLoungeShowCommandHandler : IRequestHandler<EndLoungeSho
                 "Show này có livestream — dùng chức năng kết thúc livestream thay vì lệnh này.");
 
         var now = DateTimeOffset.UtcNow;
+        var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
         show.Status = LoungeShowStatus.Ended;
         show.ActualEnd = now;
-        show.RatingOpenUntil = now.AddDays(7);   // §6.13
+        show.RatingOpenUntil = now.AddDays(ratingWindowDays);   // §6.13
         showRepo.Update(show);
 
         await _uow.SaveChangesAsync(ct);

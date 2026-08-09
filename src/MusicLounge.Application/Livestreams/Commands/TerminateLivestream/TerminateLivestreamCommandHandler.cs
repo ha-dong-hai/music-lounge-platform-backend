@@ -14,6 +14,7 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamServiceFactory _factory;
     private readonly ILivestreamHubService _hubService;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<TerminateLivestreamCommandHandler> _logger;
 
     public TerminateLivestreamCommandHandler(
@@ -21,12 +22,14 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         ICurrentUserService currentUser,
         ILivestreamServiceFactory factory,
         ILivestreamHubService hubService,
+        ISystemConfigService config,
         ILogger<TerminateLivestreamCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _factory = factory;
         _hubService = hubService;
+        _config = config;
         _logger = logger;
     }
 
@@ -60,9 +63,10 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
         if (show is not null)
         {
+            var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
             show.Status = LoungeShowStatus.Ended;
             show.ActualEnd = now;
-            show.RatingOpenUntil = now.AddDays(7);   // §6.13 — show da dien (du bi cat ngang) van cho rate
+            show.RatingOpenUntil = now.AddDays(ratingWindowDays);   // §6.13 — show da dien (du bi cat ngang) van cho rate
             _uow.Repository<LoungeShow, int>().Update(show);
         }
 

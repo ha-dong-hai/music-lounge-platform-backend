@@ -34,9 +34,14 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — NĐ 52/2024",                  UpdatedAt = seed },
             new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Platform fee rate (5%) — NĐ 117/2025",                            UpdatedAt = seed },
             new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "VAT withheld at source (5%) — NĐ 117/2025",                       UpdatedAt = seed },
-            // Settlement schedule
-            new { Id = 4,  ConfigKey = "settlement_days_before",             ConfigValue = "3",    DataType = ConfigDataType.Integer,  Description = "Days before scheduled_start to release partial settlement",         UpdatedAt = seed },
-            new { Id = 5,  ConfigKey = "settlement_days_after",              ConfigValue = "3",    DataType = ConfigDataType.Integer,  Description = "Days after actual_end to release final settlement",                 UpdatedAt = seed },
+            // Settlement schedule — timing researched against comparable ticketing-platform payout
+            // practice (Eventbrite: payout processing begins ~3 days post-event, final settlement up
+            // to 14 business days for larger events) and wired into ScheduleSettlementHandler
+            // 2026-08-09; previously these two keys existed but were never read by any code, and
+            // their old description ("before scheduled_start"/"after actual_end") didn't match the
+            // handler's actual (and better-grounded) after-show-end timing.
+            new { Id = 4,  ConfigKey = "settlement_partial_hours_after_show", ConfigValue = "48",   DataType = ConfigDataType.Integer,  Description = "Hours after show end to release the partial (Tier pre_rate) tranche", UpdatedAt = seed },
+            new { Id = 5,  ConfigKey = "settlement_final_days_after_show",    ConfigValue = "14",   DataType = ConfigDataType.Integer,  Description = "Days after show end to release the final tranche",                  UpdatedAt = seed },
             new { Id = 6,  ConfigKey = "settlement_completion_threshold_pct",ConfigValue = "0.70", DataType = ConfigDataType.Decimal,  Description = "D16: min actual/scheduled ratio for auto-release final settlement", UpdatedAt = seed },
             // Settlement tier pre_rates (D3)
             new { Id = 7,  ConfigKey = "settlement_tier_new_pre_rate",       ConfigValue = "0.50", DataType = ConfigDataType.Decimal,  Description = "D3 Tier Mới: pre_rate for venues score<3.5 or <3 shows",          UpdatedAt = seed },
@@ -57,7 +62,25 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             // Ratings & Appeals
             new { Id = 18, ConfigKey = "rating_window_days",                 ConfigValue = "7",    DataType = ConfigDataType.Integer,  Description = "Days after show end to submit rating — §6.13",                    UpdatedAt = seed },
             new { Id = 19, ConfigKey = "appeal_sla_hours",                   ConfigValue = "48",   DataType = ConfigDataType.Integer,  Description = "Hours for Admin to review penalty appeal — §6.17",                UpdatedAt = seed },
-            new { Id = 20, ConfigKey = "appeal_auto_approve",                ConfigValue = "true", DataType = ConfigDataType.Boolean,  Description = "Auto-approve appeal when Admin misses SLA — §6.17",               UpdatedAt = seed }
+            new { Id = 20, ConfigKey = "appeal_auto_approve",                ConfigValue = "true", DataType = ConfigDataType.Boolean,  Description = "Auto-approve appeal when Admin misses SLA — §6.17",               UpdatedAt = seed },
+            // NĐ 85/2021 requires the platform be the complaint-handling focal point but doesn't
+            // itself specify a numeric deadline — this is a reasonable operational target, not a
+            // literal statutory figure (contrast with moderation_sla_hours, which does cite one).
+            new { Id = 22, ConfigKey = "complaint_sla_hours",                ConfigValue = "72",   DataType = ConfigDataType.Integer,  Description = "Operational target to resolve a consumer complaint — NĐ 85/2021",  UpdatedAt = seed },
+            // Placeholder — no real Terms of Service/Privacy Policy document exists yet (2026-08-09).
+            // Update this value the moment a real document is published; every new registration
+            // snapshots whatever this currently says onto User.TermsVersion.
+            new { Id = 23, ConfigKey = "current_terms_version",              ConfigValue = "v0-placeholder-pending-legal-review", DataType = ConfigDataType.String, Description = "Version label of the currently-published ToS/Privacy Policy — Luật 91/2025/QH15 lawful-basis consent", UpdatedAt = seed },
+            // Newly wired 2026-08-09: values below previously existed only as hardcoded literals in
+            // handler/validator/job code (some contradicting this very table's "never hardcode"
+            // convention on the line right next to them). Defaults preserve existing behavior exactly.
+            new { Id = 24, ConfigKey = "publish_min_business_days_lead_time", ConfigValue = "7",        DataType = ConfigDataType.Integer, Description = "Min business days between publish/reschedule and show date — NĐ 144/2020 Điều 10", UpdatedAt = seed },
+            new { Id = 25, ConfigKey = "penalty_suspension_notice_hours",     ConfigValue = "24",       DataType = ConfigDataType.Integer, Description = "Notice hours before a Suspension penalty takes effect — §6.8",     UpdatedAt = seed },
+            new { Id = 26, ConfigKey = "penalty_ban_notice_days",             ConfigValue = "7",        DataType = ConfigDataType.Integer, Description = "Notice days before a Ban penalty takes effect — §6.8",            UpdatedAt = seed },
+            new { Id = 27, ConfigKey = "ticket_hold_max_quantity",            ConfigValue = "10",       DataType = ConfigDataType.Integer, Description = "Max tickets per checkout hold — anti-scalping ceiling",           UpdatedAt = seed },
+            new { Id = 28, ConfigKey = "walkin_ticket_max_quantity",          ConfigValue = "20",       DataType = ConfigDataType.Integer, Description = "Max tickets per walk-in/box-office sale — anti-abuse ceiling",    UpdatedAt = seed },
+            new { Id = 29, ConfigKey = "donation_max_amount",                 ConfigValue = "50000000", DataType = ConfigDataType.Decimal, Description = "Max single donation amount (VND) — anti-fraud ceiling",           UpdatedAt = seed },
+            new { Id = 30, ConfigKey = "ticket_transfer_expiry_hours",        ConfigValue = "48",       DataType = ConfigDataType.Integer, Description = "Hours before an unanswered ticket-transfer request auto-cancels", UpdatedAt = seed }
         );
     }
 }

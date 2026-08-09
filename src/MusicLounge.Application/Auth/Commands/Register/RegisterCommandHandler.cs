@@ -15,15 +15,18 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
     private readonly IUnitOfWork _uow;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IBackgroundJobService _backgroundJobs;
+    private readonly ISystemConfigService _config;
 
     public RegisterCommandHandler(
         IUnitOfWork uow,
         IPasswordHasher passwordHasher,
-        IBackgroundJobService backgroundJobs)
+        IBackgroundJobService backgroundJobs,
+        ISystemConfigService config)
     {
         _uow = uow;
         _passwordHasher = passwordHasher;
         _backgroundJobs = backgroundJobs;
+        _config = config;
     }
 
     public async Task<RegisterResultDto> Handle(RegisterCommand request, CancellationToken ct)
@@ -35,6 +38,9 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 
         var code = GenerateVerificationCode();
         var expiresAt = DateTimeOffset.UtcNow.Add(CodeLifetime);
+        var now = DateTimeOffset.UtcNow;
+        var termsVersion = await _config.GetStringAsync(
+            ConfigKeys.CurrentTermsVersion, ConfigKeys.CurrentTermsVersionDefault, ct);
 
         var user = new User
         {
@@ -46,6 +52,10 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
             Role = Enum.Parse<UserRole>(request.Role, ignoreCase: true),
             EmailVerificationCodeHash = PasswordResetTokenHasher.Hash(code),
             EmailVerificationCodeExpiresAt = expiresAt,
+            // Validator already rejects AcceptTerms=false — this records WHEN and WHICH version,
+            // not just that the checkbox existed.
+            TermsAcceptedAt = now,
+            TermsVersion = termsVersion,
             CreatedAt = DateTime.UtcNow
         };
 

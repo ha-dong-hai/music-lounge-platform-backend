@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MusicLounge.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809085114_NNN1_TermsConsentCapture")]
+    partial class NNN1_TermsConsentCapture
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2271,69 +2274,6 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigValue = "v0-placeholder-pending-legal-review",
                             DataType = "String",
                             Description = "Version label of the currently-published ToS/Privacy Policy — Luật 91/2025/QH15 lawful-basis consent",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 24,
-                            ConfigKey = "publish_min_business_days_lead_time",
-                            ConfigValue = "7",
-                            DataType = "Integer",
-                            Description = "Min business days between publish/reschedule and show date — NĐ 144/2020 Điều 10",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 25,
-                            ConfigKey = "penalty_suspension_notice_hours",
-                            ConfigValue = "24",
-                            DataType = "Integer",
-                            Description = "Notice hours before a Suspension penalty takes effect — §6.8",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 26,
-                            ConfigKey = "penalty_ban_notice_days",
-                            ConfigValue = "7",
-                            DataType = "Integer",
-                            Description = "Notice days before a Ban penalty takes effect — §6.8",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 27,
-                            ConfigKey = "ticket_hold_max_quantity",
-                            ConfigValue = "10",
-                            DataType = "Integer",
-                            Description = "Max tickets per checkout hold — anti-scalping ceiling",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 28,
-                            ConfigKey = "walkin_ticket_max_quantity",
-                            ConfigValue = "20",
-                            DataType = "Integer",
-                            Description = "Max tickets per walk-in/box-office sale — anti-abuse ceiling",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 29,
-                            ConfigKey = "donation_max_amount",
-                            ConfigValue = "50000000",
-                            DataType = "Decimal",
-                            Description = "Max single donation amount (VND) — anti-fraud ceiling",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = 30,
-                            ConfigKey = "ticket_transfer_expiry_hours",
-                            ConfigValue = "48",
-                            DataType = "Integer",
-                            Description = "Hours before an unanswered ticket-transfer request auto-cancels",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });

@@ -14,17 +14,20 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
     private readonly IUnitOfWork _uow;
     private readonly ILivestreamServiceFactory _factory;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<EndLivestreamCommandHandler> _logger;
 
     public EndLivestreamCommandHandler(
         IUnitOfWork uow,
         ILivestreamServiceFactory factory,
         ICurrentUserService currentUser,
+        ISystemConfigService config,
         ILogger<EndLivestreamCommandHandler> logger)
     {
         _uow = uow;
         _factory = factory;
         _currentUser = currentUser;
+        _config = config;
         _logger = logger;
     }
 
@@ -52,9 +55,10 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
         livestream.ViewerCount = 0;
         _uow.Repository<Livestream, int>().Update(livestream);
 
+        var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
         show.Status = LoungeShowStatus.Ended;
         show.ActualEnd = now;
-        show.RatingOpenUntil = now.AddDays(7);   // §6.13
+        show.RatingOpenUntil = now.AddDays(ratingWindowDays);   // §6.13
         _uow.Repository<LoungeShow, int>().Update(show);
 
         await _uow.SaveChangesAsync(ct);

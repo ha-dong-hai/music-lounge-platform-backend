@@ -13,15 +13,17 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<IssuePenaltyCommandHandler> _logger;
 
     public IssuePenaltyCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
-        ILogger<IssuePenaltyCommandHandler> logger)
+        ISystemConfigService config, ILogger<IssuePenaltyCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _config = config;
         _logger = logger;
     }
 
@@ -35,13 +37,16 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
         var now = DateTimeOffset.UtcNow;
 
         // §6.8 — each severity takes effect on its own delay, giving the Owner notice before it
-        // bites: warning is immediate, suspension +24h, ban +7 days. ApplyDuePenaltiesJob applies
-        // the venue-status change and subscription compensation once EffectiveAt arrives.
+        // bites: warning is immediate, suspension +notice hours, ban +notice days.
+        // ApplyDuePenaltiesJob applies the venue-status change and subscription compensation once
+        // EffectiveAt arrives.
+        var suspensionNoticeHours = await _config.GetIntAsync(ConfigKeys.PenaltySuspensionNoticeHours, 24, ct);
+        var banNoticeDays = await _config.GetIntAsync(ConfigKeys.PenaltyBanNoticeDays, 7, ct);
         var effectiveAt = penaltyType switch
         {
             PenaltyType.Warning => now,
-            PenaltyType.Suspension => now.AddHours(24),
-            PenaltyType.Ban => now.AddDays(7),
+            PenaltyType.Suspension => now.AddHours(suspensionNoticeHours),
+            PenaltyType.Ban => now.AddDays(banNoticeDays),
             _ => now
         };
 

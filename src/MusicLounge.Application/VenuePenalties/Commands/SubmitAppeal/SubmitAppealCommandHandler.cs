@@ -13,15 +13,17 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<SubmitAppealCommandHandler> _logger;
 
     public SubmitAppealCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
-        ILogger<SubmitAppealCommandHandler> logger)
+        ISystemConfigService config, ILogger<SubmitAppealCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _config = config;
         _logger = logger;
     }
 
@@ -44,11 +46,12 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
             throw new DomainException("Phạt này đã được kháng cáo trước đó.");
 
         var now = DateTimeOffset.UtcNow;
+        // §6.17 — SLA for Admin to resolve; auto-approved (Overturned) if missed, protecting the
+        // Owner from being wrongly penalized by an unattended appeal.
+        var slaHours = await _config.GetIntAsync(ConfigKeys.AppealSlaHours, 48, ct);
         penalty.AppealedAt = now;
         penalty.AppealReason = request.AppealReason;
-        // §6.17 — 48h SLA for Admin to resolve; auto-approved (Overturned) if missed, protecting
-        // the Owner from being wrongly penalized by an unattended appeal.
-        penalty.AppealDeadline = now.AddHours(48);
+        penalty.AppealDeadline = now.AddHours(slaHours);
         penalty.Status = PenaltyStatus.Appealed;
         penaltyRepo.Update(penalty);
         await _uow.SaveChangesAsync(ct);

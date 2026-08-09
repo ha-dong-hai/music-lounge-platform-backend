@@ -49,10 +49,23 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         if (ownership.OwnerId != _currentUser.UserId)
             throw new ForbiddenException("Chỉ Owner của venue này mới có thể xác nhận thanh toán cho nghệ sĩ.");
 
+        // Snapshot which bank account this payout actually went to — Donation.BankAccountId was
+        // previously defined and commented "D12: FK snapshot" but never assigned anywhere, leaving
+        // every confirmed payout with no system-of-record for its destination. Fail closed rather
+        // than confirm a payment silently going nowhere on record: the Owner is asserting money
+        // already moved (PaymentRef/evidence prove it), so demand the performer profile actually
+        // has a payout account registered before that assertion is accepted.
+        var performerAccounts = await _uow.Repository<BankAccount, int>().FindAsync(
+            a => a.OwnerType == BankAccountOwnerType.Performer && a.OwnerId == ownership.PerformerId && a.IsDefault, ct);
+        var bankAccountId = performerAccounts.FirstOrDefault()?.Id
+            ?? throw new DomainException(
+                "Nghệ sĩ chưa đăng ký tài khoản ngân hàng mặc định — không thể xác nhận đã thanh toán cho tới khi có tài khoản để ghi nhận.");
+
         donation.Status = DonationStatus.PerformerPaid;
         donation.OwnerPaidAt = DateTimeOffset.UtcNow;
         donation.PaymentRef = request.PaymentRef;
         donation.PaymentEvidenceUrl = request.PaymentEvidenceUrl;
+        donation.BankAccountId = bankAccountId;
 
         _uow.Repository<Donation, int>().Update(donation);
 

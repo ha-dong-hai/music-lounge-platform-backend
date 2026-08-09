@@ -47,7 +47,7 @@ public sealed class SettlementReleaseJob
         if (due.Count == 0) return;
 
         var threshold = await _config.GetDecimalAsync(
-            "settlement_completion_threshold_pct", 0.70m, ct);
+            ConfigKeys.SettlementCompletionThresholdPct, 0.70m, ct);
 
         foreach (var settlement in due)
         {

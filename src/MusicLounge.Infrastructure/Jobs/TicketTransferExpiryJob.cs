@@ -6,26 +6,28 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Jobs;
 
-// Chuyen nhuong ve khong duoc accept/tu choi trong 48h thi tu dong huy, tra ve lai trang thai
-// binh thuong cho chu cu (khong xoa ve, chi clear pending fields).
+// Chuyen nhuong ve khong duoc accept/tu choi trong X gio (system_config: ticket_transfer_expiry_hours)
+// thi tu dong huy, tra ve lai trang thai binh thuong cho chu cu (khong xoa ve, chi clear pending fields).
 public sealed class TicketTransferExpiryJob
 {
-    private const int ExpiryHours = 48;
-
     private readonly ApplicationDbContext _ctx;
     private readonly INotificationService _notifications;
+    private readonly ISystemConfigService _config;
 
-    public TicketTransferExpiryJob(ApplicationDbContext ctx, INotificationService notifications)
+    public TicketTransferExpiryJob(
+        ApplicationDbContext ctx, INotificationService notifications, ISystemConfigService config)
     {
         _ctx = ctx;
         _notifications = notifications;
+        _config = config;
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
     public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
         var ct = cancellationToken.ShutdownToken;
-        var cutoff = DateTimeOffset.UtcNow.AddHours(-ExpiryHours);
+        var expiryHours = await _config.GetIntAsync(ConfigKeys.TicketTransferExpiryHours, 48, ct);
+        var cutoff = DateTimeOffset.UtcNow.AddHours(-expiryHours);
 
         // Same SQLite-translation limitation documented throughout this codebase: combining a
         // simple predicate (!= null) with a DateTimeOffset comparison in one query doesn't
@@ -48,13 +50,13 @@ public sealed class TicketTransferExpiryJob
                 await _notifications.NotifyAsync(
                     senderId, NotificationType.EventReminder,
                     "Yêu cầu chuyển nhượng vé đã hết hạn",
-                    "Yêu cầu chuyển nhượng vé của bạn đã hết hạn sau 48 giờ vì người nhận chưa phản hồi.",
+                    $"Yêu cầu chuyển nhượng vé của bạn đã hết hạn sau {expiryHours} giờ vì người nhận chưa phản hồi.",
                     referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
 
             await _notifications.NotifyAsync(
                 recipientId, NotificationType.EventReminder,
                 "Lời mời nhận vé đã hết hạn",
-                "Lời mời nhận chuyển nhượng vé đã hết hạn vì bạn chưa phản hồi trong 48 giờ.",
+                $"Lời mời nhận chuyển nhượng vé đã hết hạn vì bạn chưa phản hồi trong {expiryHours} giờ.",
                 referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
         }
 

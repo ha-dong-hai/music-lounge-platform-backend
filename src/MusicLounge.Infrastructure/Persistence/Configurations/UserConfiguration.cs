@@ -21,6 +21,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.IsActive).HasDefaultValue(true);
         b.Property(u => u.DateOfBirth);
         b.Property(u => u.AiConsent).HasDefaultValue(false);
+        b.Property(u => u.TermsVersion).HasMaxLength(50);
         b.Property(u => u.PasswordResetTokenHash).HasMaxLength(64);
         b.Property(u => u.EmailVerificationCodeHash).HasMaxLength(64);
         // Ciphertext (IPiiEncryptionService), much longer than the raw 9-12 digit number —

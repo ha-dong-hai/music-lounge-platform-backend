@@ -8,5 +8,6 @@ public sealed record RegisterCommand(
     string Password,
     string FullName,
     string? Phone,
+    bool AcceptTerms,
     string Role = "Audience"
 ) : ICommand<RegisterResultDto>;

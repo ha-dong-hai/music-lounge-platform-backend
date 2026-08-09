@@ -35,9 +35,27 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
         // violation/deadlock/timeout that su) — log ERROR de operator van thay, du response
         // khong can bao dong voi nguoi dung.
         if (status >= 500 || ex is DbUpdateException)
+        {
             _logger.LogError(ex, "Unhandled server error: {Message}", ex.Message);
+        }
+        else if (ex is ForbiddenException)
+        {
+            // Distinct event name/level from routine business exceptions on purpose — a spike of
+            // these against different resource IDs from the same account is exactly the signature of
+            // IDOR/cross-tenant probing, and it was previously indistinguishable in logs from a
+            // routine "ticket not found" (both landed on the same generic "Business exception" line).
+            // Nothing currently ships this anywhere alert-able (see role-devops-release-readiness's
+            // finding — Console + local rolling file only), but a distinct, filterable event name is
+            // the prerequisite for that to ever be wired up.
+            var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "anonymous";
+            _logger.LogWarning(
+                "Authorization denied: UserId={UserId} Path={Path} Method={Method} Message={Message} at {At}",
+                userId, ctx.Request.Path, ctx.Request.Method, ex.Message, DateTimeOffset.UtcNow);
+        }
         else
+        {
             _logger.LogWarning("Business exception {ExceptionType}: {Message}", ex.GetType().Name, ex.Message);
+        }
 
         ctx.Response.ContentType = "application/json";
         ctx.Response.StatusCode = status;

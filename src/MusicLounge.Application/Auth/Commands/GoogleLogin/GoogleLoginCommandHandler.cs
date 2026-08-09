@@ -12,15 +12,18 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
     private readonly IUnitOfWork _uow;
     private readonly IGoogleTokenVerifier _googleTokenVerifier;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly ISystemConfigService _config;
 
     public GoogleLoginCommandHandler(
         IUnitOfWork uow,
         IGoogleTokenVerifier googleTokenVerifier,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        ISystemConfigService config)
     {
         _uow = uow;
         _googleTokenVerifier = googleTokenVerifier;
         _jwtTokenService = jwtTokenService;
+        _config = config;
     }
 
     public async Task<AuthResultDto> Handle(GoogleLoginCommand request, CancellationToken ct)
@@ -59,6 +62,16 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
             }
             else
             {
+                // Luật 91/2025/QH15 lawful-basis requirement — same as local registration. Only
+                // enforced here, in the branch that actually creates a new User row; an existing
+                // account (found by GoogleId or linked by email above) doesn't need to re-consent.
+                if (!request.AcceptTerms)
+                    throw new DomainException(
+                        "Bạn cần đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để đăng ký.");
+
+                var termsVersion = await _config.GetStringAsync(
+                    ConfigKeys.CurrentTermsVersion, ConfigKeys.CurrentTermsVersionDefault, ct);
+
                 user = new User
                 {
                     Email = googleInfo.Email,
@@ -68,6 +81,8 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
                     AuthProvider = "google",
                     PasswordHash = null,
                     EmailVerifiedAt = DateTimeOffset.UtcNow,
+                    TermsAcceptedAt = DateTimeOffset.UtcNow,
+                    TermsVersion = termsVersion,
                     CreatedAt = DateTime.UtcNow
                 };
                 userRepo.Add(user);

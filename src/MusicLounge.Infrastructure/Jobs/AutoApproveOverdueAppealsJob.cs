@@ -8,7 +8,8 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Jobs;
 
 /// <summary>
-/// §6.17 — Appeal SLA is 48h; if Admin hasn't resolved it by AppealDeadline, auto-approve
+/// §6.17 — Appeal SLA (system_config: appeal_sla_hours) sets each penalty's AppealDeadline at
+/// submission time (see SubmitAppealCommandHandler); if Admin hasn't resolved it by then, auto-approve
 /// (Overturned) so an unattended appeal never leaves an Owner penalized indefinitely.
 /// </summary>
 public sealed class AutoApproveOverdueAppealsJob
@@ -52,7 +53,7 @@ public sealed class AutoApproveOverdueAppealsJob
             if (current is null || current.Status != PenaltyStatus.Appealed) continue;
 
             current.Status = PenaltyStatus.Overturned;
-            current.AppealResult = "Overturned (auto — quá hạn SLA 48h)";
+            current.AppealResult = "Overturned (auto — quá hạn SLA kháng cáo)";
             current.ReviewedAt = now;
 
             var lounge = await _ctx.Lounges.FirstOrDefaultAsync(l => l.Id == current.LoungeId, ct);
@@ -76,7 +77,7 @@ public sealed class AutoApproveOverdueAppealsJob
                 lounge.OwnerId,
                 NotificationType.AppealResolved,
                 "Kháng cáo tự động được chấp thuận",
-                $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong 48h — kháng cáo được " +
+                $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong thời hạn SLA — kháng cáo được " +
                 "tự động chấp thuận, venue trở lại hoạt động bình thường.",
                 referenceType: "venue_penalty",
                 referenceId: current.Id.ToString(),

@@ -53,6 +53,9 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
 
         ValidateSaleWindow(price);
 
+        int holdId;
+        DateTimeOffset holdExpiresAt;
+
         // Serialize quota-check-then-reserve per show: without this, two buyers can both read
         // "seats available" before either has written their hold, and both pass — overselling
         // the show. See IShowBookingLock for the horizontal-scaling caveat.
@@ -74,10 +77,21 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             _uow.Repository<TicketHold, int>().Add(hold);
             await _uow.SaveChangesAsync(ct);
 
-            await NotifyIfLowStockAsync(price, show, request.Quantity, ct);
-
-            return new HoldTicketResultDto(hold.Id, hold.ExpiresAt);
+            holdId = hold.Id;
+            holdExpiresAt = hold.ExpiresAt;
         }
+
+        // Deliberately OUTSIDE the lock: the invariant the lock protects (no overselling) is already
+        // fully committed by this point. NotifyIfLowStockAsync does a handful of reads plus one
+        // synchronous Hangfire enqueue per wishlister — on a popular show crossing the low-stock
+        // threshold (i.e. exactly when many buyers are racing for the last seats), that's real I/O
+        // with unbounded cardinality that has nothing to do with quota correctness. Holding the
+        // per-show semaphore through it previously serialized every OTHER concurrent buyer behind
+        // whichever request happened to trip the threshold, turning the show's sellout moment into a
+        // self-inflicted bottleneck.
+        await NotifyIfLowStockAsync(price, show, request.Quantity, ct);
+
+        return new HoldTicketResultDto(holdId, holdExpiresAt);
     }
 
     private async Task NotifyIfLowStockAsync(

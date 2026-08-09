@@ -18,6 +18,12 @@ public sealed class Complaint : Common.BaseEntity<int>
     public ComplaintResolvedAction? ResolvedAction { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    // NĐ 85/2021: platform must be the focal point for receiving/resolving consumer complaints —
+    // the decree doesn't specify a numeric deadline itself (unlike DSAR's day-based windows), so
+    // this is a reasonable operational target (system_config complaint_sla_hours, Admin-tunable),
+    // not a literal statutory number. Set at creation. Mirrors EventModeration.SlaDeadline, which
+    // this codebase already has a working breach-alert pattern for.
+    public DateTimeOffset? SlaDeadline { get; set; }
 
     public User? Complainant { get; set; }
     public User? Admin { get; set; }

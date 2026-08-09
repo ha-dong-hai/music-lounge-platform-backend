@@ -217,6 +217,59 @@ public sealed class ComplianceTests
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    /// <summary>
+    /// D18 is enforced with a strict "&lt;" (PublishLoungeShowCommandHandler.cs: businessDaysUntilShow &lt; 7),
+    /// so exactly 7 business days must pass and exactly 6 must fail. The two tests above never hit
+    /// that line — +2 calendar days and +20 calendar days are both comfortably inside their zone,
+    /// not at the boundary itself. This walks the calendar forward counting only Mon-Sat (matching
+    /// BusinessDayCalculator's own Sat/Sun exclusion) so the test is deterministic regardless of
+    /// which weekday CI happens to run on.
+    /// </summary>
+    private static DateTimeOffset DateExactlyNBusinessDaysOut(int n)
+    {
+        var cursor = DateTimeOffset.UtcNow.Date;
+        var count = 0;
+        while (count < n)
+        {
+            cursor = cursor.AddDays(1);
+            if (cursor.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday)
+                count++;
+        }
+        // Mid-afternoon so ScheduledStart is unambiguously "on" that business day regardless of the
+        // exact UTC time the test happens to run at.
+        return new DateTimeOffset(cursor, TimeSpan.Zero).AddHours(14);
+    }
+
+    [Fact]
+    public async Task Publish_WithReferenceAndExactly6BusinessDays_Returns422()
+    {
+        var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(6));
+        await AddTierAsync(showId);
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
+            new { LegalApprovalReference = "SoVHTT-BOUNDARY-6" });
+
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "6 business days is one short of the >=7 requirement — must still be rejected at the boundary, not just when wildly early");
+    }
+
+    [Fact]
+    public async Task Publish_WithReferenceAndExactly7BusinessDays_Returns204()
+    {
+        var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(7));
+        await AddTierAsync(showId);
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
+            new { LegalApprovalReference = "SoVHTT-BOUNDARY-7" });
+
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "exactly 7 business days is the minimum that must pass — the check is strict '<', not '<='");
+    }
+
     // ─── D19 VCPMC royalty ────────────────────────────────────────────────────
 
     private async Task<int> CreatePublishedApprovedShowAsync()

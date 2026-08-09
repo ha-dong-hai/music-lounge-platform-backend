@@ -1,27 +1,39 @@
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Jobs;
 
 /// <summary>
-/// D4: Owner không xác nhận trong 24h → auto-confirm + flag auto_confirmed=true cho Admin biết.
+/// D4: Owner không xác nhận trong donation_hold_days ngày → auto-confirm + flag auto_confirmed=true
+/// cho Admin biết. Window is config-driven (default 7 days) rather than hardcoded — research against
+/// comparable escrow-style intermediary-confirmation patterns (Upwork: 14-day auto-release if
+/// unresponded; Fiverr: 3-day response window + 14-day grace period) found the originally-hardcoded
+/// 24h here to be far more aggressive than any real comparable, while the 7-day value already seeded
+/// in system_config under this exact key was never actually wired in until now.
 /// </summary>
 public sealed class AutoConfirmDonationsJob
 {
     private readonly ApplicationDbContext _ctx;
+    private readonly ISystemConfigService _config;
 
-    public AutoConfirmDonationsJob(ApplicationDbContext ctx) => _ctx = ctx;
+    public AutoConfirmDonationsJob(ApplicationDbContext ctx, ISystemConfigService config)
+    {
+        _ctx = ctx;
+        _config = config;
+    }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
     public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
         var ct = cancellationToken.ShutdownToken;
-        var cutoff = DateTimeOffset.UtcNow.AddHours(-24);
+        var holdDays = await _config.GetIntAsync(ConfigKeys.DonationHoldDays, 7, ct);
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-holdDays);
 
-        // Use PaymentConfirmedAt (not CreatedAt) so the 24h window starts when VNPay confirmed,
-        // giving the Owner a full 24h regardless of how long VNPay took to process the payment.
+        // Use PaymentConfirmedAt (not CreatedAt) so the hold window starts when VNPay confirmed,
+        // giving the Owner the full window regardless of how long VNPay took to process the payment.
         //
         // Combining the Status/null-check predicates with the PaymentConfirmedAt comparison in
         // one Where doesn't translate under the SQLite provider used in tests — filter

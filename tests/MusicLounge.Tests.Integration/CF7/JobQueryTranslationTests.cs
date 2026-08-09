@@ -192,7 +192,7 @@ public sealed class JobQueryTranslationTests
                 DonorUserId = SeedHelper.AudienceId, PerformanceId = SeedHelper.PerformanceId,
                 Gross = 50_000m, Net = 45_000m, Status = DonationStatus.PendingOwnerAck,
                 GatewayRef = $"AUTOCONFIRM-{Guid.NewGuid():N}",
-                PaymentConfirmedAt = DateTimeOffset.UtcNow.AddHours(-25) // past the 24h auto-confirm window
+                PaymentConfirmedAt = DateTimeOffset.UtcNow.AddDays(-8) // past the 7-day auto-confirm window (donation_hold_days, config-driven since 2026-08-09 — was hardcoded 24h)
             };
             db.Add(donation);
             await db.SaveChangesAsync();

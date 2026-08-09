@@ -297,6 +297,61 @@ public sealed class EventManagementTests
         body.Should().Contain("\"status\":\"Draft\"");
     }
 
+    [Fact]
+    public async Task ReviewShow_AsNonAdmin_Returns403()
+    {
+        var showId = await CreateShowAsync();
+        await CreateTierAsync(showId);
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+
+        var res = await ownerClient.PostAsJsonAsync(
+            $"/api/v1/moderations/shows/{showId}/review",
+            new { Decision = "Approved", ReviewNote = "OK" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task ReviewShow_AlreadyDecided_Returns409()
+    {
+        var showId = await CreateShowAsync();
+        await CreateTierAsync(showId);
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var first = await adminClient.PostAsJsonAsync(
+            $"/api/v1/moderations/shows/{showId}/review",
+            new { Decision = "Approved", ReviewNote = "OK" });
+        first.EnsureSuccessStatusCode();
+
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/moderations/shows/{showId}/review",
+            new { Decision = "Approved", ReviewNote = "OK again" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task ReviewShow_InvalidDecisionString_Returns400()
+    {
+        var showId = await CreateShowAsync();
+        await CreateTierAsync(showId);
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/moderations/shows/{showId}/review",
+            new { Decision = "Terminated", ReviewNote = "Not a valid review decision" });
+
+        // FluentValidation rejects anything other than Approved/Rejected before the handler's own
+        // Enum.TryParse check ever runs — so this lands as a 400 ValidationException, not the 422
+        // DomainException the handler would produce if it were ever reached directly.
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     // ─── D15: online show requires a Livestream before publish ───────────────
 
     [Fact]

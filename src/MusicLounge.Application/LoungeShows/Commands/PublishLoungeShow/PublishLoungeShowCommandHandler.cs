@@ -74,11 +74,12 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
                 "Event bán vé cần khai báo văn bản chấp thuận tổ chức biểu diễn (NĐ 144/2020 Điều 10) " +
                 "trước khi nộp duyệt.");
 
+        var minLeadDays = await _config.GetIntAsync(ConfigKeys.PublishMinBusinessDaysLeadTime, 7, ct);
         var businessDaysUntilShow = BusinessDayCalculator.CountBusinessDaysBetween(
             DateTimeOffset.UtcNow, show.ScheduledStart);
-        if (businessDaysUntilShow < 7)
+        if (businessDaysUntilShow < minLeadDays)
             throw new DomainException(
-                "Theo NĐ 144/2020 Điều 10, event bán vé phải nộp duyệt trước tối thiểu 7 ngày làm việc " +
+                $"Theo NĐ 144/2020 Điều 10, event bán vé phải nộp duyệt trước tối thiểu {minLeadDays} ngày làm việc " +
                 $"so với ngày diễn. Hiện chỉ còn {businessDaysUntilShow} ngày làm việc.");
 
         // D15: online event or any livestream-access tier requires a Livestream record before publish

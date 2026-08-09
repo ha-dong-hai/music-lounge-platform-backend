@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.ValueObjects;
@@ -44,6 +45,7 @@ public static class SeedHelper
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var piiEncryption = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
 
         await db.Database.EnsureCreatedAsync();
 
@@ -172,6 +174,32 @@ public static class SeedHelper
                 Status = SubscriptionStatus.Active,
                 MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true
             });
+
+        // Default payout bank accounts — 2026-08-09: ScheduleSettlementHandler/ConfirmDonationPaidCommandHandler
+        // now fail closed (DomainException) if the venue/performer has no default BankAccount registered,
+        // since Settlement.BankAccountId/Donation.BankAccountId used to be defined but never actually
+        // assigned. Every test exercising the settlement/donation payout path needs one of these to exist.
+        // AccountNumber must be real ciphertext (IPiiEncryptionService), not plaintext — GetBankAccountsQueryHandler
+        // decrypts unconditionally on read, and a plaintext value here throws there (found by running
+        // the suite, not by inspection — the failure only shows up as a 500 on the list endpoint).
+        db.Add(new BankAccount
+        {
+            OwnerType = BankAccountOwnerType.Lounge, OwnerId = LoungeId,
+            BankName = "Test Bank", AccountNumber = piiEncryption.Encrypt("0000000001"), AccountHolder = "Test Lounge Owner",
+            IsDefault = true, IsVerified = true, CreatedAt = DateTimeOffset.UtcNow
+        });
+        db.Add(new BankAccount
+        {
+            OwnerType = BankAccountOwnerType.Lounge, OwnerId = OtherLoungeId,
+            BankName = "Test Bank", AccountNumber = piiEncryption.Encrypt("0000000002"), AccountHolder = "Other Test Lounge Owner",
+            IsDefault = true, IsVerified = true, CreatedAt = DateTimeOffset.UtcNow
+        });
+        db.Add(new BankAccount
+        {
+            OwnerType = BankAccountOwnerType.Performer, OwnerId = PerformerId,
+            BankName = "Test Bank", AccountNumber = piiEncryption.Encrypt("0000000003"), AccountHolder = "Test Artist",
+            IsDefault = true, IsVerified = true, CreatedAt = DateTimeOffset.UtcNow
+        });
 
         // Catalog data for CF2 preference tests
         db.Genres.AddRange(

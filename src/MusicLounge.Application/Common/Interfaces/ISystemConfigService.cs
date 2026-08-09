@@ -7,6 +7,7 @@ public interface ISystemConfigService
     Task<decimal> GetDecimalAsync(string key, decimal fallback, CancellationToken ct = default);
     Task<int> GetIntAsync(string key, int fallback, CancellationToken ct = default);
     Task<bool> GetBoolAsync(string key, bool fallback, CancellationToken ct = default);
+    Task<string> GetStringAsync(string key, string fallback, CancellationToken ct = default);
 }
 
 // Keys seeded by migration MM1_DBCompleteness100pct
@@ -14,12 +15,93 @@ public static class ConfigKeys
 {
     public const string PlatformCommissionRate = "platform_commission_rate";
     public const string TaxRate = "tax_rate";
-    public const string SettlementPartialPct = "settlement_partial_pct";
-    public const string SettlementDaysBefore = "settlement_days_before";
-    public const string SettlementDaysAfter = "settlement_days_after";
+
+    // D3 payout-speed tiers, keyed by venue ReputationScore + completed-show count — replaces the
+    // old flat "settlement_partial_pct" key (removed from the seed table; a stale reference to it
+    // silently fell back to a hardcoded 0.70m for every venue regardless of standing). See
+    // ScheduleSettlementHandler for the tier-selection logic these four feed.
+    public const string SettlementTierNewPreRate = "settlement_tier_new_pre_rate";
+    public const string SettlementTierStandardPreRate = "settlement_tier_standard_pre_rate";
+    public const string SettlementTierPremiumPreRate = "settlement_tier_premium_pre_rate";
+    public const string SettlementTierStandardMinScore = "settlement_tier_standard_min_score";
+    public const string SettlementTierPremiumMinScore = "settlement_tier_premium_min_score";
+    public const string SettlementTierPremiumMinShows = "settlement_tier_premium_min_shows";
+
+    // Research-grounded (Eventbrite: payout processing begins ~3 days post-event, up to 14 business
+    // days for large-event final settlement/reconciliation) — matches this system's existing D3
+    // two-stage timing (partial fast, final held longer for the refund/chargeback window to pass).
+    // Previously hardcoded in ScheduleSettlementHandler; these replace the old "settlement_days_before"/
+    // "settlement_days_after" keys, whose seeded description ("before show end") never matched the
+    // code's actual (and, per research, more defensible) "after show end" behavior.
+    public const string SettlementPartialHoursAfterShow = "settlement_partial_hours_after_show";
+    public const string SettlementFinalDaysAfterShow = "settlement_final_days_after_show";
+
     public const string TicketHoldMinutes = "ticket_hold_minutes";
+
+    // Research-grounded (Upwork: 14-day auto-release if unresponded; Fiverr: 3-day response window
+    // + 14-day grace period) — an escrow-style "intermediary doesn't respond, so protect the payee"
+    // window. 24h (this code's previous hardcoded value) is far more aggressive than any researched
+    // comparable; the originally-seeded 7 days is the better-grounded number, now actually wired in.
     public const string DonationHoldDays = "donation_hold_days";
+
     public const string ModerationSlaHours = "moderation_sla_hours";
+
+    // §6.13 — window after a show ends during which a buyer may submit a rating. Seeded since the
+    // original migration but never actually read — TerminateLivestreamCommandHandler/
+    // EndLivestreamCommandHandler/EndLoungeShowCommandHandler each hardcoded their own literal
+    // `AddDays(7)` that happened to match this key's seeded value by coincidence, not by wiring.
+    public const string RatingWindowDays = "rating_window_days";
+
+    // §6.17 — hours an Admin has to resolve a venue's penalty appeal before AutoApproveOverdueAppealsJob
+    // auto-overturns it. Same dead-seed situation as RatingWindowDays: seeded since the original
+    // migration, but SubmitAppealCommandHandler hardcoded `AddHours(48)` independently.
+    public const string AppealSlaHours = "appeal_sla_hours";
+
+    // D18 (NĐ 144/2020/NĐ-CP Điều 10): minimum business-day lead time between submitting a ticketed
+    // show for moderation (or rescheduling one) and its scheduled date. Was hardcoded as a bare `7`
+    // literal in both PublishLoungeShowCommandHandler and RescheduleLoungeShowCommandHandler despite
+    // PublishLoungeShowCommandHandler's own comment on the very next config read ("§6.7: never
+    // hardcode") — the statutory minimum itself (7 business days) is unchanged, only how it's stored.
+    public const string PublishMinBusinessDaysLeadTime = "publish_min_business_days_lead_time";
+
+    // §6.8 — notice window before a Suspension/Ban penalty actually takes effect (venue status
+    // change + subscription compensation), giving the Owner time to see the notification and
+    // appeal before it bites. Warning has no delay (applied immediately, not config-gated).
+    public const string PenaltySuspensionNoticeHours = "penalty_suspension_notice_hours";
+    public const string PenaltyBanNoticeDays = "penalty_ban_notice_days";
+
+    // Anti-abuse ceilings on a single hold/walk-in-sale/donation — not statutory figures, but
+    // operational limits that should be Admin-tunable (D9) rather than baked into validator code.
+    // Defaults preserve this system's existing behavior exactly; only the storage moved.
+    public const string TicketHoldMaxQuantity = "ticket_hold_max_quantity";
+    public const string WalkInTicketMaxQuantity = "walkin_ticket_max_quantity";
+    public const string DonationMaxAmount = "donation_max_amount";
+
+    // Window before an unanswered ticket-transfer request auto-cancels (TicketTransferExpiryJob).
+    public const string TicketTransferExpiryHours = "ticket_transfer_expiry_hours";
+
+    // D16: min actual/scheduled show-duration ratio for SettlementReleaseJob to auto-release a
+    // Final30 tranche rather than parking it PendingReview. Was already seeded and already read —
+    // just via a raw string literal instead of this constant, the one place in the job that didn't
+    // follow the rest of the codebase's ConfigKeys convention.
+    public const string SettlementCompletionThresholdPct = "settlement_completion_threshold_pct";
+
+    // NĐ 85/2021's complaint-channel requirement doesn't itself specify a numeric deadline — this is
+    // a reasonable operational default (Admin-tunable), not a literal statutory figure.
+    public const string ComplaintSlaHours = "complaint_sla_hours";
+
+    // Version label of the currently-published Terms of Service / Privacy Policy — bump this (via
+    // Admin config update, no deploy needed) whenever the actual document changes, so newly-consenting
+    // users snapshot the version they agreed to (User.TermsVersion) distinctly from users who agreed
+    // to an earlier one. The document CONTENT itself is not a backend concern — see the placeholder
+    // note on CurrentTermsVersionDefault.
+    public const string CurrentTermsVersion = "current_terms_version";
+
+    // No real Terms of Service / Privacy Policy document exists yet as of this fix (2026-08-09) —
+    // that's a legal-drafting task for the platform owner/counsel, not something to fabricate here.
+    // This infrastructure (consent capture, versioning) is ready the moment a real document exists;
+    // until then this placeholder label is what gets stamped onto new users' TermsVersion.
+    public const string CurrentTermsVersionDefault = "v0-placeholder-pending-legal-review";
 
     // §6.5 chặng 2: fraction of the ORIGINAL gross donation the owner forwards to the performer
     // (owner keeps the rest of their chặng-1 net as compensation for holding/administering the

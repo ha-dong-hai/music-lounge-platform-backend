@@ -15,13 +15,16 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ISystemConfigService _config;
 
     public RescheduleLoungeShowCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications)
+        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
+        ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _config = config;
     }
 
     public async Task<Unit> Handle(RescheduleLoungeShowCommand request, CancellationToken ct)
@@ -45,12 +48,13 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
         // D18: doi lich la doi ngay dien da duoc "van ban chap thuan" ban dau bao ve — ap dung lai
         // dung nguyen tac 7 ngay lam viec (NĐ 144/2020 Điều 10) cho ngay dien MOI, tranh loophole
         // "publish dung han roi doi lich gap ngay hom sau".
+        var minLeadDays = await _config.GetIntAsync(ConfigKeys.PublishMinBusinessDaysLeadTime, 7, ct);
         var businessDaysUntilNewStart = BusinessDayCalculator.CountBusinessDaysBetween(
             DateTimeOffset.UtcNow, request.NewScheduledStart);
-        if (businessDaysUntilNewStart < 7)
+        if (businessDaysUntilNewStart < minLeadDays)
             throw new DomainException(
-                "Theo NĐ 144/2020 Điều 10, ngày diễn mới phải cách thời điểm đổi lịch tối thiểu " +
-                $"7 ngày làm việc. Hiện chỉ còn {businessDaysUntilNewStart} ngày làm việc.");
+                $"Theo NĐ 144/2020 Điều 10, ngày diễn mới phải cách thời điểm đổi lịch tối thiểu " +
+                $"{minLeadDays} ngày làm việc. Hiện chỉ còn {businessDaysUntilNewStart} ngày làm việc.");
 
         var oldStart = show.ScheduledStart;
         var delta = request.NewScheduledStart - oldStart;
