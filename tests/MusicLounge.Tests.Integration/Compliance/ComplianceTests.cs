@@ -130,6 +130,60 @@ public sealed class ComplianceTests
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    // ─── NĐ 147/2024: reactive content takedown on a substantiated complaint ─────
+
+    [Fact]
+    public async Task ResolveComplaint_TakeDownContent_CancelsTheShow()
+    {
+        var showId = await CreateShowAsync(DateTimeOffset.UtcNow.AddDays(20));
+
+        var audienceClient = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        var createRes = await audienceClient.PostAsJsonAsync("/api/v1/complaints", new
+        {
+            TargetType = "show",
+            TargetId = showId,
+            Category = "EventMisrepresentation",
+            Description = "This show is running an unlicensed livestream of copyrighted content",
+            EvidenceUrls = (string?)null,
+            ContactPhone = (string?)null
+        });
+        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/admin/complaints/{body!.Data}/resolve",
+            new { Status = "Resolved", Resolution = "Confirmed violation", ResolvedAction = "TakeDownContent" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var showDetail = await adminClient.GetAsync($"/api/v1/lounge-shows/{showId}");
+        var showBody = await showDetail.Content.ReadAsStringAsync();
+        showBody.Should().Contain("\"status\":\"Cancelled\"");
+    }
+
+    [Fact]
+    public async Task ResolveComplaint_TakeDownContentOnNonShowTarget_Returns422()
+    {
+        var audienceClient = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        var createRes = await audienceClient.PostAsJsonAsync("/api/v1/complaints", new
+        {
+            TargetType = "venue",
+            TargetId = SeedHelper.LoungeId,
+            Category = "VenueConduct",
+            Description = "Complaint against the venue itself, not a specific show",
+            EvidenceUrls = (string?)null,
+            ContactPhone = (string?)null
+        });
+        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/admin/complaints/{body!.Data}/resolve",
+            new { Status = "Resolved", Resolution = "N/A", ResolvedAction = "TakeDownContent" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
     // ─── D18 Legal approval (NĐ 144/2020 Điều 10) ────────────────────────────
 
     private async Task<int> CreateShowAsync(DateTimeOffset scheduledStart)
