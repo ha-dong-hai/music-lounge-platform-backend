@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Users.DTOs;
@@ -13,13 +14,16 @@ internal sealed class GetCitizenCardImageQueryHandler
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IFileStorageService _fileStorage;
+    private readonly ILogger<GetCitizenCardImageQueryHandler> _logger;
 
     public GetCitizenCardImageQueryHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, IFileStorageService fileStorage)
+        IUnitOfWork uow, ICurrentUserService currentUser, IFileStorageService fileStorage,
+        ILogger<GetCitizenCardImageQueryHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _fileStorage = fileStorage;
+        _logger = logger;
     }
 
     public async Task<CitizenCardImageDto> Handle(GetCitizenCardImageQuery request, CancellationToken ct)
@@ -41,6 +45,16 @@ internal sealed class GetCitizenCardImageQueryHandler
             throw new NotFoundException("CitizenCardImage", request.TargetUserId);
 
         var (content, contentType) = await _fileStorage.OpenPrivateFileAsync(privateRef, ct);
+
+        // Legally sensitive PII (BVDLCN 2025) with no forensic trail otherwise — the DB row doesn't
+        // record who viewed it, unlike VenuePenalty (IssuedBy) or account deactivation (this
+        // session's earlier LogWarning additions). Only log Admin access to someone ELSE's card —
+        // a user opening their own card via the "own" branch above isn't a security-relevant event.
+        if (_currentUser.UserId != request.TargetUserId)
+            _logger.LogWarning(
+                "Admin viewed citizen card image: TargetUserId={TargetUserId} Side={Side} by AdminUserId={AdminUserId} at {At}",
+                request.TargetUserId, request.Side, _currentUser.UserId, DateTimeOffset.UtcNow);
+
         return new CitizenCardImageDto(content, contentType);
     }
 }

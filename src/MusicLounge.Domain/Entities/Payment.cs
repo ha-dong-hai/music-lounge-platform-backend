@@ -19,6 +19,14 @@ public sealed class Payment : Common.BaseEntity<int>
     public string? VnPayResponseCode { get; set; }
     public string ReferenceType { get; set; } = string.Empty;  // "TicketHold"
     public string ReferenceId { get; set; } = string.Empty;    // holdId.ToString()
+
+    // D12-style snapshot for Subscription payments only (null for every other ReferenceType) —
+    // captured at checkout (SubscribeToPackageCommandHandler) so an admin editing
+    // SubscriptionPackage.MaxTicketsPerEvent/HasAiPoster between checkout and VNPay confirming
+    // can't change what the owner actually receives for what they already paid for. Mirrors why
+    // GrossAmount itself is captured once at checkout instead of re-read from the package later.
+    public int? SubscriptionMaxTicketsPerEventSnapshot { get; set; }
+    public bool? SubscriptionHasAiPosterSnapshot { get; set; }
     public DateTimeOffset? PaidAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }

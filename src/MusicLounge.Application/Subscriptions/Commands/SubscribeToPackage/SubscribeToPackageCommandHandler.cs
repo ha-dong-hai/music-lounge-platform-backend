@@ -55,6 +55,12 @@ internal sealed class SubscribeToPackageCommandHandler
             Status = PaymentStatus.Pending,
             ReferenceType = "Subscription",
             ReferenceId = package.Id.ToString(),
+            // Snapshot now, not just GrossAmount — UpdateSubscriptionPackageCommandHandler only
+            // locks these fields once a real Active OwnerSubscription exists, which doesn't happen
+            // until VNPay confirms. Without this, an admin edit landing in that pending window
+            // would silently change what the owner receives for what they already paid for.
+            SubscriptionMaxTicketsPerEventSnapshot = package.MaxTicketsPerEvent,
+            SubscriptionHasAiPosterSnapshot = package.HasAiPoster,
             CreatedAt = now
         };
         _uow.Repository<Payment, int>().Add(payment);

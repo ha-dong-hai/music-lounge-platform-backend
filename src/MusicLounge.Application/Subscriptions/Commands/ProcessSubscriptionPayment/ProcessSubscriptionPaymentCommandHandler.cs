@@ -88,8 +88,11 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             ExpiresAt = expiresAt,
             Status = SubscriptionStatus.Active,
             AutoRenew = false,
-            MaxTicketsPerEventSnapshot = package.MaxTicketsPerEvent,
-            HasAiPosterSnapshot = package.HasAiPoster
+            // From the Payment snapshot taken at checkout, NOT the freshly-refetched package above
+            // (only used for BillingCycle/Price-verification) — package.MaxTicketsPerEvent/HasAiPoster
+            // could have been edited by an admin in the window between checkout and this callback.
+            MaxTicketsPerEventSnapshot = payment.SubscriptionMaxTicketsPerEventSnapshot ?? package.MaxTicketsPerEvent,
+            HasAiPosterSnapshot = payment.SubscriptionHasAiPosterSnapshot ?? package.HasAiPoster
         };
         _uow.Repository<OwnerSubscription, int>().Add(subscription);
 

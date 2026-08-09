@@ -22,7 +22,11 @@ internal sealed class GetTrendingLoungeShowsQueryHandler
     public async Task<IReadOnlyList<LoungeShowListItemDto>> Handle(
         GetTrendingLoungeShowsQuery request, CancellationToken ct)
     {
-        var shows = await _showRepo.GetTrendingAsync(request.Limit, request.City, ct);
+        // Unlike SearchLoungeShowsQueryHandler/GetRecommendedLoungeShowsQueryHandler, this had no
+        // clamp — a zero/negative Limit reaches TOP(0)/TOP(-1) in the repository, and an
+        // unreasonably large one defeats the "small trending list" contract.
+        var limit = Math.Clamp(request.Limit, 1, 50);
+        var shows = await _showRepo.GetTrendingAsync(limit, request.City, ct);
 
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)

@@ -13,5 +13,6 @@ internal sealed class GetLoungeShowSuggestionsQueryHandler
 
     public Task<IReadOnlyList<LoungeShowSuggestionItem>> Handle(
         GetLoungeShowSuggestionsQuery request, CancellationToken ct)
-        => _showRepo.GetSuggestionsAsync(request.Keyword, request.Limit, ct);
+        // Same missing-clamp gap as GetTrendingLoungeShowsQueryHandler — see its comment.
+        => _showRepo.GetSuggestionsAsync(request.Keyword, Math.Clamp(request.Limit, 1, 20), ct);
 }
