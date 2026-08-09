@@ -36,6 +36,8 @@ Grep for any code path that mutates a balance/amount-bearing field directly (out
 
 This cannot be verified from code alone. Ask directly: when was the last restore-test performed, and against which backup? A backup schedule that has never been restore-tested is not a verified backup strategy — flag this explicitly as needing operational confirmation rather than silently assuming it's fine.
 
+PII/sensitive-data encryption-at-rest classification (which columns are encrypted, which are anonymized-on-erasure, which are retained in cleartext for the 10-year accounting requirement) is audited by `role-security-asvs-audit` under ASVS V14 — don't duplicate it here, but do flag anything schema-level you notice in passing (e.g., a new PII column added without going through `PiiEncryptionService`) so it isn't lost between the two skills.
+
 ## 6. Report
 
 Cite exact file:line for every schema/index/mutation-path finding. For the SQL-Server-apply step, report the literal command output (success or the exact error), not a paraphrase.

@@ -1,6 +1,6 @@
 ---
 name: role-qa-test-design
-description: Reviews test coverage using ISTQB-standard test design techniques (equivalence partitioning, boundary value analysis, decision tables) rather than ad hoc coverage, builds a traceability matrix from acceptance criteria to actual test cases, and specifically checks that concurrent/negative paths are tested — not just the happy path a suite tends to accumulate under time pressure. Covers role 07 (Functional QA Engineer) from the MusicLounge SDLC role charter. Use when asked to review test coverage, design test cases, audit whether the test suite is thorough enough before release, or explicitly invoke the QA role.
+description: Reviews test coverage using ISTQB-standard test design techniques (equivalence partitioning, boundary value analysis, decision tables) rather than ad hoc coverage, builds a traceability matrix from acceptance criteria to actual test cases, checks that concurrent/negative paths are tested — not just the happy path a suite tends to accumulate under time pressure — and requires the suite itself be run against real SQL Server before a major release, not only the SQLite-backed CI default. Covers role 07 (Functional QA Engineer) from the MusicLounge SDLC role charter. Use when asked to review test coverage, design test cases, audit whether the test suite is thorough enough before release, or explicitly invoke the QA role.
 license: Internal project tooling — MusicLounge repository, no separate license.
 ---
 
@@ -34,7 +34,7 @@ Cross-reference against the Acceptance Criteria produced by the BA/Architect rev
 
 ## 6. Regression discipline
 
-Confirm CI actually runs the full suite on every change, not a subset — a partial suite that's green tells you less than it appears to.
+Confirm CI actually runs the full suite on every change, not a subset — a partial suite that's green tells you less than it appears to. Beyond CI's default SQLite-backed run: before any major release, confirm the full suite (or at minimum every test touching schema, cascade behavior, or enum-typed columns) has been run at least once against a real SQL Server instance, not only the SQLite integration-test harness. This is distinct from `role-db-integrity-review`'s migration-apply check — that skill verifies the *schema* migrates cleanly; this step verifies the *test suite's assertions* still hold against real-engine behavior (query translation, constraint enforcement, and locking semantics all differ from SQLite in ways that have produced real, otherwise-invisible bugs in this project before).
 
 ## Report
 

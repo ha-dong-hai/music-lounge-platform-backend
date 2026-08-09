@@ -15,13 +15,13 @@ consuming repository not present here. That single fact determines which of the 
 | 07 | Functional QA | `role-qa-test-design` | Full |
 | 08 | Security Tester | `role-security-asvs-audit` | Full |
 | 09 | Performance Engineer | `role-performance-load-review` | Full |
-| 10 | Accessibility & Inclusive-Design Auditor | *(none directly)* | **Partial at best** — real accessibility auditing (contrast, screen-reader DOM, keyboard nav) needs rendered UI, which lives in the frontend repo. What *is* checkable from here: whether API error messages/data contracts give a frontend enough to build an accessible experience (plain-language errors, locale-correct formatting fields) — fold this spot-check into `role-technical-writer-audit` or `role-ba-architecture-review` rather than treating it as fully covered. |
+| 10 | Accessibility & Inclusive-Design Auditor | `role-technical-writer-audit` (step 4, contract-level only) | **Partial by design** — real accessibility auditing (contrast, screen-reader DOM, keyboard nav) needs rendered UI, which lives in the frontend repo. What *is* checkable from here — API error messages/data contracts giving a frontend enough to build an accessible experience (plain-language errors, locale-correct formatting fields) — is implemented as a contract-level spot-check in `role-technical-writer-audit`, not a full audit. |
 | 11 | Financial / Payment Correctness Auditor | `role-financial-ledger-audit` | Full |
 | 12 | Legal & Data Privacy Officer | `role-legal-compliance-vn` | Full |
 | 13 | DevOps / SRE / Release Engineer | `role-devops-release-readiness` | Full |
 | 14 | Technical Writer / Documentation | `role-technical-writer-audit` | Full |
 | 15 | Customer Support Readiness | *(none directly)* | **Partial** — the checkable half (error codes being lookup-able, complaint-channel SLA) is covered incidentally by `role-technical-writer-audit` and `role-legal-compliance-vn`; the FAQ/support-content half needs a human or a support-specific skill not yet built. |
-| 16 | End-User UAT | `role-enduser-uat-dynamic` | Full for account-based personas (Audience/Owner/Staff/Admin/Performer) and the anonymous persona's *API-level* experience. Does **not** cover visual/UX quality of the anonymous experience — that's rendered by the frontend repo. |
+| 16 | End-User UAT | `role-enduser-uat-dynamic` | Full for account-based personas (Audience/Owner/Staff/Admin) and the anonymous persona's *API-level* experience. `Performer` has no login in this system (verified: no Email/PasswordHash/Account link) — its coverage is Owner-mediated, not a separate account-based UAT pass. Does **not** cover visual/UX quality of the anonymous experience — that's rendered by the frontend repo. |
 | 17 | Release / Product Manager (Go/No-Go) | `sdlc-release-gate` (this skill) | Full — this IS that role |
 
 ## What "full coverage" means in practice

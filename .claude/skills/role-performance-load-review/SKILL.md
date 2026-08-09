@@ -1,6 +1,6 @@
 ---
 name: role-performance-load-review
-description: Designs and runs load tests against realistic MusicLounge traffic shapes — ticket on-sale spikes, concurrent livestream+chat viewers — measuring rate/error/duration per the RED method rather than only average latency, and specifically stress-tests the concurrency-controlled resources (ticket holds, zone capacity) that are this system's most fragile point under real load. Covers role 09 (Performance Engineer) from the MusicLounge SDLC role charter. Use when asked to load test, check performance, find N+1 queries, or explicitly invoke the Performance Engineer role.
+description: Designs and runs load tests against realistic MusicLounge traffic shapes — ticket on-sale spikes, concurrent livestream+chat viewers — measuring rate/error/duration per the RED method rather than only average latency, determines the actual breaking point rather than stopping once target load "looks fine," and specifically stress-tests the concurrency-controlled resources (ticket holds, zone capacity) that are this system's most fragile point under real load. Treats zone-capacity overselling as a physical-safety finding (ISO/IEC 25010:2023's Safety characteristic — a real venue's real occupancy limit, not just inventory), not merely a performance bug. Covers role 09 (Performance Engineer) from the MusicLounge SDLC role charter. Use when asked to load test, check performance, find N+1 queries, determine capacity limits, or explicitly invoke the Performance Engineer role.
 license: Internal project tooling — MusicLounge repository, no separate license.
 ---
 
@@ -8,7 +8,7 @@ license: Internal project tooling — MusicLounge repository, no separate licens
 
 Mandate: *"Đảm bảo hệ thống chịu đúng kịch bản tải thật — giờ mở bán vé đồng loạt, đêm diễn nhiều người xem livestream cùng lúc — không phải tải trung bình dễ chịu."*
 
-Work in order: **(1) Identify realistic load shapes → (2) Concurrency race test → (3) RED metrics → (4) N+1/index check → (5) Propose SLOs.**
+Work in order: **(1) Identify realistic load shapes → (2) Concurrency race test → (3) RED metrics → (4) Find the breaking point → (5) N+1/index check → (6) Propose SLOs.**
 
 ## 1. Identify realistic load shapes for this domain
 
@@ -24,15 +24,21 @@ This system already has proven-effective concurrency defenses (`IShowBookingLock
 
 Concretely: create a `SeatingZone` with a small capacity (e.g. 5), create two `TicketTier`s both pointing at it, then fire concurrent `POST /tickets/holds` requests from multiple simulated users summing to more than capacity. Confirm the system grants exactly up to capacity and rejects the rest — including at the exact boundary (requests summing to exactly capacity must succeed; capacity+1 must fail). A sequential loop of requests does not exercise the real race window; the requests must actually overlap in time.
 
+Treat any zone-capacity overselling found here at a higher severity than a typical performance bug. `SeatingZone.Capacity` represents a real venue's real physical occupancy limit, not just an inventory count — ISO/IEC 25010:2023 added **Safety** as its own top-level software quality characteristic specifically for cases like this, where a defect's consequence isn't purely financial (lost revenue, an angry customer) but a real-world hazardous condition (a venue over its safe/legal occupancy limit). Report an overselling defect here as a go/no-go BLOCKER candidate for `sdlc-release-gate`, not a should-fix-soon performance nit.
+
 ## 3. Measure the RED metrics, not just average latency
 
 For each load shape: **Rate** (requests/sec sustained), **Error rate** (% non-2xx, broken out by status code — a spike in 409/422 under load may be correct backpressure, not a bug, so classify before alarming), **Duration** at p50/p95/p99 (not average — a system with a fine average and a terrible p99 still produces a bad experience for a meaningful fraction of real buyers at the exact moment that matters most, on-sale).
 
-## 4. Check for N+1 queries and missing indexes under realistic data volume
+## 4. Find the breaking point before production finds it
+
+Ramp load past the shapes in step 1 until something actually fails (error rate spikes, latency degrades past any usable threshold, or the process falls over) rather than stopping once the target load "looks fine." Knowing the specific number where this system breaks — and which resource breaks first (DB connections, thread pool, a specific lock) — is what turns "we load tested it" into an actionable capacity plan; a load test that never finds the ceiling doesn't know how much headroom actually exists before the real on-sale moment.
+
+## 5. Check for N+1 queries and missing indexes under realistic data volume
 
 Enable EF Core query logging, run a representative flow (browse shows → view detail → hold ticket → checkout) against a database seeded with realistic volume (hundreds of shows/tickets, not a handful), and count queries issued per logical request. A query count that scales with result-set size instead of staying constant is an N+1. Cross-reference any slow query against `role-db-integrity-review`'s index-coverage findings.
 
-## 5. Propose SLOs
+## 6. Propose SLOs
 
 Turn the measured p95/p99 into a proposed SLO (e.g., "p95 ticket-hold latency < Xms under N concurrent on-sale requests") that Ops can monitor against going forward — a load test that produces a number nobody uses afterward for alerting has limited lasting value.
 

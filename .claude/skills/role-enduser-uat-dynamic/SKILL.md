@@ -14,7 +14,9 @@ Work in order: **(1) Set up environment and accounts → (2) Walk each persona's
 
 ## 1. Environment and accounts
 
-Start the real app against a real SQL Server database — not SQLite, not an in-memory fake. Register one genuine account per persona this system defines: Audience, Owner (at least two, at different venues — several checks only mean something with two distinct venues to test cross-venue isolation against), Staff, Admin, and Performer if that flow exists. See the playbook for the exact registration/JWT-extraction/Admin-promotion commands.
+Start the real app against a real SQL Server database — not SQLite, not an in-memory fake. Register one genuine account per persona this system defines: Audience, Owner (at least two, at different venues — several checks only mean something with two distinct venues to test cross-venue isolation against), Staff, and Admin. See the playbook for the exact registration/JWT-extraction/Admin-promotion commands.
+
+**`Performer` is not an account-holding persona in this system** — verify this hasn't changed before assuming otherwise, but as of the last check the `Performer` entity has no `Email`/`PasswordHash`/`Account` link at all, only a `CreatedByUserId` recording which Owner/Staff created the profile. There is no login for a performer to "view their own schedule" — that experience, if it's meant to exist, is entirely unbuilt (consistent with the known Performer-CRUD gap tracked elsewhere). Don't fabricate a Performer login test; instead fold Performer-related verification into the **Owner** persona's golden path (an Owner manages Performer profiles and assigns them to a `Performance`) and flag the absent self-service experience as a product gap for the BA/Architect review to weigh, not a bug in this UAT pass.
 
 ## 2. Walk each persona's golden path
 
@@ -23,8 +25,10 @@ Each persona gets its **own** end-to-end scenario, not a shared generic smoke te
 - **Owner**: create a venue → activate a subscription → create a show → submit for moderation → receive payment — confirm the lifecycle matches what `README-SETUP.md`'s "Vòng đời show" section documents (Draft → Pending → Published, not visible publicly until Admin-approved).
 - **Staff**: sell a walk-in ticket, check in a ticket — confirm scoped strictly to the one venue they're assigned to.
 - **Admin**: approve/reject a show, resolve a complaint, adjust a system_config value.
-- **Performer** (if applicable): view schedule, receive a donation.
+- **Performer (no login exists — see note in step 1)**: verify, via the Owner persona, that a Performer profile can be created/assigned to a show and that a donation credited to them flows correctly through `role-financial-ledger-audit`'s checks — this is Owner-mediated, not a Performer self-service scenario.
 - **Anonymous / khách vãng lai (no account at all)**: view the public show list and show detail, follow a shared link or simulated QR-code URL — confirm public data is reachable without being forced through a login wall, and confirm nothing meant to be private leaks through an unauthenticated request.
+
+Weave one network-constraint pass through at least the Audience and Anonymous golden paths rather than treating it as a separate persona: replay the same requests with an artificially slow/high-latency connection (`curl --limit-rate` or a proxy tool) and confirm the API still behaves correctly under a request that takes several seconds to arrive — no premature timeout that a fast connection wouldn't trigger, no partial-write left behind if a slow client disconnects mid-request. This is the backend-checkable half of "works for someone on a weak connection"; the rendering/UX half of that concern belongs to the frontend repo and is out of scope here.
 
 ## 3. Explicitly attempt cross-boundary access — this is the highest-value half of the exercise
 
