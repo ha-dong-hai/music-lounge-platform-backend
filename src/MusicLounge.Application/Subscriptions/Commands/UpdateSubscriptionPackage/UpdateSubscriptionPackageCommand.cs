@@ -8,5 +8,6 @@ public sealed record UpdateSubscriptionPackageCommand(
     decimal Price,
     int MaxTicketsPerEvent,
     bool HasAiPoster,
+    int MaxAiPostersPerMonth,
     bool IsActive
 ) : ICommand;

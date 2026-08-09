@@ -172,7 +172,8 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             // (only used for BillingCycle/Price-verification) — package.MaxTicketsPerEvent/HasAiPoster
             // could have been edited by an admin in the window between checkout and this callback.
             MaxTicketsPerEventSnapshot = payment.SubscriptionMaxTicketsPerEventSnapshot ?? package.MaxTicketsPerEvent,
-            HasAiPosterSnapshot = payment.SubscriptionHasAiPosterSnapshot ?? package.HasAiPoster
+            HasAiPosterSnapshot = payment.SubscriptionHasAiPosterSnapshot ?? package.HasAiPoster,
+            MaxAiPostersPerMonthSnapshot = payment.SubscriptionMaxAiPostersPerMonthSnapshot ?? package.MaxAiPostersPerMonth
         };
         _uow.Repository<OwnerSubscription, int>().Add(subscription);
 

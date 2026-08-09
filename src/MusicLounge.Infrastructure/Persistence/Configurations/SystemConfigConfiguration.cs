@@ -80,7 +80,11 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             new { Id = 27, ConfigKey = "ticket_hold_max_quantity",            ConfigValue = "10",       DataType = ConfigDataType.Integer, Description = "Max tickets per checkout hold — anti-scalping ceiling",           UpdatedAt = seed },
             new { Id = 28, ConfigKey = "walkin_ticket_max_quantity",          ConfigValue = "20",       DataType = ConfigDataType.Integer, Description = "Max tickets per walk-in/box-office sale — anti-abuse ceiling",    UpdatedAt = seed },
             new { Id = 29, ConfigKey = "donation_max_amount",                 ConfigValue = "50000000", DataType = ConfigDataType.Decimal, Description = "Max single donation amount (VND) — anti-fraud ceiling",           UpdatedAt = seed },
-            new { Id = 30, ConfigKey = "ticket_transfer_expiry_hours",        ConfigValue = "48",       DataType = ConfigDataType.Integer, Description = "Hours before an unanswered ticket-transfer request auto-cancels", UpdatedAt = seed }
+            new { Id = 30, ConfigKey = "ticket_transfer_expiry_hours",        ConfigValue = "48",       DataType = ConfigDataType.Integer, Description = "Hours before an unanswered ticket-transfer request auto-cancels", UpdatedAt = seed },
+            // Anti-abuse rate limit on AI poster generation attempts (success+failure) per show —
+            // separate from the per-Owner monthly billing quota on SubscriptionPackage, which only
+            // counts successful generations.
+            new { Id = 31, ConfigKey = "ai_poster_max_attempts_per_show",     ConfigValue = "5",        DataType = ConfigDataType.Integer, Description = "Max AI poster generation attempts (incl. failures) per show", UpdatedAt = seed }
         );
     }
 }

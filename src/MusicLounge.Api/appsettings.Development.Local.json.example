@@ -21,5 +21,10 @@
     "_comment_Mux": "Chi can dien neu ban dang test tinh nang livestream (video qua Mux). De trong neu chua can.",
     "TokenId": "",
     "TokenSecret": ""
+  },
+
+  "Gemini": {
+    "_comment_Gemini": "API key cho tinh nang AI cham diem uu tien duyet show/livestream (lay tu Google AI Studio). De trong neu chua can -- moderation van chay binh thuong, chi khong co diem uu tien AI.",
+    "ApiKey": ""
   }
 }

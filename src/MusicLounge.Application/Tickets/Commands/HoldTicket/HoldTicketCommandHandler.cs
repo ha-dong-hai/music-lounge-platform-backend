@@ -19,11 +19,12 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
     private readonly ICurrentUserService _currentUser;
     private readonly ISystemConfigService _config;
     private readonly INotificationService _notifications;
+    private readonly IBackgroundJobService _backgroundJobs;
 
     public HoldTicketCommandHandler(
         IUnitOfWork uow, ITicketRepository ticketRepo, IShowBookingLock bookingLock,
         ICurrentUserService currentUser, ISystemConfigService config,
-        INotificationService notifications)
+        INotificationService notifications, IBackgroundJobService backgroundJobs)
     {
         _uow = uow;
         _ticketRepo = ticketRepo;
@@ -31,6 +32,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
         _currentUser = currentUser;
         _config = config;
         _notifications = notifications;
+        _backgroundJobs = backgroundJobs;
     }
 
     public async Task<HoldTicketResultDto> Handle(HoldTicketCommand request, CancellationToken ct)
@@ -80,6 +82,12 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             holdId = hold.Id;
             holdExpiresAt = hold.ExpiresAt;
         }
+
+        // Highest-intent signal in the whole behaviour taxonomy — starting a hold means the buyer
+        // is actually trying to purchase, not just browsing. Feeds RecomputeUserEventScoresJob's
+        // collaborative-filtering matrix, same as every other BehaviourAction.
+        if (_currentUser.IsAuthenticated)
+            _backgroundJobs.EnqueueLogUserBehaviour(_currentUser.UserId, show.Id, BehaviourAction.ClickTicket);
 
         // Deliberately OUTSIDE the lock: the invariant the lock protects (no overselling) is already
         // fully committed by this point. NotifyIfLowStockAsync does a handful of reads plus one

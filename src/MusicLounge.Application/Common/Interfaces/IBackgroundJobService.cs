@@ -11,6 +11,10 @@ public interface IBackgroundJobService
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code);
     void EnqueuePhoneVerificationCode(string toPhone, string code);
 
+    // Runs AI moderation scoring for a freshly-created EventModeration row in the background, so a
+    // slow/unavailable AI vendor never delays the Publish/CreateLivestream response it's called from.
+    void EnqueueModerationAiScoring(int moderationId);
+
     // Cho Admin ep chay ngay 1 recurring job da dang ky (vd de kiem tra/van hanh), khong doi lich Cron.
     void TriggerRecurringJobNow(string recurringJobId);
 }

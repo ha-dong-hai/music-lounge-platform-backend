@@ -27,6 +27,7 @@ public sealed class Payment : Common.BaseEntity<int>
     // GrossAmount itself is captured once at checkout instead of re-read from the package later.
     public int? SubscriptionMaxTicketsPerEventSnapshot { get; set; }
     public bool? SubscriptionHasAiPosterSnapshot { get; set; }
+    public int? SubscriptionMaxAiPostersPerMonthSnapshot { get; set; }
     public DateTimeOffset? PaidAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }

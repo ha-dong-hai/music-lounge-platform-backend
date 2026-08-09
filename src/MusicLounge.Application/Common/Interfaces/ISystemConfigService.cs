@@ -86,6 +86,13 @@ public static class ConfigKeys
     // follow the rest of the codebase's ConfigKeys convention.
     public const string SettlementCompletionThresholdPct = "settlement_completion_threshold_pct";
 
+    // Global anti-abuse ceiling on AI poster generation ATTEMPTS (success + failure both count) per
+    // show — distinct from SubscriptionPackage.MaxAiPostersPerMonth, which is the per-Owner monthly
+    // billing quota (only successful generations count against it). This cap exists purely to stop
+    // one show from looping the vendor call indefinitely regardless of tier; it is not a
+    // tier-differentiator, so it lives in system_config rather than on the package.
+    public const string AiPosterMaxAttemptsPerShow = "ai_poster_max_attempts_per_show";
+
     // NĐ 85/2021's complaint-channel requirement doesn't itself specify a numeric deadline — this is
     // a reasonable operational default (Admin-tunable), not a literal statutory figure.
     public const string ComplaintSlaHours = "complaint_sla_hours";

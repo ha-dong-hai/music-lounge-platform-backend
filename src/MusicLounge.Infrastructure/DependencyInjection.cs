@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<FirebaseSettings>(configuration.GetSection("Firebase"));
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
+        services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
 
         // DbContext
         services.AddDbContext<ApplicationDbContext>(opts =>
@@ -65,6 +66,8 @@ public static class DependencyInjection
         services.AddScoped<ISystemConfigService, SystemConfigService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAIRecommendationService, MLNetRecommendationService>();
+        services.AddScoped<IAiModerationService, GeminiModerationService>();
+        services.AddScoped<IAiImageGenerationService, GeminiImageGenerationService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
         services.AddScoped<IFcmService, FcmService>();
@@ -103,6 +106,7 @@ public static class DependencyInjection
         services.AddSingleton<IChatRateLimiter, ChatRateLimiter>();
         services.AddScoped<ReleaseExpiredHoldsJob>();
         services.AddScoped<RefreshRecommendationsJob>();
+        services.AddScoped<RecomputeUserEventScoresJob>();
         services.AddScoped<RefreshUserRecommendationJob>();
         services.AddScoped<AutoConfirmDonationsJob>();
         services.AddScoped<ExpireStuckDonationsJob>();
@@ -115,6 +119,7 @@ public static class DependencyInjection
         services.AddScoped<AutoApproveOverdueAppealsJob>();
         services.AddScoped<ModerationSlaBreachAlertJob>();
         services.AddScoped<ComplaintSlaBreachAlertJob>();
+        services.AddScoped<ScoreModerationWithAiJob>();
         // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing
         // from DI — Hangfire would throw InvalidOperationException ("No service for type...")
         // the first time either fired, silently breaking event reminders and overdue-donation
@@ -142,6 +147,7 @@ public static class DependencyInjection
         services.AddHttpClient("cloudflare").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("mux").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddKeyedTransient<ILivestreamService, CloudflareStreamService>("cloudflare");
         services.AddKeyedTransient<ILivestreamService, MuxStreamService>("mux");
         services.AddScoped<ILivestreamServiceFactory, LivestreamServiceFactory>();
@@ -171,6 +177,16 @@ public static class DependencyInjection
             "release-expired-holds",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
+
+        // Must run before refresh-recommendations so the collaborative-filtering matrix it feeds
+        // (user_event_scores) is fresh when MLNetRecommendationService reads it — daily cadence
+        // matches UserEventScore's own "aggregated periodically from behaviour logs" design intent,
+        // not hourly like the recommendation refresh itself (aggregating every table this job reads
+        // hourly would be wasted work for a signal that doesn't meaningfully shift that often).
+        RecurringJob.AddOrUpdate<RecomputeUserEventScoresJob>(
+            "recompute-user-event-scores",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Daily(3)); // 03:00 UTC, ahead of every hourly refresh-recommendations run that day
 
         RecurringJob.AddOrUpdate<RefreshRecommendationsJob>(
             "refresh-recommendations",

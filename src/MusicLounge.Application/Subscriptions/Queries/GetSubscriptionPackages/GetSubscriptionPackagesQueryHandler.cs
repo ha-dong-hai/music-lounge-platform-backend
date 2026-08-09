@@ -35,7 +35,7 @@ internal sealed class GetSubscriptionPackagesQueryHandler
             .OrderBy(p => p.Price)
             .Select(p => new SubscriptionPackageDto(
                 p.Id, p.Name, p.Description, p.Price, p.BillingCycle.ToString(),
-                p.MaxTicketsPerEvent, p.HasAiPoster, p.IsActive))
+                p.MaxTicketsPerEvent, p.HasAiPoster, p.MaxAiPostersPerMonth, p.IsActive))
             .ToList();
     }
 }

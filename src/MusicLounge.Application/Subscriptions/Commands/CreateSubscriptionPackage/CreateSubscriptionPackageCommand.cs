@@ -8,5 +8,6 @@ public sealed record CreateSubscriptionPackageCommand(
     decimal Price,
     string BillingCycle,
     int MaxTicketsPerEvent,
-    bool HasAiPoster
+    bool HasAiPoster,
+    int MaxAiPostersPerMonth
 ) : ICommand<int>;

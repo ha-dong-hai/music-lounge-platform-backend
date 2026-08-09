@@ -22,6 +22,7 @@ internal sealed class CreateSubscriptionPackageCommandHandler
             BillingCycle = Enum.Parse<SubscriptionBillingCycle>(request.BillingCycle, ignoreCase: true),
             MaxTicketsPerEvent = request.MaxTicketsPerEvent,
             HasAiPoster = request.HasAiPoster,
+            MaxAiPostersPerMonth = request.MaxAiPostersPerMonth,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };

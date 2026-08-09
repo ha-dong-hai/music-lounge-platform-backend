@@ -61,6 +61,7 @@ internal sealed class SubscribeToPackageCommandHandler
             // would silently change what the owner receives for what they already paid for.
             SubscriptionMaxTicketsPerEventSnapshot = package.MaxTicketsPerEvent,
             SubscriptionHasAiPosterSnapshot = package.HasAiPoster,
+            SubscriptionMaxAiPostersPerMonthSnapshot = package.MaxAiPostersPerMonth,
             CreatedAt = now
         };
         _uow.Repository<Payment, int>().Add(payment);

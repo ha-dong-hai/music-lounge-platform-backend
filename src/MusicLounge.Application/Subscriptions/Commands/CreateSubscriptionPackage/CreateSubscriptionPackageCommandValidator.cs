@@ -15,5 +15,9 @@ public sealed class CreateSubscriptionPackageCommandValidator : AbstractValidato
             .Must(c => ValidCycles.Contains(c, StringComparer.OrdinalIgnoreCase))
             .WithMessage("BillingCycle phải là 'Monthly', 'Quarterly' hoặc 'Yearly'.");
         RuleFor(x => x.MaxTicketsPerEvent).GreaterThan(0);
+        RuleFor(x => x.MaxAiPostersPerMonth).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MaxAiPostersPerMonth)
+            .GreaterThan(0).WithMessage("Gói có AI poster phải cho ít nhất 1 poster/tháng.")
+            .When(x => x.HasAiPoster);
     }
 }

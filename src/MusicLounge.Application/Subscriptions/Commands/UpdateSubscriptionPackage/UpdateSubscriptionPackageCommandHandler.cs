@@ -6,8 +6,9 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Subscriptions.Commands.UpdateSubscriptionPackage;
 
-// D12: Owner da subscribe (Active) vao goi nay thi khong duoc sua Price/MaxTicketsPerEvent/HasAiPoster
-// nua - chi Description/IsActive. Muon doi gia that su -> tao goi moi + deactivate goi cu.
+// D12: Owner da subscribe (Active) vao goi nay thi khong duoc sua
+// Price/MaxTicketsPerEvent/HasAiPoster/MaxAiPostersPerMonth nua - chi Description/IsActive.
+// Muon doi gia that su -> tao goi moi + deactivate goi cu.
 internal sealed class UpdateSubscriptionPackageCommandHandler
     : IRequestHandler<UpdateSubscriptionPackageCommand, Unit>
 {
@@ -29,7 +30,8 @@ internal sealed class UpdateSubscriptionPackageCommandHandler
             var changesLockedFields =
                 package.Price != request.Price ||
                 package.MaxTicketsPerEvent != request.MaxTicketsPerEvent ||
-                package.HasAiPoster != request.HasAiPoster;
+                package.HasAiPoster != request.HasAiPoster ||
+                package.MaxAiPostersPerMonth != request.MaxAiPostersPerMonth;
 
             if (changesLockedFields)
                 throw new DomainException(
@@ -41,6 +43,7 @@ internal sealed class UpdateSubscriptionPackageCommandHandler
         package.Price = request.Price;
         package.MaxTicketsPerEvent = request.MaxTicketsPerEvent;
         package.HasAiPoster = request.HasAiPoster;
+        package.MaxAiPostersPerMonth = request.MaxAiPostersPerMonth;
         package.IsActive = request.IsActive;
 
         packageRepo.Update(package);

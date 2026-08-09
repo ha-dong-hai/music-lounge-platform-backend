@@ -17,6 +17,7 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
     private readonly IEventModerationRepository _moderationRepo;
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
+    private readonly IBackgroundJobService _backgroundJobs;
 
     public PublishLoungeShowCommandHandler(
         IUnitOfWork uow,
@@ -24,7 +25,8 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         ILivestreamRepository livestreamRepo,
         IEventModerationRepository moderationRepo,
         ISystemConfigService config,
-        IAsyncKeyedLock @lock)
+        IAsyncKeyedLock @lock,
+        IBackgroundJobService backgroundJobs)
     {
         _uow = uow;
         _currentUser = currentUser;
@@ -32,6 +34,7 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         _moderationRepo = moderationRepo;
         _config = config;
         _lock = @lock;
+        _backgroundJobs = backgroundJobs;
     }
 
     public async Task<Unit> Handle(PublishLoungeShowCommand request, CancellationToken ct)
@@ -105,29 +108,41 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
         var now = DateTimeOffset.UtcNow;
 
+        EventModeration moderation;
         if (existingModeration is null)
         {
-            _uow.Repository<EventModeration, int>().Add(new EventModeration
+            moderation = new EventModeration
             {
                 TargetType = ModerationTargetType.Show,
                 TargetId = show.Id,
                 CreatedAt = now,
                 SlaDeadline = now.AddHours(slaHours)
-            });
+            };
+            _uow.Repository<EventModeration, int>().Add(moderation);
         }
         else
         {
             // Resubmission after a previous rejection — reopen for review
-            existingModeration.AdminDecision = null;
-            existingModeration.AdminId = null;
-            existingModeration.ReviewNote = null;
-            existingModeration.ReviewedAt = null;
-            existingModeration.CreatedAt = now;
-            existingModeration.SlaDeadline = now.AddHours(slaHours);
-            _moderationRepo.Update(existingModeration);
+            moderation = existingModeration;
+            moderation.AdminDecision = null;
+            moderation.AdminId = null;
+            moderation.ReviewNote = null;
+            moderation.ReviewedAt = null;
+            moderation.CreatedAt = now;
+            moderation.SlaDeadline = now.AddHours(slaHours);
+            // Stale from the previous submission's scoring — re-score the (possibly edited)
+            // content fresh rather than leave the old verdict sitting on a reopened review.
+            moderation.AiScore = null;
+            moderation.RiskLevel = null;
+            moderation.FlagReason = null;
+            moderation.AiRecommendation = null;
+            _moderationRepo.Update(moderation);
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        _backgroundJobs.EnqueueModerationAiScoring(moderation.Id);
+
         return Unit.Value;
     }
 }

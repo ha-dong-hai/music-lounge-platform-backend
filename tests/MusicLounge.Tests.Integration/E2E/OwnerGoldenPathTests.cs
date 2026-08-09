@@ -99,7 +99,7 @@ public sealed class OwnerGoldenPathTests
         var packageRes = await adminClient.PostAsJsonAsync("/api/v1/subscriptions/packages", new
         {
             Name = $"GoldenPkg-{Guid.NewGuid():N}", Description = "E2E package", Price = 250_000m,
-            BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = true
+            BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = true, MaxAiPostersPerMonth = 10
         });
         packageRes.StatusCode.Should().Be(HttpStatusCode.Created);
         var packageId = (await packageRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;

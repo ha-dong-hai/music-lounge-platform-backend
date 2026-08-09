@@ -46,7 +46,8 @@ public sealed class SubscriptionTests
             Price = price,
             BillingCycle = "Monthly",
             MaxTicketsPerEvent = maxTicketsPerEvent,
-            HasAiPoster = true
+            HasAiPoster = true,
+            MaxAiPostersPerMonth = 10
         });
         res.EnsureSuccessStatusCode();
         var body = await res.Content.ReadFromJsonAsync<IdResponse>();
@@ -190,7 +191,8 @@ public sealed class SubscriptionTests
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PutAsJsonAsync($"/api/v1/subscriptions/packages/{packageId}", new
         {
-            Description = "Updated", Price = 999_999m, MaxTicketsPerEvent = 100, HasAiPoster = true, IsActive = true
+            Description = "Updated", Price = 999_999m, MaxTicketsPerEvent = 100, HasAiPoster = true,
+            MaxAiPostersPerMonth = 10, IsActive = true
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
@@ -205,7 +207,7 @@ public sealed class SubscriptionTests
         var res = await adminClient.PutAsJsonAsync($"/api/v1/subscriptions/packages/{packageId}", new
         {
             Description = "New description", Price = 500_000m, MaxTicketsPerEvent = 100,
-            HasAiPoster = true, IsActive = true
+            HasAiPoster = true, MaxAiPostersPerMonth = 10, IsActive = true
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);

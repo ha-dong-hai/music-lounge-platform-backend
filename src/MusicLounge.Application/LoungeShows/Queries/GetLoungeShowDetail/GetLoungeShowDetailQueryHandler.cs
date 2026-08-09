@@ -43,12 +43,20 @@ internal sealed class GetLoungeShowDetailQueryHandler
             && !VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId))
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
-        if (_currentUser.IsAuthenticated)
-            _jobs.EnqueueLogUserBehaviour(_currentUser.UserId, request.ShowId, BehaviourAction.ViewEvent);
-
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)
             : (IReadOnlySet<int>)new HashSet<int>();
+
+        if (_currentUser.IsAuthenticated)
+        {
+            // A user who already wishlisted this show coming back to view it again is a stronger
+            // signal than a first-time view — logged as its own BehaviourAction rather than a plain
+            // ViewEvent so RecomputeUserEventScoresJob can weight it accordingly.
+            var action = wishlisted.Contains(request.ShowId)
+                ? BehaviourAction.ViewAfterWishlist
+                : BehaviourAction.ViewEvent;
+            _jobs.EnqueueLogUserBehaviour(_currentUser.UserId, request.ShowId, action);
+        }
 
         bool? userHasTicket = null;
         bool? userHasRated = null;

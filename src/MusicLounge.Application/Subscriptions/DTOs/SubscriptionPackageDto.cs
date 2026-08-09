@@ -8,4 +8,5 @@ public sealed record SubscriptionPackageDto(
     string BillingCycle,
     int MaxTicketsPerEvent,
     bool HasAiPoster,
+    int MaxAiPostersPerMonth,
     bool IsActive);

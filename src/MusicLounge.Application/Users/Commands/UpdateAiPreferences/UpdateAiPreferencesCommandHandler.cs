@@ -49,35 +49,38 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
                 throw new NotFoundException(nameof(VenueAtmosphere), "một hoặc nhiều atmosphere không tồn tại.");
         }
 
-        // Replace genre preferences
+        // Remove-then-add for each preference set is split into two SaveChangesAsync calls (remove
+        // batch flushed first): EF Core doesn't guarantee a DELETE for an old (UserId, XId) pair
+        // commits before an INSERT for the same pair within one SaveChangesAsync, which can
+        // transiently violate the unique index on that pair even when the net result (same tag
+        // kept across an update) is a no-op change — same class of bug fixed earlier for
+        // BankAccount/PerformerGenre.
         var existingGenres = await _uow.Repository<UserFavouriteGenre, int>()
             .FindAsync(g => g.UserId == _currentUser.UserId, ct);
-        foreach (var g in existingGenres)
-            _uow.Repository<UserFavouriteGenre, int>().Remove(g);
+        var existingMoods = await _uow.Repository<UserFavouriteMood, int>()
+            .FindAsync(m => m.UserId == _currentUser.UserId, ct);
+        var existingAtmospheres = await _uow.Repository<UserFavouriteAtmosphere, int>()
+            .FindAsync(a => a.UserId == _currentUser.UserId, ct);
+
+        foreach (var g in existingGenres) _uow.Repository<UserFavouriteGenre, int>().Remove(g);
+        foreach (var m in existingMoods) _uow.Repository<UserFavouriteMood, int>().Remove(m);
+        foreach (var a in existingAtmospheres) _uow.Repository<UserFavouriteAtmosphere, int>().Remove(a);
+
+        if (existingGenres.Count > 0 || existingMoods.Count > 0 || existingAtmospheres.Count > 0)
+            await _uow.SaveChangesAsync(ct);
+
         foreach (var genreId in genreIds)
             _uow.Repository<UserFavouriteGenre, int>().Add(new UserFavouriteGenre
             {
                 UserId = _currentUser.UserId,
                 GenreId = genreId
             });
-
-        // Replace mood preferences
-        var existingMoods = await _uow.Repository<UserFavouriteMood, int>()
-            .FindAsync(m => m.UserId == _currentUser.UserId, ct);
-        foreach (var m in existingMoods)
-            _uow.Repository<UserFavouriteMood, int>().Remove(m);
         foreach (var moodId in moodIds)
             _uow.Repository<UserFavouriteMood, int>().Add(new UserFavouriteMood
             {
                 UserId = _currentUser.UserId,
                 MoodId = moodId
             });
-
-        // Replace atmosphere preferences
-        var existingAtmospheres = await _uow.Repository<UserFavouriteAtmosphere, int>()
-            .FindAsync(a => a.UserId == _currentUser.UserId, ct);
-        foreach (var a in existingAtmospheres)
-            _uow.Repository<UserFavouriteAtmosphere, int>().Remove(a);
         foreach (var atmosphereId in atmosphereIds)
             _uow.Repository<UserFavouriteAtmosphere, int>().Add(new UserFavouriteAtmosphere
             {

@@ -17,6 +17,7 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
     private readonly ICurrentUserService _currentUser;
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
+    private readonly IBackgroundJobService _backgroundJobs;
 
     public CreateLivestreamCommandHandler(
         IUnitOfWork uow,
@@ -24,7 +25,8 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         ILivestreamServiceFactory factory,
         ICurrentUserService currentUser,
         ISystemConfigService config,
-        IAsyncKeyedLock @lock)
+        IAsyncKeyedLock @lock,
+        IBackgroundJobService backgroundJobs)
     {
         _uow = uow;
         _livestreamRepo = livestreamRepo;
@@ -32,6 +34,7 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         _currentUser = currentUser;
         _config = config;
         _lock = @lock;
+        _backgroundJobs = backgroundJobs;
     }
 
     public async Task<int> Handle(CreateLivestreamCommand request, CancellationToken ct)
@@ -82,14 +85,17 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         // read from system_config, never hardcoded (§6.7).
         var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
         var moderationCreatedAt = DateTimeOffset.UtcNow;
-        _uow.Repository<EventModeration, int>().Add(new EventModeration
+        var moderation = new EventModeration
         {
             TargetType = ModerationTargetType.Livestream,
             TargetId = livestream.Id,
             CreatedAt = moderationCreatedAt,
             SlaDeadline = moderationCreatedAt.AddHours(slaHours)
-        });
+        };
+        _uow.Repository<EventModeration, int>().Add(moderation);
         await _uow.SaveChangesAsync(ct);
+
+        _backgroundJobs.EnqueueModerationAiScoring(moderation.Id);
 
         return livestream.Id;
     }

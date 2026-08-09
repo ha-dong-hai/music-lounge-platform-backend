@@ -50,6 +50,7 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<Livestream> Livestreams => Set<Livestream>();
     public DbSet<LivestreamChatMessage> LivestreamChatMessages => Set<LivestreamChatMessage>();
     public DbSet<EventModeration> EventModerations => Set<EventModeration>();
+    public DbSet<AiPosterGeneration> AiPosterGenerations => Set<AiPosterGeneration>();
     public DbSet<Donation> Donations => Set<Donation>();
 
     // --- N1: Identity extensions ---

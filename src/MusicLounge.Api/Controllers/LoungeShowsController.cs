@@ -10,6 +10,7 @@ using MusicLounge.Application.LoungeShows.Commands.CancelLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.ChangeLoungeShowFormat;
 using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.EndLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.GeneratePoster;
 using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.StartLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.RateShow;
@@ -25,6 +26,7 @@ using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowsByLounge;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowsByPerformer;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowSuggestions;
+using MusicLounge.Application.LoungeShows.Queries.GetPosterGenerationHistory;
 using MusicLounge.Application.LoungeShows.Queries.GetPublishedLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetShowSeatingMap;
 using MusicLounge.Application.LoungeShows.Queries.GetTrendingLoungeShows;
@@ -279,6 +281,35 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
+    // W02: gated by the Owner's subscription (HasAiPosterSnapshot) inside the handler, not by
+    // policy here — RequireOwner only proves "an Owner", the actual entitlement check needs the
+    // Owner's specific active subscription snapshot.
+    [HttpPost("{id:int}/ai-poster")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<PosterGenerationResultDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> GeneratePoster(
+        int id, [FromBody] GeneratePosterRequest? body, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GeneratePosterCommand(id, body?.StyleHint), ct);
+        return Ok(ApiResponse<PosterGenerationResultDto>.Ok(result));
+    }
+
+    [HttpGet("{id:int}/ai-poster/history")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPosterHistory(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPosterGenerationHistoryQuery(id), ct);
+        return Ok(ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>.Ok(result));
+    }
+
     [HttpPost("{id:int}/start")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -372,6 +403,8 @@ public sealed class LoungeShowsController : ControllerBase
 public sealed record RateShowRequest(int Score, string? Comment);
 
 public sealed record RescheduleLoungeShowRequest(DateTimeOffset NewScheduledStart);
+
+public sealed record GeneratePosterRequest(string? StyleHint);
 
 public sealed record ChangeLoungeShowFormatRequest(LoungeShowFormat NewFormat);
 

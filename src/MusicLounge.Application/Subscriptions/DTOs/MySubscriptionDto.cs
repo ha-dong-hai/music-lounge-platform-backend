@@ -9,4 +9,5 @@ public sealed record MySubscriptionDto(
     string Status,
     bool AutoRenew,
     int MaxTicketsPerEventSnapshot,
-    bool HasAiPosterSnapshot);
+    bool HasAiPosterSnapshot,
+    int MaxAiPostersPerMonthSnapshot);

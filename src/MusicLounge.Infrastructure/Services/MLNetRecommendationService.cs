@@ -19,11 +19,20 @@ namespace MusicLounge.Infrastructure.Services;
 // job (khong retrain lai cho tung user) va tu dong "refit dinh ky" o lan chay tiep theo (scope moi).
 internal sealed class MLNetRecommendationService : IAIRecommendationService
 {
+    // Additive boost applied AFTER the documented weighted formula (content*0.5 + collab*0.3 +
+    // custom*0.2) is fully computed — not folded into it. DICE (a comparable live-music discovery
+    // app) explicitly surfaces "artists/venues you follow" as its own signal distinct from taste-
+    // matching; this system already has Follow (user follows a venue) sitting completely unused by
+    // recommendations. Kept as a clearly separate post-hoc business-rule boost, not a change to the
+    // core formula, since the formula's own comment states it follows a fixed spec exactly.
+    private const float FollowedVenueBoost = 0.15f;
+
     private readonly ApplicationDbContext _ctx;
     private readonly IRepository<UserBehaviourLog, int> _logRepo;
     private readonly IRepository<UserFavouriteGenre, int> _genreRepo;
     private readonly IRepository<UserFavouriteMood, int> _moodRepo;
     private readonly IRepository<UserFavouriteAtmosphere, int> _atmosphereRepo;
+    private readonly IRepository<Follow, int> _followRepo;
     private readonly ILoungeShowRepository _showRepo;
     private readonly IRepository<AiRecommendation, int> _recRepo;
     private readonly IUnitOfWork _uow;
@@ -48,6 +57,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         IRepository<UserFavouriteGenre, int> genreRepo,
         IRepository<UserFavouriteMood, int> moodRepo,
         IRepository<UserFavouriteAtmosphere, int> atmosphereRepo,
+        IRepository<Follow, int> followRepo,
         ILoungeShowRepository showRepo,
         IRepository<AiRecommendation, int> recRepo,
         IUnitOfWork uow)
@@ -57,6 +67,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         _genreRepo = genreRepo;
         _moodRepo = moodRepo;
         _atmosphereRepo = atmosphereRepo;
+        _followRepo = followRepo;
         _showRepo = showRepo;
         _recRepo = recRepo;
         _uow = uow;
@@ -68,15 +79,19 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         var favouriteGenres = await _genreRepo.FindAsync(g => g.UserId == userId, ct);
         var favouriteMoods = await _moodRepo.FindAsync(m => m.UserId == userId, ct);
         var favouriteAtmospheres = await _atmosphereRepo.FindAsync(a => a.UserId == userId, ct);
+        var followedLoungeIds = (await _followRepo.FindAsync(f => f.UserId == userId, ct))
+            .Select(f => f.LoungeId).ToHashSet();
 
         var hasContentPrefs = favouriteGenres.Count > 0 || favouriteMoods.Count > 0 || favouriteAtmospheres.Count > 0;
 
         IReadOnlyList<AiRecommendation> recommendations;
 
         if (behaviourLogs.Count >= 5)
-            recommendations = await ComputeHybridAsync(userId, favouriteGenres, favouriteMoods, favouriteAtmospheres, ct);
-        else if (hasContentPrefs)
-            recommendations = await ComputeContentBasedAsync(userId, favouriteGenres, favouriteMoods, favouriteAtmospheres, ct);
+            recommendations = await ComputeHybridAsync(
+                userId, favouriteGenres, favouriteMoods, favouriteAtmospheres, followedLoungeIds, ct);
+        else if (hasContentPrefs || followedLoungeIds.Count > 0)
+            recommendations = await ComputeContentBasedAsync(
+                userId, favouriteGenres, favouriteMoods, favouriteAtmospheres, followedLoungeIds, ct);
         else
             return; // Stage 1 (Trending) handled at query time — no cache needed
 
@@ -88,27 +103,36 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         IReadOnlyList<UserFavouriteGenre> favouriteGenres,
         IReadOnlyList<UserFavouriteMood> favouriteMoods,
         IReadOnlyList<UserFavouriteAtmosphere> favouriteAtmospheres,
+        IReadOnlySet<int> followedLoungeIds,
         CancellationToken ct)
     {
         var shows = await GetCachedTrendingShowsAsync(ct);
+        var showById = shows.ToDictionary(s => s.Id);
         var contentScores = await ComputeContentScoresAsync(
             shows, favouriteGenres, favouriteMoods, favouriteAtmospheres, ct);
 
         return contentScores
-            .Where(kvp => kvp.Value > 0)
-            .Select(kvp => new AiRecommendation
+            .Select(kvp =>
             {
-                UserId = userId,
-                LoungeShowId = kvp.Key,
-                Algorithm = "content_based",
-                ContentScore = kvp.Value,
-                CollabScore = 0f,
-                CustomScore = 0f,
-                FinalScore = kvp.Value,
-                Reason = "Dựa trên thể loại/mood/không khí bạn yêu thích",
-                CreatedAt = DateTimeOffset.UtcNow,
-                ExpiresAt = DateTimeOffset.UtcNow.AddHours(6)
+                var isFollowedVenue = followedLoungeIds.Contains(showById[kvp.Key].LoungeId);
+                var final = kvp.Value + (isFollowedVenue ? FollowedVenueBoost : 0f);
+                return new AiRecommendation
+                {
+                    UserId = userId,
+                    LoungeShowId = kvp.Key,
+                    Algorithm = "content_based",
+                    ContentScore = kvp.Value,
+                    CollabScore = 0f,
+                    CustomScore = 0f,
+                    FinalScore = final,
+                    Reason = isFollowedVenue
+                        ? "Dựa trên thể loại/mood/không khí bạn yêu thích + venue bạn đang theo dõi"
+                        : "Dựa trên thể loại/mood/không khí bạn yêu thích",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    ExpiresAt = DateTimeOffset.UtcNow.AddHours(6)
+                };
             })
+            .Where(r => r.FinalScore > 0)
             .OrderByDescending(r => r.FinalScore)
             .Take(20)
             .ToList();
@@ -119,10 +143,12 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         IReadOnlyList<UserFavouriteGenre> favouriteGenres,
         IReadOnlyList<UserFavouriteMood> favouriteMoods,
         IReadOnlyList<UserFavouriteAtmosphere> favouriteAtmospheres,
+        IReadOnlySet<int> followedLoungeIds,
         CancellationToken ct)
     {
         var shows = await GetCachedTrendingShowsAsync(ct);
         var showIds = shows.Select(s => s.Id).ToList();
+        var showById = shows.ToDictionary(s => s.Id);
 
         var contentScores = await ComputeContentScoresAsync(
             shows, favouriteGenres, favouriteMoods, favouriteAtmospheres, ct);
@@ -135,7 +161,9 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
                 var content = contentScores.GetValueOrDefault(showId, 0f);
                 var collab = collabScores.GetValueOrDefault(showId, 0f);
                 var custom = customScores.GetValueOrDefault(showId, 0f);
-                var final = content * 0.5f + collab * 0.3f + custom * 0.2f;
+                var isFollowedVenue = followedLoungeIds.Contains(showById[showId].LoungeId);
+                var final = content * 0.5f + collab * 0.3f + custom * 0.2f
+                    + (isFollowedVenue ? FollowedVenueBoost : 0f);
 
                 return new AiRecommendation
                 {
@@ -146,7 +174,9 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
                     CollabScore = collab,
                     CustomScore = custom,
                     FinalScore = final,
-                    Reason = "Hybrid: nội dung yêu thích + hành vi người dùng tương tự + tiêu chí riêng của venue",
+                    Reason = isFollowedVenue
+                        ? "Hybrid: nội dung yêu thích + hành vi người dùng tương tự + tiêu chí riêng của venue + venue bạn đang theo dõi"
+                        : "Hybrid: nội dung yêu thích + hành vi người dùng tương tự + tiêu chí riêng của venue",
                     CreatedAt = DateTimeOffset.UtcNow,
                     ExpiresAt = DateTimeOffset.UtcNow.AddHours(6)
                 };

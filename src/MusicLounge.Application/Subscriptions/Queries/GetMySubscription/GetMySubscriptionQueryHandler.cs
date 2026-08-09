@@ -30,6 +30,6 @@ internal sealed class GetMySubscriptionQueryHandler
         return new MySubscriptionDto(
             latest.Id, latest.PackageId, package?.Name ?? string.Empty,
             latest.StartedAt, latest.ExpiresAt, latest.Status.ToString(), latest.AutoRenew,
-            latest.MaxTicketsPerEventSnapshot, latest.HasAiPosterSnapshot);
+            latest.MaxTicketsPerEventSnapshot, latest.HasAiPosterSnapshot, latest.MaxAiPostersPerMonthSnapshot);
     }
 }

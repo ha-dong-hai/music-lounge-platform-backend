@@ -38,9 +38,14 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         if (user is null || !user.AiConsent)
             return await GetTrendingFallbackAsync(limit, ct);
 
+        // Same recurring SQLite-translation limitation documented throughout this codebase:
+        // combining an equality predicate with a DateTimeOffset comparison in one Where clause
+        // fails to translate under the test provider — filter server-side on the simple equality,
+        // then the expiry client-side. Never caught before this fix — nothing had ever exercised
+        // this exact query (AiConsent=true + a real GetRecommended call) under test.
         var now = DateTimeOffset.UtcNow;
-        var cached = await _recRepo.FindAsync(
-            r => r.UserId == _currentUser.UserId && r.ExpiresAt > now, ct);
+        var allForUser = await _recRepo.FindAsync(r => r.UserId == _currentUser.UserId, ct);
+        var cached = allForUser.Where(r => r.ExpiresAt > now).ToList();
 
         if (cached.Count == 0)
         {

@@ -11,6 +11,11 @@ public sealed class SubscriptionPackage : Common.BaseEntity<int>
     public SubscriptionBillingCycle BillingCycle { get; set; }
     public int MaxTicketsPerEvent { get; set; }
     public bool HasAiPoster { get; set; } = false;
+    // Monthly quota of AI-generated posters this package grants — only meaningful when
+    // HasAiPoster is true. Resets each calendar month; only successful generations count against
+    // it (a failed AI call is the platform's problem, not the Owner's, so it doesn't cost them a
+    // poster — see GeneratePosterCommandHandler).
+    public int MaxAiPostersPerMonth { get; set; } = 0;
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
 
