@@ -15,21 +15,29 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly ILivestreamServiceFactory _factory;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAsyncKeyedLock _lock;
 
     public CreateLivestreamCommandHandler(
         IUnitOfWork uow,
         ILivestreamRepository livestreamRepo,
         ILivestreamServiceFactory factory,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _livestreamRepo = livestreamRepo;
         _factory = factory;
         _currentUser = currentUser;
+        _lock = @lock;
     }
 
     public async Task<int> Handle(CreateLivestreamCommand request, CancellationToken ct)
     {
+        // Without this, two concurrent calls for the same show both pass the "existing is null"
+        // check before either commits, and both create a Livestream (+ matching EventModeration)
+        // row for the same show — a real double-broadcast-setup, not just a duplicate DB row.
+        await using var _ = await _lock.AcquireAsync($"create-livestream:{request.ShowId}", ct);
+
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 

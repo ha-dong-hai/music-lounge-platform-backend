@@ -15,21 +15,30 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly IEventModerationRepository _moderationRepo;
+    private readonly IAsyncKeyedLock _lock;
 
     public PublishLoungeShowCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         ILivestreamRepository livestreamRepo,
-        IEventModerationRepository moderationRepo)
+        IEventModerationRepository moderationRepo,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _livestreamRepo = livestreamRepo;
         _moderationRepo = moderationRepo;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(PublishLoungeShowCommand request, CancellationToken ct)
     {
+        // Without this, two concurrent Publish calls on the same Draft show both pass the
+        // "existingModeration is null" check before either commits, and both insert an
+        // EventModeration row — EventModerationConfiguration has no unique index on
+        // (TargetType, TargetId), so nothing else stops the duplicate.
+        await using var _ = await _lock.AcquireAsync($"moderation:show:{request.ShowId}", ct);
+
         var showRepo = _uow.Repository<LoungeShow, int>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);

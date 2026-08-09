@@ -4,6 +4,9 @@ public enum NotificationType
 {
     TicketConfirmed,
     EventReminder,
+    EventRescheduled,
+    EventCancelled,
+    EventFormatChanged,
     EventLive,
     NewEvent,
     WishlistLowStock,

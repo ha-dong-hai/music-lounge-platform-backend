@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -12,13 +13,16 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ILogger<SubmitAppealCommandHandler> _logger;
 
     public SubmitAppealCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications)
+        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
+        ILogger<SubmitAppealCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(SubmitAppealCommand request, CancellationToken ct)
@@ -48,6 +52,10 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
         penalty.Status = PenaltyStatus.Appealed;
         penaltyRepo.Update(penalty);
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Penalty appeal submitted: PenaltyId={PenaltyId} LoungeId={LoungeId} AppealDeadline={AppealDeadline} by OwnerUserId={OwnerUserId} at {At}",
+            penalty.Id, penalty.LoungeId, penalty.AppealDeadline, _currentUser.UserId, now);
 
         var adminIds = await _uow.Repository<User, int>()
             .FindAsync(u => u.Role == UserRole.Admin, ct);

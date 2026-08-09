@@ -111,8 +111,11 @@ public sealed class ShowLifecycleTests
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // NotificationType.EventRescheduled, not EventReminder — the two used to share a type,
+        // which made EventReminderJob's dedup check treat this reschedule notice as "already
+        // reminded" and silently skip the real pre-show reminder for the new date.
         var notif = db.Notifications.FirstOrDefault(
-            n => n.UserId == SeedHelper.AudienceId && n.Type == NotificationType.EventReminder
+            n => n.UserId == SeedHelper.AudienceId && n.Type == NotificationType.EventRescheduled
                 && n.ReferenceId == showId.ToString());
         notif.Should().NotBeNull();
     }

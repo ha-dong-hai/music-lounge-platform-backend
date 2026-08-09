@@ -25,15 +25,18 @@ internal sealed class GetMyVenuePenaltiesQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        // Repository<T> generic khong ho tro Include — filter theo Lounge.OwnerId van dich duoc
-        // sang JOIN o tang SQL (chi can cho WHERE), nhung sau khi materialize thi p.Lounge se null
-        // (AsNoTracking, khong lazy-loading). Fetch ten lounge rieng roi join phia client, giong
-        // pattern da dung o LoungeShowRepository.GetWishlistByUserAsync/GetTrendingAsync.
-        var mine = await _uow.Repository<VenuePenalty, int>()
-            .FindAsync(p => p.Lounge.OwnerId == _currentUser.UserId, ct);
-
-        var ordered = mine.OrderByDescending(p => p.IssuedAt).ToList();
-        var pageItems = ordered.Skip((page - 1) * size).Take(size).ToList();
+        // p.Lounge.OwnerId is only used to filter (translates to a SQL JOIN), never to read
+        // p.Lounge itself — GetPagedAsync orders/counts/pages server-side instead of pulling this
+        // owner's entire penalty history into memory just to throw most of it away per page. Lounge
+        // names are still fetched separately below since Repository<T> has no Include.
+        //
+        // Order by Id, not IssuedAt — ordering by a DateTimeOffset column doesn't translate under
+        // the SQLite provider used in tests (same limitation documented throughout this codebase).
+        // A penalty's Id is assigned at insert time and IssuedAt is set to UtcNow at that same
+        // moment, so Id order and IssuedAt order are always identical here (penalties are never
+        // backdated), and Id keeps pagination server-side on both SQLite and SQL Server.
+        var (pageItems, totalCount) = await _uow.Repository<VenuePenalty, int>()
+            .GetPagedAsync(p => p.Lounge.OwnerId == _currentUser.UserId, p => p.Id, page, size, ct);
 
         var loungeIds = pageItems.Select(p => p.LoungeId).Distinct().ToList();
         var lounges = await _uow.Repository<MusicLoungeEntity, int>()
@@ -48,6 +51,6 @@ internal sealed class GetMyVenuePenaltiesQueryHandler
                 p.AppealDeadline, p.AppealedAt, p.AppealReason, p.AppealResult, p.ReviewedAt))
             .ToList();
 
-        return new PaginatedResult<VenuePenaltyDto>(items, page, size, ordered.Count);
+        return new PaginatedResult<VenuePenaltyDto>(items, page, size, totalCount);
     }
 }

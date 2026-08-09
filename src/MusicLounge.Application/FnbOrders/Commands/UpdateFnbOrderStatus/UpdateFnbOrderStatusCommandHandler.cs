@@ -69,6 +69,30 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         order.Status = newStatus;
         order.UpdatedAt = DateTimeOffset.UtcNow;
         orderRepo.Update(order);
+
+        // Marking Paid used to be a bare status flip with no record anywhere else in the system —
+        // a Staff member could flag an order Paid without collecting anything (inflates
+        // GetOwnerAnalyticsQueryHandler's FnbRevenue), or collect real money and never flag it
+        // Paid (skims cash with nothing to reconcile against). This Payment row doesn't feed the
+        // ledger/settlement pipeline (F&B isn't a platform-commission product, same as walk-in
+        // ticket sales) — it exists purely so "who marked what order Paid, for how much, when" is
+        // an auditable record instead of a single mutable status field only Staff can see/edit.
+        if (newStatus == FnbOrderStatus.Paid)
+        {
+            _uow.Repository<Payment, int>().Add(new Payment
+            {
+                OrderId = $"FNB-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40],
+                PayerId = order.AudienceUserId,
+                GrossAmount = order.TotalAmount,
+                Method = order.PaymentMethod,
+                Status = PaymentStatus.Confirmed,
+                ReferenceType = "FnbOrder",
+                ReferenceId = order.Id.ToString(),
+                PaidAt = order.UpdatedAt,
+                CreatedAt = order.UpdatedAt
+            });
+        }
+
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
     }

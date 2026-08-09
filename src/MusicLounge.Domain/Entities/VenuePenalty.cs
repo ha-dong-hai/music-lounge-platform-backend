@@ -14,6 +14,11 @@ public sealed class VenuePenalty : Common.BaseEntity<int>
     public int? SuspensionDays { get; set; }
     public DateTimeOffset? SuspensionEnd { get; set; }
     public PenaltyStatus Status { get; set; } = PenaltyStatus.Active;
+    // Set by ApplyDuePenaltiesJob the moment it actually runs this penalty's venue-status change +
+    // subscription compensation — the precise "has this specific penalty's consequence already
+    // executed" marker. Distinct from checking the venue's CURRENT status, which two different
+    // penalties of the same severity (e.g. two separate Suspensions) can both legitimately share.
+    public DateTimeOffset? AppliedAt { get; set; }
     public DateTimeOffset? AppealDeadline { get; set; }
     public DateTimeOffset? AppealedAt { get; set; }
     public string? AppealReason { get; set; }

@@ -14,17 +14,27 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly IAsyncKeyedLock _lock;
 
     public ChangeLoungeShowFormatCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications)
+        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(ChangeLoungeShowFormatCommand request, CancellationToken ct)
     {
+        // Without this, a double-click (or Owner + Admin racing) both pass the Format==Offline
+        // guard before either commits, and both generate a duplicate RefundRequest per physical
+        // ticket — not a double-payout (ProcessRefundRequestCommandHandler's cumulative check
+        // still caps total refunds at payment.GrossAmount), but a stuck duplicate Pending refund
+        // row and a duplicate cancellation notification per buyer.
+        await using var _ = await _lock.AcquireAsync($"show-status-change:{request.ShowId}", ct);
+
         var showRepo = _uow.Repository<LoungeShow, int>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
@@ -80,7 +90,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                 if (ticket.BuyerId is int buyerId)
                     await _notifications.NotifyAsync(
                         buyerId,
-                        NotificationType.EventReminder,
+                        NotificationType.EventFormatChanged,
                         "Event đã chuyển sang hình thức Online",
                         $"\"{show.Name}\" đã chuyển từ trực tiếp sang online. Vé vật lý của bạn đã được " +
                         "hủy và tự động tạo yêu cầu hoàn 100% tiền vé.",

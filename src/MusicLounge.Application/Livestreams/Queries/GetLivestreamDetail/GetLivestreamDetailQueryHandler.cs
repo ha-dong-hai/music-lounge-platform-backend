@@ -1,21 +1,26 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Domain.Exceptions;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Livestreams.Queries.GetLivestreamDetail;
 
 internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLivestreamDetailQuery, LivestreamDetailDto>
 {
+    private readonly IUnitOfWork _uow;
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly ICurrentUserService _currentUser;
 
     public GetLivestreamDetailQueryHandler(
+        IUnitOfWork uow,
         ILivestreamRepository livestreamRepo,
         ICurrentUserService currentUser)
     {
+        _uow = uow;
         _livestreamRepo = livestreamRepo;
         _currentUser = currentUser;
     }
@@ -25,11 +30,19 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
         var livestream = await _livestreamRepo.GetByIdWithDetailsAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException("Livestream", request.LivestreamId);
 
-        // HLS URL is only visible to users with a valid livestream ticket,
-        // or to Staff/Admin who need to monitor the stream.
-        var userHasAccess = _currentUser.Role is Roles.Admin or Roles.Staff
-            || (_currentUser.IsAuthenticated
-                && await _livestreamRepo.HasViewerAccessAsync(request.LivestreamId, _currentUser.UserId, ct));
+        // HLS URL is only visible to users with a valid livestream ticket, or to Staff/Owner of
+        // THIS venue who need to monitor the stream — was previously any Staff/Admin account
+        // regardless of venue, letting Staff of venue A watch venue B's paid livestream for free.
+        var userHasAccess = _currentUser.Role == Roles.Admin;
+        if (!userHasAccess)
+        {
+            var lounge = await _uow.Repository<MusicLoungeEntity, int>()
+                .GetByIdAsync(livestream.LoungeShow.LoungeId, ct);
+            userHasAccess = (lounge is not null
+                    && VenueOperatorAccess.CanOperate(_currentUser, livestream.LoungeShow.LoungeId, lounge.OwnerId))
+                || (_currentUser.IsAuthenticated
+                    && await _livestreamRepo.HasViewerAccessAsync(request.LivestreamId, _currentUser.UserId, ct));
+        }
 
         return new LivestreamDetailDto(
             livestream.Id,

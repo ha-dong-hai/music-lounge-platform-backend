@@ -67,10 +67,14 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
             t => t.ShowId == show.Id && t.Status == TicketStatus.Confirmed && t.BuyerId != null, ct);
         var buyerIds = tickets.Select(t => t.BuyerId!.Value).Distinct();
 
+        // Was NotificationType.EventReminder — collided with EventReminderJob's own dedup key
+        // (Type=EventReminder + ReferenceType="show" + ReferenceId=show.Id, per buyer). The job
+        // saw this reschedule notice, concluded the buyer was "already reminded" for the show, and
+        // silently never sent the real pre-show reminder for the new date.
         foreach (var buyerId in buyerIds)
             await _notifications.NotifyAsync(
                 buyerId,
-                NotificationType.EventReminder,
+                NotificationType.EventRescheduled,
                 "Lịch diễn đã thay đổi",
                 $"\"{show.Name}\" đã đổi lịch từ {oldStart:HH:mm dd/MM/yyyy} sang " +
                 $"{show.ScheduledStart:HH:mm dd/MM/yyyy}. Bạn có thể hủy vé để được hoàn tiền nếu không " +

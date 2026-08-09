@@ -14,17 +14,20 @@ internal sealed class ReviewLivestreamCommandHandler : IRequestHandler<ReviewLiv
     private readonly ICurrentUserService _currentUser;
     private readonly IEventModerationRepository _moderationRepo;
     private readonly INotificationService _notifications;
+    private readonly IAsyncKeyedLock _lock;
 
     public ReviewLivestreamCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         IEventModerationRepository moderationRepo,
-        INotificationService notifications)
+        INotificationService notifications,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _moderationRepo = moderationRepo;
         _notifications = notifications;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(ReviewLivestreamCommand request, CancellationToken ct)
@@ -32,6 +35,9 @@ internal sealed class ReviewLivestreamCommandHandler : IRequestHandler<ReviewLiv
         if (!Enum.TryParse<ModerationDecision>(request.Decision, true, out var decision)
             || decision == ModerationDecision.Terminated)
             throw new DomainException("Quyết định không hợp lệ. Dùng 'Approved' hoặc 'Rejected'.");
+
+        // Same double-review race as ReviewShowCommandHandler — see its comment.
+        await using var _ = await _lock.AcquireAsync($"moderation:livestream:{request.LivestreamId}", ct);
 
         var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);

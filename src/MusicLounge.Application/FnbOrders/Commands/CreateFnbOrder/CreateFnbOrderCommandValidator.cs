@@ -7,7 +7,11 @@ namespace MusicLounge.Application.FnbOrders.Commands.CreateFnbOrder;
 
 public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnbOrderCommand>
 {
-    private static readonly string[] ValidMethods = ["Gateway", "Cash"];
+    // "Gateway" used to be accepted here too, but nothing in CreateFnbOrderCommandHandler or
+    // UpdateFnbOrderStatusCommandHandler ever calls VNPay for an FnbOrder — it was a purely
+    // decorative option that behaved identically to Cash while implying an online-payment flow
+    // that doesn't exist. Reject it explicitly instead of silently no-op'ing.
+    private static readonly string[] ValidMethods = ["Cash"];
 
     public CreateFnbOrderCommandValidator(IUnitOfWork uow)
     {
@@ -32,7 +36,7 @@ public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnb
 
         RuleFor(x => x.PaymentMethod)
             .Must(m => ValidMethods.Contains(m, StringComparer.OrdinalIgnoreCase))
-            .WithMessage("PaymentMethod phải là 'Gateway' hoặc 'Cash'.");
+            .WithMessage("PaymentMethod phải là 'Cash' — F&B chưa hỗ trợ thanh toán qua cổng VNPay.");
 
         RuleFor(x => x.Items).NotEmpty().WithMessage("Đơn hàng phải có ít nhất 1 món.");
 

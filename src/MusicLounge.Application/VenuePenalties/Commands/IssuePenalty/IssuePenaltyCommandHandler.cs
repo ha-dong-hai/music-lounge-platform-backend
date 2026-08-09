@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -12,13 +13,16 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ILogger<IssuePenaltyCommandHandler> _logger;
 
     public IssuePenaltyCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications)
+        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
+        ILogger<IssuePenaltyCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _logger = logger;
     }
 
     public async Task<int> Handle(IssuePenaltyCommand request, CancellationToken ct)
@@ -81,6 +85,10 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
             ct: ct);
+
+        _logger.LogWarning(
+            "Venue penalty issued: PenaltyId={PenaltyId} LoungeId={LoungeId} Type={PenaltyType} EffectiveAt={EffectiveAt} by AdminUserId={AdminUserId} at {At}",
+            penalty.Id, penalty.LoungeId, penaltyType, effectiveAt, _currentUser.UserId, now);
 
         return penalty.Id;
     }

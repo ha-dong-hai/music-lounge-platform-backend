@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -11,13 +12,16 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
+    private readonly ILogger<ResolveComplaintCommandHandler> _logger;
 
     public ResolveComplaintCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications)
+        IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
+        ILogger<ResolveComplaintCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(ResolveComplaintCommand request, CancellationToken ct)
@@ -62,6 +66,11 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Complaint resolved: ComplaintId={ComplaintId} NewStatus={NewStatus} ResolvedAction={ResolvedAction} by AdminUserId={AdminUserId} at {At}",
+            complaint.Id, newStatus, complaint.ResolvedAction, _currentUser.UserId, DateTimeOffset.UtcNow);
+
         return Unit.Value;
     }
 }

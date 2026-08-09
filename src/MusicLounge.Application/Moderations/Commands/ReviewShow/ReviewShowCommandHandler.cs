@@ -15,19 +15,22 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
     private readonly IEventModerationRepository _moderationRepo;
     private readonly IFollowRepository _followRepo;
     private readonly INotificationService _notifications;
+    private readonly IAsyncKeyedLock _lock;
 
     public ReviewShowCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         IEventModerationRepository moderationRepo,
         IFollowRepository followRepo,
-        INotificationService notifications)
+        INotificationService notifications,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _moderationRepo = moderationRepo;
         _followRepo = followRepo;
         _notifications = notifications;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(ReviewShowCommand request, CancellationToken ct)
@@ -35,6 +38,12 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
         if (!Enum.TryParse<ModerationDecision>(request.Decision, true, out var decision)
             || decision == ModerationDecision.Terminated)
             throw new DomainException("Quyết định không hợp lệ. Dùng 'Approved' hoặc 'Rejected'.");
+
+        // Two Admins reviewing the same pending show within the same instant is the failure this
+        // guards against: without a lock, both can read AdminDecision == null before either
+        // commits, and both approve/reject — one decision silently overwrites the other's
+        // notifications/side-effects (followers notified of a status the show didn't end up in).
+        await using var _ = await _lock.AcquireAsync($"moderation:show:{request.ShowId}", ct);
 
         var showRepo = _uow.Repository<LoungeShow, int>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)

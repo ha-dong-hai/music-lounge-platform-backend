@@ -14,19 +14,26 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
     private readonly ILogger<ReviewAppealCommandHandler> _logger;
+    private readonly IAsyncKeyedLock _lock;
 
     public ReviewAppealCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
-        ILogger<ReviewAppealCommandHandler> logger)
+        ILogger<ReviewAppealCommandHandler> logger, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
         _logger = logger;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(ReviewAppealCommand request, CancellationToken ct)
     {
+        // Same key AutoApproveOverdueAppealsJob locks on — an Admin manually deciding right at the
+        // 48h SLA boundary can otherwise race the auto-approve job: both read Status==Appealed
+        // before either commits, both write a (possibly contradictory) decision.
+        await using var _ = await _lock.AcquireAsync($"appeal-review:{request.PenaltyId}", ct);
+
         var penaltyRepo = _uow.Repository<VenuePenalty, int>();
         var penalty = await penaltyRepo.GetByIdAsync(request.PenaltyId, ct)
             ?? throw new NotFoundException(nameof(VenuePenalty), request.PenaltyId);
@@ -47,16 +54,30 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(penalty.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), penalty.LoungeId);
 
-        var wasAlreadyApplied = penalty.EffectiveAt <= now
-            && penalty.PenaltyType is PenaltyType.Suspension or PenaltyType.Ban;
+        // Exact now (was inferred from EffectiveAt <= now, which could be wrong in the window
+        // after EffectiveAt passes but before ApplyDuePenaltiesJob has actually ticked).
+        var wasAlreadyApplied = penalty.AppliedAt is not null;
 
         if (decision == PenaltyStatus.Overturned)
         {
-            // Simplifying assumption: a venue has at most one penalty in effect at a time (no
-            // "penalty stack" concept exists in this schema), so reversing always means restoring
-            // normal operation rather than falling back to some other still-active penalty.
-            lounge.Status = LoungeStatus.Approved;
-            _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
+            // A venue CAN have more than one Suspension/Ban in effect at once (e.g. a second
+            // violation while the first is still unresolved) — only reset to Approved if no OTHER
+            // currently-in-effect penalty still justifies keeping this venue locked/suspended.
+            // Previously this reset unconditionally, which could re-open a venue that another,
+            // still-active penalty should have kept locked.
+            var otherActivePenalties = await _uow.Repository<VenuePenalty, int>().FindAsync(
+                p => p.LoungeId == penalty.LoungeId
+                    && p.Id != penalty.Id
+                    && p.Status == PenaltyStatus.Active
+                    && p.AppliedAt != null
+                    && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
+                ct);
+
+            if (otherActivePenalties.Count == 0)
+            {
+                lounge.Status = LoungeStatus.Approved;
+                _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
+            }
 
             if (wasAlreadyApplied)
             {

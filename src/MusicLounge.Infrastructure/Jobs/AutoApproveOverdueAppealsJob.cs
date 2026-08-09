@@ -15,11 +15,14 @@ public sealed class AutoApproveOverdueAppealsJob
 {
     private readonly ApplicationDbContext _ctx;
     private readonly INotificationService _notifications;
+    private readonly IAsyncKeyedLock _lock;
 
-    public AutoApproveOverdueAppealsJob(ApplicationDbContext ctx, INotificationService notifications)
+    public AutoApproveOverdueAppealsJob(
+        ApplicationDbContext ctx, INotificationService notifications, IAsyncKeyedLock @lock)
     {
         _ctx = ctx;
         _notifications = notifications;
+        _lock = @lock;
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -38,26 +41,45 @@ public sealed class AutoApproveOverdueAppealsJob
 
         foreach (var penalty in overdue)
         {
-            penalty.Status = PenaltyStatus.Overturned;
-            penalty.AppealResult = "Overturned (auto — quá hạn SLA 48h)";
-            penalty.ReviewedAt = now;
+            // Same lock key ReviewAppealCommandHandler uses — an Admin manually deciding right at
+            // the SLA boundary can otherwise race this job. Held until this penalty's own
+            // SaveChangesAsync below, not released early, so the lock actually covers the commit.
+            await using var _ = await _lock.AcquireAsync($"appeal-review:{penalty.Id}", ct);
 
-            var lounge = await _ctx.Lounges.FirstOrDefaultAsync(l => l.Id == penalty.LoungeId, ct);
+            // Re-check under the lock: a manual review that won it may have already resolved this
+            // penalty (moved it off Appealed) between the query above and acquiring the lock.
+            var current = await _ctx.VenuePenalties.FirstOrDefaultAsync(p => p.Id == penalty.Id, ct);
+            if (current is null || current.Status != PenaltyStatus.Appealed) continue;
+
+            current.Status = PenaltyStatus.Overturned;
+            current.AppealResult = "Overturned (auto — quá hạn SLA 48h)";
+            current.ReviewedAt = now;
+
+            var lounge = await _ctx.Lounges.FirstOrDefaultAsync(l => l.Id == current.LoungeId, ct);
             if (lounge is null) continue;
 
-            var wasAlreadyApplied = penalty.EffectiveAt <= now
-                && penalty.PenaltyType is PenaltyType.Suspension or PenaltyType.Ban;
+            var wasAlreadyApplied = current.AppliedAt is not null;
 
-            lounge.Status = LoungeStatus.Approved;
+            // A venue can have more than one Suspension/Ban in effect at once — only reset to
+            // Approved if no OTHER currently-in-effect penalty still justifies keeping it locked.
+            var hasOtherActivePenalty = await _ctx.VenuePenalties.AnyAsync(
+                p => p.LoungeId == current.LoungeId
+                    && p.Id != current.Id
+                    && p.Status == PenaltyStatus.Active
+                    && p.AppliedAt != null
+                    && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
+                ct);
+            if (!hasOtherActivePenalty)
+                lounge.Status = LoungeStatus.Approved;
 
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.AppealResolved,
                 "Kháng cáo tự động được chấp thuận",
-                $"Admin không xử lý kháng cáo cho phạt #{penalty.Id} trong 48h — kháng cáo được " +
+                $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong 48h — kháng cáo được " +
                 "tự động chấp thuận, venue trở lại hoạt động bình thường.",
                 referenceType: "venue_penalty",
-                referenceId: penalty.Id.ToString(),
+                referenceId: current.Id.ToString(),
                 ct: ct);
 
             if (wasAlreadyApplied)
@@ -71,16 +93,16 @@ public sealed class AutoApproveOverdueAppealsJob
                         admin.Id,
                         NotificationType.AppealResolved,
                         "Cần xử lý thủ công: hoàn tác bù trừ subscription",
-                        $"Phạt #{penalty.Id} ({penalty.PenaltyType}) trên \"{lounge.Name}\" đã tự động " +
+                        $"Phạt #{current.Id} ({current.PenaltyType}) trên \"{lounge.Name}\" đã tự động " +
                         "overturn (quá hạn SLA) sau khi bù trừ subscription đã áp dụng. Vui lòng kiểm " +
                         "tra và điều chỉnh owner_subscriptions/ledger thủ công cho đúng.",
                         referenceType: "venue_penalty",
-                        referenceId: penalty.Id.ToString(),
+                        referenceId: current.Id.ToString(),
                         ct: ct);
                 }
             }
-        }
 
-        await _ctx.SaveChangesAsync(ct);
+            await _ctx.SaveChangesAsync(ct);
+        }
     }
 }

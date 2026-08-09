@@ -10,10 +10,12 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// <summary>
 /// §6.8 — applies the delayed venue-status change and subscription compensation for
 /// Suspension/Ban penalties once EffectiveAt arrives. Warning has no delay and is applied
-/// immediately by IssuePenaltyCommandHandler, so it never appears here. Idempotent by construction:
-/// re-running against an already-applied penalty is a no-op because the venue's Status already
-/// matches the target (checked before doing anything), so a penalty is never compensated twice
-/// even if the job overlaps itself or retries.
+/// immediately by IssuePenaltyCommandHandler, so it never appears here. Idempotent per penalty via
+/// VenuePenalty.AppliedAt (set the moment this job actually processes a penalty) — NOT via
+/// comparing against the venue's current Status, which was the original (buggy) approach: two
+/// separate Suspension penalties on the same venue can both legitimately target LoungeStatus.Suspended,
+/// and checking only the venue's status meant the second one's subscription compensation was
+/// silently skipped as "already applied" when it never was.
 /// </summary>
 public sealed class ApplyDuePenaltiesJob
 {
@@ -39,7 +41,7 @@ public sealed class ApplyDuePenaltiesJob
         // SettlementReleaseJob/ReleaseExpiredHoldsJob: combining an enum-equality predicate with a
         // DateTimeOffset comparison in one query does not translate under the SQLite test provider.
         var active = await _ctx.VenuePenalties
-            .Where(p => p.Status == PenaltyStatus.Active
+            .Where(p => p.Status == PenaltyStatus.Active && p.AppliedAt == null
                 && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban))
             .ToListAsync(ct);
         var due = active.Where(p => p.EffectiveAt <= now).ToList();
@@ -54,11 +56,8 @@ public sealed class ApplyDuePenaltiesJob
                 ? LoungeStatus.Suspended
                 : LoungeStatus.Locked;
 
-            // Idempotency guard — if the venue is already in the target state, this penalty (or a
-            // more severe one reaching the same state) has already been applied.
-            if (lounge.Status == targetStatus) continue;
-
             lounge.Status = targetStatus;
+            penalty.AppliedAt = now;
 
             // Ordering by a DateTimeOffset column does not translate under the SQLite provider
             // used in tests (same limitation noted elsewhere in this codebase) — an owner should
