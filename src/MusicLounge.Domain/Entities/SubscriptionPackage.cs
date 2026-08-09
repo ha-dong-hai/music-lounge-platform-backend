@@ -16,6 +16,10 @@ public sealed class SubscriptionPackage : Common.BaseEntity<int>
     // it (a failed AI call is the platform's problem, not the Owner's, so it doesn't cost them a
     // poster — see GeneratePosterCommandHandler).
     public int MaxAiPostersPerMonth { get; set; } = 0;
+    // Max panorama scenes an Owner can add to their venue's 360° virtual tour — 0 means the tour
+    // feature is unavailable on this tier (still snapshotted like the other entitlements below, so
+    // a later package edit can't shrink a tour an Owner already built mid-subscription).
+    public int MaxTourScenes { get; set; } = 0;
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
 

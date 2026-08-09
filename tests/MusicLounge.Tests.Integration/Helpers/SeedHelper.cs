@@ -157,7 +157,7 @@ public static class SeedHelper
         {
             Id = 1, Name = "Test Package", Price = 500_000m,
             BillingCycle = SubscriptionBillingCycle.Monthly,
-            MaxTicketsPerEvent = 1000, HasAiPoster = true, MaxAiPostersPerMonth = 10, IsActive = true,
+            MaxTicketsPerEvent = 1000, HasAiPoster = true, MaxAiPostersPerMonth = 10, MaxTourScenes = 5, IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         });
         db.OwnerSubscriptions.AddRange(
@@ -167,7 +167,8 @@ public static class SeedHelper
                 StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(29),
                 Status = SubscriptionStatus.Active,
-                MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10
+                MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10,
+                MaxTourScenesSnapshot = 5
             },
             new OwnerSubscription
             {
@@ -175,7 +176,8 @@ public static class SeedHelper
                 StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(29),
                 Status = SubscriptionStatus.Active,
-                MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10
+                MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10,
+                MaxTourScenesSnapshot = 5
             });
 
         // Default payout bank accounts — 2026-08-09: ScheduleSettlementHandler/ConfirmDonationPaidCommandHandler

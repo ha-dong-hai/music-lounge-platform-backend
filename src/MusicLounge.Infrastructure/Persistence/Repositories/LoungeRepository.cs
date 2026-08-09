@@ -70,6 +70,13 @@ internal sealed class LoungeRepository : ILoungeRepository
 
         var upcomingCount = (await GetUpcomingActiveShowCountsAsync([id], now, ct)).GetValueOrDefault(id);
 
+        var galleryImages = await _ctx.LoungeGalleryImages
+            .AsNoTracking()
+            .Where(g => g.LoungeId == id)
+            .OrderBy(g => g.OrderIndex)
+            .Select(g => new LoungeGalleryImageDto(g.Id, g.ImageUrl, g.Caption, g.OrderIndex))
+            .ToListAsync(ct);
+
         return new LoungeDetailDto(
             lounge.Id,
             lounge.Name,
@@ -90,7 +97,8 @@ internal sealed class LoungeRepository : ILoungeRepository
             upcomingCount,
             null,
             lounge.Description,
-            lounge.AtmosphereName);
+            lounge.AtmosphereName,
+            galleryImages);
     }
 
     /// <summary>

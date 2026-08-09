@@ -23,6 +23,7 @@ internal sealed class CreateSubscriptionPackageCommandHandler
             MaxTicketsPerEvent = request.MaxTicketsPerEvent,
             HasAiPoster = request.HasAiPoster,
             MaxAiPostersPerMonth = request.MaxAiPostersPerMonth,
+            MaxTourScenes = request.MaxTourScenes,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };

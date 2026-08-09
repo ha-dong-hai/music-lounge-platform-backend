@@ -14,5 +14,6 @@ public sealed class UpdateSubscriptionPackageCommandValidator : AbstractValidato
         RuleFor(x => x.MaxAiPostersPerMonth)
             .GreaterThan(0).WithMessage("Gói có AI poster phải cho ít nhất 1 poster/tháng.")
             .When(x => x.HasAiPoster);
+        RuleFor(x => x.MaxTourScenes).GreaterThanOrEqualTo(0);
     }
 }

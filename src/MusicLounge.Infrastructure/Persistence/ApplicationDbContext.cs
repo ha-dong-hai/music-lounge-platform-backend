@@ -23,6 +23,9 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<LoungeShow> LoungeShows => Set<LoungeShow>();
     public DbSet<Performer> Performers => Set<Performer>();
     public DbSet<PerformerSocialLink> PerformerSocialLinks => Set<PerformerSocialLink>();
+    public DbSet<VenueTourScene> VenueTourScenes => Set<VenueTourScene>();
+    public DbSet<VenueTourHotspot> VenueTourHotspots => Set<VenueTourHotspot>();
+    public DbSet<LoungeGalleryImage> LoungeGalleryImages => Set<LoungeGalleryImage>();
     public DbSet<Performance> Performances => Set<Performance>();
     public DbSet<TicketTier> TicketTiers => Set<TicketTier>();
     public DbSet<TicketPrice> TicketPrices => Set<TicketPrice>();

@@ -64,7 +64,7 @@ public sealed class SubscriptionsController : ControllerBase
     {
         await _sender.Send(new UpdateSubscriptionPackageCommand(
             id, body.Description, body.Price, body.MaxTicketsPerEvent, body.HasAiPoster,
-            body.MaxAiPostersPerMonth, body.IsActive), ct);
+            body.MaxAiPostersPerMonth, body.MaxTourScenes, body.IsActive), ct);
         return NoContent();
     }
 
@@ -145,6 +145,6 @@ public sealed class SubscriptionsController : ControllerBase
 
 public sealed record UpdateSubscriptionPackageRequest(
     string? Description, decimal Price, int MaxTicketsPerEvent, bool HasAiPoster,
-    int MaxAiPostersPerMonth, bool IsActive);
+    int MaxAiPostersPerMonth, int MaxTourScenes, bool IsActive);
 
 public sealed record SubscribeToPackageRequest(int PackageId);

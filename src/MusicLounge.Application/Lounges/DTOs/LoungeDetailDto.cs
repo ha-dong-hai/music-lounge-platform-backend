@@ -17,4 +17,7 @@ public sealed record LoungeDetailDto(
     int UpcomingShowCount,
     bool? IsFollowing,
     string? Description,
-    string? AtmosphereName);
+    string? AtmosphereName,
+    IReadOnlyList<LoungeGalleryImageDto> GalleryImages);
+
+public sealed record LoungeGalleryImageDto(int Id, string ImageUrl, string? Caption, int OrderIndex);

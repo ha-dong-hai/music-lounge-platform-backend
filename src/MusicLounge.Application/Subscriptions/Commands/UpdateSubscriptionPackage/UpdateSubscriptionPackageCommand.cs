@@ -9,5 +9,6 @@ public sealed record UpdateSubscriptionPackageCommand(
     int MaxTicketsPerEvent,
     bool HasAiPoster,
     int MaxAiPostersPerMonth,
+    int MaxTourScenes,
     bool IsActive
 ) : ICommand;

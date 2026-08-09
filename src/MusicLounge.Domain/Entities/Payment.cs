@@ -28,6 +28,7 @@ public sealed class Payment : Common.BaseEntity<int>
     public int? SubscriptionMaxTicketsPerEventSnapshot { get; set; }
     public bool? SubscriptionHasAiPosterSnapshot { get; set; }
     public int? SubscriptionMaxAiPostersPerMonthSnapshot { get; set; }
+    public int? SubscriptionMaxTourScenesSnapshot { get; set; }
     public DateTimeOffset? PaidAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }

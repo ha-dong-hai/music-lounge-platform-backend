@@ -31,11 +31,12 @@ internal sealed class UpdateSubscriptionPackageCommandHandler
                 package.Price != request.Price ||
                 package.MaxTicketsPerEvent != request.MaxTicketsPerEvent ||
                 package.HasAiPoster != request.HasAiPoster ||
-                package.MaxAiPostersPerMonth != request.MaxAiPostersPerMonth;
+                package.MaxAiPostersPerMonth != request.MaxAiPostersPerMonth ||
+                package.MaxTourScenes != request.MaxTourScenes;
 
             if (changesLockedFields)
                 throw new DomainException(
-                    "Gói đã có Owner đang sử dụng — không thể sửa Giá/Số vé tối đa/AI Poster. " +
+                    "Gói đã có Owner đang sử dụng — không thể sửa Giá/Số vé tối đa/AI Poster/Số scene tour. " +
                     "Hãy tạo gói mới và deactivate gói cũ nếu muốn thay đổi các điều khoản này.");
         }
 
@@ -44,6 +45,7 @@ internal sealed class UpdateSubscriptionPackageCommandHandler
         package.MaxTicketsPerEvent = request.MaxTicketsPerEvent;
         package.HasAiPoster = request.HasAiPoster;
         package.MaxAiPostersPerMonth = request.MaxAiPostersPerMonth;
+        package.MaxTourScenes = request.MaxTourScenes;
         package.IsActive = request.IsActive;
 
         packageRepo.Update(package);

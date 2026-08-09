@@ -71,6 +71,7 @@ internal sealed class RenewSubscriptionCommandHandler
             SubscriptionMaxTicketsPerEventSnapshot = package.MaxTicketsPerEvent,
             SubscriptionHasAiPosterSnapshot = package.HasAiPoster,
             SubscriptionMaxAiPostersPerMonthSnapshot = package.MaxAiPostersPerMonth,
+            SubscriptionMaxTourScenesSnapshot = package.MaxTourScenes,
             CreatedAt = now
         };
         _uow.Repository<Payment, int>().Add(payment);

@@ -1016,6 +1016,36 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.ToTable("login_spike_alert_states", (string)null);
                 });
 
+            modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeGalleryImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("LoungeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoungeId");
+
+                    b.ToTable("lounge_gallery_images", (string)null);
+                });
+
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeImage", b =>
                 {
                     b.Property<int>("Id")
@@ -1585,6 +1615,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<int>("MaxTicketsPerEventSnapshot")
                         .HasColumnType("int");
 
+                    b.Property<int>("MaxTourScenesSnapshot")
+                        .HasColumnType("int");
+
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
@@ -1696,6 +1729,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("SubscriptionMaxTicketsPerEventSnapshot")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SubscriptionMaxTourScenesSnapshot")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TaxWithheld")
@@ -2167,6 +2203,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("MaxTicketsPerEvent")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxTourScenes")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -3205,6 +3244,84 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.ToTable("venue_penalties", (string)null);
                 });
 
+            modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourHotspot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("InfoText")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<double>("Pitch")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SceneId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetSceneId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<double>("Yaw")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SceneId");
+
+                    b.HasIndex("TargetSceneId");
+
+                    b.ToTable("venue_tour_hotspots", (string)null);
+                });
+
+            modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourScene", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("LoungeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("PositionX")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("PositionY")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoungeId");
+
+                    b.ToTable("venue_tour_scenes", (string)null);
+                });
+
             modelBuilder.Entity("MusicLounge.Domain.Entities.AiPosterGeneration", b =>
                 {
                     b.HasOne("MusicLounge.Domain.Entities.User", "Owner")
@@ -3477,6 +3594,17 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Navigation("Livestream");
 
                     b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeGalleryImage", b =>
+                {
+                    b.HasOne("MusicLounge.Domain.Entities.MusicLounge", "Lounge")
+                        .WithMany()
+                        .HasForeignKey("LoungeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lounge");
                 });
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeImage", b =>
@@ -4169,6 +4297,35 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Navigation("ReviewedByUser");
                 });
 
+            modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourHotspot", b =>
+                {
+                    b.HasOne("MusicLounge.Domain.Entities.VenueTourScene", "Scene")
+                        .WithMany("Hotspots")
+                        .HasForeignKey("SceneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MusicLounge.Domain.Entities.VenueTourScene", "TargetScene")
+                        .WithMany()
+                        .HasForeignKey("TargetSceneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Scene");
+
+                    b.Navigation("TargetScene");
+                });
+
+            modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourScene", b =>
+                {
+                    b.HasOne("MusicLounge.Domain.Entities.MusicLounge", "Lounge")
+                        .WithMany()
+                        .HasForeignKey("LoungeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lounge");
+                });
+
             modelBuilder.Entity("MusicLounge.Domain.Entities.Account", b =>
                 {
                     b.Navigation("Entries");
@@ -4325,6 +4482,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Navigation("LoungeShowAtmospheres");
 
                     b.Navigation("UserFavourites");
+                });
+
+            modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourScene", b =>
+                {
+                    b.Navigation("Hotspots");
                 });
 #pragma warning restore 612, 618
         }

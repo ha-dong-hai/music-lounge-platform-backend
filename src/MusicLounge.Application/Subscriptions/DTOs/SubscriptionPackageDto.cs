@@ -9,4 +9,5 @@ public sealed record SubscriptionPackageDto(
     int MaxTicketsPerEvent,
     bool HasAiPoster,
     int MaxAiPostersPerMonth,
+    int MaxTourScenes,
     bool IsActive);

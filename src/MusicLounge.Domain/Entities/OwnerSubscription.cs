@@ -15,6 +15,7 @@ public sealed class OwnerSubscription : Common.BaseEntity<int>
     public int MaxTicketsPerEventSnapshot { get; set; }
     public bool HasAiPosterSnapshot { get; set; }
     public int MaxAiPostersPerMonthSnapshot { get; set; }
+    public int MaxTourScenesSnapshot { get; set; }
 
     public User Owner { get; set; } = null!;
     public SubscriptionPackage Package { get; set; } = null!;

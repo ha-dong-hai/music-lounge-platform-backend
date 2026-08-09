@@ -172,7 +172,8 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             // could have been edited by an admin in the window between checkout and this callback.
             MaxTicketsPerEventSnapshot = payment.SubscriptionMaxTicketsPerEventSnapshot ?? package.MaxTicketsPerEvent,
             HasAiPosterSnapshot = payment.SubscriptionHasAiPosterSnapshot ?? package.HasAiPoster,
-            MaxAiPostersPerMonthSnapshot = payment.SubscriptionMaxAiPostersPerMonthSnapshot ?? package.MaxAiPostersPerMonth
+            MaxAiPostersPerMonthSnapshot = payment.SubscriptionMaxAiPostersPerMonthSnapshot ?? package.MaxAiPostersPerMonth,
+            MaxTourScenesSnapshot = payment.SubscriptionMaxTourScenesSnapshot ?? package.MaxTourScenes
         };
         _uow.Repository<OwnerSubscription, int>().Add(subscription);
 
