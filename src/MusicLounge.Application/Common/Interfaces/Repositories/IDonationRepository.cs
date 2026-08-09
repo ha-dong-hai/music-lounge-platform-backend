@@ -16,16 +16,17 @@ public interface IDonationRepository : IRepository<Donation, int>
     Task<(int OwnerId, int LoungeShowId, int PerformerId)?> GetOwnershipInfoAsync(int donationId, CancellationToken ct = default);
 
     /// <summary>
-    /// <paramref name="performerShareRate"/> (system_config donation_performer_share_rate) is used
-    /// to compute the DTO's AmountToPayPerformer preview — the actual chặng-2 transfer amount is
-    /// always recomputed fresh in ConfirmDonationPaidCommandHandler at confirmation time, this is
-    /// display-only so the Owner isn't shown the wrong figure to wire.
+    /// Computes the DTO's AmountToPayPerformer preview from each donation's own
+    /// <c>PerformerShareRateSnapshot</c> — the same value ConfirmDonationPaidCommandHandler will
+    /// actually use at confirmation time, so this preview can never show a different figure than
+    /// what actually gets transferred. <paramref name="fallbackPerformerShareRate"/> (a live
+    /// system_config read) only applies to donations created before that column existed.
     /// </summary>
     Task<PaginatedResult<PendingDonationDto>> GetPendingForOwnerAsync(
-        int ownerId, decimal performerShareRate, int page, int pageSize, CancellationToken ct = default);
+        int ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default);
 
     Task<PaginatedResult<PendingDonationDto>> GetOwnerReceivedAwaitingPayoutAsync(
-        int ownerId, decimal performerShareRate, int page, int pageSize, CancellationToken ct = default);
+        int ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default);
 
     Task<PaginatedResult<MyDonationDto>> GetMyDonationsAsync(
         int userId, int page, int pageSize, CancellationToken ct = default);

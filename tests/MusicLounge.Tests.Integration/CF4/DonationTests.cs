@@ -364,6 +364,62 @@ public sealed class DonationTests
     }
 
     /// <summary>
+    /// PerformerShareRateSnapshot is frozen the moment VNPay confirms the donation (chặng 1) — not
+    /// re-read from system_config at whatever later moment the Owner gets around to confirm-paid
+    /// (chặng 2, which per DonationHoldDays can be days/weeks later). Proves the fix by directly
+    /// diverging the snapshot from the live default AFTER VNPay confirmation (simulating "an admin
+    /// changed the rate in between") and checking every downstream reader — the pending/awaiting
+    /// preview lists AND the actual ledger transfer — uses the frozen value, not the live default.
+    /// </summary>
+    [Fact]
+    public async Task DonationLifecycle_RateChangedAfterVnPayConfirms_StillUsesSnapshotEverywhere()
+    {
+        const decimal gross = 100_000m;
+        var (id, orderId) = await CreateDonationAsync(amount: gross);
+        await SimulateVnPayCallbackAsync(orderId, success: true);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var donation = await db.Donations.SingleAsync(d => d.Id == id);
+            donation.PerformerShareRateSnapshot.Should().Be(0.88m,
+                "ProcessDonationPaymentCommandHandler must freeze the rate the instant VNPay confirms");
+
+            // Simulate "an Admin changed donation_performer_share_rate after this donation was
+            // already confirmed" without fighting ISystemConfigService's 60s memory cache — directly
+            // diverge this donation's own frozen snapshot from what a fresh config read would give.
+            donation.PerformerShareRateSnapshot = 0.50m;
+            await db.SaveChangesAsync();
+        }
+
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+
+        var pendingRes = await ownerClient.GetAsync("/api/v1/donations/pending-ack?pageSize=50");
+        (await pendingRes.Content.ReadAsStringAsync()).Should().Contain("\"amountToPayPerformer\":50000",
+            "preview must reflect THIS donation's own snapshot (50%), not the live 88% default");
+
+        await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
+
+        var awaitingRes = await ownerClient.GetAsync("/api/v1/donations/awaiting-payout?pageSize=50");
+        (await awaitingRes.Content.ReadAsStringAsync()).Should().Contain("\"amountToPayPerformer\":50000");
+
+        await ownerClient.PostAsJsonAsync($"/api/v1/donations/{id}/confirm-paid", new
+        {
+            PaymentRef = "TXN-SNAPSHOT",
+            PaymentEvidenceUrl = (string?)null
+        });
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var performerAccount = await verifyDb.LedgerAccounts.SingleAsync(
+            a => a.OwnerType == AccountType.Performer && a.OwnerId == SeedHelper.PerformerId);
+        var performerCredit = await verifyDb.LedgerEntries.SingleAsync(e =>
+            e.ReferenceType == "donation" && e.ReferenceId == id.ToString() && e.AccountId == performerAccount.Id);
+        performerCredit.Amount.Should().Be(50_000m,
+            "the actual transfer must match the frozen snapshot (50%), not whatever system_config says now");
+    }
+
+    /// <summary>
     /// PaymentFeeCalculator.SplitDonationPayout is the single source of truth for chặng-2 math
     /// (mirrors Split's role for chặng 1) — pure function, no HTTP/DB needed. Proves the rate is a
     /// genuine parameter (not a hardcoded 0.88 anywhere in the calculation) and that the negative-

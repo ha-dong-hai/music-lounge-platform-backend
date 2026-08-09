@@ -33,7 +33,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<PaginatedResult<PendingDonationDto>> GetPendingForOwnerAsync(
-        int ownerId, decimal performerShareRate, int page, int pageSize, CancellationToken ct = default)
+        int ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.Donations
             .AsNoTracking()
@@ -51,7 +51,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
                 d.Performance.LoungeShow.Name,
                 d.Gross,
                 d.Net,
-                Math.Round(d.Gross * performerShareRate, 2),
+                Math.Round(d.Gross * (d.PerformerShareRateSnapshot ?? fallbackPerformerShareRate), 2),
                 d.IsAnonymous,
                 d.IsAnonymous ? null : d.DisplayName,
                 d.IsMessagePublic ? d.Message : null,
@@ -65,7 +65,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<PaginatedResult<PendingDonationDto>> GetOwnerReceivedAwaitingPayoutAsync(
-        int ownerId, decimal performerShareRate, int page, int pageSize, CancellationToken ct = default)
+        int ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.Donations
             .AsNoTracking()
@@ -88,7 +88,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
                 d.Performance.LoungeShow.Name,
                 d.Gross,
                 d.Net,
-                Math.Round(d.Gross * performerShareRate, 2),
+                Math.Round(d.Gross * (d.PerformerShareRateSnapshot ?? fallbackPerformerShareRate), 2),
                 d.IsAnonymous,
                 d.IsAnonymous ? null : d.DisplayName,
                 d.IsMessagePublic ? d.Message : null,

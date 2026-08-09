@@ -8,6 +8,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Subscriptions.Commands.CreateSubscriptionPackage;
 using MusicLounge.Application.Subscriptions.Commands.ProcessSubscriptionPayment;
+using MusicLounge.Application.Subscriptions.Commands.RenewSubscription;
 using MusicLounge.Application.Subscriptions.Commands.SubscribeToPackage;
 using MusicLounge.Application.Subscriptions.Commands.UpdateSubscriptionPackage;
 using MusicLounge.Application.Subscriptions.DTOs;
@@ -81,6 +82,24 @@ public sealed class SubscriptionsController : ControllerBase
         var result = await _sender.Send(new SubscribeToPackageCommand(body.PackageId, ip), ct);
         // Handler da persist 1 ban ghi Payment (Pending) truoc khi tra ve — dung 201 giong
         // Donations.Create/Tickets.Purchase (cung ban chat "khoi tao thanh toan").
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<SubscriptionPaymentInitiationDto>.Ok(result));
+    }
+
+    // Convenience counterpart to Subscribe — re-uses whichever package the Owner was last on
+    // instead of making them re-pick from the catalog. Still a normal VNPay checkout (one OTP tap):
+    // VNPay's token API has no silent merchant-initiated charge, so this can't be truly automatic —
+    // see RenewSubscriptionCommand's header comment.
+    [HttpPost("renew")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<SubscriptionPaymentInitiationDto>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Renew(CancellationToken ct = default)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _sender.Send(new RenewSubscriptionCommand(ip), ct);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<SubscriptionPaymentInitiationDto>.Ok(result));
     }
 

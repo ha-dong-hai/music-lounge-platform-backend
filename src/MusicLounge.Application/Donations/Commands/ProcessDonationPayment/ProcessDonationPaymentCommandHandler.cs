@@ -121,6 +121,19 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 // agree, mirroring how WriteTicketLedgerHandler snapshots payment.NetAmount once at
                 // confirmation instead of trusting a value computed earlier.
                 donation.Net = fees.OwnerNet;
+
+                // Same snapshot-at-confirmation reasoning as Net above, for the chặng-2 split rate:
+                // this is the one moment the donation is confirmed real, so it's also the right
+                // moment to freeze what the performer was promised. ConfirmDonationPaidCommandHandler
+                // reads THIS column (falling back to a live config read only for pre-migration
+                // donations that never got a snapshot) instead of re-reading system_config at
+                // whatever arbitrary later moment the Owner gets around to confirming payout — which
+                // could be days/weeks after this, per DonationHoldDays — so an Admin rate change in
+                // between can't retroactively change what a performer receives for a donation that
+                // already happened.
+                donation.PerformerShareRateSnapshot =
+                    await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+
                 _uow.Repository<Donation, int>().Update(donation);
 
                 await _ledger.WriteJournalAsync(

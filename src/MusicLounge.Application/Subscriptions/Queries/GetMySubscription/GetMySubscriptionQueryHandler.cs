@@ -29,7 +29,7 @@ internal sealed class GetMySubscriptionQueryHandler
 
         return new MySubscriptionDto(
             latest.Id, latest.PackageId, package?.Name ?? string.Empty,
-            latest.StartedAt, latest.ExpiresAt, latest.Status.ToString(), latest.AutoRenew,
+            latest.StartedAt, latest.ExpiresAt, latest.Status.ToString(),
             latest.MaxTicketsPerEventSnapshot, latest.HasAiPosterSnapshot, latest.MaxAiPostersPerMonthSnapshot);
     }
 }

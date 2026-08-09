@@ -74,7 +74,14 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         // the rest of their chặng-1 net for holding/administering the donation. Uses donation.Net
         // (chặng 1's committed figure) rather than re-deriving it from today's commission/tax rates
         // — same snapshot-at-commitment-point reasoning as WriteTicketLedgerHandler.
-        var performerShareRate = await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+        // The rate itself is read from PerformerShareRateSnapshot (frozen back in
+        // ProcessDonationPaymentCommandHandler, the moment this donation was confirmed real) rather
+        // than a fresh system_config lookup here — this action can happen days/weeks after that,
+        // per DonationHoldDays, and re-reading live would let an Admin rate change made in between
+        // retroactively alter what this specific donation promised the performer. The live-config
+        // fallback only fires for donations created before this column existed.
+        var performerShareRate = donation.PerformerShareRateSnapshot
+            ?? await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
         var split = PaymentFeeCalculator.SplitDonationPayout(donation.Gross, donation.Net, performerShareRate);
         if (split.OwnerRetained < 0)
             throw new DomainException(

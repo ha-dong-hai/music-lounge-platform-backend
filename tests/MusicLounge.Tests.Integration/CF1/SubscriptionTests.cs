@@ -264,6 +264,96 @@ public sealed class SubscriptionTests
         confirmedCount.Should().Be(2, "both payments genuinely succeeded at VNPay and must both be reconciled, not left Pending");
     }
 
+    // ─── Renew (honest replacement for the dead AutoRenew field — no silent VNPay recharge is
+    // possible, so this is a convenience "skip re-picking the package" endpoint, not true auto-pay) ──
+
+    [Fact]
+    public async Task Renew_NoExistingSubscriptionEver_Returns422()
+    {
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/renew", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task Renew_WhileCurrentSubscriptionStillActive_Returns409()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/renew", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Renew_AfterPreviousSubscriptionExpired_InitiatesPaymentForSamePackage()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var sub = await db.OwnerSubscriptions.SingleAsync(s => s.OwnerId == ownerId);
+            sub.ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+            await db.SaveChangesAsync();
+        }
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/renew", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await res.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        body!.Data.Amount.Should().Be(250_000m, "renew must re-use the same package the owner was last on");
+    }
+
+    [Fact]
+    public async Task Renew_PackageNoLongerActive_Returns422WithClearMessage()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var sub = await db.OwnerSubscriptions.SingleAsync(s => s.OwnerId == ownerId);
+            sub.ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+            var package = await db.SubscriptionPackages.SingleAsync(p => p.Id == packageId);
+            package.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/renew", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        var body = await res.Content.ReadAsStringAsync();
+        body.Should().Contain("không còn mở đăng ký");
+    }
+
     private sealed record IdResponse(bool Success, int Data);
     private sealed record SubscriptionInitiationData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record SubscriptionInitiationResponse(bool Success, SubscriptionInitiationData Data);

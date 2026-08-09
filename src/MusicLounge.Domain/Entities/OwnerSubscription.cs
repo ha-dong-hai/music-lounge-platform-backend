@@ -9,7 +9,6 @@ public sealed class OwnerSubscription : Common.BaseEntity<int>
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }   // extended by suspension_days when venue penalized
     public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
-    public bool AutoRenew { get; set; } = false;
     public DateTimeOffset? CancelledAt { get; set; }
 
     // D12: Snapshot at subscription time — package changes after do not affect active sub

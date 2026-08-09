@@ -167,7 +167,6 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             StartedAt = now,
             ExpiresAt = expiresAt,
             Status = SubscriptionStatus.Active,
-            AutoRenew = false,
             // From the Payment snapshot taken at checkout, NOT the freshly-refetched package above
             // (only used for BillingCycle/Price-verification) — package.MaxTicketsPerEvent/HasAiPoster
             // could have been edited by an admin in the window between checkout and this callback.

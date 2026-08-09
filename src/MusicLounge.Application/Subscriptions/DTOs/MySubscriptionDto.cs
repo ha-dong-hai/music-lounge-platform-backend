@@ -7,7 +7,6 @@ public sealed record MySubscriptionDto(
     DateTimeOffset StartedAt,
     DateTimeOffset ExpiresAt,
     string Status,
-    bool AutoRenew,
     int MaxTicketsPerEventSnapshot,
     bool HasAiPosterSnapshot,
     int MaxAiPostersPerMonthSnapshot);

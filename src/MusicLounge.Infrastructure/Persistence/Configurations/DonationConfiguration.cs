@@ -13,6 +13,7 @@ internal sealed class DonationConfiguration : IEntityTypeConfiguration<Donation>
 
         b.Property(d => d.Gross).HasColumnType("decimal(15,2)");
         b.Property(d => d.Net).HasColumnType("decimal(15,2)");
+        b.Property(d => d.PerformerShareRateSnapshot).HasPrecision(5, 4);
         b.Property(d => d.Status).HasConversion<string>().HasMaxLength(30);
         b.Property(d => d.PaymentRef).HasMaxLength(255);
         b.Property(d => d.PaymentEvidenceUrl).HasMaxLength(500);
