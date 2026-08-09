@@ -72,9 +72,15 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(
-        [FromBody] LoginCommand command, CancellationToken ct = default)
+        [FromBody] LoginRequest body, CancellationToken ct = default)
     {
-        var result = await _sender.Send(command, ct);
+        // IpAddress is deliberately NOT part of the request body a client could bind directly —
+        // LoginSpikeDetectionJob keys entirely on this value, so a client-supplied one would let an
+        // attacker spoof or rotate it to dodge detection. Read from the connection itself, same
+        // "best-effort, not proxy-aware" approach SubscribeToPackageCommandHandler already uses for
+        // its own IP capture.
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _sender.Send(new LoginCommand(body.Email, body.Password, ip), ct);
         return Ok(ApiResponse<AuthResultDto>.Ok(result));
     }
 
@@ -111,3 +117,5 @@ public sealed class AuthController : ControllerBase
         return NoContent();
     }
 }
+
+public sealed record LoginRequest(string Email, string Password);

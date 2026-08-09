@@ -8,4 +8,5 @@ public sealed record PerformerDto(
     string Type,
     int? CreatedByUserId,
     IReadOnlyList<int> GenreIds,
-    IReadOnlyList<string> GenreNames);
+    IReadOnlyList<string> GenreNames,
+    IReadOnlyList<PerformerSocialLinkDto> SocialLinks);

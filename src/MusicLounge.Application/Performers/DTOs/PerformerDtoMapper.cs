@@ -15,21 +15,28 @@ internal static class PerformerDtoMapper
         if (performers.Count == 0) return [];
 
         var performerIds = performers.Select(p => p.Id).ToHashSet();
-        var links = await uow.Repository<PerformerGenre, int>().FindAsync(
+        var genreLinks = await uow.Repository<PerformerGenre, int>().FindAsync(
             g => performerIds.Contains(g.PerformerId), ct);
 
-        var genreIds = links.Select(l => l.GenreId).Distinct().ToList();
+        var genreIds = genreLinks.Select(l => l.GenreId).Distinct().ToList();
         var genres = genreIds.Count == 0
             ? []
             : await uow.Repository<MusicGenre, int>().FindAsync(g => genreIds.Contains(g.Id), ct);
         var genreNameById = genres.ToDictionary(g => g.Id, g => g.Name);
 
-        var linksByPerformer = links.GroupBy(l => l.PerformerId)
+        var genresByPerformer = genreLinks.GroupBy(l => l.PerformerId)
             .ToDictionary(g => g.Key, g => g.Select(l => l.GenreId).ToList());
+
+        var socialLinks = await uow.Repository<PerformerSocialLink, int>().FindAsync(
+            s => performerIds.Contains(s.PerformerId), ct);
+        var socialLinksByPerformer = socialLinks.GroupBy(s => s.PerformerId)
+            .ToDictionary(g => g.Key, g => g
+                .Select(s => new PerformerSocialLinkDto(s.Id, s.Platform.ToString(), s.Url, s.DisplayName))
+                .ToList());
 
         return performers.Select(p =>
         {
-            var performerGenreIds = linksByPerformer.GetValueOrDefault(p.Id, []);
+            var performerGenreIds = genresByPerformer.GetValueOrDefault(p.Id, []);
             return new PerformerDto(
                 p.Id,
                 p.Name,
@@ -38,7 +45,8 @@ internal static class PerformerDtoMapper
                 p.Type.ToString(),
                 p.CreatedByUserId,
                 performerGenreIds,
-                performerGenreIds.Select(id => genreNameById.GetValueOrDefault(id, string.Empty)).ToList());
+                performerGenreIds.Select(id => genreNameById.GetValueOrDefault(id, string.Empty)).ToList(),
+                socialLinksByPerformer.GetValueOrDefault(p.Id, []));
         }).ToList();
     }
 }

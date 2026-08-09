@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
         services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
         services.Configure<OpenAiSettings>(configuration.GetSection("OpenAi"));
+        services.Configure<SecurityDetectionSettings>(configuration.GetSection("SecurityDetection"));
 
         // DbContext
         services.AddDbContext<ApplicationDbContext>(opts =>
@@ -122,6 +123,8 @@ public static class DependencyInjection
         services.AddScoped<ModerationSlaBreachAlertJob>();
         services.AddScoped<ComplaintSlaBreachAlertJob>();
         services.AddScoped<ScoreModerationWithAiJob>();
+        services.AddScoped<LoginSpikeDetectionJob>();
+        services.AddScoped<AdminRoleDriftDetectionJob>();
         // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing
         // from DI — Hangfire would throw InvalidOperationException ("No service for type...")
         // the first time either fired, silently breaking event reminders and overdue-donation
@@ -261,6 +264,18 @@ public static class DependencyInjection
 
         RecurringJob.AddOrUpdate<ComplaintSlaBreachAlertJob>(
             "alert-complaint-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        // Every 5 minutes against a 10-minute detection window, so a spike is never more than one
+        // extra run away from being caught, while still cheap enough to poll this often.
+        RecurringJob.AddOrUpdate<LoginSpikeDetectionJob>(
+            "detect-login-spikes",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            "*/5 * * * *");
+
+        RecurringJob.AddOrUpdate<AdminRoleDriftDetectionJob>(
+            "detect-admin-role-drift",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
     }

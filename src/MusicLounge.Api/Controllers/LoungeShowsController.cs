@@ -18,6 +18,7 @@ using MusicLounge.Application.LoungeShows.Commands.RescheduleLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.SetLegalApprovalReference;
 using MusicLounge.Application.LoungeShows.Commands.SetPlaybackMode;
 using MusicLounge.Application.LoungeShows.Commands.SetShowCoverImage;
+using MusicLounge.Application.LoungeShows.Commands.SetShowPoster;
 using MusicLounge.Application.LoungeShows.Commands.SetVcpmcRoyaltyReference;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.DTOs;
@@ -372,6 +373,20 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
+    // Manual counterpart to POST {id}/ai-poster — for an Owner who wants to upload their own
+    // poster instead of generating one, or doesn't have the AI-poster subscription tier at all.
+    [HttpPut("{id:int}/poster")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetPoster(
+        int id, [FromBody] SetShowPosterRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetShowPosterCommand(id, body.ImageUrl), ct);
+        return NoContent();
+    }
+
     /// <summary>Tour ảo 3D / Online concert 3D: Owner chọn phát 2D (mặc định) hay 3D cho show Online/Hybrid.</summary>
     [HttpPut("{id:int}/playback-mode")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -413,6 +428,8 @@ public sealed record SetLegalApprovalReferenceRequest(string LegalApprovalRefere
 public sealed record SetVcpmcRoyaltyReferenceRequest(string VcpmcRoyaltyReference);
 
 public sealed record SetShowCoverImageRequest(string ImageUrl);
+
+public sealed record SetShowPosterRequest(string ImageUrl);
 
 public sealed record SetPlaybackModeRequest(string PlaybackMode);
 

@@ -12,7 +12,10 @@ namespace MusicLounge.Tests.Integration.Helpers;
 /// <summary>
 /// Seeds baseline data. IDs are fixed so tests can reference them directly.
 /// User IDs: 1=Admin, 2=Staff, 3=Owner, 4=Audience, 5=OtherOwner
-/// Role is carried in JWT claims (TestAuthHandler), NOT stored in the User entity.
+/// Endpoint-level authorization in tests is driven by TestAuthHandler's role header, independent
+/// of this seed — but User.Role itself is a real, persisted column (embedded in the JWT at login,
+/// read directly by e.g. AdminRoleDriftDetectionJob), so it's set here to match each user's name
+/// rather than left at the entity default.
 /// </summary>
 public static class SeedHelper
 {
@@ -51,14 +54,14 @@ public static class SeedHelper
 
         if (await db.Users.AnyAsync()) return; // already seeded
 
-        // Users (role is stored in JWT only — no Role field on entity)
+        // Users — Role set to match each user's name; see class-level remark on why this matters.
         db.Users.AddRange(
-            new User { Id = AdminId,          Email = "admin@test.com",      FullName = "Admin" },
-            new User { Id = StaffId,          Email = "staff@test.com",      FullName = "Staff" },
-            new User { Id = OwnerId,          Email = "owner@test.com",      FullName = "Owner" },
-            new User { Id = AudienceId,       Email = "audience@test.com",   FullName = "Audience" },
-            new User { Id = OtherOwnerId,     Email = "owner2@test.com",     FullName = "OtherOwner" },
-            new User { Id = OtherVenueStaffId, Email = "staff2@test.com",    FullName = "OtherVenueStaff" }
+            new User { Id = AdminId,          Email = "admin@test.com",      FullName = "Admin",          Role = UserRole.Admin },
+            new User { Id = StaffId,          Email = "staff@test.com",      FullName = "Staff",          Role = UserRole.Staff },
+            new User { Id = OwnerId,          Email = "owner@test.com",      FullName = "Owner",          Role = UserRole.Owner },
+            new User { Id = AudienceId,       Email = "audience@test.com",   FullName = "Audience",       Role = UserRole.Audience },
+            new User { Id = OtherOwnerId,     Email = "owner2@test.com",     FullName = "OtherOwner",     Role = UserRole.Owner },
+            new User { Id = OtherVenueStaffId, Email = "staff2@test.com",    FullName = "OtherVenueStaff", Role = UserRole.Staff }
         );
 
         // Venues

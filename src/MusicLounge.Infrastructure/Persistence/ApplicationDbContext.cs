@@ -22,6 +22,7 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<MusicLoungeVenue> Lounges => Set<MusicLoungeVenue>();
     public DbSet<LoungeShow> LoungeShows => Set<LoungeShow>();
     public DbSet<Performer> Performers => Set<Performer>();
+    public DbSet<PerformerSocialLink> PerformerSocialLinks => Set<PerformerSocialLink>();
     public DbSet<Performance> Performances => Set<Performance>();
     public DbSet<TicketTier> TicketTiers => Set<TicketTier>();
     public DbSet<TicketPrice> TicketPrices => Set<TicketPrice>();
@@ -81,6 +82,9 @@ public sealed class ApplicationDbContext : DbContext
 
     // --- N14: Notifications ---
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<LoginFailureLog> LoginFailureLogs => Set<LoginFailureLog>();
+    public DbSet<LoginSpikeAlertState> LoginSpikeAlertStates => Set<LoginSpikeAlertState>();
+    public DbSet<KnownAdminSnapshot> KnownAdminSnapshots => Set<KnownAdminSnapshot>();
 
     // --- N15: Moderation extensions ---
     public DbSet<Complaint> Complaints => Set<Complaint>();

@@ -71,6 +71,19 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
                 _logger.LogWarning(
                     "Login failed — unknown email: Email={Email} at {At}", request.Email, DateTimeOffset.UtcNow);
             }
+
+            // Feeds LoginSpikeDetectionJob — distinct from IAuthAttemptTracker's per-account lockout
+            // counter above, which only ever sees ONE account and can't detect the same source IP
+            // failing across MANY different accounts (credential stuffing). LoginCommand is already
+            // INoTransactionCommand, so this commits immediately regardless of the throw below.
+            _uow.Repository<LoginFailureLog, int>().Add(new LoginFailureLog
+            {
+                Email = request.Email,
+                IpAddress = request.IpAddress,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            await _uow.SaveChangesAsync(ct);
+
             throw new UnauthorizedException("Email hoặc mật khẩu không đúng.");
         }
 

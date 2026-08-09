@@ -5,5 +5,6 @@ namespace MusicLounge.Application.Auth.Commands.Login;
 
 public sealed record LoginCommand(
     string Email,
-    string Password
+    string Password,
+    string? IpAddress = null
 ) : ICommand<AuthResultDto>, INoTransactionCommand;

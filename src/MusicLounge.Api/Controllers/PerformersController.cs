@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Performers.Commands.AddPerformerSocialLink;
 using MusicLounge.Application.Performers.Commands.CreatePerformer;
+using MusicLounge.Application.Performers.Commands.RemovePerformerSocialLink;
 using MusicLounge.Application.Performers.Commands.UpdatePerformer;
 using MusicLounge.Application.Performers.DTOs;
 using MusicLounge.Application.Performers.Queries.GetPerformerById;
@@ -68,7 +70,33 @@ public sealed class PerformersController : ControllerBase
             id, body.Name, body.AvatarUrl, body.Bio, body.Type, body.GenreIds), ct);
         return NoContent();
     }
+
+    // §6.14 — upsert: setting a link for a platform the performer already has replaces it.
+    [HttpPut("{id:int}/social-links")]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddSocialLink(
+        int id, [FromBody] AddPerformerSocialLinkRequest body, CancellationToken ct = default)
+    {
+        var linkId = await _sender.Send(
+            new AddPerformerSocialLinkCommand(id, body.Platform, body.Url, body.DisplayName), ct);
+        return Ok(ApiResponse<int>.Ok(linkId));
+    }
+
+    [HttpDelete("{id:int}/social-links/{linkId:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveSocialLink(int id, int linkId, CancellationToken ct = default)
+    {
+        await _sender.Send(new RemovePerformerSocialLinkCommand(id, linkId), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdatePerformerRequest(
     string Name, string? AvatarUrl, string? Bio, string Type, IReadOnlyList<int> GenreIds);
+
+public sealed record AddPerformerSocialLinkRequest(string Platform, string Url, string? DisplayName);
