@@ -344,8 +344,14 @@ try
     var uploadContentTypeProvider = new FileExtensionContentTypeProvider();
     uploadContentTypeProvider.Mappings[".glb"] = "model/gltf-binary";
     uploadContentTypeProvider.Mappings[".gltf"] = "model/gltf+json";
-    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = uploadContentTypeProvider });
+    // UseCors PHAI truoc UseStaticFiles — thu tu nguoc (nhu truoc day) khien moi response tinh
+    // (/uploads/...: poster, avatar, gallery, panorama...) khong bao gio co header CORS, du policy
+    // "Default" ben duoi co cho phep origin nao di nua. Khong lo ngay o API JSON binh thuong (JS
+    // frontend goi bang fetch/XHR van bi CORS chan dung cach du thieu header), nhung anh tai qua
+    // <img>/canvas/WebGL-texture tu 1 domain khac domain backend se luon that bai truoc lay du
+    // lieu pixel (vd Pannellum ve panorama 360 bang WebGL) — phat hien khi test tinh nang tour 360.
     app.UseCors("Default");
+    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = uploadContentTypeProvider });
     // Testing host chay hang loat request lien tuc trong 1 suite (khong phai traffic that) —
     // rate limiter theo IP se tu chan chinh no. Chi bat o Development/Production.
     if (!app.Environment.IsEnvironment("Testing"))

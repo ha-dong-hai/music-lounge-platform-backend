@@ -30,6 +30,10 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# Python (services/panorama-stitcher)
+__pycache__/
+*.pyc
+
 # IDE
 .vs/
 .vscode/

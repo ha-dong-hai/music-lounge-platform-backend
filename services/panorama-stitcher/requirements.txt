@@ -3,3 +3,4 @@ uvicorn[standard]==0.32.0
 opencv-python-headless==4.10.0.84
 numpy==2.1.2
 requests==2.32.3
+Pillow==11.0.0
