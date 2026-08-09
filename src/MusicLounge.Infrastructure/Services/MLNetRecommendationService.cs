@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Trainers;
@@ -27,6 +28,13 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     // core formula, since the formula's own comment states it follows a fixed spec exactly.
     private const float FollowedVenueBoost = 0.15f;
 
+    // Only the handful of recommendations actually prominent in the UI get an AI-written
+    // explanation — generating one for all 20 computed per user, per 6h refresh cycle, across every
+    // consenting user would multiply Gemini calls for zero benefit on items rarely even scrolled to.
+    private const int TopReasonsToEnrichWithAi = 5;
+
+    private static readonly JsonSerializerOptions CaseInsensitive = new() { PropertyNameCaseInsensitive = true };
+
     private readonly ApplicationDbContext _ctx;
     private readonly IRepository<UserBehaviourLog, int> _logRepo;
     private readonly IRepository<UserFavouriteGenre, int> _genreRepo;
@@ -35,6 +43,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     private readonly IRepository<Follow, int> _followRepo;
     private readonly ILoungeShowRepository _showRepo;
     private readonly IRepository<AiRecommendation, int> _recRepo;
+    private readonly IAiTextGenerationService _textGen;
     private readonly IUnitOfWork _uow;
 
     private bool _collabTrainingAttempted;
@@ -60,6 +69,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         IRepository<Follow, int> followRepo,
         ILoungeShowRepository showRepo,
         IRepository<AiRecommendation, int> recRepo,
+        IAiTextGenerationService textGen,
         IUnitOfWork uow)
     {
         _ctx = ctx;
@@ -70,6 +80,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         _followRepo = followRepo;
         _showRepo = showRepo;
         _recRepo = recRepo;
+        _textGen = textGen;
         _uow = uow;
     }
 
@@ -111,7 +122,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         var contentScores = await ComputeContentScoresAsync(
             shows, favouriteGenres, favouriteMoods, favouriteAtmospheres, ct);
 
-        return contentScores
+        var recommendations = contentScores
             .Select(kvp =>
             {
                 var isFollowedVenue = followedLoungeIds.Contains(showById[kvp.Key].LoungeId);
@@ -136,6 +147,9 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
             .OrderByDescending(r => r.FinalScore)
             .Take(20)
             .ToList();
+
+        await EnrichTopReasonsWithAiAsync(recommendations, showById, followedLoungeIds, ct);
+        return recommendations;
     }
 
     private async Task<IReadOnlyList<AiRecommendation>> ComputeHybridAsync(
@@ -155,7 +169,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         var collabScores = await ComputeCollabScoresAsync(userId, showIds, ct);
         var customScores = await ComputeCustomScoresAsync(userId, showIds, ct);
 
-        return showIds
+        var recommendations = showIds
             .Select(showId =>
             {
                 var content = contentScores.GetValueOrDefault(showId, 0f);
@@ -185,7 +199,74 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
             .OrderByDescending(r => r.FinalScore)
             .Take(20)
             .ToList();
+
+        await EnrichTopReasonsWithAiAsync(recommendations, showById, followedLoungeIds, ct);
+        return recommendations;
     }
+
+    // Replaces the top few recommendations' generic template Reason with a short, warm,
+    // Gemini-written sentence personalized to why THIS show matched THIS user — fail-open (any
+    // failure just leaves the existing generic Reason in place, since this is cosmetic enrichment,
+    // not something the recommendation feature depends on to function).
+    private async Task EnrichTopReasonsWithAiAsync(
+        IReadOnlyList<AiRecommendation> recommendations,
+        IReadOnlyDictionary<int, Domain.Entities.LoungeShow> showById,
+        IReadOnlySet<int> followedLoungeIds,
+        CancellationToken ct)
+    {
+        var top = recommendations.Take(TopReasonsToEnrichWithAi).ToList();
+        if (top.Count == 0) return;
+
+        var promptItems = top.Select(r =>
+        {
+            var show = showById[r.LoungeShowId];
+            var genreNames = show.Genres.Select(g => g.Genre?.Name).Where(n => n is not null).ToList();
+            return new
+            {
+                showId = r.LoungeShowId,
+                name = show.Name,
+                genres = genreNames.Count > 0 ? string.Join(", ", genreNames) : "chưa rõ thể loại",
+                matchedByTaste = r.ContentScore > 0,
+                matchedBySimilarUsers = r.CollabScore > 0,
+                isFollowedVenue = followedLoungeIds.Contains(show.LoungeId)
+            };
+        }).ToList();
+
+        var prompt = $$"""
+            Bạn viết lý do gợi ý show nhạc sống cá nhân hóa cho người dùng, bằng tiếng Việt, giọng văn
+            ấm áp, tự nhiên, ngắn gọn (1 câu, tối đa 25 từ), không dùng dấu ngoặc kép trong câu trả lời.
+
+            Danh sách show đang gợi ý cho 1 người dùng, kèm lý do hệ thống tính điểm cao cho từng show:
+            {{JsonSerializer.Serialize(promptItems)}}
+
+            Trả lời DUY NHẤT một JSON array, mỗi phần tử dạng {"showId": <số>, "reason": "<câu giải thích>"},
+            không thêm chữ nào khác, không dùng markdown.
+            """;
+
+        var json = await _textGen.GenerateJsonAsync(prompt, ct);
+        if (string.IsNullOrWhiteSpace(json)) return;
+
+        try
+        {
+            var results = JsonSerializer.Deserialize<List<AiReasonItem>>(json, CaseInsensitive);
+            if (results is null) return;
+
+            var reasonByShowId = results
+                .Where(r => !string.IsNullOrWhiteSpace(r.Reason))
+                .ToDictionary(r => r.ShowId, r => r.Reason!);
+
+            foreach (var rec in top)
+                if (reasonByShowId.TryGetValue(rec.LoungeShowId, out var aiReason))
+                    rec.Reason = aiReason;
+        }
+        catch (JsonException)
+        {
+            // Malformed AI output — keep the existing generic Reason strings rather than fail the
+            // whole recommendation refresh over cosmetic text.
+        }
+    }
+
+    private sealed record AiReasonItem(int ShowId, string? Reason);
 
     // content_score = genre*0.4 + mood*0.4 + atmosphere*0.2 — moi chieu la Jaccard(so thich user, tag cua show).
     private async Task<Dictionary<int, float>> ComputeContentScoresAsync(

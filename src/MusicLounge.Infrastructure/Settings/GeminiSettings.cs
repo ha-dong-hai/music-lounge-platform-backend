@@ -9,9 +9,7 @@ public sealed class GeminiSettings
     // deprecates this model later, without needing a code change.
     public string Model { get; init; } = "gemini-3.6-flash";
 
-    // Separate model id for image generation — a different capability from text scoring, priced
-    // and rate-limited independently. Defaults to the cheaper "Nano Banana" flash-image tier
-    // (~$0.04-0.13/image) rather than the "Pro" tier (~$0.13-0.24/image) since a social-media-quality
-    // poster doesn't need the Pro tier's higher resolution ceiling — override here if that changes.
-    public string ImageModel { get; init; } = "gemini-2.5-flash-image";
+    // Text scoring only — image generation moved to OpenAI (see OpenAiSettings/
+    // OpenAiImageGenerationService) since the Gemini API has no free tier at all for image models
+    // and the user chose to switch vendors rather than enable Google Cloud billing.
 }

@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.Configure<FirebaseSettings>(configuration.GetSection("Firebase"));
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
         services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
+        services.Configure<OpenAiSettings>(configuration.GetSection("OpenAi"));
 
         // DbContext
         services.AddDbContext<ApplicationDbContext>(opts =>
@@ -67,7 +68,8 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAIRecommendationService, MLNetRecommendationService>();
         services.AddScoped<IAiModerationService, GeminiModerationService>();
-        services.AddScoped<IAiImageGenerationService, GeminiImageGenerationService>();
+        services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
+        services.AddScoped<IAiImageGenerationService, OpenAiImageGenerationService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
         services.AddScoped<IFcmService, FcmService>();
@@ -148,6 +150,10 @@ public static class DependencyInjection
         services.AddHttpClient("mux").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        // Image generation can run noticeably longer than the other external calls this app makes —
+        // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
+        // (not hung) generation doesn't get cut off right as it would have succeeded.
+        services.AddHttpClient("openai").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(90));
         services.AddKeyedTransient<ILivestreamService, CloudflareStreamService>("cloudflare");
         services.AddKeyedTransient<ILivestreamService, MuxStreamService>("mux");
         services.AddScoped<ILivestreamServiceFactory, LivestreamServiceFactory>();

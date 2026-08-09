@@ -26,5 +26,10 @@
   "Gemini": {
     "_comment_Gemini": "API key cho tinh nang AI cham diem uu tien duyet show/livestream (lay tu Google AI Studio). De trong neu chua can -- moderation van chay binh thuong, chi khong co diem uu tien AI.",
     "ApiKey": ""
+  },
+
+  "OpenAi": {
+    "_comment_OpenAi": "API key cho tinh nang tao poster AI (lay tu platform.openai.com/api-keys, project phai da bat billing). De trong neu chua can -- tao poster se bao loi ro rang va khong tru han muc cua Owner, khong lam sap he thong.",
+    "ApiKey": ""
   }
 }
