@@ -60,9 +60,14 @@ internal sealed class InitiateTicketTransferCommandHandler
         if (recipient.Id == _currentUser.UserId)
             throw new DomainException("Không thể chuyển nhượng vé cho chính mình.");
 
-        ticket.PendingTransferToUserId = recipient.Id;
-        ticket.PendingTransferInitiatedAt = DateTimeOffset.UtcNow;
-        _ticketRepo.Update(ticket);
+        // Atomic conditional write — closes the lost-update race where two near-simultaneous
+        // initiate-transfer calls both pass the in-memory "is one already pending?" check above
+        // before either commits; the guard here re-checks PendingTransferToUserId IS NULL at the
+        // exact moment of write, so only one of them can actually win.
+        var initiatedAt = DateTimeOffset.UtcNow;
+        var initiated = await _ticketRepo.TryInitiateTransferAsync(ticket.Id, recipient.Id, initiatedAt, ct);
+        if (!initiated)
+            throw new ConflictException("Vé này đang có một yêu cầu chuyển nhượng khác đang chờ xử lý.");
 
         await _notifications.NotifyAsync(
             recipient.Id,

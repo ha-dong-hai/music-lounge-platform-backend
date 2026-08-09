@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<ISmsService, SmsService>();
         // Default key ring (%LOCALAPPDATA%\ASP.NET\DataProtection-Keys, protected via per-user
         // DPAPI) is fine for a single interactive dev session but is a real risk for this app's
         // actual self-hosted deployment: it's tied to whichever Windows user profile the process
@@ -128,6 +129,8 @@ public static class DependencyInjection
         services.AddScoped<LogUserBehaviourJob>();
         services.AddScoped<SendPasswordResetEmailJob>();
         services.AddScoped<SendEmailVerificationCodeJob>();
+        // Same registration discipline as the two jobs above — see comment there.
+        services.AddScoped<SendPhoneVerificationCodeJob>();
 
         // Livestream provider abstraction
         // Explicit timeout — HttpClient's default is 100s, long enough that one slow/hanging

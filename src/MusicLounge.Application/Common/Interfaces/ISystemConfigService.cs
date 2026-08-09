@@ -21,6 +21,17 @@ public static class ConfigKeys
     public const string DonationHoldDays = "donation_hold_days";
     public const string ModerationSlaHours = "moderation_sla_hours";
 
+    // §6.5 chặng 2: fraction of the ORIGINAL gross donation the owner forwards to the performer
+    // (owner keeps the rest of their chặng-1 net as compensation for holding/administering the
+    // donation). Default 0.88 matches docs/04-design-decisions.md §6.5 — benchmarked 2026-08-09
+    // against industry donation/tip intermediary practice (YouTube Super Chat keeps 30%, Twitch
+    // Bits nets creators ~55-71%; venue-holds-tip-for-performer arrangements commonly run 0-20%+
+    // house cut) and found generous to the performer, not an outlier. Admin-tunable via
+    // system_config, not hardcoded (§6.7) — ConfirmDonationPaidCommandHandler re-reads this at
+    // confirmation time, so a rate change applies to donations confirmed after the change without
+    // a deploy.
+    public const string DonationPerformerShareRate = "donation_performer_share_rate";
+
     // Not seeded by the original migration — GetIntAsync's fallback covers it until an Admin
     // adds a real row (D9: business parameters belong in system_config, not hardcoded).
     public const string EventReminderHours = "event_reminder_hours";

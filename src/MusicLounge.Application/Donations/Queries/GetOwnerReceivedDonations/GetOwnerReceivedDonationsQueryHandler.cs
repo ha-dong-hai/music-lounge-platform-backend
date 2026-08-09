@@ -11,11 +11,14 @@ internal sealed class GetOwnerReceivedDonationsQueryHandler
 {
     private readonly IDonationRepository _repo;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
 
-    public GetOwnerReceivedDonationsQueryHandler(IDonationRepository repo, ICurrentUserService currentUser)
+    public GetOwnerReceivedDonationsQueryHandler(
+        IDonationRepository repo, ICurrentUserService currentUser, ISystemConfigService config)
     {
         _repo = repo;
         _currentUser = currentUser;
+        _config = config;
     }
 
     public async Task<PaginatedResult<PendingDonationDto>> Handle(
@@ -23,6 +26,7 @@ internal sealed class GetOwnerReceivedDonationsQueryHandler
     {
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
-        return await _repo.GetOwnerReceivedAwaitingPayoutAsync(_currentUser.UserId, page, size, ct);
+        var performerShareRate = await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+        return await _repo.GetOwnerReceivedAwaitingPayoutAsync(_currentUser.UserId, performerShareRate, page, size, ct);
     }
 }

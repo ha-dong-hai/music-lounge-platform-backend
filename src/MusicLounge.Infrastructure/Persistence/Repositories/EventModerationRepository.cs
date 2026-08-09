@@ -44,6 +44,7 @@ internal sealed class EventModerationRepository
                 m.AdminDecision == null ? null : m.AdminDecision.ToString(),
                 m.ReviewNote,
                 m.CreatedAt,
+                m.SlaDeadline,
                 m.ReviewedAt))
             .ToListAsync(ct);
 

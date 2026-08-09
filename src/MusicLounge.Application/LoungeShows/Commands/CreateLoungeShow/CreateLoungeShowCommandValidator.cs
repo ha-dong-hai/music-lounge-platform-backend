@@ -53,5 +53,11 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
         RuleForEach(x => x.GenreIds)
             .MustAsync(async (id, ct) => await uow.Repository<MusicGenre, int>().AnyAsync(g => g.Id == id, ct))
             .WithMessage("GenreId không tồn tại.");
+
+        // A negative quota isn't rejected anywhere downstream — HoldTicket/SellWalkInTicket only
+        // check `reserved + quantity > quota`, which a negative quota satisfies unconditionally,
+        // silently blocking every sale on that channel instead of failing cleanly at creation time.
+        RuleFor(x => x.OfflineQuota).GreaterThanOrEqualTo(0).When(x => x.OfflineQuota.HasValue);
+        RuleFor(x => x.OnlineQuota).GreaterThanOrEqualTo(0).When(x => x.OnlineQuota.HasValue);
     }
 }

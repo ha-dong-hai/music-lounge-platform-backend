@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -14,6 +15,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
     private readonly IDonationRepository _donationRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly ILedgerService _ledger;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<ConfirmDonationPaidCommandHandler> _logger;
 
     public ConfirmDonationPaidCommandHandler(
@@ -21,12 +23,14 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         IDonationRepository donationRepo,
         ICurrentUserService currentUser,
         ILedgerService ledger,
+        ISystemConfigService config,
         ILogger<ConfirmDonationPaidCommandHandler> logger)
     {
         _uow = uow;
         _donationRepo = donationRepo;
         _currentUser = currentUser;
         _ledger = ledger;
+        _config = config;
         _logger = logger;
     }
 
@@ -52,13 +56,17 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
 
         _uow.Repository<Donation, int>().Update(donation);
 
-        // Chặng 2 (§6.5) — money leaves the owner's held balance and is recorded as delivered to
-        // the performer. NOTE: docs describe this tranche as 88% of gross (owner keeps a further
-        // 2% on top of the platform's 5%+5%), but ConfirmDonationPaidCommand has no amount field
-        // — Owner can only attest "paid" with a reference/evidence URL, no partial amount. This
-        // records the full donation.Net (the only figure the system actually tracks) as
-        // transferred; if the 88%/2% split is real product intent, ConfirmDonationPaidCommand
-        // needs an amount field and this needs revisiting — flagged, not silently assumed.
+        // Chặng 2 (§6.5): owner forwards a configurable share of the ORIGINAL gross to the
+        // performer (default 88% — system_config, tunable by Admin without a deploy, §6.7), keeping
+        // the rest of their chặng-1 net for holding/administering the donation. Uses donation.Net
+        // (chặng 1's committed figure) rather than re-deriving it from today's commission/tax rates
+        // — same snapshot-at-commitment-point reasoning as WriteTicketLedgerHandler.
+        var performerShareRate = await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+        var split = PaymentFeeCalculator.SplitDonationPayout(donation.Gross, donation.Net, performerShareRate);
+        if (split.OwnerRetained < 0)
+            throw new DomainException(
+                $"Cấu hình donation_performer_share_rate ({performerShareRate:P0}) vượt quá phần owner thực nhận — kiểm tra lại system_config.");
+
         await _ledger.WriteJournalAsync(
             Guid.NewGuid().ToString("N"),
             LedgerReferenceTypes.Donation,
@@ -66,17 +74,17 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
             paymentId: null,
             new LedgerLine[]
             {
-                new(AccountType.User, ownership.OwnerId, donation.Net, IsDebit: true,
-                    Description: $"Donate #{donation.Id} — chặng 2, trả nghệ sĩ"),
-                new(AccountType.Performer, ownership.PerformerId, donation.Net, IsDebit: false,
+                new(AccountType.User, ownership.OwnerId, split.PerformerAmount, IsDebit: true,
+                    Description: $"Donate #{donation.Id} — chặng 2, trả nghệ sĩ ({performerShareRate:P0} gross)"),
+                new(AccountType.Performer, ownership.PerformerId, split.PerformerAmount, IsDebit: false,
                     Description: $"Donate #{donation.Id} — nhận từ chủ phòng trà")
             }, ct);
 
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogInformation(
-            "Donation payout to performer confirmed: DonationId={DonationId} Net={Net} OwnerId={OwnerId} PerformerId={PerformerId} PaymentRef={PaymentRef}",
-            donation.Id, donation.Net, ownership.OwnerId, ownership.PerformerId, request.PaymentRef);
+            "Donation payout to performer confirmed: DonationId={DonationId} PerformerAmount={PerformerAmount} OwnerRetained={OwnerRetained} OwnerId={OwnerId} PerformerId={PerformerId} PaymentRef={PaymentRef}",
+            donation.Id, split.PerformerAmount, split.OwnerRetained, ownership.OwnerId, ownership.PerformerId, request.PaymentRef);
 
         return Unit.Value;
     }

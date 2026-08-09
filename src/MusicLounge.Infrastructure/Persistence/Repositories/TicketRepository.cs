@@ -170,4 +170,40 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
         var reserved = await GetReservedQuantitiesByPriceIdsAsync(priceIds, ct);
         return reserved.Values.Sum();
     }
+
+    public async Task<int> GetReservedQuantityByShowAsync(int showId, CancellationToken ct = default)
+    {
+        var priceIds = await _ctx.TicketPrices
+            .Where(p => p.Tier.LoungeShowId == showId)
+            .Select(p => p.Id)
+            .ToListAsync(ct);
+        if (priceIds.Count == 0) return 0;
+
+        var reserved = await GetReservedQuantitiesByPriceIdsAsync(priceIds, ct);
+        return reserved.Values.Sum();
+    }
+
+    public async Task<int> GetReservedQuantityByZoneAsync(
+        int showId, int zoneId, CancellationToken ct = default)
+    {
+        var priceIds = await _ctx.TicketPrices
+            .Where(p => p.Tier.LoungeShowId == showId && p.Tier.ZoneId == zoneId)
+            .Select(p => p.Id)
+            .ToListAsync(ct);
+        if (priceIds.Count == 0) return 0;
+
+        var reserved = await GetReservedQuantitiesByPriceIdsAsync(priceIds, ct);
+        return reserved.Values.Sum();
+    }
+
+    public async Task<bool> TryInitiateTransferAsync(
+        Guid ticketId, int recipientUserId, DateTimeOffset initiatedAt, CancellationToken ct = default)
+    {
+        var affected = await _ctx.Tickets
+            .Where(t => t.Id == ticketId && t.PendingTransferToUserId == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.PendingTransferToUserId, recipientUserId)
+                .SetProperty(t => t.PendingTransferInitiatedAt, initiatedAt), ct);
+        return affected > 0;
+    }
 }

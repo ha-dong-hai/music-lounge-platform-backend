@@ -34,4 +34,29 @@ public interface ITicketRepository : IRepository<Ticket, Guid>
 
     /// <summary>Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price of the given access type under a show.</summary>
     Task<int> GetReservedQuantityByShowAndAccessTypeAsync(int showId, AccessType accessType, CancellationToken ct = default);
+
+    /// <summary>Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price under a show, regardless of tier/access type — used for the whole-show subscription ticket cap (D14), which applies across physical and online tiers combined.</summary>
+    Task<int> GetReservedQuantityByShowAsync(int showId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price of every tier
+    /// that shares the given physical seating zone WITHIN one show — §6.11 row 4
+    /// (SUM(price.quota) ≤ seating_areas.capacity): a zone's real physical capacity is the true cap
+    /// regardless of how many separate ticket tiers (VIP, Early-bird, Walk-in, ...) were carved out
+    /// of it, and per-tier TotalCapacity alone cannot catch two tiers on the same zone jointly
+    /// overselling it. Scoped to one show (not the zone's lifetime across every show ever held
+    /// there) because a venue-level zone is reused night to night — SeatingZone.
+    /// </summary>
+    Task<int> GetReservedQuantityByZoneAsync(int showId, int zoneId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Atomically sets the pending-transfer fields only if no transfer is already pending on this
+    /// ticket. Closes a lost-update race: two near-simultaneous InitiateTicketTransfer calls for
+    /// the same ticket can both pass an earlier in-memory "is one already pending?" check before
+    /// either commits a normal load-then-save; the second silently overwrites the first with no
+    /// error. Returns false (no row matched the guard) if a transfer was already pending by the
+    /// time this executed — caller should surface that as a conflict, not swallow it.
+    /// </summary>
+    Task<bool> TryInitiateTransferAsync(
+        Guid ticketId, int recipientUserId, DateTimeOffset initiatedAt, CancellationToken ct = default);
 }

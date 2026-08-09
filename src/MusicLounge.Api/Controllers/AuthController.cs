@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MusicLounge.Application.Auth.Commands.ForgotPassword;
@@ -18,6 +19,12 @@ namespace MusicLounge.Api.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/auth")]
 [EnableRateLimiting("auth")]
+// Every action here is intentionally public (you can't authenticate to an endpoint that issues
+// authentication). Previously relied on no global fallback authorization policy existing yet to
+// stay reachable — safe today, but silent: if a stricter fallback is ever added elsewhere, this
+// whole controller would start requiring a token to reach the endpoints that issue one, with no
+// visible cause. Explicit here so that risk can't reappear invisibly.
+[AllowAnonymous]
 public sealed class AuthController : ControllerBase
 {
     private readonly ISender _sender;

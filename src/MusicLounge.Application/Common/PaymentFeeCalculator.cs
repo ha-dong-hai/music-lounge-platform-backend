@@ -22,6 +22,30 @@ public static class PaymentFeeCalculator
         var ownerNet = grossAmount - platformFee - tax;
         return new PaymentFeeBreakdown(platformFee, tax, ownerNet);
     }
+
+    /// <summary>
+    /// Donate chặng 2 (§6.5): owner forwards <paramref name="performerShareRate"/> of the ORIGINAL
+    /// gross to the performer, keeping the rest of their chặng-1 net as compensation for holding/
+    /// administering the donation. Deliberately takes <paramref name="ownerNet"/> (chặng 1's
+    /// already-committed figure, per WriteTicketLedgerHandler's snapshot-at-commitment-point
+    /// pattern) rather than re-deriving it — if commission/tax rates changed between chặng 1 and
+    /// chặng 2, this must still balance against what was actually credited, not what today's config
+    /// would produce. Same "remainder, not independently rounded" rule as Split above.
+    /// </summary>
+    public static DonationPayoutSplit SplitDonationPayout(
+        decimal grossAmount, decimal ownerNet, decimal performerShareRate)
+    {
+        var performerAmount = Math.Round(grossAmount * performerShareRate, 2);
+        var ownerRetained = ownerNet - performerAmount;
+        return new DonationPayoutSplit(performerAmount, ownerRetained);
+    }
 }
 
 public sealed record PaymentFeeBreakdown(decimal PlatformFee, decimal Tax, decimal OwnerNet);
+
+/// <summary>
+/// <paramref name="OwnerRetained"/> negative means <c>performerShareRate</c> is misconfigured
+/// (asks the owner to forward more than they actually received in chặng 1) — callers must check
+/// this before writing a ledger journal, since the ledger cannot represent a negative transfer.
+/// </summary>
+public sealed record DonationPayoutSplit(decimal PerformerAmount, decimal OwnerRetained);

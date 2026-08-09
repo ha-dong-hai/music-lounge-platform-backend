@@ -13,7 +13,16 @@ public sealed class User : Common.AuditableEntity<int>
     public string AuthProvider { get; set; } = "local";     // "local" | "google"
     public string? GoogleId { get; set; }
     public bool IsActive { get; set; } = true;
+    // Luật 91/2025/QH15 Điều 19 + Luật Kế toán (10-year retention on accounting records): erasure
+    // scrubs identifying fields on this row in place rather than deleting it — Tickets/Donations/
+    // Payments/Settlements/LedgerEntries/OwnerSubscription/MusicLounge/VenuePenalty/SystemConfig
+    // FKs still resolve to this Id, so financial/audit history stays intact and referentially valid,
+    // but no longer identifies a natural person. Null = never erased; set = irreversible, distinct
+    // from IsActive (which DeactivateMyAccountCommand also flips false, but reversibly).
+    public DateTimeOffset? DataErasedAt { get; set; }
     public bool PhoneVerified { get; set; } = false;   // NĐ 147/2024
+    public string? PhoneVerificationCodeHash { get; set; }      // SHA256 hex của mã OTP 6 số — không lưu mã thô
+    public DateTimeOffset? PhoneVerificationCodeExpiresAt { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public bool AiConsent { get; set; } = false;
     public string? PasswordResetTokenHash { get; set; }        // SHA256 hex cua token thô gửi qua email — không lưu token thô

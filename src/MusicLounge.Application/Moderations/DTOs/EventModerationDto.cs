@@ -12,5 +12,6 @@ public sealed record EventModerationDto(
     string? AdminDecision,
     string? ReviewNote,
     DateTimeOffset CreatedAt,
+    DateTimeOffset? SlaDeadline,
     DateTimeOffset? ReviewedAt
 );

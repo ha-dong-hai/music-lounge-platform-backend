@@ -5,6 +5,7 @@ using MusicLounge.Application.Tickets.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Tickets.Commands.HoldTicket;
 
@@ -141,6 +142,20 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
                 throw new DomainException("Khu vực ngồi này đã hết chỗ. Vui lòng chọn khu vực hoặc hạng vé khác.");
         }
 
+        // §6.11: SUM(price.quota) của MỌI tier cùng trỏ 1 zone vật lý không được vượt sức chứa
+        // thật của zone — check TotalCapacity ở trên chỉ giới hạn từng tier riêng lẻ, không bắt
+        // được trường hợp 2 tier khác nhau (vd VIP + Standard) cùng zone cộng lại vượt sức chứa.
+        if (tier.ZoneId.HasValue)
+        {
+            var zone = await _uow.Repository<SeatingZone, int>().GetByIdAsync(tier.ZoneId.Value, ct);
+            if (zone is not null)
+            {
+                var zoneReserved = await _ticketRepo.GetReservedQuantityByZoneAsync(show.Id, tier.ZoneId.Value, ct);
+                if (zoneReserved + quantity > zone.Capacity)
+                    throw new DomainException("Khu vực này đã vượt sức chứa thực tế. Vui lòng chọn khu vực hoặc hạng vé khác.");
+            }
+        }
+
         // Kiểm tra tổng sức chứa của cả show theo loại truy cập
         var accessType = tier.AccessType;
         var relevantQuota = accessType == AccessType.Physical ? show.OfflineQuota : show.OnlineQuota;
@@ -150,6 +165,26 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             if (showReserved + quantity > relevantQuota.Value)
                 throw new DomainException(
                     accessType == AccessType.Physical ? "Show đã hết vé vật lý." : "Show đã hết vé online.");
+        }
+
+        // D14: giới hạn tổng vé/event của gói subscription Owner đang Active — check ở
+        // CreateTicketTierCommandHandler chỉ áp dụng khi TotalCapacity được set lúc tạo tier, nên
+        // 1 tier để trống TotalCapacity (hợp lệ, chỉ dùng Quota) bán được vô hạn định; subscription
+        // cũng có thể hết hạn/hạ gói SAU khi tier đã tồn tại. Check lại ở đây — đúng điểm tiền/vé
+        // đổi chủ thật — để không thể bị bỏ qua bằng cách để trống 1 field tuỳ chọn.
+        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+            ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
+        var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+            s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
+        var activeSub = activeSubs
+            .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
+            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
+        if (activeSub is not null)
+        {
+            var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
+            if (showReservedTotal + quantity > activeSub.MaxTicketsPerEventSnapshot)
+                throw new DomainException(
+                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
         }
     }
 }

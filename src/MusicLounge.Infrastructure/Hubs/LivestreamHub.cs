@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Livestreams.Commands.SendChatMessage;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Infrastructure.Persistence;
@@ -14,6 +15,8 @@ namespace MusicLounge.Infrastructure.Hubs;
 [Authorize]
 public sealed class LivestreamHub : Hub
 {
+    private const string JoinedMarkerKey = "joined";
+
     private readonly IMediator _mediator;
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly ICurrentUserService _currentUser;
@@ -39,9 +42,21 @@ public sealed class LivestreamHub : Hub
         var livestreamId = GetLivestreamId();
         if (livestreamId is null) { Context.Abort(); return; }
 
-        var isStaffOrAdmin = _currentUser.Role is Roles.Admin or Roles.Staff;
-        var hasAccess = isStaffOrAdmin
-            || await _livestreamRepo.HasViewerAccessAsync(livestreamId.Value, _currentUser.UserId);
+        // Was previously any Staff/Admin account regardless of venue — let Staff of venue A join
+        // the group and receive venue B's paid livestream for free. Mirrors the fix already applied
+        // to GetLivestreamDetailQueryHandler/GetChatHistoryQueryHandler: Admin bypasses fully,
+        // Staff/Owner must operate the SAME venue as this livestream, everyone else falls back to
+        // the real ticket-based viewer check.
+        var hasAccess = _currentUser.Role == Roles.Admin;
+        if (!hasAccess)
+        {
+            var venue = await _ctx.Livestreams
+                .Where(l => l.Id == livestreamId.Value)
+                .Select(l => new { l.LoungeShow.LoungeId, OwnerId = l.LoungeShow.Lounge.OwnerId })
+                .FirstOrDefaultAsync();
+            hasAccess = (venue is not null && VenueOperatorAccess.CanOperate(_currentUser, venue.LoungeId, venue.OwnerId))
+                || await _livestreamRepo.HasViewerAccessAsync(livestreamId.Value, _currentUser.UserId);
+        }
         if (!hasAccess) { Context.Abort(); return; }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(livestreamId.Value));
@@ -50,6 +65,13 @@ public sealed class LivestreamHub : Hub
         await _ctx.Livestreams
             .Where(l => l.Id == livestreamId.Value)
             .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewerCount, l => l.ViewerCount + 1));
+
+        // Marks that THIS connection actually incremented the count, so OnDisconnectedAsync only
+        // decrements for connections that got past the access check above — a connection rejected
+        // by Context.Abort() still fires OnDisconnectedAsync, and without this marker it would
+        // decrement a count it never contributed to (every failed join attempt — retry, no ticket,
+        // wrong-venue Staff — would silently drag the displayed viewer count down).
+        Context.Items[JoinedMarkerKey] = true;
 
         var newCount = await _ctx.Livestreams
             .Where(l => l.Id == livestreamId.Value)
@@ -63,7 +85,7 @@ public sealed class LivestreamHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var livestreamId = GetLivestreamId();
-        if (livestreamId is not null)
+        if (livestreamId is not null && Context.Items.ContainsKey(JoinedMarkerKey))
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(livestreamId.Value));
 

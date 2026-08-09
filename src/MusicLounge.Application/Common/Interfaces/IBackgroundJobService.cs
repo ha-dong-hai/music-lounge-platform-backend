@@ -9,6 +9,7 @@ public interface IBackgroundJobService
     void EnqueueFcmNotification(int userId, string title, string body);
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink);
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code);
+    void EnqueuePhoneVerificationCode(string toPhone, string code);
 
     // Cho Admin ep chay ngay 1 recurring job da dang ky (vd de kiem tra/van hanh), khong doi lich Cron.
     void TriggerRecurringJobNow(string recurringJobId);

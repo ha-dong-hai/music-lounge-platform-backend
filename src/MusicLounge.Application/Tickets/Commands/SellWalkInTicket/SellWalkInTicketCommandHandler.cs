@@ -71,7 +71,7 @@ internal sealed class SellWalkInTicketCommandHandler
         // a Staff walk-in sale and an online buyer's hold can target the same show concurrently.
         await using (await _bookingLock.AcquireAsync(show.Id, ct))
         {
-            await ValidateQuotaAsync(price, tier, show, request.Quantity, ct);
+            await ValidateQuotaAsync(price, tier, show, request.Quantity, loungeOwnerId, ct);
 
             var totalAmount = price.Price * request.Quantity;
 
@@ -128,7 +128,7 @@ internal sealed class SellWalkInTicketCommandHandler
     }
 
     private async Task ValidateQuotaAsync(
-        TicketPrice price, TicketTier tier, LoungeShow show, int quantity, CancellationToken ct)
+        TicketPrice price, TicketTier tier, LoungeShow show, int quantity, int loungeOwnerId, CancellationToken ct)
     {
         if (price.Quota.HasValue)
         {
@@ -144,12 +144,40 @@ internal sealed class SellWalkInTicketCommandHandler
                 throw new DomainException("Khu vực ngồi này đã hết chỗ.");
         }
 
+        // §6.11: cùng check tổng sức chứa zone như HoldTicketCommandHandler — walk-in cũng phải
+        // chịu chung giới hạn vật lý của khu vực, không chỉ đường mua online mới bị chặn.
+        if (tier.ZoneId.HasValue)
+        {
+            var zone = await _uow.Repository<SeatingZone, int>().GetByIdAsync(tier.ZoneId.Value, ct);
+            if (zone is not null)
+            {
+                var zoneReserved = await _ticketRepo.GetReservedQuantityByZoneAsync(show.Id, tier.ZoneId.Value, ct);
+                if (zoneReserved + quantity > zone.Capacity)
+                    throw new DomainException("Khu vực này đã vượt sức chứa thực tế.");
+            }
+        }
+
         if (show.OfflineQuota.HasValue)
         {
             var showReserved = await _ticketRepo.GetReservedQuantityByShowAndAccessTypeAsync(
                 show.Id, AccessType.Physical, ct);
             if (showReserved + quantity > show.OfflineQuota.Value)
                 throw new DomainException("Show đã hết vé vật lý.");
+        }
+
+        // D14: cùng giới hạn subscription như HoldTicketCommandHandler — walk-in cũng đổi vé/tiền
+        // thật nên phải chịu cùng giới hạn, không chỉ đường mua online mới bị chặn.
+        var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+            s => s.OwnerId == loungeOwnerId && s.Status == SubscriptionStatus.Active, ct);
+        var activeSub = activeSubs
+            .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
+            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
+        if (activeSub is not null)
+        {
+            var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
+            if (showReservedTotal + quantity > activeSub.MaxTicketsPerEventSnapshot)
+                throw new DomainException(
+                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
         }
     }
 }

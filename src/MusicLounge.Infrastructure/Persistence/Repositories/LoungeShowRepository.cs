@@ -56,30 +56,14 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             ));
         }
 
-        query = ApplySort(query, sortBy);
-
-        var total = await query.CountAsync(ct);
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(ct);
-
-        return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
+        return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetMineAsync(
         int ownerId, int page, int pageSize, LoungeShowSortBy sortBy, CancellationToken ct = default)
     {
         var query = WithDetails().Where(s => s.Lounge.OwnerId == ownerId);
-        query = ApplySort(query, sortBy);
-
-        var total = await query.CountAsync(ct);
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(ct);
-
-        return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
+        return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }
 
     public async Task<PaginatedResult<LoungeShow>> SearchAsync(
@@ -165,12 +149,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             ));
         }
 
-        query = ApplySort(query, p.SortBy);
-
-        var total = await query.CountAsync(ct);
-        var items = await query.Skip((p.Page - 1) * p.PageSize).Take(p.PageSize).ToListAsync(ct);
-
-        return new PaginatedResult<LoungeShow>(items, p.Page, p.PageSize, total);
+        return await SortAndPaginateAsync(query, p.SortBy, p.Page, p.PageSize, ct);
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetByPerformerAsync(
@@ -184,9 +163,17 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             query = query.Where(s => s.Status != LoungeShowStatus.Ended
                                   && s.Status != LoungeShowStatus.Cancelled);
 
-        query = query.OrderByDescending(s => s.ScheduledStart);
-        var total = await query.CountAsync(ct);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+        // ORDER BY ScheduledStart (DateTimeOffset) combined with Skip/Take in one deferred query
+        // does not translate under the SQLite provider used in tests — same limitation as
+        // GetTrendingAsync/GetWishlistByUserAsync elsewhere in this file. Materialize the
+        // (already Status-filtered) set, then sort/paginate client-side.
+        var candidates = await query.ToListAsync(ct);
+        var total = candidates.Count;
+        var items = candidates
+            .OrderByDescending(s => s.ScheduledStart)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
         return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
     }
@@ -195,11 +182,16 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         int loungeId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = WithDetails()
-            .Where(s => s.LoungeId == loungeId && s.Status != LoungeShowStatus.Draft)
-            .OrderByDescending(s => s.ScheduledStart);
+            .Where(s => s.LoungeId == loungeId && s.Status != LoungeShowStatus.Draft);
 
-        var total = await query.CountAsync(ct);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+        // Same ORDER BY-on-DateTimeOffset-with-Skip/Take limitation as GetByPerformerAsync above.
+        var candidates = await query.ToListAsync(ct);
+        var total = candidates.Count;
+        var items = candidates
+            .OrderByDescending(s => s.ScheduledStart)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
         return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
     }
@@ -360,6 +352,35 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         return result;
     }
 
+    // sortBy == StartingSoon combines a Where(ScheduledStart > now) with the query's existing
+    // Status filter and/or an ORDER BY on ScheduledStart with Skip/Take — none of which translate
+    // under the SQLite provider used in tests (same DateTimeOffset limitation as GetByLoungeAsync/
+    // GetByPerformerAsync above). Every other sort mode stays a normal single DB round trip; only
+    // StartingSoon materializes the (already otherwise-filtered) candidate set and finishes the
+    // filter/sort/paginate client-side.
+    private static async Task<PaginatedResult<LoungeShow>> SortAndPaginateAsync(
+        IQueryable<LoungeShow> query, LoungeShowSortBy sortBy, int page, int pageSize, CancellationToken ct)
+    {
+        if (sortBy == LoungeShowSortBy.StartingSoon)
+        {
+            var candidates = await query.ToListAsync(ct);
+            var upcoming = candidates
+                .Where(s => s.ScheduledStart > DateTimeOffset.UtcNow)
+                .OrderBy(s => s.ScheduledStart)
+                .ToList();
+            var candidateTotal = upcoming.Count;
+            var candidateItems = upcoming.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            return new PaginatedResult<LoungeShow>(candidateItems, page, pageSize, candidateTotal);
+        }
+
+        var sorted = ApplySort(query, sortBy);
+        var total = await sorted.CountAsync(ct);
+        var items = await sorted.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+        return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
+    }
+
+    // LoungeShowSortBy.StartingSoon is intercepted by SortAndPaginateAsync before this is ever
+    // called (see comment there) — never reaches the default branch below for that sort mode.
     private static IQueryable<LoungeShow> ApplySort(
         IQueryable<LoungeShow> query, LoungeShowSortBy sortBy)
         => sortBy switch
@@ -372,9 +393,6 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             LoungeShowSortBy.PriceDesc => query.OrderByDescending(
                 s => s.TicketTiers.SelectMany(t => t.Prices)
                      .Max(p => (decimal?)p.Price)),
-            LoungeShowSortBy.StartingSoon => query
-                .Where(s => s.ScheduledStart > DateTimeOffset.UtcNow)
-                .OrderBy(s => s.ScheduledStart),
             _ => query.OrderByDescending(s => s.CreatedAt)
         };
 }

@@ -1,5 +1,5 @@
 using MediatR;
-using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.DTOs;
@@ -35,10 +35,12 @@ internal sealed class GetLoungeShowDetailQueryHandler
         var show = await _showRepo.GetByIdWithDetailsAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
-        var isOwnerOfShow = _currentUser.IsAuthenticated && show.Lounge.OwnerId == _currentUser.UserId;
+        // Was previously any Staff/Admin account regardless of venue — Staff of venue A could see
+        // venue B's Draft show (unpublished price/lineup/description). Admin still bypasses fully;
+        // Staff/Owner must actually operate THIS show's venue, matching the pattern already used
+        // for livestream credentials/detail.
         if (show.Status == LoungeShowStatus.Draft
-            && _currentUser.Role is not Roles.Admin and not Roles.Staff
-            && !isOwnerOfShow)
+            && !VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId))
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
         if (_currentUser.IsAuthenticated)

@@ -56,6 +56,9 @@ public sealed class MuxStreamService : ILivestreamService
         var result = await response.Content.ReadFromJsonAsync<MuxApiResponse>(cancellationToken: ct)
             ?? throw new ExternalServiceException("Mux", "Response body was empty or invalid.");
 
+        if (result.Data.PlaybackIds is not { Length: > 0 })
+            throw new ExternalServiceException("Mux", "Response contained no playback IDs.");
+
         var playbackId = result.Data.PlaybackIds[0].Id;
 
         return new LivestreamProviderResult(

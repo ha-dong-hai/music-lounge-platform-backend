@@ -15,6 +15,7 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly IEventModerationRepository _moderationRepo;
+    private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
 
     public PublishLoungeShowCommandHandler(
@@ -22,12 +23,14 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         ICurrentUserService currentUser,
         ILivestreamRepository livestreamRepo,
         IEventModerationRepository moderationRepo,
+        ISystemConfigService config,
         IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _livestreamRepo = livestreamRepo;
         _moderationRepo = moderationRepo;
+        _config = config;
         _lock = @lock;
     }
 
@@ -96,13 +99,19 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         var existingModeration = await _moderationRepo.GetByTargetAsync(
             ModerationTargetType.Show, show.Id, ct);
 
+        // NĐ 147/2024: 24h SLA to review — read from system_config (§6.7: never hardcode),
+        // recomputed from "now" so a resubmission after rejection gets a fresh SLA window too.
+        var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
+        var now = DateTimeOffset.UtcNow;
+
         if (existingModeration is null)
         {
             _uow.Repository<EventModeration, int>().Add(new EventModeration
             {
                 TargetType = ModerationTargetType.Show,
                 TargetId = show.Id,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = now,
+                SlaDeadline = now.AddHours(slaHours)
             });
         }
         else
@@ -112,7 +121,8 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
             existingModeration.AdminId = null;
             existingModeration.ReviewNote = null;
             existingModeration.ReviewedAt = null;
-            existingModeration.CreatedAt = DateTimeOffset.UtcNow;
+            existingModeration.CreatedAt = now;
+            existingModeration.SlaDeadline = now.AddHours(slaHours);
             _moderationRepo.Update(existingModeration);
         }
 

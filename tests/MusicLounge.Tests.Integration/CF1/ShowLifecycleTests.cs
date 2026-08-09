@@ -223,7 +223,8 @@ public sealed class ShowLifecycleTests
     public async Task StartOfflineShow_WrongVenueStaff_Returns403()
     {
         var showId = await SeedPublishedShowAsync();
-        var wrongStaffClient = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", 999);
+        var wrongStaffClient = _factory.CreateAuthenticatedClient(
+            SeedHelper.OtherVenueStaffId, "Staff", SeedHelper.OtherLoungeId);
 
         var res = await wrongStaffClient.PostAsync($"/api/v1/lounge-shows/{showId}/start", null);
 

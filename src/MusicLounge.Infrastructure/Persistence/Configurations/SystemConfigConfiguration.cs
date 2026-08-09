@@ -53,6 +53,7 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             // Tickets & Donations
             new { Id = 16, ConfigKey = "ticket_hold_minutes",                ConfigValue = "15",   DataType = ConfigDataType.Integer,  Description = "Checkout hold duration before slot released — §6.3",              UpdatedAt = seed },
             new { Id = 17, ConfigKey = "donation_hold_days",                 ConfigValue = "7",    DataType = ConfigDataType.Integer,  Description = "Days before auto-confirm donation if Owner inactive — D4",         UpdatedAt = seed },
+            new { Id = 21, ConfigKey = "donation_performer_share_rate",      ConfigValue = "0.88", DataType = ConfigDataType.Decimal,  Description = "§6.5 chặng 2: % of gross donation forwarded to performer",         UpdatedAt = seed },
             // Ratings & Appeals
             new { Id = 18, ConfigKey = "rating_window_days",                 ConfigValue = "7",    DataType = ConfigDataType.Integer,  Description = "Days after show end to submit rating — §6.13",                    UpdatedAt = seed },
             new { Id = 19, ConfigKey = "appeal_sla_hours",                   ConfigValue = "48",   DataType = ConfigDataType.Integer,  Description = "Hours for Admin to review penalty appeal — §6.17",                UpdatedAt = seed },

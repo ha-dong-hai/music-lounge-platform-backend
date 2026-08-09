@@ -40,6 +40,13 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
             j => j.ExecuteAsync(toEmail, toName, protectedCode, CancellationToken.None));
     }
 
+    public void EnqueuePhoneVerificationCode(string toPhone, string code)
+    {
+        var protectedCode = _secretProtector.Protect(code);
+        BackgroundJob.Enqueue<SendPhoneVerificationCodeJob>(
+            j => j.ExecuteAsync(toPhone, protectedCode, CancellationToken.None));
+    }
+
     public void TriggerRecurringJobNow(string recurringJobId)
         => RecurringJob.TriggerJob(recurringJobId);
 }

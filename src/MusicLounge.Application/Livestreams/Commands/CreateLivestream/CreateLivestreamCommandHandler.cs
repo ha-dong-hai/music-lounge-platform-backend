@@ -15,6 +15,7 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly ILivestreamServiceFactory _factory;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
 
     public CreateLivestreamCommandHandler(
@@ -22,12 +23,14 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         ILivestreamRepository livestreamRepo,
         ILivestreamServiceFactory factory,
         ICurrentUserService currentUser,
+        ISystemConfigService config,
         IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _livestreamRepo = livestreamRepo;
         _factory = factory;
         _currentUser = currentUser;
+        _config = config;
         _lock = @lock;
     }
 
@@ -75,12 +78,16 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         _uow.Repository<Livestream, int>().Add(livestream);
         await _uow.SaveChangesAsync(ct);
 
-        // Create moderation record for Admin to review before going live (W08)
+        // Create moderation record for Admin to review before going live (W08). SLA (NĐ 147/2024)
+        // read from system_config, never hardcoded (§6.7).
+        var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
+        var moderationCreatedAt = DateTimeOffset.UtcNow;
         _uow.Repository<EventModeration, int>().Add(new EventModeration
         {
             TargetType = ModerationTargetType.Livestream,
             TargetId = livestream.Id,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = moderationCreatedAt,
+            SlaDeadline = moderationCreatedAt.AddHours(slaHours)
         });
         await _uow.SaveChangesAsync(ct);
 

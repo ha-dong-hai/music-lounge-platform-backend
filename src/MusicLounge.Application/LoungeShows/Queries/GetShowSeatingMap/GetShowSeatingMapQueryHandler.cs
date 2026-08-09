@@ -1,5 +1,5 @@
 using MediatR;
-using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.DTOs;
@@ -33,10 +33,10 @@ internal sealed class GetShowSeatingMapQueryHandler : IRequestHandler<GetShowSea
 
         // Endpoint AllowAnonymous (khop show-detail cong khai) — nhung show Draft van phai an
         // giong het GetLoungeShowDetailQueryHandler, khong duoc lo layout/gia qua endpoint rieng nay.
-        var isOwnerOfShow = _currentUser.IsAuthenticated && show.Lounge.OwnerId == _currentUser.UserId;
+        // Cross-venue Staff bypass fixed the same way as GetLoungeShowDetailQueryHandler: Admin
+        // bypasses fully, Staff/Owner must actually operate THIS show's venue.
         if (show.Status == LoungeShowStatus.Draft
-            && _currentUser.Role is not Roles.Admin and not Roles.Staff
-            && !isOwnerOfShow)
+            && !VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId))
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
         // Chi gom tier co ZoneId (tier online/khong phan khu giu nguyen UX danh sach phang cu,

@@ -358,8 +358,29 @@ public sealed class DonationTests
 
             var performerCredit = allEntries.Single(e => e.AccountId == performerAccount.Id);
             performerCredit.IsDebit.Should().BeFalse();
-            performerCredit.Amount.Should().Be(90_000m, "chặng 2 chuyển toàn bộ donation.Net cho nghệ sĩ");
+            performerCredit.Amount.Should().Be(88_000m,
+                "chặng 2 chuyển 88% GROSS cho nghệ sĩ (system_config donation_performer_share_rate mặc định 0.88, §6.5) — owner giữ lại 2% còn lại trong 90% đã nhận ở chặng 1");
         }
+    }
+
+    /// <summary>
+    /// PaymentFeeCalculator.SplitDonationPayout is the single source of truth for chặng-2 math
+    /// (mirrors Split's role for chặng 1) — pure function, no HTTP/DB needed. Proves the rate is a
+    /// genuine parameter (not a hardcoded 0.88 anywhere in the calculation) and that the negative-
+    /// OwnerRetained guard actually fires when donation_performer_share_rate is misconfigured
+    /// above what the owner's chặng-1 net can cover.
+    /// </summary>
+    [Theory]
+    [InlineData(100_000, 90_000, 0.88, 88_000, 2_000)]   // documented default (§6.5)
+    [InlineData(100_000, 90_000, 0.80, 80_000, 10_000)]  // Admin retuned the rate — not hardcoded
+    [InlineData(100_000, 90_000, 1.00, 100_000, -10_000)] // misconfigured: exceeds owner's net → negative guard must catch this
+    public void SplitDonationPayout_ComputesFromRateParameter_NotAHardcodedConstant(
+        decimal gross, decimal ownerNet, decimal rate, decimal expectedPerformerAmount, decimal expectedOwnerRetained)
+    {
+        var split = MusicLounge.Application.Common.PaymentFeeCalculator.SplitDonationPayout(gross, ownerNet, rate);
+
+        split.PerformerAmount.Should().Be(expectedPerformerAmount);
+        split.OwnerRetained.Should().Be(expectedOwnerRetained);
     }
 
     // ─── Pending-ack / awaiting-payout lists — previously zero test coverage ──

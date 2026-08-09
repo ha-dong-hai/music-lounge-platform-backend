@@ -6,6 +6,7 @@ public sealed record PendingDonationDto(
     string ShowName,
     decimal Gross,
     decimal Net,
+    decimal AmountToPayPerformer,
     bool IsAnonymous,
     string? DisplayName,
     string? Message,

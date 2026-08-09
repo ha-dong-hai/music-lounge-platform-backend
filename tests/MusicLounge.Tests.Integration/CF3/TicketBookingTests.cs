@@ -95,8 +95,9 @@ public sealed class TicketBookingTests
     public async Task SellWalkIn_WrongVenueStaff_Returns403()
     {
         var priceId = await CreatePhysicalPriceAsync(SeedHelper.OfflineShowId);
-        // Staff assigned to a different lounge (id 999) than the show's venue (SeedHelper.LoungeId)
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", 999);
+        // Staff genuinely assigned to a different venue (OtherLoungeId) than the show's venue (SeedHelper.LoungeId)
+        var client = _factory.CreateAuthenticatedClient(
+            SeedHelper.OtherVenueStaffId, "Staff", SeedHelper.OtherLoungeId);
 
         var res = await client.PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = priceId, Quantity = 1 });
 
@@ -128,6 +129,64 @@ public sealed class TicketBookingTests
         var confirmedCount = await db.Tickets.CountAsync(
             t => t.PriceId == priceId && t.Status == TicketStatus.Confirmed);
         confirmedCount.Should().Be(1, "không được bán vượt quota dù có tranh chấp đồng thời");
+    }
+
+    /// <summary>
+    /// §6.11 row 4 (SUM(price.quota) ≤ seating_areas.capacity) — governance gap #6 from the
+    /// 2026-08-09 production-hardening audit. Two tiers sharing one physical zone, each with its
+    /// own unbounded-at-the-tier-level quota (5 each), must still be capped by the zone's real
+    /// capacity (5) in aggregate — the per-tier TotalCapacity check alone cannot catch this since
+    /// neither tier's own TotalCapacity is set.
+    /// </summary>
+    [Fact]
+    public async Task Hold_AcrossTwoTiersSharingOneZone_CannotExceedZoneCapacity()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var zone = new SeatingZone { LoungeId = SeedHelper.LoungeId, Name = "VIP", Capacity = 5 };
+        db.Add(zone);
+        await db.SaveChangesAsync();
+
+        var tierA = new TicketTier
+        {
+            LoungeShowId = SeedHelper.OfflineShowId, Name = "VIP-A",
+            AccessType = AccessType.Physical, ZoneId = zone.Id, CreatedAt = DateTime.UtcNow
+        };
+        var tierB = new TicketTier
+        {
+            LoungeShowId = SeedHelper.OfflineShowId, Name = "VIP-B",
+            AccessType = AccessType.Physical, ZoneId = zone.Id, CreatedAt = DateTime.UtcNow
+        };
+        db.AddRange(tierA, tierB);
+        await db.SaveChangesAsync();
+
+        var priceA = new TicketPrice
+        {
+            TierId = tierA.Id, Name = "A", Price = 100_000m, Quota = 5,
+            PurchaseChannel = PurchaseChannel.Online,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(2)
+        };
+        var priceB = new TicketPrice
+        {
+            TierId = tierB.Id, Name = "B", Price = 100_000m, Quota = 5,
+            PurchaseChannel = PurchaseChannel.Online,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(2)
+        };
+        db.AddRange(priceA, priceB);
+        await db.SaveChangesAsync();
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var firstHold = await client.PostAsJsonAsync(
+            "/api/v1/tickets/holds", new { PriceId = priceA.Id, Quantity = 3 });
+        firstHold.StatusCode.Should().Be(HttpStatusCode.Created,
+            "3 trong sức chứa 5 của zone, hợp lệ");
+
+        var secondHold = await client.PostAsJsonAsync(
+            "/api/v1/tickets/holds", new { PriceId = priceB.Id, Quantity = 3 });
+        secondHold.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "3+3=6 vượt sức chứa thật (5) của zone dùng chung, dù mỗi tier/price riêng lẻ vẫn còn quota");
     }
 
     // ─── W26 Cancel ticket ────────────────────────────────────────────────────

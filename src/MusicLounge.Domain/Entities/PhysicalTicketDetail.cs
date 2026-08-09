@@ -9,4 +9,6 @@ public sealed class PhysicalTicketDetail
     public int? CheckedInByStaffId { get; set; }
 
     public Ticket Ticket { get; set; } = null!;
+    public User? SoldByStaff { get; set; }
+    public User? CheckedInByStaff { get; set; }
 }

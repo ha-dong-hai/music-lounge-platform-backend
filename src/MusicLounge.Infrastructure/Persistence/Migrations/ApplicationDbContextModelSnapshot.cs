@@ -40,6 +40,10 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OwnerType")
+                        .IsUnique()
+                        .HasFilter("[OwnerId] IS NULL");
+
                     b.HasIndex("OwnerType", "OwnerId")
                         .IsUnique()
                         .HasFilter("[OwnerId] IS NOT NULL");
@@ -450,6 +454,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<string>("RiskLevel")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("SlaDeadline")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("TargetId")
                         .HasColumnType("int");
@@ -1733,6 +1740,10 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                     b.HasKey("TicketId");
 
+                    b.HasIndex("CheckedInByStaffId");
+
+                    b.HasIndex("SoldByStaffId");
+
                     b.ToTable("physical_ticket_details", (string)null);
                 });
 
@@ -2205,6 +2216,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            Id = 21,
+                            ConfigKey = "donation_performer_share_rate",
+                            ConfigValue = "0.88",
+                            DataType = "Decimal",
+                            Description = "§6.5 chặng 2: % of gross donation forwarded to performer",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
                             Id = 18,
                             ConfigKey = "rating_window_days",
                             ConfigValue = "7",
@@ -2541,6 +2561,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("DataErasedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
@@ -2595,6 +2618,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<string>("Phone")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("PhoneVerificationCodeExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PhoneVerificationCodeHash")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneVerified")
                         .HasColumnType("bit");
@@ -3486,11 +3515,25 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.PhysicalTicketDetail", b =>
                 {
+                    b.HasOne("MusicLounge.Domain.Entities.User", "CheckedInByStaff")
+                        .WithMany()
+                        .HasForeignKey("CheckedInByStaffId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MusicLounge.Domain.Entities.User", "SoldByStaff")
+                        .WithMany()
+                        .HasForeignKey("SoldByStaffId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MusicLounge.Domain.Entities.Ticket", "Ticket")
                         .WithOne("PhysicalDetail")
                         .HasForeignKey("MusicLounge.Domain.Entities.PhysicalTicketDetail", "TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CheckedInByStaff");
+
+                    b.Navigation("SoldByStaff");
 
                     b.Navigation("Ticket");
                 });

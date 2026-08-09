@@ -20,8 +20,10 @@ public static class SeedHelper
     public const int OwnerId = 3;
     public const int AudienceId = 4;
     public const int OtherOwnerId = 5;
+    public const int OtherVenueStaffId = 6;   // real Staff assignment at OtherLoungeId — for "wrong venue" tests
 
     public const int LoungeId = 1;
+    public const int OtherLoungeId = 2;       // a different venue than LoungeId, staffed by OtherVenueStaffId
     public const int ShowId = 1;           // Livestream format, Ongoing
     public const int CancelledShowId = 2;
     public const int OfflineShowId = 3;
@@ -49,18 +51,41 @@ public static class SeedHelper
 
         // Users (role is stored in JWT only — no Role field on entity)
         db.Users.AddRange(
-            new User { Id = AdminId,      Email = "admin@test.com",    FullName = "Admin" },
-            new User { Id = StaffId,      Email = "staff@test.com",    FullName = "Staff" },
-            new User { Id = OwnerId,      Email = "owner@test.com",    FullName = "Owner" },
-            new User { Id = AudienceId,   Email = "audience@test.com", FullName = "Audience" },
-            new User { Id = OtherOwnerId, Email = "owner2@test.com",   FullName = "OtherOwner" }
+            new User { Id = AdminId,          Email = "admin@test.com",      FullName = "Admin" },
+            new User { Id = StaffId,          Email = "staff@test.com",      FullName = "Staff" },
+            new User { Id = OwnerId,          Email = "owner@test.com",      FullName = "Owner" },
+            new User { Id = AudienceId,       Email = "audience@test.com",   FullName = "Audience" },
+            new User { Id = OtherOwnerId,     Email = "owner2@test.com",     FullName = "OtherOwner" },
+            new User { Id = OtherVenueStaffId, Email = "staff2@test.com",    FullName = "OtherVenueStaff" }
         );
 
-        // Venue
-        db.Lounges.Add(new MusicLoungeVenue
+        // Venues
+        db.Lounges.AddRange(
+            new MusicLoungeVenue
+            {
+                Id = LoungeId, OwnerId = OwnerId, Name = "Test Lounge",
+                Address = new VenueAddress { Street = "123 Main", District = "1", City = "HCM" }
+            },
+            new MusicLoungeVenue
+            {
+                Id = OtherLoungeId, OwnerId = OtherOwnerId, Name = "Other Test Lounge",
+                Address = new VenueAddress { Street = "456 Other", District = "2", City = "HCM" }
+            });
+
+        // Staff assignments (ActiveUserBehavior re-checks these on every request — D6/bug #31:
+        // a Staff JWT claiming a lounge_id with no matching active row here is rejected at the
+        // pipeline). One user can only be active Staff at one venue at a time (see
+        // LoungeStaffConfiguration's filtered unique index), so "wrong venue" tests need a
+        // genuinely different Staff identity rather than reusing StaffId with a fake lounge_id.
+        db.Add(new LoungeStaff
         {
-            Id = LoungeId, OwnerId = OwnerId, Name = "Test Lounge",
-            Address = new VenueAddress { Street = "123 Main", District = "1", City = "HCM" }
+            LoungeId = LoungeId, UserId = StaffId, AssignedBy = OwnerId,
+            IsActive = true, AssignedAt = DateTimeOffset.UtcNow
+        });
+        db.Add(new LoungeStaff
+        {
+            LoungeId = OtherLoungeId, UserId = OtherVenueStaffId, AssignedBy = OtherOwnerId,
+            IsActive = true, AssignedAt = DateTimeOffset.UtcNow
         });
 
         // Shows
