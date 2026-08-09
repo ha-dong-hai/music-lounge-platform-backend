@@ -21,6 +21,7 @@ using MusicLounge.Application.Lounges.Commands.SetLoungeModel3D;
 using MusicLounge.Application.Lounges.Commands.SetVenueTourScenePosition;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout3D;
+using MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.UpdateLounge;
 using MusicLounge.Application.Lounges.Commands.UpdateSeatingZone;
 using MusicLounge.Application.Lounges.DTOs;
@@ -294,6 +295,27 @@ public sealed class LoungesController : ControllerBase
         return CreatedAtAction(nameof(GetTour), new { id, version = "1.0" }, ApiResponse<int>.Ok(sceneId));
     }
 
+    // Alternative to AddTourScene for Owners without a native 360° capture app: submit several
+    // overlapping photos taken standing in one spot while rotating, the standalone panorama-
+    // stitcher service merges them into one panorama, and that becomes a scene exactly like
+    // AddTourScene's — counts against the same MaxTourScenes quota, plus its own anti-abuse cap
+    // since stitching runs on our own server's CPU.
+    [HttpPost("{id:int}/tour/scenes/stitch")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> StitchTourScene(
+        int id, [FromBody] StitchVenueTourSceneRequest body, CancellationToken ct = default)
+    {
+        var sceneId = await _sender.Send(
+            new StitchVenueTourSceneCommand(id, body.SourceImageUrls, body.Name), ct);
+        return CreatedAtAction(nameof(GetTour), new { id, version = "1.0" }, ApiResponse<int>.Ok(sceneId));
+    }
+
     [HttpDelete("{id:int}/tour/scenes/{sceneId:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -395,6 +417,8 @@ public sealed record AddVenueTourSceneRequest(string ImageUrl, string? Name);
 
 public sealed record AddVenueTourHotspotRequest(
     string Type, double Yaw, double Pitch, string? Label, int? TargetSceneId, string? InfoText);
+
+public sealed record StitchVenueTourSceneRequest(IReadOnlyList<string> SourceImageUrls, string? Name);
 
 public sealed record AddLoungeGalleryImageRequest(string ImageUrl, string? Caption);
 

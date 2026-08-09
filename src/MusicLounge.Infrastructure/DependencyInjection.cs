@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
         services.Configure<OpenAiSettings>(configuration.GetSection("OpenAi"));
         services.Configure<SecurityDetectionSettings>(configuration.GetSection("SecurityDetection"));
+        services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
 
         // DbContext
         services.AddDbContext<ApplicationDbContext>(opts =>
@@ -71,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<IAiModerationService, GeminiModerationService>();
         services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
         services.AddScoped<IAiImageGenerationService, OpenAiImageGenerationService>();
+        services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
         services.AddScoped<IFcmService, FcmService>();
@@ -157,6 +159,9 @@ public static class DependencyInjection
         // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
         // (not hung) generation doesn't get cut off right as it would have succeeded.
         services.AddHttpClient("openai").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(90));
+        // Stitching several phone photos can genuinely take a while (feature detection + matching
+        // + blending scales with image count/resolution) — longer than the other external calls.
+        services.AddHttpClient("panorama-stitcher").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(120));
         services.AddKeyedTransient<ILivestreamService, CloudflareStreamService>("cloudflare");
         services.AddKeyedTransient<ILivestreamService, MuxStreamService>("mux");
         services.AddScoped<ILivestreamServiceFactory, LivestreamServiceFactory>();

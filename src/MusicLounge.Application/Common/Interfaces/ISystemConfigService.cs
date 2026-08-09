@@ -136,4 +136,11 @@ public static class ConfigKeys
     // venue still collects directly recreates the double-payment bug this config replaced (owner
     // keeps the cash AND receives a real bank transfer for the same sale).
     public const string WalkInCommissionEnabled = "walkin_commission_enabled";
+
+    // Anti-abuse ceiling on panorama-STITCH attempts (success + failure both count) per venue —
+    // same shape as AiPosterMaxAttemptsPerShow, but for a different reason: a stitch runs on our
+    // OWN server's CPU (the standalone panorama-stitcher service), not a paid vendor call, so an
+    // unbounded retry loop is a direct cost/DoS vector rather than just a wasted bill. Not seeded
+    // by any migration — GetIntAsync's fallback covers it until an Admin adds a real row.
+    public const string TourStitchMaxAttemptsPerLounge = "tour_stitch_max_attempts_per_lounge";
 }

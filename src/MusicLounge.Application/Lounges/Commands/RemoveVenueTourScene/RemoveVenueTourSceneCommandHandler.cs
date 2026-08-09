@@ -40,6 +40,19 @@ internal sealed class RemoveVenueTourSceneCommandHandler : IRequestHandler<Remov
         foreach (var hotspot in incomingHotspots)
             hotspotRepo.Remove(hotspot);
 
+        // Same reasoning as the hotspot cleanup above — VenueTourStitchAttempt.ResultSceneId is
+        // NoAction (not Cascade/SetNull, to avoid a second cascade path from MusicLounge into that
+        // table), so any attempt log pointing at this scene needs its reference cleared explicitly
+        // before the scene is deleted. The log ROW itself stays (it's an audit trail), just its
+        // link to a now-gone scene is nulled.
+        var attemptRepo = _uow.Repository<VenueTourStitchAttempt, int>();
+        var referencingAttempts = await attemptRepo.FindAsync(a => a.ResultSceneId == request.SceneId, ct);
+        foreach (var attempt in referencingAttempts)
+        {
+            attempt.ResultSceneId = null;
+            attemptRepo.Update(attempt);
+        }
+
         sceneRepo.Remove(scene);
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
