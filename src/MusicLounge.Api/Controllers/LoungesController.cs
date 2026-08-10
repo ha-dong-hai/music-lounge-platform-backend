@@ -29,6 +29,7 @@ using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
 using MusicLounge.Application.Lounges.Queries.GetLounges;
 using MusicLounge.Application.Lounges.Queries.GetLoungeZones;
 using MusicLounge.Application.Lounges.Queries.GetVenueTour;
+using MusicLounge.Application.Lounges.Queries.GetVenueTourStitchAttempt;
 using MusicLounge.Application.Staffing.Commands.AssignStaff;
 using MusicLounge.Application.Staffing.Commands.DeactivateStaff;
 using MusicLounge.Application.Staffing.DTOs;
@@ -300,20 +301,38 @@ public sealed class LoungesController : ControllerBase
     // stitcher service merges them into one panorama, and that becomes a scene exactly like
     // AddTourScene's — counts against the same MaxTourScenes quota, plus its own anti-abuse cap
     // since stitching runs on our own server's CPU.
+    //
+    // Runs in the background (StitchVenueTourSceneJob) — a stitch can take 15-30+ seconds and
+    // occasionally brushes the panorama-stitcher HttpClient's 120s timeout on harder photo sets.
+    // This returns 202 with an attempt id immediately; poll GetStitchAttempt for the outcome.
     [HttpPost("{id:int}/tour/scenes/stitch")]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> StitchTourScene(
         int id, [FromBody] StitchVenueTourSceneRequest body, CancellationToken ct = default)
     {
-        var sceneId = await _sender.Send(
+        var attemptId = await _sender.Send(
             new StitchVenueTourSceneCommand(id, body.SourceImageUrls, body.Name), ct);
-        return CreatedAtAction(nameof(GetTour), new { id, version = "1.0" }, ApiResponse<int>.Ok(sceneId));
+        return AcceptedAtAction(
+            nameof(GetStitchAttempt), new { id, attemptId, version = "1.0" }, ApiResponse<int>.Ok(attemptId));
+    }
+
+    // Owner polls this after StitchTourScene returns an attempt id. Status is "Pending" while the
+    // background job hasn't finished yet, "Succeeded" (ResultSceneId set) or "Failed"
+    // (ErrorMessage set) once it has.
+    [HttpGet("{id:int}/tour/scenes/stitch/{attemptId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<VenueTourStitchAttemptDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStitchAttempt(int id, int attemptId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetVenueTourStitchAttemptQuery(id, attemptId), ct);
+        return Ok(ApiResponse<VenueTourStitchAttemptDto>.Ok(result));
     }
 
     [HttpDelete("{id:int}/tour/scenes/{sceneId:int}")]

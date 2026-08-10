@@ -51,6 +51,10 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
         => BackgroundJob.Enqueue<ScoreModerationWithAiJob>(
             j => j.ExecuteAsync(moderationId, JobCancellationToken.Null));
 
+    public void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
+        => BackgroundJob.Enqueue<StitchVenueTourSceneJob>(
+            j => j.ExecuteAsync(attemptId, loungeId, sourceImageUrls, name, JobCancellationToken.Null));
+
     public void TriggerRecurringJobNow(string recurringJobId)
         => RecurringJob.TriggerJob(recurringJobId);
 }

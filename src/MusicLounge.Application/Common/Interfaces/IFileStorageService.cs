@@ -20,4 +20,11 @@ public interface IFileStorageService
 
     /// <summary>Opens a file previously relocated via RelocateToPrivateAsync for streaming back to an authorized caller.</summary>
     Task<(Stream Content, string ContentType)> OpenPrivateFileAsync(string privateRef, CancellationToken ct = default);
+
+    /// <summary>
+    /// Reads back the bytes of a file previously saved via SaveImageAsync (still in the public
+    /// wwwroot/uploads tree) — used to hand the actual image content to IImageModerationGate
+    /// before an Owner-supplied ImageUrl becomes a VenueTourScene/LoungeGalleryImage row.
+    /// </summary>
+    Task<byte[]> ReadPublicImageAsync(string publicUrl, CancellationToken ct = default);
 }

@@ -143,4 +143,14 @@ public static class ConfigKeys
     // unbounded retry loop is a direct cost/DoS vector rather than just a wasted bill. Not seeded
     // by any migration — GetIntAsync's fallback covers it until an Admin adds a real row.
     public const string TourStitchMaxAttemptsPerLounge = "tour_stitch_max_attempts_per_lounge";
+
+    // Image moderation (gallery photos + tour scenes, incl. stitched panoramas) — stored as whole
+    // percent (0-100) rather than a 0.0-1.0 float since ISystemConfigService has no GetDoubleAsync,
+    // and adding one for a single caller wasn't worth the interface change. Block is intentionally
+    // high (only very-confident violations ever stop an upload outright - a false positive here
+    // means an Owner's legitimate photo is rejected, not just delayed); Review is lower so
+    // borderline cases still reach an Admin instead of silently passing. Not seeded by any
+    // migration — GetIntAsync's fallback covers it until an Admin adds real rows.
+    public const string ImageModerationBlockThresholdPercent = "image_moderation_block_threshold_percent";
+    public const string ImageModerationReviewThresholdPercent = "image_moderation_review_threshold_percent";
 }

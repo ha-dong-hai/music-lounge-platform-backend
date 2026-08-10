@@ -14,6 +14,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-downloads kornia's indoor-pretrained LoFTR checkpoint into torch's weight cache at BUILD
+# time, not first-request time - the running container needs no runtime network access for it and
+# it doesn't add multi-second cold-start latency to the connectivity-rescue path on every restart.
+# Placed right after the pip install (before COPY main.py) so Docker's layer cache keeps this
+# expensive layer intact across ordinary main.py-only rebuilds. Also doubles as a build-time smoke
+# test: a broken torch/kornia CPU install fails the build here, loudly, instead of failing
+# silently in production. If this fails with a libgomp.so.1 error (a known occasional issue for
+# torch CPU wheels on slim Debian images), add libgomp1 to the apt-get install line above.
+RUN python -c "import kornia.feature as KF; KF.LoFTR(pretrained='indoor')"
+
 COPY main.py .
 
 EXPOSE 8000

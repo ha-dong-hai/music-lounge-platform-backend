@@ -70,6 +70,8 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAIRecommendationService, MLNetRecommendationService>();
         services.AddScoped<IAiModerationService, GeminiModerationService>();
+        services.AddScoped<IImageModerationService, GeminiImageModerationService>();
+        services.AddScoped<IImageModerationGate, ImageModerationGate>();
         services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
         services.AddScoped<IAiImageGenerationService, OpenAiImageGenerationService>();
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
@@ -125,6 +127,7 @@ public static class DependencyInjection
         services.AddScoped<ModerationSlaBreachAlertJob>();
         services.AddScoped<ComplaintSlaBreachAlertJob>();
         services.AddScoped<ScoreModerationWithAiJob>();
+        services.AddScoped<StitchVenueTourSceneJob>();
         services.AddScoped<LoginSpikeDetectionJob>();
         services.AddScoped<AdminRoleDriftDetectionJob>();
         // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing

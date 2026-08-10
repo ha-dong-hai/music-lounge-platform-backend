@@ -59,11 +59,28 @@ public sealed class VenueTourTests
         return (id, id);
     }
 
+    // AddVenueTourSceneCommandHandler now reads the image back off disk (IImageModerationGate) —
+    // needs a real uploaded file, a fake "https://cdn.example.com/..." URL 404s at that read.
+    private async Task<string> UploadRealImageAsync(HttpClient client)
+    {
+        byte[] pngBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
+        using var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(pngBytes);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+        form.Add(fileContent, "file", $"pano-{Guid.NewGuid():N}.png");
+
+        var res = await client.PostAsync("/api/v1/uploads/images", form);
+        res.EnsureSuccessStatusCode();
+        var body = await res.Content.ReadFromJsonAsync<UploadResponse>();
+        return body!.Data.Url;
+    }
+
     private async Task<int> AddSceneAsync(HttpClient ownerClient, int loungeId, string? name = null)
     {
+        var imageUrl = await UploadRealImageAsync(ownerClient);
         var res = await ownerClient.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes", new
         {
-            ImageUrl = $"https://cdn.example.com/pano-{Guid.NewGuid():N}.jpg",
+            ImageUrl = imageUrl,
             Name = name
         });
         res.EnsureSuccessStatusCode();
@@ -76,10 +93,11 @@ public sealed class VenueTourTests
     {
         var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
         var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client);
 
         var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes", new
         {
-            ImageUrl = "https://cdn.example.com/pano-entrance.jpg",
+            ImageUrl = imageUrl,
             Name = "Sảnh chính"
         });
 
@@ -314,4 +332,6 @@ public sealed class VenueTourTests
     }
 
     private sealed record IdResponse(bool Success, int Data);
+    private sealed record UploadResponse(bool Success, UploadedUrl Data);
+    private sealed record UploadedUrl(string Url);
 }

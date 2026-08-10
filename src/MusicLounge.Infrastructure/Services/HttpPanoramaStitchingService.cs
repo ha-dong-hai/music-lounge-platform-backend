@@ -21,6 +21,14 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
     {
         if (string.IsNullOrWhiteSpace(_settings.BaseUrl))
             throw new ExternalServiceException("PanoramaStitcher", "Chưa cấu hình PanoramaStitcher:BaseUrl.");
+        if (string.IsNullOrWhiteSpace(_settings.PublicBaseUrl))
+            throw new ExternalServiceException("PanoramaStitcher", "Chưa cấu hình PanoramaStitcher:PublicBaseUrl.");
+
+        // The validator (StitchVenueTourSceneCommandValidator) already confirmed every URL
+        // starts with "/uploads/" - resolving to our own PublicBaseUrl here, rather than trusting
+        // any absolute URL from the caller, is what actually closes the SSRF hole (an allowlist
+        // by construction: this is the only URL shape that can reach this point).
+        var absoluteUrls = imageUrls.Select(u => $"{_settings.PublicBaseUrl.TrimEnd('/')}{u}").ToArray();
 
         var http = _httpFactory.CreateClient("panorama-stitcher");
 
@@ -28,7 +36,7 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
         try
         {
             response = await http.PostAsJsonAsync(
-                $"{_settings.BaseUrl.TrimEnd('/')}/stitch", new { image_urls = imageUrls }, ct);
+                $"{_settings.BaseUrl.TrimEnd('/')}/stitch", new { image_urls = absoluteUrls }, ct);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {

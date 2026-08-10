@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -14,11 +15,19 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IFileStorageService _fileStorage;
+    private readonly IImageModerationGate _moderationGate;
+    private readonly ISystemConfigService _config;
 
-    public AddVenueTourSceneCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public AddVenueTourSceneCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IFileStorageService fileStorage,
+        IImageModerationGate moderationGate, ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _fileStorage = fileStorage;
+        _moderationGate = moderationGate;
+        _config = config;
     }
 
     public async Task<int> Handle(AddVenueTourSceneCommand request, CancellationToken ct)
@@ -45,6 +54,13 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
                     ? "Gói subscription hiện tại không hỗ trợ tour ảo 360° — vui lòng nâng cấp gói."
                     : $"Tour đã đạt giới hạn {maxScenes} scene của gói subscription hiện tại.");
 
+        // Throws (blocks the upload entirely) if the image scores high enough - see
+        // IImageModerationGate. Checked BEFORE creating the scene so a blocked image never lands
+        // in the DB at all, not even transiently.
+        var imageBytes = await _fileStorage.ReadPublicImageAsync(request.ImageUrl, ct);
+        var moderation = await _moderationGate.CheckOrThrowAsync(
+            imageBytes, ImageMimeTypeHelper.FromUrl(request.ImageUrl), ct);
+
         var scene = new VenueTourScene
         {
             LoungeId = request.LoungeId,
@@ -54,6 +70,28 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         };
         _uow.Repository<VenueTourScene, int>().Add(scene);
         await _uow.SaveChangesAsync(ct);
+
+        if (moderation is not null)
+            await FlagForReviewAsync(scene.Id, moderation, ct);
+
         return scene.Id;
+    }
+
+    private async Task FlagForReviewAsync(int sceneId, AiModerationResult moderation, CancellationToken ct)
+    {
+        var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
+        var now = DateTimeOffset.UtcNow;
+        _uow.Repository<EventModeration, int>().Add(new EventModeration
+        {
+            TargetType = ModerationTargetType.TourScene,
+            TargetId = sceneId,
+            AiScore = moderation.Score,
+            RiskLevel = Enum.TryParse<ModerationRiskLevel>(moderation.RiskLevel, true, out var risk) ? risk : null,
+            FlagReason = moderation.FlagReason,
+            AiRecommendation = Enum.TryParse<AiModerationRecommendation>(moderation.Recommendation, true, out var rec) ? rec : null,
+            CreatedAt = now,
+            SlaDeadline = now.AddHours(slaHours)
+        });
+        await _uow.SaveChangesAsync(ct);
     }
 }

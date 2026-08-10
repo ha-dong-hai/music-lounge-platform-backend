@@ -14,23 +14,29 @@ namespace MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 // MaxTourScenesSnapshot quota (it's still one more scene either way), plus its own anti-abuse cap
 // (tour_stitch_max_attempts_per_lounge) since — unlike the AI vendor calls elsewhere in this
 // codebase — a stitch attempt burns OUR OWN server's CPU, not a paid third party's.
+//
+// Runs the actual stitch in the background (StitchVenueTourSceneJob) rather than inline: a stitch
+// can take 15-30+ seconds and occasionally brushes the panorama-stitcher HttpClient's 120s
+// timeout on harder photo sets, which would otherwise block the Owner's HTTP request for that
+// whole window. This handler does the upfront checks and creates a Pending attempt row
+// synchronously (so quota/anti-abuse limits are enforced before returning), then enqueues the
+// job and returns the attempt id immediately — the Owner polls GetVenueTourStitchAttemptQuery for
+// the outcome instead of waiting on this request.
 internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<StitchVenueTourSceneCommand, int>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly ISystemConfigService _config;
-    private readonly IPanoramaStitchingService _stitcher;
-    private readonly IFileStorageService _fileStorage;
+    private readonly IBackgroundJobService _backgroundJobs;
 
     public StitchVenueTourSceneCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config,
-        IPanoramaStitchingService stitcher, IFileStorageService fileStorage)
+        IBackgroundJobService backgroundJobs)
     {
         _uow = uow;
         _currentUser = currentUser;
         _config = config;
-        _stitcher = stitcher;
-        _fileStorage = fileStorage;
+        _backgroundJobs = backgroundJobs;
     }
 
     public async Task<int> Handle(StitchVenueTourSceneCommand request, CancellationToken ct)
@@ -59,56 +65,27 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
 
         var attemptRepo = _uow.Repository<VenueTourStitchAttempt, int>();
 
-        // Anti-abuse: every attempt (success or failure) on THIS lounge counts — a stitch runs on
-        // our own server's CPU, unlike the AI vendor calls elsewhere in this codebase.
+        // Anti-abuse: every attempt (success, failure, or now-pending) on THIS lounge counts — a
+        // stitch runs on our own server's CPU, unlike the AI vendor calls elsewhere in this
+        // codebase. Counting Pending too (not just terminal states) stops a burst of concurrent
+        // requests from all slipping past the cap before any of them finishes.
         var maxAttempts = await _config.GetIntAsync(ConfigKeys.TourStitchMaxAttemptsPerLounge, 20, ct);
         var attemptsForLounge = await attemptRepo.CountAsync(a => a.LoungeId == request.LoungeId, ct);
         if (attemptsForLounge >= maxAttempts)
             throw new DomainException(
                 $"Venue này đã đạt giới hạn {maxAttempts} lần ghép ảnh. Vui lòng liên hệ hỗ trợ nếu cần thêm.");
 
-        byte[] imageBytes;
-        try
-        {
-            imageBytes = await _stitcher.StitchAsync(request.SourceImageUrls, ct);
-        }
-        catch (ExternalServiceException ex)
-        {
-            attemptRepo.Add(new VenueTourStitchAttempt
-            {
-                LoungeId = request.LoungeId,
-                Status = VenueTourStitchStatus.Failed,
-                ErrorMessage = ex.Message,
-                CreatedAt = now
-            });
-            await _uow.SaveChangesAsync(ct);
-            throw;
-        }
-
-        string imageUrl;
-        await using (var stream = new MemoryStream(imageBytes))
-        {
-            imageUrl = await _fileStorage.SaveImageAsync(stream, "panorama.jpg", ct);
-        }
-
-        var scene = new VenueTourScene
+        var attempt = new VenueTourStitchAttempt
         {
             LoungeId = request.LoungeId,
-            ImageUrl = imageUrl,
-            Name = request.Name,
-            OrderIndex = existingScenes.Count
-        };
-        sceneRepo.Add(scene);
-
-        attemptRepo.Add(new VenueTourStitchAttempt
-        {
-            LoungeId = request.LoungeId,
-            Status = VenueTourStitchStatus.Succeeded,
-            ResultScene = scene,
+            Status = VenueTourStitchStatus.Pending,
             CreatedAt = now
-        });
-
+        };
+        attemptRepo.Add(attempt);
         await _uow.SaveChangesAsync(ct);
-        return scene.Id;
+
+        _backgroundJobs.EnqueueStitchVenueTourScene(attempt.Id, request.LoungeId, request.SourceImageUrls, request.Name);
+
+        return attempt.Id;
     }
 }

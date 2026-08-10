@@ -135,4 +135,19 @@ internal sealed class LocalFileStorageService : IFileStorageService
         Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
         return Task.FromResult((stream, contentType));
     }
+
+    public async Task<byte[]> ReadPublicImageAsync(string publicUrl, CancellationToken ct = default)
+    {
+        // Same "strip to bare filename" defense as RelocateToPrivateAsync — publicUrl always has
+        // our own "/uploads/xxxx.ext" shape from SaveImageAsync, never trusted as an arbitrary path.
+        var fileName = Path.GetFileName(publicUrl);
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new DomainException("Đường dẫn ảnh không hợp lệ.");
+
+        var path = Path.Combine(_webRootPath, "uploads", fileName);
+        if (!File.Exists(path))
+            throw new DomainException("Không tìm thấy ảnh đã upload — vui lòng upload lại.");
+
+        return await File.ReadAllBytesAsync(path, ct);
+    }
 }
