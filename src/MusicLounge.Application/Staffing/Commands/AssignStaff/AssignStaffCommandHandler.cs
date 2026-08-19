@@ -35,6 +35,17 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
         var user = await userRepo.GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
+        // Owner/Admin accounts are already tied to their own cross-venue (Owner) or platform-wide
+        // (Admin) identity — letting one of those become Staff here too would create a LoungeStaff
+        // row that's silently dead (their JWT role never becomes "Staff", since only an Audience
+        // gets promoted below, so VenueOperatorAccess.CanOperate never grants them anything through
+        // it) while still showing up as a real staff member on this venue's staff list. Same "mỗi
+        // venue cần một tài khoản staff riêng" rule the check below already enforces for Staff
+        // accounts — this closes the same loophole for Owner/Admin ones.
+        if (user.Role is UserRole.Owner or UserRole.Admin)
+            throw new ConflictException(
+                "Tài khoản này đang giữ vai trò Owner/Admin — không thể gán làm staff. Mỗi venue cần một tài khoản staff riêng.");
+
         var staffRepo = _uow.Repository<LoungeStaffEntity, int>();
         var alreadyAssigned = await staffRepo.AnyAsync(
             s => s.LoungeId == request.LoungeId && s.UserId == request.UserId && s.IsActive, ct);
