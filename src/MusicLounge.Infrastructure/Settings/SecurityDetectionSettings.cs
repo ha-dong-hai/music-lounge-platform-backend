@@ -23,4 +23,12 @@ public sealed class SecurityDetectionSettings
     // LoginFailureLog only needs to cover LoginSpikeWindowMinutes of history to do its job —
     // anything older is pruned so the table doesn't grow unbounded on a busy site.
     public int LoginFailureLogRetentionHours { get; init; } = 24;
+
+    // AuthAttemptTracker — single-account brute-force lockout. Same reasoning as the spike-detection
+    // thresholds above applies directly: raising this (or the duration) is exactly what a
+    // credential-stuffing attacker with DB write access would want to do to defeat the lockout, so
+    // this belongs in appsettings, not system_config, even though it's per-account rather than
+    // platform-wide detection.
+    public int MaxFailedLoginAttempts { get; init; } = 5;
+    public int LockoutDurationMinutes { get; init; } = 15;
 }
