@@ -1,0 +1,107 @@
+@startuml activity-payment
+!include _style.puml
+' UML 2.5.1 Activity Diagram with partitions (swimlanes).
+'
+'   partition        who performs the action — the vertical bands below
+'   rounded node     initial and final node
+'   diamond          decision / merge node
+'   fork / join      concurrent flow
+'
+' This complements seq-ticket-purchase, which shows the same purchase as message
+' exchange between objects. The activity view shows control flow instead, including
+' the timeout branch and the concurrency lock.
+'
+' Every step is taken from the handler that performs it: HoldTicketCommandHandler,
+' PurchaseTicketCommandHandler, ProcessVnPayCallbackCommandHandler and
+' ReleaseExpiredHoldsJob. Note that holding and purchasing are two separate
+' commands — the hold creates no Ticket and no Payment.
+title Activity Diagram — Ticket Hold, Purchase and Payment Confirmation
+
+|Audience|
+start
+:Select show, tier and quantity;
+
+|API — HoldTicket|
+:Validate the show is Published or Ongoing;
+:Validate the sale window is open\nand the tier is not counter-only;
+:Acquire the show booking lock;
+note right
+  Check and write happen under one lock.
+  Without it two buyers can both read
+  "seats available" before either writes
+  its hold, and the show is oversold.
+end note
+:Compute remaining as quota\nminus confirmed tickets\nminus active held quantity;
+if (remaining seats cover the request?) then (yes)
+  :Create TicketHold, expiring in 15 minutes;
+  :Release the lock;
+  :Notify wishlisters if stock is low;
+else (no)
+  :Release the lock;
+  |Audience|
+  :See "sold out";
+  stop
+endif
+
+|Audience|
+:See the countdown;
+
+split
+  -[#black]-> pays before the hold expires;
+  :Confirm and proceed to payment;
+
+  |API — PurchaseTicket|
+  :Create Payment as Pending;
+  :Create one Ticket as Pending\nper held seat;
+  :Build the signed gateway request;
+
+  |VNPay|
+  :Collect card details;
+  :Charge the customer;
+  :Send the server-to-server IPN callback;
+
+  |API — ProcessVnPayCallback|
+  if (signature valid and amount matches?) then (yes)
+    if (this callback was already processed?) then (yes)
+      :Acknowledge without reapplying;
+      note right
+        The gateway retries, so the
+        handler must be idempotent.
+      end note
+      stop
+    else (no)
+    endif
+    :Mark Payment Confirmed;
+    :Mark each Ticket Confirmed;
+    :Generate the check-in QR code;
+    fork
+      :Post the balanced double-entry journal;
+    fork again
+      :Schedule the settlement tranche;
+    fork again
+      :Send the confirmation notification;
+    end fork
+    |Audience|
+    :Receive the e-ticket and QR code;
+    stop
+  else (no)
+    :Reject the callback and\nleave the hold untouched;
+    stop
+  endif
+
+split again
+  -[#black]-> countdown expires unpaid;
+  |Background job|
+  :ReleaseExpiredHoldsJob runs;
+  :Acquire the same per-hold lock;
+  :Delete the expired TicketHold row;
+  note right
+    Deleting the hold is all that is needed:
+    availability is computed from live holds,
+    so the seats return to the pool without
+    any counter being restored.
+  end note
+  stop
+end split
+
+@enduml

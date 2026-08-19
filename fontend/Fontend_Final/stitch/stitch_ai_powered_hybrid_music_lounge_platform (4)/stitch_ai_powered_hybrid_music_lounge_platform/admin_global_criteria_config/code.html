@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge Admin - Platform Criteria</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#1b1c19",
+                      "on-surface-variant": "#4d4540",
+                      "surface": "#fbf9f4",
+                      "on-primary-container": "#96908b",
+                      "outline-variant": "#cfc4bd",
+                      "on-primary": "#ffffff",
+                      "outline": "#7e756f",
+                      "on-secondary-fixed": "#261900",
+                      "secondary-fixed": "#ffdea5",
+                      "error-container": "#ffdad6",
+                      "surface-dim": "#dbdad5",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-tint": "#635d5a",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-container-high": "#eae8e3",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#785a1a",
+                      "tertiary": "#310501",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "inverse-primary": "#cdc5c0",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "background": "#fbf9f4",
+                      "secondary-container": "#fed488",
+                      "primary": "#181512",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-background": "#1b1c19",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-container": "#f0eee9",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "tertiary-container": "#4d190e",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "tertiary-fixed": "#ffdad3",
+                      "secondary": "#775a19",
+                      "surface-variant": "#e4e2dd",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "surface-container-highest": "#e4e2dd",
+                      "error": "#ba1a1a",
+                      "primary-container": "#2d2926",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "surface-bright": "#fbf9f4",
+                      "inverse-surface": "#30312e",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-container-low": "#f5f3ee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "stack-sm": "16px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface h-full flex font-body-md">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center w-full px-margin-mobile py-4 bg-surface text-primary font-headline-md text-headline-md font-body-md text-body-md font-display-md text-display-md text-primary docked full-width top-0 border-b border-outline-variant opacity-10 flat no shadows fixed z-50">
+<div>AuraLounge Admin</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined cursor-pointer active:opacity-70" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer active:opacity-70" data-icon="settings">settings</span>
+</div>
+</header>
+<!-- SideNavBar (Desktop Only) -->
+<nav class="hidden md:flex flex-col h-full py-stack-md px-4 gap-stack-sm bg-surface-container-low text-primary font-label-caps text-label-caps font-body-md text-body-md font-display-md text-display-md text-primary docked left-0 h-screen w-64 border-r border-outline-variant opacity-10 flat no shadows fixed z-40 shrink-0">
+<div class="mb-stack-lg px-4 flex flex-col items-center text-center">
+<div class="w-16 h-16 rounded-full bg-surface-variant mb-2 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-outline" style="font-size: 2rem;">person</span>
+</div>
+<div class="font-headline-md text-headline-md">System Management</div>
+<div class="text-on-surface-variant">Global Dashboard</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-4 py-3 px-4 rounded-DEFAULT text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-200" data-icon="group">group</span>
+<span>Users</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-DEFAULT text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-200" data-icon="inventory_2">inventory_2</span>
+<span>Packages</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-DEFAULT text-primary font-bold border-l-2 border-primary pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group bg-surface-container-high" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-200" data-icon="rule" data-weight="fill" style="font-variation-settings: 'FILL' 1;">rule</span>
+<span>Criteria</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-DEFAULT text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-200" data-icon="analytics">analytics</span>
+<span>Reports</span>
+</a>
+</div>
+<div class="mt-stack-md px-4">
+<button class="w-full py-3 bg-primary text-on-primary rounded-DEFAULT font-button text-button hover:opacity-90 transition-opacity">Add New Resource</button>
+</div>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-4 opacity-100 flex flex-col gap-2">
+<a class="flex items-center gap-4 py-3 px-4 rounded-DEFAULT text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-200" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-DEFAULT text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-200" data-icon="logout">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 h-full overflow-y-auto w-full md:pl-64 pt-20 md:pt-0">
+<div class="px-margin-mobile md:px-margin-desktop py-stack-md max-w-container-max mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-stack-lg gap-4">
+<div>
+<h1 class="font-display-md text-display-md text-primary">Platform Criteria</h1>
+<p class="text-on-surface-variant mt-2 max-w-2xl">Manage custom categories for venues and shows. These dimensions allow for highly nuanced searching and filtering across the platform.</p>
+</div>
+<button class="bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT shrink-0 hover:bg-primary-container transition-colors flex items-center gap-2 w-fit">
+<span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span>
+                    Add Global Category
+                </button>
+</div>
+<!-- Data Table Container -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant/15 overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/15 font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low">
+<th class="py-4 px-6 font-semibold">Category Name</th>
+<th class="py-4 px-6 font-semibold">Machine Key</th>
+<th class="py-4 px-6 font-semibold">Data Type</th>
+<th class="py-4 px-6 font-semibold text-right">Usage Count</th>
+<th class="py-4 px-6 font-semibold text-center">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<!-- Row 1 -->
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-low/50 transition-colors">
+<td class="py-5 px-6">
+<div class="font-medium text-primary">Acoustic Warmth</div>
+</td>
+<td class="py-5 px-6">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-sm font-mono">acoustic_warmth</span>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-DEFAULT border border-outline-variant/30 text-on-surface-variant text-sm bg-surface">
+<span class="material-symbols-outlined" style="font-size: 1rem;">tune</span>
+                                        Range (1-10)
+                                    </span>
+</td>
+<td class="py-5 px-6 text-right">
+<span class="text-on-surface-variant">1,204 shows</span>
+</td>
+<td class="py-5 px-6 text-center">
+<div class="flex items-center justify-center gap-3 text-on-surface-variant">
+<button aria-label="Edit" class="hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
+</button>
+<button aria-label="Delete" class="hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-low/50 transition-colors">
+<td class="py-5 px-6">
+<div class="font-medium text-primary">Intimacy Level</div>
+</td>
+<td class="py-5 px-6">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-sm font-mono">intimacy_level</span>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-DEFAULT border border-outline-variant/30 text-on-surface-variant text-sm bg-surface">
+<span class="material-symbols-outlined" style="font-size: 1rem;">list</span>
+                                        Options (Low, Med, High)
+                                    </span>
+</td>
+<td class="py-5 px-6 text-right">
+<span class="text-on-surface-variant">856 shows</span>
+</td>
+<td class="py-5 px-6 text-center">
+<div class="flex items-center justify-center gap-3 text-on-surface-variant">
+<button aria-label="Edit" class="hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
+</button>
+<button aria-label="Delete" class="hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-low/50 transition-colors">
+<td class="py-5 px-6">
+<div class="font-medium text-primary">Lighting Mood</div>
+</td>
+<td class="py-5 px-6">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-sm font-mono">lighting_mood</span>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-DEFAULT border border-outline-variant/30 text-on-surface-variant text-sm bg-surface">
+<span class="material-symbols-outlined" style="font-size: 1rem;">list</span>
+                                        Options (Dark, Ambient, Bright)
+                                    </span>
+</td>
+<td class="py-5 px-6 text-right">
+<span class="text-on-surface-variant">2,109 shows</span>
+</td>
+<td class="py-5 px-6 text-center">
+<div class="flex items-center justify-center gap-3 text-on-surface-variant">
+<button aria-label="Edit" class="hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
+</button>
+<button aria-label="Delete" class="hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-5 px-6">
+<div class="font-medium text-primary">Seating Available</div>
+</td>
+<td class="py-5 px-6">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-sm font-mono">seating_available</span>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-DEFAULT border border-outline-variant/30 text-on-surface-variant text-sm bg-surface">
+<span class="material-symbols-outlined" style="font-size: 1rem;">toggle_on</span>
+                                        Toggle (Boolean)
+                                    </span>
+</td>
+<td class="py-5 px-6 text-right">
+<span class="text-on-surface-variant">4,592 shows</span>
+</td>
+<td class="py-5 px-6 text-center">
+<div class="flex items-center justify-center gap-3 text-on-surface-variant">
+<button aria-label="Edit" class="hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
+</button>
+<button aria-label="Delete" class="hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 1.25rem;">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="mt-8 flex justify-between items-center text-on-surface-variant font-label-caps text-label-caps">
+<div>Showing 1-4 of 4 categories</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 border border-outline-variant/30 rounded hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">Prev</button>
+<button class="px-3 py-1 border border-outline-variant/30 rounded hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">Next</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

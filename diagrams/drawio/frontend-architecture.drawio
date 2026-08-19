@@ -1,0 +1,106 @@
+<mxfile host="Electron">
+  <diagram name="frontend-architecture" id="0">
+    <mxGraphModel dx="1236" dy="1082" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1178" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n1" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#000000;" value="Frontend Architecture — structure shared by all five client surfaces" vertex="1">
+          <mxGeometry height="30" width="1000" x="50" y="24" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" parent="1" style="shape=folder;tabWidth=182;tabHeight=27;tabPosition=left;rounded=0;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;" value="«layer»  Screens / Routes" vertex="1">
+          <mxGeometry height="128" width="1000" x="50" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="One route per screen (lazy-loaded)" vertex="1">
+          <mxGeometry height="62" width="476" x="66" y="128" as="geometry" />
+        </mxCell>
+        <mxCell id="n4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Route guards (role resolved from JWT)" vertex="1">
+          <mxGeometry height="62" width="476" x="558" y="128" as="geometry" />
+        </mxCell>
+        <mxCell id="n5" parent="1" style="shape=folder;tabWidth=176;tabHeight=28;tabPosition=left;rounded=0;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;" value="«layer»  Feature Modules" vertex="1">
+          <mxGeometry height="128" width="1000" x="50" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="n6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="auth · venues · shows" vertex="1">
+          <mxGeometry height="62" width="312" x="66" y="326" as="geometry" />
+        </mxCell>
+        <mxCell id="n7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="tickets · livestream · donations" vertex="1">
+          <mxGeometry height="62" width="312" x="394" y="326" as="geometry" />
+        </mxCell>
+        <mxCell id="n8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="f&amp;b · subscription · admin" vertex="1">
+          <mxGeometry height="62" width="312" x="722" y="326" as="geometry" />
+        </mxCell>
+        <mxCell id="n9" parent="1" style="shape=folder;tabWidth=219;tabHeight=31;tabPosition=left;rounded=0;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;" value="«layer»  Shared Design System" vertex="1">
+          <mxGeometry height="128" width="1000" x="50" y="474" as="geometry" />
+        </mxCell>
+        <mxCell id="n10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Warm Luxury Lounge tokens" vertex="1">
+          <mxGeometry height="62" width="476" x="66" y="524" as="geometry" />
+        </mxCell>
+        <mxCell id="n11" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Reusable components (forms, tables, modals, states)" vertex="1">
+          <mxGeometry height="62" width="476" x="558" y="524" as="geometry" />
+        </mxCell>
+        <mxCell id="n12" parent="1" style="shape=folder;tabWidth=206;tabHeight=29;tabPosition=left;rounded=0;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;" value="«layer»  State &amp; Data Access" vertex="1">
+          <mxGeometry height="128" width="1000" x="50" y="672" as="geometry" />
+        </mxCell>
+        <mxCell id="n13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="TanStack Query (server state)" vertex="1">
+          <mxGeometry height="62" width="230" x="66" y="722" as="geometry" />
+        </mxCell>
+        <mxCell id="n14" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Zustand (client state)" vertex="1">
+          <mxGeometry height="62" width="230" x="312" y="722" as="geometry" />
+        </mxCell>
+        <mxCell id="n15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Typed API client (OpenAPI)" vertex="1">
+          <mxGeometry height="62" width="230" x="558" y="722" as="geometry" />
+        </mxCell>
+        <mxCell id="n16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="SignalR client" vertex="1">
+          <mxGeometry height="62" width="230" x="804" y="722" as="geometry" />
+        </mxCell>
+        <mxCell id="n17" parent="1" style="shape=folder;tabWidth=170;tabHeight=26;tabPosition=left;rounded=0;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;" value="«layer»  Cross-Cutting" vertex="1">
+          <mxGeometry height="128" width="1000" x="50" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="n18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="JWT storage &amp; refresh" vertex="1">
+          <mxGeometry height="62" width="230" x="66" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="n19" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Error to message mapping" vertex="1">
+          <mxGeometry height="62" width="230" x="312" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="n20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Form validation" vertex="1">
+          <mxGeometry height="62" width="230" x="558" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="n21" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="Accessibility primitives" vertex="1">
+          <mxGeometry height="62" width="230" x="804" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontColor=#000000;fontSize=12;labelBackgroundColor=#FFFFFF;jumpStyle=none;exitPerimeter=0;entryPerimeter=0;entryX=0.499;entryY=0.214;entryDx=0;entryDy=0;" target="n5" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="550" y="206" as="sourcePoint" />
+            <mxPoint x="550" y="276" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontColor=#000000;fontSize=12;labelBackgroundColor=#FFFFFF;jumpStyle=none;exitPerimeter=0;entryPerimeter=0;entryX=0.499;entryY=0.247;entryDx=0;entryDy=0;" target="n9" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="550" y="404" as="sourcePoint" />
+            <mxPoint x="550" y="474" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontColor=#000000;fontSize=12;labelBackgroundColor=#FFFFFF;jumpStyle=none;exitPerimeter=0;entryPerimeter=0;entryX=0.496;entryY=0.223;entryDx=0;entryDy=0;" target="n12" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="550" y="602" as="sourcePoint" />
+            <mxPoint x="550" y="672" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontColor=#000000;fontSize=12;labelBackgroundColor=#FFFFFF;jumpStyle=none;exitPerimeter=0;entryPerimeter=0;entryX=0.5;entryY=0.176;entryDx=0;entryDy=0;" target="n17" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="550" y="800" as="sourcePoint" />
+            <mxPoint x="550" y="870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n26" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontColor=#000000;fontSize=13;" value="MusicLounge REST + SignalR API  (over HTTPS)" vertex="1">
+          <mxGeometry height="56" width="500" x="300" y="1068" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontColor=#000000;fontSize=12;labelBackgroundColor=#FFFFFF;jumpStyle=none;exitPerimeter=0;entryPerimeter=0;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="550" y="998" as="sourcePoint" />
+            <mxPoint x="550" y="1068" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

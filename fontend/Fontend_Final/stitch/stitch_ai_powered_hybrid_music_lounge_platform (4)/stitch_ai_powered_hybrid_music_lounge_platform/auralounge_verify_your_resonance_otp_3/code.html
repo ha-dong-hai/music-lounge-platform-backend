@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Verify Your Email</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#fbf9f4",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "on-surface": "#1b1c19",
+                        "outline": "#7e756f",
+                        "surface-container": "#f0eee9",
+                        "secondary-container": "#fed488",
+                        "inverse-surface": "#30312e",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdea5",
+                        "surface": "#fbf9f4",
+                        "on-secondary-fixed": "#261900",
+                        "tertiary-container": "#4d190e",
+                        "primary-fixed": "#e9e1dc",
+                        "primary-container": "#2d2926",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-container-low": "#f5f3ee",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-tertiary-container": "#cb7c6b",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary-container": "#96908b",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#cdc5c0",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface-container-highest": "#e4e2dd",
+                        "outline-variant": "#cfc4bd",
+                        "surface-dim": "#dbdad5",
+                        "surface-tint": "#635d5a",
+                        "surface-container-high": "#eae8e3",
+                        "on-primary": "#ffffff",
+                        "secondary": "#775a19",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-background": "#1b1c19",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#181512",
+                        "tertiary": "#310501",
+                        "on-secondary-container": "#785a1a",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "surface-bright": "#fbf9f4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-md": "32px",
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "margin-mobile": "20px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "button": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .otp-input:focus {
+            outline: none;
+            border-bottom-color: theme('colors.primary');
+        }
+        /* Hide arrows in number input */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col items-center justify-center px-margin-mobile">
+<!-- Main Container -->
+<main class="w-full max-w-[400px] flex flex-col items-center gap-stack-md text-center">
+<!-- Icon -->
+<div aria-hidden="true" class="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center mb-stack-sm">
+<span class="material-symbols-outlined text-display-md text-primary" style="font-variation-settings: 'FILL' 0;">
+                mark_email_read
+            </span>
+</div>
+<!-- Headings -->
+<div class="flex flex-col gap-unit">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Verify your email</h1>
+<p class="font-body-md text-body-md text-on-surface-variant px-unit">
+                We've sent a 6-digit code to <br/>
+<span class="text-primary font-medium">connoisseur@auralounge.com</span>
+</p>
+</div>
+<!-- OTP Input Group -->
+<form class="w-full flex flex-col gap-stack-md mt-stack-sm" id="otp-form" onsubmit="event.preventDefault();">
+<div class="flex justify-between w-full gap-2">
+<input class="otp-input w-12 h-14 bg-transparent border-0 border-b border-outline-variant text-center font-display-md text-[32px] text-primary rounded-none transition-colors duration-200" maxlength="1" pattern="\d*" required="" type="number"/>
+<input class="otp-input w-12 h-14 bg-transparent border-0 border-b border-outline-variant text-center font-display-md text-[32px] text-primary rounded-none transition-colors duration-200" maxlength="1" pattern="\d*" required="" type="number"/>
+<input class="otp-input w-12 h-14 bg-transparent border-0 border-b border-outline-variant text-center font-display-md text-[32px] text-primary rounded-none transition-colors duration-200" maxlength="1" pattern="\d*" required="" type="number"/>
+<input class="otp-input w-12 h-14 bg-transparent border-0 border-b border-outline-variant text-center font-display-md text-[32px] text-primary rounded-none transition-colors duration-200" maxlength="1" pattern="\d*" required="" type="number"/>
+<input class="otp-input w-12 h-14 bg-transparent border-0 border-b border-outline-variant text-center font-display-md text-[32px] text-primary rounded-none transition-colors duration-200" maxlength="1" pattern="\d*" required="" type="number"/>
+<input class="otp-input w-12 h-14 bg-transparent border-0 border-b border-outline-variant text-center font-display-md text-[32px] text-primary rounded-none transition-colors duration-200" maxlength="1" pattern="\d*" required="" type="number"/>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-stack-sm w-full mt-4">
+<button class="w-full bg-primary text-on-primary py-4 rounded-DEFAULT font-button text-button hover:opacity-90 active:scale-[0.98] transition-all duration-200" type="submit">
+                    Verify
+                </button>
+<button class="w-full py-4 text-outline hover:text-primary font-button text-button transition-colors duration-200" type="button">
+                    Resend code
+                </button>
+</div>
+</form>
+</main>
+<script>
+        // Simple OTP input logic for auto-focusing next/prev
+        const inputs = document.querySelectorAll('.otp-input');
+        
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                // Keep only first digit if multiple entered
+                if(e.target.value.length > 1) {
+                    e.target.value = e.target.value.slice(0, 1);
+                }
+                
+                // Move to next input if filled
+                if (e.target.value !== '' && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                // Move to previous input on backspace if empty
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+            
+            // Allow pasting full code
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').slice(0, 6).replace(/\D/g, '');
+                
+                if(pastedData.length > 0) {
+                    pastedData.split('').forEach((char, i) => {
+                        if(i < inputs.length) {
+                            inputs[i].value = char;
+                            if(i < inputs.length - 1) {
+                                inputs[i+1].focus();
+                            } else {
+                                inputs[i].focus();
+                                inputs[i].blur(); // blur last input
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // Focus first input on load
+        window.onload = () => {
+            if(inputs.length > 0) inputs[0].focus();
+        }
+    </script>
+</body></html>

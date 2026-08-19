@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Admin - Dispute Resolution</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface": "#fbf9f4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-tint": "#635d5a",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-highest": "#e4e2dd",
+                      "secondary": "#775a19",
+                      "on-surface": "#1b1c19",
+                      "inverse-on-surface": "#f2f1ec",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-secondary": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#fed488",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#181512",
+                      "outline-variant": "#cfc4bd",
+                      "on-error": "#ffffff",
+                      "on-background": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "surface-bright": "#fbf9f4",
+                      "outline": "#7e756f",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-primary-container": "#96908b",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed": "#261900",
+                      "on-secondary-container": "#785a1a",
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "tertiary-container": "#4d190e",
+                      "primary-container": "#2d2926",
+                      "surface-container-high": "#eae8e3",
+                      "inverse-surface": "#30312e",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-dim": "#dbdad5",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary-fixed": "#ffdea5",
+                      "on-surface-variant": "#4d4540",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "primary-fixed": "#e9e1dc",
+                      "background": "#fbf9f4",
+                      "tertiary": "#310501"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px",
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- SideNavBar (Semantic match: Venue Operations for dispute resolution) -->
+<nav class="hidden md:flex flex-col h-screen w-64 z-40 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline/10 py-stack-md">
+<div class="px-6 mb-stack-md">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed mb-1">Aura Admin</h1>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Lounge Management</p>
+</div>
+<button class="mx-6 mb-stack-md bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT hover:bg-primary-container transition-colors duration-200 ease-in-out shadow-sm">
+            Add New Event
+        </button>
+<ul class="flex-grow flex flex-col gap-2 font-label-caps text-label-caps">
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-primary dark:text-primary-fixed border-l-4 border-secondary font-bold pl-4 bg-surface-container-high dark:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+                    Venue Operations
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+                    Analytics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                    Staff Management
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+                    Schedule
+                </a>
+</li>
+</ul>
+<ul class="mt-auto flex flex-col gap-2 font-label-caps text-label-caps">
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                    Help Center
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                    Log Out
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen pt-8 pb-stack-lg px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Breadcrumbs & Header -->
+<div class="mb-stack-md flex flex-col gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-caps text-label-caps">
+<a class="hover:text-primary transition-colors" href="#">Venue Operations</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Disputes</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-bold">Case #D-8492</span>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div>
+<h2 class="font-display-md text-headline-lg-mobile md:text-headline-lg text-primary mb-2">User Dispute: Seat Condition</h2>
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center px-2 py-1 rounded bg-error-container text-on-error-container font-label-caps text-label-caps">Open</span>
+<span class="text-on-surface-variant text-sm">Opened: Oct 24, 2024 (2 days ago)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout for Details -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Case Details & Evidence (Spans 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-gutter">
+<!-- Target Show/Venue Info -->
+<section class="bg-surface-container-lowest border border-outline/10 p-6 md:p-8 rounded-lg">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-outline/10 pb-4">Event Details</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Event</p>
+<p class="font-body-md text-body-lg text-on-surface font-medium">Midnight Jazz Sessions: The Coltrane Legacy</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Venue</p>
+<p class="font-body-md text-body-md text-on-surface">Aura Main Hall - Sector B, Table 12</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Date &amp; Time</p>
+<p class="font-body-md text-body-md text-on-surface">Oct 22, 2024 • 10:00 PM</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Ticket ID</p>
+<p class="font-body-md text-body-md text-on-surface font-mono">TKT-99482-A</p>
+</div>
+</div>
+</section>
+<!-- Complaint Text -->
+<section class="bg-surface-container-lowest border border-outline/10 p-6 md:p-8 rounded-lg">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-outline/10 pb-4">Complaint Overview</h3>
+<div class="bg-surface-container p-6 rounded-md mb-6 relative">
+<span class="material-symbols-outlined absolute top-4 right-4 text-outline/30 text-4xl">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10">
+                            "When we arrived at our reserved premium table (Table 12), the upholstery on one of the velvet chairs was significantly torn and stained. For a VIP experience that cost $250 per ticket, this was completely unacceptable and ruined the aesthetic of the evening. We asked a server to switch the chair, but they said none were available."
+                        </p>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="A sophisticated, high-quality headshot of a well-dressed patron in a dimly lit, upscale jazz lounge environment. The lighting is warm and moody, with deep blacks, rich golds, and soft cream tones, reflecting the 'Quiet Luxury' aesthetic. The portrait is sharply in focus against a softly blurred background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaDZFhrOHdYHH5BSesKioMXo4Q4VhGPiv3V0KXIWAWdeLydP-UdSiKfHp0vOitrGCfV2pWgpEa2B0uFP4Aq8B7iu375IvvY6-eVzSbtojlKl3ZndwCpQILkoYOPUCEnvy4jTC1v4UDhQKqS9vNyMMYwjoxbQ6kvKh5IM2EcFZL6LXqEQRmmPlITTDTmgCLUG_tqDb_OehaZc5PB2fs572xJKexc5C7wKskDpF2WejQo-GnvdXWRcabSw"/>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium">Eleanor Vance</p>
+<p class="font-body-md text-sm text-on-surface-variant">eleanor.v@example.com • VIP Member since 2022</p>
+</div>
+</div>
+</section>
+<!-- Evidence Photos -->
+<section class="bg-surface-container-lowest border border-outline/10 p-6 md:p-8 rounded-lg">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-outline/10 pb-4">User Evidence</h3>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<div class="aspect-square bg-surface-variant rounded-md overflow-hidden relative group cursor-pointer border border-outline/10">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A close-up photograph of a damaged, deep burgundy velvet lounge chair in an upscale venue. There is a noticeable tear in the upholstery and a faint dark stain near the armrest. The lighting is dim and warm, emphasizing the texture of the fabric and the severity of the damage against the otherwise luxurious setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfREx6Bb5K0BCT2bkfIbR_ljm5Mhl0eOuPrNi7EC4E_VrtXMQsVs-3IGtfxgj_-Ys_oShC4dmt9R0L8SJ8wBLNETZYDOiG5BnU14SVvbXK2ZGaxa1tyFfaFerX5N5LXi9K5JdYJL5UzI8Vg9Vxe20NWKs-TA8aXtsthtjR_Qkbw7vCppLyF2rmknE23F-nnviZYm4pIJnWAxYy6RiiVeTZfdv4dfi9ZJusseXC0HO3OmXk1Ekdu9ZyZA"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary">zoom_in</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-variant rounded-md overflow-hidden relative group cursor-pointer border border-outline/10">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Another angle of a damaged velvet chair in a dark, high-end music lounge. The photo shows the chair positioned next to a sleek cocktail table, contrasting the damaged seating with the polished, premium environment. Soft, warm ambient lighting highlights the scene." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOuA24xxhMW4TLa0Ghorv-kRCHcDJkysatjeL0dphaPS7U91u9cylsuHRCzHDFXuEGg_KG1xvqd3nDcNS4khT27zA0ccLcrXNtl0wP68qU8c3W4sKcWoH2D0oXB6ghlTWiGtPkz_x9zi6lPfRdQPWiYfAZwuS7876qXG1Mcu-bdpNWawIBdznmZzIkOdLZHsE1aKrCoEffBzOtE9eeVk3wQrY1WIfViG80pJn0F8S4yFkqn-DoAI-AGw"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary">zoom_in</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Resolution Form (Spans 4 cols) -->
+<div class="lg:col-span-4">
+<div class="sticky top-stack-md bg-surface-container-lowest border border-outline/10 p-6 md:p-8 rounded-lg">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-outline/10 pb-4">Resolution Action</h3>
+<form class="flex flex-col gap-6">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Internal Notes</label>
+<textarea class="w-full bg-surface border border-outline/20 rounded-md p-3 text-body-md focus:border-secondary focus:ring-1 focus:ring-secondary outline-none min-h-[120px] resize-y" placeholder="Add findings or investigation details here..."></textarea>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Compensation Amount ($)</label>
+<input class="w-full bg-surface border border-outline/20 rounded-md p-3 text-body-md focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" placeholder="0.00" type="number" value="250.00"/>
+</div>
+<div class="pt-4 border-t border-outline/10 flex flex-col gap-3">
+<button class="w-full py-3 px-6 bg-primary text-on-primary font-button text-button rounded-DEFAULT hover:bg-primary-container transition-colors flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-sm">qr_code_2</span>
+                                Issue Refund
+                            </button>
+<button class="w-full py-3 px-6 bg-surface-container border border-outline/20 text-on-surface font-button text-button rounded-DEFAULT hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-sm">mail</span>
+                                Contact User
+                            </button>
+<button class="w-full py-3 px-6 bg-transparent border border-error/30 text-error font-button text-button rounded-DEFAULT hover:bg-error-container/50 transition-colors flex items-center justify-center gap-2 mt-2" type="button">
+<span class="material-symbols-outlined text-sm">block</span>
+                                Dismiss Case
+                            </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</main>
+</body></html>

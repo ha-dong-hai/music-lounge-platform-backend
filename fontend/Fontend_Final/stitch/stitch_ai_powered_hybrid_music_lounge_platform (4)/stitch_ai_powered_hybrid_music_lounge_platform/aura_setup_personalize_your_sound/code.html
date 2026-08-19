@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Define Your Aura</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#eae8e3",
+                      "on-primary-fixed": "#1e1b18",
+                      "secondary-fixed": "#ffdea5",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-tertiary-container": "#cb7c6b",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-dim": "#dbdad5",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-secondary-container": "#785a1a",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-fixed": "#261900",
+                      "background": "#fbf9f4",
+                      "tertiary": "#310501",
+                      "inverse-surface": "#30312e",
+                      "on-primary-container": "#96908b",
+                      "surface-bright": "#fbf9f4",
+                      "primary": "#181512",
+                      "on-background": "#1b1c19",
+                      "outline": "#7e756f",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f5f3ee",
+                      "tertiary-container": "#4d190e",
+                      "surface-variant": "#e4e2dd",
+                      "surface-tint": "#635d5a",
+                      "primary-container": "#2d2926",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface": "#fbf9f4",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "outline-variant": "#cfc4bd",
+                      "secondary-container": "#fed488",
+                      "on-surface": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed": "#e9e1dc",
+                      "inverse-on-surface": "#f2f1ec",
+                      "error-container": "#ffdad6",
+                      "secondary": "#775a19",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "on-error-container": "#93000a",
+                      "on-surface-variant": "#4d4540",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error": "#ffffff",
+                      "inverse-primary": "#cdc5c0",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "error": "#ba1a1a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "stack-lg": "80px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "margin-desktop": "64px",
+                      "stack-sm": "16px",
+                      "stack-md": "32px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Subtle entrance animation for chips */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chip-animate {
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface h-screen flex flex-col relative overflow-hidden font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Ambient background element for depth -->
+<div class="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply" data-alt="A highly detailed, ultra-subtle abstract pattern resembling fine paper grain and smooth liquid waves. The visual style is extremely minimalist and high-key, using only pure whites and soft creams to create a sense of quiet luxury and acoustic purity, perfectly fitting a sophisticated music application." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDzlaVlY1oq-S2l-NeEv-kNaDB2B7PUl-qQF4MKd3BPzeJRmAnE0WIC3vzdiiGvI3o5YoWyysc4AQ__4FQvhTcV2vAiwMZ1ZHRICckNyMo-E3gpOiA1TKFH0yUtwZ0I-2ZMUpUnqBBfhN3muuavCmiAGxxezo0GWftmSkTPAsCRDtwuffQR79Hzcwitr1QFP9k_tZZq6NX_itEfsIHtvXpQp-k5Si7AfnwUWS1U5ml_7RPHne8YwNU2lw')">
+</div>
+<!-- Main Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto px-margin-mobile pt-16 pb-40 flex flex-col relative z-10 w-full max-w-md mx-auto">
+<!-- Header -->
+<header class="flex flex-col gap-4 mb-stack-md">
+<h1 class="font-display-md text-display-md text-primary tracking-tight">
+                Define Your Aura
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-sm">
+                Our intelligence shapes your sonic environment based on your selected frequencies. Choose the atmospheres that resonate with your current state.
+            </p>
+</header>
+<!-- Interactive Chip Grid -->
+<div class="flex flex-wrap gap-x-2 gap-y-3" id="chip-container">
+<!-- Chips will be generated via JS for the staggering effect, but here is the static representation for the prompt's requirements -->
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.05s;">
+<span class="material-symbols-outlined text-[18px]">nightlife</span>
+                Late Night Jazz
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.1s;">
+<span class="material-symbols-outlined text-[18px]">cloud</span>
+                Atmospheric Ambient
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.15s;">
+<span class="material-symbols-outlined text-[18px]">graphic_eq</span>
+                Acoustic Soul
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.2s;">
+<span class="material-symbols-outlined text-[18px]">waves</span>
+                Deep House
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.25s;">
+<span class="material-symbols-outlined text-[18px]">local_cafe</span>
+                Lo-Fi Beats
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.3s;">
+<span class="material-symbols-outlined text-[18px]">blur_on</span>
+                Minimal Techno
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.35s;">
+<span class="material-symbols-outlined text-[18px]">park</span>
+                Indie Folk
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.4s;">
+<span class="material-symbols-outlined text-[18px]">headphones</span>
+                Neo-Soul
+            </button>
+<button class="aura-chip chip-animate inline-flex items-center gap-2 px-6 py-3 rounded-DEFAULT border border-outline-variant text-on-surface-variant font-button text-button transition-all duration-300 hover:bg-surface-container-high" style="animation-delay: 0.45s;">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                Classical Focus
+            </button>
+</div>
+</main>
+<!-- Fixed Bottom Action Area -->
+<div class="absolute bottom-0 left-0 w-full px-margin-mobile pb-margin-mobile pt-16 bg-gradient-to-t from-surface via-surface/90 to-transparent z-50 pointer-events-none flex justify-center">
+<div class="w-full max-w-md pointer-events-auto">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 flex items-center justify-center gap-2 rounded-lg transition-transform duration-200 active:scale-[0.98] shadow-sm">
+                Finish Setup
+                <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chips = document.querySelectorAll('.aura-chip');
+            
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const isSelected = chip.classList.contains('bg-primary');
+                    
+                    if (isSelected) {
+                        // Revert to inactive state
+                        chip.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
+                        chip.classList.add('border-outline-variant', 'text-on-surface-variant', 'hover:bg-surface-container-high');
+                    } else {
+                        // Apply active state
+                        chip.classList.remove('border-outline-variant', 'text-on-surface-variant', 'hover:bg-surface-container-high');
+                        chip.classList.add('bg-primary', 'text-on-primary', 'border-primary');
+                    }
+                });
+            });
+        });
+    </script>
+</body></html>

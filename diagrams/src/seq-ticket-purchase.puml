@@ -1,0 +1,107 @@
+@startuml seq-ticket-purchase
+!include _style.puml
+
+' UML 2.5.1 Sequence Diagram.
+'   ->    synchronous message (solid line, filled arrowhead)
+'   ->>   asynchronous message (solid line, open arrowhead)
+'   -->   reply (dashed line, open arrowhead) — only ever answers a prior call
+'   alt / opt / loop   combined fragment; the guard is written WITHOUT brackets,
+'                      because PlantUML renders the brackets itself
+title Ticket Purchase — hold, pay, and confirm via VNPay IPN
+
+actor Audience as AUD
+participant "Audience Website" as WEB
+participant "TicketsController" as CTRL
+participant "HoldTicketCommandHandler" as HOLD
+participant "PurchaseTicketCommandHandler" as PURCH
+participant "ConfirmPaymentCommandHandler" as CONF
+participant "LedgerJournalFactory" as LEDGER
+database "SQL Database" as DB
+participant "VNPay" as VNPAY
+participant "ReleaseExpiredHoldsJob" as JOB
+
+AUD -> WEB : select tier and quantity
+activate WEB
+WEB -> CTRL : POST /tickets/hold
+activate CTRL
+CTRL -> HOLD : Send(HoldTicketCommand)
+activate HOLD
+HOLD -> DB : under the show booking lock, compute remaining as\nquota minus confirmed tickets minus active holds,\nthen insert TicketHold expiring in 15 minutes
+activate DB
+DB --> HOLD : holdId
+deactivate DB
+HOLD --> CTRL : holdId
+deactivate HOLD
+CTRL --> WEB : 200 holdId and expiry
+deactivate CTRL
+WEB --> AUD : show countdown
+deactivate WEB
+
+alt payment completed within 15 minutes
+  AUD -> WEB : proceed to payment
+  activate WEB
+  WEB -> CTRL : POST /tickets/purchase
+  activate CTRL
+  CTRL -> PURCH : Send(PurchaseTicketCommand)
+  activate PURCH
+  PURCH -> DB : create Payment as Pending and\none Ticket as Pending per held seat
+  activate DB
+  DB --> PURCH : ok
+  deactivate DB
+  PURCH --> CTRL : signed gateway redirect URL
+  deactivate PURCH
+  CTRL --> WEB : VNPay redirect URL
+  deactivate CTRL
+  WEB -> VNPAY : redirect customer
+  deactivate WEB
+  activate VNPAY
+
+  VNPAY -> CTRL : IPN callback, server to server
+  activate CTRL
+  CTRL -> CONF : Send(ConfirmPaymentCommand)
+  activate CONF
+
+  opt signature valid and amount matches
+    CONF -> DB : mark Payment Confirmed,\nmark each Ticket Confirmed, generate the QR
+    activate DB
+    DB --> CONF : ok
+    deactivate DB
+    CONF -> LEDGER : build balanced journal
+    activate LEDGER
+    LEDGER --> CONF : debit and credit lines
+    deactivate LEDGER
+    CONF -> DB : append LedgerEntry set
+  end
+
+  CONF --> CTRL : result
+  deactivate CONF
+  CTRL --> VNPAY : RspCode 00
+  deactivate CTRL
+  VNPAY -> AUD : return customer to Payment Result
+  deactivate VNPAY
+
+else countdown expires unpaid
+  JOB -> DB : delete the expired TicketHold row
+  activate JOB
+  activate DB
+  DB --> JOB : released
+  deactivate DB
+  deactivate JOB
+end
+
+note over JOB
+  Deleting the hold is all that is needed:
+  availability is computed from live holds,
+  so the seats return to the pool without
+  any counter being restored.
+end note
+
+note over CONF
+  The IPN callback is the authoritative
+  confirmation, not the browser redirect,
+  so the ticket still confirms if the
+  customer closes the tab. The handler is
+  idempotent because VNPay retries.
+end note
+
+@enduml

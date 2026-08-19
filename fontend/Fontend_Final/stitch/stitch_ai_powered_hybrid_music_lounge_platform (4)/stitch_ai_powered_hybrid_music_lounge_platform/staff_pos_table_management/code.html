@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Velvet Room - Staff POS Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error-container": "#ffdad6",
+                      "surface-container-high": "#eae8e3",
+                      "on-secondary": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "tertiary": "#310501",
+                      "on-tertiary": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "primary-fixed": "#e9e1dc",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-fixed": "#ffdad3",
+                      "outline-variant": "#cfc4bd",
+                      "surface": "#fbf9f4",
+                      "primary": "#181512",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-secondary-fixed": "#261900",
+                      "surface-tint": "#635d5a",
+                      "on-primary": "#ffffff",
+                      "on-secondary-container": "#785a1a",
+                      "surface-bright": "#fbf9f4",
+                      "on-surface": "#1b1c19",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-primary": "#cdc5c0",
+                      "on-error": "#ffffff",
+                      "secondary-container": "#fed488",
+                      "surface-container": "#f0eee9",
+                      "primary-container": "#2d2926",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-container": "#cb7c6b",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "inverse-on-surface": "#f2f1ec",
+                      "outline": "#7e756f",
+                      "background": "#fbf9f4",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-background": "#1b1c19",
+                      "surface-dim": "#dbdad5",
+                      "secondary": "#775a19",
+                      "tertiary-container": "#4d190e",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "secondary-fixed": "#ffdea5",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-primary-container": "#96908b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "margin-desktop": "64px",
+                      "gutter": "32px",
+                      "stack-lg": "80px",
+                      "stack-sm": "16px",
+                      "unit": "8px",
+                      "stack-md": "32px"
+              },
+              "fontFamily": {
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        .ghost-border { border: 1px solid theme('colors.outline-variant'); opacity: 0.8; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="h-full flex overflow-hidden">
+<!-- SideNavBar (from JSON) -->
+<nav class="fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 bg-surface-container dark:bg-surface-container-high flex flex-col py-8 px-6 gap-stack-sm z-50">
+<div class="mb-8">
+<h1 class="text-headline-md font-headline-md text-primary">Management</h1>
+<p class="text-body-md font-body-md text-on-surface-variant">Staff Access</p>
+</div>
+<div class="flex-1 flex flex-col gap-unit">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-body-md font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+<span class="text-body-md font-body-md">Events</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span class="text-body-md font-body-md">Livestreams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="text-body-md font-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold bg-surface-container-highest/50" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-body-md font-body-md">Staff</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-unit border-t border-outline-variant/10 pt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-body-md font-body-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-body-md font-body-md">Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex h-full p-margin-desktop gap-gutter bg-surface">
+<!-- Left Pane: Tables & Scanning -->
+<section class="w-1/3 flex flex-col gap-stack-md h-full">
+<header>
+<h2 class="text-headline-lg font-headline-lg text-primary mb-2">The Velvet Room</h2>
+<p class="text-body-md font-body-md text-on-surface-variant">Active Service: Evening Shift</p>
+</header>
+<!-- Ticket Scanner Quick Action -->
+<div class="ghost-border p-6 rounded-xl flex items-center justify-between bg-surface-container-lowest">
+<div>
+<h3 class="text-label-caps font-label-caps text-on-surface-variant mb-1">Entry Management</h3>
+<p class="text-body-lg font-body-lg text-primary">Scan Ticket</p>
+</div>
+<button class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+</button>
+</div>
+<!-- Active Tables -->
+<div class="flex-1 flex flex-col gap-4 overflow-y-auto scrollbar-hide pr-2">
+<h3 class="text-label-caps font-label-caps text-on-surface-variant sticky top-0 bg-surface py-2 z-10">Active Tables</h3>
+<!-- Table Card - Active -->
+<button class="text-left ghost-border p-5 rounded-xl bg-surface-container-low border-primary/20 hover:border-primary/40 transition-colors focus:outline-none focus:ring-1 focus:ring-primary">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-headline-md font-headline-md text-primary block">Table 4</span>
+<span class="text-body-md font-body-md text-on-surface-variant">4 Guests • 45m</span>
+</div>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container text-label-caps font-label-caps rounded-sm">Action Needed</span>
+</div>
+<p class="text-body-md font-body-md text-primary">$184.00</p>
+</button>
+<!-- Table Card -->
+<button class="text-left ghost-border p-5 rounded-xl hover:bg-surface-container-lowest transition-colors focus:outline-none">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-headline-md font-headline-md text-primary block">Table 7</span>
+<span class="text-body-md font-body-md text-on-surface-variant">2 Guests • 1h 15m</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-primary">$210.50</p>
+</button>
+<!-- Table Card -->
+<button class="text-left ghost-border p-5 rounded-xl hover:bg-surface-container-lowest transition-colors focus:outline-none">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-headline-md font-headline-md text-primary block">Bar 1-3</span>
+<span class="text-body-md font-body-md text-on-surface-variant">3 Guests • 15m</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-primary">$45.00</p>
+</button>
+</div>
+</section>
+<!-- Right Pane: Menu & Order -->
+<section class="w-2/3 flex gap-gutter h-full">
+<!-- Menu Selector -->
+<div class="flex-1 flex flex-col h-full bg-surface-container-lowest ghost-border rounded-xl p-6 overflow-hidden">
+<!-- Menu Tabs -->
+<div class="flex gap-4 border-b border-outline-variant/20 pb-4 mb-6">
+<button class="text-button font-button text-primary border-b-2 border-primary pb-2 px-2">Cocktails</button>
+<button class="text-button font-button text-on-surface-variant hover:text-primary transition-colors pb-2 px-2">Small Plates</button>
+<button class="text-button font-button text-on-surface-variant hover:text-primary transition-colors pb-2 px-2">Desserts</button>
+</div>
+<!-- Menu Items Grid -->
+<div class="grid grid-cols-2 gap-4 overflow-y-auto scrollbar-hide flex-1 pb-4 pr-2">
+<!-- Item -->
+<button class="flex flex-col items-start p-4 ghost-border rounded-lg hover:bg-surface-container-low transition-colors group text-left">
+<span class="text-body-lg font-body-lg text-primary mb-1 group-hover:text-tertiary-container">Velvet Martini</span>
+<span class="text-body-md font-body-md text-on-surface-variant mb-3">Gin, Dry Vermouth, Olive</span>
+<span class="text-button font-button text-primary mt-auto">$18.00</span>
+</button>
+<!-- Item -->
+<button class="flex flex-col items-start p-4 ghost-border rounded-lg hover:bg-surface-container-low transition-colors group text-left">
+<span class="text-body-lg font-body-lg text-primary mb-1 group-hover:text-tertiary-container">Smoked Old Fashioned</span>
+<span class="text-body-md font-body-md text-on-surface-variant mb-3">Bourbon, Bitters, Smoke</span>
+<span class="text-button font-button text-primary mt-auto">$22.00</span>
+</button>
+<!-- Item -->
+<button class="flex flex-col items-start p-4 ghost-border rounded-lg hover:bg-surface-container-low transition-colors group text-left">
+<span class="text-body-lg font-body-lg text-primary mb-1 group-hover:text-tertiary-container">Aura Spritz</span>
+<span class="text-body-md font-body-md text-on-surface-variant mb-3">Aperol, Prosecco, Soda</span>
+<span class="text-button font-button text-primary mt-auto">$16.00</span>
+</button>
+<!-- Item -->
+<button class="flex flex-col items-start p-4 ghost-border rounded-lg hover:bg-surface-container-low transition-colors group text-left">
+<span class="text-body-lg font-body-lg text-primary mb-1 group-hover:text-tertiary-container">Midnight Sour</span>
+<span class="text-body-md font-body-md text-on-surface-variant mb-3">Whiskey, Lemon, Egg White</span>
+<span class="text-button font-button text-primary mt-auto">$20.00</span>
+</button>
+</div>
+</div>
+<!-- Digital Check / Order Panel -->
+<div class="w-80 flex flex-col h-full bg-surface-container-low ghost-border rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-headline-md font-headline-md text-primary">Table 4</h3>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Check #1042</span>
+</div>
+<!-- Order Items -->
+<div class="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-4 border-t border-outline-variant/20 pt-4 mb-4">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-body-md font-body-md text-primary block">2x Velvet Martini</span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Extra olives</span>
+</div>
+<span class="text-body-md font-body-md text-primary">$36.00</span>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<span class="text-body-md font-body-md text-primary block">1x Truffle Fries</span>
+</div>
+<span class="text-body-md font-body-md text-primary">$14.00</span>
+</div>
+<div class="flex justify-between items-start bg-secondary-container/20 p-2 rounded -mx-2">
+<div>
+<span class="text-body-md font-body-md text-primary block">1x Smoked Old Fashioned</span>
+<span class="text-label-caps font-label-caps text-secondary">Pending</span>
+</div>
+<span class="text-body-md font-body-md text-primary">$22.00</span>
+</div>
+</div>
+<!-- Totals & Actions -->
+<div class="border-t border-outline-variant/20 pt-4 flex flex-col gap-4">
+<div class="flex justify-between text-body-md font-body-md text-on-surface-variant">
+<span>Subtotal</span>
+<span>$72.00</span>
+</div>
+<div class="flex justify-between text-body-md font-body-md text-on-surface-variant">
+<span>Tax</span>
+<span>$6.48</span>
+</div>
+<div class="flex justify-between text-headline-md font-headline-md text-primary mb-4">
+<span>Total</span>
+<span>$78.48</span>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-3 px-4 border border-outline-variant text-primary text-button font-button rounded hover:bg-surface-container-highest transition-colors">
+                            Hold
+                        </button>
+<button class="flex-[2] py-3 px-4 bg-primary text-on-primary text-button font-button rounded hover:bg-primary-container transition-colors">
+                            Send to Kitchen
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

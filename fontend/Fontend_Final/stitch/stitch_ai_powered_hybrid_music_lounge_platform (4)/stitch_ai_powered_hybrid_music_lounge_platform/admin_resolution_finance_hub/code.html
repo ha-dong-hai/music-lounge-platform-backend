@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Resolution &amp; Finance - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#e4e2dd",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-container": "#96908b",
+                      "on-tertiary-container": "#cb7c6b",
+                      "primary-container": "#2d2926",
+                      "surface-container-high": "#eae8e3",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "tertiary-container": "#4d190e",
+                      "on-background": "#1b1c19",
+                      "on-primary-fixed": "#1e1b18",
+                      "inverse-surface": "#30312e",
+                      "on-error-container": "#93000a",
+                      "surface": "#fbf9f4",
+                      "background": "#fbf9f4",
+                      "surface-container-highest": "#e4e2dd",
+                      "surface-tint": "#635d5a",
+                      "tertiary-fixed": "#ffdad3",
+                      "secondary-container": "#fed488",
+                      "inverse-on-surface": "#f2f1ec",
+                      "tertiary": "#310501",
+                      "outline": "#7e756f",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-surface-variant": "#4d4540",
+                      "on-secondary-fixed": "#261900",
+                      "on-secondary-container": "#785a1a",
+                      "inverse-primary": "#cdc5c0",
+                      "primary": "#181512",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-surface": "#1b1c19",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#775a19",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-bright": "#fbf9f4",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "secondary-fixed": "#ffdea5",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#cfc4bd",
+                      "primary-fixed": "#e9e1dc",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-dim": "#dbdad5",
+                      "on-secondary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-lg": "80px",
+                      "stack-sm": "16px",
+                      "unit": "8px",
+                      "stack-md": "32px",
+                      "margin-desktop": "64px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px",
+                      "gutter": "32px"
+              },
+              "fontFamily": {
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for thread view */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cfc4bd;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7e756f;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-full flex overflow-hidden antialiased">
+<!-- SideNavBar -->
+<nav class="bg-surface-container dark:bg-surface-container-high fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 z-40 flex flex-col py-8 px-6 gap-stack-sm translate-x-1 duration-200">
+<div class="mb-stack-md flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A minimalist abstract geometric avatar showing overlapping circles in subtle beige and dark charcoal tones on a pure white background, suitable for a professional corporate dashboard management profile icon." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2FGXoVE0a0wnCtz38h0qYN1VWzCK2X2fwI2dq413n5b1Qt7wwNE0F0KT7ewvnjpZFrp-H_YUBuaHcrxBUKa-q7r1UEje3OYhOI9HIVtx9lD_wpx5azpnBrfghz-9eijNUPR4AzjM4toKM6WwzJVM8zkYE9sZAnM3pQ5EwyhZx5iVutmQobwUOL8J6XgwViqqxZrHqBoVIpxFnfHwY8FivCzPcGeqG8rbQp94DejFZ0eHZ1YQp5ZeGnQ"/>
+</div>
+<div>
+<h2 class="text-headline-md font-headline-md text-primary tracking-tight leading-none mb-1">Management</h2>
+<p class="text-label-caps font-label-caps text-on-surface-variant">Staff Access</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 flex-grow">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">event</span>
+<span>Events</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold bg-surface-container-highest/50 text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">sensors</span>
+<span>Livestreams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">leaderboard</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Staff</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="flex flex-col gap-2 mt-auto pt-4 border-t border-outline-variant/10">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 h-full flex flex-col bg-surface">
+<!-- Header -->
+<header class="h-20 flex items-center justify-between px-margin-desktop border-b border-outline-variant/10 shrink-0">
+<div>
+<h1 class="text-headline-lg font-headline-lg text-primary">Resolution &amp; Finance</h1>
+<p class="text-body-md font-body-md text-on-surface-variant">Manage complaints, refunds, and financial disputes.</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-px bg-outline-variant/20"></div>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-6 py-2 rounded font-button text-button hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export Report
+                </button>
+</div>
+</header>
+<!-- Content Split -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Pane: Refund Requests List -->
+<div class="w-1/3 flex flex-col border-r border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
+<div class="p-6 border-b border-outline-variant/10 shrink-0 flex justify-between items-center bg-surface-container-low">
+<h3 class="text-headline-md font-headline-md text-primary">Pending Reviews</h3>
+<span class="bg-error-container text-on-error-container px-2 py-1 rounded text-label-caps font-label-caps">12 Action Required</span>
+</div>
+<!-- Filters/Search -->
+<div class="p-4 border-b border-outline-variant/10 shrink-0">
+<div class="relative mb-4">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container pl-10 pr-4 py-2 border-none rounded font-body-md text-body-md focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-colors" placeholder="Search ID, User, or Event..." type="text"/>
+</div>
+<div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+<button class="px-4 py-1.5 rounded-full border border-primary bg-primary text-on-primary font-button text-button shrink-0">All Issues</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant/50 text-on-surface-variant hover:bg-surface-container transition-colors font-button text-button shrink-0">Refunds</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant/50 text-on-surface-variant hover:bg-surface-container transition-colors font-button text-button shrink-0">Complaints</button>
+</div>
+</div>
+<!-- List -->
+<div class="flex-1 overflow-y-auto">
+<!-- Item 1 (Active) -->
+<div class="p-6 border-b border-outline-variant/10 bg-surface-container-highest cursor-pointer border-l-2 border-l-primary relative">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">REF-8924A</span>
+<span class="bg-surface text-on-surface px-2 py-0.5 rounded text-[10px] font-label-caps uppercase border border-outline-variant/20">High Priority</span>
+</div>
+<h4 class="text-body-lg font-body-lg font-semibold text-primary mb-1">Acoustic Sessions: Velvet Room</h4>
+<p class="text-body-md font-body-md text-on-surface-variant line-clamp-2 mb-3">Sound system failure during headline performance. Requesting full refund for VIP table package.</p>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="Close up portrait photograph of an elegant middle aged man in a tailored dark suit, soft warm studio lighting, neutral grey background, professional luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8QAtHdT-S13fx8j8YgRSXLdLyGTxxui-a8LkG52WO-8I5uHWjl8RCE6eHScZKt0OaF8Wo8bmMpzwvY3t6ULoNk8_jAgQaSp__lsStgm5Nq_QllvIm6-NjJ68bw2mtzF1s3zbWnaJ2M2kM_7D8Qwju5FrkYig00nXSJcldmCbePcmxywrDhVdmAUv3_TUH5vt-H44IABkS7TAcE54yCgn9EfcvfrE1b3vrY-_UZzUHd0T96j8P6KDcfg"/>
+</div>
+<span class="text-button font-button text-on-surface">J. Sterling</span>
+</div>
+<span class="text-body-md font-body-md font-semibold text-primary">$1,200.00</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-6 border-b border-outline-variant/10 hover:bg-surface-container-low cursor-pointer transition-colors border-l-2 border-l-transparent">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CMP-1029B</span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">2 hrs ago</span>
+</div>
+<h4 class="text-body-lg font-body-lg font-semibold text-primary mb-1">Staff Conduct: The Atrium</h4>
+<p class="text-body-md font-body-md text-on-surface-variant line-clamp-2 mb-3">Denied entry despite confirmed reservation and dress code adherence. Seeking compensation.</p>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full overflow-hidden bg-surface-variant">
+<span class="material-symbols-outlined text-[16px] m-auto pt-1 text-on-surface-variant">person</span>
+</div>
+<span class="text-button font-button text-on-surface">M. Davies</span>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-label-caps">In Review</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-6 border-b border-outline-variant/10 hover:bg-surface-container-low cursor-pointer transition-colors border-l-2 border-l-transparent">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">REF-9912C</span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">1 day ago</span>
+</div>
+<h4 class="text-body-lg font-body-lg font-semibold text-primary mb-1">Overcharge: Midnight Lounge</h4>
+<p class="text-body-md font-body-md text-on-surface-variant line-clamp-2 mb-3">Billed twice for bottle service package. Second charge pending on statement.</p>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="Close up minimalist artistic portrait of a woman in chic monochrome attire, soft side lighting creating gentle shadows, soft beige background, elegant high-fashion aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlejLanEL_ID5NKfBvC0crtzL2fEYEk5rK3hH7B_t3YG3BrUIfvMUof9fTpousLaMYRDggMUMFe8w2FRJFCiCC2rjixZl3CirXCnhTnGafNlZvSgSZ6BVgrYTAuwWAEdx1mhWcKpLnMxObPojJQrTSnfSiSZPpKT-JfA4TQsMJHb9wgesNV-LKeJaOrUARWLzppTaog13i71oEaVDPUmZNRLtF2GK8pIo7vDK8ROaTnzn16l2kiSJHBQ"/>
+</div>
+<span class="text-button font-button text-on-surface">E. Thorne</span>
+</div>
+<span class="text-body-md font-body-md font-semibold text-primary">$450.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Pane: Resolution Thread -->
+<div class="w-2/3 flex flex-col bg-surface relative">
+<!-- Thread Header -->
+<div class="p-8 border-b border-outline-variant/10 bg-surface flex justify-between items-start shrink-0">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<span class="bg-error-container text-on-error-container px-2 py-1 rounded text-label-caps font-label-caps">Refund Request</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">REF-8924A</span>
+</div>
+<h2 class="text-display-md font-display-md text-primary mb-4 leading-tight">Sound system failure during headline performance</h2>
+<!-- Meta Details -->
+<div class="flex gap-8 items-center">
+<div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">VENUE</p>
+<p class="text-body-md font-body-md text-primary">Velvet Room, Main Floor</p>
+</div>
+<div class="w-px h-8 bg-outline-variant/20"></div>
+<div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">DATE</p>
+<p class="text-body-md font-body-md text-primary">Oct 24, 2024</p>
+</div>
+<div class="w-px h-8 bg-outline-variant/20"></div>
+<div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">DISPUTED AMOUNT</p>
+<p class="text-body-md font-body-md text-primary font-semibold">$1,200.00</p>
+</div>
+</div>
+</div>
+<!-- Action Panel -->
+<div class="flex flex-col gap-3 min-w-[200px] p-4 bg-surface-container-lowest border border-outline-variant/10 rounded-lg shadow-sm">
+<button class="bg-primary text-on-primary w-full py-2.5 rounded font-button text-button hover:bg-primary/90 transition-colors">Approve Refund</button>
+<button class="bg-surface text-primary border border-outline-variant/50 w-full py-2.5 rounded font-button text-button hover:bg-surface-variant transition-colors">Decline Request</button>
+<button class="text-on-surface-variant text-button font-button hover:text-primary mt-2 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">more_horiz</span> More Actions
+                        </button>
+</div>
+</div>
+<!-- Scrollable Thread Content -->
+<div class="flex-1 overflow-y-auto p-8 px-margin-desktop bg-surface-bright">
+<div class="max-w-3xl mx-auto flex flex-col gap-8">
+<!-- Initial Complaint (User) -->
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden shrink-0 mt-1">
+<img class="w-full h-full object-cover" data-alt="Close up portrait photograph of an elegant middle aged man in a tailored dark suit, soft warm studio lighting, neutral grey background, professional luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTnj7Nk58ay1Cd31OIeXXkh-FfZacGXRR4xLbF8b69xrOShGksgxf13XPVb3cnBGCRpx0PoQwEVr9p0uhEgK6VLzY-QmXBBHNPaMqfjxkan7lwC7LOQVW1xPQoq0luHehS-AcYk2Ma-q6bZ_5DOYXhAa7NbM_pHoJIN_36DLssT9ZJVYdAQtiYhmMYLR8oC2M7KY1HZr97suE1MPaPYdDcez0QsLi7YVF_UEG3iB9wmlclUnhDo2_JdA"/>
+</div>
+<div class="flex-1">
+<div class="flex items-baseline gap-3 mb-1">
+<h4 class="text-body-lg font-body-lg font-semibold text-primary">Jonathan Sterling</h4>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Oct 25, 9:14 AM</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant/10 text-body-md font-body-md text-on-surface shadow-sm">
+<p class="mb-4">I am writing to formally request a full refund for the VIP table package purchased for the Acoustic Sessions event last night.</p>
+<p class="mb-4">Approximately 20 minutes into the headline set, the main PA system completely failed. We were left sitting in near silence while technicians attempted to fix it for over an hour before the event was unceremoniously cancelled.</p>
+<p>Given the premium nature of this booking, this experience was entirely unacceptable. I expect this to be resolved promptly.</p>
+<!-- Attachments -->
+<div class="mt-4 pt-4 border-t border-outline-variant/10 flex gap-4">
+<div class="flex items-center gap-2 bg-surface-container px-3 py-2 rounded text-button font-button cursor-pointer hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                                            Receipt_VIP_8924.pdf
+                                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- System Note (Automated) -->
+<div class="flex items-center justify-center gap-4 my-2">
+<div class="h-px bg-outline-variant/20 flex-1"></div>
+<span class="text-label-caps font-label-caps text-on-surface-variant bg-surface-bright px-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span> System Note • Internal
+                            </span>
+<div class="h-px bg-outline-variant/20 flex-1"></div>
+</div>
+<div class="ml-14 max-w-2xl bg-surface-container-low border-l-4 border-l-secondary-container p-4 text-body-md font-body-md text-on-surface-variant">
+                            Cross-referencing venue logs: "Velvet Room" experienced critical audio failure at 22:45 on Oct 24. Incident logged by Stage Manager (Ref: LOG-441-A). User claim corroborated.
+                        </div>
+<!-- Admin Reply -->
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined">shield_person</span>
+</div>
+<div class="flex-1">
+<div class="flex items-baseline gap-3 mb-1">
+<h4 class="text-body-lg font-body-lg font-semibold text-primary">Sarah Jenkins (Management)</h4>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Oct 25, 11:30 AM</span>
+</div>
+<div class="bg-surface-variant p-6 rounded-lg text-body-md font-body-md text-on-surface">
+<p>Dear Mr. Sterling,</p>
+<p class="mt-4">Thank you for reaching out, and I sincerely apologize for the disruption during last night's Acoustic Sessions. We aim for a flawless experience, and falling short is deeply frustrating for both our guests and our artists.</p>
+<p class="mt-4">I have reviewed the venue logs and confirmed the technical failure. I am authorizing a full refund of $1,200.00 for your VIP package immediately. Please allow 3-5 business days for this to reflect on your original payment method.</p>
+<p class="mt-4">Additionally, we would like to invite you back with complimentary priority access to a future event of your choosing, once our technical issues are fully resolved.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Spacer for sticky input -->
+<div class="h-32"></div>
+</div>
+<!-- Reply Input Area (Sticky Bottom) -->
+<div class="absolute bottom-0 left-0 w-full p-6 border-t border-outline-variant/10 bg-surface/90 backdrop-blur-md">
+<div class="max-w-3xl mx-auto flex gap-4">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</div>
+<div class="flex-1 relative">
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg p-4 pr-16 text-body-md font-body-md focus:ring-1 focus:ring-primary focus:border-primary resize-none min-h-[100px] shadow-sm" placeholder="Type a response or internal note..." rows="3"></textarea>
+<div class="absolute bottom-4 right-4 flex gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<button class="bg-primary text-on-primary p-2 rounded hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

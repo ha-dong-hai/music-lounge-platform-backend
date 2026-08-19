@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AURA - Venue Analytics &amp; Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#fbf9f4",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#cdc5c0",
+                        "outline": "#7e756f",
+                        "background": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e9e1dc",
+                        "inverse-on-surface": "#f2f1ec",
+                        "secondary": "#775a19",
+                        "on-background": "#1b1c19",
+                        "surface-container-highest": "#e4e2dd",
+                        "primary-container": "#2d2926",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "outline-variant": "#cfc4bd",
+                        "surface-container": "#f0eee9",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary-container": "#96908b",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-secondary-container": "#785a1a",
+                        "surface-dim": "#dbdad5",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-error": "#ffffff",
+                        "surface": "#fbf9f4",
+                        "on-secondary": "#ffffff",
+                        "primary": "#181512",
+                        "inverse-surface": "#30312e",
+                        "tertiary": "#310501",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-container-high": "#eae8e3",
+                        "tertiary-fixed": "#ffdad3",
+                        "tertiary-container": "#4d190e",
+                        "secondary-container": "#fed488",
+                        "on-secondary-fixed": "#261900",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-surface": "#1b1c19",
+                        "secondary-fixed": "#ffdea5",
+                        "surface-tint": "#635d5a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-lg": "80px",
+                        "stack-md": "32px",
+                        "unit": "8px",
+                        "gutter": "32px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "16px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "button": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        .ghost-border {
+            border: 1px solid theme('colors.outline-variant');
+            border-opacity: 0.15;
+        }
+
+        .glass-panel {
+            background: rgba(240, 238, 233, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(207, 196, 189, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex w-full relative">
+<!-- TopAppBar for Mobile (Hidden on Desktop) -->
+<header class="md:hidden flex justify-between items-center h-20 px-margin-mobile w-full fixed top-0 z-50 backdrop-blur-md bg-surface/80 dark:bg-surface/80 border-b border-outline-variant/10 transition-all duration-300 ease-in-out">
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim">menu</span>
+</button>
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim tracking-[0.2em] uppercase">AURA</h1>
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim">apps_outage</span>
+</button>
+</header>
+<!-- NavigationDrawer for Desktop (Hidden on Mobile) -->
+<nav class="hidden md:flex flex-col p-stack-sm h-full w-80 fixed left-0 top-0 z-[60] bg-surface-bright dark:bg-surface-dim border-r border-outline-variant/10">
+<!-- Header -->
+<div class="mb-stack-lg flex flex-col items-start px-unit">
+<h2 class="font-display-md text-headline-md text-primary dark:text-primary-fixed-dim mb-unit">Aura Lounge NYC</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Premier Partner</p>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-unit flex-grow">
+<li>
+<a class="flex items-center gap-stack-sm p-stack-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">insights</span>
+                    Venue Analytics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-stack-sm rounded-lg bg-primary text-on-primary transition-all duration-200 hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">view_in_ar_new</span>
+                    Atmosphere Control
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-stack-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+                    Staffing
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-stack-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">payments</span>
+                    Finance
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-stack-sm p-stack-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<main class="w-full md:pl-80 pt-20 md:pt-0 min-h-screen">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+<!-- Page Header -->
+<header class="mb-stack-lg flex justify-between items-end border-b border-outline-variant/20 pb-stack-sm">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary mb-unit">Atmosphere Control</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Curate the sensory experience of your venue spaces.</p>
+</div>
+<button class="bg-primary text-on-primary font-button text-button px-stack-md py-3 rounded hover:opacity-90 transition-opacity">
+                    Publish Changes
+                </button>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Venue Photo Gallery (Bento Grid) -->
+<section class="lg:col-span-7">
+<h2 class="font-headline-md text-headline-md text-primary mb-stack-md">Venue Spaces</h2>
+<div class="grid grid-cols-2 gap-unit h-[600px]">
+<!-- Large Feature Image -->
+<div class="col-span-2 row-span-2 relative group rounded-lg overflow-hidden ghost-border">
+<img class="w-full h-full object-cover absolute inset-0 transition-transform duration-700 group-hover:scale-105" data-alt="A wide-angle shot of a luxurious, dimly lit speakeasy lounge. Dark mahogany wood paneling, plush velvet emerald green seating, and a warm, glowing amber light emanating from the back bar. Minimalist aesthetic with high-end architectural details. The atmosphere is quiet luxury and exclusive." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3eX7doztoBVAafZzRLoKItZVp2AaIY8lsBEhOsr7qZxxGC65eZKMBPY6Ika6FSrlfSjgrZ-8izeEgpSP9BRax0KNhMtJQGZeAVvRE4Goe9NmJuXv8lQi4d9b6aJv5Dqr_QJKNre5EGZD5fhjeLEnTuvxwRsC3E7E4IB_IW1TxdO7MCsN-aJ01CjE8nnhB7thlK5yA3ghS1NfObzOE44_v_nZCHZjgJDqtkBuvoWkkR4Z5u2WHCAE4BA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60"></div>
+<div class="absolute bottom-0 left-0 p-stack-md">
+<h3 class="font-headline-md text-on-primary mb-1">The Main Room</h3>
+<p class="font-body-md text-on-primary/80">Primary seating &amp; bar</p>
+</div>
+</div>
+<!-- Smaller Images -->
+<div class="relative group rounded-lg overflow-hidden ghost-border h-48">
+<img class="w-full h-full object-cover absolute inset-0 transition-transform duration-700 group-hover:scale-105" data-alt="A tight shot of a minimalist, high-end VIP booth in a lounge. Soft, indirect warm lighting illuminating a textured concrete wall behind a sleek leather banquette. A single, perfectly placed cocktail on a small marble table. The mood is intimate and sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnpgdn-scj7w22iTv4I1Rswppv4oQkj5puo_Boro5zK3QipUKg4HpQ9w58mnHB7PzLbsrOZoWmQPVD_d2MX0uNwXh4vmtN93mADlV9LfRx6Y3dOcMZG8AwZcfwI7qM4kW2fvzUwniCDBHm2eSpsF90cSPRuebMWEUDUrS4GSEN0_ayRX05YJxUIbUocrbXuGUf_Z0jhCIOup8ad2WxUmV_MUikkXpGSNjzBNNnxTWY-8Xt3SZaMZ6z8g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-stack-sm">
+<h3 class="font-body-lg text-on-primary">The Vault (VIP)</h3>
+</div>
+</div>
+<div class="relative group rounded-lg overflow-hidden ghost-border h-48 flex items-center justify-center bg-surface-container-high cursor-pointer hover:bg-surface-container-highest transition-colors">
+<div class="text-center">
+<span class="material-symbols-outlined text-outline text-3xl mb-2">add_photo_alternate</span>
+<p class="font-button text-button text-on-surface-variant">Add Space</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Custom Criteria Settings -->
+<section class="lg:col-span-5">
+<div class="flex justify-between items-center mb-stack-md">
+<h2 class="font-headline-md text-headline-md text-primary">Atmospheric Metrics</h2>
+<button class="text-primary hover:text-outline transition-colors flex items-center gap-1 font-button text-button">
+<span class="material-symbols-outlined text-sm">add</span> New Metric
+                        </button>
+</div>
+<div class="space-y-stack-sm">
+<!-- Metric Item: Acoustic Warmth (Range) -->
+<div class="glass-panel rounded-xl p-stack-md">
+<div class="flex justify-between items-start mb-stack-sm">
+<div>
+<h3 class="font-body-lg text-primary mb-1">Acoustic Warmth</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant">RANGE: 1-10</p>
+</div>
+<div class="flex gap-2">
+<button class="text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-label-caps text-label-caps text-outline">COOL</span>
+<input class="w-full h-1 bg-surface-variant rounded-full appearance-none cursor-pointer accent-primary" max="10" min="1" type="range" value="8"/>
+<span class="font-label-caps text-label-caps text-outline">WARM</span>
+</div>
+<div class="mt-4 text-right font-body-md text-primary">Current: 8/10</div>
+</div>
+<!-- Metric Item: Intimacy Level (Select) -->
+<div class="glass-panel rounded-xl p-stack-md">
+<div class="flex justify-between items-start mb-stack-sm">
+<div>
+<h3 class="font-body-lg text-primary mb-1">Intimacy Level</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant">CATEGORICAL</p>
+</div>
+<div class="flex gap-2">
+<button class="text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+<div class="flex gap-2 mt-4">
+<button class="flex-1 py-2 border border-outline-variant/30 rounded font-button text-button text-on-surface-variant hover:bg-surface-container transition-colors">Low</button>
+<button class="flex-1 py-2 border border-primary bg-primary text-on-primary rounded font-button text-button transition-colors">Medium</button>
+<button class="flex-1 py-2 border border-outline-variant/30 rounded font-button text-button text-on-surface-variant hover:bg-surface-container transition-colors">High</button>
+</div>
+</div>
+<!-- Metric Item: Lighting Temp (Range) -->
+<div class="glass-panel rounded-xl p-stack-md">
+<div class="flex justify-between items-start mb-stack-sm">
+<div>
+<h3 class="font-body-lg text-primary mb-1">Lighting Temperature</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant">RANGE (K)</p>
+</div>
+<div class="flex gap-2">
+<button class="text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-label-caps text-label-caps text-outline">2000K</span>
+<input class="w-full h-1 bg-surface-variant rounded-full appearance-none cursor-pointer accent-primary" max="6000" min="2000" type="range" value="2700"/>
+<span class="font-label-caps text-label-caps text-outline">6000K</span>
+</div>
+<div class="mt-4 text-right font-body-md text-primary">Current: 2700K (Amber)</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- BottomNavBar for Mobile (Hidden on Desktop) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pb-safe h-20 bg-surface/90 dark:bg-surface/90 backdrop-blur-xl border-t border-outline-variant/10 shadow-[0_-4px_40px_rgba(24,21,18,0.05)] z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant/60 pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span class="font-label-caps text-label-caps">Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant/60 pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">layers</span>
+<span class="font-label-caps text-label-caps">Lounge</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-semibold border-t-2 border-primary pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">view_in_ar_new</span>
+<span class="font-label-caps text-label-caps">Atmosphere</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant/60 pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</nav>
+</body></html>

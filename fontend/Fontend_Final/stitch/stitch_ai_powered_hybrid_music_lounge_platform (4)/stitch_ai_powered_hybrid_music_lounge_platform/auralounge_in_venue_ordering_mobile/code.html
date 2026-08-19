@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Aura - In-Venue Orders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "tertiary-container": "#4d190e",
+                        "on-surface": "#1b1c19",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-tint": "#635d5a",
+                        "inverse-surface": "#30312e",
+                        "outline-variant": "#cfc4bd",
+                        "secondary-container": "#fed488",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-primary-container": "#96908b",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "secondary": "#775a19",
+                        "primary-container": "#2d2926",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-background": "#1b1c19",
+                        "tertiary-fixed": "#ffdad3",
+                        "background": "#fbf9f4",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "secondary-fixed": "#ffdea5",
+                        "surface-variant": "#e4e2dd",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#e9c176",
+                        "tertiary": "#310501",
+                        "surface-bright": "#fbf9f4",
+                        "surface-container-high": "#eae8e3",
+                        "primary-fixed": "#e9e1dc",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-secondary-container": "#785a1a",
+                        "primary": "#181512",
+                        "surface-container": "#f0eee9",
+                        "outline": "#7e756f",
+                        "on-secondary-fixed": "#261900",
+                        "inverse-primary": "#cdc5c0",
+                        "surface": "#fbf9f4",
+                        "surface-dim": "#dbdad5",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#4d4540"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "margin-mobile": "20px",
+                        "stack-md": "32px",
+                        "gutter": "32px",
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "stack-sm": "16px",
+                        "stack-lg": "80px",
+                        "safe": "env(safe-area-inset-bottom)"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-panel { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased md:hidden overflow-x-hidden pt-20 pb-32">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-50 backdrop-blur-md bg-surface/80 dark:bg-surface/80 border-b border-outline-variant/10 flex justify-between items-center h-20 px-margin-mobile transition-all duration-300 ease-in-out">
+<button aria-label="Menu" class="text-primary dark:text-primary-fixed-dim hover:opacity-70 transition-opacity flex items-center justify-center p-2 -ml-2">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim tracking-[0.2em] uppercase text-xl">AURA</h1>
+<button aria-label="Profile" class="text-primary dark:text-primary-fixed-dim hover:opacity-70 transition-opacity flex items-center justify-center p-1 rounded-full bg-surface-container-high">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+</button>
+</header>
+<main class="w-full">
+<!-- Venue Context -->
+<section class="px-margin-mobile pt-stack-sm pb-stack-md text-center">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">The Lounge Menu</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Curated selections delivered to your seat.</p>
+<div class="mt-4 inline-flex items-center space-x-2 bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/20">
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="location_on">location_on</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">TABLE 12</span>
+</div>
+</section>
+<!-- Category Tabs -->
+<nav class="sticky top-20 z-40 bg-surface/95 backdrop-blur-md border-b border-outline-variant/10">
+<ul class="flex overflow-x-auto no-scrollbar px-margin-mobile space-x-6 py-4">
+<li>
+<button class="font-label-caps text-label-caps text-primary border-b-2 border-primary pb-1 whitespace-nowrap">SIGNATURE COCKTAILS</button>
+</li>
+<li>
+<button class="font-label-caps text-label-caps text-on-surface-variant/60 hover:text-on-surface-variant pb-1 whitespace-nowrap transition-colors">WINE &amp; CHAMPAGNE</button>
+</li>
+<li>
+<button class="font-label-caps text-label-caps text-on-surface-variant/60 hover:text-on-surface-variant pb-1 whitespace-nowrap transition-colors">SMALL PLATES</button>
+</li>
+</ul>
+</nav>
+<!-- Menu List -->
+<section class="px-margin-mobile py-stack-md flex flex-col space-y-6">
+<!-- Item 1 -->
+<article class="flex space-x-4 items-center p-2 rounded-xl active:bg-surface-container-low transition-colors touch-action-manipulation">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-outline-variant/10">
+<img alt="The Resonance Cocktail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLsoaprbAxRsDIweJ-u2qVK_ZWWtUOg_Gyai37SHPPF7FLM2BQduX6MlqXEUxz-4vqMe4_JZ_Ms0XEETNVRw4d9QhZAGTfxpY56fL_499fM3K4T_1kI3FWktxg3gtwwI47pU8frUfXF8iklCkyM_uKM_jnLIP8rdM-smfPARWw91HDlkJ61DBf8KTCrUPAQzekd319KmRkwZ2dxV-6zLbbTcIV6jf7xRfKvfaqtR8GGzpCN45ipsVIcZLgA"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-md text-lg text-on-surface">The Resonance</h3>
+<span class="font-body-md text-body-md text-on-surface-variant">$24</span>
+</div>
+<p class="font-body-md text-sm text-on-surface-variant/80 mt-1 line-clamp-2">Mezcal, Clarified Grapefruit, Sage, Black Salt rim.</p>
+</div>
+<button aria-label="Add The Resonance" class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-primary flex-shrink-0 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</article>
+<!-- Item 2 -->
+<article class="flex space-x-4 items-center p-2 rounded-xl active:bg-surface-container-low transition-colors touch-action-manipulation">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-outline-variant/10">
+<img alt="Velvet Silence Cocktail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLupyIWuGiFkof_sZc-LrnmJ_YIfHuR5-et-gV86UsFHcp7TSPk83QeIWsfQnbD9exvbRoFnqnPljAcw8hOa4PgjKamZbPuFOHo2_u3bAnOjK_eD-dtzOQnV_HL51LLjPoun8TUMBjWvGnJPmROP5DLwk5Eqsq6oK8agf_HkscP-jrnELvcESGGB0zq4Ll6GGPW6bziM2t86haHiAQ2n_DNoFLUH7_5S8FacIs2xYqlYwU6yOtVF9eLwU9Nk"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-md text-lg text-on-surface">Velvet Silence</h3>
+<span class="font-body-md text-body-md text-on-surface-variant">$28</span>
+</div>
+<p class="font-body-md text-sm text-on-surface-variant/80 mt-1 line-clamp-2">Japanese Whisky, Plum Wine, Smoked Tea Bitters.</p>
+</div>
+<button aria-label="Remove Velvet Silence" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform">
+<span class="font-body-md">1</span>
+</button>
+</article>
+<!-- Text Only Item -->
+<article class="flex space-x-4 items-center p-2 rounded-xl active:bg-surface-container-low transition-colors touch-action-manipulation">
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-md text-lg text-on-surface">Midnight Espresso</h3>
+<span class="font-body-md text-body-md text-on-surface-variant">$22</span>
+</div>
+<p class="font-body-md text-sm text-on-surface-variant/80 mt-1">Vodka, Cold Brew Concentrate, Vanilla Bean, Cocoa Nib.</p>
+</div>
+<button aria-label="Add Midnight Espresso" class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-primary flex-shrink-0 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</article>
+</section>
+</main>
+<!-- Mini Cart Bar -->
+<div class="fixed bottom-20 left-0 w-full px-margin-mobile pb-4 z-40">
+<div class="bg-primary text-on-primary rounded-xl p-4 flex justify-between items-center shadow-[0_8px_30px_rgba(24,21,18,0.15)] glass-panel bg-primary/95">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-on-primary/10 flex items-center justify-center">
+<span class="font-label-caps text-label-caps">1</span>
+</div>
+<span class="font-button text-button">View Order</span>
+</div>
+<div class="flex items-center space-x-4">
+<span class="font-body-md text-body-md">$28.00</span>
+<button class="font-button text-button bg-on-primary text-primary px-4 py-2 rounded-full active:scale-95 transition-transform">
+                    Place
+                </button>
+</div>
+</div>
+</div>
+<!-- BottomNavBar Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center pb-safe h-20 bg-surface/90 dark:bg-surface/90 backdrop-blur-xl border-t border-outline-variant/10 shadow-[0_-4px_40px_rgba(24,21,18,0.05)] z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant/60 pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="explore">explore</span>
+<span class="font-label-caps text-label-caps">Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant/60 pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="layers">layers</span>
+<span class="font-label-caps text-label-caps">Lounge</span>
+</a>
+<a aria-current="page" class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-semibold border-t-2 border-primary pt-2 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant/60 pt-2 hover:text-primary dark:hover:text-primary-fixed-dim scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</nav>
+</body></html>

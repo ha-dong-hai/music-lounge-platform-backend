@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Owner 360° Virtual Tour Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "primary-fixed": "#e9e1dc",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#96908b",
+                        "on-primary-fixed": "#1e1b18",
+                        "primary": "#181512",
+                        "secondary-fixed": "#ffdea5",
+                        "on-surface-variant": "#4d4540",
+                        "surface-container": "#f0eee9",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "outline-variant": "#cfc4bd",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "background": "#fbf9f4",
+                        "on-secondary-container": "#785a1a",
+                        "surface-dim": "#dbdad5",
+                        "surface-tint": "#635d5a",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#fed488",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface": "#fbf9f4",
+                        "on-background": "#1b1c19",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#261900",
+                        "primary-container": "#2d2926",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#4d190e",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary": "#775a19",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "secondary-fixed-dim": "#e9c176",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary": "#310501",
+                        "surface-container-high": "#eae8e3",
+                        "surface-container-highest": "#e4e2dd",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "outline": "#7e756f",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "surface-bright": "#fbf9f4",
+                        "tertiary-fixed": "#ffdad3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "32px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "16px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "button": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        /* Subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+    </style>
+</head>
+<body class="flex min-h-screen bg-background font-body-md text-on-background">
+<!-- SideNavBar (Admin/Owner View) -->
+<nav class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant/15 py-stack-sm z-50">
+<div class="px-8 mb-8">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed mb-1">AuraLounge</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Management Portal</p>
+</div>
+<div class="px-8 mb-8">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded flex items-center justify-center gap-2 hover:bg-primary-container transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="add" style="font-variation-settings: 'FILL' 1;">add</span>
+                New Event
+            </button>
+</div>
+<ul class="flex-1 flex flex-col gap-2">
+<li class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</li>
+<li class="flex items-center gap-4 py-3 px-8 cursor-pointer text-primary font-bold border-r-2 border-primary pr-4 bg-surface-container-highest/20">
+<span class="material-symbols-outlined" data-icon="storefront" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span class="font-label-caps text-label-caps">Venue Operations</span>
+</li>
+<li class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps">Analytics</span>
+</li>
+<li class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">Staff Management</span>
+</li>
+<li class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-caps text-label-caps">Schedule</span>
+</li>
+</ul>
+<div class="mt-auto px-8 py-4 border-t border-outline-variant/15 flex flex-col gap-4">
+<div class="flex items-center gap-4 cursor-pointer text-on-surface-variant font-medium hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</div>
+<div class="flex items-center gap-4 cursor-pointer text-on-surface-variant font-medium hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 w-full bg-background min-h-screen">
+<!-- Top App Bar (Mobile Nav Alternative & Desktop Header) -->
+<header class="flex justify-between items-center px-margin-mobile md:px-margin-desktop w-full h-16 bg-surface dark:bg-surface-dim border-b border-outline-variant/15 sticky top-0 z-40">
+<div class="md:hidden">
+<span class="font-headline-md text-headline-md text-primary dark:text-primary-fixed">AuraLounge</span>
+</div>
+<div class="hidden md:flex items-center gap-4 text-on-surface-variant">
+<h2 class="font-headline-md text-headline-md text-primary">Virtual Tour Manager</h2>
+</div>
+<div class="flex items-center gap-4 text-primary dark:text-primary-fixed">
+<span class="material-symbols-outlined cursor-pointer hover:opacity-70 transition-opacity" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:opacity-70 transition-opacity" data-icon="settings">settings</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant/30 ml-2">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A small, circular profile picture of an elegant lounge manager. The lighting is soft and professional, set against a neutral, high-key white background. The image exudes a quiet luxury aesthetic fitting for a premium brand administrator." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLfCbQMqUkyaJp0tPxqX2r70NCusAxzYDaAp0BWvqi11rQ0l9RPQk0yYiK_9Ykqt_MT1dKmofBJeTb9F4-Rm3kyn-SDEDCavKgKcP11816ph2ekcwTo12ZZktSWI4akDGEnJDupKQ_f5V6ii05sicWy9E9xgsQRqz9eQwy_F3cV_VDoYWyFkyj6jIPt0fKvyg0WM8QAk237eNGMCXxiA3Xx23p9EEPyiUIuffOuOZmAI4bedosfFyB6Q"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-margin-mobile md:p-margin-desktop max-w-[1440px] mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-stack-md">
+<div>
+<h2 class="font-display-md text-display-md text-primary mb-2">360° Scenes</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Upload panoramic images and link them together to create an immersive digital twin of your venue.</p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<div class="flex items-center gap-2 bg-surface-container py-2 px-4 rounded border border-outline-variant/20">
+<span class="material-symbols-outlined text-secondary" data-icon="pie_chart">pie_chart</span>
+<span class="font-button text-button text-on-surface">3 of 5 scenes used</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant text-right">Pro Plan Quota</p>
+</div>
+</div>
+<!-- Bento Grid Layout for Main Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Scenes List (Left Column) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Action Bar -->
+<div class="flex gap-4 p-4 bg-surface-container-low rounded border border-outline-variant/10">
+<button class="bg-primary text-on-primary font-button text-button py-2 px-6 rounded flex items-center gap-2 hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                            Add Scene
+                        </button>
+<button class="bg-transparent text-primary font-button text-button py-2 px-6 rounded border border-outline-variant/30 flex items-center gap-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+                            Auto-Stitch Photos
+                        </button>
+</div>
+<!-- Scene Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Scene Card 1 -->
+<div class="bg-surface rounded overflow-hidden border border-outline-variant/15 group relative cursor-pointer">
+<div class="h-48 w-full relative overflow-hidden bg-surface-container-high">
+<img alt="Main Bar" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A wide panoramic view of a luxurious, dimly lit cocktail lounge. Plush velvet seating in deep tones contrasts with warm, glowing ambient lighting from brass fixtures. The scene is immaculate, minimalist, and highly detailed, conveying a sense of exclusive nightlife." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvwm93cYuEaSpTXUlok7_BssbNpAiD9RzmLL2XsV26h6G6nn2i6X_qLVtEjm0Irh6WMKzLASvVyNc-hWQWfK-8ywVpTHXKyvbC5fvLk4jieGyJAetOXLRbKw5M90L1HYOqw0SKMQRjVPGNGb7-Tfzcr6THmKse_4ls0ZKZEjlfeKgY9OyzTgcBeD3I9BIyaySxaAKM5ju4nCkU9D0zlvjpbpBgyWconYho__6lErIKyxtIa0TQApKzgg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+<button class="text-on-primary font-label-caps text-label-caps flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span> Edit Hotspots
+                                    </button>
+</div>
+<div class="absolute top-3 left-3 bg-primary/80 backdrop-blur-sm text-on-primary px-2 py-1 rounded font-label-caps text-[10px] tracking-wider border border-white/10">
+                                    STARTING VIEW
+                                </div>
+</div>
+<div class="p-4 flex justify-between items-center bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-primary font-bold">Main Bar</h3>
+<p class="font-label-caps text-on-surface-variant mt-1">Uploaded 2 days ago</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Scene Card 2 -->
+<div class="bg-surface rounded overflow-hidden border border-outline-variant/15 group relative cursor-pointer">
+<div class="h-48 w-full relative overflow-hidden bg-surface-container-high">
+<img alt="VIP Lounge" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A 360-degree panoramic capture of an exclusive VIP seating area in a high-end club. Soft, diffuse lighting highlights the textures of leather booths and a polished dark wood table. The atmosphere is serene, premium, and meticulously curated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPKY41JebNMbvTbIbNF0N6_6Tao1meCel1k2-x6LAE8hnE71VrAD9-2lkPFbXPdKSpBeJJ4-ASlZ52-ZzTcr42QZJyKVl74vcuYHKohfjrFe_xWn5wWo40t--TwfPEcjFfWYEcjBgSoqqlzhtBhDNEjM235tuqqf0_4RO38Q1jYM-GXEuBNUQeB8P8-hDKajHVBYElEZkPPnehW2FNyP5JXLXkS6MKrmWB8Ki3j8rKwLU2aUooqvJUhQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+<button class="text-on-primary font-label-caps text-label-caps flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span> Edit Hotspots
+                                    </button>
+</div>
+<div class="absolute top-3 left-3 bg-surface-container/80 backdrop-blur-sm text-primary px-2 py-1 rounded font-label-caps text-[10px] tracking-wider border border-outline-variant/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="link">link</span> 2 Links
+                                </div>
+</div>
+<div class="p-4 flex justify-between items-center bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-primary font-bold">VIP Lounge</h3>
+<p class="font-label-caps text-on-surface-variant mt-1">Uploaded 1 week ago</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Scene Card 3 -->
+<div class="bg-surface rounded overflow-hidden border border-outline-variant/15 group relative cursor-pointer">
+<div class="h-48 w-full relative overflow-hidden bg-surface-container-high">
+<img alt="Dance Floor" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A sweeping view of a modern gallery-style dance floor. The space is largely empty, emphasizing architectural lines, high ceilings, and minimal, sophisticated lighting rigs above. The color palette is composed of cool greys, charcoals, and off-whites, projecting a quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzjFXWbt1fa6biMBLBYysew0hP22sLMPuecNullJ2hKvKTWq7En3doESrys6dRAvKAGLfgy8ISmZXwBVAnmAhCIp2OGBqjBSxmoXbCHw5qHd53PsOq9bq7Z4Noxo0pIN1oQ4r0v18-y0nmw15Ald3AaC8asJMCTNzmI8Ki2HIuScD_DPeATJjLTNXIAlkFHb6TCWqxk6xxi0JAkTLqdYvjJ5IZ_BwpsRF-NHm7xUQLVYxKQPSXArZaMw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+<button class="text-on-primary font-label-caps text-label-caps flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span> Edit Hotspots
+                                    </button>
+</div>
+<div class="absolute top-3 left-3 bg-surface-container/80 backdrop-blur-sm text-primary px-2 py-1 rounded font-label-caps text-[10px] tracking-wider border border-outline-variant/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="link">link</span> 1 Link
+                                </div>
+</div>
+<div class="p-4 flex justify-between items-center bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-primary font-bold">Main Dance Floor</h3>
+<p class="font-label-caps text-on-surface-variant mt-1">Uploaded 1 month ago</p>
+</div>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Empty State / Add New Placeholder -->
+<div class="bg-surface-container-low rounded border border-dashed border-outline-variant/50 flex flex-col items-center justify-center h-[266px] cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="add_photo_alternate">add_photo_alternate</span>
+</div>
+<p class="font-body-md text-primary font-bold">Upload Scene</p>
+<p class="font-label-caps text-on-surface-variant mt-2">JPEG or PNG up to 50MB</p>
+</div>
+</div>
+</div>
+<!-- Minimap & Configuration (Right Column) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Minimap Widget -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant/15 p-6 flex flex-col h-full">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-primary">Floorplan</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="zoom_out_map">zoom_out_map</span>
+</button>
+</div>
+<p class="font-body-md text-on-surface-variant mb-6">Drag and drop uploaded scenes onto the floorplan to set their spatial relationship.</p>
+<div class="flex-1 min-h-[400px] w-full bg-surface-container-low rounded border border-outline-variant/20 relative overflow-hidden flex items-center justify-center group">
+<!-- Floorplan Image Background -->
+<div class="absolute inset-0 opacity-40 mix-blend-multiply" data-alt="A clean, minimalist architectural blueprint floorplan of a modern lounge. The lines are thin, precise, and drawn in a subtle charcoal grey against an off-white background, lacking heavy text or clutter, maintaining a sophisticated and highly legible layout." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDj_4ESSmBGEBfXKUyBhTx3LxiGTLVwYgt9Pnv1KC0pKCfSOuXP-Q2dl4XBQI-5-ZSNo-UhSEfB4HXVJpRGUuTTkKAr94WublZiok3mPID8XjRTJHZmY-2Hm4p3H2At08u3X6LdtIqkGJIUerLYdGgK46KU18CnNbhYCsQJRRlE0evbQeGFnJ1SLBuR5wCq8J-2LB_Z3jExeL4-mHstCCu8iCB06rhia7Yu31YqutQkmb81QHtuVMOX-Q')"></div>
+<!-- Interactive Markers Overlay -->
+<div class="absolute inset-0 z-10 p-4">
+<!-- Marker 1 -->
+<div class="absolute top-1/4 left-1/4 flex flex-col items-center cursor-move">
+<div class="w-4 h-4 bg-primary rounded-full shadow-[0_0_15px_rgba(24,21,18,0.3)] border-2 border-surface"></div>
+<span class="mt-1 bg-surface-container-lowest/90 px-2 py-0.5 rounded font-label-caps text-[10px] text-primary whitespace-nowrap">Main Bar</span>
+</div>
+<!-- Marker 2 -->
+<div class="absolute top-1/2 left-2/3 flex flex-col items-center cursor-move">
+<div class="w-4 h-4 bg-outline-variant rounded-full border-2 border-surface hover:bg-primary transition-colors"></div>
+<span class="mt-1 bg-surface-container-lowest/90 px-2 py-0.5 rounded font-label-caps text-[10px] text-on-surface-variant whitespace-nowrap">VIP</span>
+</div>
+<!-- Connection Line (SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:-1;">
+<line class="text-outline-variant/50" stroke="currentColor" stroke-dasharray="4" stroke-width="1" x1="25%" x2="66%" y1="25%" y2="50%"></line>
+</svg>
+</div>
+<!-- Upload Floorplan Overlay (Hidden by default, shown on empty) -->
+<!-- <div class="absolute inset-0 flex flex-col items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm z-20">
+                                 <button class="bg-primary text-on-primary font-button text-button py-2 px-4 rounded">Upload Floorplan</button>
+                             </div> -->
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

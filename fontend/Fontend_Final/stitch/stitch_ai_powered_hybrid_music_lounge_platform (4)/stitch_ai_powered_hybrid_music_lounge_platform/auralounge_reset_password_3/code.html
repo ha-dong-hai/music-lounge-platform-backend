@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Forgot Password - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#fbf9f4",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-surface": "#1b1c19",
+                      "outline": "#7e756f",
+                      "surface-container": "#f0eee9",
+                      "secondary-container": "#fed488",
+                      "inverse-surface": "#30312e",
+                      "on-error": "#ffffff",
+                      "secondary-fixed": "#ffdea5",
+                      "surface": "#fbf9f4",
+                      "on-secondary-fixed": "#261900",
+                      "tertiary-container": "#4d190e",
+                      "primary-fixed": "#e9e1dc",
+                      "primary-container": "#2d2926",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-container-low": "#f5f3ee",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-tertiary-container": "#cb7c6b",
+                      "error": "#ba1a1a",
+                      "on-surface-variant": "#4d4540",
+                      "on-primary-container": "#96908b",
+                      "error-container": "#ffdad6",
+                      "inverse-primary": "#cdc5c0",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-container-highest": "#e4e2dd",
+                      "outline-variant": "#cfc4bd",
+                      "surface-dim": "#dbdad5",
+                      "surface-tint": "#635d5a",
+                      "surface-container-high": "#eae8e3",
+                      "on-primary": "#ffffff",
+                      "secondary": "#775a19",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-background": "#1b1c19",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#181512",
+                      "tertiary": "#310501",
+                      "on-secondary-container": "#785a1a",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "surface-bright": "#fbf9f4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-md": "32px",
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "margin-desktop": "64px",
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "margin-mobile": "20px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "button": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 300,
+          'GRAD' 0,
+          'opsz' 24
+        }
+        
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #fbf9f4 inset !important;
+            -webkit-text-fill-color: #181512 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-sans">
+<!-- Navbar Suppressed as per instructions for Transactional/Login flows -->
+<main class="flex-grow flex flex-col px-margin-mobile pt-stack-md pb-stack-lg relative overflow-hidden">
+<!-- Subtle decorative background element for depth -->
+<div class="absolute -top-[20%] -right-[20%] w-[80vw] h-[80vw] rounded-full bg-surface-container blur-[100px] opacity-40 -z-10 pointer-events-none"></div>
+<!-- Back Button -->
+<div class="mb-stack-sm mt-4">
+<button aria-label="Go back" class="inline-flex items-center justify-center p-unit text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span aria-hidden="true" class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+</div>
+<div class="flex-grow flex flex-col max-w-[400px] w-full mx-auto justify-center pb-[132px]">
+<header class="mb-stack-md">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-unit">Forgot Password</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Enter the email address associated with your account, and we'll send you a link to reset your password.
+                </p>
+</header>
+<form action="#" class="flex flex-col space-y-stack-md" method="POST" novalidate="">
+<!-- Input Group (Underlined Style for Audience View) -->
+<div class="relative group">
+<input class="w-full bg-transparent border-0 border-b border-outline-variant/30 py-3 px-0 font-body-md text-body-md text-primary placeholder:text-transparent focus:ring-0 focus:border-primary transition-colors duration-300 peer" id="email" name="email" placeholder="Email Address" required="" type="email"/>
+<label class="absolute left-0 top-3 font-body-md text-body-md text-on-surface-variant transition-all duration-300 transform origin-left peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:scale-75 pointer-events-none" for="email">
+                        Email Address
+                    </label>
+</div>
+<!-- Primary Button -->
+<button class="w-full bg-primary text-on-primary py-4 px-6 rounded flex items-center justify-between group hover:bg-on-surface transition-colors duration-300" type="submit">
+<span class="font-button text-button">Send reset link</span>
+<span aria-hidden="true" class="material-symbols-outlined transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
+</button>
+</form>
+<!-- Footer Link -->
+<div class="mt-stack-sm text-center">
+<a class="inline-flex items-center font-button text-button text-outline hover:text-primary transition-colors duration-200" href="#">
+                    Return to Sign In
+                </a>
+</div>
+</div>
+</main>
+</body></html>

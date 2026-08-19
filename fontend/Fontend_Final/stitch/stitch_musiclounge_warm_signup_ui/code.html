@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MusicLounge - Tạo tài khoản</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#8f4d20",
+                      "on-primary": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "tertiary-fixed-dim": "#b9cbbd",
+                      "on-surface": "#1d1b15",
+                      "tertiary-fixed": "#d5e7d8",
+                      "on-primary-fixed": "#321200",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#5e4021",
+                      "error": "#ba1a1a",
+                      "on-tertiary-container": "#f6fff5",
+                      "surface-dim": "#dfd9cf",
+                      "primary-container": "#aa6233",
+                      "on-secondary-container": "#7a5837",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#723609",
+                      "error-container": "#ffdad6",
+                      "surface-container": "#f3ede2",
+                      "on-surface-variant": "#53433b",
+                      "surface-container-low": "#f9f3e8",
+                      "surface-variant": "#e8e2d7",
+                      "secondary-fixed": "#ffdcbd",
+                      "inverse-on-surface": "#f6f0e5",
+                      "secondary-container": "#ffd2a8",
+                      "primary-fixed-dim": "#ffb68c",
+                      "surface-container-high": "#ede7dd",
+                      "background": "#fff9ed",
+                      "secondary-fixed-dim": "#eabe95",
+                      "outline": "#867369",
+                      "on-tertiary-fixed-variant": "#3a4a3f",
+                      "primary": "#8c4a1e",
+                      "tertiary-container": "#68796c",
+                      "on-tertiary-fixed": "#101f16",
+                      "secondary": "#795836",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "on-background": "#1d1b15",
+                      "surface-bright": "#fff9ed",
+                      "surface": "#fff9ed",
+                      "on-secondary-fixed": "#2c1600",
+                      "primary-fixed": "#ffdbc9",
+                      "outline-variant": "#d9c2b6",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e8e2d7",
+                      "tertiary": "#4f6054",
+                      "inverse-surface": "#333029",
+                      "inverse-primary": "#ffb68c"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "8px",
+                      "lg": "48px",
+                      "margin-mobile": "16px",
+                      "md": "24px",
+                      "container-max": "1280px",
+                      "sm": "12px",
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "xl": "80px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Playfair Display"
+                      ],
+                      "headline-sm": [
+                              "Playfair Display"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Playfair Display"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "caption-handwriting": [
+                              "Playfair Display"
+                      ],
+                      "headline-md": [
+                              "Playfair Display"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "title-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "caption-handwriting": [
+                              "16px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Subtle texture overlay for the left pane to enhance tactile feel */
+        .texture-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* Input autofill styling override to match theme */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #f9f3e8 inset !important;
+            -webkit-text-fill-color: #1d1b15 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .polaroid-enter {
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+            animation: polaroidFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes polaroidFadeIn {
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex selection:bg-primary-container/30 selection:text-primary">
+<!-- Left Pane: Visuals (55%) -->
+<div class="hidden lg:flex w-[55%] bg-surface-container relative overflow-hidden items-center justify-center" id="parallax-container">
+<!-- Ambient Texture -->
+<div class="absolute inset-0 texture-overlay"></div>
+<!-- Faint Terracotta Glow -->
+<div class="absolute w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] mix-blend-multiply opacity-60 pointer-events-none"></div>
+<!-- Polaroids Cluster -->
+<div class="relative w-full max-w-[600px] aspect-square flex items-center justify-center">
+<!-- Polaroid 1: Top Left -->
+<div class="absolute -top-4 -left-12 polaroid-enter z-10" data-parallax-factor="0.4" style="animation-delay: 0.1s;">
+<div class="bg-surface-container-lowest p-4 pb-6 rounded-sm shadow-[0_12px_32px_rgba(43,42,39,0.08)] border border-outline-variant/20 rotate-[-6deg] transition-transform duration-500 ease-out hover:rotate-[-4deg] hover:scale-105">
+<img class="w-48 h-48 object-cover sepia-[.2] contrast-125" data-alt="A close-up of a gleaming golden saxophone standing upright. Warm, dramatic spotlighting against a dark, smoky background. Evokes a sense of classic jazz, late-night intimacy, and tactile luxury. High fidelity, rich textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdcE0dj3Kxe7MoPfEsGrxAW--94Hp8ipbovnGFLjIJozhzBx8UXlUbQB9L0A2r_wxerZiNiprhOZVK3RR5NqiWJGgV_5bKHE24jr2n5b_RjdJI4wU7f6hwIdmzIAlwgFQdB6h8_6rlDwh6A3YfBoYElLefokR3dVvugCvXVa7gTSkXK4K1mFU7iF1gQMWoRegHFHGrCvFuqAW_gZkU_njZqrqVC4uM9VYV35VoM810oIt5Gp8Ziu6DIQ"/>
+<p class="font-caption-handwriting text-caption-handwriting italic text-on-surface-variant mt-4 text-center">đêm mưa nhạc jazz</p>
+</div>
+</div>
+<!-- Polaroid 2: Center Right (Main) -->
+<div class="absolute top-1/4 right-0 polaroid-enter z-30" data-parallax-factor="0.6" style="animation-delay: 0.3s;">
+<div class="bg-surface-container-lowest p-4 pb-6 rounded-sm shadow-[0_16px_40px_rgba(43,42,39,0.12)] border border-outline-variant/30 rotate-[4deg] transition-transform duration-500 ease-out hover:rotate-[2deg] hover:scale-105">
+<img class="w-64 h-64 object-cover sepia-[.1] contrast-110" data-alt="An acoustic guitar leaning against a plush, velvet tufted armchair in a softly lit room. Natural afternoon light streaming through a nearby window, casting long, warm shadows. Tactile minimalism, cozy listening room aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7r1HuES7LnQZhOp_o4IClvLoCSGMT-rHDHdu9vE99Uyzoo-if2EOsZr1cc0HOfxloCg93_5p2JD3UzSO844cB8MEDXhyte7YQvJ5eTMFLLnK4Op42fpZ7lyhXXpJ2d70XUVe7yZluZukkT7dN8WM_imJTnOV5llG8SlHrdLq0-ixaBXQ5QVNyGiNn0WRjLV3x_wWf1x5RxbcjX1hqdts_lNITvip5YX9h8wNewoYwo7Sd0JEAB9VpQw"/>
+<p class="font-caption-handwriting text-caption-handwriting italic text-on-surface-variant mt-4 text-center">âm mộc — chiều tà</p>
+</div>
+</div>
+<!-- Polaroid 3: Bottom Left -->
+<div class="absolute bottom-4 left-8 polaroid-enter z-20" data-parallax-factor="0.3" style="animation-delay: 0.5s;">
+<div class="bg-surface-container-lowest p-4 pb-6 rounded-sm shadow-[0_8px_24px_rgba(43,42,39,0.06)] border border-outline-variant/20 rotate-[7deg] transition-transform duration-500 ease-out hover:rotate-[9deg] hover:scale-105">
+<img class="w-40 h-40 object-cover sepia-[.3] contrast-120" data-alt="A glass of red wine next to a melting candle on a textured, rustic wooden table. Dimly lit, intimate atmosphere of a high-end music lounge. Warm color palette with deep ambers and subtle highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCGSxTnBLdjHlofyZRCXnCKYUaMqsYzBQz7CUXghFxtvOl-EqsmPjIASgIBJW-bw_u19nEp9774M0mzDYJEc3dYYUi8-jutC4sMeCbhEYPeT3eb6xX3O-jUlZgSwRwHaMUQUkkEV04tscLbacwYg9c6xk0aLasUHRrR7d1i1lg1MipZ3NlXDhmfrd_gntQXaGX9zcXUybjr9KvDqNXXmLyI3vhvZuGFWrtcR8wKZoP0PO05Y1EDFilHA"/>
+<p class="font-caption-handwriting text-caption-handwriting italic text-on-surface-variant mt-3 text-center">phố nhạc — 21:30</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Pane: Form (45%) -->
+<div class="w-full lg:w-[45%] bg-surface-container-lowest flex flex-col justify-center px-margin-mobile md:px-lg py-xl relative shadow-[-10px_0_30px_rgba(43,42,39,0.03)] z-10 overflow-y-auto">
+<div class="max-w-[420px] w-full mx-auto">
+<!-- Logo area -->
+<div class="mb-xl">
+<span class="font-display-lg text-headline-sm text-primary tracking-tight">MusicLounge</span>
+</div>
+<!-- Header -->
+<h1 class="font-display-lg text-headline-md text-on-surface mb-2">Tạo tài khoản</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">Bắt đầu hành trình thưởng thức âm nhạc đích thực.</p>
+<!-- Role Toggle Segmented Control -->
+<div class="bg-surface-container p-1 rounded-xl flex items-center mb-lg relative shadow-[inset_0_2px_4px_rgba(43,42,39,0.04)]">
+<!-- Active background slider pill -->
+<div class="absolute left-1 top-1 bottom-1 w-[calc(50%-4px)] bg-primary/15 rounded-lg transition-transform duration-300 ease-out" id="role-slider"></div>
+<button class="relative z-10 flex-1 py-2.5 font-label-md text-label-md rounded-lg transition-colors text-primary" onclick="setRole('listener')" type="button">
+                    Khán giả
+                </button>
+<button class="relative z-10 flex-1 py-2.5 font-label-md text-label-md rounded-lg transition-colors text-on-surface-variant hover:text-on-surface" onclick="setRole('owner')" type="button">
+                    Chủ phòng trà
+                </button>
+</div>
+<form class="flex flex-col gap-sm">
+<!-- Full Name -->
+<div class="relative group">
+<input class="peer w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-4 pt-6 pb-2 text-on-surface font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-all" id="fullname" placeholder=" " required="" type="text"/>
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-2.5 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:text-xs cursor-text" for="fullname">
+                        Họ và tên
+                    </label>
+</div>
+<!-- Email -->
+<div class="relative group">
+<input class="peer w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-4 pt-6 pb-2 text-on-surface font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-all" id="email" placeholder=" " required="" type="email"/>
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-2.5 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:text-xs cursor-text" for="email">
+                        Địa chỉ Email
+                    </label>
+</div>
+<!-- Password -->
+<div class="relative group">
+<input class="peer w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-4 pt-6 pb-2 pr-12 text-on-surface font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-all" id="password" oninput="checkStrength()" placeholder=" " required="" type="password"/>
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-2.5 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:text-xs cursor-text" for="password">
+                        Mật khẩu
+                    </label>
+<button class="absolute right-3 top-3.5 text-on-surface-variant hover:text-primary transition-colors p-1" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined text-[20px]" id="eye-icon">visibility</span>
+</button>
+<!-- Strength Meter -->
+<div class="flex gap-1 mt-2 px-1">
+<div class="h-1 flex-1 rounded-full bg-surface-variant transition-colors duration-300" id="str-1"></div>
+<div class="h-1 flex-1 rounded-full bg-surface-variant transition-colors duration-300" id="str-2"></div>
+<div class="h-1 flex-1 rounded-full bg-surface-variant transition-colors duration-300" id="str-3"></div>
+</div>
+</div>
+<!-- Phone (Optional) -->
+<div class="relative group mt-1">
+<input class="peer w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-4 pt-6 pb-2 text-on-surface font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-all" id="phone" placeholder=" " type="tel"/>
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-2.5 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:text-xs cursor-text flex items-center gap-2 w-[calc(100%-2rem)]" for="phone">
+                        Số điện thoại <span class="text-xs opacity-60 font-normal ml-auto peer-focus:hidden">(Tùy chọn)</span>
+</label>
+</div>
+<!-- CTA -->
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-3.5 rounded-xl mt-md shadow-[0_4px_12px_rgba(140,74,30,0.2)] hover:shadow-[0_6px_16px_rgba(140,74,30,0.3)] hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]" type="submit">
+                    Đăng ký
+                </button>
+</form>
+<!-- Login Link -->
+<div class="mt-lg text-center font-body-md text-body-md text-on-surface-variant">
+                Đã có tài khoản? 
+                <a class="text-primary font-medium hover:underline decoration-primary/30 underline-offset-4 transition-all" href="#">Đăng nhập</a>
+</div>
+</div>
+</div>
+<script>
+        // Parallax Effect for Polaroids
+        const container = document.getElementById('parallax-container');
+        const polaroids = container.querySelectorAll('[data-parallax-factor]');
+
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Normalize coordinates from -1 to 1 based on center
+            const normX = (x / rect.width) * 2 - 1;
+            const normY = (y / rect.height) * 2 - 1;
+
+            polaroids.forEach(el => {
+                const factor = parseFloat(el.getAttribute('data-parallax-factor'));
+                // Inverse movement for softer effect
+                const moveX = normX * -20 * factor;
+                const moveY = normY * -20 * factor;
+                
+                // Get original rotation from inline style or compute it (simplified for demo)
+                const baseTransform = el.firstElementChild.style.transform || '';
+                
+                // We apply transform to the wrapper to keep the CSS hover rotation on the child intact
+                el.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            });
+        });
+
+        // Role Toggle Logic
+        function setRole(role) {
+            const slider = document.getElementById('role-slider');
+            const buttons = slider.parentElement.querySelectorAll('button');
+            
+            if (role === 'listener') {
+                slider.style.transform = 'translateX(0)';
+                buttons[0].classList.add('text-primary');
+                buttons[0].classList.remove('text-on-surface-variant', 'hover:text-on-surface');
+                buttons[1].classList.remove('text-primary');
+                buttons[1].classList.add('text-on-surface-variant', 'hover:text-on-surface');
+            } else {
+                slider.style.transform = 'translateX(100%)';
+                buttons[1].classList.add('text-primary');
+                buttons[1].classList.remove('text-on-surface-variant', 'hover:text-on-surface');
+                buttons[0].classList.remove('text-primary');
+                buttons[0].classList.add('text-on-surface-variant', 'hover:text-on-surface');
+            }
+        }
+
+        // Password Toggle
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // Simple Password Strength Meter
+        function checkStrength() {
+            const val = document.getElementById('password').value;
+            const s1 = document.getElementById('str-1');
+            const s2 = document.getElementById('str-2');
+            const s3 = document.getElementById('str-3');
+            
+            // Reset
+            [s1, s2, s3].forEach(el => el.className = 'h-1 flex-1 rounded-full bg-surface-variant transition-colors duration-300');
+
+            if (val.length > 0) {
+                s1.classList.remove('bg-surface-variant');
+                s1.classList.add('bg-error'); // Weak
+            }
+            if (val.length > 5 && /[A-Z]/.test(val) && /[0-9]/.test(val)) {
+                s1.classList.replace('bg-error', 'bg-primary-container');
+                s2.classList.remove('bg-surface-variant');
+                s2.classList.add('bg-primary-container'); // Medium
+            }
+            if (val.length > 8 && /[!@#$%^&*]/.test(val)) {
+                s1.classList.replace('bg-primary-container', 'bg-tertiary');
+                s2.classList.replace('bg-primary-container', 'bg-tertiary');
+                s3.classList.remove('bg-surface-variant');
+                s3.classList.add('bg-tertiary'); // Strong
+            }
+        }
+    </script>
+</body></html>

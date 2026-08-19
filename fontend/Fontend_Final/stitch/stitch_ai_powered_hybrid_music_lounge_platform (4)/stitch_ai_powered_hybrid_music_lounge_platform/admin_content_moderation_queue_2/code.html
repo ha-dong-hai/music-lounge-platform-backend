@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Content Moderation Queue - Admin Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#cdc5c0",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "outline-variant": "#cfc4bd",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-secondary-fixed": "#261900",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#fbf9f4",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#fed488",
+                        "surface": "#fbf9f4",
+                        "secondary-fixed": "#ffdea5",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface-tint": "#635d5a",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-dim": "#dbdad5",
+                        "primary-fixed": "#e9e1dc",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "secondary": "#775a19",
+                        "inverse-surface": "#30312e",
+                        "on-primary-container": "#96908b",
+                        "on-error": "#ffffff",
+                        "primary": "#181512",
+                        "on-primary-fixed": "#1e1b18",
+                        "error-container": "#ffdad6",
+                        "outline": "#7e756f",
+                        "surface-bright": "#fbf9f4",
+                        "on-secondary-container": "#785a1a",
+                        "surface-variant": "#e4e2dd",
+                        "on-surface-variant": "#4d4540",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#cb7c6b",
+                        "surface-container-highest": "#e4e2dd",
+                        "tertiary-fixed": "#ffdad3",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#2d2926",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#310501",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "surface-container": "#f0eee9",
+                        "on-surface": "#1b1c19",
+                        "tertiary-container": "#4d190e",
+                        "surface-container-high": "#eae8e3",
+                        "on-background": "#1b1c19"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "unit": "8px",
+                        "margin-desktop": "64px",
+                        "stack-lg": "80px",
+                        "stack-md": "32px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "button": ["Manrope"],
+                        "body-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        /* Custom scrollbar for tables */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: theme('colors.outline-variant'); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: theme('colors.outline'); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="bg-surface-container-low dark:bg-surface-container-lowest text-primary dark:text-primary-fixed font-label-caps text-label-caps h-screen w-64 fixed left-0 top-0 border-r border-outline-variant/15 flex flex-col h-full py-stack-sm z-40 hidden md:flex">
+<!-- Header -->
+<div class="px-8 mb-8 flex flex-col gap-2">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed">AuraLounge</h1>
+<p class="text-on-surface-variant">Management Portal</p>
+</div>
+<!-- CTA -->
+<div class="px-8 mb-8">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 rounded hover:bg-primary-container transition-colors duration-200">New Event</button>
+</div>
+<!-- Main Tabs -->
+<ul class="flex-col flex-1 space-y-1">
+<li class="text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 flex items-center gap-4 py-3 px-8 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </li>
+<li class="text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 flex items-center gap-4 py-3 px-8 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+                Venue Operations
+            </li>
+<li class="text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 flex items-center gap-4 py-3 px-8 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                Analytics
+            </li>
+<!-- Active Tab (Intent match for Moderation/Content/Staff management area) -->
+<li class="text-primary font-bold border-r-2 border-primary pr-4 flex items-center gap-4 py-3 px-8 cursor-pointer bg-surface-container-highest/20">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+                Staff Management
+            </li>
+<li class="text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 flex items-center gap-4 py-3 px-8 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+                Schedule
+            </li>
+</ul>
+<!-- Footer Tabs -->
+<ul class="flex-col mt-auto pb-4 space-y-1">
+<li class="text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 flex items-center gap-4 py-3 px-8 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Support
+            </li>
+<li class="text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 flex items-center gap-4 py-3 px-8 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </li>
+</ul>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed font-body-md text-body-md w-full h-16 border-b border-outline-variant/15 flex justify-between items-center px-margin-desktop sticky top-0 z-30">
+<!-- Brand / Search (Left) -->
+<div class="flex items-center gap-8">
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed hidden md:block" style="font-size: 24px; line-height: 1;">AuraLounge</span>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container border-none focus:ring-1 focus:ring-primary rounded text-body-md w-64 placeholder-on-surface-variant/50 transition-all" placeholder="Search moderation queue..." type="text"/>
+</div>
+</div>
+<!-- Trailing Actions (Right) -->
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors duration-200 text-on-surface-variant" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors duration-200 text-on-surface-variant" data-icon="settings">settings</span>
+<button class="bg-primary text-on-primary px-6 py-2 rounded font-button text-button hover:bg-primary-container transition-colors duration-200 ml-2">Profile</button>
+</div>
+</header>
+<!-- Canvas Area -->
+<main class="flex-1 p-margin-mobile md:p-margin-desktop overflow-x-hidden flex flex-col gap-stack-lg">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant/15 pb-stack-sm">
+<div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-2">Content Moderation Queue</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Review and action flagged user-generated content across the platform. Maintain the high standard of the AuraLounge community.</p>
+</div>
+<div class="flex gap-4">
+<button class="flex items-center gap-2 border border-outline-variant px-4 py-2 rounded font-button text-button text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="flex items-center gap-2 border border-outline-variant px-4 py-2 rounded font-button text-button text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">sort</span>
+                        Sort
+                    </button>
+</div>
+</div>
+<!-- Stats Overview (Bento style) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="bg-surface-container-low border border-outline-variant/20 p-6 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Pending Reviews</p>
+<p class="font-display-md text-display-md text-primary">24</p>
+</div>
+<div class="bg-error-container/30 border border-error/10 p-6 rounded-lg">
+<p class="font-label-caps text-label-caps text-error mb-2">High Priority</p>
+<p class="font-display-md text-display-md text-error">3</p>
+</div>
+<div class="bg-surface-container-low border border-outline-variant/20 p-6 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Reviewed Today</p>
+<p class="font-display-md text-display-md text-primary">112</p>
+</div>
+<div class="bg-surface-container-low border border-outline-variant/20 p-6 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Avg Resolution Time</p>
+<p class="font-display-md text-display-md text-primary" style="font-size: 32px; line-height: 56px;">4m 12s</p>
+</div>
+</div>
+<!-- Moderation Table -->
+<div class="w-full overflow-x-auto custom-scrollbar border border-outline-variant/15 rounded-lg bg-surface">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/20 bg-surface-container-low">
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Content Type</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant min-w-[300px]">Content Snippet</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Report Details</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant text-right whitespace-nowrap">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y divide-outline-variant/10">
+<!-- Row 1: High Priority Chat -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors">
+<td class="py-6 px-6 align-top">
+<div class="flex flex-col gap-2">
+<span class="inline-flex items-center gap-1 bg-surface-container-high px-2 py-1 rounded font-label-caps text-[10px] text-on-surface-variant w-max">
+<span class="material-symbols-outlined text-[14px]">chat</span> Chat Message
+                                    </span>
+<span class="text-error font-medium text-sm flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">priority_high</span> High Priority</span>
+</div>
+</td>
+<td class="py-6 px-6 align-top">
+<p class="text-on-surface font-medium mb-1">User: @jazz_fan_99</p>
+<div class="bg-surface-container-low p-3 border-l-2 border-error rounded-r italic text-on-surface-variant">
+                                    "This venue is a complete scam, do not buy tickets for the Friday show. The promoter is stealing money."
+                                </div>
+</td>
+<td class="py-6 px-6 align-top">
+<p class="mb-1"><span class="text-on-surface-variant font-medium">Flagged for:</span> Harassment / Defamation</p>
+<p class="text-sm text-on-surface-variant">Reported by: Venue Admin (ID: 492)</p>
+<p class="text-xs text-on-surface-variant mt-1">10 mins ago</p>
+</td>
+<td class="py-6 px-6 align-top text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-on-surface hover:text-primary bg-surface-container-low hover:bg-surface-container-high rounded transition-colors tooltip" title="Ignore / Approve Content">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</button>
+<button class="p-2 text-error hover:bg-error-container rounded transition-colors tooltip" title="Remove Content">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="px-3 py-1 bg-primary text-on-primary font-button text-button rounded hover:bg-primary-container transition-colors ml-2">
+                                        Warn User
+                                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Review -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors">
+<td class="py-6 px-6 align-top">
+<div class="flex flex-col gap-2">
+<span class="inline-flex items-center gap-1 bg-surface-container-high px-2 py-1 rounded font-label-caps text-[10px] text-on-surface-variant w-max">
+<span class="material-symbols-outlined text-[14px]">star</span> Venue Review
+                                    </span>
+</div>
+</td>
+<td class="py-6 px-6 align-top">
+<p class="text-on-surface font-medium mb-1">Venue: The Blue Note</p>
+<div class="bg-surface-container-low p-3 border-l-2 border-secondary-container rounded-r italic text-on-surface-variant">
+                                    "Sound quality was terrible. Find better speakers. Check out my soundcloud instead soundcloud.com/fake-dj-spam"
+                                </div>
+</td>
+<td class="py-6 px-6 align-top">
+<p class="mb-1"><span class="text-on-surface-variant font-medium">Flagged for:</span> Spam / Self-Promotion</p>
+<p class="text-sm text-on-surface-variant">Reported by: Automated Filter</p>
+<p class="text-xs text-on-surface-variant mt-1">1 hour ago</p>
+</td>
+<td class="py-6 px-6 align-top text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-on-surface hover:text-primary bg-surface-container-low hover:bg-surface-container-high rounded transition-colors tooltip" title="Ignore / Approve Content">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</button>
+<button class="p-2 text-error hover:bg-error-container rounded transition-colors tooltip" title="Remove Content">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="px-3 py-1 border border-outline-variant text-on-surface font-button text-button rounded hover:bg-surface-container-low transition-colors ml-2">
+                                        Edit
+                                    </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination (Simple) -->
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant/15 mt-auto">
+<span class="font-body-md text-sm text-on-surface-variant">Showing 1-10 of 24 entries</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 border border-outline-variant/50 rounded text-on-surface-variant hover:bg-surface-container-low opacity-50 cursor-not-allowed">Prev</button>
+<button class="px-3 py-1 border border-outline-variant rounded text-on-surface hover:bg-surface-container-low">Next</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

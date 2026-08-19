@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Refund Requests</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#cb7c6b",
+                      "secondary": "#775a19",
+                      "on-background": "#1b1c19",
+                      "on-primary": "#ffffff",
+                      "primary": "#181512",
+                      "on-secondary-container": "#785a1a",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "outline": "#7e756f",
+                      "surface": "#fbf9f4",
+                      "outline-variant": "#cfc4bd",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-tertiary": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-container": "#2d2926",
+                      "on-secondary-fixed": "#261900",
+                      "surface-container-low": "#f5f3ee",
+                      "on-secondary": "#ffffff",
+                      "on-surface": "#1b1c19",
+                      "surface-tint": "#635d5a",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-container-highest": "#e4e2dd",
+                      "inverse-surface": "#30312e",
+                      "on-primary-container": "#96908b",
+                      "surface-dim": "#dbdad5",
+                      "on-primary-fixed": "#1e1b18",
+                      "background": "#fbf9f4",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "secondary-fixed": "#ffdea5",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "error": "#ba1a1a",
+                      "surface-container-high": "#eae8e3",
+                      "inverse-primary": "#cdc5c0",
+                      "tertiary-container": "#4d190e",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-error-container": "#93000a",
+                      "surface-bright": "#fbf9f4",
+                      "secondary-container": "#fed488",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary": "#310501",
+                      "surface-container": "#f0eee9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-md": "32px",
+                      "gutter": "32px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px",
+                      "stack-sm": "16px",
+                      "margin-desktop": "64px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fbf9f4; /* surface */
+            color: #1b1c19; /* on-surface */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md">
+<!-- TopAppBar -->
+<header class="hidden md:flex w-full top-0 sticky z-50 bg-background dark:bg-background border-b border-outline-variant/10 transition-all duration-300 ease-in-out">
+<div class="flex justify-between items-center px-margin-desktop py-unit max-w-container-max mx-auto w-full">
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed">
+                AuraLounge
+            </div>
+<nav class="flex gap-gutter font-headline-md text-headline-md font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Discover</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Venues</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Artists</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Profile</a>
+</nav>
+<div class="flex items-center text-primary dark:text-primary-fixed">
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop py-stack-md md:py-stack-lg">
+<div class="mb-stack-md">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-display-lg md:text-display-lg text-primary mb-2">Refund Requests</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Track the status of your ticket and token refund requests for cancelled events or unused amenities.</p>
+</div>
+<!-- Bento Grid Layout for Requests -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Request Card: Pending -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-6 flex flex-col hover:bg-surface-container transition-colors duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-secondary-container/30 text-on-secondary-container font-label-caps text-label-caps px-3 py-1 rounded-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> Pending Review
+                    </span>
+<span class="font-headline-md text-headline-md text-primary">$120.00</span>
+</div>
+<div class="mb-6 flex-grow">
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Midnight Jazz Ensemble</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">2x VIP Tickets • Event Cancelled</p>
+<p class="font-body-md text-body-md text-outline mt-2 text-sm">Requested on Oct 12, 2023</p>
+</div>
+<div class="border-t border-outline-variant/20 pt-4 flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Request ID: #REF-8492</span>
+<button class="text-primary hover:text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Request Card: Approved -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-6 flex flex-col hover:bg-surface-container transition-colors duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-primary/5 text-primary font-label-caps text-label-caps px-3 py-1 rounded-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span> Approved &amp; Refunded
+                    </span>
+<span class="font-headline-md text-headline-md text-primary">$45.00</span>
+</div>
+<div class="mb-6 flex-grow">
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Echoes of Eden</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">5x Drink Tokens • Unused</p>
+<p class="font-body-md text-body-md text-outline mt-2 text-sm">Processed on Sep 28, 2023</p>
+</div>
+<div class="border-t border-outline-variant/20 pt-4 flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Request ID: #REF-7310</span>
+<button class="text-primary hover:text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</button>
+</div>
+</div>
+<!-- Request Card: Denied -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-6 flex flex-col hover:bg-surface-container transition-colors duration-300 opacity-80">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-error-container/50 text-on-error-container font-label-caps text-label-caps px-3 py-1 rounded-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="cancel">cancel</span> Request Denied
+                    </span>
+<span class="font-headline-md text-headline-md text-on-surface-variant line-through">$80.00</span>
+</div>
+<div class="mb-6 flex-grow">
+<h3 class="font-headline-md text-headline-md text-primary mb-1">The Velvet Room Opening</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">1x Standard Ticket • No Show</p>
+<p class="font-body-md text-body-md text-outline mt-2 text-sm">Reviewed on Aug 15, 2023</p>
+</div>
+<div class="border-t border-outline-variant/20 pt-4 flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Request ID: #REF-6122</span>
+<button class="text-primary hover:text-on-surface-variant transition-colors" title="View Reason">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+</button>
+</div>
+</div>
+<!-- New Request Action Card -->
+<div class="bg-transparent border border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center min-h-[280px] hover:bg-surface-container-lowest/50 transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-primary" data-icon="add">add</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 text-center">Submit New Request</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-[200px]">Have an issue with a recent purchase?</p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile pb-8 pt-4 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-t border-outline-variant/10 shadow-[0_-4px_40px_rgba(0,0,0,0.05)]">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-80 scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-80 scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="event">event</span>
+<span class="font-label-caps text-label-caps">Events</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-80 scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="location_on">location_on</span>
+<span class="font-label-caps text-label-caps">Venues</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-semibold" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</nav>
+</body></html>

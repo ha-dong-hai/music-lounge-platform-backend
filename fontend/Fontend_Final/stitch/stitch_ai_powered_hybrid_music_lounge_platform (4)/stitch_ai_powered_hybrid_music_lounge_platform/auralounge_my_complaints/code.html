@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>My Complaints - Aura Lounge</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from Design System -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-primary": "#cdc5c0",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "outline-variant": "#cfc4bd",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-secondary-fixed": "#261900",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-container-lowest": "#ffffff",
+                      "background": "#fbf9f4",
+                      "error": "#ba1a1a",
+                      "secondary-container": "#fed488",
+                      "surface": "#fbf9f4",
+                      "secondary-fixed": "#ffdea5",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-tint": "#635d5a",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-dim": "#dbdad5",
+                      "primary-fixed": "#e9e1dc",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "secondary": "#775a19",
+                      "inverse-surface": "#30312e",
+                      "on-primary-container": "#96908b",
+                      "on-error": "#ffffff",
+                      "primary": "#181512",
+                      "on-primary-fixed": "#1e1b18",
+                      "error-container": "#ffdad6",
+                      "outline": "#7e756f",
+                      "surface-bright": "#fbf9f4",
+                      "on-secondary-container": "#785a1a",
+                      "surface-variant": "#e4e2dd",
+                      "on-surface-variant": "#4d4540",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-container-highest": "#e4e2dd",
+                      "tertiary-fixed": "#ffdad3",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#2d2926",
+                      "on-error-container": "#93000a",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#310501",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-container": "#f0eee9",
+                      "on-surface": "#1b1c19",
+                      "tertiary-container": "#4d190e",
+                      "surface-container-high": "#eae8e3",
+                      "on-background": "#1b1c19"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "margin-desktop": "64px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #fbf9f4; /* background color */
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar for webkit to keep minimal look if scrollable */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cfc4bd;
+            border-radius: 4px;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased md:hidden pb-safe">
+<!-- TopAppBar from JSON Component -->
+<header class="w-full top-0 sticky bg-background dark:bg-background flat no shadows flex justify-between items-center px-margin-mobile h-16 w-full z-40 border-b border-outline-variant/20">
+<button aria-label="Menu" class="scale-95 active:scale-90 transition-transform hover:opacity-80 transition-opacity p-2 -ml-2">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<div class="font-headline-md text-headline-md uppercase tracking-widest text-primary dark:text-inverse-primary">
+            AURA LOUNGE
+        </div>
+<button aria-label="Account" class="scale-95 active:scale-90 transition-transform hover:opacity-80 transition-opacity p-2 -mr-2">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</header>
+<!-- Main Canvas Content -->
+<main class="flex-grow flex flex-col px-margin-mobile pt-stack-sm pb-stack-lg">
+<!-- Header Section -->
+<div class="mb-stack-md mt-4">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">My Complaints</h1>
+<p class="font-body-md text-body-md text-outline">Track the status and history of your submitted reports.</p>
+</div>
+<!-- Filter / Tabs -->
+<div class="flex gap-4 mb-stack-md overflow-x-auto pb-2 scrollbar-hide">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label-caps text-label-caps whitespace-nowrap">All</button>
+<button class="px-4 py-2 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-label-caps whitespace-nowrap border border-outline-variant/30">In Progress</button>
+<button class="px-4 py-2 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-label-caps whitespace-nowrap border border-outline-variant/30">Resolved</button>
+</div>
+<!-- Complaints List (Bento-style Cards) -->
+<div class="flex flex-col gap-4" id="complaints-list">
+<!-- Complaint Card 1: In Progress -->
+<button class="w-full text-left bg-surface-container-low rounded-xl p-4 border border-outline-variant/20 transition-transform active:scale-[0.98] focus:outline-none flex flex-col gap-3 relative overflow-hidden group">
+<div class="flex justify-between items-start w-full">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary mb-1">REF: #AL-8924</span>
+<h3 class="font-headline-md text-headline-md text-primary text-xl">Venue Conduct</h3>
+</div>
+<div class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded font-label-caps text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">pending</span>
+                        IN PROGRESS
+                    </div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mt-1">
+                    Issue regarding seating arrangements in the VIP lounge during the Friday night event...
+                </p>
+<div class="flex justify-between items-center w-full mt-2 pt-3 border-t border-outline-variant/10">
+<span class="font-label-caps text-label-caps text-outline text-[10px]">Submitted: Oct 12, 2023</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</button>
+<!-- Complaint Card 2: Resolved -->
+<button class="w-full text-left bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/20 transition-transform active:scale-[0.98] focus:outline-none flex flex-col gap-3 relative overflow-hidden group">
+<div class="flex justify-between items-start w-full">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-1">REF: #AL-8810</span>
+<h3 class="font-headline-md text-headline-md text-primary text-xl">Ticket Issue</h3>
+</div>
+<div class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded font-label-caps text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        RESOLVED
+                    </div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mt-1">
+                    Double charge on the credit card for the entrance fee. Need refund for the duplicate transaction...
+                </p>
+<div class="flex justify-between items-center w-full mt-2 pt-3 border-t border-outline-variant/10">
+<span class="font-label-caps text-label-caps text-outline text-[10px]">Submitted: Sep 28, 2023</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</button>
+<!-- Complaint Card 3: Resolved -->
+<button class="w-full text-left bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/20 transition-transform active:scale-[0.98] focus:outline-none flex flex-col gap-3 relative overflow-hidden group">
+<div class="flex justify-between items-start w-full">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-1">REF: #AL-8755</span>
+<h3 class="font-headline-md text-headline-md text-primary text-xl">Service Quality</h3>
+</div>
+<div class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded font-label-caps text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        RESOLVED
+                    </div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mt-1">
+                    Delay in coat check retrieval at the end of the evening. Waited over 45 minutes...
+                </p>
+<div class="flex justify-between items-center w-full mt-2 pt-3 border-t border-outline-variant/10">
+<span class="font-label-caps text-label-caps text-outline text-[10px]">Submitted: Sep 15, 2023</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</button>
+</div>
+<!-- Empty State (Hidden by default for demonstration of list, can be toggled via JS if needed) -->
+<div class="hidden flex-col items-center justify-center text-center h-64 my-auto" id="empty-state">
+<div class="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-outline text-3xl">inbox</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">No Complaints History</h3>
+<p class="font-body-md text-body-md text-outline max-w-[250px]">You haven't submitted any complaints or issues yet.</p>
+<button class="mt-6 px-6 py-3 bg-primary text-on-primary font-button text-button rounded-full border border-primary hover:opacity-90 transition-opacity">Submit a Report</button>
+</div>
+</main>
+<!-- BottomNavBar from JSON Component (Profile Active) -->
+<!-- Profile is selected as Active because managing complaints is a user profile/account action -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 bg-surface/90 backdrop-blur-md dark:bg-primary-container/80 pb-safe shadow-[0_-4px_40px_rgba(24,21,18,0.05)] border-t-0">
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:text-primary dark:hover:text-inverse-primary transition-colors active:scale-95 transition-all duration-200 ease-out group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0;">explore</span>
+<span class="font-label-caps text-label-caps text-[10px]">Discover</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:text-primary dark:hover:text-inverse-primary transition-colors active:scale-95 transition-all duration-200 ease-out group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0;">confirmation_number</span>
+<span class="font-label-caps text-label-caps text-[10px]">Tickets</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:text-primary dark:hover:text-inverse-primary transition-colors active:scale-95 transition-all duration-200 ease-out group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0;">subscriptions</span>
+<span class="font-label-caps text-label-caps text-[10px]">Following</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:text-primary dark:hover:text-inverse-primary transition-colors active:scale-95 transition-all duration-200 ease-out group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="font-label-caps text-label-caps text-[10px]">Alerts</span>
+</button>
+<!-- ACTIVE TAB: Profile -->
+<button class="flex flex-col items-center justify-center bg-primary-container dark:bg-secondary-container text-on-primary-container dark:text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-all duration-200 ease-out group">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps text-[10px]">Profile</span>
+</button>
+</nav>
+</body></html>

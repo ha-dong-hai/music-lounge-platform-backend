@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Aura AI Results</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Manrope:wght@200..800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-background": "#1b1c19",
+                        "surface-variant": "#e4e2dd",
+                        "background": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#310501",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#1b1c19",
+                        "primary": "#181512",
+                        "inverse-surface": "#30312e",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-container": "#f0eee9",
+                        "secondary-fixed": "#ffdea5",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-dim": "#dbdad5",
+                        "tertiary-container": "#4d190e",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#ffdad3",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#cb7c6b",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-secondary-fixed": "#261900",
+                        "on-primary-container": "#96908b",
+                        "outline": "#7e756f",
+                        "surface-tint": "#635d5a",
+                        "surface": "#fbf9f4",
+                        "on-secondary-container": "#785a1a",
+                        "primary-container": "#2d2926",
+                        "on-primary-fixed": "#1e1b18",
+                        "secondary": "#775a19",
+                        "secondary-container": "#fed488",
+                        "on-surface-variant": "#4d4540",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "surface-container-high": "#eae8e3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "outline-variant": "#cfc4bd",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "surface-bright": "#fbf9f4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "stack-md": "32px",
+                        "gutter": "32px",
+                        "stack-sm": "16px",
+                        "margin-mobile": "20px",
+                        "stack-lg": "80px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .font-display-md, .font-display-lg, .font-headline-lg, .font-headline-md, .font-headline-lg-mobile { font-family: 'Libre Caslon Text', serif; }
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Subtle fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col pt-20">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 backdrop-blur-md dark:bg-surface-container-high/80 fixed top-0 w-full z-50 border-b border-outline-variant/15 flat no shadows">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<!-- Brand Logo -->
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight">
+                AuraLounge
+            </div>
+<!-- Navigation Links -->
+<div class="hidden md:flex space-x-8">
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Artists</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1 font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Lounges</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Events</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Schedule</a>
+</div>
+<!-- Trailing Action / Profile -->
+<div class="flex items-center space-x-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<div class="h-10 w-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20 cursor-pointer active:opacity-70 flex items-center justify-center">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A refined, minimalist portrait of a user profile avatar. Soft lighting, neutral background, conveying a sense of quiet luxury and discerning taste." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUKNXOEzEJfQFrXi-oWhWE7U6SP418a1u-LvakDRffTMCsmysy-SBqmX3yf3O0GXdodsEobuczooek9ftbYb6m8SlEiEW_IVtPmBq97FtPaJZCuKvXYxiBOD6VOVd1NR2_vUK0NAGd2VW8__T89N6RJ8mGGF9VnKpxdAtnxUkKndrMaE9ihJKRrcNTz6MCcGg3gJiewCg-FfB3cXXsjFjQvkldEpbN0Npmt9T_9lSV7AJkoQn-7hce_Q"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop py-stack-lg space-y-stack-lg">
+<!-- Hero: The Daily Mix (Aura AI Results) -->
+<section class="animate-fade-in" style="animation-delay: 0.1s;">
+<div class="flex flex-col md:flex-row gap-gutter">
+<!-- Left: Text Content -->
+<div class="md:w-1/2 flex flex-col justify-center space-y-stack-sm pr-0 md:pr-12">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary/60" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Aura AI Curated</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-primary tracking-tight leading-tight">
+                        Your Daily Mix
+                    </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg leading-relaxed">
+                        A personalized selection of acoustic sets and intimate lounge environments tailored to your listening history. Relax, discover, and enjoy the ambiance.
+                    </p>
+<div class="pt-4 flex items-center space-x-4">
+<button class="bg-primary text-on-primary px-8 py-3 rounded-DEFAULT font-button text-button hover:bg-primary/90 transition-colors duration-300 flex items-center space-x-2">
+<span class="material-symbols-outlined" data-icon="play_arrow" data-weight="fill">play_arrow</span>
+<span>Play Mix</span>
+</button>
+<button class="bg-transparent border border-outline-variant/30 text-primary px-8 py-3 rounded-DEFAULT font-button text-button hover:bg-surface-container transition-colors duration-300">
+                            Save to Library
+                        </button>
+</div>
+</div>
+<!-- Right: Hero Image (Bento style card) -->
+<div class="md:w-1/2 h-[500px] bg-surface-container-low rounded-xl border border-outline-variant/10 overflow-hidden relative group">
+<img alt="Daily Mix Cover" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A serene, high-end lounge interior with soft natural light filtering through sheer curtains. A sleek, modern leather armchair sits next to a small wooden side table holding a minimalist vase with dry branches. The aesthetic is clean, sophisticated, and embodies 'Quiet Luxury'." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_VK5GOOl-nk1aSaS6H1gHvOHSrA39a4wllhrEmIe5M7uV0x2FG-Z1_j2rco70Yj62VJuCQqWjbHCI2pdOXAEvtbkf7aG_IzY-4DU6jwxVcPn-_w_jsF_I5n3ftu_U7YMkWgutA4aV8TDBt2Ro7ccsNg6KquHvHJSpqKAChTEQUd6g1626jIHXAkEU4TTllII9bjReIDRML10iu8KgSRuB1GG1gKIYIb4ayUHO7UUZsMEbb8e9wN51OA"/>
+<!-- Overlay gradient -->
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent"></div>
+<!-- Meta info overlay -->
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-primary">Evening Respite</h3>
+<p class="font-body-md text-body-md text-on-primary/80">Featuring: The Modern Jazz Quartet, Miles Davis</p>
+</div>
+<div class="bg-surface/20 backdrop-blur-md px-3 py-1 rounded-full text-on-primary font-label-caps text-label-caps flex items-center space-x-1">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span>1h 45m</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Top Matches Grid -->
+<section class="animate-fade-in" style="animation-delay: 0.2s;">
+<div class="flex items-center justify-between mb-stack-md">
+<h2 class="font-headline-lg text-headline-lg text-primary">Top Matches</h2>
+<a class="text-on-surface-variant font-button text-button hover:text-primary transition-colors flex items-center" href="#">
+                    View All <span class="material-symbols-outlined ml-1 text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Match Card 1 -->
+<div class="bg-surface group cursor-pointer">
+<div class="h-64 rounded-DEFAULT overflow-hidden mb-4 relative bg-surface-container-low border border-outline-variant/10">
+<img alt="Acoustic Evenings" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A close-up shot of a vintage acoustic guitar resting against a stool in a dimly lit, cozy room. Warm amber lighting creates a rich, intimate mood, perfect for an acoustic performance setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWPOWHCpZJ9tazRbjxfcbvUmAF8YeQvsRdJXLnW-TPgpnhFKctQbiGs6NGtqMmTzX-K4d8BozsHkvisnAlahKoABjG4_7P3ko8IrZ3KDk3wxSHwpZA5mTpXMLTUjvqJNAYiTlVBXFcIrWX7hpQT6Eq6I4Q4E1F4Anve9sm9ZryA9_bGxfCE3_uk1-VmzcLjZ0sm5tZOOiLT5Y0ksc1hd7_TqlZOgs0j8cvVu4B2ZkLxwqHIjxH7rjP3g"/>
+<!-- Match Score Badge -->
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-3 py-1.5 rounded-sm border border-outline-variant/20 flex items-center space-x-1 shadow-sm">
+<span class="font-label-caps text-label-caps text-primary">99% MATCH</span>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Acoustic Evenings</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">The Blue Note Lounge</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-2">
+<span class="material-symbols-outlined" data-icon="favorite_border">favorite_border</span>
+</button>
+</div>
+</div>
+<!-- Match Card 2 -->
+<div class="bg-surface group cursor-pointer">
+<div class="h-64 rounded-DEFAULT overflow-hidden mb-4 relative bg-surface-container-low border border-outline-variant/10">
+<img alt="Midnight Jazz" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A sophisticated cocktail bar setting with crystal glasses, a sleek marble counter, and soft, diffused lighting. The atmosphere is elegant, modern, and perfectly suited for a high-end jazz experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3vWryX9SkfecNfwdslpfn7yoNcW2ovLSRNJmn85-Bf0tFvFyetwbP0X4_JsRulMLLWTjuHRe2EHEXo5igmDmJxp_QywqC90gSGC0Imn3ghWWNo70B9bdXGDIvhGpRS-nBVdVX9n6t4GZE3o7AzkXk4_lymb6hP7lcyJpdv4nHFRrSpC6dF9xTpk66ZrO2vTbdUy0gNHy5ZbAKUrcyD51zTsnwBpz8sMas8mwsgMdwm2p8NsroEhu86A"/>
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-3 py-1.5 rounded-sm border border-outline-variant/20 flex items-center space-x-1 shadow-sm">
+<span class="font-label-caps text-label-caps text-primary">95% MATCH</span>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Midnight Jazz</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">The Velvet Room</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-2">
+<span class="material-symbols-outlined" data-icon="favorite_border">favorite_border</span>
+</button>
+</div>
+</div>
+<!-- Match Card 3 -->
+<div class="bg-surface group cursor-pointer hidden lg:block">
+<div class="h-64 rounded-DEFAULT overflow-hidden mb-4 relative bg-surface-container-low border border-outline-variant/10">
+<img alt="Gallery Sessions" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="An expansive, minimally decorated gallery space acting as a lounge. High ceilings, large abstract art pieces on the walls, and a grand piano in the center bathed in soft, natural daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVO6dMEdP-b9abWR2SMRPMfpFjFUssShitcABDNHMCHKMBCzpm-LCNRTu9ay7cRuDquhHLSa_AxeyHeWlu_B-OzHIJ2jKTZRF1vX18X1QD2umXRtIKrSY1vMoLOjLeUPpikvS4Yqy9FIc-YJZM3tkrPW1UQbmwJiSr69Veaf832jBeg57MxqCjhbiH7GBMzCWFcClW1AibFPyQVPi8nJtWsr3E_ynTQoss4rPuzFL0n-V6qah1qRVvUg"/>
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-3 py-1.5 rounded-sm border border-outline-variant/20 flex items-center space-x-1 shadow-sm">
+<span class="font-label-caps text-label-caps text-primary">88% MATCH</span>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Gallery Sessions</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Lumina Art Space</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-2">
+<span class="material-symbols-outlined" data-icon="favorite_border">favorite_border</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Events List (Asymmetric Layout) -->
+<section class="animate-fade-in" style="animation-delay: 0.3s;">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-stack-md border-b border-outline-variant/10 pb-4">Upcoming Events for You</h2>
+<div class="space-y-6">
+<!-- Event Row 1 -->
+<div class="flex flex-col md:flex-row items-center group cursor-pointer hover:bg-surface-container-low transition-colors duration-300 p-4 -mx-4 rounded-lg">
+<div class="flex-shrink-0 w-full md:w-32 h-32 md:h-24 bg-surface-container border border-outline-variant/10 rounded-DEFAULT overflow-hidden mb-4 md:mb-0 md:mr-6">
+<img alt="Cello Recital" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" data-alt="Abstract minimal photography of a cello resting against a stark white wall. Strong shadows and a clean composition reflecting the quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA13qOxGeRwZoSJ6BpxPrbjI30QetgklCrJtD3lWVt-JrM-YzI_pM0lu2njQqYeo0vFzaKUlsNyRchUaeMFAEVWqEGdCSNn-_2u31AykTkHdPAjJNqpE01NbVSA86UpXJp5krTOP4cXvRtuXNvHsLoljc3jPfRuZ3aZPW6YxDau78KyxeMCR7aIJshi9V0WSr8KT9aakSt02b66oExeL0SRJoaYYN3Y8mXNudjK5jG_qSLr9RK9MsvaCg"/>
+</div>
+<div class="flex-grow">
+<div class="flex items-center space-x-3 mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OCT 24</span>
+<span class="h-1 w-1 bg-outline-variant rounded-full"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">8:00 PM</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary">An Evening of Cello: Yo-Yo Ma Tribute</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">The Grand Conservatory</p>
+</div>
+<div class="hidden md:flex flex-shrink-0 ml-6">
+<button class="border border-outline-variant/30 text-primary px-6 py-2 rounded-DEFAULT font-button text-button hover:bg-primary hover:text-on-primary transition-colors duration-300">
+                            RSVP
+                        </button>
+</div>
+</div>
+<!-- Event Row 2 -->
+<div class="flex flex-col md:flex-row items-center group cursor-pointer hover:bg-surface-container-low transition-colors duration-300 p-4 -mx-4 rounded-lg">
+<div class="flex-shrink-0 w-full md:w-32 h-32 md:h-24 bg-surface-container border border-outline-variant/10 rounded-DEFAULT overflow-hidden mb-4 md:mb-0 md:mr-6">
+<img alt="Electronic Lounge" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" data-alt="A sleek, modern synthesizer keyboard setup in a minimalist studio. Cool blue lighting accents the metallic surfaces, conveying a modern electronic lounge vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_6hSDyrInZtyKahjOj7drzZ_KmmJX_famgEsCbfL2dpQGIJQQcbaVsGXBE_gjb5jQ2eVlO2x9Ii8opEHX92llfTnCHG0l-O1Yr38G33QKkpA02GVYT9nNl88IwhgMxj631NWF6WV_h1QL0Z92jsBmHcx_IUu0GPGMb1yB-EHTF-YqO0ZmtFOrWHsprxBkLG5JpBcyPX-fuTCPsz7KTGCPXHif9USABZSajwpRl7sl3P058W2J6qBFEg"/>
+</div>
+<div class="flex-grow">
+<div class="flex items-center space-x-3 mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">NOV 02</span>
+<span class="h-1 w-1 bg-outline-variant rounded-full"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">9:30 PM</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary">Ambient Synth Textures</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Studio B Lounge</p>
+</div>
+<div class="hidden md:flex flex-shrink-0 ml-6">
+<button class="border border-outline-variant/30 text-primary px-6 py-2 rounded-DEFAULT font-button text-button hover:bg-primary hover:text-on-primary transition-colors duration-300">
+                            RSVP
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container dark:bg-primary-container w-full py-stack-lg border-t border-outline-variant/10 flat no shadows mt-stack-lg">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Brand & Copyright -->
+<div class="flex flex-col justify-between">
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed mb-4">
+                    AuraLounge
+                </div>
+<div class="text-on-surface dark:text-on-primary-container font-body-md text-body-md">
+                    © 2024 AuraLounge. The Quiet Luxury of Sound.
+                </div>
+</div>
+<!-- Links -->
+<div class="flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-end">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">About</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Privacy</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Terms</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Support</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Press</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Careers</a>
+</div>
+</div>
+</footer>
+</body></html>

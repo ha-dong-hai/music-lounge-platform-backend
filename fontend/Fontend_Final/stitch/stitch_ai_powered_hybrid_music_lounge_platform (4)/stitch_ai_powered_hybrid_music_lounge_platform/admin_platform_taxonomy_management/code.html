@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Platform Taxonomy Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#1b1c19",
+                      "background": "#fbf9f4",
+                      "surface-container-highest": "#e4e2dd",
+                      "surface-tint": "#635d5a",
+                      "on-secondary-container": "#785a1a",
+                      "outline-variant": "#cfc4bd",
+                      "primary-fixed": "#e9e1dc",
+                      "on-error-container": "#93000a",
+                      "on-error": "#ffffff",
+                      "primary": "#181512",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#fed488",
+                      "secondary": "#775a19",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-secondary-fixed": "#261900",
+                      "on-primary": "#ffffff",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-container-low": "#f5f3ee",
+                      "inverse-surface": "#30312e",
+                      "surface-container": "#f0eee9",
+                      "surface": "#fbf9f4",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed": "#ffdea5",
+                      "on-primary-fixed": "#1e1b18",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-variant": "#e4e2dd",
+                      "on-background": "#1b1c19",
+                      "primary-container": "#2d2926",
+                      "on-primary-container": "#96908b",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-tertiary-container": "#cb7c6b",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-dim": "#dbdad5",
+                      "tertiary-container": "#4d190e",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "error": "#ba1a1a",
+                      "surface-container-high": "#eae8e3",
+                      "outline": "#7e756f",
+                      "tertiary": "#310501",
+                      "surface-bright": "#fbf9f4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-surface-variant": "#4d4540",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "container-max": "1440px",
+                      "gutter": "32px",
+                      "stack-md": "32px",
+                      "stack-sm": "16px",
+                      "margin-mobile": "20px",
+                      "unit": "8px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md fixed top-0 w-full z-50 border-b border-outline/10">
+<div class="flex justify-between items-center px-margin-desktop py-4 w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<a class="font-display-md text-display-md text-primary dark:text-primary-fixed" href="#">AuraLounge</a>
+<div class="hidden md:flex gap-6">
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer duration-300 font-body-md text-body-md" href="#">Discovery</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer duration-300 font-body-md text-body-md" href="#">Lounges</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer duration-300 font-body-md text-body-md" href="#">Artists</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer duration-300 font-body-md text-body-md" href="#">Events</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline/10 rounded-full text-body-md font-body-md focus:outline-none focus:border-primary transition-colors w-64" placeholder="Search..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2">
+<span class="font-button text-button">Support</span>
+</button>
+<div class="flex gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<img alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border border-outline/10" data-alt="A small, circular profile picture of an elegant user in a softly lit luxury lounge setting, muted tones, professional high quality portrait photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsG4arz5lAB3NmQEg3Rpn6Mk1xQuQ1Ffm07QnX9RMwQ1SvNK5xY6_7WGTp66HSKg1k_vfvVC1g0WtWg4uvXM0VWOWXl4BzoC_-i9IfNVPCoNdW9ynvBmSOUCdTd5WdaS4l0ctC2cPBpYDURr3d20IdF1GAYyYaLPGscgakEmsrxgbFCYMiRkY9P6yOx-mP0wCp6z20h76vj3_4nAVEQbnOoRwn3qbWpqrSlY9ltfuKgA1SdJXyU05Zjw"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar & Main Content Wrapper -->
+<div class="flex pt-[88px] min-h-screen">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low dark:bg-surface-container-lowest fixed left-0 top-0 h-screen w-64 z-40 border-r border-outline/10 flex flex-col py-stack-md mt-[88px] hidden md:flex">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-4 mb-2">
+<img alt="Venue logo" class="w-12 h-12 rounded-full object-cover" data-alt="A sophisticated, minimalist circular logo for a luxury venue management platform, monochrome palette, elegant design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD56YUHm0ZHnBkQrF69-zF1DilNkvm4vASdJPjI8pU_nhMRhd2oMg9ssSy-h99pNvZJQ-ZVDc9AwbnNsFmmrJOpCeql5Sl6oE4ksW3gRJc7954uW-LTVbLhrLNLik3h3GfhEsFBq_xgi95B6WLME02HKX8rmjm_9B_sf_ISGRNiWZ4-FrAZBS1-XcrsGgc8GJSqclMvkjsL2OHBlZxftWGCTTwfIYN9A8VH5cnjLaXfCom3FBlJyKYoEg"/>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed leading-tight">Aura Admin</h2>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Lounge Management</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">storefront</span>
+                    Venue Operations
+                </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">insights</span>
+                    Analytics
+                </a>
+<a class="flex items-center gap-3 py-3 text-primary dark:text-primary-fixed border-l-4 border-secondary font-bold pl-4 bg-surface-container-high/50 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">category</span>
+                    Platform Taxonomy
+                </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">group</span>
+                    Staff Management
+                </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant dark:text-on-primary-fixed-variant pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+                    Schedule
+                </a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT mb-6 hover:opacity-90 transition-opacity">Add New Event</button>
+<div class="flex flex-col gap-2 border-t border-outline/10 pt-4">
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">help</span>
+                        Help Center
+                    </a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">logout</span>
+                        Log Out
+                    </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full">
+<header class="mb-stack-md flex justify-between items-end border-b border-outline/10 pb-6">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">Platform Taxonomy</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Manage global categories used across the platform to organize artists, venues, and events. These settings ensure a consistent experience for all users.</p>
+</div>
+<button class="hidden md:flex bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT hover:opacity-90 transition-opacity items-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                    New Category
+                </button>
+</header>
+<!-- Tabs -->
+<div class="flex gap-8 border-b border-outline/10 mb-stack-md">
+<button class="pb-4 border-b-2 border-primary font-label-caps text-label-caps text-primary tracking-widest uppercase transition-colors">Genre</button>
+<button class="pb-4 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-primary tracking-widest uppercase transition-colors">Mood</button>
+<button class="pb-4 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-primary tracking-widest uppercase transition-colors">Atmosphere</button>
+</div>
+<!-- Content Grid: Form + Table -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Add New Form Panel -->
+<div class="lg:col-span-4 bg-surface-container-lowest p-6 rounded-lg border border-outline/10 h-fit">
+<h3 class="font-headline-md text-headline-md text-primary mb-6">Add New Genre</h3>
+<form class="flex flex-col gap-6">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Name</label>
+<input class="w-full bg-surface-container-low border border-outline/10 rounded-DEFAULT px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" placeholder="e.g. Deep House" type="text"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Description</label>
+<textarea class="w-full bg-surface-container-low border border-outline/10 rounded-DEFAULT px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary transition-colors resize-none" placeholder="Brief description of this genre..." rows="4"></textarea>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Parent Category (Optional)</label>
+<select class="w-full bg-surface-container-low border border-outline/10 rounded-DEFAULT px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary transition-colors appearance-none">
+<option>None</option>
+<option>Electronic</option>
+<option>Jazz</option>
+<option>Classical</option>
+</select>
+</div>
+<button class="mt-4 w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT hover:opacity-90 transition-opacity" type="button">Save Genre</button>
+</form>
+</div>
+<!-- Existing Items Table Panel -->
+<div class="lg:col-span-8 bg-surface-container-lowest rounded-lg border border-outline/10 overflow-hidden">
+<div class="p-6 border-b border-outline/10 flex justify-between items-center bg-surface-container-low">
+<h3 class="font-headline-md text-headline-md text-primary">Existing Genres</h3>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="pl-9 pr-4 py-2 bg-surface-container-lowest border border-outline/10 rounded-full text-body-md font-body-md focus:outline-none focus:border-primary transition-colors text-sm w-48" placeholder="Filter..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline/10 bg-surface">
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant font-medium">Name</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant font-medium hidden sm:table-cell">Description</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant font-medium">Items Tagged</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant font-medium text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline/10 hover:bg-surface-container/50 transition-colors">
+<td class="p-4 font-medium">Ambient</td>
+<td class="p-4 text-on-surface-variant hidden sm:table-cell truncate max-w-[200px]">Atmospheric, background music focusing on tone.</td>
+<td class="p-4"><span class="bg-surface-container-high px-2 py-1 rounded text-sm text-on-surface-variant">1,204</span></td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline/10 hover:bg-surface-container/50 transition-colors">
+<td class="p-4 font-medium">Lo-Fi Hip Hop</td>
+<td class="p-4 text-on-surface-variant hidden sm:table-cell truncate max-w-[200px]">Downtempo beats with a nostalgic, relaxed feel.</td>
+<td class="p-4"><span class="bg-surface-container-high px-2 py-1 rounded text-sm text-on-surface-variant">856</span></td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline/10 hover:bg-surface-container/50 transition-colors">
+<td class="p-4 font-medium">Neo-Soul</td>
+<td class="p-4 text-on-surface-variant hidden sm:table-cell truncate max-w-[200px]">Contemporary R&amp;B influenced by 70s soul music.</td>
+<td class="p-4"><span class="bg-surface-container-high px-2 py-1 rounded text-sm text-on-surface-variant">412</span></td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline/10 hover:bg-surface-container/50 transition-colors">
+<td class="p-4 font-medium">Jazz Fusion</td>
+<td class="p-4 text-on-surface-variant hidden sm:table-cell truncate max-w-[200px]">Blending jazz harmony and improvisation with rock, funk.</td>
+<td class="p-4"><span class="bg-surface-container-high px-2 py-1 rounded text-sm text-on-surface-variant">298</span></td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-outline/10 flex justify-between items-center text-sm text-on-surface-variant">
+<span>Showing 1 to 4 of 24 entries</span>
+<div class="flex gap-2">
+<button class="p-2 border border-outline/10 rounded hover:bg-surface-container transition-colors disabled:opacity-50"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="p-2 border border-outline/10 rounded hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-primary-container w-full relative bottom-0 border-t border-outline/10 mt-auto hidden md:block">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md px-margin-desktop py-stack-lg max-w-container-max mx-auto">
+<div>
+<a class="font-display-md text-display-md text-primary dark:text-primary-fixed block mb-4" href="#">AuraLounge</a>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-primary-fixed">© 2024 AuraLounge. The Quiet Luxury of Sound.</p>
+</div>
+<div class="flex flex-wrap gap-x-8 gap-y-4 justify-start md:justify-end items-end">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-100 hover:opacity-80 transition-opacity" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-100 hover:opacity-80 transition-opacity" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-100 hover:opacity-80 transition-opacity" href="#">Artist Relations</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-100 hover:opacity-80 transition-opacity" href="#">Press Kit</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-100 hover:opacity-80 transition-opacity" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+</body></html>

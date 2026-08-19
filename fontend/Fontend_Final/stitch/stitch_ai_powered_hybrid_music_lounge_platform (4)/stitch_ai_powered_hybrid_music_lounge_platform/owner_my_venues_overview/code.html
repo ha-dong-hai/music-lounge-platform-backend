@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Venues - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "tertiary-container": "#4d190e",
+                      "on-surface": "#1b1c19",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-tint": "#635d5a",
+                      "inverse-surface": "#30312e",
+                      "outline-variant": "#cfc4bd",
+                      "secondary-container": "#fed488",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "on-primary-container": "#96908b",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "secondary": "#775a19",
+                      "primary-container": "#2d2926",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-background": "#1b1c19",
+                      "tertiary-fixed": "#ffdad3",
+                      "background": "#fbf9f4",
+                      "on-primary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-variant": "#e4e2dd",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "tertiary": "#310501",
+                      "surface-bright": "#fbf9f4",
+                      "surface-container-high": "#eae8e3",
+                      "primary-fixed": "#e9e1dc",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-secondary-container": "#785a1a",
+                      "primary": "#181512",
+                      "surface-container": "#f0eee9",
+                      "outline": "#7e756f",
+                      "on-secondary-fixed": "#261900",
+                      "inverse-primary": "#cdc5c0",
+                      "surface": "#fbf9f4",
+                      "surface-dim": "#dbdad5",
+                      "error-container": "#ffdad6",
+                      "on-surface-variant": "#4d4540"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "stack-md": "32px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "stack-sm": "16px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .ghost-border {
+            border: 1px solid rgba(27, 28, 25, 0.1);
+        }
+        .soft-ambient-shadow {
+            box-shadow: 0 20px 40px -10px rgba(24, 21, 18, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col md:flex-row antialiased">
+<!-- TopNav Mobile (md:hidden) -->
+<nav class="md:hidden bg-surface dark:bg-surface-dim w-full h-16 flex justify-between items-center px-margin-mobile border-b border-outline-variant/15 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="font-display-md text-headline-md text-primary dark:text-primary-fixed tracking-tight">AuraLounge</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors duration-200" data-icon="search">search</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors duration-200" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors duration-200" data-icon="settings">settings</span>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden cursor-pointer">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A small circular profile picture of an elegant lounge administrator. The image features a sophisticated adult in smart casual attire, set against a soft, high-key minimalist background. The lighting is bright and clean, typical of a high-end luxury brand light-mode interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDpS6_jSiHAMyKRh356Ti8OKmLi273vjNpyu5kPihihAwYZG1j8i3kbJsd0ok9ioe-7ZJcIFW9iRhAkJKCnxrCflCQlpC3hydrYT_uM4IAI1KJQsfsVRv-auV2tbozdZK_opa5EgXWKHz7QJ12Quftl2Z8uAyZ2S5MbK4X1qJoPFWjgVW8_cpMIP6uVHvXVJhPs_gaJHtqauQuxvnDWZoXumX-gD7KJ133D6Kvokr6PAB2O3j47Q3WWA"/>
+</div>
+</div>
+</nav>
+<!-- SideNav Desktop (hidden md:flex) -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant/15 z-40 py-stack-sm">
+<div class="px-8 pb-8">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed mb-1">AuraLounge</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Management Portal</p>
+</div>
+<div class="px-8 mb-8">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 rounded-DEFAULT hover:opacity-90 transition-opacity">
+                New Event
+            </button>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-primary font-bold border-r-2 border-primary pr-4 bg-surface-container-highest/20">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</div>
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="font-label-caps text-label-caps">Venue Operations</span>
+</div>
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps">Analytics</span>
+</div>
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">Staff Management</span>
+</div>
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-caps text-label-caps">Schedule</span>
+</div>
+</nav>
+<div class="mt-auto flex flex-col gap-2 pt-8">
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</div>
+<div class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full md:pl-64 flex flex-col">
+<!-- Header -->
+<header class="hidden md:flex justify-between items-center px-margin-desktop py-stack-md w-full max-w-[1440px] mx-auto border-b border-outline-variant/15 bg-surface/80 backdrop-blur-md sticky top-0 z-30">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2">My Venues</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your portfolio of premium spaces.</p>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-body-md text-body-md focus:ring-1 focus:ring-primary w-64 placeholder:text-on-surface-variant" placeholder="Search venues..." type="text"/>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden cursor-pointer ghost-border">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A circular profile picture of an elegant lounge administrator. The image features a sophisticated adult in smart casual attire, set against a soft, high-key minimalist background. The lighting is bright and clean, typical of a high-end luxury brand light-mode interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU_WsOaH13xqAlNU6l0KmvikiUZSRkcFXFIAyRtIyjS-zCYhRe1SknZ22k2nfrK52gM89Jj-uxRp3tmnQUedh18sakM7BkSJPl47ekQaAXetGUO-mKonKN2iYRtJapufpI7KhSkIcbv3Xb6PtaEGlr_xVvBv191sWkIAHsK8_NBKJto6Kf_QR9p_2krs7FyzRF1WmEa3AOScdth-vrselYEj5wi_Sn9GBH9rg44OpZJUcPXzHWrmtxNg"/>
+</div>
+</div>
+</header>
+<!-- Canvas Content -->
+<div class="px-margin-mobile md:px-margin-desktop py-stack-md md:py-stack-lg max-w-[1440px] mx-auto w-full">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Venue Card 1: The Velvet Room -->
+<article class="bg-surface-container-lowest rounded-DEFAULT overflow-hidden ghost-border flex flex-col group cursor-pointer hover:soft-ambient-shadow transition-shadow duration-300">
+<div class="h-64 md:h-80 w-full relative overflow-hidden bg-surface-variant">
+<img alt="Interior of The Velvet Room" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A wide-angle interior photograph of a high-end luxury lounge named 'The Velvet Room'. The space features deep charcoal walls, plush cream-colored seating, and subtle brass accents. The lighting is moody yet sophisticated, creating a serene and exclusive atmosphere. A sleek, modern bar area is visible in the background, designed with high-key minimalism in mind." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgpryG1m-gkK5dV9XgwToRXAJydTgjel4enmk6qdPu1BeatpH1xidCeBCpV2jIXJ7K8LC7u8bSnq7SYNImyir9ikM4411mWhdzqZwLz2sLJFetHNack8rNpauB4YHYyhxWvPMVlYlIFAJwoXNZS68YFbon7gJS9I5hUfN8FNBM-3BniyxnLNleJi7R4RlPkkJVbRIWm9TmUZLmRpBhwvgmRSvhL5iMWbxLYN6Pksks9nwg3gT0tLH_yg"/>
+<div class="absolute top-4 left-4">
+<span class="bg-surface/90 backdrop-blur-sm px-3 py-1 rounded-sm font-label-caps text-label-caps text-primary border border-outline-variant/20 shadow-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+                                Approved
+                            </span>
+</div>
+</div>
+<div class="p-6 md:p-8 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">The Velvet Room</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                                    Downtown Arts District
+                                </p>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-low transition-colors ghost-border">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-outline-variant/15">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Tonight's Sales (Est)</p>
+<p class="font-body-lg text-body-lg text-primary">$12,450</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Upcoming Shows</p>
+<p class="font-body-lg text-body-lg text-primary flex items-center gap-2">
+                                    3 <span class="text-on-surface-variant font-body-md text-sm">this week</span>
+</p>
+</div>
+</div>
+</div>
+</article>
+<!-- Venue Card 2: Echo Gallery -->
+<article class="bg-surface-container-lowest rounded-DEFAULT overflow-hidden ghost-border flex flex-col group cursor-pointer hover:soft-ambient-shadow transition-shadow duration-300">
+<div class="h-64 md:h-80 w-full relative overflow-hidden bg-surface-variant">
+<img alt="Interior of Echo Gallery" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A wide-angle interior photograph of a high-end luxury music venue named 'Echo Gallery'. The space is designed like a modern art gallery, featuring expansive white walls, minimalist architectural lines, and a high ceiling. Generous whitespace dominates the composition. A sleek, low-profile stage area is set up with acoustic instruments, bathed in soft, natural-looking white light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCp8Yq2VMRRr9COptSRxPui9H7gtx76OKouY22KUtq6Mgb_C9k5r_0Lxg6BF9JtJnDTtKWgTpHAyzEf_IL69FBWH8zKAUAmJSu0RlKOsPMSrd5br4sL-u3RtSoSptMgF0kEzJFvn_akuYLlmeYWiVlRMjZMh_tKLbFhSKgTbRcpAFgKCv8Bc2S5JRtWGuIQQOm0CodvnqMNt0q2hrREmgG7KJifx3DVUg0wmmjagpkOFxlUZ7VJ_939Iw"/>
+<div class="absolute top-4 left-4">
+<span class="bg-surface/90 backdrop-blur-sm px-3 py-1 rounded-sm font-label-caps text-label-caps text-primary border border-outline-variant/20 shadow-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+                                Approved
+                            </span>
+</div>
+</div>
+<div class="p-6 md:p-8 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Echo Gallery</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                                    Westside Cultural Hub
+                                </p>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-low transition-colors ghost-border">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-outline-variant/15">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Tonight's Sales (Est)</p>
+<p class="font-body-lg text-body-lg text-primary">$8,900</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Upcoming Shows</p>
+<p class="font-body-lg text-body-lg text-primary flex items-center gap-2">
+                                    5 <span class="text-on-surface-variant font-body-md text-sm">this week</span>
+</p>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,817 @@
+<title>Backend Defence Q&A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: light dark;
+  --ground:      #fbfaf8;
+  --surface:     #ffffff;
+  --surface-alt: #f3f1ed;
+  --ink:         #1c1a17;
+  --ink-soft:    #57524a;
+  --ink-faint:   #8a8378;
+  --rule:        #ddd8cf;
+  --accent:      #14595c;
+  --accent-soft: #e4efee;
+  --warn:        #8a5300;
+  --warn-soft:   #fbf0dc;
+  --warn-rule:   #e0b86a;
+  --star:        #7a4b12;
+  --weak:        #a8322b;
+  --measure: 74ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #16171a;
+    --surface:     #1d1f23;
+    --surface-alt: #24272c;
+    --ink:         #e9e6e0;
+    --ink-soft:    #b0aaa1;
+    --ink-faint:   #7e7970;
+    --rule:        #34383e;
+    --accent:      #6fc4c2;
+    --accent-soft: #1b3234;
+    --warn:        #e3ae5c;
+    --warn-soft:   #2e2519;
+    --warn-rule:   #6b5226;
+    --star:        #e0b06a;
+    --weak:        #c9564a;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:      #16171a;
+  --surface:     #1d1f23;
+  --surface-alt: #24272c;
+  --ink:         #e9e6e0;
+  --ink-soft:    #b0aaa1;
+  --ink-faint:   #7e7970;
+  --rule:        #34383e;
+  --accent:      #6fc4c2;
+  --accent-soft: #1b3234;
+  --warn:        #e3ae5c;
+  --warn-soft:   #2e2519;
+  --warn-rule:   #6b5226;
+  --star:        #e0b06a;
+  --weak:        #c9564a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 8rem;
+}
+
+/* ── masthead ───────────────────────────────────────────────────────────── */
+header.mast {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.6rem;
+  margin-bottom: 3rem;
+}
+header.mast .eyebrow {
+  font-size: .74rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0 0 .7rem;
+}
+header.mast h1 {
+  font-family: "Source Serif 4", ui-serif, Georgia, serif;
+  font-size: clamp(2rem, 4.6vw, 2.9rem);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  text-wrap: balance;
+  margin: 0 0 .6rem;
+}
+header.mast .sub { color: var(--ink-soft); max-width: var(--measure); margin: 0; }
+
+/* ── headings ───────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: "Source Serif 4", ui-serif, Georgia, serif;
+  font-weight: 600;
+  text-wrap: balance;
+  letter-spacing: -.01em;
+}
+h1 { font-size: 1.9rem; margin: 4rem 0 1rem; }
+h2 {
+  font-size: 1.05rem;
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 4.5rem 0 1.4rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--rule);
+}
+/* Each slide opens with a full-width bar, so a reader scrolling fast can find the
+   slide boundaries without reading them. */
+h3 {
+  font-size: 1.16rem;
+  margin: 2.6rem 0 1.2rem;
+  padding: .85rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 5px;
+}
+h4 { font-size: 1rem; margin: 2rem 0 .5rem; color: var(--ink-soft); }
+
+p, ul, ol { max-width: var(--measure); }
+p { margin: 0 0 1rem; }
+ul, ol { margin: 0 0 1rem; padding-left: 1.3rem; }
+li { margin-bottom: .35rem; }
+li::marker { color: var(--ink-faint); }
+
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px;
+}
+
+strong { font-weight: 650; }
+hr { border: none; border-top: 1px solid var(--rule); margin: 2.6rem 0; }
+
+/* ── code & filenames ───────────────────────────────────────────────────── */
+code {
+  font-family: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: .855em;
+  background: var(--surface-alt);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: .1em .38em;
+  word-break: break-word;
+}
+pre {
+  background: var(--surface-alt);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code { background: none; border: none; padding: 0; font-size: .84rem; }
+
+/* ── tables ─────────────────────────────────────────────────────────────── */
+.tablewrap { overflow-x: auto; margin: 0 0 1.4rem; border-radius: 6px; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 32rem;
+  font-size: .92rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+}
+th, td {
+  text-align: left;
+  padding: .58rem .8rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+thead th {
+  background: var(--surface-alt);
+  font-size: .76rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--rule);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+td code { font-size: .8em; }
+
+/* ── callouts ───────────────────────────────────────────────────────────── */
+blockquote {
+  margin: 0 0 1.4rem;
+  padding: .8rem 1.1rem;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 5px 5px 0;
+  color: var(--ink-soft);
+  font-size: .94rem;
+  max-width: var(--measure);
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+.warn {
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-rule);
+  border-left: 3px solid var(--warn-rule);
+  border-radius: 0 5px 5px 0;
+  padding: .85rem 1.1rem;
+  margin: 0 0 1.2rem;
+  color: var(--warn);
+  max-width: var(--measure);
+}
+.warn strong { color: var(--warn); }
+.warn code { background: transparent; border-color: var(--warn-rule); }
+
+/* ── badges inside slide headings ───────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  padding: .17em .5em;
+  border-radius: 3px;
+  vertical-align: .18em;
+  margin-left: .45rem;
+  white-space: nowrap;
+}
+.tag-core   { background: var(--accent); color: var(--ground); }
+.tag-backup { background: var(--surface-alt); color: var(--ink-soft); border: 1px solid var(--rule); }
+.tag-weak   { background: var(--weak); color: var(--ground); }
+h3.weak     { border-left-color: var(--weak); }
+.tag-star   { color: var(--star); font-size: .95rem; margin-left: .3rem; letter-spacing: 0; }
+
+/* ── speaker note ───────────────────────────────────────────────────────── */
+.note-vi {
+  border-left: 3px solid var(--rule);
+  padding-left: .95rem;
+  color: var(--ink-soft);
+  font-size: .95rem;
+}
+
+@media (max-width: 640px) {
+  .wrap { padding: 2.5rem 1rem 5rem; }
+  body { font-size: 16px; }
+  h3 { padding: .85rem .9rem .65rem; }
+}
+</style>
+<div class="wrap">
+<header class="mast">
+  <p class="eyebrow">SEP490 · MusicLounge · chuẩn bị phản biện</p>
+  <h1>Bộ câu hỏi phản biện Backend</h1>
+  <p class="sub">45 câu hỏi hội đồng có thể hỏi về backend, từ cơ bản tới nâng cao, kèm lời giải thích diễn đạt để người không rành kỹ thuật cũng hiểu. Mọi con số lấy trực tiếp từ code.</p>
+</header>
+<p>Chuẩn bị cho buổi bảo vệ SEP490. Mỗi câu gồm <strong>Trả lời ngắn</strong> (câu bạn nói ra đầu tiên,
+3–4 giây), <strong>Giải thích</strong> (cách nói để cả người không rành kỹ thuật cũng hiểu), và
+<strong>Nếu bị hỏi sâu</strong> (chỉ dùng khi hội đồng đào tiếp).</p>
+<p><strong>Nguyên tắc trả lời:</strong> nói <em>quyết định</em> và <em>lý do</em>, đừng đọc tên công nghệ. Hội đồng
+không chấm bạn biết bao nhiêu framework — họ chấm bạn có hiểu vì sao mình chọn không.
+Mọi con số dưới đây đều lấy trực tiếp từ code, không phải ước lượng.</p>
+<p><strong>Quan trọng:</strong> các câu gắn 🔴 là <strong>điểm yếu thật</strong> của hệ thống. Đừng giấu — hội đồng sẽ
+tìm ra. Trả lời thẳng cộng điểm nhiều hơn là bị bắt bài.</p>
+<hr />
+<h2>Phần 1 — Cơ bản: hệ thống làm gì</h2>
+<h3 class="qh">1. Dự án của em giải quyết vấn đề gì?</h3>
+<p><strong>Trả lời ngắn:</strong> Một phòng trà nhạc sống nhỏ hiện phải dùng 3 công cụ rời rạc — bán vé
+một nơi, livestream một nơi, tiền tip cho nghệ sĩ thì ghi tay. MusicLounge gộp cả ba vào
+một nền tảng.</p>
+<p><strong>Giải thích:</strong> Hãy tưởng tượng một quán cà phê nhạc sống. Tối nay có ca sĩ A hát, mai có
+ban nhạc B. Chủ quán muốn bán vé online thì phải lên sàn vé chung — nhưng sàn đó thiết kế
+cho concert có giờ diễn cố định, còn quán thì vé có giá trị cả buổi tối và vẫn bán tiếp cho
+khách vãng lai lúc nhạc đã bắt đầu. Muốn livestream thì lên nền tảng khác, nhưng ở đó ai
+cũng xem được, kể cả người không mua vé. Còn khách muốn tip cho ca sĩ thì đưa tiền mặt hoặc
+chuyển khoản riêng — không ai biết chính xác quán đã thu hộ bao nhiêu và trả lại cho ca sĩ
+bao nhiêu.</p>
+<p>Ba vấn đề đó chính là ba nhóm chức năng chính của hệ thống.</p>
+<hr />
+<h3 class="qh">2. Hệ thống có mấy loại người dùng?</h3>
+<p><strong>Trả lời ngắn:</strong> 6 actor, nhưng chỉ 4 loại có tài khoản đăng nhập.</p>
+<p><strong>Giải thích:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Đăng nhập?</th>
+<th>Làm gì</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Guest</strong> (khách vãng lai)</td>
+<td>Không</td>
+<td>Xem show, xem venue, tham quan tour 360°, gửi khiếu nại. Không mua/xem/donate được</td>
+</tr>
+<tr>
+<td><strong>Audience</strong> (khán giả)</td>
+<td>Có</td>
+<td>Mua vé, xem livestream, donate, đặt đồ ăn tại bàn, đánh giá show</td>
+</tr>
+<tr>
+<td><strong>Owner</strong> (chủ venue)</td>
+<td>Có</td>
+<td>Đăng ký venue, tạo show, quản lý khu vực ghế, xem doanh thu. Trả phí subscription</td>
+</tr>
+<tr>
+<td><strong>Staff</strong> (nhân viên)</td>
+<td>Có</td>
+<td>Bán vé tại quầy, soát vé cửa, xử lý order đồ ăn, bật/tắt phát sóng</td>
+</tr>
+<tr>
+<td><strong>Admin</strong> (quản trị)</td>
+<td>Có</td>
+<td>Duyệt venue, kiểm duyệt nội dung, xử lý hoàn tiền, xác minh tài khoản ngân hàng</td>
+</tr>
+<tr>
+<td><strong>Performer</strong> (nghệ sĩ)</td>
+<td><strong>Không</strong></td>
+<td>Có hồ sơ công khai và tài khoản ngân hàng nhận tiền, nhưng không tự đăng nhập</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 class="qh">3. Vì sao nghệ sĩ lại không có tài khoản đăng nhập?</h3>
+<p><strong>Trả lời ngắn:</strong> Vì trong mô hình này nghệ sĩ là <em>người được venue mời</em>, không phải người
+tự vận hành. Chủ venue quản lý hồ sơ nghệ sĩ thay họ.</p>
+<p><strong>Giải thích:</strong> Một ca sĩ có thể hát ở 5 quán khác nhau trong tháng. Nếu bắt họ tạo tài
+khoản, tự cập nhật hồ sơ, tự khai số tài khoản ngân hàng — thì với một quán nhỏ mời ca sĩ
+hát một tối, quy trình đó quá nặng và ca sĩ sẽ không làm. Thực tế là chủ quán nhập giúp.</p>
+<p>Đây là quyết định có chủ đích, không phải thiếu sót. <strong>Đừng để hội đồng dẫn bạn sang hướng
+"vậy là thiếu tính năng"</strong> — hãy nói ngay: nếu sau này mở rộng, thêm login cho nghệ sĩ là
+thêm một vai trò, không phải thiết kế lại hệ thống.</p>
+<hr />
+<h3 class="qh">4. Luồng mua vé diễn ra như thế nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Giữ chỗ 15 phút → thanh toán qua VNPay → VNPay báo ngược về server →
+hệ thống xác nhận vé và sinh mã QR.</p>
+<p><strong>Giải thích:</strong> Giống đặt vé máy bay. Khi bạn chọn ghế, hệ thống <strong>giữ chỗ tạm</strong> cho bạn
+15 phút để kịp thanh toán — trong lúc đó người khác không mua được chỗ đó. Nếu 15 phút trôi
+qua mà không trả tiền, chỗ tự động được thả ra.</p>
+<p>Điểm quan trọng nhất: cái xác nhận vé <strong>không phải</strong> là trình duyệt của khách quay về trang
+"thanh toán thành công", mà là VNPay gọi thẳng vào server báo "giao dịch này đã thu tiền".
+Nhờ vậy khách có tắt trình duyệt giữa chừng thì vé vẫn được xác nhận bình thường.</p>
+<hr />
+<h3 class="qh">5. Backend làm gì? Khác gì frontend?</h3>
+<p><strong>Trả lời ngắn:</strong> Frontend là cái người dùng nhìn thấy; backend là nơi ra quyết định và giữ
+dữ liệu. Mọi luật nghiệp vụ đều nằm ở backend.</p>
+<p><strong>Giải thích:</strong> Frontend giống mặt tiền quán — thực đơn, bàn ghế, người phục vụ. Backend là
+bếp và két tiền. Nếu chỉ kiểm tra ở frontend rằng "vé còn hay hết", người dùng có thể mở
+công cụ lập trình của trình duyệt và bỏ qua kiểm tra đó. Vì vậy <strong>mọi kiểm tra quan trọng
+đều lặp lại ở backend</strong> — số vé còn, quyền hạn, giá tiền — kể cả khi frontend đã kiểm rồi.</p>
+<hr />
+<h3 class="qh">6. Vì sao chọn .NET/C# mà không phải Java, Node.js hay Python?</h3>
+<p><strong>Trả lời ngắn:</strong> Vì hệ thống này xoay quanh tiền, và .NET có sẵn kiểu dữ liệu chính xác
+cho tiền tệ cùng cơ chế transaction chặt chẽ trong framework.</p>
+<p><strong>Giải thích:</strong> Trong lập trình có hai cách lưu số: kiểu "gần đúng" và kiểu "chính xác".
+Kiểu gần đúng nhanh hơn nhưng <code>0.1 + 0.2</code> cho ra <code>0.30000000000000004</code>. Với đồ hoạ thì không
+sao; với tiền thì sau vài nghìn giao dịch là lệch sổ. .NET có kiểu <code>decimal</code> chuẩn cho tiền
+và cả hệ sinh thái mặc định dùng nó.</p>
+<p>Ngoài ra nhóm đã quen C#. Với đồ án 15 tuần, chọn thứ mình làm nhanh và ít lỗi quan trọng
+hơn chọn thứ đang thời thượng.</p>
+<hr />
+<h3 class="qh">7. Hệ thống lớn cỡ nào?</h3>
+<p><strong>Trả lời ngắn:</strong> 68 bảng dữ liệu, 25 nhóm API với 209 endpoint, 109 use case, 30 job nền.</p>
+<p><strong>Giải thích:</strong> Nói kèm quy mô cho dễ hình dung: 5 giao diện khác nhau (website khán giả,
+app đặt đồ ăn, dashboard chủ venue, app nhân viên, console quản trị), tổng 75 màn hình,
+ước lượng công sức 488 ngày-người.</p>
+<hr />
+<h2>Phần 2 — Nghiệp vụ và dòng tiền</h2>
+<h3 class="qh">8. Nền tảng kiếm tiền bằng cách nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Chủ yếu bằng <strong>phí thuê bao</strong> chủ venue trả hàng tháng, cộng hoa hồng
+trên vé bán online.</p>
+<p><strong>Giải thích:</strong> Có hai mô hình phổ biến: ăn hoa hồng từng vé, hoặc thu phí thuê bao. Hệ
+thống này nghiêng về thuê bao, vì một quán nhỏ bán 30 vé một tối thì hoa hồng không đáng
+kể, trong khi chi phí vận hành nền tảng (server, livestream, SMS) là cố định. Thuê bao cho
+doanh thu ổn định và dễ dự đoán hơn.</p>
+<hr />
+<h3 class="qh">9. Vì sao vé bán tại quầy lại không thu hoa hồng?</h3>
+<p><strong>Trả lời ngắn:</strong> Vì vé quầy là khách tự đến, nền tảng không mang khách về nên thu hoa hồng
+là không hợp lý. Chi phí đó đã nằm trong gói thuê bao.</p>
+<p><strong>Giải thích:</strong> Câu này hay bị hỏi. Nếu thu hoa hồng cả vé quầy, chủ venue sẽ đơn giản là
+<strong>không nhập vé quầy vào hệ thống</strong> — họ vẫn bán tiền mặt như cũ. Kết quả là hệ thống mất
+luôn dữ liệu, mà dữ liệu mới là thứ có giá trị. Miễn hoa hồng vé quầy chính là để chủ venue
+có động lực nhập đủ.</p>
+<p><strong>Nếu bị hỏi sâu:</strong> Trong code vẫn có sẵn công tắc bật hoa hồng vé quầy nếu mô hình kinh
+doanh thay đổi — đây là quyết định cấu hình, không phải giới hạn kỹ thuật.</p>
+<hr />
+<h3 class="qh">10. Tiền donate chia thế nào? Con số ở đâu ra?</h3>
+<p><strong>Trả lời ngắn:</strong> Mặc định <strong>88% chuyển cho nghệ sĩ</strong>, phần còn lại bù phí cổng thanh toán
+và phí nền tảng. Con số này nằm trong bảng cấu hình, không viết cứng trong code.</p>
+<p><strong>Giải thích:</strong> Tất cả con số nghiệp vụ đều nằm trong bảng <code>system_config</code>. Một vài giá trị
+thật:</p>
+<table>
+<thead>
+<tr>
+<th>Cấu hình</th>
+<th>Giá trị</th>
+<th>Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>donation_performer_share_rate</code></td>
+<td>0.88</td>
+<td>88% tiền donate chuyển cho nghệ sĩ</td>
+</tr>
+<tr>
+<td><code>gateway_fee_rate</code></td>
+<td>0.02</td>
+<td>Phí cổng thanh toán 2%</td>
+</tr>
+<tr>
+<td><code>platform_commission_rate</code></td>
+<td>0.05</td>
+<td>Hoa hồng nền tảng 5%</td>
+</tr>
+<tr>
+<td><code>tax_rate</code></td>
+<td>0.05</td>
+<td>Thuế khấu trừ 5%</td>
+</tr>
+<tr>
+<td><code>ticket_hold_minutes</code></td>
+<td>15</td>
+<td>Giữ chỗ 15 phút</td>
+</tr>
+<tr>
+<td><code>moderation_sla_hours</code></td>
+<td>24</td>
+<td>Kiểm duyệt trong 24 giờ</td>
+</tr>
+<tr>
+<td><code>donation_hold_days</code></td>
+<td>7</td>
+<td>Giữ tiền donate 7 ngày trước khi trả</td>
+</tr>
+</tbody>
+</table>
+<p>Ý nghĩa thực tế: muốn đổi tỷ lệ chia, admin sửa một dòng cấu hình — <strong>không cần lập trình
+viên sửa code và deploy lại</strong>.</p>
+<hr />
+<h3 class="qh">11. Nếu sau này đổi tỷ lệ chia thì giao dịch cũ có bị tính sai không?</h3>
+<p><strong>Trả lời ngắn:</strong> Không. Mỗi giao dịch <strong>chụp lại (snapshot)</strong> tỷ lệ tại đúng thời điểm phát
+sinh và lưu vào chính bản ghi đó.</p>
+<p><strong>Giải thích:</strong> Đây là điểm hội đồng hay khen nếu nói được. Giả sử hôm nay tỷ lệ 88%, khách
+donate 100.000đ → hệ thống lưu luôn vào bản ghi: "tỷ lệ 88%, nghệ sĩ nhận 88.000đ". Tháng
+sau đổi thành 90%. Nếu hệ thống <em>tính lại</em> mỗi lần xem báo cáo thì giao dịch cũ đột nhiên
+hiện 90.000đ — lệch sổ sách và không đối chiếu được với tiền đã chuyển thật.</p>
+<p>Nguyên tắc: <strong>con số đã phát sinh thì đóng băng, không tính lại.</strong></p>
+<hr />
+<h3 class="qh">12. Làm sao chứng minh tiền không thất thoát?</h3>
+<p><strong>Trả lời ngắn:</strong> Mọi chuyển động tiền ghi theo <strong>sổ kép</strong> — mỗi giao dịch sinh ra các bút
+toán nợ và có phải cân bằng nhau. Có job chạy hằng ngày kiểm tra lại.</p>
+<p><strong>Giải thích:</strong> Đây là nguyên tắc kế toán hàng trăm năm. Tiền không tự sinh ra hay mất đi —
+nó chỉ chuyển từ chỗ này sang chỗ khác. Nên mỗi giao dịch phải ghi <em>hai vế</em>: tiền ra khỏi
+đâu và vào đâu, tổng hai vế bằng nhau.</p>
+<p>Nếu ai đó sửa tay trong database làm lệch, job kiểm tra hằng ngày sẽ phát hiện và báo động.
+Nói cách khác: hệ thống không chỉ ghi số dư, nó ghi <strong>toàn bộ lịch sử</strong> đủ để dựng lại số
+dư từ đầu.</p>
+<hr />
+<h3 class="qh">13. Khi nào chủ venue nhận được tiền? Vì sao không trả ngay sau show?</h3>
+<p><strong>Trả lời ngắn:</strong> Trả làm hai đợt — một phần sau 48 giờ, phần cuối sau 14 ngày.</p>
+<p><strong>Giải thích:</strong> Vì cần khoảng đệm để xử lý khiếu nại và hoàn tiền. Nếu trả hết ngay sau show
+mà hôm sau khách khiếu nại đòi hoàn tiền, nền tảng đã chuyển hết tiền đi thì lấy đâu ra để
+hoàn. Các sàn thương mại điện tử đều làm vậy.</p>
+<p>Tỷ lệ đợt đầu còn tuỳ <strong>mức uy tín của venue</strong>: venue mới nhận trước 50%, venue tiêu chuẩn
+70%, venue hạng cao 80%. Venue làm tốt lâu dài thì bị giữ tiền ít hơn.</p>
+<hr />
+<h3 class="qh">14. Khách đòi hoàn tiền thì xử lý thế nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Khách tạo yêu cầu, Admin duyệt, hệ thống gọi VNPay hoàn tiền và ghi bút
+toán đảo vào sổ.</p>
+<p><strong>Giải thích:</strong> Ba bước: (1) khách nêu lý do, (2) admin xem xét và duyệt, (3) tiền chạy
+ngược đúng đường nó đã đi. Không có chuyện admin bấm nút rồi tiền "biến mất" khỏi sổ — mỗi
+lần hoàn tiền tạo thêm một bút toán đảo, nên vẫn nhìn thấy đủ lịch sử.</p>
+<p>🔴 <strong>Giới hạn thật — nói thẳng nếu bị hỏi:</strong> VNPay sandbox của đồ án không cấp API hoàn tiền.
+Code đã viết đúng cấu trúc gọi API thật; khi cổng không phản hồi, hệ thống chuyển sang ghi
+nhận "chuyển khoản thủ công" để admin xử lý tay và vẫn ghi sổ đầy đủ. Đây là giới hạn môi
+trường sandbox, không phải lỗi thiết kế.</p>
+<hr />
+<h3 class="qh">15. Sơ đồ trạng thái vé có <code>Refunded</code> mà sao không đường nào tới?</h3>
+<p><strong>Trả lời ngắn:</strong> Đúng — đó là trạng thái được khai báo nhưng không nơi nào trong code gán
+tới. Vé hoàn tiền thực tế kết thúc ở <code>Cancelled</code> kèm bút toán đảo.</p>
+<p><strong>Giải thích:</strong> Nhóm phát hiện điều này khi đối chiếu sơ đồ với code, và <strong>cố ý vẽ nó kèm
+ghi chú "không tới được"</strong> thay vì bỏ đi. Lý do: trạng thái đó vẫn tồn tại trong database,
+người đọc schema sẽ thấy nó, nên sơ đồ phải phản ánh đúng sự thật.</p>
+<p>Đây là câu <strong>bạn nên chủ động nói ra</strong> ở slide State Machine chứ đừng đợi bị hỏi — nó chứng
+minh nhóm đối chiếu sơ đồ với code thật chứ không vẽ cho đẹp.</p>
+<hr />
+<h2>Phần 3 — Kỹ thuật, giải thích dễ hiểu</h2>
+<h3 class="qh">16. Kiến trúc hệ thống là gì? Vì sao phải chia tầng?</h3>
+<p><strong>Trả lời ngắn:</strong> Clean Architecture — chia 4 tầng, và <strong>mọi phụ thuộc đều chỉ vào trong</strong>,
+hướng về tầng chứa luật nghiệp vụ.</p>
+<p><strong>Giải thích:</strong> Hình dung như củ hành. Lõi trong cùng là <strong>luật nghiệp vụ</strong> — "vé đã dùng
+thì không huỷ được", "không bán quá số ghế". Lớp ngoài là những thứ <em>có thể thay đổi</em> —
+database nào, cổng thanh toán nào, giao diện web hay mobile.</p>
+<p>Quy tắc: lớp ngoài biết lớp trong, <strong>lớp trong không biết gì về lớp ngoài</strong>. Lợi ích cụ thể:
+kiểm thử toàn bộ luật nghiệp vụ mà <strong>không cần bật database</strong>, vì lõi không biết database
+tồn tại. Và nếu mai đổi từ SQL Server sang PostgreSQL, luật nghiệp vụ không phải sửa một dòng.</p>
+<hr />
+<h3 class="qh">17. CQRS là gì và vì sao dùng?</h3>
+<p><strong>Trả lời ngắn:</strong> Tách rõ hai loại thao tác: <strong>Command</strong> (thay đổi dữ liệu) và <strong>Query</strong>
+(chỉ đọc). Mỗi thao tác là một class riêng.</p>
+<p><strong>Giải thích:</strong> Không dùng CQRS thì thường có một class khổng lồ tên <code>TicketService</code> chứa 30
+hàm — mua vé, huỷ vé, xem vé, chuyển vé... Sửa một hàm dễ vỡ hàm khác, và hai người trong
+nhóm sửa cùng file thì xung đột liên tục.</p>
+<p>Với CQRS, "mua vé" là một file riêng, "xem danh sách vé" là file riêng. Ai làm gì rõ ràng,
+và tìm code rất nhanh: muốn biết logic mua vé nằm đâu thì mở đúng thư mục tên đó.</p>
+<p><strong>Lợi ích thật đã dùng:</strong> vì tách rõ đọc/ghi, hệ thống chỉ mở transaction database cho lệnh
+<strong>ghi</strong>. Lệnh đọc không mở transaction — nhẹ hơn, nhanh hơn.</p>
+<hr />
+<h3 class="qh">18. Cơ sở dữ liệu thiết kế thế nào?</h3>
+<p><strong>Trả lời ngắn:</strong> 68 bảng, 95 quan hệ, chia theo 9 miền nghiệp vụ (tài khoản, venue, show,
+vé, tiền, đồ ăn, cá nhân hoá, vận hành...).</p>
+<p><strong>Giải thích:</strong> Không vẽ hết 68 bảng vào một hình vì không ai đọc nổi. Nhóm chia thành 9 sơ
+đồ theo miền, mỗi sơ đồ trả lời một câu hỏi. Bảng thuộc miền khác thì vẽ nét đứt để biết nó
+ở đâu mà không lặp lại.</p>
+<p><strong>Nếu bị hỏi về chuẩn hoá:</strong> Dữ liệu ở dạng chuẩn 3 (3NF) — không lưu trùng lặp. Ngoại lệ
+có chủ đích là các trường <strong>snapshot</strong> của tiền (câu 11): cố ý lưu lại giá trị tại thời điểm
+giao dịch, vì đó là dữ liệu lịch sử chứ không phải dữ liệu trùng.</p>
+<hr />
+<h3 class="qh">19. API bảo mật thế nào? Làm sao biết ai được gọi cái gì?</h3>
+<p><strong>Trả lời ngắn:</strong> Đăng nhập trả về một <strong>token</strong> có hạn; mỗi lần gọi API phải kèm token đó;
+hệ thống đọc token biết bạn là ai, vai trò gì, rồi mới cho phép.</p>
+<p><strong>Giải thích:</strong> Giống thẻ ra vào công ty. Đăng nhập một lần, nhận thẻ. Mỗi cửa quẹt thẻ, máy
+đọc thấy "nhân viên phòng kế toán" thì cho vào phòng kế toán, không cho vào phòng server.</p>
+<p>Điểm quan trọng: hệ thống đặt <strong>mặc định là CẤM</strong>. Một API mới viết mà lập trình viên quên
+khai báo quyền thì nó <strong>tự động bị chặn</strong>, chứ không phải tự động mở. Sai sót do quên sẽ dẫn
+tới "không dùng được" chứ không dẫn tới "lộ dữ liệu".</p>
+<hr />
+<h3 class="qh">20. Mật khẩu lưu như thế nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Không lưu mật khẩu. Chỉ lưu một chuỗi băm một chiều — từ chuỗi đó không
+tính ngược lại được mật khẩu gốc.</p>
+<p><strong>Giải thích:</strong> Nếu database bị lộ, kẻ tấn công cũng không đọc được mật khẩu của ai. Kể cả
+admin hệ thống cũng không xem được mật khẩu người dùng — đó là lý do khi quên mật khẩu thì
+hệ thống bắt đặt lại chứ không gửi lại mật khẩu cũ.</p>
+<hr />
+<h3 class="qh">21. Vì sao mật khẩu bắt 15 ký tự mà không bắt phải có chữ hoa, số, ký tự đặc biệt?</h3>
+<p><strong>Trả lời ngắn:</strong> Vì đó đúng theo khuyến nghị hiện hành của NIST và OWASP — <strong>độ dài quan
+trọng hơn độ phức tạp</strong>, và quy tắc bắt buộc ký tự đặc biệt phản tác dụng.</p>
+<p><strong>Giải thích:</strong> Câu này trả lời được sẽ rất ghi điểm. Khi bắt "phải có 1 hoa, 1 số, 1 ký tự
+đặc biệt", người dùng không tạo mật khẩu mạnh hơn — họ tạo <code>Password@123</code>. Máy tính đoán
+chuỗi đó trong vài giây vì nó là <strong>khuôn mẫu đoán được</strong>.</p>
+<p>Ngược lại một câu dài dễ nhớ như <code>phongtranhacsong2026</code> dài 20 ký tự, không có ký tự đặc
+biệt nào, nhưng khó đoán hơn nhiều lần. Vì vậy chuẩn mới bỏ quy tắc thành phần và tăng độ
+dài tối thiểu lên 15 (khi hệ thống chưa có xác thực 2 lớp).</p>
+<p><strong>Nguồn:</strong> NIST SP 800-63B §5.1.1.2 và OWASP Authentication Cheat Sheet — ghi rõ trong
+comment ngay tại file kiểm tra mật khẩu, mở ra chỉ được nếu bị hỏi.</p>
+<hr />
+<h3 class="qh">22. Job chạy nền là gì? Hệ thống có bao nhiêu?</h3>
+<p><strong>Trả lời ngắn:</strong> 30 loại job, trong đó 22 job chạy lặp theo lịch. Chúng làm những việc
+không cần người bấm nút.</p>
+<p><strong>Giải thích:</strong> Ví dụ dễ hiểu nhất: khách giữ chỗ 15 phút rồi bỏ đi không thanh toán. Không
+ai bấm nút "thả chỗ" cả — có một job cứ vài phút chạy một lần, tìm các chỗ giữ quá hạn và
+dọn đi. Tương tự: nhắc show sắp diễn ra, đối soát tiền cho venue, kiểm tra sổ cái, cảnh báo
+khi sắp trễ hạn kiểm duyệt 24 giờ.</p>
+<hr />
+<h3 class="qh">23. Livestream và donate hiển thị realtime bằng cách nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Dùng kết nối hai chiều luôn mở giữa trình duyệt và server, nên server chủ
+động đẩy dữ liệu xuống mà không cần trình duyệt hỏi liên tục.</p>
+<p><strong>Giải thích:</strong> Cách cũ là trình duyệt cứ 5 giây hỏi server "có gì mới không?" — tốn tài
+nguyên mà vẫn trễ. Cách này giống giữ một cuộc gọi điện thoại mở sẵn: khi có người donate,
+server "nói" ngay xuống tất cả người đang xem, hiệu ứng hiện lên tức thì.</p>
+<p>Riêng <strong>video</strong> thì không đi qua server của hệ thống — nó đi qua dịch vụ chuyên dụng
+(Mux/Cloudflare Stream), vì truyền video cần hạ tầng phân phối toàn cầu mà một server đơn lẻ
+không kham nổi.</p>
+<hr />
+<h3 class="qh">24. Hệ thống deploy ở đâu?</h3>
+<p><strong>Trả lời ngắn:</strong> Microsoft Azure — API chạy trên App Service, database là Azure SQL, giao
+diện web trên Static Web Apps, dịch vụ ghép ảnh panorama chạy riêng trên Container Apps.</p>
+<p><strong>Giải thích:</strong> Nói thêm được thì nói: mọi mật khẩu và khoá API đều để trong Key Vault chứ
+không nằm trong code — nên đẩy code lên GitHub công khai cũng không lộ gì. Việc build, chạy
+test và deploy đều tự động khi có thay đổi.</p>
+<hr />
+<h2>Phần 4 — Nâng cao: các tình huống hội đồng hay vặn</h2>
+<h3 class="qh">25. Hai người cùng bấm mua chiếc vé cuối cùng thì sao?</h3>
+<p><strong>Trả lời ngắn:</strong> Chỉ một người mua được. Hệ thống dùng <strong>khoá ở tầng database</strong> theo từng
+show, nên hai yêu cầu bị xếp hàng xử lý lần lượt chứ không cùng lúc.</p>
+<p><strong>Giải thích:</strong> Đây là câu kinh điển và là chỗ nhiều đồ án sai. Vấn đề: nếu không khoá, cả
+hai yêu cầu cùng đọc thấy "còn 1 vé", cả hai cùng thấy hợp lệ, cả hai cùng ghi vào → bán quá
+số ghế.</p>
+<p>Giải pháp giống phòng thử đồ trong shop: chỉ một người vào một lúc, người sau phải đợi. Ở
+đây "phòng thử đồ" được khoá theo từng show — hai show khác nhau vẫn bán song song bình
+thường, không làm chậm hệ thống.</p>
+<p><strong>Nếu bị hỏi sâu:</strong> Khoá này đặt ở <strong>SQL Server</strong> (<code>sp_getapplock</code>), không phải trong bộ nhớ
+ứng dụng. Khác biệt rất quan trọng: nếu khoá trong bộ nhớ, khi chạy 2 server song song thì
+mỗi server có khoá riêng và vẫn bán quá. Khoá ở database thì mọi server đều tuân theo cùng
+một khoá. Trong code có cả hai bản — bản bộ nhớ chỉ dùng cho môi trường test.</p>
+<hr />
+<h3 class="qh">26. Khách tắt trình duyệt ngay sau khi trả tiền thì vé có mất không?</h3>
+<p><strong>Trả lời ngắn:</strong> Không. Vé vẫn được xác nhận, vì cái xác nhận là VNPay gọi vào server, không
+phải trình duyệt quay về.</p>
+<p><strong>Giải thích:</strong> Có hai đường tin về sau khi thanh toán. Đường thứ nhất: trình duyệt khách
+quay lại trang web — đường này <strong>không đáng tin</strong>, khách tắt máy, mất mạng, hết pin là mất.
+Đường thứ hai: VNPay gọi thẳng vào server hệ thống báo kết quả — đường này chạy giữa hai máy
+chủ, không phụ thuộc khách.</p>
+<p>Hệ thống lấy đường thứ hai làm căn cứ. Trình duyệt quay về chỉ để <strong>hiển thị</strong> cho khách xem,
+không dùng để ghi nhận tiền.</p>
+<hr />
+<h3 class="qh">27. Nếu VNPay gọi lại 2 lần thì khách có bị trừ tiền 2 lần không?</h3>
+<p><strong>Trả lời ngắn:</strong> Không. Hàm xử lý được viết <strong>idempotent</strong> — gọi bao nhiêu lần thì kết quả
+vẫn như gọi một lần.</p>
+<p><strong>Giải thích:</strong> Cổng thanh toán nào cũng có cơ chế gọi lại khi không nhận được phản hồi (mạng
+chập chờn chẳng hạn). Nên hệ thống phải giả định "sẽ bị gọi lại nhiều lần".</p>
+<p>Cách xử lý: trước khi làm gì, kiểm tra "giao dịch này đã xác nhận chưa?". Nếu rồi thì trả lời
+"OK, đã xong" và <strong>không làm gì thêm</strong> — không ghi sổ lần hai, không tạo vé lần hai.</p>
+<p>Ví von: giống nút thang máy. Bấm 10 lần thì thang cũng chỉ đến một lần.</p>
+<hr />
+<h3 class="qh">28. Nếu giữ chỗ mà không thanh toán, ghế có bị khoá vĩnh viễn không?</h3>
+<p><strong>Trả lời ngắn:</strong> Không. Job nền dọn các bản ghi giữ chỗ quá 15 phút.</p>
+<p><strong>Giải thích:</strong> Điểm tinh tế đáng nói: khi dọn, hệ thống chỉ <strong>xoá bản ghi giữ chỗ</strong> chứ
+không phải "cộng lại số ghế trống". Vì số ghế còn trống được <strong>tính động</strong> mỗi lần hỏi: tổng
+ghế − vé đã xác nhận − số chỗ đang giữ còn hiệu lực.</p>
+<p>Cách này an toàn hơn hẳn kiểu có một biến đếm rồi cộng/trừ. Với biến đếm, chỉ cần một lần trừ
+mà quên cộng lại là số ghế sai vĩnh viễn và không ai biết. Với cách tính động, không có gì để
+sai.</p>
+<hr />
+<h3 class="qh">29. Nếu ghi nhận thanh toán thành công nhưng tạo vé bị lỗi thì sao?</h3>
+<p><strong>Trả lời ngắn:</strong> Cả hai cùng nằm trong một <strong>transaction</strong> — hoặc thành công cả hai, hoặc
+huỷ cả hai. Không có trạng thái nửa vời.</p>
+<p><strong>Giải thích:</strong> Giống chuyển khoản ngân hàng: trừ tài khoản A và cộng tài khoản B phải cùng
+thành công. Nếu trừ xong mà cộng lỗi thì tiền biến mất. Transaction đảm bảo nếu bất kỳ bước
+nào lỗi, mọi thứ quay về như chưa từng xảy ra.</p>
+<p><strong>Nếu bị hỏi sâu:</strong> Trong hệ thống, transaction được mở tự động cho mọi lệnh <em>ghi</em> thông qua
+một lớp trung gian dùng chung — lập trình viên không phải nhớ mở/đóng thủ công ở từng chỗ,
+nên không thể quên.</p>
+<p>Nhóm cũng từng gặp một lỗi thật thuộc nhóm này: khi thanh toán xong mà venue chưa khai tài
+khoản ngân hàng, hệ thống rollback luôn cả phần xác nhận vé — dù tiền đã bị VNPay trừ thật.
+Đã sửa: thiếu tài khoản ngân hàng chỉ chặn bước đối soát, không được huỷ giao dịch đã thu tiền.</p>
+<hr />
+<h3 class="qh">30. Một vé có thể chia cho nhiều người cùng xem livestream không?</h3>
+<p><strong>Trả lời ngắn:</strong> Giới hạn 2 thiết bị cùng lúc trên một vé. Thiết bị thứ 3 bị từ chối kết nối.</p>
+<p><strong>Giải thích:</strong> Nếu không giới hạn, một người mua vé rồi chia tài khoản cho cả nhóm bạn —
+doanh thu của venue mất trắng. Nhưng cấm hoàn toàn chỉ 1 thiết bị cũng bất tiện: nhiều người
+mở máy tính rồi chuyển sang điện thoại, hoặc mạng rớt rồi vào lại.</p>
+<p>Con số 2 là điểm cân bằng, và nằm trong file cấu hình nên đổi được mà không cần sửa code.</p>
+<p><strong>Nói thêm được thì rất ghi điểm:</strong> đây là lỗ hổng nhóm tự phát hiện khi rà soát — mã truy
+cập livestream vốn đã được sinh ra nhưng <strong>chưa nơi nào kiểm tra</strong>, nghĩa là trên lý thuyết
+một vé stream được cho vô hạn thiết bị. Đã bịt lại.</p>
+<hr />
+<h3 class="qh">31. Nếu VNPay, Mux hay dịch vụ AI bị sập thì hệ thống có sập theo không?</h3>
+<p><strong>Trả lời ngắn:</strong> Không đồng loạt. Mỗi dịch vụ ngoài chỉ ảnh hưởng đúng phần của nó, và phần
+AI được thiết kế <strong>suy giảm nhẹ nhàng</strong> chứ không chặn người dùng.</p>
+<p><strong>Giải thích:</strong> Tách theo mức độ nghiêm trọng:</p>
+<ul>
+<li><strong>VNPay sập</strong> → không thanh toán online được, nhưng vẫn xem show, vẫn bán vé tại quầy bằng
+  tiền mặt, vẫn soát vé đã mua.</li>
+<li><strong>Mux sập</strong> → không livestream được, nhưng show trực tiếp tại venue và bán vé vẫn chạy.</li>
+<li><strong>AI (Gemini) sập</strong> → <strong>không ảnh hưởng gì tới người dùng</strong>. AI ở đây chỉ chấm điểm rủi ro
+  để xếp thứ tự ưu tiên kiểm duyệt. Nếu gọi lỗi, hệ thống trả điểm trung tính và admin vẫn
+  duyệt bình thường. AI <strong>không bao giờ tự quyết định</strong> thay người.</li>
+<li><strong>SMS sập</strong> → xác thực vẫn chạy vì luồng chính dùng <strong>email</strong>, không phải SMS.</li>
+</ul>
+<hr />
+<h3 class="qh">32. Làm sao đảm bảo chủ venue A không xem được dữ liệu venue B?</h3>
+<p><strong>Trả lời ngắn:</strong> Mọi truy vấn đều lọc theo chủ sở hữu ở tầng server, lấy từ token đăng nhập
+chứ không lấy từ tham số người dùng gửi lên.</p>
+<p><strong>Giải thích:</strong> Đây là lỗ hổng phổ biến nhất trong hệ thống nhiều người thuê chung. Kiểu sai
+điển hình: API nhận <code>venueId</code> từ client rồi trả dữ liệu — người dùng chỉ cần sửa số trên URL
+là xem được venue người khác.</p>
+<p>Cách làm đúng: server <strong>không tin</strong> <code>venueId</code> client gửi lên. Nó lấy danh tính từ token, tra
+ra venue mà người này thực sự sở hữu, rồi mới truy vấn. Người dùng có sửa URL cũng vô ích.</p>
+<hr />
+<h3 class="qh">33. Có chống đăng nhập dò mật khẩu (brute force) không?</h3>
+<p><strong>Trả lời ngắn:</strong> Có — theo dõi số lần đăng nhập sai và khoá tạm sau nhiều lần thất bại.</p>
+<p><strong>Giải thích:</strong> Ngoài ra còn một thứ tinh tế hơn: <strong>chống dò email</strong>. Khi đăng ký với email
+đã tồn tại, hệ thống vẫn trả về kết quả <strong>y hệt</strong> như đăng ký thành công. Vì nếu báo "email
+đã tồn tại", kẻ tấn công có thể thử hàng loạt email để biết ai có tài khoản trên hệ thống —
+đó đã là rò rỉ thông tin rồi.</p>
+<hr />
+<h3 class="qh">34. Dữ liệu cá nhân được xử lý thế nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Theo Luật 91/2025/QH15 — người dùng xuất được dữ liệu của mình và yêu cầu
+xoá. Nhưng "xoá" ở đây là <strong>ẩn danh tại chỗ</strong>, không xoá cứng bản ghi.</p>
+<p><strong>Giải thích:</strong> Đây là chỗ hai luật xung đột và nhóm xử lý có chủ đích. Luật bảo vệ dữ liệu
+cá nhân nói phải xoá khi người dùng yêu cầu. Luật Kế toán nói chứng từ tài chính phải giữ 10
+năm. Nếu xoá cứng tài khoản, các hoá đơn liên quan mất tham chiếu → vi phạm luật kế toán.</p>
+<p>Giải pháp: giữ bản ghi nhưng <strong>xoá sạch thông tin nhận dạng</strong> — tên, email, số điện thoại
+thành giá trị ẩn danh. Hoá đơn vẫn còn, vẫn đối chiếu được, nhưng không còn biết là của ai.</p>
+<p>Ngoài ra: <strong>đồng ý dùng AI mặc định là TẮT</strong> — người dùng phải chủ động bật, không phải bỏ
+tick để tắt.</p>
+<hr />
+<h2>Phần 5 — Điểm yếu và câu hỏi khó</h2>
+<h3 class="qh">35. Test coverage bao nhiêu? Có test nào fail không?</h3>
+<p><strong>Trả lời ngắn:</strong> 795 test, 791 pass, tỷ lệ 99,5%. <strong>Có 4 test đang fail</strong> và nhóm biết rõ
+đó là những test nào.</p>
+<p><strong>Giải thích:</strong> Chia theo tầng: backend 460 test, frontend 307 test, end-to-end 28 test.</p>
+<div class="warn"><p>⚠️ <strong>Nói thẳng con số 4 test fail.</strong> Đừng làm tròn thành 100%. Nếu hội đồng phát hiện sau khi
+bạn nói 100% thì mất uy tín toàn bộ phần trình bày. Chuẩn bị sẵn: đó là các test fail từ
+trước, không liên quan tính năng đang bảo vệ. <strong>Chạy lại suite trước hôm bảo vệ</strong> để cập nhật
+con số chính xác.</p></div>
+<hr />
+<h3 class="qh weak">36. Test chạy trên SQLite nhưng production dùng SQL Server — có rủi ro không?<span class="tag tag-weak">điểm yếu</span></h3>
+<p><strong>Trả lời ngắn:</strong> Có, và nhóm <strong>đã từng bị đúng lỗi đó</strong> — một bug chỉ xuất hiện trên SQL
+Server mà toàn bộ test trên SQLite đều pass.</p>
+<p><strong>Giải thích:</strong> Hai loại database không hành xử giống nhau ở vài chỗ: quy tắc xoá dây chuyền
+qua nhiều đường, cách lưu kiểu enum, và các lệnh khoá đặc thù. SQLite nhanh và nhẹ nên thích
+hợp chạy test tự động liên tục, nhưng không phản ánh 100% môi trường thật.</p>
+<p><strong>Cách nhóm xử lý:</strong> trước mỗi bản release, chạy lại toàn bộ suite trên <strong>SQL Server thật</strong>,
+không chỉ dựa vào CI mặc định. Và có kiểm thử chấp nhận (UAT) chạy trên hệ thống thật đang
+deploy, với tài khoản thật cho từng vai trò.</p>
+<p>Trả lời được câu này rất ghi điểm vì nó cho thấy nhóm hiểu <strong>giới hạn của chính bộ test của
+mình</strong> — điều rất ít đồ án nói ra.</p>
+<hr />
+<h3 class="qh weak">37. Ảnh và file upload lưu ở đâu?<span class="tag tag-weak">điểm yếu</span></h3>
+<p><strong>Trả lời ngắn:</strong> Hiện lưu trên <strong>ổ đĩa của máy chủ ứng dụng</strong>, chưa chuyển sang Azure Blob
+Storage như trong thiết kế.</p>
+<p><strong>Giải thích:</strong> Đây là điểm yếu thật, nên nói thẳng và nói kèm hệ quả để chứng minh mình hiểu:</p>
+<ul>
+<li>Nếu chạy nhiều server song song, mỗi server có ổ đĩa riêng → ảnh upload lên server 1, người
+  dùng vào server 2 sẽ không thấy ảnh.</li>
+<li>Nếu App Service bị tạo lại, file có nguy cơ mất.</li>
+<li>Không có CDN nên ảnh tải chậm hơn với người dùng ở xa.</li>
+</ul>
+<p><strong>Vì sao chưa làm:</strong> đây là việc thay một lớp cài đặt lưu trữ, không ảnh hưởng luật nghiệp vụ
+— do kiến trúc đã tách interface sẵn, đổi sang Blob Storage là thay một class chứ không phải
+sửa toàn hệ thống. Trong phạm vi đồ án chạy một server thì chưa gây lỗi thực tế, nên nhóm ưu
+tiên các phần nghiệp vụ trước.</p>
+<hr />
+<h3 class="qh">38. Nếu scale ra nhiều server thì cái gì sẽ hỏng?</h3>
+<p><strong>Trả lời ngắn:</strong> Ba thứ: lưu trữ file (câu 37), bộ đếm giới hạn thiết bị livestream, và bộ
+đếm chống brute-force — vì cả ba đang giữ trong bộ nhớ của từng tiến trình.</p>
+<p><strong>Giải thích:</strong> Khoá bán vé thì <strong>không nằm trong danh sách này</strong> — nó đã đặt ở database nên
+an toàn khi scale. Nhóm đã cân nhắc đúng chỗ quan trọng nhất trước.</p>
+<p>Trả lời được câu này cho thấy bạn hiểu hệ thống ở mức vận hành, không chỉ mức code.</p>
+<hr />
+<h3 class="qh">39. Vì sao Admin phải tạo trực tiếp trong database, không có màn hình đăng ký?</h3>
+<p><strong>Trả lời ngắn:</strong> Cố ý. Không có bất kỳ đường nào để tự nâng quyền lên Admin từ bên ngoài.</p>
+<p><strong>Giải thích:</strong> Nếu có API tạo Admin, thì chỉ cần một lỗi phân quyền ở đúng API đó là kẻ tấn
+công chiếm toàn bộ hệ thống. Bỏ hẳn đường đó đi là cách phòng thủ đơn giản và chắc chắn nhất
+— không thể khai thác một thứ không tồn tại.</p>
+<p>API đăng ký chỉ chấp nhận hai vai trò: <code>Audience</code> và <code>Owner</code>. Gửi lên <code>Admin</code> bị từ chối ngay
+ở tầng kiểm tra dữ liệu.</p>
+<hr />
+<h3 class="qh weak">40. SMS có gửi được về số điện thoại Việt Nam không?<span class="tag tag-weak">điểm yếu</span></h3>
+<p><strong>Trả lời ngắn:</strong> Không, và đó là <strong>rào cản pháp lý của Việt Nam</strong>, không phải lỗi code.</p>
+<p><strong>Giải thích:</strong> Nhà mạng Việt Nam chặn tin nhắn gửi từ số điện thoại thường của nhà cung cấp
+nước ngoài. Muốn gửi được phải đăng ký Brand Name/Sender ID, yêu cầu <strong>giấy phép kinh doanh
+Việt Nam thật</strong> và mất khoảng 5 tuần duyệt — đồ án không có pháp nhân nên không đạt được.</p>
+<p><strong>Cách demo:</strong> dùng số nước ngoài gửi tới số nước ngoài để chứng minh phần tích hợp hoạt động
+đúng. Luồng xác thực chính của hệ thống dùng <strong>email</strong>, nên hạn chế này không chặn tính năng nào.</p>
+<p>Nói kèm điều này: nhóm đã thử cả nhà cung cấp nội địa Việt Nam, họ cũng yêu cầu bước đăng ký
+tương đương — <strong>đây là quy định chống spam ở cấp nhà mạng, mọi nhà cung cấp đều vướng như nhau.</strong></p>
+<hr />
+<h3 class="qh">41. Soát vé lúc mất mạng thì làm sao?</h3>
+<p><strong>Trả lời ngắn:</strong> Hiện chưa có chế độ offline — cần mạng để soát vé.</p>
+<p><strong>Giải thích:</strong> Đây là <strong>rủi ro đã được ghi nhận có chủ đích</strong>, không phải bỏ sót. Nói được
+hướng giải quyết sẽ cứu câu trả lời: cách làm chuẩn là cho app nhân viên tải trước danh sách
+vé của show, soát offline rồi đồng bộ lại khi có mạng. Việc này cần xử lý xung đột (cùng một
+vé bị soát ở hai cửa) nên không nhỏ, và nằm ngoài phạm vi 15 tuần.</p>
+<hr />
+<h3 class="qh">42. Hệ thống chịu được bao nhiêu người truy cập cùng lúc?</h3>
+<p><strong>Trả lời ngắn:</strong> Chưa đo bằng kiểm thử tải chính thức, nên không đưa ra con số để tránh nói sai.</p>
+<p><strong>Giải thích:</strong> Nói cấu hình thật thì tốt hơn con số bịa: hiện chạy trên App Service gói B1 và
+Azure SQL gói S0 — cấu hình cho môi trường đồ án, không phải cấu hình chịu tải thật. Kiến trúc
+<strong>có thể</strong> scale ngang vì khoá bán vé đã đặt ở database, nhưng ba thứ ở câu 38 phải xử lý trước.</p>
+<p><strong>Đừng bịa con số.</strong> Nếu hội đồng gặng, nói rõ điều cần đo là gì: điểm gãy khi nhiều người cùng
+mua vé một show, vì đó là chỗ có khoá và là điểm nghẽn tự nhiên của hệ thống.</p>
+<hr />
+<h3 class="qh">43. Phần nào khó nhất khi làm?</h3>
+<p><strong>Trả lời ngắn:</strong> Xử lý dòng tiền — vì đây là phần <strong>sai một lần là mất tiền thật</strong>, không như
+lỗi giao diện có thể sửa sau.</p>
+<p><strong>Giải thích:</strong> Cụ thể ba thứ khó: (1) đảm bảo không bán quá số ghế khi nhiều người mua cùng
+lúc; (2) xử lý việc cổng thanh toán gọi lại nhiều lần mà không nhân đôi giao dịch; (3) thiết kế
+sổ kép sao cho mọi giao dịch đều đối chiếu lại được.</p>
+<p>Bạn cũng có thể kể một bug thật đã gặp và cách sửa (xem câu 29) — kể được một lỗi cụ thể mình
+tự tìm ra và tự sửa thuyết phục hơn nhiều so với nói chung chung "phần thanh toán khó".</p>
+<hr />
+<h3 class="qh">44. Nếu làm lại thì em sẽ làm khác chỗ nào?</h3>
+<p><strong>Trả lời ngắn:</strong> Ba thứ: dùng Blob Storage cho file ngay từ đầu, chạy test trên SQL Server
+thật sớm hơn, và làm kiểm thử tải sớm hơn.</p>
+<p><strong>Giải thích:</strong> Câu này hội đồng hỏi để xem bạn có <strong>tự đánh giá</strong> được không. Đừng trả lời
+"em thấy ổn rồi" — nghe như không nhận ra vấn đề. Cũng đừng chê hết mọi thứ. Ba điều trên là
+thật, cụ thể, và mỗi điều đều gắn với một bài học đã rút ra ở trên.</p>
+<hr />
+<h3 class="qh">45. Điểm mạnh nhất của hệ thống là gì?</h3>
+<p><strong>Trả lời ngắn:</strong> Toàn bộ dòng tiền đều <strong>truy vết được</strong> — từ lúc khán giả trả tiền tới lúc
+nghệ sĩ nhận, không có bước nào là hộp đen.</p>
+<p><strong>Giải thích:</strong> Cụ thể hoá bằng ba thứ kiểm chứng được:</p>
+<ol>
+<li><strong>Sổ kép</strong> — mọi chuyển động tiền có hai vế cân bằng, có job kiểm tra hằng ngày.</li>
+<li><strong>Snapshot tỷ lệ</strong> — con số đã phát sinh không bị tính lại khi đổi cấu hình.</li>
+<li><strong>Mọi tham số nghiệp vụ nằm trong cấu hình</strong>, không viết cứng — đổi được mà không cần lập
+   trình viên.</li>
+</ol>
+<p>Và một điểm nữa đáng nói ở phần cuối: <strong>các sơ đồ trong báo cáo được kiểm tra tự động khớp với
+code</strong> — tên use case, tên bảng, tên trạng thái đều phải tồn tại thật trong mã nguồn, nếu không
+thì build fail. Nghĩa là tài liệu không thể lệch khỏi hệ thống thật.</p>
+<hr />
+<h2>Ba câu nên chủ động nói trước khi bị hỏi</h2>
+<p>Nói trước ba điều này ở đúng slide của nó — chủ động thừa nhận mạnh hơn bị vặn:</p>
+<ol>
+<li><strong>4 test đang fail</strong> (slide Test Report) — nói kèm lý do, đừng làm tròn 100%.</li>
+<li><strong>Trạng thái <code>Refunded</code> không tới được</strong> (slide State Machine) — chứng minh nhóm đối chiếu
+   sơ đồ với code thật.</li>
+<li><strong>SMS chưa gửi được về số Việt Nam</strong> (slide kiến trúc/tích hợp) — kèm giải thích đây là rào
+   cản pháp lý cấp nhà mạng, mọi nhà cung cấp đều vướng.</li>
+</ol>
+<h2>Ba thứ tuyệt đối đừng bịa</h2>
+<ul>
+<li><strong>Con số chịu tải</strong> — chưa đo thì nói chưa đo (câu 42).</li>
+<li><strong>Số liệu thị trường</strong> — chưa tìm được nguồn thì đừng bịa số trên slide.</li>
+<li><strong>Tỷ lệ test pass</strong> — đọc đúng con số suite vừa chạy, không đọc con số mong muốn.</li>
+</ul>
+</div>
+<script>
+document.querySelectorAll('table').forEach(t => {
+  if (t.parentElement.classList.contains('tablewrap')) return;
+  const w = document.createElement('div');
+  w.className = 'tablewrap';
+  t.replaceWith(w); w.appendChild(t);
+});
+</script>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Order Tracking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#cfc4bd",
+                    "inverse-surface": "#30312e",
+                    "on-secondary-fixed": "#261900",
+                    "surface-tint": "#635d5a",
+                    "on-tertiary-container": "#cb7c6b",
+                    "primary-container": "#2d2926",
+                    "primary-fixed-dim": "#cdc5c0",
+                    "on-secondary-container": "#785a1a",
+                    "on-tertiary-fixed": "#3a0a03",
+                    "secondary-fixed-dim": "#e9c176",
+                    "tertiary-container": "#4d190e",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#775a19",
+                    "primary-fixed": "#e9e1dc",
+                    "on-primary-fixed": "#1e1b18",
+                    "background": "#fbf9f4",
+                    "surface-variant": "#e4e2dd",
+                    "on-primary-container": "#96908b",
+                    "tertiary-fixed-dim": "#ffb4a4",
+                    "secondary-container": "#fed488",
+                    "inverse-primary": "#cdc5c0",
+                    "on-tertiary-fixed-variant": "#723527",
+                    "surface-dim": "#dbdad5",
+                    "on-primary-fixed-variant": "#4b4642",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f5f3ee",
+                    "surface-bright": "#fbf9f4",
+                    "on-surface": "#1b1c19",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#ffdad3",
+                    "on-surface-variant": "#4d4540",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ec",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary": "#310501",
+                    "surface": "#fbf9f4",
+                    "secondary-fixed": "#ffdea5",
+                    "on-secondary": "#ffffff",
+                    "primary": "#181512",
+                    "on-secondary-fixed-variant": "#5d4201",
+                    "outline": "#7e756f",
+                    "surface-container-high": "#eae8e3",
+                    "surface-container-highest": "#e4e2dd",
+                    "on-background": "#1b1c19",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#f0eee9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-md": "32px",
+                    "margin-mobile": "20px",
+                    "margin-desktop": "64px",
+                    "unit": "8px",
+                    "container-max": "1440px",
+                    "stack-sm": "16px",
+                    "gutter": "32px",
+                    "stack-lg": "80px"
+            },
+            "fontFamily": {
+                    "headline-md": [
+                            "Libre Caslon Text"
+                    ],
+                    "label-caps": [
+                            "Manrope"
+                    ],
+                    "button": [
+                            "Manrope"
+                    ],
+                    "headline-lg": [
+                            "Libre Caslon Text"
+                    ],
+                    "headline-lg-mobile": [
+                            "Libre Caslon Text"
+                    ],
+                    "display-md": [
+                            "Libre Caslon Text"
+                    ],
+                    "display-lg": [
+                            "Libre Caslon Text"
+                    ],
+                    "body-md": [
+                            "Manrope"
+                    ],
+                    "body-lg": [
+                            "Manrope"
+                    ]
+            },
+            "fontSize": {
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "button": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-md": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg": [
+                            "64px",
+                            {
+                                    "lineHeight": "72px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fbf9f4; /* bg-background */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Minimalist pull to refresh spinner */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(24, 21, 18, 0.1);
+            border-top-color: #181512;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pull-indicator {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pull-indicator.active {
+            height: 60px;
+        }
+        
+        /* Stepper Line Logic */
+        .stepper-line {
+            position: absolute;
+            left: 11px;
+            top: 24px;
+            bottom: -24px;
+            width: 1px;
+            background-color: #cfc4bd; /* outline-variant */
+            z-index: 0;
+        }
+        
+        .step-item:last-child .stepper-line {
+            display: none;
+        }
+        
+        .step-indicator {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background font-body-md antialiased overflow-x-hidden">
+<!-- Top Navigation App Bar (Suppressed on transactional/sub-pages, but included as a back-nav header) -->
+<header class="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-outline-variant/10">
+<div class="flex items-center justify-between px-margin-mobile h-16">
+<button aria-label="Go back" class="flex items-center text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<div class="font-headline-md text-headline-md tracking-tighter text-primary">Order #8042</div>
+<div class="w-6"><!-- Spacer for center alignment --></div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-20 pb-safe px-margin-mobile max-w-md mx-auto" id="main-scroll-area">
+<!-- Pull to refresh indicator -->
+<div class="pull-indicator w-full" id="refresh-indicator">
+<div class="spinner"></div>
+</div>
+<div class="mt-stack-sm mb-stack-lg">
+<!-- Order Status Header -->
+<div class="mb-stack-md">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Preparing</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Estimated wait: 12 minutes</p>
+</div>
+<!-- Vertical Stepper -->
+<div class="mb-stack-lg bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm relative overflow-hidden">
+<!-- Step 1: Pending (Completed) -->
+<div class="step-item relative flex items-start mb-8">
+<div class="stepper-line bg-primary/20"></div>
+<div class="step-indicator flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center mr-4 mt-1">
+<span class="material-symbols-outlined text-on-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-primary uppercase">Received</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">20:42 • Sent to kitchen</p>
+</div>
+</div>
+<!-- Step 2: Preparing (Active) -->
+<div class="step-item relative flex items-start mb-8">
+<div class="stepper-line"></div>
+<div class="step-indicator flex-shrink-0 w-6 h-6 rounded-full border-2 border-primary bg-background flex items-center justify-center mr-4 mt-1">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-primary uppercase">Preparing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Our curators are crafting your order.</p>
+</div>
+</div>
+<!-- Step 3: Served (Upcoming) -->
+<div class="step-item relative flex items-start mb-8">
+<div class="stepper-line"></div>
+<div class="step-indicator flex-shrink-0 w-6 h-6 rounded-full border border-outline-variant bg-surface-container-low flex items-center justify-center mr-4 mt-1">
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-outline uppercase">Served</h3>
+<p class="font-body-md text-body-md text-outline-variant text-sm mt-1">At Table 12</p>
+</div>
+</div>
+<!-- Step 4: Paid (Upcoming) -->
+<div class="step-item relative flex items-start">
+<div class="step-indicator flex-shrink-0 w-6 h-6 rounded-full border border-outline-variant bg-surface-container-low flex items-center justify-center mr-4 mt-1">
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-outline uppercase">Paid</h3>
+</div>
+</div>
+</div>
+<!-- Order Summary -->
+<div class="mb-stack-md">
+<h2 class="font-headline-md text-headline-md text-primary mb-4 pb-2 border-b border-outline-variant/20">Summary</h2>
+<div class="space-y-4 mb-6">
+<!-- Item 1 -->
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant mt-1">1X</span>
+<div>
+<div class="font-body-lg text-body-lg text-primary">Velvet Silence</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Signature cocktail, neat</div>
+</div>
+</div>
+<div class="font-body-md text-body-md text-primary">$24.00</div>
+</div>
+<!-- Item 2 -->
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant mt-1">1X</span>
+<div>
+<div class="font-body-lg text-body-lg text-primary">Truffle Fries</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Parmesan, garlic aioli</div>
+</div>
+</div>
+<div class="font-body-md text-body-md text-primary">$14.00</div>
+</div>
+</div>
+<!-- Totals -->
+<div class="border-t border-outline-variant/20 pt-4 space-y-2">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-body-md text-body-md text-sm">Subtotal</span>
+<span class="font-body-md text-body-md text-sm">$38.00</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-body-md text-body-md text-sm">Tax &amp; Fees</span>
+<span class="font-body-md text-body-md text-sm">$3.80</span>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="font-headline-md text-headline-md text-primary">Total</span>
+<span class="font-headline-md text-headline-md text-primary">$41.80</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex gap-4 mt-stack-md">
+<button class="flex-1 py-3 px-6 rounded-full border border-outline-variant text-primary font-button text-button hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                    Receipt
+                </button>
+<button class="flex-1 py-3 px-6 rounded-full bg-primary text-on-primary font-button text-button hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Add to Order
+                </button>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar is suppressed because this is a transactional detail view -->
+<script>
+        // Simulated pull-to-refresh logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainArea = document.getElementById('main-scroll-area');
+            const indicator = document.getElementById('refresh-indicator');
+            let startY = 0;
+            let currentY = 0;
+            let isPulling = false;
+
+            document.addEventListener('touchstart', (e) => {
+                if (window.scrollY === 0) {
+                    startY = e.touches[0].clientY;
+                    isPulling = true;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isPulling) return;
+                currentY = e.touches[0].clientY;
+                const diff = currentY - startY;
+
+                if (diff > 50 && window.scrollY === 0) {
+                    indicator.classList.add('active');
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                if (indicator.classList.contains('active')) {
+                    // Simulate refresh
+                    setTimeout(() => {
+                        indicator.classList.remove('active');
+                    }, 1000);
+                }
+                isPulling = false;
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge Admin - Platform Criteria</title>
+<!-- Tailwind CSS (Forms & Container Queries included) -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config injected from Style Guidance -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed": "#261900",
+                      "on-primary-container": "#96908b",
+                      "surface": "#fbf9f4",
+                      "secondary-container": "#fed488",
+                      "surface-container-lowest": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "tertiary": "#310501",
+                      "primary": "#181512",
+                      "primary-container": "#2d2926",
+                      "surface-bright": "#fbf9f4",
+                      "surface-dim": "#dbdad5",
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#eae8e3",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "primary-fixed": "#e9e1dc",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#7e756f",
+                      "secondary-fixed": "#ffdea5",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-container": "#4d190e",
+                      "surface-container-highest": "#e4e2dd",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-tertiary-container": "#cb7c6b",
+                      "error": "#ba1a1a",
+                      "on-secondary-container": "#785a1a",
+                      "on-surface": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "on-background": "#1b1c19",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "tertiary-fixed": "#ffdad3",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-primary-fixed": "#1e1b18",
+                      "outline-variant": "#cfc4bd",
+                      "surface-variant": "#e4e2dd",
+                      "secondary": "#775a19",
+                      "inverse-surface": "#30312e",
+                      "surface-tint": "#635d5a",
+                      "on-primary": "#ffffff",
+                      "background": "#fbf9f4",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-low": "#f5f3ee",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px",
+                      "gutter": "32px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "stack-sm": "16px"
+              },
+              "fontFamily": {
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #eae8e3; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cfc4bd; 
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased overflow-hidden flex h-screen">
+<!-- SideNavBar (from JSON, modified active state for Criteria) -->
+<aside class="hidden md:flex bg-surface-container-low dark:bg-primary-container text-primary dark:text-primary-fixed docked left-0 h-screen w-64 border-r border-outline-variant/10 flat no shadows flex-col h-full py-stack-md px-4 gap-stack-sm flex-shrink-0">
+<!-- Header -->
+<div class="mb-stack-md px-4">
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed mb-1">Aura</h1>
+<h2 class="font-headline-md text-[18px] text-primary">System Management</h2>
+<p class="font-body-md text-sm text-on-surface-variant">Global Dashboard</p>
+</div>
+<!-- CTA -->
+<div class="px-4 mb-stack-sm">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Add New Resource
+            </button>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 flex flex-col gap-2 font-label-caps text-label-caps">
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded-lg cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">group</span>
+                Users
+            </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded-lg cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                Packages
+            </a>
+<!-- Active State: Criteria -->
+<a class="flex items-center gap-3 py-3 text-primary font-bold border-l-2 border-primary pl-4 bg-surface-container-high/50 rounded-r-lg cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rule</span>
+                Criteria
+            </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded-lg cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                Reports
+            </a>
+</nav>
+<!-- Footer Links -->
+<div class="mt-auto pt-4 border-t border-outline-variant/10 flex flex-col gap-2 font-label-caps text-label-caps">
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded-lg cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded-lg cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">logout</span>
+                Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto h-screen relative scroll-smooth">
+<!-- TopNavBar (Mobile Only Fallback for Navigation context, though admin is usually desktop) -->
+<header class="md:hidden bg-surface dark:bg-surface text-primary dark:text-primary-fixed docked full-width top-0 border-b border-outline-variant/10 flat no shadows flex justify-between items-center w-full px-margin-mobile py-4 sticky z-10">
+<div class="font-display-md text-[24px] text-primary dark:text-primary-fixed">Aura Admin</div>
+<button class="material-symbols-outlined text-primary cursor-pointer active:opacity-70">menu</button>
+</header>
+<div class="max-w-[container-max] mx-auto px-margin-mobile md:px-margin-desktop py-stack-md md:py-stack-lg">
+<!-- Page Header -->
+<header class="mb-stack-lg">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Platform Criteria</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Manage global classification tags and event categories to maintain taxonomy across the platform.</p>
+</header>
+<!-- Bento Grid Layout for Criteria Blocks -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- 1. Music Genres Card -->
+<section class="bg-surface-container-lowest rounded-xl p-stack-md border border-outline-variant/20 flex flex-col h-full">
+<div class="mb-stack-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">music_note</span>
+<h2 class="font-headline-md text-[20px] text-primary">Music Genres</h2>
+</div>
+<!-- Existing Chips -->
+<div class="flex flex-wrap gap-2 mb-stack-md">
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Jazz</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Classical</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Soul</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Folk</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Electronic</span>
+</div>
+<!-- Add Form -->
+<form class="mt-auto pt-stack-sm border-t border-outline-variant/10 flex flex-col gap-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Name <span class="text-error">*</span></label>
+<input class="w-full bg-transparent border border-outline-variant/30 focus:border-primary focus:ring-0 rounded-DEFAULT px-3 py-2 text-on-surface placeholder:text-on-surface-variant/50 transition-colors" placeholder="e.g. Ambient" required="" type="text"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Name (En) <span class="text-on-surface-variant/50 lowercase font-normal">(Optional)</span></label>
+<input class="w-full bg-transparent border border-outline-variant/30 focus:border-primary focus:ring-0 rounded-DEFAULT px-3 py-2 text-on-surface placeholder:text-on-surface-variant/50 transition-colors" placeholder="e.g. Ambient" type="text"/>
+</div>
+</div>
+<button class="self-start mt-2 px-6 py-2 bg-surface text-primary border border-outline-variant hover:bg-surface-container transition-colors rounded-DEFAULT font-button text-button" type="button">Add Genre</button>
+</form>
+</section>
+<!-- 2. Atmospheres Card -->
+<section class="bg-surface-container-lowest rounded-xl p-stack-md border border-outline-variant/20 flex flex-col h-full">
+<div class="mb-stack-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">wb_sunny</span>
+<h2 class="font-headline-md text-[20px] text-primary">Atmospheres</h2>
+</div>
+<!-- Existing Chips -->
+<div class="flex flex-wrap gap-2 mb-stack-md">
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Intimate</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Industrial</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Grand</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Cozy</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Minimalist</span>
+</div>
+<!-- Add Form -->
+<form class="mt-auto pt-stack-sm border-t border-outline-variant/10 flex flex-col gap-4">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Name <span class="text-error">*</span></label>
+<input class="w-full bg-transparent border border-outline-variant/30 focus:border-primary focus:ring-0 rounded-DEFAULT px-3 py-2 text-on-surface placeholder:text-on-surface-variant/50 transition-colors" placeholder="e.g. Bohemian" required="" type="text"/>
+</div>
+<button class="self-start mt-2 px-6 py-2 bg-surface text-primary border border-outline-variant hover:bg-surface-container transition-colors rounded-DEFAULT font-button text-button" type="button">Add Atmosphere</button>
+</form>
+</section>
+<!-- 3. Moods Card -->
+<section class="bg-surface-container-lowest rounded-xl p-stack-md border border-outline-variant/20 flex flex-col h-full">
+<div class="mb-stack-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">mood</span>
+<h2 class="font-headline-md text-[20px] text-primary">Moods</h2>
+</div>
+<!-- Existing Chips -->
+<div class="flex flex-wrap gap-2 mb-stack-md">
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Melancholic</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Energetic</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Romantic</span>
+<span class="inline-flex items-center px-3 py-1 rounded bg-surface-container-high text-on-surface text-sm font-medium border border-outline-variant/10">Reflective</span>
+</div>
+<!-- Add Form -->
+<form class="mt-auto pt-stack-sm border-t border-outline-variant/10 flex flex-col gap-4">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Name <span class="text-error">*</span></label>
+<input class="w-full bg-transparent border border-outline-variant/30 focus:border-primary focus:ring-0 rounded-DEFAULT px-3 py-2 text-on-surface placeholder:text-on-surface-variant/50 transition-colors" placeholder="e.g. Uplifting" required="" type="text"/>
+</div>
+<button class="self-start mt-2 px-6 py-2 bg-surface text-primary border border-outline-variant hover:bg-surface-container transition-colors rounded-DEFAULT font-button text-button" type="button">Add Mood</button>
+</form>
+</section>
+<!-- 4. Event Categories Card (Takes up more vertical space, span on large screens maybe, keeping grid simple for now) -->
+<section class="bg-surface-container-lowest rounded-xl p-stack-md border border-outline-variant/20 flex flex-col h-full lg:row-span-2">
+<div class="mb-stack-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">category</span>
+<h2 class="font-headline-md text-[20px] text-primary">Event Categories</h2>
+</div>
+<!-- Existing Cards List -->
+<div class="flex flex-col gap-3 mb-stack-md flex-1 max-h-[300px] overflow-y-auto pr-2">
+<!-- Item -->
+<div class="p-3 rounded-lg border border-outline-variant/10 bg-surface-container-low/50">
+<h3 class="font-button text-button text-primary">Live Performance</h3>
+<p class="text-sm text-on-surface-variant mt-1">Acoustic or amplified performances featuring central musical artists.</p>
+</div>
+<!-- Item -->
+<div class="p-3 rounded-lg border border-outline-variant/10 bg-surface-container-low/50">
+<h3 class="font-button text-button text-primary">Gallery Viewing</h3>
+<p class="text-sm text-on-surface-variant mt-1">Visual art exhibitions with curated ambient soundscapes.</p>
+</div>
+<!-- Item -->
+<div class="p-3 rounded-lg border border-outline-variant/10 bg-surface-container-low/50">
+<h3 class="font-button text-button text-primary">Listening Session</h3>
+<p class="text-sm text-on-surface-variant mt-1">Focused audiophile events centered around specific albums or pressing.</p>
+</div>
+</div>
+<!-- Add Form -->
+<form class="mt-auto pt-stack-sm border-t border-outline-variant/10 flex flex-col gap-4">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Name <span class="text-error">*</span></label>
+<input class="w-full bg-transparent border border-outline-variant/30 focus:border-primary focus:ring-0 rounded-DEFAULT px-3 py-2 text-on-surface placeholder:text-on-surface-variant/50 transition-colors" placeholder="e.g. Masterclass" required="" type="text"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Description <span class="text-on-surface-variant/50 lowercase font-normal">(Optional)</span></label>
+<textarea class="w-full bg-transparent border border-outline-variant/30 focus:border-primary focus:ring-0 rounded-DEFAULT px-3 py-2 text-on-surface placeholder:text-on-surface-variant/50 transition-colors resize-none" placeholder="Brief description of this category type..." rows="3"></textarea>
+</div>
+<button class="self-start mt-2 px-6 py-2 bg-surface text-primary border border-outline-variant hover:bg-surface-container transition-colors rounded-DEFAULT font-button text-button" type="button">Add Category</button>
+</form>
+</section>
+</div>
+</div>
+</main>
+</body></html>

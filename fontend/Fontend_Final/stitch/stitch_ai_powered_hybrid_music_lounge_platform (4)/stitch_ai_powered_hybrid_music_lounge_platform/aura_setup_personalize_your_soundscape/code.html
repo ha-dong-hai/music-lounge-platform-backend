@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-background": "#1b1c19",
+                        "surface-variant": "#e4e2dd",
+                        "background": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#310501",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#1b1c19",
+                        "primary": "#181512",
+                        "inverse-surface": "#30312e",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-container": "#f0eee9",
+                        "secondary-fixed": "#ffdea5",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-dim": "#dbdad5",
+                        "tertiary-container": "#4d190e",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#ffdad3",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#cb7c6b",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-secondary-fixed": "#261900",
+                        "on-primary-container": "#96908b",
+                        "outline": "#7e756f",
+                        "surface-tint": "#635d5a",
+                        "surface": "#fbf9f4",
+                        "on-secondary-container": "#785a1a",
+                        "primary-container": "#2d2926",
+                        "on-primary-fixed": "#1e1b18",
+                        "secondary": "#775a19",
+                        "secondary-container": "#fed488",
+                        "on-surface-variant": "#4d4540",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "surface-container-high": "#eae8e3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "outline-variant": "#cfc4bd",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "surface-bright": "#fbf9f4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "stack-md": "32px",
+                        "gutter": "32px",
+                        "stack-sm": "16px",
+                        "margin-mobile": "20px",
+                        "stack-lg": "80px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        .glass-panel { background: rgba(251, 249, 244, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .aura-card { transition: all 0.3s ease; border: 1px solid rgba(207, 196, 189, 0.3); }
+        .aura-card:hover { transform: translateY(-4px); border-color: rgba(207, 196, 189, 0.8); }
+        .aura-card.selected { border-color: theme('colors.primary'); background-color: theme('colors.surface-container-high'); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md">
+<!-- TopNavBar component logic suppressed: Linear/Transactional Onboarding Intent -->
+<main class="flex-grow flex items-stretch">
+<!-- Left Content Area -->
+<div class="w-full lg:w-1/2 flex flex-col justify-center px-margin-mobile lg:px-margin-desktop py-stack-lg relative z-10">
+<div class="max-w-md mx-auto w-full space-y-stack-md">
+<header class="space-y-4">
+<div class="flex items-center space-x-2 text-primary font-label-caps text-label-caps uppercase tracking-widest">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">tune</span>
+<span>Aura Setup</span>
+</div>
+<h1 class="font-display-md text-display-md text-primary tracking-tight">Define your atmosphere.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                        Select the sonic signatures that resonate with your space. This will curate the initial lounge experience.
+                    </p>
+</header>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Atmosphere Options -->
+<button class="aura-card text-left p-6 rounded-lg bg-surface flex flex-col gap-4 group" onclick="this.classList.toggle('selected')">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors text-3xl" style="font-variation-settings: 'FILL' 0;">nightlife</span>
+<div>
+<h3 class="font-button text-button text-primary mb-1">Late Night Jazz</h3>
+<p class="font-body-md text-sm text-on-surface-variant">Smoky, syncopated, and intimate.</p>
+</div>
+</button>
+<button class="aura-card text-left p-6 rounded-lg bg-surface flex flex-col gap-4 group" onclick="this.classList.toggle('selected')">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors text-3xl" style="font-variation-settings: 'FILL' 0;">air</span>
+<div>
+<h3 class="font-button text-button text-primary mb-1">Atmospheric Ambient</h3>
+<p class="font-body-md text-sm text-on-surface-variant">Ethereal textures and calm focus.</p>
+</div>
+</button>
+<button class="aura-card text-left p-6 rounded-lg bg-surface flex flex-col gap-4 group" onclick="this.classList.toggle('selected')">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors text-3xl" style="font-variation-settings: 'FILL' 0;">album</span>
+<div>
+<h3 class="font-button text-button text-primary mb-1">Neo-Soul</h3>
+<p class="font-body-md text-sm text-on-surface-variant">Warm grooves and modern rhythms.</p>
+</div>
+</button>
+<button class="aura-card text-left p-6 rounded-lg bg-surface flex flex-col gap-4 group" onclick="this.classList.toggle('selected')">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors text-3xl" style="font-variation-settings: 'FILL' 0;">piano</span>
+<div>
+<h3 class="font-button text-button text-primary mb-1">Classical Minimalism</h3>
+<p class="font-body-md text-sm text-on-surface-variant">Structured, elegant, and timeless.</p>
+</div>
+</button>
+</div>
+<div class="pt-8 flex items-center justify-between border-t border-outline-variant/10">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Step 1 of 3</span>
+<button class="bg-primary text-on-primary font-button text-button px-8 py-4 rounded hover:bg-primary-container transition-colors duration-300">
+                        Complete Your Profile
+                    </button>
+</div>
+</div>
+</div>
+<!-- Right Image Area -->
+<div class="hidden lg:block lg:w-1/2 relative bg-surface-container-low">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A serene, minimalist modern interior lounge space. Soft, high-key natural lighting illuminates a comfortable dark leather accent chair next to a simple wooden side table holding a ceramic vase with delicate branches. The aesthetic is luxurious, calm, and uncluttered, adhering strictly to a premium, neutral color palette with deep charcoal accents." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAzqr6FDgSgnsiau3AsuscGUmcfPkfZyM7roq9txh8yhL1r5avmSI9mMMuC9d66O5Jz9L8c4AZlJgC7H5D-gx8JIoMjfzFT43xsh-cU-RPCDfO3VE9FZPyplxSQBwcfmewFhOSTHeia6DxssXnyQ-PnVh1z0YFrJpNmiAwQ9wu1rutANax5Yd1SIAFuM9jP56FGR1u1wGKJcTeH08PJHJvik_SJAMl9B1VLQLYg64sSE44qGPBQaBighQ')"></div>
+<!-- Optional floating element to match the prompt's aesthetic feel -->
+<div class="absolute bottom-12 left-12 glass-panel p-4 rounded-lg flex items-center gap-3 border border-outline-variant/20 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-button text-button text-primary">Taste Profile Initiated</span>
+</div>
+</div>
+</main>
+<!-- Footer component logic suppressed: Linear/Transactional Onboarding Intent -->
+</body></html>

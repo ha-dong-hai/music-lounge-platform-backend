@@ -1,0 +1,100 @@
+' ─────────────────────────────────────────────────────────────────────────────
+' Shared house style for every MusicLounge diagram.
+'
+' Strict black-and-white only: no fills, no shadows, no colour. Printed reports
+' and photocopies must read identically to the screen, and the SEP490 documents
+' are graded on paper.
+' ─────────────────────────────────────────────────────────────────────────────
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam dpi 200
+skinparam roundCorner 0
+' Orthogonal routing: every connector is straight with square right-angle bends,
+' never a curved spline.
+skinparam linetype ortho
+' wrapWidth, not maxMessageSize, is what re-wraps a sequence message. At 220 it broke
+' lines that already carried their own break, leaving the text ragged.
+skinparam wrapWidth 360
+' 180 re-wrapped messages that already carried their own line breaks, leaving them
+' ragged; 340 is wide enough that an explicit break is the only break.
+skinparam maxMessageSize 340
+skinparam nodesep 45
+skinparam ranksep 55
+
+' Keep every element white-filled with a plain black outline.
+skinparam ArrowColor #000000
+skinparam ArrowThickness 1
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+  AttributeFontSize 11
+  StereotypeFontSize 10
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+  FontStyle bold
+}
+skinparam node {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+  FontStyle bold
+}
+skinparam database {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+}
+skinparam artifact {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+skinparam sequence {
+  ArrowThickness 1
+  LifeLineBorderColor #000000
+  LifeLineBackgroundColor #FFFFFF
+  ParticipantBorderColor #000000
+  ParticipantBackgroundColor #FFFFFF
+  ParticipantFontStyle bold
+  ActorBorderColor #000000
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #000000
+  GroupBorderColor #000000
+  GroupBackgroundColor #FFFFFF
+  DividerBackgroundColor #FFFFFF
+  ReferenceBackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+@enduml

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Discovery Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface-container-lowest": "#ffffff",
+                "inverse-on-surface": "#f2f1ec",
+                "on-background": "#1b1c19",
+                "tertiary-fixed": "#ffdad3",
+                "background": "#fbf9f4",
+                "on-tertiary-container": "#cb7c6b",
+                "on-secondary-fixed": "#261900",
+                "tertiary-container": "#4d190e",
+                "primary-container": "#2d2926",
+                "outline": "#7e756f",
+                "error": "#ba1a1a",
+                "surface-container": "#f0eee9",
+                "surface": "#fbf9f4",
+                "on-error-container": "#93000a",
+                "secondary-container": "#fed488",
+                "tertiary": "#310501",
+                "primary": "#181512",
+                "tertiary-fixed-dim": "#ffb4a4",
+                "surface-bright": "#fbf9f4",
+                "on-primary-fixed-variant": "#4b4642",
+                "on-primary-fixed": "#1e1b18",
+                "on-tertiary": "#ffffff",
+                "on-primary-container": "#96908b",
+                "on-tertiary-fixed-variant": "#723527",
+                "surface-variant": "#e4e2dd",
+                "surface-container-low": "#f5f3ee",
+                "on-primary": "#ffffff",
+                "on-surface": "#1b1c19",
+                "primary-fixed": "#e9e1dc",
+                "surface-dim": "#dbdad5",
+                "on-secondary-container": "#785a1a",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed": "#3a0a03",
+                "secondary-fixed": "#ffdea5",
+                "surface-container-high": "#eae8e3",
+                "inverse-primary": "#cdc5c0",
+                "surface-container-highest": "#e4e2dd",
+                "surface-tint": "#635d5a",
+                "primary-fixed-dim": "#cdc5c0",
+                "secondary": "#775a19",
+                "secondary-fixed-dim": "#e9c176",
+                "outline-variant": "#cfc4bd",
+                "on-secondary-fixed-variant": "#5d4201",
+                "inverse-surface": "#30312e",
+                "on-error": "#ffffff",
+                "error-container": "#ffdad6",
+                "on-surface-variant": "#4d4540"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "stack-md": "32px",
+                "unit": "8px",
+                "margin-desktop": "64px",
+                "stack-sm": "16px",
+                "container-max": "1440px",
+                "margin-mobile": "20px",
+                "stack-lg": "80px",
+                "gutter": "32px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "Libre Caslon Text"
+                ],
+                "headline-lg-mobile": [
+                        "Libre Caslon Text"
+                ],
+                "body-md": [
+                        "Manrope"
+                ],
+                "display-lg": [
+                        "Libre Caslon Text"
+                ],
+                "display-md": [
+                        "Libre Caslon Text"
+                ],
+                "headline-md": [
+                        "Libre Caslon Text"
+                ],
+                "body-lg": [
+                        "Manrope"
+                ],
+                "button": [
+                        "Manrope"
+                ],
+                "label-caps": [
+                        "Manrope"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "64px",
+                        {
+                                "lineHeight": "72px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-md": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "button": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.1em",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-background/90 backdrop-blur-md border-b border-outline-variant/10 transition-all duration-300 ease-in-out hidden md:block">
+<div class="flex justify-between items-center px-margin-desktop py-unit max-w-container-max mx-auto">
+<a class="font-display-md text-display-md text-primary tracking-tight" href="#">AuraLounge</a>
+<nav class="flex space-x-8"><a class="font-headline-md text-headline-md text-on-surface-variant hover:text-primary transition-colors pb-1" href="#">Discover</a><a class="font-headline-md text-headline-md text-on-surface-variant hover:text-primary transition-colors pb-1" href="#">Venues</a><a class="font-headline-md text-headline-md text-on-surface-variant hover:text-primary transition-colors pb-1" href="#">Events</a><a class="font-headline-md text-headline-md text-primary font-bold border-b-2 border-primary pb-1" href="#">AI Discovery</a><a class="font-headline-md text-headline-md text-on-surface-variant hover:text-primary transition-colors pb-1" href="#">Curations</a></nav>
+<div class="flex items-center space-x-4">
+<button class="text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+<button class="text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-margin-desktop py-stack-md flex flex-col gap-stack-lg">
+<!-- AI Spotlight Hero -->
+<section class="w-full flex flex-col lg:flex-row gap-gutter bg-surface-container-lowest border border-outline-variant/20 rounded-xl overflow-hidden shadow-sm">
+<div class="w-full lg:w-3/5 relative min-h-[400px] lg:min-h-[600px]">
+<img alt="AI Spotlight Event" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsILMWOMkUDkYOjtzxqocR18sUIrJQKGne_HnOd8OYL170a6i5Fz5bc8s8RQyxMbPi5kTanTqjUD2MRqwczI0qfuloIS1ANqvExUeo5nRrwKP8SlzvHZWOHrigN2AM_gWQFuQTWWvtadCFynN45c6tc-_xjg_ti5hGMoaN4Tp6mqI7PDCy7bW7RpZfG-g5KG5vvWZyZSOJnWwFxDgzBu2qgF0dKhJySAWkOlV-uDdocp81xWm7hPT3gg"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
+<div class="absolute top-6 left-6 bg-surface/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary text-[18px]">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-primary tracking-wider">AURA AI SPOTLIGHT</span>
+</div>
+</div>
+<div class="w-full lg:w-2/5 p-8 lg:p-12 flex flex-col justify-center bg-surface-container-lowest">
+<div class="flex items-center gap-3 mb-4">
+<div class="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-on-primary">
+<span class="font-headline-md text-[20px] font-bold">98%</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Resonance Score</span>
+</div>
+<h1 class="font-display-md text-display-md text-on-surface mb-2 leading-tight">The Midnight Sessions</h1>
+<div class="flex items-center gap-4 text-on-surface-variant font-body-md mb-8">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">calendar_today</span> Oct 14</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span> 21:00</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">location_on</span> The Velvet Room</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg border border-outline-variant/10 mb-8">
+<h3 class="font-label-caps text-label-caps text-outline mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">psychology</span> MATCH ANALYSIS
+      </h3>
+<p class="font-body-md text-body-md text-on-surface">Based on your love for Miles Davis and atmospheric jazz, this intimate session features a renowned saxophonist exploring deep, moody improvisations perfectly aligned with your recent listening history.</p>
+</div>
+<button class="bg-primary text-on-primary font-button text-button py-4 px-8 rounded hover:bg-primary/90 transition-colors w-full lg:w-auto self-start">
+      Secure Your Reservation
+    </button>
+</div>
+</section>
+<!-- Content Grid Layout -->
+<div class="flex flex-col lg:flex-row gap-gutter">
+<!-- Main Discovery Feed (Editorial Style) -->
+<div class="flex-1 space-y-gutter">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Curated Discoveries</h2>
+<span class="font-body-md text-on-surface-variant italic">Tailored to your aesthetic</span>
+</div>
+<!-- Editorial Feature 1 -->
+<article class="group flex flex-col md:flex-row gap-8 items-center bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 hover:shadow-md transition-shadow">
+<div class="w-full md:w-1/2 relative aspect-[4/3] rounded-lg overflow-hidden">
+<img alt="Velvet Resonance" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBC7VsTjXVp1hmrZpwRYzJlERr7pTI8kapZKYs9OHMb_2DbywxsAsUMsUu83bb_uXLDFccZUJiennZAWEp9dATCo_d4y_U9shQgRjL57YHSmpZw8oB8LBRUg21SvZMuA5CW2ni2zIKGbvJsxQqwe2w8IG8UoF1zrMJy4-RoVmW6ozXNWEQO2T08Qwou_15ddacE2BAXDeXHFCDLp42vpc7Ape1BtYkPUhvtsOkChRJ2rtSl7eBRSRTMNg"/>
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-3 py-1 rounded-full border border-outline-variant/20 flex items-center gap-1 shadow-sm">
+<span class="font-label-caps text-primary">85% Match</span>
+</div>
+</div>
+<div class="w-full md:w-1/2 flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-2">CLASSICAL CONTEMPORARY</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-3">Velvet Resonance</h3>
+<p class="font-body-md text-on-surface-variant mb-6 line-clamp-3">A serene exploration of modern classical piano, curated for your appreciation of minimalist compositions and ethereal acoustics. Set in the intimate Onyx Cellar.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex items-center gap-4 text-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> Oct 16</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Onyx Cellar</span>
+</div>
+<button class="text-primary font-button hover:underline underline-offset-4">Details →</button>
+</div>
+</div>
+</article>
+<!-- Editorial Feature 2 -->
+<article class="group flex flex-col md:flex-row-reverse gap-8 items-center bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 hover:shadow-md transition-shadow">
+<div class="w-full md:w-1/2 relative aspect-[4/3] rounded-lg overflow-hidden">
+<img alt="Azure Rhythms" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1vfP7I8g_entbuEDslgn4nqDFyEAwAFATyx7MBbVxSoZwfy4oEBOVy1H6VzDbNQ6x0SewfPhh3xIbSc_ej_ZpkT1xgMXdIGICMnzVWfpznTPMcP7dQ7EnEc4qPfbXG0sVccMxDcUdHtYNx7wXRgJt_0-nbqKxKVLX8ysaPYuosi8cuPUFjHnZrrIQT45yZEjLc_EOulPOsxrpzdgZgzSO1_H0rRtZMKOP3uFSDEbD4ZPFq_CsAOVLSw"/>
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-3 py-1 rounded-full border border-outline-variant/20 flex items-center gap-1 shadow-sm">
+<span class="font-label-caps text-primary">78% Match</span>
+</div>
+</div>
+<div class="w-full md:w-1/2 flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-2">AMBIENT ELECTRONIC</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-3">Azure Rhythms</h3>
+<p class="font-body-md text-on-surface-variant mb-6 line-clamp-3">Subtle electronic soundscapes blending with the atmospheric lighting of the Azure Terrace. Selected to introduce a sophisticated contemporary edge to your listening profile.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex items-center gap-4 text-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> Oct 20</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Azure Terrace</span>
+</div>
+<button class="text-primary font-button hover:underline underline-offset-4">← Details</button>
+</div>
+</div>
+</article>
+</div>
+<!-- Secondary Sidebar (Refined Filters) -->
+<aside class="w-full lg:w-72 flex-shrink-0 lg:pl-8 lg:border-l border-outline-variant/20">
+<div class="sticky top-[120px] space-y-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
+<div>
+<h3 class="font-headline-md text-[20px] mb-4">Refine Discovery</h3>
+<p class="font-body-md text-sm text-on-surface-variant mb-6">Tweak your AI curator's parameters to explore new sonic landscapes.</p>
+</div>
+<div class="space-y-6">
+<div>
+<h4 class="font-label-caps text-label-caps text-outline mb-3">TEMPO / MOOD</h4>
+<input class="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="1" type="range" value="50"/>
+<div class="flex justify-between text-xs text-on-surface-variant mt-2 font-label-caps">
+<span>Mellow</span>
+<span>Upbeat</span>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/20">
+<h4 class="font-label-caps text-label-caps text-outline mb-3">TIMEFRAME</h4>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-1.5 rounded-full border border-primary text-primary font-button text-sm bg-primary/5">This Week</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-button text-sm hover:border-primary transition-colors">Next Week</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-button text-sm hover:border-primary transition-colors">Later</button>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/20">
+<h4 class="font-label-caps text-label-caps text-outline mb-3">SONIC PALETTE</h4>
+<ul class="space-y-3">
+<li>
+<label class="flex items-center cursor-pointer group">
+<input checked="" class="form-checkbox text-primary border-outline-variant focus:ring-primary rounded-sm mr-3" type="checkbox"/>
+<span class="font-body-md text-on-surface group-hover:text-primary transition-colors">Acoustic &amp; Jazz</span>
+</label>
+</li>
+<li>
+<label class="flex items-center cursor-pointer group">
+<input class="form-checkbox text-primary border-outline-variant focus:ring-primary rounded-sm mr-3" type="checkbox"/>
+<span class="font-body-md text-on-surface group-hover:text-primary transition-colors">Synthesized &amp; Deep</span>
+</label>
+</li>
+<li>
+<label class="flex items-center cursor-pointer group">
+<input class="form-checkbox text-primary border-outline-variant focus:ring-primary rounded-sm mr-3" type="checkbox"/>
+<span class="font-body-md text-on-surface group-hover:text-primary transition-colors">Orchestral &amp; Strings</span>
+</label>
+</li>
+</ul>
+</div>
+</div>
+<button class="w-full mt-6 bg-surface-variant text-on-surface font-button py-2 rounded border border-outline-variant/20 hover:bg-surface-container transition-colors">
+        Recalibrate Feed
+      </button>
+</div>
+</aside>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile pb-8 pt-4 bg-surface/90 backdrop-blur-md border-t border-outline-variant/10 shadow-[0_-4px_40px_rgba(0,0,0,0.05)] md:hidden">
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary font-semibold opacity-100 scale-100 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-caps text-label-caps">Discover</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1">location_on</span>
+<span class="font-label-caps text-label-caps">Venues</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</button>
+</nav>
+</body></html>

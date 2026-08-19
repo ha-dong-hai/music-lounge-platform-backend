@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AURA - Security &amp; Privacy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "tertiary-container": "#4d190e",
+                        "surface-bright": "#fbf9f4",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#785a1a",
+                        "on-surface": "#1b1c19",
+                        "surface-container-high": "#eae8e3",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-variant": "#e4e2dd",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "primary-fixed": "#e9e1dc",
+                        "on-surface-variant": "#4d4540",
+                        "surface-container-highest": "#e4e2dd",
+                        "outline": "#7e756f",
+                        "surface-dim": "#dbdad5",
+                        "secondary-fixed": "#ffdea5",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "error": "#ba1a1a",
+                        "primary": "#181512",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#cb7c6b",
+                        "inverse-on-surface": "#f2f1ec",
+                        "secondary": "#775a19",
+                        "on-primary-fixed": "#1e1b18",
+                        "inverse-surface": "#30312e",
+                        "tertiary": "#310501",
+                        "on-primary-container": "#96908b",
+                        "outline-variant": "#cfc4bd",
+                        "inverse-primary": "#cdc5c0",
+                        "secondary-fixed-dim": "#e9c176",
+                        "background": "#fbf9f4",
+                        "surface": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#635d5a",
+                        "primary-container": "#2d2926",
+                        "secondary-container": "#fed488",
+                        "surface-container": "#f0eee9",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-secondary-fixed": "#261900",
+                        "on-background": "#1b1c19"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "32px",
+                        "margin-desktop": "64px",
+                        "unit": "8px",
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "stack-lg": "80px",
+                        "container-max": "1440px",
+                        "stack-sm": "16px"
+                    },
+                    "fontFamily": {
+                        "display-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopAppBar -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 w-full border-b border-transparent">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-70 transition-opacity active:scale-95 transition-transform text-on-surface-variant dark:text-on-surface-variant flex items-center justify-center p-2 rounded-full md:hidden">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<a class="font-display-md text-display-md tracking-widest text-primary dark:text-primary-fixed-dim" href="#">AURA</a>
+</div>
+<!-- Desktop Nav -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors" href="#">Discover</a>
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors" href="#">Tickets</a>
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors" href="#">Following</a>
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors" href="#">Alerts</a>
+<a class="font-button text-button text-primary dark:text-primary-fixed-dim border-b-2 border-primary pb-1" href="#">Profile</a>
+</nav>
+<button class="hover:opacity-70 transition-opacity active:scale-95 transition-transform text-on-surface-variant dark:text-on-surface-variant flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</header>
+<main class="flex-grow pt-24 pb-32 md:pt-32 md:pb-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Sidebar Navigation (Desktop Settings) -->
+<aside class="hidden lg:block lg:col-span-3">
+<div class="sticky top-32 space-y-stack-sm">
+<h2 class="font-label-caps text-label-caps text-outline uppercase tracking-widest mb-6">Account Settings</h2>
+<nav class="flex flex-col gap-2">
+<a class="px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md" href="#">Personal Information</a>
+<a class="px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md" href="#">Payment Methods</a>
+<a class="px-4 py-3 rounded-lg bg-surface-container-highest text-primary font-body-md font-medium flex items-center justify-between" href="#">
+                        Security &amp; Privacy
+                        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+<a class="px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md" href="#">Notifications</a>
+<a class="px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md" href="#">Preferences</a>
+</nav>
+</div>
+</aside>
+<!-- Main Content -->
+<div class="lg:col-span-9 space-y-stack-lg max-w-3xl">
+<!-- Header -->
+<section class="border-b border-outline-variant/20 pb-8">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Security &amp; Privacy</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your account security, active sessions, and privacy settings.</p>
+</section>
+<!-- Two-Factor Authentication -->
+<section class="space-y-stack-sm">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">shield_lock</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Two-Factor Authentication</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-6 md:p-8 space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="space-y-2">
+<p class="font-body-lg text-body-lg text-primary">Authenticator App</p>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Use an app like Google Authenticator or Authy to generate verification codes. Recommended for highest security.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+<span class="ml-3 font-button text-button text-primary">Enabled</span>
+</label>
+</div>
+<hr class="border-outline-variant/20"/>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="space-y-2">
+<p class="font-body-lg text-body-lg text-primary">SMS Recovery</p>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Receive a code via SMS if you lose access to your authenticator app. Ends in •••• 4892.</p>
+</div>
+<button class="px-6 py-2 border border-outline-variant text-primary font-button text-button rounded-full hover:bg-surface-container transition-colors shrink-0">Edit</button>
+</div>
+</div>
+</section>
+<!-- Active Sessions -->
+<section class="space-y-stack-sm">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">devices</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Active Devices</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden">
+<!-- Current Device -->
+<div class="p-6 md:p-8 flex items-start gap-4 bg-surface-bright border-b border-outline-variant/20">
+<span class="material-symbols-outlined text-secondary mt-1">laptop_mac</span>
+<div class="flex-grow">
+<div class="flex items-center gap-3 mb-1">
+<p class="font-body-lg text-body-lg text-primary">MacBook Pro (Mac OS)</p>
+<span class="bg-secondary-container/30 text-secondary-fixed-dim text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-label-caps">Current Session</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">San Francisco, CA • Chrome 120.0</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Active now</p>
+</div>
+</div>
+<!-- Other Device -->
+<div class="p-6 md:p-8 flex items-start gap-4 border-b border-outline-variant/20">
+<span class="material-symbols-outlined text-outline mt-1">smartphone</span>
+<div class="flex-grow">
+<p class="font-body-lg text-body-lg text-primary mb-1">iPhone 14 Pro (iOS 17)</p>
+<p class="font-body-md text-body-md text-on-surface-variant">San Francisco, CA • Aura App</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Last active: 2 hours ago</p>
+</div>
+<button class="text-error hover:text-error-container p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+<!-- Other Device -->
+<div class="p-6 md:p-8 flex items-start gap-4">
+<span class="material-symbols-outlined text-outline mt-1">tablet_mac</span>
+<div class="flex-grow">
+<p class="font-body-lg text-body-lg text-primary mb-1">iPad Air (iPadOS 16)</p>
+<p class="font-body-md text-body-md text-on-surface-variant">New York, NY • Safari</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Last active: Oct 12, 2023</p>
+</div>
+<button class="text-error hover:text-error-container p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+</div>
+<div class="flex justify-end mt-4">
+<button class="font-button text-button text-error hover:underline flex items-center gap-2">
+                        Sign out of all other devices
+                    </button>
+</div>
+</section>
+<!-- Data & Deletion -->
+<section class="space-y-stack-sm pt-8 border-t border-outline-variant/20">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">delete_forever</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-error">Danger Zone</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-error/20 rounded-xl p-6 md:p-8 space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="space-y-2 max-w-md">
+<p class="font-body-lg text-body-lg text-primary">Deactivate Account</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Temporarily hide your profile, tickets, and activity. You can reactivate by signing back in.</p>
+</div>
+<button class="px-6 py-3 border border-outline-variant text-primary font-button text-button rounded-full hover:bg-surface-container transition-colors shrink-0">Deactivate</button>
+</div>
+<hr class="border-outline-variant/20"/>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="space-y-2 max-w-md">
+<p class="font-body-lg text-body-lg text-error font-medium">Delete Account</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Permanently remove your account, past ticket history, and preferences. This action cannot be undone.</p>
+</div>
+<button class="px-6 py-3 bg-error text-on-error font-button text-button rounded-full hover:bg-error-container transition-colors shrink-0" onclick="document.getElementById('deleteModal').classList.remove('hidden')">Delete Account</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden bg-surface/90 dark:bg-surface/90 backdrop-blur-lg fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe shadow-[0_-1px_0_rgba(0,0,0,0.05)]">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">explore</span>
+<span class="font-label-caps text-[10px] tracking-wider">Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">confirmation_number</span>
+<span class="font-label-caps text-[10px] tracking-wider">Tickets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">favorite</span>
+<span class="font-label-caps text-[10px] tracking-wider">Following</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]">notifications</span>
+<span class="font-label-caps text-[10px] tracking-wider">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-secondary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined fill mb-1 text-[24px]">person</span>
+<span class="font-label-caps text-[10px] tracking-wider">Profile</span>
+</a>
+</nav>
+<!-- Delete Confirmation Modal (Hidden by default) -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" id="deleteModal">
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" onclick="document.getElementById('deleteModal').classList.add('hidden')"></div>
+<div class="relative bg-surface-bright rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant/10">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Delete Account?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Are you absolutely sure you want to delete your account? This action will permanently wipe all your data, including upcoming tickets. This cannot be reversed.</p>
+<div class="space-y-4">
+<div>
+<label class="block font-label-caps text-label-caps text-outline uppercase tracking-wider mb-2">Type "DELETE" to confirm</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md focus:outline-none focus:border-error focus:ring-1 focus:ring-error transition-colors" placeholder="DELETE" type="text"/>
+</div>
+<div class="flex gap-4 mt-8">
+<button class="flex-1 px-6 py-3 border border-outline-variant text-primary font-button text-button rounded-full hover:bg-surface-container transition-colors" onclick="document.getElementById('deleteModal').classList.add('hidden')">Cancel</button>
+<button class="flex-1 px-6 py-3 bg-error text-on-error font-button text-button rounded-full opacity-50 cursor-not-allowed">Delete</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

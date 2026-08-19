@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Forgot Password</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface-bright": "#fbf9f4",
+                "on-secondary-fixed": "#261900",
+                "secondary-fixed-dim": "#e9c176",
+                "primary-fixed": "#e9e1dc",
+                "surface-dim": "#dbdad5",
+                "on-primary-fixed": "#1e1b18",
+                "on-secondary-fixed-variant": "#5d4201",
+                "on-secondary-container": "#785a1a",
+                "outline": "#7e756f",
+                "surface-container-highest": "#e4e2dd",
+                "surface-tint": "#635d5a",
+                "on-tertiary-container": "#cb7c6b",
+                "on-error-container": "#93000a",
+                "surface": "#fbf9f4",
+                "error": "#ba1a1a",
+                "on-error": "#ffffff",
+                "secondary-container": "#fed488",
+                "on-surface": "#1b1c19",
+                "background": "#fbf9f4",
+                "primary-fixed-dim": "#cdc5c0",
+                "on-tertiary-fixed-variant": "#723527",
+                "tertiary-container": "#4d190e",
+                "outline-variant": "#cfc4bd",
+                "tertiary": "#310501",
+                "surface-variant": "#e4e2dd",
+                "surface-container-high": "#eae8e3",
+                "on-primary": "#ffffff",
+                "on-tertiary": "#ffffff",
+                "inverse-primary": "#cdc5c0",
+                "surface-container-low": "#f5f3ee",
+                "error-container": "#ffdad6",
+                "on-background": "#1b1c19",
+                "on-surface-variant": "#4d4540",
+                "primary-container": "#2d2926",
+                "tertiary-fixed-dim": "#ffb4a4",
+                "surface-container-lowest": "#ffffff",
+                "secondary": "#775a19",
+                "primary": "#181512",
+                "on-primary-container": "#96908b",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed": "#3a0a03",
+                "secondary-fixed": "#ffdea5",
+                "inverse-surface": "#30312e",
+                "inverse-on-surface": "#f2f1ec",
+                "surface-container": "#f0eee9",
+                "on-primary-fixed-variant": "#4b4642",
+                "tertiary-fixed": "#ffdad3"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "margin-mobile": "20px",
+                "gutter": "32px",
+                "stack-lg": "80px",
+                "unit": "8px",
+                "container-max": "1440px",
+                "stack-md": "32px",
+                "stack-sm": "16px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "body-lg": [
+                        "Manrope"
+                ],
+                "body-md": [
+                        "Manrope"
+                ],
+                "headline-md": [
+                        "Libre Caslon Text"
+                ],
+                "headline-lg-mobile": [
+                        "Libre Caslon Text"
+                ],
+                "label-caps": [
+                        "Manrope"
+                ],
+                "display-md": [
+                        "Libre Caslon Text"
+                ],
+                "headline-lg": [
+                        "Libre Caslon Text"
+                ],
+                "button": [
+                        "Manrope"
+                ],
+                "display-lg": [
+                        "Libre Caslon Text"
+                ]
+        },
+        "fontSize": {
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.1em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-md": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "button": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "display-lg": [
+                        "64px",
+                        {
+                                "lineHeight": "72px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-surface-bright text-on-surface antialiased min-h-screen flex flex-col md:flex-row relative overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Split Screen Layout for Desktop -->
+<div class="flex-1 flex flex-col items-center justify-center p-6 md:p-margin-desktop bg-surface z-10 w-full md:w-1/2 min-h-screen">
+<div class="w-full max-w-[480px] flex flex-col items-center">
+<!-- Brand Anchor -->
+<header class="w-full flex justify-center mb-12">
+<h1 class="font-display-md text-display-md text-primary tracking-tight">AuraLounge</h1>
+</header>
+<!-- Dynamic Content Area -->
+<div class="w-full flex flex-col gap-stack-sm relative transition-all duration-500 ease-in-out" id="auth-container">
+<!-- Default Form State -->
+<div class="flex flex-col gap-stack-md w-full opacity-100 transition-opacity duration-300" id="reset-form-state">
+<!-- Heading Group -->
+<div class="flex flex-col gap-unit text-center">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Forgot your resonance?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[380px] mx-auto">
+                        Enter your email address and we'll send you a link to recover your account.
+                    </p>
+</div>
+<!-- Form -->
+<form class="flex flex-col gap-6 mt-4" id="forgot-password-form" novalidate="">
+<!-- Input Group -->
+<div class="flex flex-col gap-2 relative">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="email">Email Address</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant">mail</span>
+<input class="w-full font-body-md text-body-md text-primary placeholder:text-outline-variant py-3 pl-12 pr-4 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary focus:border-primary transition-all" id="email" name="email" placeholder="e.g. julian@aura.com" required="" type="email"/>
+</div>
+<!-- Validation Message -->
+<span class="font-button text-[12px] text-error mt-1 hidden transition-all flex items-center gap-1" id="email-error">
+<span class="material-symbols-outlined text-[16px]">error</span>
+                            Please enter a valid email address.
+                        </span>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary hover:bg-primary/90 text-on-primary font-button text-button py-4 px-6 rounded-lg transition-all duration-200 active:scale-[0.98] mt-2 flex justify-center items-center gap-2 relative disabled:opacity-70 disabled:cursor-not-allowed" id="submit-btn" type="submit">
+<span id="btn-text">Send Reset Link</span>
+<span class="material-symbols-outlined loading-spinner hidden absolute" id="btn-spinner">progress_activity</span>
+</button>
+</form>
+<!-- Secondary Action -->
+<div class="flex justify-center mt-4">
+<a class="flex items-center gap-2 font-button text-button text-on-surface-variant hover:text-primary transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                        Back to Login
+                    </a>
+</div>
+</div>
+<!-- Success State (Initially Hidden) -->
+<div class="hidden flex-col gap-stack-md w-full items-center text-center py-8 opacity-0 transition-opacity duration-500 bg-surface z-20 justify-center" id="success-state">
+<div class="w-20 h-20 rounded-full bg-surface-container-low flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[40px] text-primary">forward_to_inbox</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary">Check your inbox</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[400px]">
+                    If an account is associated with this email, you will receive a link to reset your password shortly.
+                </p>
+<a class="mt-8 flex items-center gap-2 font-button text-button text-primary border border-outline-variant px-8 py-3 rounded-lg hover:bg-surface-variant transition-colors w-full md:w-auto justify-center group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Back to Login
+                </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Atmospheric Right Panel for Desktop -->
+<div class="hidden md:flex flex-1 bg-primary relative overflow-hidden items-center justify-center">
+<!-- Immersive Brand Image -->
+<img alt="Atmospheric lounge vibe with a premium record player" class="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-overlay" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF-6l8nLCjVAPisV7oQ3dLmWhO0y4WzuFoV_YstdRg0b_fC8ePXwp2eALlj2nJjWiDPqYiTjvvgpUOPguI41tsyvWy2DVP9EEsGajLBfK3Fe9nAgVEjReEzlApBStXDDMkkTJXajBeqhWtIRXZO0ITwIHflhd4Ac3ddoRAQfvJ4sLvMIybDrg5LR_l0hCz6skzGnY48jl0JQMIpq2ODI4gG2Dgm1k0nu_TgLtBmDeFt2KEvgyyvmqrDQ"/>
+<!-- Gradient Transition Overlay -->
+<div class="absolute inset-0 bg-gradient-to-r from-surface via-surface/40 to-transparent pointer-events-none opacity-80"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent pointer-events-none"></div>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('forgot-password-form');
+            const emailInput = document.getElementById('email');
+            const emailError = document.getElementById('email-error');
+            const formState = document.getElementById('reset-form-state');
+            const successState = document.getElementById('success-state');
+            const btnText = document.getElementById('btn-text');
+            const btnSpinner = document.getElementById('btn-spinner');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // Simple email validation regex
+            const isValidEmail = (email) => {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            };
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const email = emailInput.value.trim();
+                
+                // Reset visual error state
+                emailInput.classList.remove('border-error', 'ring-1', 'ring-error');
+                emailError.classList.add('hidden');
+
+                if (!email || !isValidEmail(email)) {
+                    // Show validation error (Constraint: Format only, no 'not found')
+                    emailInput.classList.add('border-error', 'ring-1', 'ring-error');
+                    emailError.classList.remove('hidden');
+                    emailInput.focus();
+                    return;
+                }
+
+                // Loading State
+                submitBtn.disabled = true;
+                btnText.classList.add('invisible');
+                btnSpinner.classList.remove('hidden');
+
+                // Simulate processing network request
+                setTimeout(() => {
+                    // Fade out form
+                    formState.style.opacity = '0';
+                    formState.style.pointerEvents = 'none';
+
+                    setTimeout(() => {
+                        // Hide form, Show success state
+                        formState.classList.add('hidden');
+                        successState.classList.remove('hidden');
+                        successState.classList.add('flex');
+                        
+                        // Trigger reflow
+                        void successState.offsetWidth;
+                        
+                        // Fade in success state
+                        successState.style.opacity = '1';
+                    }, 300);
+                }, 1500); // 1.5s simulated loading
+            });
+
+            // Clear error on input
+            emailInput.addEventListener('input', () => {
+                if (!emailError.classList.contains('hidden')) {
+                    emailInput.classList.remove('border-error', 'ring-1', 'ring-error');
+                    emailError.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body></html>

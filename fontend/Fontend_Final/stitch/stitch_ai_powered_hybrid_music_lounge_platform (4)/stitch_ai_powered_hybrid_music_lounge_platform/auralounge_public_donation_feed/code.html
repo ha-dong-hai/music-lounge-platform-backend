@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Public Donation Transparency Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#fbf9f4",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-tint": "#635d5a",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "inverse-primary": "#cdc5c0",
+                        "surface-container-highest": "#e4e2dd",
+                        "secondary": "#775a19",
+                        "on-surface": "#1b1c19",
+                        "inverse-on-surface": "#f2f1ec",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#fed488",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#181512",
+                        "outline-variant": "#cfc4bd",
+                        "on-error": "#ffffff",
+                        "on-background": "#1b1c19",
+                        "surface-container": "#f0eee9",
+                        "surface-bright": "#fbf9f4",
+                        "outline": "#7e756f",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-container": "#96908b",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#261900",
+                        "on-secondary-container": "#785a1a",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "tertiary-container": "#4d190e",
+                        "primary-container": "#2d2926",
+                        "surface-container-high": "#eae8e3",
+                        "inverse-surface": "#30312e",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary-fixed": "#ffdea5",
+                        "on-surface-variant": "#4d4540",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "primary-fixed": "#e9e1dc",
+                        "background": "#fbf9f4",
+                        "tertiary": "#310501"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "margin-desktop": "64px",
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "stack-lg": "80px",
+                        "stack-md": "32px"
+                    },
+                    fontFamily: {
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "button": ["Manrope"]
+                    },
+                    fontSize: {
+                        "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.1em", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "display-md": ["48px", { lineHeight: "56px", letterSpacing: "-0.01em", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "400" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "400" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "display-lg": ["64px", { lineHeight: "72px", letterSpacing: "-0.02em", fontWeight: "400" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "400" }],
+                        "button": ["14px", { lineHeight: "20px", letterSpacing: "0.02em", fontWeight: "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen pb-24 md:pb-0 pt-20">
+<!-- Top Navigation (Mobile & Desktop) -->
+<nav class="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md fixed top-0 w-full z-50 border-b border-outline/10 flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed">AuraLounge</span>
+</div>
+<div class="hidden md:flex items-center gap-8 font-body-md text-body-md text-on-surface-variant dark:text-on-primary-fixed-variant cursor-pointer transition-all duration-300">
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Discovery</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Lounges</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Artists</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Events</a>
+</div>
+<div class="flex items-center gap-4 text-primary dark:text-primary-fixed">
+<span class="hidden md:inline font-button text-button cursor-pointer">Support</span>
+<span class="material-symbols-outlined cursor-pointer" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="material-symbols-outlined cursor-pointer" style="font-variation-settings: 'FILL' 0;">settings</span>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline/10">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A sophisticated, high-contrast portrait of a music connoisseur looking slightly away from the camera. The lighting is moody and dramatic, with a subtle warm key light accentuating their features against a deep, dark background. The overall aesthetic feels like a premium magazine editorial, aligning with a quiet luxury vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApHdQ5LEWcjOisZ_CVfPLGoYmKNmT8sAR3_jREr4WdjggLt7pAZLV-LcmTjiuhx-VfCp2tc1vpI6wtlXIXoeotPpqinaB6-bq6ASuIT77UvZmg5pDE6yZlzOQ6Oq_Fupp7mrpHA3CCsgcoE0RKc5VTtiVMOJmPbyRBHSZHd6J8teTTZNrT7VCUhXpLjdM6EKT5-vPgKhGWCei0jb3yMHL_w9xy0ygOy5oM7juewH6E_xGVNEc6W-eanw"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mt-stack-md">
+<!-- Header Section -->
+<header class="mb-stack-md text-center md:text-left">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Public Ledger</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto md:mx-0">A transparent view of patronage. Empowering artists through direct support, recorded immutably.</p>
+</header>
+<!-- Toggle Controls -->
+<div class="flex justify-center md:justify-start mb-stack-lg">
+<div class="flex bg-surface-container-low rounded-full p-1 border border-outline/10">
+<button class="px-6 py-2 rounded-full font-button text-button bg-primary text-on-primary shadow-sm transition-all">All Donations</button>
+<button class="px-6 py-2 rounded-full font-button text-button text-on-surface-variant hover:text-primary transition-all">Trending High Impact</button>
+</div>
+</div>
+<!-- Ledger List -->
+<div class="space-y-unit">
+<!-- Ledger Item 1 -->
+<div class="group flex flex-col md:flex-row md:items-center justify-between p-stack-sm bg-surface-container-lowest border border-outline/10 rounded-lg hover:bg-surface-container-low transition-colors duration-300">
+<div class="flex items-center gap-4 mb-4 md:mb-0">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-outline/10">
+<img class="w-full h-full object-cover" data-alt="A close-up, abstract detail shot of a classical instrument, perhaps the curves of a cello or the keys of a grand piano. The lighting is soft and cinematic, emphasizing the texture of the wood or ivory. The image should convey a sense of timeless elegance and musical heritage, suitable for a premium arts platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3LYfaiKwJ0oxG-YsARyy5mNE6AdO8WNPcCz2MQxVnLnf2RgQhsAifEtOvo7Ro2u_wO1TUaq-y90dZxwTXcOGc6b8kVG48oIBneZoQmdYf4RHhie5fsVKlKNSdwGKneRsIsA9LKnGTOi345nOPLKzeSSPUByoaHOZXorxDPJqdTgB6vSeO_E_BjextmFhrdsH-ltyD9nsZ1ZE01W09RvLcv2l8seBL0m2ZbuTlZd3y0g-gsUFgZ6XXSA"/>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Oct 24, 2023</p>
+<p class="font-body-md text-body-md text-primary font-medium">Anonymous Supporter</p>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-6 md:gap-12 w-full md:w-auto border-t md:border-t-0 border-outline/10 pt-4 md:pt-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0; font-size: 18px;">arrow_forward</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Recipient</p>
+<p class="font-body-md text-body-md text-primary">The Velvet Room</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Amount</p>
+<p class="font-headline-md text-headline-md text-primary">$1,500</p>
+</div>
+</div>
+</div>
+<!-- Ledger Item 2 -->
+<div class="group flex flex-col md:flex-row md:items-center justify-between p-stack-sm bg-surface-container-lowest border border-outline/10 rounded-lg hover:bg-surface-container-low transition-colors duration-300">
+<div class="flex items-center gap-4 mb-4 md:mb-0">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center shrink-0 border border-outline/10">
+<span class="font-headline-md text-headline-md text-on-surface-variant">E</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Oct 23, 2023</p>
+<p class="font-body-md text-body-md text-primary font-medium">Elena R.</p>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-6 md:gap-12 w-full md:w-auto border-t md:border-t-0 border-outline/10 pt-4 md:pt-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0; font-size: 18px;">arrow_forward</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Recipient</p>
+<p class="font-body-md text-body-md text-primary">Marcus Vance Trio</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Amount</p>
+<p class="font-headline-md text-headline-md text-primary">$250</p>
+</div>
+</div>
+</div>
+<!-- Ledger Item 3 -->
+<div class="group flex flex-col md:flex-row md:items-center justify-between p-stack-sm bg-surface-container-lowest border border-outline/10 rounded-lg hover:bg-surface-container-low transition-colors duration-300">
+<div class="flex items-center gap-4 mb-4 md:mb-0">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-outline/10">
+<img class="w-full h-full object-cover" data-alt="A moody, atmospheric shot of an empty lounge interior, featuring dark velvet seating and low, warm amber lighting. The scene is shot with a shallow depth of field, blurring the background to create a sense of intimacy and exclusivity. The overall tone is luxurious and quiet, fitting a high-end music venue aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFkUblfG2zL9vh5uAoCs1TGpFR2XZuQjiIKqElvWB0uG0-c8IK4qSLfANDOhBGGKcPLSnk-PmahqntULOMW4l2koxVTkRquvhwZBLvp_fYIEtMqx1cCZLqwUiiIF0zq_zJr3tH-DqY2X5NzzKFm1xHQkhXCkz8hkH9hHu4687ZOYFpZKDi4Qsgzk2cymMOGuFo6tQcQheeqmu9NjhePJMqczBRSxqBx3-VoUCzuliHKDW7BQ3OVYKL-g"/>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Oct 22, 2023</p>
+<p class="font-body-md text-body-md text-primary font-medium">Julian H.</p>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-6 md:gap-12 w-full md:w-auto border-t md:border-t-0 border-outline/10 pt-4 md:pt-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0; font-size: 18px;">arrow_forward</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Recipient</p>
+<p class="font-body-md text-body-md text-primary">Aura Foundation</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Amount</p>
+<p class="font-headline-md text-headline-md text-primary">$5,000</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-primary-container text-on-surface dark:text-on-primary-fixed font-body-md text-body-md w-full relative mt-stack-lg border-t border-outline/10">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto">
+<div>
+<p class="font-display-md text-display-md text-primary dark:text-primary-fixed mb-4">AuraLounge</p>
+<p class="text-on-surface-variant dark:text-on-primary-fixed-variant">© 2024 AuraLounge. The Quiet Luxury of Sound.</p>
+</div>
+<div class="flex flex-col md:items-end gap-2 opacity-100 transition-opacity">
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Artist Relations</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Press Kit</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+</body></html>

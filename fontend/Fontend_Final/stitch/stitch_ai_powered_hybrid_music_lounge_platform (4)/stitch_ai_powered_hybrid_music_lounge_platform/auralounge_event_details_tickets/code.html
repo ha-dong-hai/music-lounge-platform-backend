@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Midnight Echoes - Event Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-dim": "#dbdad5",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "inverse-surface": "#30312e",
+                      "background": "#fbf9f4",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-container": "#f0eee9",
+                      "on-secondary-container": "#785a1a",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-container-high": "#eae8e3",
+                      "on-primary": "#ffffff",
+                      "on-surface": "#1b1c19",
+                      "surface-container-highest": "#e4e2dd",
+                      "primary-container": "#2d2926",
+                      "secondary-fixed": "#ffdea5",
+                      "error": "#ba1a1a",
+                      "inverse-primary": "#cdc5c0",
+                      "error-container": "#ffdad6",
+                      "outline": "#7e756f",
+                      "on-error-container": "#93000a",
+                      "surface-variant": "#e4e2dd",
+                      "primary": "#181512",
+                      "surface-container-low": "#f5f3ee",
+                      "on-primary-container": "#96908b",
+                      "inverse-on-surface": "#f2f1ec",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-bright": "#fbf9f4",
+                      "on-secondary-fixed": "#261900",
+                      "surface-tint": "#635d5a",
+                      "on-tertiary-container": "#cb7c6b",
+                      "outline-variant": "#cfc4bd",
+                      "on-surface-variant": "#4d4540",
+                      "surface": "#fbf9f4",
+                      "tertiary": "#310501",
+                      "secondary": "#775a19",
+                      "tertiary-container": "#4d190e",
+                      "secondary-container": "#fed488",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-background": "#1b1c19",
+                      "on-error": "#ffffff",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "margin-desktop": "64px",
+                      "stack-md": "32px",
+                      "margin-mobile": "20px",
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md antialiased pb-24 md:pb-0">
+<!-- Top Navigation (Mobile/Tablet specific intent: Task-Focused, so suppressing global nav shell, but keeping a contextual header) -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md flex justify-between items-center px-margin-mobile py-4 border-b border-outline/10 md:hidden">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary">Midnight Echoes</h1>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">share</span>
+</button>
+</header>
+<main class="w-full max-w-container-max mx-auto md:px-margin-desktop md:pt-margin-desktop pt-[72px]">
+<!-- Hero Section -->
+<section class="relative w-full h-[442px] md:h-[530px] md:rounded-xl overflow-hidden mb-stack-md">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A moody, high-contrast photograph of a live music performance in a sophisticated, minimalist lounge. The lighting is dim with dramatic spotlights highlighting the artist. The aesthetic is premium, exclusive, and culturally rich, emphasizing the 'Quiet Luxury of Sound' with a refined color palette of deep charcoals, soft creams, and warm amber glows." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBTwuCPf7Z4ML3lob2VhV2gS2Mas1dHmHVXd7RGdpa6WEoFOzseOpP0mM9k00HYfQJjNfbppuyPNpAsDEa83rL3TYK6JhijPpvV6s4mmlkl9pACbtVlifbzXMkNP_hOwfJcW5CsKPeb7yAfEqmMHcY7kqZqfex-gOt0my1dYb8AhSNXICv737OYr_jWvNjiLsbQar4KeVpG4c-6wVGRuBiF02aMuaSPYbtEzLAkp_xH_9DiU3xw-Q5Kjw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/30 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-margin-mobile md:p-stack-md flex flex-col justify-end text-on-primary">
+<div class="flex items-center gap-2 mb-2">
+<span class="px-2 py-1 bg-surface/20 backdrop-blur-sm rounded-sm font-label-caps text-label-caps text-surface">ELECTRONIC</span>
+<span class="px-2 py-1 bg-surface/20 backdrop-blur-sm rounded-sm font-label-caps text-label-caps text-surface">LIVE SET</span>
+</div>
+<h1 class="font-display-md text-display-md md:font-display-lg md:text-display-lg mb-2">Midnight Echoes</h1>
+<p class="font-body-lg text-body-lg text-surface-container opacity-90">An immersive auditory journey.</p>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter px-margin-mobile md:px-0">
+<!-- Left Column: Details -->
+<div class="md:col-span-8 flex flex-col gap-stack-lg">
+<!-- Meta Info -->
+<section class="flex flex-col gap-4">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">calendar_today</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Friday, October 27th</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Doors 9:00 PM • Show 10:30 PM</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">location_on</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">The Aura Room</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">124 Gallery Row, Arts District</p>
+<a class="font-button text-button text-primary underline mt-1 inline-block" href="#">View Map</a>
+</div>
+</div>
+</section>
+<!-- About Artist -->
+<section>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface mb-6 border-b border-outline/10 pb-4">About the Artist</h2>
+<div class="prose max-w-none text-on-surface-variant font-body-md leading-relaxed">
+<p class="mb-4">Midnight Echoes is the latest project from acclaimed sound architect Elias Thorne. Known for blending organic textures with deep, resonant electronic pulses, Thorne creates environments rather than just songs.</p>
+<p>This exclusive performance marks the debut of his new analog-driven setup, designed specifically for the intimate acoustics of The Aura Room. Expect a seamless flow of ambient introspection building to intricate, rhythmic peaks.</p>
+</div>
+</section>
+<!-- Gallery Preview (Bento-ish) -->
+<section>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface mb-6 border-b border-outline/10 pb-4">Atmosphere</h2>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+<div class="col-span-2 row-span-2 h-48 md:h-64 rounded-lg bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A wide angle shot of an elegant, minimalist lounge setting. The room features plush, low-profile seating in deep charcoal tones, subtle architectural lighting casting soft shadows, and a sophisticated, high-end gallery feel. The color palette revolves around cream, charcoal, and warm wood accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC91yqMyGe9PBnZ_iLgVyx_qYcUUR7ehMAKcXEPG46PBGFR2FUniHHiE1yQ2IMYPZrBMRgOl1yf5zdvJuCi6hs0TqLYQ6OmDDEFj2v6CLI33lFaWFWU5VyOKx8huswgHxu66lZCjlJjiVbRkJs2Wrfr_dv0-nW6QP4XFUH4eCsI-1vwF3Ti-UjWVxAA7yUjHHo9VYeBeLw-vu6UQe9z7-7yCrbIuBaOwZgJ8UgN0auFVQDgtxAnUhqUfA"/>
+</div>
+<div class="h-24 md:h-32 rounded-lg bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A close-up of a vintage analog synthesizer with intricate knobs and cables, bathed in a soft, warm light. The aesthetic is tactile, premium, and focused on the 'Quiet Luxury of Sound' with crisp details and a refined color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwFCT_fZlcyysyufOjyfjYrM0DdHVUXFgAVOSYplmNuABig7dblDVpqTSd1b9RA1Lw7ijRQ5wxEHTjgLunrj7jPp_G7JPjv85tg0qsUcBgHVmdXX05IuHcccHFVHbadPJj7zi0ybev8pWTLnUxuIsKaKKbXFeOUzFngVjVVURXmpBh0dpwDxT4bUgxvLfkzVi3VFC1xm4F6C4ujKpq5PEJrjGS1UqoNCJA1G_yFxutuDRDQWYrLmnyaw"/>
+</div>
+<div class="h-24 md:h-32 rounded-lg bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A detail shot of a pristine, high-end cocktail resting on a dark marble table in a dimly lit, luxurious lounge environment. Soft, ambient background blur emphasizes the sophistication and exclusivity of the venue." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcnnIjkWOrehdf6HhligG_iVal2MmS1MDtKpi4kYQI1BggC6tXZHw_j42S2JzvUPczKIZqbeyR1XBN2hscNoyXTBo1iXMPiIzNC6BS36JQTPQbIsbovwqNTzrzMsuVFENiuO9g-DLkD9QPjBgGHjM-Pytw254E4tU8DE-R1gGOamUotAzrGzEjlTE5JS7VaTlUIWIvMQxXAyrhu3zvqCz59yrO0LWqlzyEoplfJTdTBLBhONNSO-pZWw"/>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Tickets (Sticky on Desktop, normal flow on mobile) -->
+<div class="md:col-span-4 relative">
+<div class="md:sticky md:top-32 flex flex-col gap-6">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface md:hidden mt-8 mb-2 border-b border-outline/10 pb-4">Select Tickets</h2>
+<!-- Ticket Cards -->
+<div class="flex flex-col gap-4">
+<!-- VIP -->
+<label class="relative flex flex-col p-6 rounded-xl border border-outline/20 bg-surface cursor-pointer hover:bg-surface-container transition-colors group has-[:checked]:border-primary has-[:checked]:bg-surface-container-low">
+<input class="peer sr-only" name="ticket_type" type="radio" value="vip"/>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-label-caps text-label-caps text-primary tracking-widest mb-1">VIP RESERVE</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Booth seating, dedicated service, limited capacity.</p>
+</div>
+<span class="font-headline-md text-headline-md text-primary ml-4">$150</span>
+</div>
+<div class="absolute inset-0 border-2 border-transparent rounded-xl peer-checked:border-primary pointer-events-none transition-colors"></div>
+</label>
+<!-- Premium -->
+<label class="relative flex flex-col p-6 rounded-xl border border-outline/20 bg-surface cursor-pointer hover:bg-surface-container transition-colors group has-[:checked]:border-primary has-[:checked]:bg-surface-container-low">
+<input checked="" class="peer sr-only" name="ticket_type" type="radio" value="premium"/>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-label-caps text-label-caps text-primary tracking-widest mb-1">PREMIUM</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Guaranteed seating in the main listening area.</p>
+</div>
+<span class="font-headline-md text-headline-md text-primary ml-4">$85</span>
+</div>
+<div class="absolute inset-0 border-2 border-transparent rounded-xl peer-checked:border-primary pointer-events-none transition-colors"></div>
+</label>
+<!-- Standard -->
+<label class="relative flex flex-col p-6 rounded-xl border border-outline/20 bg-surface cursor-pointer hover:bg-surface-container transition-colors group has-[:checked]:border-primary has-[:checked]:bg-surface-container-low opacity-50">
+<input class="peer sr-only" disabled="" name="ticket_type" type="radio" value="standard"/>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-label-caps text-label-caps text-primary tracking-widest mb-1">STANDARD ENTRY</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Standing room access.</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-headline-md text-headline-md text-primary ml-4 line-through text-on-surface-variant">$45</span>
+<span class="font-label-caps text-label-caps text-error mt-1">SOLD OUT</span>
+</div>
+</div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom Bar for Mobile Checkout -->
+<div class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-outline/10 p-4 md:hidden z-50 flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PREMIUM SELECTED</span>
+<span class="font-headline-md text-headline-md text-primary">$85 <span class="font-body-md text-body-md text-on-surface-variant text-sm">/ ea</span></span>
+</div>
+<button class="bg-primary text-on-primary font-button text-button px-8 py-4 rounded-full hover:opacity-90 transition-opacity active:scale-95">
+            Select Seats
+        </button>
+</div>
+</body></html>

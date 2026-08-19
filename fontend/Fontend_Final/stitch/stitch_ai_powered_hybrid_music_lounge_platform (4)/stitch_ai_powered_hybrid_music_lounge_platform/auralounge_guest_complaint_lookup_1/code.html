@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AuraLounge - Guest Complaint Lookup</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#cdc5c0",
+                        "surface-container-low": "#f5f3ee",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#1e1b18",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-container": "#96908b",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#eae8e3",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-secondary-fixed": "#261900",
+                        "background": "#fbf9f4",
+                        "tertiary-fixed": "#ffdad3",
+                        "tertiary": "#310501",
+                        "surface-container": "#f0eee9",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-error": "#ffffff",
+                        "primary-container": "#2d2926",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-dim": "#dbdad5",
+                        "on-secondary-container": "#785a1a",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-surface-variant": "#4d4540",
+                        "surface-bright": "#fbf9f4",
+                        "on-surface": "#1b1c19",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#30312e",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "secondary-fixed": "#ffdea5",
+                        "surface-container-highest": "#e4e2dd",
+                        "primary": "#181512",
+                        "surface-tint": "#635d5a",
+                        "primary-fixed": "#e9e1dc",
+                        "secondary-container": "#fed488",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#4d190e",
+                        "outline": "#7e756f",
+                        "surface": "#fbf9f4",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c19",
+                        "secondary": "#775a19",
+                        "outline-variant": "#cfc4bd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "stack-lg": "80px",
+                        "unit": "8px",
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "16px",
+                        "gutter": "32px"
+                    },
+                    "fontFamily": {
+                        "button": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(207, 196, 189, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- TopAppBar (Suppressed for Transactional Intent, but providing a simplified header for navigation context) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
+<button aria-label="Back" class="text-on-surface-variant p-2 -ml-2 rounded-full hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<span class="font-display-md text-[20px] leading-tight tracking-widest text-primary">AURA</span>
+<div class="w-10"></div> <!-- Spacer for center alignment -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col px-margin-mobile pt-24 pb-safe-bottom">
+<!-- Header Section -->
+<section class="mt-stack-sm mb-stack-md flex flex-col gap-unit">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Status Lookup</h1>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-80">
+                Enter your reference details below to check the current status of your submitted inquiry or complaint.
+            </p>
+</section>
+<!-- Form Glass Panel -->
+<section class="glass-panel rounded-xl p-6 mb-stack-md flex flex-col gap-stack-sm shadow-[0_8px_32px_rgba(24,21,18,0.04)] relative overflow-hidden">
+<!-- Subtle gradient orb behind form -->
+<div class="absolute -top-24 -right-24 w-48 h-48 bg-secondary-fixed/20 rounded-full blur-[40px] pointer-events-none"></div>
+<div class="flex flex-col gap-2 relative z-10">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest" for="referenceNumber">Reference Number</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none ml-2" style="font-variation-settings: 'FILL' 0;">tag</span>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant/50 focus:border-primary focus:ring-0 px-0 pl-10 py-3 font-body-md text-body-md text-primary placeholder:text-on-surface-variant/40 transition-colors" id="referenceNumber" placeholder="e.g. AUR-8492" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-2 relative z-10 mt-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest" for="phoneNumber">Phone Number</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none ml-2" style="font-variation-settings: 'FILL' 0;">call</span>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant/50 focus:border-primary focus:ring-0 px-0 pl-10 py-3 font-body-md text-body-md text-primary placeholder:text-on-surface-variant/40 transition-colors" id="phoneNumber" placeholder="(555) 000-0000" type="tel"/>
+</div>
+</div>
+<button class="mt-stack-sm w-full bg-primary text-on-primary font-button text-button py-4 rounded-full flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all" type="button">
+                Check Status
+                <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+</button>
+</section>
+<!-- Help / Support Link -->
+<section class="mt-auto pt-stack-md flex flex-col items-center text-center gap-2 mb-stack-sm">
+<span class="material-symbols-outlined text-outline/50" style="font-variation-settings: 'FILL' 0;">help</span>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">
+                Lost your reference number?
+            </p>
+<a class="font-button text-button text-secondary underline underline-offset-4 hover:text-secondary-container transition-colors" href="#">
+                Contact Guest Services
+            </a>
+</section>
+</main>
+<!-- BottomNavBar (Suppressed due to Transactional Intent - Status Lookup is a focused task) -->
+</body></html>

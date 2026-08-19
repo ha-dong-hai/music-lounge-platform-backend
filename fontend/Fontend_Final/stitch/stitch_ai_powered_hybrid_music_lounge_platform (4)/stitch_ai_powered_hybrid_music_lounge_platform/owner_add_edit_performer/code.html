@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Add/Edit Performer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#775a19",
+                        "tertiary": "#310501",
+                        "tertiary-container": "#4d190e",
+                        "surface-tint": "#635d5a",
+                        "on-primary-fixed": "#1e1b18",
+                        "background": "#fbf9f4",
+                        "surface-bright": "#fbf9f4",
+                        "primary-container": "#2d2926",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "inverse-primary": "#cdc5c0",
+                        "primary": "#181512",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#7e756f",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "on-background": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#eae8e3",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface-dim": "#dbdad5",
+                        "surface-container-low": "#f5f3ee",
+                        "secondary-container": "#fed488",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-variant": "#e4e2dd",
+                        "surface-container": "#f0eee9",
+                        "on-secondary-container": "#785a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#ffdea5",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "outline-variant": "#cfc4bd",
+                        "surface": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#4d4540",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-surface": "#1b1c19",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-secondary-fixed": "#261900",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-primary-container": "#96908b",
+                        "inverse-on-surface": "#f2f1ec"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "gutter": "32px",
+                        "stack-sm": "16px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "20px",
+                        "unit": "8px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "button": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        /* High-end minimalist form inputs */
+        .aura-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid theme('colors.outline-variant');
+            padding: 12px 0;
+            transition: border-color 0.3s ease;
+        }
+        .aura-input:focus {
+            outline: none;
+            border-bottom-color: theme('colors.primary');
+            box-shadow: none;
+        }
+        .aura-input::placeholder {
+            color: theme('colors.outline');
+        }
+        /* Custom file upload styling */
+        .aura-upload-area {
+            border: 1px dashed theme('colors.outline-variant');
+            transition: all 0.3s ease;
+        }
+        .aura-upload-area:hover {
+            border-color: theme('colors.primary');
+            background-color: theme('colors.surface-container');
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex selection:bg-secondary selection:text-on-secondary">
+<!-- SideNavBar (Hidden on Mobile) -->
+<nav class="hidden md:flex flex-col py-8 px-6 gap-stack-sm bg-surface-container dark:bg-surface-container-high fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 z-40">
+<div class="mb-stack-md">
+<h1 class="text-headline-md font-headline-md text-primary tracking-tight">Management</h1>
+<p class="text-label-caps font-label-caps text-on-surface-variant/70 mt-1">Staff Access</p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+<span>Events</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-primary font-bold bg-surface-container-highest/50" href="#">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+<span>Performers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span>Livestreams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant/10 pt-4 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-highest transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 relative min-h-screen pb-stack-lg">
+<!-- Mobile Header (Visible only on mobile) -->
+<header class="md:hidden flex items-center justify-between px-margin-mobile h-20 border-b border-outline-variant/10 bg-surface/80 backdrop-blur-md sticky top-0 z-30">
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile text-primary">AuraLounge</h1>
+<button class="text-primary p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-stack-md md:pt-stack-lg">
+<div class="mb-stack-md flex justify-between items-end">
+<div>
+<h2 class="text-display-md font-display-md text-primary mb-2">New Performer</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant">Add details for a new artist or band to your roster.</p>
+</div>
+</div>
+<!-- Form Container -->
+<form class="max-w-3xl grid gap-stack-lg">
+<!-- Section 1: Performer Information -->
+<section class="bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-8 md:p-12">
+<h3 class="text-headline-md font-headline-md text-primary mb-stack-sm flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">person</span>
+                        Performer Information
+                    </h3>
+<div class="grid gap-stack-md">
+<!-- Avatar Upload -->
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-4">Avatar / Press Image</label>
+<div class="flex items-center gap-8">
+<div class="w-32 h-32 rounded-full bg-surface-variant flex-shrink-0 overflow-hidden border border-outline-variant/20 relative group">
+<div class="absolute inset-0 bg-primary/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-on-primary">edit</span>
+</div>
+</div>
+<div class="flex-1 aura-upload-area rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+<span class="material-symbols-outlined text-outline mb-2">cloud_upload</span>
+<p class="text-body-md font-body-md text-primary mb-1">Click to upload or drag and drop</p>
+<p class="text-label-caps font-label-caps text-outline">SVG, PNG, JPG or GIF (max. 5MB)</p>
+</div>
+</div>
+</div>
+<!-- Name -->
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-2" for="performer_name">Performer Name</label>
+<input class="aura-input text-body-lg font-body-lg text-primary" id="performer_name" maxlength="200" placeholder="Enter artist or band name" type="text"/>
+</div>
+<!-- Type Toggle -->
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-3">Act Type</label>
+<div class="flex items-center gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 text-primary bg-surface border-outline focus:ring-primary" name="act_type" type="radio" value="solo"/>
+<span class="text-body-md font-body-md text-on-surface">Solo Artist</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 text-primary bg-surface border-outline focus:ring-primary" name="act_type" type="radio" value="band"/>
+<span class="text-body-md font-body-md text-on-surface">Band / Ensemble</span>
+</label>
+</div>
+</div>
+<!-- Bio -->
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-2" for="performer_bio">Biography</label>
+<textarea class="aura-input text-body-md font-body-md text-primary resize-y" id="performer_bio" maxlength="2000" placeholder="Brief biography or stylistic description..." rows="4"></textarea>
+<div class="flex justify-end mt-1">
+<span class="text-label-caps font-label-caps text-outline">0 / 2000</span>
+</div>
+</div>
+<!-- Genres -->
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-3">Genres</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-1.5 rounded bg-surface-variant border border-outline-variant/50 text-body-md font-body-md text-on-surface hover:border-primary transition-colors" type="button">Jazz</button>
+<button class="px-4 py-1.5 rounded bg-primary text-on-primary text-body-md font-body-md flex items-center gap-1" type="button">Classical <span class="material-symbols-outlined text-[16px]">close</span></button>
+<button class="px-4 py-1.5 rounded bg-surface-variant border border-outline-variant/50 text-body-md font-body-md text-on-surface hover:border-primary transition-colors" type="button">Acoustic</button>
+<button class="px-4 py-1.5 rounded bg-surface border border-dashed border-outline text-body-md font-body-md text-outline hover:text-primary hover:border-primary flex items-center gap-1 transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">add</span> Add Genre</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Bank Information -->
+<section class="bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-8 md:p-12 relative overflow-hidden">
+<!-- Subtle background decoration -->
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-surface-container rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+<div class="flex justify-between items-center mb-stack-sm relative z-10">
+<h3 class="text-headline-md font-headline-md text-primary flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">account_balance</span>
+                            Banking Information
+                        </h3>
+<span class="text-label-caps font-label-caps text-outline bg-surface px-2 py-1 border border-outline-variant/30 rounded">Optional</span>
+</div>
+<div class="grid md:grid-cols-2 gap-x-gutter gap-y-stack-md relative z-10">
+<div class="md:col-span-2">
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-2" for="bank_name">Bank Name</label>
+<input class="aura-input text-body-lg font-body-lg text-primary" id="bank_name" placeholder="e.g. Chase, Bank of America" type="text"/>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-2" for="account_holder">Account Holder Name</label>
+<input class="aura-input text-body-md font-body-md text-primary" id="account_holder" placeholder="Legal name on account" type="text"/>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-2" for="account_number">Account / IBAN Number</label>
+<input class="aura-input text-body-md font-body-md text-primary" id="account_number" placeholder="••••••••••••" type="password"/>
+</div>
+<div class="md:col-span-2 pt-4">
+<label class="flex items-center gap-3 cursor-pointer">
+<input checked="" class="w-5 h-5 rounded border-outline text-primary bg-surface focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-body-md font-body-md text-on-surface">Set as default payout method for this performer</span>
+</label>
+</div>
+</div>
+</section>
+<!-- Actions -->
+<div class="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 mt-stack-sm pt-stack-sm border-t border-outline-variant/10">
+<button class="w-full sm:w-auto px-8 py-3 rounded border border-outline text-button font-button text-on-surface hover:bg-surface-variant transition-colors" type="button">
+                        Cancel
+                    </button>
+<button class="w-full sm:w-auto px-8 py-3 rounded bg-primary text-on-primary text-button font-button hover:bg-primary/90 transition-colors shadow-sm" type="submit">
+                        Save Performer
+                    </button>
+</div>
+</form>
+</div>
+</main>
+</body></html>

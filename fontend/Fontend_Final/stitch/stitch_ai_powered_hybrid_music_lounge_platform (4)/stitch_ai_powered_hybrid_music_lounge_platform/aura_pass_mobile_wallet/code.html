@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AuraLounge - Your Tickets</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error-container": "#ffdad6",
+                      "on-primary-container": "#96908b",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-primary": "#ffffff",
+                      "secondary-container": "#fed488",
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-container": "#4d190e",
+                      "surface-variant": "#e4e2dd",
+                      "on-background": "#1b1c19",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-container-high": "#eae8e3",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "secondary-fixed": "#ffdea5",
+                      "secondary": "#775a19",
+                      "surface-tint": "#635d5a",
+                      "background": "#fbf9f4",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-secondary": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "surface-container-low": "#f5f3ee",
+                      "on-surface": "#1b1c19",
+                      "primary": "#181512",
+                      "inverse-primary": "#cdc5c0",
+                      "outline-variant": "#cfc4bd",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-secondary-fixed": "#261900",
+                      "surface-container-highest": "#e4e2dd",
+                      "surface": "#fbf9f4",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-error": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "primary-fixed": "#e9e1dc",
+                      "on-secondary-container": "#785a1a",
+                      "outline": "#7e756f",
+                      "primary-container": "#2d2926",
+                      "surface-container": "#f0eee9",
+                      "tertiary": "#310501",
+                      "surface-bright": "#fbf9f4",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#dbdad5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "container-max": "1440px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        /* Custom Ticket Edge Effect */
+        .ticket-edge {
+            background-image: radial-gradient(circle at 0 50%, transparent 8px, #ffffff 9px), 
+                              radial-gradient(circle at 100% 50%, transparent 8px, #ffffff 9px);
+            background-size: 10px 100%;
+            background-position: left center, right center;
+            background-repeat: no-repeat;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased md:hidden min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-background fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md">
+<div class="flex items-center justify-between px-margin-mobile h-16">
+<button aria-label="Menu" class="text-primary dark:text-on-background hover:opacity-70 transition-opacity scale-95 active:transition-transform">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-display-md text-headline-md text-primary dark:text-primary-fixed-dim tracking-tighter">AuraLounge</h1>
+<button aria-label="Notifications" class="text-primary dark:text-on-background hover:opacity-70 transition-opacity scale-95 active:transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow pt-24 pb-32 px-margin-mobile flex flex-col gap-stack-md">
+<!-- Page Title -->
+<section>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile mb-unit">Your Tickets</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your upcoming and past experiences.</p>
+</section>
+<!-- Active Ticket (Bento/Card) -->
+<section class="flex flex-col gap-unit">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase">Active</h3>
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl overflow-hidden flex flex-col relative">
+<!-- Ticket Header Image -->
+<div class="h-32 w-full relative">
+<img class="w-full h-full object-cover" data-alt="Abstract visualization of smooth jazz music in a high-end, dimly lit lounge. A grand piano silhouette against a backdrop of deep indigo and warm amber lighting. The atmosphere is sophisticated and quiet luxury, embodying the 'Quiet Luxury of Sound' aesthetic. High resolution, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVY7Qg4jN7nyJH_hrZplmlB1-prHTZuhT7GJBeDtEaaES6hHK1SFLvxWptGbYHeNW7f7mVsQr_SvDm61Ta3eu26RutWyWS4L2puAN9JiCSRXhbmfukB2pG02WvidTuM-NwlDjy_E2XGc9o4Kt9R87bJcytgn5SkJ2TULcsN10TKRAjJGQSQDrEYTh1et39soOdkMHlHErSJ_EkEiD77L66QXonwO1H5XCjXrIzQRItIBmEt-debdZ37Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest to-transparent"></div>
+</div>
+<!-- Ticket Info -->
+<div class="px-6 py-4 flex flex-col gap-stack-sm z-10 -mt-8">
+<div>
+<span class="font-label-caps text-label-caps bg-surface-variant/50 px-2 py-1 rounded inline-block mb-2">Live Jazz</span>
+<h4 class="font-headline-md text-headline-md">Midnight Serenade</h4>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+                            The Velvet Room
+                        </p>
+</div>
+<div class="flex justify-between items-end border-t border-outline-variant/20 pt-4 mt-2">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Date &amp; Time</span>
+<span class="font-body-lg text-body-lg font-medium">Oct 24, 9:00 PM</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Admit</span>
+<span class="font-body-lg text-body-lg font-medium">2 Guests</span>
+</div>
+</div>
+</div>
+<!-- Ticket Actions (QR & Transfer) -->
+<div class="bg-surface-container-low px-6 py-4 flex gap-4 ticket-edge border-t border-outline-variant/10 border-dashed relative">
+<!-- Fake perforations on sides (handled by css background) -->
+<button class="flex-1 bg-primary text-on-primary font-button text-button py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+                        Show QR
+                    </button>
+<button class="flex-1 border border-outline font-button text-button py-3 rounded-lg flex items-center justify-center gap-2 text-primary hover:bg-surface-variant/50 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+                        Transfer
+                    </button>
+</div>
+</div>
+</section>
+<!-- Past Experiences List -->
+<section class="flex flex-col gap-unit mt-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase">Past Experiences</h3>
+<div class="flex flex-col gap-3">
+<!-- Past Ticket Item 1 -->
+<div class="flex items-center gap-4 p-3 border border-outline-variant/10 rounded-lg bg-surface/50 opacity-70">
+<div class="w-16 h-16 rounded bg-surface-variant flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover grayscale" data-alt="Minimalist acoustic guitar leaning against a concrete wall in an art gallery space. Soft, natural daylight illuminating the scene from a high window. The style is serene, high-end minimal, embodying a premium cultural aesthetic. Soft shadows, pristine composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_3h9q007xk0AHiWhUz9j3T_RMecnFoPI8kfmz4o331UbLVnFAhuu74y5aa4gWJdzVPfyNDac3iwGDYuL_dJuCehf3g2ckh3jUbChvm7cThsfp0H-m-XWmueJHOduS03VnAZe3PVPaTsfzVQaCr5DvKrQaV3E0LmGJSDnQvGE0ohio_IYDN_-nVffhOr-gV9wD9L54nPUcZAd0V3kvCYpJmmDPOEsSqC9c6yZSg4sr1VIpCc3JdZVcHg"/>
+</div>
+<div class="flex-grow">
+<h5 class="font-body-lg text-body-lg leading-tight">Acoustic Sessions</h5>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Sept 12 • The Atrium</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<!-- Past Ticket Item 2 -->
+<div class="flex items-center gap-4 p-3 border border-outline-variant/10 rounded-lg bg-surface/50 opacity-70">
+<div class="w-16 h-16 rounded bg-surface-variant flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover grayscale" data-alt="Close up of a classic vinyl record spinning on a high-end turntable. Ambient, moody lighting with a touch of neon reflection. The setting feels like an exclusive listening lounge. Quiet luxury, sophisticated atmosphere. High fidelity image." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3ESd7EFbjIW6-1S4U1bE_Y_mIczR54pXJArCa31Vq25zTzUXiCHmYeWDJS_XQjxCZO900kb8WlYTlSX8CRHhVxkKU76gs4A5tvcagCYkWBpWNXsXK2lMsZV5n-_Sttus5joFUHV2UbAQyxHHOGcZUCu9ABYnRJx4oTr5iy3VjXdoMsPcAujErKufKBXThxBPCBQcmq9YsqlofANdvp39bigsnnloPOrA4q19wG9Lx5NIXJeHQHBHbhA"/>
+</div>
+<div class="flex-grow">
+<h5 class="font-body-lg text-body-lg leading-tight">Vinyl &amp; Vino</h5>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Aug 05 • Cellar Door</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface/90 dark:bg-surface-container-highest/90 fixed bottom-0 w-full z-50 pb-safe border-t border-outline-variant/10 backdrop-blur-xl">
+<div class="fixed bottom-0 left-0 w-full flex justify-around items-center py-2 px-4 pb-safe">
+<!-- Discovery (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-colors tap-highlight-transparent active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-caps text-label-caps mt-1">Discovery</span>
+</button>
+<!-- Tickets (Active) -->
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim bg-secondary-container/30 rounded-full px-4 py-1 hover:text-primary transition-colors tap-highlight-transparent active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="confirmation_number" style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+<span class="font-label-caps text-label-caps mt-1">Tickets</span>
+</button>
+<!-- Profile (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-colors tap-highlight-transparent active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</button>
+</div>
+</nav>
+</body></html>

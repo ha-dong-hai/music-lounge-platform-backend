@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge | Discovery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#635d5a",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#fed488",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary-container": "#785a1a",
+                        "on-surface-variant": "#4d4540",
+                        "surface": "#fbf9f4",
+                        "on-primary-container": "#96908b",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#cdc5c0",
+                        "secondary": "#775a19",
+                        "on-primary-fixed": "#1e1b18",
+                        "inverse-on-surface": "#f2f1ec",
+                        "secondary-fixed": "#ffdea5",
+                        "tertiary-fixed": "#ffdad3",
+                        "background": "#fbf9f4",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#261900",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "primary-container": "#2d2926",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-container": "#f0eee9",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "primary": "#181512",
+                        "outline-variant": "#cfc4bd",
+                        "surface-variant": "#e4e2dd",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#1b1c19",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#1b1c19",
+                        "tertiary-container": "#4d190e",
+                        "surface-bright": "#fbf9f4",
+                        "tertiary": "#310501",
+                        "surface-container-high": "#eae8e3",
+                        "surface-dim": "#dbdad5",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary-fixed-dim": "#e9c176",
+                        "outline": "#7e756f",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "surface-container-highest": "#e4e2dd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "32px",
+                        "stack-sm": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "stack-md": "32px",
+                        "container-max": "1440px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-md": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                        "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "button": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .text-shadow-sm {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline/10 flat no shadows">
+<div class="flex justify-between items-center w-full px-margin-desktop py-stack-sm max-w-container-max mx-auto">
+<div class="flex items-center gap-stack-md">
+<a class="font-headline-md text-headline-md font-normal tracking-tight text-primary dark:text-primary-fixed" href="#">AuraLounge</a>
+<div class="hidden md:flex gap-stack-sm items-center font-button text-button">
+<a class="text-primary dark:text-primary-fixed border-b border-primary dark:border-primary-fixed pb-1 hover:opacity-80 transition-all duration-300" href="#">Discovery</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:opacity-80 transition-all duration-300" href="#">My Tickets</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:opacity-80 transition-all duration-300" href="#">Livestreams</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:opacity-80 transition-all duration-300" href="#">Transparency</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-sm">
+<div class="hidden md:flex items-center text-primary dark:text-primary-fixed gap-unit">
+<button aria-label="notifications" class="hover:opacity-80 transition-all duration-300 flex items-center justify-center p-2 rounded-full hover:bg-surface-variant">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="search" class="hover:opacity-80 transition-all duration-300 flex items-center justify-center p-2 rounded-full hover:bg-surface-variant">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+<button class="bg-primary text-on-primary font-button text-button px-stack-sm py-2 rounded-full hover:opacity-90 transition-opacity">
+                    Connect Wallet
+                </button>
+</div>
+</div>
+</nav>
+<main class="flex-grow pt-[80px]">
+<!-- Hero Section -->
+<section class="relative w-full h-[70vh] min-h-[500px] flex items-center justify-center px-margin-desktop overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="bg-cover bg-center w-full h-full object-cover" data-alt="A sophisticated, dimly lit acoustic lounge setting. A vintage microphone stands on a wooden stage illuminated by a warm, golden spotlight. The background is a soft blur of deep shadows and subtle amber reflections off a polished grand piano. The mood is intimate, quiet luxury, and highly refined, fitting a premium music curation platform. Light mode optimized with soft cream highlights." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAn9Ho8AZzE0-uGzNjxo9Eu4IAZpuD__OjCxE-onr7HIVkGXLZbE6HtKlzpCFofoeKqpg4puwUDlj4FO6MjpKM5o-fLfH1rCet9_ACkIsWHFOGVdmt7-s4zq7z2PEwQ7UZ4Cd5-U3LNrr5K0yeYBlGTvkslHNaWteR79Pcm-43hvngpzVwFehXchRcRy6UCn2BBlqkHyxsODenN1DDt-OOLmcCyob739pzJI_DFu2cJgPooOdsITkj9Ag')"></div>
+<div class="absolute inset-0 bg-surface/30 mix-blend-overlay"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto text-center flex flex-col items-center gap-stack-md mt-stack-lg">
+<h1 class="font-display-lg text-display-lg text-primary text-shadow-sm max-w-[800px] mx-auto leading-tight">
+                    Less noise, more resonance.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-[600px] mx-auto">
+                    Discover intimate performances tailored to your exact sonic preferences in Vietnam's most exclusive venues.
+                </p>
+<button class="mt-stack-sm flex items-center gap-2 border border-outline px-stack-md py-3 rounded-full text-primary hover:bg-surface-variant transition-colors font-button text-button group glass-panel">
+<span>Refine Taste Profile</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Curated Soundscape (High Match) -->
+<section class="max-w-container-max mx-auto px-margin-desktop py-stack-lg">
+<div class="flex justify-between items-end mb-stack-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-unit">Curated Soundscape</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Performances matching your atmospheric signature.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-md">
+<!-- Card 1 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-[4/5] rounded-xl overflow-hidden mb-stack-sm bg-surface-container-high border border-outline/10">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-700" data-alt="A close-up shot of a saxophonist playing in a smoky, warmly lit jazz club. The image captures the polished brass of the saxophone reflecting amber stage lights. The background is a soft, creamy bokeh of an intimate audience. The aesthetic is sophisticated, quiet luxury, emphasizing acoustic warmth and high-end curation." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCCJod_HC8XQ2oPV3zaF4Mw9sbypY7jib17k23z6p6QO16oayIXrYsiUxK2kcgguUIGsfWRaiD5Rb1o-hybgCIk8fjGFXpLbcfcHkU-TaSu1qTWDWibxqvqzEqsUC-VRrT9WxDwiwxI8Rg7h2OPYQxHnoIZrS-HQQfqf1_1slqwo8Ze-vCi7OuNk30CC2xbR-F5mRI7gC9gLyisNJ3Z2kCUbB-IpZ4t5PbIQgIuY-FxNMzSg2RFquP97A')"></div>
+<div class="absolute top-4 right-4 glass-panel px-3 py-1 rounded-full border border-surface/20 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-primary">98% Match</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-md text-headline-md text-primary">Midnight Reverie</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">The Velvet Room • Oct 24</p>
+<div class="flex gap-2 mt-2">
+<span class="px-2 py-1 bg-surface-container rounded font-label-caps text-label-caps text-on-surface-variant border border-outline/10">Acoustic Warmth</span>
+<span class="px-2 py-1 bg-surface-container rounded font-label-caps text-label-caps text-on-surface-variant border border-outline/10">Jazz</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group cursor-pointer md:mt-stack-md">
+<div class="relative aspect-[4/5] rounded-xl overflow-hidden mb-stack-sm bg-surface-container-high border border-outline/10">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-700" data-alt="A minimalist indie acoustic performance setup. A classic wooden Martin guitar rests on a stand next to a simple stool. Soft, natural light filters in through a large window, illuminating dust motes. The setting feels calm, organic, and premium, embodying a light-mode quiet luxury aesthetic suitable for an acoustic lounge." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRKDbBf_LK6ziJ7uMjt0nig1U62zHdklZJ_0Z7q2A1PpKYXZNczXrYPGjZM1P97wzrpz_PVmX8cbAsp8yZkUvMg4T3Lfn_H4m96BPBX9JsVNAP6CmCctlq2_poM2bqEB-5KfrSZjw7fm4iBDkqVJ1bkBPXYaBmMUyJUIJPMsW1HmBdXgfeZcV9hXIitSnixRGdZ1Q23gqYjzrDkk6p5r8sX5o00PuvxibykfNF8zxF--ro_eaefOpRuw')"></div>
+<div class="absolute top-4 right-4 glass-panel px-3 py-1 rounded-full border border-surface/20 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-primary">94% Match</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-md text-headline-md text-primary">Echoes &amp; Strings</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Acoustic Bar • Oct 26</p>
+<div class="flex gap-2 mt-2">
+<span class="px-2 py-1 bg-surface-container rounded font-label-caps text-label-caps text-on-surface-variant border border-outline/10">Intimate</span>
+<span class="px-2 py-1 bg-surface-container rounded font-label-caps text-label-caps text-on-surface-variant border border-outline/10">Indie Folk</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-[4/5] rounded-xl overflow-hidden mb-stack-sm bg-surface-container-high border border-outline/10">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-700" data-alt="A stylish pianist's hands playing a grand piano from an overhead, slightly angled perspective. The keys are crisp white and deep black, set against polished mahogany. Warm, cinematic lighting creates subtle shadows. The mood is elegant, refined, and deeply resonant, perfectly matching a high-end classical or jazz curation platform." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_6pyRENi1q5FoF18h3kjbN1RX6ecbTJNh2-w9_-0MHzKZItENRU6I19OhN6m20mG0Zex5v0xfPAcAp0yGapneJHC8CBJ0AMp_v26wuPSO1kqYrqUuJHb0GRO97Ge9XKMHe9HTZYeEU7fnkzarcXB0uCJd72RQ8q4khpnwAP0pQDBuIK463IpoIE2UL8d6uNoFvkv9deeWh0yHY8V84NEaXfUi1gEGYeioFUUTNmz5hjnvV5b2izEHVA')"></div>
+<div class="absolute top-4 right-4 glass-panel px-3 py-1 rounded-full border border-surface/20 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-primary">91% Match</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-md text-headline-md text-primary">Keys in the Dark</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Lumina Lounge • Nov 02</p>
+<div class="flex gap-2 mt-2">
+<span class="px-2 py-1 bg-surface-container rounded font-label-caps text-label-caps text-on-surface-variant border border-outline/10">Piano Bar</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trending Lounges Section -->
+<section class="w-full bg-surface-container-lowest border-y border-outline/10 py-stack-lg overflow-hidden">
+<div class="max-w-container-max mx-auto px-margin-desktop mb-stack-md">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-unit">Trending Sanctuaries</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">The most atmospheric venues in Ho Chi Minh City this week.</p>
+</div>
+<!-- Horizontal scroll container -->
+<div class="flex overflow-x-auto gap-stack-md px-margin-desktop pb-8 snap-x hide-scrollbar" style="scrollbar-width: none; -ms-overflow-style: none;">
+<!-- Venue 1 -->
+<div class="min-w-[300px] md:min-w-[400px] snap-start flex flex-col group cursor-pointer">
+<div class="aspect-video bg-surface-container-high rounded-lg mb-stack-sm overflow-hidden relative border border-outline/5">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="The interior of 'The Velvet Room', a premium jazz lounge in Ho Chi Minh City. Featuring plush burgundy seating, dark wood paneling, and vintage filament bulbs casting a warm, inviting glow over small cocktail tables. The atmosphere is quiet luxury, sophisticated, and intimate." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD-lTcEHDZIxlPwL0u7EAqCAYLlrsjVFtkKMSuY9DMjH5YCd7jiEtNHGQN-qgHef9p1MIDeOVV8h6k--RDYhDUzO_NQCWEGPOqR0Uajm-LMeYqCrlEKx5vTqkRulL6qtVckLHa2o_ouPfiH3k5nJj5T_QAyEyVd2FAtpwKiFv3kvcLmp4JZ0yF0NOvPDgPZEQgdUA2jOsgo2TtS4rbbx3NEv4_OlLZo0ECcwheQddMxcGTuhIGDSl2rJw')"></div>
+</div>
+<h4 class="font-headline-md text-headline-md text-primary">The Velvet Room</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">District 1, HCMC</p>
+<div class="flex items-center gap-2">
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 85%;"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">High Warmth</span>
+</div>
+</div>
+<!-- Venue 2 -->
+<div class="min-w-[300px] md:min-w-[400px] snap-start flex flex-col group cursor-pointer">
+<div class="aspect-video bg-surface-container-high rounded-lg mb-stack-sm overflow-hidden relative border border-outline/5">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A bright, airy acoustic cafe setting in Vietnam. Sun streaming through large green-framed windows, illuminating rustic wooden furniture and a small corner stage with a stool and mic stand. Lots of indoor plants. The vibe is fresh, organic, and calm." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDU92zQX8xZKJtKWC6LETWFWFlcwmd6sXNJVofn68jqbvKAAtl6Dz2m3wa9CynqqQHZEwQcBj5WxI1YGdwv8pYFwL8UZSNdzkRLp447huJozYnGPk3H7hGi1f-gl-ZSB3wZ1SOqr9ihy_fDGH8vGUjoDd5aJd48AdtobojBQKbLW3CzDrQ7oCVUq0vPzwI2Nr23rvAVkD8XFRkM7MPBiwJYnJwP68juQs_q6HikKKuRZnOPUdZfwtEVRA')"></div>
+</div>
+<h4 class="font-headline-md text-headline-md text-primary">Acoustic Bar</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">District 3, HCMC</p>
+<div class="flex items-center gap-2">
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 60%;"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Balanced</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg bg-surface dark:bg-surface-dim border-t border-outline/10 flat no shadows text-on-surface dark:text-on-surface-variant">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto gap-stack-md">
+<div class="font-headline-md text-headline-md text-primary">AuraLounge</div>
+<div class="text-center md:text-left">
+<span class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors">© 2024 AuraLounge. The Quiet Luxury of Sound.</span>
+</div>
+<div class="flex gap-stack-md font-label-caps text-label-caps">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Terms of Service</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Curator Guidelines</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Press Kit</a>
+</div>
+</div>
+</footer>
+</body></html>

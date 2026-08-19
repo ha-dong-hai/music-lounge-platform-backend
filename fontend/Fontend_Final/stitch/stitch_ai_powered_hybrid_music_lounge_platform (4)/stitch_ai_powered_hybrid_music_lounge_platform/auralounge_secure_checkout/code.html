@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AuraLounge Checkout</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-dim": "#dbdad5",
+                      "secondary-container": "#fed488",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#775a19",
+                      "on-secondary-fixed": "#261900",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-bright": "#fbf9f4",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "surface": "#fbf9f4",
+                      "surface-container": "#f0eee9",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "outline-variant": "#cfc4bd",
+                      "tertiary": "#310501",
+                      "primary": "#181512",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-variant": "#e4e2dd",
+                      "background": "#fbf9f4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-tint": "#635d5a",
+                      "on-secondary": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "outline": "#7e756f",
+                      "on-surface": "#1b1c19",
+                      "on-secondary-container": "#785a1a",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-primary-container": "#96908b",
+                      "surface-container-highest": "#e4e2dd",
+                      "inverse-on-surface": "#f2f1ec",
+                      "primary-container": "#2d2926",
+                      "tertiary-container": "#4d190e",
+                      "on-error-container": "#93000a",
+                      "on-background": "#1b1c19",
+                      "surface-container-high": "#eae8e3",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "16px",
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px",
+                      "container-max": "1440px",
+                      "unit": "8px",
+                      "gutter": "32px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: 300;
+            font-style: normal;
+            font-size: 24px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            -webkit-font-smoothing: antialiased;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 24px); }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen pt-safe pb-safe bg-background text-on-background relative md:hidden">
+<!-- Top Navigation (Transactional, no Bottom Nav) -->
+<header class="flex items-center justify-between px-margin-mobile h-16 bg-background/90 backdrop-blur-md sticky top-0 z-50">
+<button aria-label="Go back" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-background" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tighter">Checkout</h1>
+<div class="w-10 h-10"></div> <!-- Placeholder for balance -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col px-margin-mobile pb-32">
+<!-- Order Summary Card -->
+<section class="mt-stack-sm mb-stack-md relative rounded-xl overflow-hidden bg-surface border border-outline-variant/20">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-surface/90 pointer-events-none z-10"></div>
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="A high-end, softly lit jazz club interior with rich cream and charcoal tones, focusing on a premium reserved table near the stage. The lighting is moody but sophisticated, highlighting the luxurious textures of the seating in a minimalist setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBw_M_EUhOsaMdvOtIZJFp0KPOTvOkSWOehZKtnquwgYRiRbh_wx_EFW-BQ3MSNcaEllkqxsMwaLDG3gpGGKRwr2XqZ2HomZF6oIIHHpNqlQUAKYUB0_2xduaoN1U9i6pqKa9mf1Doma1E8_5YR31BtD_snTSMvkFWFaDaFeyhdg4kxpj4LhI8XVbpqCW0uKDGf9gSPDvpWN6vrm-6YKrZA8FQaZ_KO5bN06joAlOWKRGwYtOwxWt0C4A"/>
+</div>
+<div class="relative z-20 p-6 -mt-12">
+<div class="bg-surface/95 backdrop-blur-md rounded-lg p-5 border border-outline-variant/10 shadow-sm">
+<p class="font-label-caps text-label-caps text-secondary uppercase tracking-widest mb-2">Live Music Event</p>
+<h2 class="font-headline-md text-headline-md text-primary mb-1">The Midnight Sessions</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Thu, Oct 24 • 9:00 PM</p>
+<div class="flex items-start gap-4 p-4 bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-outline mt-1" data-icon="event_seat">event_seat</span>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface">VIP Booth 4</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Main Floor, Stage Right</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Payment Breakdown -->
+<section class="mb-stack-lg">
+<h3 class="font-headline-md text-headline-md mb-6">Order Summary</h3>
+<div class="space-y-4 font-body-md text-body-md">
+<div class="flex justify-between items-center text-on-surface">
+<span>VIP Booth 4</span>
+<span>$150.00</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Service Fee</span>
+<span>$12.50</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Tax</span>
+<span>$14.22</span>
+</div>
+<hr class="border-t border-outline-variant/20 my-4"/>
+<div class="flex justify-between items-center font-headline-md text-headline-md text-primary pt-2">
+<span>Total</span>
+<span>$176.72</span>
+</div>
+</div>
+</section>
+<!-- Payment Methods -->
+<section class="mb-stack-lg flex-1">
+<h3 class="font-headline-md text-headline-md mb-6">Payment Method</h3>
+<div class="space-y-3">
+<!-- Aura Wallet Option -->
+<label class="flex items-center p-4 border border-outline-variant/30 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="form-radio text-primary focus:ring-primary h-5 w-5 border-outline-variant" name="payment" type="radio" value="wallet"/>
+<div class="ml-4 flex-1 flex justify-between items-center">
+<span class="font-body-lg text-body-lg text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance_wallet">account_balance_wallet</span>
+                            Aura Wallet
+                        </span>
+<span class="font-body-md text-body-md text-on-surface-variant">Bal: $450.00</span>
+</div>
+</label>
+<!-- Apple Pay Option -->
+<label class="flex items-center p-4 border border-outline-variant/30 rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="form-radio text-primary focus:ring-primary h-5 w-5 border-outline-variant" name="payment" type="radio" value="apple"/>
+<div class="ml-4 flex-1">
+<span class="font-body-lg text-body-lg text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface" data-icon="phone_iphone">phone_iphone</span>
+                            Apple Pay
+                        </span>
+</div>
+</label>
+<!-- Credit Card Option -->
+<label class="flex items-center p-4 border border-outline-variant/30 rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="form-radio text-primary focus:ring-primary h-5 w-5 border-outline-variant" name="payment" type="radio" value="card"/>
+<div class="ml-4 flex-1">
+<span class="font-body-lg text-body-lg text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface" data-icon="credit_card">credit_card</span>
+                            Credit Card ending in 4242
+                        </span>
+</div>
+</label>
+<button class="w-full py-4 mt-2 font-button text-button text-secondary flex items-center justify-center gap-2 hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                    Add new payment method
+                </button>
+</div>
+</section>
+</main>
+<!-- Persistent Bottom Action Area -->
+<div class="fixed bottom-0 left-0 w-full bg-background/90 backdrop-blur-xl border-t border-outline-variant/10 px-margin-mobile py-4 pb-safe z-40">
+<div class="flex items-center justify-between mb-4">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Due</p>
+<p class="font-headline-md text-headline-md text-primary">$176.72</p>
+</div>
+<button class="bg-primary text-on-primary font-button text-button py-4 px-10 rounded-lg hover:bg-primary-container transition-colors active:scale-95 flex items-center gap-2 shadow-sm">
+                Confirm &amp; Pay
+                <span class="material-symbols-outlined text-on-primary" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<p class="text-center font-label-caps text-label-caps text-outline text-[10px]">By confirming, you agree to our Terms of Service</p>
+</div>
+</body></html>

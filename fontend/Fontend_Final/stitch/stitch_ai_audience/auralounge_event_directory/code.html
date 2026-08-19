@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Performance Directory - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#635d5a",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#fed488",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-container": "#785a1a",
+                      "on-surface-variant": "#4d4540",
+                      "surface": "#fbf9f4",
+                      "on-primary-container": "#96908b",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "inverse-primary": "#cdc5c0",
+                      "secondary": "#775a19",
+                      "on-primary-fixed": "#1e1b18",
+                      "inverse-on-surface": "#f2f1ec",
+                      "secondary-fixed": "#ffdea5",
+                      "tertiary-fixed": "#ffdad3",
+                      "background": "#fbf9f4",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed": "#261900",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "primary-container": "#2d2926",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-container": "#f0eee9",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "on-primary": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "primary": "#181512",
+                      "outline-variant": "#cfc4bd",
+                      "surface-variant": "#e4e2dd",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#1b1c19",
+                      "on-error-container": "#93000a",
+                      "on-surface": "#1b1c19",
+                      "tertiary-container": "#4d190e",
+                      "surface-bright": "#fbf9f4",
+                      "tertiary": "#310501",
+                      "surface-container-high": "#eae8e3",
+                      "surface-dim": "#dbdad5",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary-fixed-dim": "#e9c176",
+                      "outline": "#7e756f",
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "surface-container-highest": "#e4e2dd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "32px",
+                      "stack-sm": "16px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "stack-md": "32px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col pt-20">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 backdrop-blur-md dark:bg-surface-container-high/80 border-b border-outline-variant/15 fixed top-0 w-full z-50">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight">
+                AuraLounge
+            </div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">
+                        Artists
+                    </a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">
+                        Lounges
+                    </a>
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1 hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">
+                        Events
+                    </a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">
+                        Schedule
+                    </a>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 cursor-pointer active:opacity-70 group">
+<span class="font-body-md text-body-md text-primary dark:text-primary-fixed group-hover:text-primary dark:group-hover:text-primary-fixed transition-colors duration-300">Profile</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Page Header & Filters -->
+<header class="max-w-container-max mx-auto px-margin-desktop pt-stack-lg pb-stack-md w-full">
+<h1 class="font-display-lg text-display-lg text-primary mb-8">Live Performance Directory</h1>
+<div class="bg-surface-container-lowest p-6 border border-outline-variant/15 flex flex-wrap gap-4 items-end">
+<div class="flex-1 min-w-[250px]">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Search</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface border-b border-outline focus:border-primary focus:outline-none font-body-md text-body-md text-on-surface placeholder:text-outline-variant transition-colors" placeholder="Artists, Genres, Venues..." type="text"/>
+</div>
+</div>
+<div class="w-full md:w-auto flex gap-4 flex-wrap">
+<div class="min-w-[150px]">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Venue</label>
+<select class="w-full px-4 py-3 bg-surface border-b border-outline focus:border-primary focus:outline-none font-body-md text-body-md text-on-surface appearance-none">
+<option>All Venues</option>
+<option>The Velvet Room</option>
+<option>Echo Chamber</option>
+<option>Silica Lounge</option>
+</select>
+</div>
+<div class="min-w-[150px]">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Atmosphere</label>
+<select class="w-full px-4 py-3 bg-surface border-b border-outline focus:border-primary focus:outline-none font-body-md text-body-md text-on-surface appearance-none">
+<option>Any Vibe</option>
+<option>Intimate Acoustic</option>
+<option>High Energy</option>
+<option>Ambient Electronic</option>
+</select>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-container-max mx-auto px-margin-desktop w-full pb-stack-lg flex flex-col gap-stack-lg">
+<!-- Featured Event -->
+<section class="relative h-[600px] w-full bg-surface-container overflow-hidden group border border-outline-variant/15">
+<div class="absolute inset-0 bg-cover bg-center w-full h-full transition-transform duration-700 group-hover:scale-105" data-alt="A sweeping, high-contrast photograph of a live jazz performance in an opulent, dimly lit lounge. A saxophonist stands in the spotlight against a dark background, smoke lingering in the air. The scene is rich with deep blacks and warm amber lighting, capturing the essence of quiet luxury and intense musical atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAxyeNiDilU5XgjOobE713p86PGl0Dkn200dqh_KO022G78wkNxC2CNOURVXXaLQBgzWAcicbOa9woLMXhFmVWyZkrmcxxaXRMB_MeyNa8O0OB9ni0sSfnNYrJa7mxQx-0YktL0mRQrkNfQQY6J3l41d3pU_G0KC1NmWpJheSXFe4Y7UDyWLnlx9WAcnBCKRFgJvAfLjwk7cnfVOD08obkLSnivJIHmTu5wrRY-W6kad51rjdlcGQLOOg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-12 w-full md:w-2/3">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-lowest/20 backdrop-blur-md border border-surface-container-lowest/30 rounded-DEFAULT mb-4">
+<span class="material-symbols-outlined text-surface-container-lowest text-[16px]">star</span>
+<span class="font-label-caps text-label-caps text-surface-container-lowest">Featured Headliner</span>
+</div>
+<h2 class="font-display-md text-display-md text-surface-container-lowest mb-4">The Midnight Quartet: Sessions</h2>
+<div class="flex items-center gap-6 mb-8 text-surface-container-low font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">calendar_today</span>
+<span>Friday, Oct 27 • 9:00 PM</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">location_on</span>
+<span>The Velvet Room</span>
+</div>
+</div>
+<button class="bg-surface-container-lowest text-primary font-button text-button px-8 py-4 hover:bg-surface transition-colors duration-300">Reserve Tickets</button>
+</div>
+</section>
+<!-- Main List Grid -->
+<section>
+<div class="flex justify-between items-center mb-8 border-b border-outline-variant/15 pb-4">
+<h3 class="font-headline-lg text-headline-lg text-primary">Upcoming Schedule</h3>
+<span class="font-body-md text-body-md text-on-surface-variant">Showing 24 Events</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Event Card 1 -->
+<article class="group flex flex-col border border-outline-variant/15 bg-surface-container-lowest hover:bg-surface-container-low transition-colors duration-300 cursor-pointer">
+<div class="h-64 w-full relative overflow-hidden">
+<img class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" data-alt="A close-up, high-fidelity black and white portrait of an electronic music producer adjusting synthesizers in a moody, minimalist studio setting. Soft, diffuse lighting highlights the textures of the equipment and the artist's focused expression, aligning with a premium, austere aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqZ4WbNRUUC6FVuQZs_ItA7b4D33nO8z1eDRrROHkrtaWTmzclmu-eQJ4m7mylWpqaB91sUwep1KrVasBJm6YP_HCvDS0gRjYZZyL9P0CEeV_blU6UrsEwixpvYCNsuznpZbpZoAhl05Yayk6gwHzSpap4d239tYP33U17X-5fImR5-oH3idKHDYQk9aVo6OQ58W9IdeTCU-cfMhdlFzz-V98ht6U0dVNvCqwWYHEeF7vsGnhw_NXEmw"/>
+<div class="absolute top-4 right-4 bg-surface-container-lowest px-3 py-1 font-label-caps text-label-caps text-primary shadow-sm border border-outline-variant/15">
+                            $45
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="font-label-caps text-label-caps text-secondary mb-2">Electronic • Ambient</div>
+<h4 class="font-headline-md text-headline-md text-primary mb-2 line-clamp-2">Ethereal Frequencies with DJ Nova</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2 flex-1">A four-hour journey through ambient soundscapes and minimal techno, designed for deep listening.</p>
+<div class="pt-4 border-t border-outline-variant/15 flex justify-between items-end">
+<div>
+<div class="font-button text-button text-primary mb-1">Oct 28 • 10:00 PM</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm">Silica Lounge</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Event Card 2 -->
+<article class="group flex flex-col border border-outline-variant/15 bg-surface-container-lowest hover:bg-surface-container-low transition-colors duration-300 cursor-pointer">
+<div class="h-64 w-full relative overflow-hidden">
+<img class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" data-alt="A sophisticated, cinematic shot of a grand piano on a dimly lit stage. The piano is illuminated by a single, dramatic overhead spotlight against a deep charcoal background. The composition is minimal, emphasizing the elegant curves of the instrument and the quiet luxury of classical performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0n7nBqCPLE1st1xrWcjQMmBuS93VmtIz0pFG_fPzL5iA-R8HnYXW5-eGEC-kei-GAfQ81urrYXhgHZEO7jvRKp1tvogxGCr_WLl5HMkSX_BH3mEUKInCJUw2ZU-ot2yDF-UQOi43V4I2JEpzr5EQnkdMfTcuxtrfQ4JzZrWv9eeAbVvN5Ciw36zIipvIyEQLKgaMaHkyaLpMkbVKlfV8g5NQNKPUWWgXb--VyNZu9GSdWcEAOt8MeAA"/>
+<div class="absolute top-4 right-4 bg-surface-container-lowest px-3 py-1 font-label-caps text-label-caps text-primary shadow-sm border border-outline-variant/15">
+                            $80
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="font-label-caps text-label-caps text-secondary mb-2">Classical • Solo</div>
+<h4 class="font-headline-md text-headline-md text-primary mb-2 line-clamp-2">Elena Rostova: The Chopin Nocturnes</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2 flex-1">An intimate, unplugged evening featuring complete performances of Chopin's most melancholic works.</p>
+<div class="pt-4 border-t border-outline-variant/15 flex justify-between items-end">
+<div>
+<div class="font-button text-button text-primary mb-1">Nov 02 • 8:00 PM</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm">The Grand Hall</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Event Card 3 -->
+<article class="group flex flex-col border border-outline-variant/15 bg-surface-container-lowest hover:bg-surface-container-low transition-colors duration-300 cursor-pointer">
+<div class="h-64 w-full relative overflow-hidden">
+<img class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" data-alt="An abstract, atmospheric photograph of a crowded, low-lit jazz club. The focus is blurred slightly, capturing the motion of a double bass player and the warm glow of table lamps. The color palette is rich in mahogany, amber, and deep shadows, conveying a sense of exclusive nightlife." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPcJX7hCLjMNoXTD3-S0fyf-i5fevs1D9eMVNtwrWM2vMYwPRTWE6-TYP13AVPSN1TWA_oxyqN7BujxHjxMYTrHadQ5byCZiodIGxXRjsJLFa_KHEh71JMociGnmkQB5vSB2stnwhACa0xdE1ATSjRL_aTlTRxi7t2XlbGRGscbrzLPN2nnNbcTKiLYHtRrC2CZ3y2STtnun1DXSGgDcAExswrGQ_iwEh48h7xiptsdwd3ImoN9m37sQ"/>
+<div class="absolute top-4 right-4 bg-surface-container-lowest px-3 py-1 font-label-caps text-label-caps text-primary shadow-sm border border-outline-variant/15">
+                            $35
+                        </div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="font-label-caps text-label-caps text-secondary mb-2">Jazz • Trio</div>
+<h4 class="font-headline-md text-headline-md text-primary mb-2 line-clamp-2">The Blue Note Collective</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2 flex-1">Weekly residency featuring improvisational modern jazz with rotating special guest vocalists.</p>
+<div class="pt-4 border-t border-outline-variant/15 flex justify-between items-end">
+<div>
+<div class="font-button text-button text-primary mb-1">Nov 05 • 9:30 PM</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm">Echo Chamber</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">arrow_forward</span>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Pagination -->
+<div class="flex justify-center items-center gap-4 mt-8">
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant/15 text-outline hover:text-primary hover:border-primary transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<div class="flex gap-2 font-button text-button">
+<button class="w-10 h-10 flex items-center justify-center bg-primary text-on-primary">1</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors">3</button>
+<span class="w-10 h-10 flex items-center justify-center text-outline">...</span>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors">8</button>
+</div>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant/15 text-outline hover:text-primary hover:border-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container dark:bg-primary-container w-full py-stack-lg border-t border-outline-variant/10 mt-auto">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed">
+                AuraLounge
+            </div>
+<div class="flex flex-col md:items-end justify-between gap-8">
+<div class="flex flex-wrap gap-6 font-body-md text-body-md text-on-surface-variant dark:text-outline-variant">
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">About</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Support</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Press</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Careers</a>
+</div>
+<div class="font-body-md text-body-md text-on-surface dark:text-on-primary-container">
+                    © 2024 AuraLounge. The Quiet Luxury of Sound.
+                </div>
+</div>
+</div>
+</footer>
+</body></html>

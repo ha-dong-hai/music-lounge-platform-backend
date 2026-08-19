@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge | The Quiet Luxury of Sound</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-background": "#1b1c19",
+                      "surface-variant": "#e4e2dd",
+                      "background": "#fbf9f4",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#310501",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#1b1c19",
+                      "primary": "#181512",
+                      "inverse-surface": "#30312e",
+                      "inverse-primary": "#cdc5c0",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-container": "#f0eee9",
+                      "secondary-fixed": "#ffdea5",
+                      "on-error-container": "#93000a",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-dim": "#dbdad5",
+                      "tertiary-container": "#4d190e",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed": "#ffdad3",
+                      "error": "#ba1a1a",
+                      "on-error": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-container": "#cb7c6b",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-secondary-fixed": "#261900",
+                      "on-primary-container": "#96908b",
+                      "outline": "#7e756f",
+                      "surface-tint": "#635d5a",
+                      "surface": "#fbf9f4",
+                      "on-secondary-container": "#785a1a",
+                      "primary-container": "#2d2926",
+                      "on-primary-fixed": "#1e1b18",
+                      "secondary": "#775a19",
+                      "secondary-container": "#fed488",
+                      "on-surface-variant": "#4d4540",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "surface-container-high": "#eae8e3",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "outline-variant": "#cfc4bd",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-bright": "#fbf9f4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "container-max": "1440px",
+                      "stack-md": "32px",
+                      "gutter": "32px",
+                      "stack-sm": "16px",
+                      "margin-mobile": "20px",
+                      "stack-lg": "80px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col pt-20">
+<!-- TopNavBar Component -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-surface-container-high/80 border-b border-outline-variant/15">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<div class="flex items-center gap-12">
+<a class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight" href="#">AuraLounge</a>
+<div class="hidden md:flex gap-8">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-body-md text-body-md" href="#">Artists</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-body-md text-body-md" href="#">Lounges</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-body-md text-body-md" href="#">Events</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-body-md text-body-md" href="#">Schedule</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">search</span>
+</button>
+<a class="text-primary dark:text-primary-fixed font-button text-button uppercase tracking-widest hover:opacity-70 transition-opacity" href="#">Profile</a>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="max-w-container-max mx-auto px-margin-desktop py-stack-lg min-h-[819px] flex items-center relative overflow-hidden">
+<div class="w-full md:w-1/2 z-10 pr-8">
+<div class="flex items-center gap-2 mb-8">
+<span class="material-symbols-outlined text-outline">graphic_eq</span>
+<span class="font-label-caps text-label-caps text-outline tracking-widest uppercase">The Quiet Luxury of Sound</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-primary mb-6 leading-tight">Find Their<br/>Frequency</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-lg">Discover curated live music experiences in intimate settings. A sanctuary for connoisseurs of atmosphere and acoustic excellence.</p>
+<div class="flex gap-4">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-full font-button text-button hover:bg-primary/90 transition-colors">Explore Tonight</button>
+<button class="border border-outline-variant px-8 py-4 rounded-full font-button text-button text-primary hover:bg-surface-container transition-colors">View Artists</button>
+</div>
+</div>
+<div class="absolute right-0 top-0 w-1/2 h-full hidden md:block">
+<div class="w-full h-full relative">
+<!-- Image Placeholder for Hero -->
+<img class="object-cover w-full h-full" data-alt="A sophisticated, softly lit lounge interior with warm ambient lighting casting shadows on minimalist furniture. A grand piano sits elegantly in the background, subtly out of focus. The overall palette is muted, featuring deep charcoals, warm creams, and subtle metallic accents. The mood is highly exclusive and serene, perfectly suited for a high-end architectural or lifestyle publication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCffb-V_MYMEH5RqXzwkjf-yW2U7W_w0BulVdpN5Nb8FM-KzCPNYdDni-RYVibHQPEBs9E4Y3ME-AjZ6QFoxIsrynsTQz7zyPuoeoh4gFW8VnP8JGUdz3IeGy1BZzmaRkrWeS44GEnAUTPp2TF4GdK1w2ekM9gagdZKSTcQvdBLgXVPF14aP8voBUx22NPI8LqnX4Mv72El8Z_gtuHYFiDpJuGQhTIiG7zoYBJ-Ifm-dbXZYD1vTkwxRA"/>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
+</div>
+</div>
+</section>
+<!-- Trending Section (Bento Grid) -->
+<section class="max-w-container-max mx-auto px-margin-desktop py-stack-lg">
+<div class="flex justify-between items-end mb-12 border-b border-outline-variant/10 pb-6">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Trending Tonight</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Curated performances happening nearby.</p>
+</div>
+<a class="font-button text-button text-primary flex items-center gap-2 hover:opacity-70 transition-opacity" href="#">View All <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Large Featured Card -->
+<div class="md:col-span-2 group cursor-pointer relative h-[400px] overflow-hidden bg-surface-container-low">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A high-contrast black and white photograph of a jazz saxophonist performing passionately in a dimly lit, smoky room. The lighting focuses intensely on the artist and instrument, leaving the background in deep shadow. The aesthetic is raw, emotional, and timeless, capturing the essence of live acoustic music." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_LRfrwqD6k5FPzpnCWkPgp_CnL5a-UA5OZrvL0f_kJxngbXhiugwky_28yUMDAW9Afa-LlunZwo3TkP-XRPiafCIJhfvlLrj-ahzzTgqnBVWKfWq2swMc0wxwDtx9e6aSLnSRdDobxF_b795oiUNOqKIU7NxFipOuU7XbVoU2jhx3-SptuqXlWql2n4oOXsAEk5ELTOgHOIRACKU1f-DnC_SqepqHCBqka26veF9kmbpWPbn-0MKS9Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-8 w-full">
+<div class="flex justify-between items-end">
+<div>
+<span class="bg-surface/20 backdrop-blur-sm text-on-primary px-3 py-1 rounded text-xs tracking-wider uppercase mb-3 inline-block border border-white/10">Jazz / Acoustic</span>
+<h3 class="font-headline-md text-headline-md text-on-primary mb-1">The Miles Quartet</h3>
+<p class="font-body-md text-body-md text-on-primary/80 flex items-center gap-2"><span class="material-symbols-outlined text-sm">location_on</span> The Blue Note Room</p>
+</div>
+<button class="bg-on-primary text-primary w-12 h-12 rounded-full flex items-center justify-center hover:bg-surface-variant transition-colors backdrop-blur-md">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-gutter">
+<!-- Smaller Card 1 -->
+<div class="group cursor-pointer relative h-full min-h-[184px] overflow-hidden bg-surface-container-low">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A close-up shot of hands elegantly playing a grand piano keyboard. The image is bathed in a warm, golden hour light that catches the dust motes in the air. The styling is minimalist and intimate, focusing purely on the artistry and texture of the instrument." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2TW018q2duQj6__ZkGl_M6O_cIDiK1Z3FtPQQFpO_zlSULmT7C3gGfVrl2oSNJPYa_bTYv83pnFBRkPKQpwaXX1EbtP5jomveT9CQbq0Rf17WmAjxPU4aup6oeIvCc-KUX_e4y30yDlxUXhlYr-AOoPAiRTL-_sEVP4CCTwpELyt9Wo5sz6N_mdoBi8zUX9jx46N2AKt-fMmPKPv0fuT9pPoTaAjEb9M03j2FOnxNclSciz5hRvjqhQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-6 w-full">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-1 text-lg">Clara Schumann Series</h3>
+<p class="font-body-md text-body-md text-on-primary/80 text-sm">Symphony Hall Atrium</p>
+</div>
+</div>
+<!-- Smaller Card 2 -->
+<div class="group cursor-pointer relative h-full min-h-[184px] overflow-hidden bg-surface-container-low">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A modern, abstract architectural detail of an acoustic panel wall in a high-end listening room. The wooden slats are warmly lit, creating strong vertical lines and geometric patterns. The overall tone is sophisticated, technical yet organic, appealing to audiophiles and design enthusiasts." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB57xAUh9XzhwYFGPiZOCdoxz6qrLHVy2WjFwtXj1xgdX0Urxcs2lQXDWlQzAoZ_C7ENG91gZQ-DfYWiw_CSgSxC3j2FdO8dV5qjMvHSI1XuW7EtCcRy12QXSqxxJ1Bq_E_WQ5FfgS2ysJi4tuNHBjCN2pEd13DJZhpd1Y1e_fMHYYltfdoiSBBJMuxsIv0Dna-PAeb45VhMc8remqYbvS6vSckTS9VQe7ZJsnDasCySifRpMi4OuYhsA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-6 w-full">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-1 text-lg">Electronic Echoes</h3>
+<p class="font-body-md text-body-md text-on-primary/80 text-sm">The Vault</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Call to Action -->
+<section class="max-w-container-max mx-auto px-margin-desktop py-stack-lg text-center">
+<h2 class="font-display-md text-display-md text-primary mb-6">Experience the Unheard</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10">Join a community of listeners who appreciate the nuances of a perfectly tuned room and a masterfully played chord.</p>
+<button class="bg-primary text-on-primary px-8 py-4 rounded-full font-button text-button hover:bg-primary/90 transition-colors">Join AuraLounge</button>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="w-full py-stack-lg bg-surface-container dark:bg-primary-container border-t border-outline-variant/10">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed block mb-4">AuraLounge</span>
+<p class="text-on-surface dark:text-on-primary-container font-body-md text-body-md">© 2024 AuraLounge. The Quiet Luxury of Sound.</p>
+</div>
+<div class="flex flex-wrap gap-6 md:justify-end items-end">
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">About</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Support</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Press</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Careers</a>
+</div>
+</div>
+</footer>
+</body></html>

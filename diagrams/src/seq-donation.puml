@@ -1,0 +1,83 @@
+@startuml seq-donation
+!include _style.puml
+' UML 2.5.1 Sequence Diagram. Combined fragment guards are written without
+' brackets; PlantUML renders the brackets itself.
+' Donation status values are the real DonationStatus enum members.
+title Donation — tip a performer, then owner acknowledgement and payout
+
+actor Audience as A
+participant "Audience Website" as WEB
+participant "DonationsController" as CTRL
+participant "CreateDonationHandler" as CREATE
+participant "ProcessDonationPaymentHandler" as CONFIRM
+participant "ConfirmDonationPaidHandler" as PAYOUT
+participant "LedgerService" as LEDGER
+database "SQL Database" as DB
+participant "VNPay" as VNPAY
+actor Owner as O
+
+A -> WEB : choose performer, amount, privacy
+activate WEB
+WEB -> CTRL : POST /donations
+activate CTRL
+CTRL -> CREATE : Send(CreateDonationCommand)
+activate CREATE
+CREATE -> DB : insert Donation as PendingPayment
+CREATE --> CTRL : gateway redirect URL
+deactivate CREATE
+CTRL --> WEB : redirect URL
+deactivate CTRL
+WEB -> VNPAY : redirect donor
+deactivate WEB
+activate VNPAY
+
+VNPAY -> CTRL : IPN callback
+activate CTRL
+CTRL -> CONFIRM : Send(ProcessDonationPaymentCommand)
+activate CONFIRM
+opt signature valid and amount matches
+  CONFIRM -> DB : status becomes PendingOwnerAck
+  CONFIRM -> LEDGER : post commission, tax and owner net
+  activate LEDGER
+  LEDGER -> DB : append balanced journal
+  LEDGER --> CONFIRM : posted
+  deactivate LEDGER
+  CONFIRM -> DB : freeze performer share rate
+end
+CONFIRM --> CTRL : result
+deactivate CONFIRM
+CTRL --> VNPAY : acknowledged
+deactivate CTRL
+deactivate VNPAY
+
+... hours or days later ...
+
+O -> CTRL : confirm receipt
+activate CTRL
+CTRL -> DB : status becomes OwnerReceived
+CTRL --> O : acknowledged
+deactivate CTRL
+
+O -> CTRL : record performer payout with evidence
+activate CTRL
+CTRL -> PAYOUT : Send(ConfirmDonationPaidCommand)
+activate PAYOUT
+alt performer has a default bank account
+  PAYOUT -> LEDGER : transfer performer share from owner to performer
+  activate LEDGER
+  LEDGER -> DB : append balanced journal
+  deactivate LEDGER
+  PAYOUT -> DB : status becomes PerformerPaid
+else no bank account registered
+  PAYOUT --> CTRL : refuse, a payout needs a destination
+end
+deactivate PAYOUT
+deactivate CTRL
+
+note over CONFIRM
+  The share rate is frozen at confirmation,
+  so an administrator changing the rate later
+  cannot alter what an existing donation
+  already promised the performer.
+end note
+@enduml

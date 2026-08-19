@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Venue Earnings &amp; Settlement Report - Aura Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#fbf9f4",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-tint": "#635d5a",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "inverse-primary": "#cdc5c0",
+                        "surface-container-highest": "#e4e2dd",
+                        "secondary": "#775a19",
+                        "on-surface": "#1b1c19",
+                        "inverse-on-surface": "#f2f1ec",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#fed488",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#181512",
+                        "outline-variant": "#cfc4bd",
+                        "on-error": "#ffffff",
+                        "on-background": "#1b1c19",
+                        "surface-container": "#f0eee9",
+                        "surface-bright": "#fbf9f4",
+                        "outline": "#7e756f",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-container": "#96908b",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#261900",
+                        "on-secondary-container": "#785a1a",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "tertiary-container": "#4d190e",
+                        "primary-container": "#2d2926",
+                        "surface-container-high": "#eae8e3",
+                        "inverse-surface": "#30312e",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary-fixed": "#ffdea5",
+                        "on-surface-variant": "#4d4540",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "primary-fixed": "#e9e1dc",
+                        "background": "#fbf9f4",
+                        "tertiary": "#310501"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "stack-lg": "80px",
+                        "stack-md": "32px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "button": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen">
+<!-- SideNavBar from JSON -->
+<nav class="hidden md:flex flex-col h-screen w-64 z-40 bg-surface-container-low border-r border-outline/10 fixed left-0 top-0 py-stack-md">
+<div class="px-6 mb-12">
+<h1 class="font-headline-md text-headline-md text-primary">Aura Admin</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Lounge Management</p>
+</div>
+<ul class="flex flex-col gap-2 flex-grow">
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant pl-4 hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant pl-4 hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+                    Venue Operations
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-primary border-l-4 border-secondary font-bold pl-4 bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined fill" data-icon="insights" data-weight="fill">insights</span>
+                    Analytics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant pl-4 hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                    Staff Management
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant pl-4 hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+                    Schedule
+                </a>
+</li>
+</ul>
+<div class="px-6 mt-auto">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 rounded-DEFAULT hover:opacity-90 transition-opacity mb-6">
+                Add New Event
+            </button>
+<ul class="flex flex-col gap-2 border-t border-outline/10 pt-4">
+<li>
+<a class="flex items-center gap-4 py-2 text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+                        Help Center
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 py-2 text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+                        Log Out
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto min-h-screen">
+<!-- Header -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-stack-sm mb-stack-md">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Venue Earnings &amp; Settlement Report</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Financial overview for the current period.</p>
+</div>
+<button class="flex items-center justify-center gap-2 border border-outline px-6 py-3 text-primary font-button text-button rounded-DEFAULT hover:bg-surface-container transition-colors w-full md:w-auto">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                Export Report
+            </button>
+</header>
+<!-- KPI Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-stack-lg">
+<div class="bg-surface-container-lowest border border-outline/10 p-6 flex flex-col gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-caps text-label-caps">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+                    Total Revenue
+                </div>
+<div class="font-display-md text-display-md text-primary">$42,500.00</div>
+<div class="font-body-md text-body-md text-secondary">+12.5% vs last month</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline/10 p-6 flex flex-col gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-caps text-label-caps">
+<span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+                    Ticket Sales
+                </div>
+<div class="font-display-md text-display-md text-primary">$28,000.00</div>
+<div class="font-body-md text-body-md text-on-surface-variant">65% of total</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline/10 p-6 flex flex-col gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-caps text-label-caps">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+                    F&amp;B Earnings
+                </div>
+<div class="font-display-md text-display-md text-primary">$14,500.00</div>
+<div class="font-body-md text-body-md text-on-surface-variant">35% of total</div>
+</div>
+</section>
+<!-- Revenue Breakdown & Chart Area -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline/10 p-6 min-h-[400px] flex flex-col">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-outline/10 pb-4">Revenue Trend</h3>
+<div class="flex-grow flex items-center justify-center bg-surface-container/30 border border-outline/5 relative overflow-hidden">
+<!-- Placeholder for actual chart, using decorative element for now -->
+<div class="absolute bottom-0 w-full flex items-end justify-around h-48 px-4 opacity-50">
+<div class="w-12 bg-secondary/20 h-1/3"></div>
+<div class="w-12 bg-secondary/40 h-1/2"></div>
+<div class="w-12 bg-secondary/60 h-2/3"></div>
+<div class="w-12 bg-secondary/80 h-3/4"></div>
+<div class="w-12 bg-secondary h-full"></div>
+</div>
+<span class="font-body-md text-on-surface-variant z-10">Chart Visualization Area</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline/10 p-6">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-outline/10 pb-4">Platform Fees</h3>
+<ul class="flex flex-col gap-4 font-body-md text-body-md">
+<li class="flex justify-between items-center pb-2 border-b border-outline/5">
+<span class="text-on-surface-variant">Ticketing Fee (3%)</span>
+<span class="text-primary font-medium">$840.00</span>
+</li>
+<li class="flex justify-between items-center pb-2 border-b border-outline/5">
+<span class="text-on-surface-variant">Processing Fee</span>
+<span class="text-primary font-medium">$350.00</span>
+</li>
+<li class="flex justify-between items-center pb-2 border-b border-outline/5">
+<span class="text-on-surface-variant">Marketing Boost</span>
+<span class="text-primary font-medium">$150.00</span>
+</li>
+<li class="flex justify-between items-center pt-4">
+<span class="text-primary font-bold">Total Fees</span>
+<span class="text-error font-bold">-$1,340.00</span>
+</li>
+</ul>
+<div class="mt-8 pt-6 border-t border-outline/10">
+<div class="text-on-surface-variant font-label-caps text-label-caps mb-2">Net Earnings Available</div>
+<div class="font-headline-lg text-headline-lg text-primary">$41,160.00</div>
+</div>
+</div>
+</section>
+<!-- Settlements Table -->
+<section class="bg-surface-container-lowest border border-outline/10 overflow-x-auto mb-stack-lg">
+<div class="p-6 border-b border-outline/10 flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-primary">Recent Settlements</h3>
+<button class="text-secondary hover:text-primary transition-colors font-button text-button flex items-center gap-1">
+                    View All <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container font-label-caps text-label-caps text-on-surface-variant">
+<th class="py-4 px-6 font-semibold">Date</th>
+<th class="py-4 px-6 font-semibold">Description</th>
+<th class="py-4 px-6 font-semibold">Amount</th>
+<th class="py-4 px-6 font-semibold">Status</th>
+<th class="py-4 px-6 font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-outline/10 hover:bg-surface-container/30 transition-colors">
+<td class="py-4 px-6 text-on-surface">Oct 24, 2024</td>
+<td class="py-4 px-6 text-on-surface">Weekly Payout - Week 42</td>
+<td class="py-4 px-6 text-primary font-medium">$12,450.00</td>
+<td class="py-4 px-6">
+<span class="inline-block px-3 py-1 bg-surface-container text-on-surface-variant font-label-caps text-label-caps rounded-[2px]">Pending</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-secondary hover:underline text-button font-button">Details</button>
+</td>
+</tr>
+<tr class="border-b border-outline/10 hover:bg-surface-container/30 transition-colors">
+<td class="py-4 px-6 text-on-surface">Oct 17, 2024</td>
+<td class="py-4 px-6 text-on-surface">Weekly Payout - Week 41</td>
+<td class="py-4 px-6 text-primary font-medium">$9,800.00</td>
+<td class="py-4 px-6">
+<span class="inline-block px-3 py-1 bg-secondary/10 text-secondary-fixed-dim font-label-caps text-label-caps rounded-[2px]">Released</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-secondary hover:underline text-button font-button">Details</button>
+</td>
+</tr>
+<tr class="border-b border-outline/10 hover:bg-surface-container/30 transition-colors">
+<td class="py-4 px-6 text-on-surface">Oct 10, 2024</td>
+<td class="py-4 px-6 text-on-surface">Weekly Payout - Week 40</td>
+<td class="py-4 px-6 text-primary font-medium">$15,200.00</td>
+<td class="py-4 px-6">
+<span class="inline-block px-3 py-1 bg-secondary/10 text-secondary-fixed-dim font-label-caps text-label-caps rounded-[2px]">Released</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-secondary hover:underline text-button font-button">Details</button>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+</main>
+</body></html>

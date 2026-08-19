@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge Admin - Refund Requests</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "tertiary-container": "#4d190e",
+                      "on-surface": "#1b1c19",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-tint": "#635d5a",
+                      "inverse-surface": "#30312e",
+                      "outline-variant": "#cfc4bd",
+                      "secondary-container": "#fed488",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "on-primary-container": "#96908b",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "secondary": "#775a19",
+                      "primary-container": "#2d2926",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-background": "#1b1c19",
+                      "tertiary-fixed": "#ffdad3",
+                      "background": "#fbf9f4",
+                      "on-primary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-variant": "#e4e2dd",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "tertiary": "#310501",
+                      "surface-bright": "#fbf9f4",
+                      "surface-container-high": "#eae8e3",
+                      "primary-fixed": "#e9e1dc",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-secondary-container": "#785a1a",
+                      "primary": "#181512",
+                      "surface-container": "#f0eee9",
+                      "outline": "#7e756f",
+                      "on-secondary-fixed": "#261900",
+                      "inverse-primary": "#cdc5c0",
+                      "surface": "#fbf9f4",
+                      "surface-dim": "#dbdad5",
+                      "error-container": "#ffdad6",
+                      "on-surface-variant": "#4d4540"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "stack-md": "32px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "stack-sm": "16px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        /* Hide scrollbar for clean aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant'); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline'); 
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-primary-container docked left-0 h-screen w-64 border-r border-outline-variant opacity-100 flex flex-col py-stack-md px-4 gap-stack-sm flex-shrink-0">
+<div class="flex items-center gap-4 mb-stack-md px-4">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-surface-variant">
+<img alt="System Manager" class="w-full h-full object-cover" data-alt="A close up, professional portrait of a system manager in a modern, light-filled office. The lighting is soft and flattering, reflecting a sophisticated, minimalist aesthetic consistent with the brand's quiet luxury. The subject conveys confidence and calm authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtw2iW3YBz8BwIgl52LSSRIicTcim_ojAlNL0TmKf9J_ikIpfPpgwtdEFoS336y9VDiNiB74nMDutMTz2h6ObYMTlA5htbq7U_hfnJtcPWXlOmqjAbDQjTc5lg2WB4thbr2hhcGeWL58wD5JrQfAnN2P7Mp7D0IpTOZep112sdnu4nqzLF4wztGhxEKsXPnkX7PkimJEPyDPBHVWi32KPXlhhYpARCPkxdJ6nYr6HBLf4SM1j5JQW9yQ"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed truncate">System Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Global Dashboard</p>
+</div>
+</div>
+<div class="flex-grow flex flex-col gap-2">
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="font-label-caps text-label-caps">Users</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-primary font-bold border-l-2 border-primary pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95 bg-surface-container-high" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Finance</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+<span class="font-label-caps text-label-caps">Packages</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">rule</span>
+<span class="font-label-caps text-label-caps">Criteria</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">analytics</span>
+<span class="font-label-caps text-label-caps">Reports</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-2">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded hover:bg-opacity-90 transition-opacity mb-4">
+                Add New Resource
+            </button>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help_outline</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
+<span class="font-label-caps text-label-caps">Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-grow flex flex-col h-full overflow-hidden bg-background">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface docked full-width top-0 border-b border-outline-variant border-opacity-10 flex justify-between items-center w-full px-margin-desktop py-4 flex-shrink-0 z-10">
+<div class="flex items-center gap-4">
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed font-bold tracking-tight">AuraLounge Admin</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Search requests..." type="text"/>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-70 p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-70 p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A small, circular avatar image of an administrator, featuring a minimalistic geometric design in subtle cream and charcoal tones, fitting the high-end UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaAlPQe8UpMPwaKNQryE9LOvdc6nQUyUHpGf7oOvSBbB6gpe9_PAl4HURNfKV2r5z6Qi9Da5kMD7YwA2Q3oVGOYbZBeULdiSrrthnfdQHkbdHSxKM9-Ocn54XjT7m9zRMwdh0XbMgpEwLJ1i1-sC4OCEIbJ4sYcBvyQzHxdm8FC7lWAEq9rouH9nBIXTrQzvoxgSHg8Cw8feWVpr6dBA0WbZxEaptlltF1V7DbO2LRf5XtvWgQgz_EOw"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-grow overflow-y-auto px-margin-mobile md:px-margin-desktop py-stack-md flex flex-col gap-stack-sm">
+<div class="flex justify-between items-end mb-stack-sm">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2">Refund Requests</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage and process pending ticket refunds.</p>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2 border border-outline-variant rounded font-button text-button text-primary hover:bg-surface-container-low transition-colors">
+                        Export CSV
+                    </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="flex gap-4 mb-4 items-center bg-surface-container-lowest p-4 rounded border border-outline-variant border-opacity-20 shadow-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant mr-2">Filter By:</span>
+<span class="px-3 py-1 bg-surface-container-low text-primary font-body-md text-sm rounded cursor-pointer hover:bg-surface-container-high transition border border-outline-variant border-opacity-50">All Pending</span>
+<span class="px-3 py-1 bg-transparent text-on-surface-variant font-body-md text-sm rounded cursor-pointer hover:bg-surface-container-low transition border border-transparent">Buyer Request</span>
+<span class="px-3 py-1 bg-transparent text-on-surface-variant font-body-md text-sm rounded cursor-pointer hover:bg-surface-container-low transition border border-transparent">Owner Cancel</span>
+<span class="px-3 py-1 bg-transparent text-error font-body-md text-sm rounded cursor-pointer hover:bg-error-container transition border border-transparent">Admin Complaint</span>
+</div>
+<!-- Data Table Container -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant border-opacity-20 overflow-hidden shadow-sm flex-grow flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="font-label-caps text-label-caps text-on-surface-variant px-6 py-4 border-b border-outline-variant border-opacity-10 whitespace-nowrap">Req ID / Date</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant px-6 py-4 border-b border-outline-variant border-opacity-10 whitespace-nowrap">User / Event</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant px-6 py-4 border-b border-outline-variant border-opacity-10 whitespace-nowrap">Origin</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant px-6 py-4 border-b border-outline-variant border-opacity-10 whitespace-nowrap text-right">Original Amt</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant px-6 py-4 border-b border-outline-variant border-opacity-10 whitespace-nowrap text-right">Requested Amt</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant px-6 py-4 border-b border-outline-variant border-opacity-10 whitespace-nowrap text-center">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant divide-opacity-10">
+<!-- Row 1: Buyer Request -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="font-body-md text-primary font-medium">#RF-9021</div>
+<div class="font-label-caps text-on-surface-variant mt-1 text-[10px]">Oct 24, 2:30 PM</div>
+</td>
+<td class="px-6 py-4">
+<div class="font-body-md text-primary">Eleanor Vance</div>
+<div class="font-body-md text-on-surface-variant text-sm mt-1">Midnight Jazz Session</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded bg-secondary-container bg-opacity-30 text-secondary font-label-caps text-[10px]">Buyer Request</span>
+<div class="font-body-md text-on-surface-variant text-xs mt-1 max-w-[200px] truncate" title="Schedule conflict, requested 48h prior.">Schedule conflict, requested 48h prior.</div>
+</td>
+<td class="px-6 py-4 text-right font-body-md text-on-surface-variant">
+                                    $120.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="font-body-md text-primary font-medium">$120.00</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center hover:bg-error hover:text-on-error text-on-surface-variant transition-colors" title="Reject">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-opacity-90 transition-colors" title="Approve">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Owner Cancel -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="font-body-md text-primary font-medium">#RF-9024</div>
+<div class="font-label-caps text-on-surface-variant mt-1 text-[10px]">Oct 24, 9:15 AM</div>
+</td>
+<td class="px-6 py-4">
+<div class="font-body-md text-primary">Marcus Thorne</div>
+<div class="font-body-md text-on-surface-variant text-sm mt-1">Acoustic Sunset</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-caps text-[10px]">Owner Cancel</span>
+<div class="font-body-md text-on-surface-variant text-xs mt-1 max-w-[200px] truncate" title="Event cancelled due to weather. Auto-refund initiated.">Event cancelled due to weather...</div>
+</td>
+<td class="px-6 py-4 text-right font-body-md text-on-surface-variant">
+                                    $45.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="font-body-md text-primary font-medium">$45.00</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center hover:bg-error hover:text-on-error text-on-surface-variant transition-colors" title="Reject">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-opacity-90 transition-colors" title="Approve">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Admin Complaint (Partial Refund) -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-error-container bg-opacity-10">
+<td class="px-6 py-4">
+<div class="font-body-md text-primary font-medium">#RF-9028</div>
+<div class="font-label-caps text-error mt-1 text-[10px]">Oct 23, 11:45 PM</div>
+</td>
+<td class="px-6 py-4">
+<div class="font-body-md text-primary">Sarah Jenkins</div>
+<div class="font-body-md text-on-surface-variant text-sm mt-1">Lounge Access - VIP</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded bg-error-container text-on-error-container font-label-caps text-[10px]">Admin Complaint</span>
+<div class="font-body-md text-on-surface-variant text-xs mt-1 max-w-[200px] truncate" title="Poor service reported. Reviewing for partial refund.">Poor service reported. Reviewin...</div>
+</td>
+<td class="px-6 py-4 text-right font-body-md text-on-surface-variant">
+                                    $250.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<!-- Editable amount for partial refunds -->
+<input class="w-20 px-2 py-1 bg-surface border border-outline-variant rounded font-body-md text-right text-primary focus:ring-1 focus:ring-primary focus:outline-none" type="text" value="125.00"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center hover:bg-error hover:text-on-error text-on-surface-variant transition-colors" title="Reject">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+<button class="px-3 py-1 rounded bg-primary text-on-primary font-button text-xs hover:bg-opacity-90 transition-colors" title="Approve Partial">
+                                            Approve
+                                        </button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Buyer Request -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="font-body-md text-primary font-medium">#RF-9032</div>
+<div class="font-label-caps text-on-surface-variant mt-1 text-[10px]">Oct 23, 4:20 PM</div>
+</td>
+<td class="px-6 py-4">
+<div class="font-body-md text-primary">David Kim</div>
+<div class="font-body-md text-on-surface-variant text-sm mt-1">Gallery Opening</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded bg-secondary-container bg-opacity-30 text-secondary font-label-caps text-[10px]">Buyer Request</span>
+<div class="font-body-md text-on-surface-variant text-xs mt-1 max-w-[200px] truncate" title="Double booked tickets by mistake.">Double booked tickets by mistak...</div>
+</td>
+<td class="px-6 py-4 text-right font-body-md text-on-surface-variant">
+                                    $75.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="font-body-md text-primary font-medium">$75.00</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center hover:bg-error hover:text-on-error text-on-surface-variant transition-colors" title="Reject">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-opacity-90 transition-colors" title="Approve">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="bg-surface-container-low border-t border-outline-variant border-opacity-10 px-6 py-3 flex items-center justify-between mt-auto">
+<span class="font-body-md text-sm text-on-surface-variant">Showing 1 to 4 of 42 requests</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 border border-outline-variant rounded font-body-md text-sm text-on-surface-variant disabled:opacity-50" disabled="">Previous</button>
+<button class="px-3 py-1 border border-outline-variant rounded font-body-md text-sm text-primary hover:bg-surface-variant transition-colors">Next</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

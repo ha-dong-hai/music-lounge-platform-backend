@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - My Donation History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#e4e2dd",
+                      "on-secondary-container": "#785a1a",
+                      "secondary-fixed": "#ffdea5",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-surface": "#1b1c19",
+                      "surface-variant": "#e4e2dd",
+                      "surface": "#fbf9f4",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "primary-container": "#2d2926",
+                      "background": "#fbf9f4",
+                      "surface-bright": "#fbf9f4",
+                      "surface-tint": "#635d5a",
+                      "secondary": "#775a19",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#fed488",
+                      "on-background": "#1b1c19",
+                      "inverse-primary": "#cdc5c0",
+                      "tertiary-container": "#4d190e",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-primary-container": "#96908b",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed": "#e9e1dc",
+                      "inverse-surface": "#30312e",
+                      "primary": "#181512",
+                      "surface-dim": "#dbdad5",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#261900",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-container-low": "#f5f3ee",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary": "#310501",
+                      "outline": "#7e756f",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "outline-variant": "#cfc4bd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "32px",
+                      "container-max": "1440px",
+                      "stack-sm": "16px",
+                      "stack-lg": "80px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "stack-md": "32px"
+              },
+              "fontFamily": {
+                      "display-md": ["Libre Caslon Text"],
+                      "display-lg": ["Libre Caslon Text"],
+                      "button": ["Manrope"],
+                      "body-lg": ["Manrope"],
+                      "headline-md": ["Libre Caslon Text"],
+                      "headline-lg-mobile": ["Libre Caslon Text"],
+                      "headline-lg": ["Libre Caslon Text"],
+                      "body-md": ["Manrope"],
+                      "label-caps": ["Manrope"]
+              },
+              "fontSize": {
+                      "display-md": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                      "button": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .ghost-border { border: 1px solid rgba(27, 28, 25, 0.1); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md hidden md:flex justify-between items-center px-margin-desktop h-16 transition-all duration-300">
+<div class="flex items-center gap-4 cursor-pointer hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary text-2xl">menu</span>
+</div>
+<div class="font-display-md text-display-md tracking-widest text-primary">AURA</div>
+<div class="flex items-center gap-4 cursor-pointer hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary text-2xl">shopping_bag</span>
+</div>
+</header>
+<!-- Mobile Top Header -->
+<header class="md:hidden flex justify-between items-center px-margin-mobile h-16 w-full fixed top-0 z-50 bg-surface/80 backdrop-blur-md">
+<span class="material-symbols-outlined text-primary text-2xl">arrow_back</span>
+<div class="font-display-md text-display-md tracking-widest text-primary text-2xl">AURA</div>
+<span class="material-symbols-outlined text-primary text-2xl opacity-0">shopping_bag</span> <!-- Spacer -->
+</header>
+<main class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop pt-24 md:pt-32 min-h-screen">
+<div class="mb-stack-lg">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-2">Donation History</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">A record of your support for the artists.</p>
+</div>
+<div class="space-y-stack-sm w-full max-w-4xl">
+<!-- List Item 1 -->
+<article class="bg-surface-container-lowest ghost-border rounded-lg p-6 flex flex-col md:flex-row gap-6 md:items-center hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4 flex-1">
+<img class="w-16 h-16 rounded-full object-cover ghost-border" data-alt="A sophisticated black and white portrait of a jazz musician playing a saxophone in a dimly lit, high-end lounge setting. The mood is intimate and premium. Focus is on the artist's face and instrument." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdMtJHI54hFrM1_HYx5XQSRMlPKfWdxbR9h_yqE2gA3Mw8vdXO4R2S76cu0Q828mA_1AtWIARiGoQVwCNUGo5HkJZ4VKLM7zrLIpyi7N76AH4J7_KznvvDChPGz7X9CYuqi4c2NuGj1RLqLItXEgOTCIsjcgKJRZ6rprQKt91TlhKLhbX8yRShGZ9MQf4lFLmugYVnH2smH20VHDgkAbFMXWEO9sMZxwNc0bK4ozoBCD1pfJPQNH9FzQ"/>
+<div>
+<h2 class="font-body-lg text-body-lg text-on-surface mb-1">Marcus Reed Trio</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Blue Note Evening Session</p>
+</div>
+</div>
+<div class="flex flex-col md:items-end flex-1 gap-2">
+<div class="font-headline-md text-headline-md text-primary">$50.00</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">Oct 12, 2023</div>
+</div>
+<div class="flex-1 w-full mt-4 md:mt-0">
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-2">
+<span class="text-secondary">Sent</span>
+<span class="text-secondary">Venue Confirmed</span>
+<span class="text-secondary">Performer Paid</span>
+</div>
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary w-full"></div>
+</div>
+</div>
+</article>
+<!-- List Item 2 -->
+<article class="bg-surface-container-lowest ghost-border rounded-lg p-6 flex flex-col md:flex-row gap-6 md:items-center hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4 flex-1">
+<img class="w-16 h-16 rounded-full object-cover ghost-border" data-alt="A minimalist photograph of a classical pianist at a grand piano, captured from a slightly elevated angle. The lighting is soft and natural, emphasizing the quiet luxury of the performance space. High key aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMJ6BRf1fPV9mj9BIWB4xrslaDcyuGuXKlJqJrss8Ig5C0Y8yyHW22qI2xM3HN2vUErKwpKZILsTOxz37M86Sva8SMtbZddouJl4JOqEtxkMBSGLolt1UW8bpyE2k78HrkoRhqzDjn8RmTON7U1C86RxU2dM7fDIm91A6dOId9sVV8VSJiZBouW71yJQ4d0DPZtLt3Ljm3fDaalVv6IurKY9vxt0QTM97-7pgZdwocwgET5kIsfZTM-Q"/>
+<div>
+<h2 class="font-body-lg text-body-lg text-on-surface mb-1">Elena Rostova</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Sonatas in D Minor</p>
+</div>
+</div>
+<div class="flex flex-col md:items-end flex-1 gap-2">
+<div class="font-headline-md text-headline-md text-primary">$100.00</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">Sep 28, 2023</div>
+</div>
+<div class="flex-1 w-full mt-4 md:mt-0">
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-2">
+<span class="text-secondary">Sent</span>
+<span class="text-secondary">Venue Confirmed</span>
+<span class="opacity-40">Performer Paid</span>
+</div>
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary w-2/3"></div>
+</div>
+</div>
+</article>
+<!-- List Item 3 -->
+<article class="bg-surface-container-lowest ghost-border rounded-lg p-6 flex flex-col md:flex-row gap-6 md:items-center hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4 flex-1">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-display-md text-headline-md">
+                        VS
+                    </div>
+<div>
+<h2 class="font-body-lg text-body-lg text-on-surface mb-1">Vanguard Strings</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Modern Classic Fusion</p>
+</div>
+</div>
+<div class="flex flex-col md:items-end flex-1 gap-2">
+<div class="font-headline-md text-headline-md text-primary">$25.00</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">Sep 15, 2023</div>
+</div>
+<div class="flex-1 w-full mt-4 md:mt-0">
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-2">
+<span class="text-secondary">Sent</span>
+<span class="opacity-40">Venue Confirmed</span>
+<span class="opacity-40">Performer Paid</span>
+</div>
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary w-1/3"></div>
+</div>
+</div>
+</article>
+<!-- Empty State (Hidden by default, shown for demonstration if list was empty) -->
+<!--
+            <div class="py-stack-lg text-center flex flex-col items-center justify-center">
+                <span class="material-symbols-outlined text-outline text-[48px] mb-4 opacity-50">volunteer_activism</span>
+                <p class="font-body-lg text-body-lg text-on-surface-variant">You haven't donated to anyone yet.</p>
+                <button class="mt-6 bg-primary text-on-primary font-button text-button px-8 py-3 rounded-full hover:opacity-90 transition-opacity">Explore Artists</button>
+            </div>
+            -->
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface/90 backdrop-blur-lg border-t border-outline-variant/10">
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span class="font-label-caps text-label-caps">Discover</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined mb-1">confirmation_number</span>
+<span class="font-label-caps text-label-caps">Tickets</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined mb-1">favorite</span>
+<span class="font-label-caps text-label-caps">Following</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary transition-colors active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined mb-1">notifications</span>
+<span class="font-label-caps text-label-caps">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary hover:text-secondary transition-colors active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</div>
+</nav>
+</body></html>

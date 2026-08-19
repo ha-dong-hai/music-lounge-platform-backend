@@ -1,0 +1,72 @@
+@startuml seq-moderation
+!include _style.puml
+' UML 2.5.1 Sequence Diagram. Combined fragment guards are written without
+' brackets; PlantUML renders the brackets itself.
+' Status values are the real LoungeShowStatus enum members.
+title Show Moderation — submit, AI scoring, Admin decision
+
+actor Owner as O
+participant "Owner Dashboard" as UI
+participant "LoungeShowsController" as CTRL
+participant "SubmitForReviewHandler" as SUBMIT
+participant "ScoreModerationWithAiJob" as JOB
+participant "Gemini" as AI
+participant "ReviewShowHandler" as REVIEW
+database "SQL Database" as DB
+actor Admin as AD
+
+O -> UI : Submit for Review
+activate UI
+UI -> CTRL : POST /lounge-shows/{id}/publish
+activate CTRL
+CTRL -> SUBMIT : Send(SubmitForReviewCommand)
+activate SUBMIT
+alt venue approved, subscription active, tier and permit present
+  SUBMIT -> DB : status becomes Pending, create EventModeration
+  SUBMIT ->> JOB : enqueue scoring, asynchronous
+  SUBMIT --> CTRL : accepted
+else a prerequisite is missing
+  SUBMIT --> CTRL : refuse and name the missing prerequisite
+end
+deactivate SUBMIT
+CTRL --> UI : result
+deactivate CTRL
+UI --> O : status now Pending
+deactivate UI
+
+activate JOB
+JOB -> AI : score title, description, poster
+activate AI
+alt service responds
+  AI --> JOB : risk score and recommendation
+else unavailable or over quota
+  AI --> JOB : error
+  JOB -> JOB : fall back to a neutral score
+end
+deactivate AI
+JOB -> DB : store score and recommendation
+deactivate JOB
+
+AD -> CTRL : open moderation queue, decide
+activate CTRL
+CTRL -> REVIEW : Send(ReviewShowCommand)
+activate REVIEW
+alt approved
+  REVIEW -> DB : status becomes Published,\nrecord legal approval confirmation
+else rejected
+  REVIEW -> DB : status returns to Draft,\nso the Owner can fix and resubmit
+end
+REVIEW -> DB : record decision, reviewer and timestamp
+REVIEW --> CTRL : done
+deactivate REVIEW
+CTRL --> AD : queue updated
+deactivate CTRL
+
+note over JOB, AI
+  The AI result is advice only. It never
+  approves or rejects on its own, and an
+  unavailable service must not block
+  submission — the item still reaches the
+  queue with a neutral score.
+end note
+@enduml

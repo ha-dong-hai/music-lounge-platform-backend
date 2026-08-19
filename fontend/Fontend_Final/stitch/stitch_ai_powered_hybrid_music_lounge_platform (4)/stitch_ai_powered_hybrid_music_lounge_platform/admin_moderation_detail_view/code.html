@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge Admin - Moderation Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "primary-fixed": "#e9e1dc",
+                      "error-container": "#ffdad6",
+                      "on-primary-container": "#96908b",
+                      "on-primary-fixed": "#1e1b18",
+                      "primary": "#181512",
+                      "secondary-fixed": "#ffdea5",
+                      "on-surface-variant": "#4d4540",
+                      "surface-container": "#f0eee9",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "outline-variant": "#cfc4bd",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "background": "#fbf9f4",
+                      "on-secondary-container": "#785a1a",
+                      "surface-dim": "#dbdad5",
+                      "surface-tint": "#635d5a",
+                      "on-primary": "#ffffff",
+                      "secondary-container": "#fed488",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface": "#fbf9f4",
+                      "on-background": "#1b1c19",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed": "#261900",
+                      "primary-container": "#2d2926",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#4d190e",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary": "#775a19",
+                      "on-secondary": "#ffffff",
+                      "on-surface": "#1b1c19",
+                      "secondary-fixed-dim": "#e9c176",
+                      "inverse-primary": "#cdc5c0",
+                      "tertiary": "#310501",
+                      "surface-container-high": "#eae8e3",
+                      "surface-container-highest": "#e4e2dd",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "outline": "#7e756f",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "surface-bright": "#fbf9f4",
+                      "tertiary-fixed": "#ffdad3"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "32px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px",
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px",
+                      "stack-sm": "16px",
+                      "margin-desktop": "64px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<nav aria-label="Sidebar" class="bg-surface-container-low dark:bg-primary-container text-primary dark:text-primary-fixed font-label-caps text-label-caps font-body-md text-body-md font-display-md text-display-md text-primary dark:text-primary-fixed docked left-0 h-screen w-64 border-r border-outline-variant opacity-10 flat no shadows flex flex-col h-full py-stack-md px-4 gap-stack-sm hidden md:flex">
+<div class="mb-stack-md px-4">
+<h1 class="font-headline-md text-headline-md font-bold tracking-tight">System Management</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Global Dashboard</p>
+</div>
+<ul class="flex flex-col gap-2 flex-grow">
+<li>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 rounded-r-full" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="group">group</span>
+<span>Users</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 rounded-r-full" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Packages</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 text-primary font-bold border-l-2 border-primary pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 rounded-r-full bg-surface-container-highest" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="rule" style="font-variation-settings: 'FILL' 1;">rule</span>
+<span>Criteria</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 rounded-r-full" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Reports</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded hover:bg-primary-container transition-colors duration-200 mb-6 flex justify-center items-center gap-2">
+<span>Add New Resource</span>
+</button>
+<ul class="flex flex-col gap-2 border-t border-outline-variant/20 pt-4">
+<li>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 rounded-r-full" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-2 text-error font-medium pl-4 hover:bg-error-container hover:text-on-error-container transition-all duration-300 cursor-pointer active:scale-95 rounded-r-full" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Sign Out</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface text-primary dark:text-primary-fixed font-headline-md text-headline-md font-body-md text-body-md font-display-md text-display-md text-primary dark:text-primary-fixed docked full-width top-0 border-b border-outline-variant opacity-10 flat no shadows flex justify-between items-center w-full px-margin-desktop py-4 sticky z-10 hidden md:flex">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold tracking-tight">AuraLounge Admin</span>
+</div>
+<div class="flex-1 max-w-md mx-8">
+<div class="relative">
+<span aria-hidden="true" class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-b border-outline-variant/30 focus:border-primary px-10 py-2 font-body-md text-body-md focus:outline-none transition-colors duration-200 bg-transparent placeholder-on-surface-variant/50" placeholder="Search resources..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-70 relative">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-70">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 cursor-pointer active:opacity-70 hover:opacity-80 transition-opacity">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A close-up portrait of a professional system administrator in a brightly lit, modern office setting. The lighting is soft and neutral, enhancing a clean and approachable light-mode aesthetic. The individual wears minimal, premium attire, blending seamlessly with the gallery-style UI design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYz0eXGIMM8t3GZNX8pHSHqglQfADptcO5u0No4Uj38mBrTJkm8dqwnNSUiQUyOFLGHTYMABP8m_7lHWNA7HWT-vgsKaYUFKxblCaebWQp3mLBcpP3JcNoXwyt3ZCnfMdHAOcykxtyh2nncWuwgA3kp-0ib5hn3Q1zTQEuvopPNXCosz8ng-mDpTZEsEJBIi_9x0395R28siXaneVHb4FEbca8INgmtG0Wv0Nr2RZXS0i6EWsb-SB2uA"/>
+</div>
+</div>
+</header>
+<!-- Main Scrollable Area -->
+<main class="flex-1 overflow-y-auto px-margin-mobile md:px-margin-desktop py-stack-md md:py-stack-lg flex flex-col gap-stack-md bg-surface">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant/10 pb-6">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span aria-hidden="true" class="material-symbols-outlined text-outline" data-icon="arrow_back">arrow_back</span>
+<a class="font-body-md text-body-md text-outline hover:text-primary transition-colors" href="#">Back to Queue</a>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg font-bold text-primary">Review: "Midnight Jazz Sessions"</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Submission ID: #88392-A • Submitted 2 hours ago by @jazzclub_nyc</p>
+</div>
+<div class="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
+<button class="flex-1 md:flex-none px-6 py-2 border border-outline-variant/30 font-button text-button text-primary hover:bg-surface-container-low transition-colors rounded">Hold for Review</button>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Submission Details (The Art) -->
+<div class="lg:col-span-7 flex flex-col gap-stack-md">
+<!-- Main Poster/Media -->
+<div class="relative w-full aspect-video rounded overflow-hidden bg-surface-container-low border border-outline-variant/10 group">
+<img alt="Show Poster" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A high-quality, moody promotional poster for a jazz livestream. A dimly lit, upscale jazz club interior with a gleaming brass saxophone resting on a stand. Deep shadow contrasts with warm, golden spotlighting. The aesthetic is premium, minimal, and sophisticated, fitting perfectly within a quiet luxury gallery UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGaYDiG-XW5LTudzAv7rhOpp5b0P1YI0ZGLOGF3hlryNZ8B7DjejoXvfiVXtRF2SAY1Ko6CDdDIzUIyk0vHJMBmW8msvuhRNkSrLh_xO7_fFMxU5sAThTGCCnm_W4APLcfgjlJWFHR4jhT3fciqUHcvAF_iQLLaevfsqS1P24Xf7zb9KFMZHXznE49iLiBizhHHx02-Nb4CrhN1Cfu_Eo228GrZQTaTdtHqq22TyPTcIg9QeJU-iVeyQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<button class="flex items-center gap-2 text-on-primary bg-primary/20 backdrop-blur-md px-4 py-2 rounded font-button text-button border border-on-primary/20 hover:bg-primary/40 transition-colors">
+<span aria-hidden="true" class="material-symbols-outlined text-[18px]" data-icon="zoom_in">zoom_in</span>
+                                View High Res
+                            </button>
+</div>
+</div>
+<!-- Metadata Details -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-sm">
+<div class="bg-surface-container-lowest p-6 rounded border border-outline-variant/10">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 flex items-center gap-2">
+<span aria-hidden="true" class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                                Event Details
+                            </h3>
+<dl class="space-y-3">
+<div>
+<dt class="font-label-caps text-label-caps text-outline text-[10px]">Title</dt>
+<dd class="font-body-md text-body-md text-primary mt-1">Midnight Jazz Sessions Vol. IV</dd>
+</div>
+<div>
+<dt class="font-label-caps text-label-caps text-outline text-[10px]">Description</dt>
+<dd class="font-body-md text-body-md text-primary mt-1 line-clamp-3">Join us for an exclusive, late-night acoustic set featuring the John Doe Quartet. Expect smooth improvisations and a relaxed atmosphere straight from our downtown lounge. High fidelity audio stream.</dd>
+</div>
+<div>
+<dt class="font-label-caps text-label-caps text-outline text-[10px]">Scheduled Time</dt>
+<dd class="font-body-md text-body-md text-primary mt-1">Oct 24, 2023 • 11:00 PM EST</dd>
+</div>
+</dl>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded border border-outline-variant/10">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 flex items-center gap-2">
+<span aria-hidden="true" class="material-symbols-outlined text-[16px]" data-icon="groups">groups</span>
+                                Lineup &amp; Tags
+                            </h3>
+<dl class="space-y-4">
+<div>
+<dt class="font-label-caps text-label-caps text-outline text-[10px] mb-2">Performers</dt>
+<dd class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container-high rounded text-primary font-body-md text-body-md text-sm border border-outline-variant/20 flex items-center gap-1">
+                                            @johndoe_sax
+                                            <span aria-hidden="true" class="material-symbols-outlined text-[14px] text-outline cursor-pointer hover:text-primary" data-icon="open_in_new">open_in_new</span>
+</span>
+<span class="px-3 py-1 bg-surface-container-high rounded text-primary font-body-md text-body-md text-sm border border-outline-variant/20 flex items-center gap-1">
+                                            @smith_keys
+                                            <span aria-hidden="true" class="material-symbols-outlined text-[14px] text-outline cursor-pointer hover:text-primary" data-icon="open_in_new">open_in_new</span>
+</span>
+</dd>
+</div>
+<div>
+<dt class="font-label-caps text-label-caps text-outline text-[10px] mb-2">Genres</dt>
+<dd class="flex flex-wrap gap-2">
+<span class="px-2 py-0.5 bg-surface-dim rounded-[2px] text-on-surface-variant font-label-caps text-[10px]">JAZZ</span>
+<span class="px-2 py-0.5 bg-surface-dim rounded-[2px] text-on-surface-variant font-label-caps text-[10px]">ACOUSTIC</span>
+<span class="px-2 py-0.5 bg-surface-dim rounded-[2px] text-on-surface-variant font-label-caps text-[10px]">LIVE</span>
+</dd>
+</div>
+</dl>
+</div>
+</div>
+</div>
+<!-- Right Column: AI Analysis & Actions (The Logic) -->
+<div class="lg:col-span-5 flex flex-col gap-stack-md">
+<!-- AI Risk Score Card -->
+<div class="bg-surface-container-low p-6 rounded border border-outline-variant/10 relative overflow-hidden">
+<!-- Subtle background effect for 'Safe' status -->
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex justify-between items-start mb-6 relative z-10">
+<div>
+<h3 class="font-headline-md text-headline-md font-bold text-primary">Risk Assessment</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">AI Scan completed at 10:42 AM</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-display-md text-display-md text-primary font-bold leading-none">12<span class="text-headline-md text-outline">/100</span></span>
+<span class="font-label-caps text-label-caps text-secondary mt-1">LOW RISK</span>
+</div>
+</div>
+<!-- Flags List -->
+<div class="space-y-3 relative z-10">
+<div class="flex items-start gap-3 p-3 bg-surface-container-highest rounded border border-outline-variant/10">
+<span aria-hidden="true" class="material-symbols-outlined text-outline mt-0.5" data-icon="check_circle">check_circle</span>
+<div>
+<p class="font-body-md text-body-md text-primary font-medium">Visual Content Clear</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">No explicit imagery detected in poster.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3 bg-surface-container-highest rounded border border-outline-variant/10">
+<span aria-hidden="true" class="material-symbols-outlined text-outline mt-0.5" data-icon="check_circle">check_circle</span>
+<div>
+<p class="font-body-md text-body-md text-primary font-medium">Text Analysis Clean</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Title and description pass profanity filters.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3 bg-surface-container-highest rounded border border-outline-variant/10">
+<span aria-hidden="true" class="material-symbols-outlined text-on-tertiary-container mt-0.5" data-icon="warning">warning</span>
+<div>
+<p class="font-body-md text-body-md text-primary font-medium">Account Age Warning</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Submitter account created less than 30 days ago.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Moderation Actions -->
+<div class="bg-surface-container-lowest p-6 rounded border border-outline-variant/10 flex-1 flex flex-col">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Final Decision</h3>
+<div class="mb-6 flex-1">
+<label class="block font-label-caps text-label-caps text-primary mb-2" for="mod-notes">Moderator Notes (Required for Rejection)</label>
+<textarea class="w-full bg-surface-container-low border border-outline-variant/30 focus:border-primary p-3 font-body-md text-body-md rounded focus:outline-none transition-colors duration-200 resize-none" id="mod-notes" placeholder="Enter reason for rejection or internal notes..." rows="4"></textarea>
+</div>
+<div class="flex gap-4">
+<button class="flex-1 px-6 py-4 border border-error/50 text-error hover:bg-error-container hover:border-error transition-colors rounded font-button text-button flex items-center justify-center gap-2 group">
+<span aria-hidden="true" class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="block">block</span>
+                                Reject Content
+                            </button>
+<button class="flex-1 px-6 py-4 bg-primary text-on-primary hover:bg-primary-container transition-colors rounded font-button text-button flex items-center justify-center gap-2 group">
+<span aria-hidden="true" class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Approve &amp; Unlock
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

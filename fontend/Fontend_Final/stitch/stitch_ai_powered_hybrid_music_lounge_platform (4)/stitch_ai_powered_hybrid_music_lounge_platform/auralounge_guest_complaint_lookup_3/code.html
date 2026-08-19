@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Track Support Request</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#1b1c19",
+                      "on-surface-variant": "#4d4540",
+                      "surface": "#fbf9f4",
+                      "on-primary-container": "#96908b",
+                      "outline-variant": "#cfc4bd",
+                      "on-primary": "#ffffff",
+                      "outline": "#7e756f",
+                      "on-secondary-fixed": "#261900",
+                      "secondary-fixed": "#ffdea5",
+                      "error-container": "#ffdad6",
+                      "surface-dim": "#dbdad5",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-tint": "#635d5a",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-container-high": "#eae8e3",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#785a1a",
+                      "tertiary": "#310501",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "inverse-primary": "#cdc5c0",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "background": "#fbf9f4",
+                      "secondary-container": "#fed488",
+                      "primary": "#181512",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-background": "#1b1c19",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-container": "#f0eee9",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "tertiary-container": "#4d190e",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "tertiary-fixed": "#ffdad3",
+                      "secondary": "#775a19",
+                      "surface-variant": "#e4e2dd",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "surface-container-highest": "#e4e2dd",
+                      "error": "#ba1a1a",
+                      "primary-container": "#2d2926",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "surface-bright": "#fbf9f4",
+                      "inverse-surface": "#30312e",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-container-low": "#f5f3ee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "stack-sm": "16px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-lg min-h-screen flex flex-col md:hidden">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface-dim flat no shadows flex justify-between items-center px-margin-mobile py-4 w-full z-10">
+<div class="flex items-center">
+<button class="text-primary dark:text-primary-fixed cursor-pointer transition-transform duration-200 active:scale-95 hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-display-md text-display-md text-primary dark:text-primary-fixed font-bold tracking-tight">AuraLounge</h1>
+<div>
+<button class="text-primary dark:text-primary-fixed cursor-pointer transition-transform duration-200 active:scale-95 hover:opacity-80 transition-opacity font-button text-button">Join</button>
+</div>
+</header>
+<main class="flex-grow px-margin-mobile py-stack-md flex flex-col gap-stack-lg">
+<!-- Header Section -->
+<section class="text-center">
+<h2 class="font-headline-md text-headline-md text-primary mb-unit">Track Request</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Enter your details to view the current status of your inquiry.</p>
+</section>
+<!-- Form Section -->
+<section class="flex flex-col gap-stack-sm bg-surface-container-lowest p-margin-mobile rounded-lg border border-outline-variant/30">
+<div class="flex flex-col gap-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="referenceId">Reference ID</label>
+<input class="bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary font-body-md text-body-md text-on-surface p-0 pb-2 placeholder-outline/50 transition-colors" id="referenceId" placeholder="e.g. RQ-84729" type="text" value="RQ-84729"/>
+</div>
+<div class="flex flex-col gap-unit mt-stack-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="phoneNumber">Phone Number</label>
+<input class="bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary font-body-md text-body-md text-on-surface p-0 pb-2 placeholder-outline/50 transition-colors" id="phoneNumber" placeholder="Enter associated number" type="tel" value="***-***-5521"/>
+</div>
+<button class="mt-stack-sm w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT transition-opacity hover:opacity-90 active:scale-[0.98]">
+                Check Status
+            </button>
+</section>
+<!-- Timeline Section (Visible after submit/pre-filled) -->
+<section class="flex flex-col gap-stack-md mt-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest border-b border-outline-variant/30 pb-2">Status Timeline</h3>
+<div class="relative pl-6 border-l border-outline-variant/30 ml-3 flex flex-col gap-stack-md">
+<!-- Step 1: Completed -->
+<div class="relative">
+<div class="absolute -left-[30px] top-1 w-3 h-3 rounded-full bg-surface-tint ring-4 ring-surface"></div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Oct 12, 09:41 AM</span>
+<h4 class="font-body-md text-body-md text-primary font-medium">Request Received</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Your inquiry regarding acoustic arrangements has been logged.</p>
+</div>
+</div>
+<!-- Step 2: Completed -->
+<div class="relative">
+<div class="absolute -left-[30px] top-1 w-3 h-3 rounded-full bg-surface-tint ring-4 ring-surface"></div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Oct 13, 02:15 PM</span>
+<h4 class="font-body-md text-body-md text-primary font-medium">Review in Progress</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Our curation team is currently evaluating the details.</p>
+</div>
+</div>
+<!-- Step 3: Current -->
+<div class="relative">
+<div class="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-surface ring-2 ring-primary flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-primary">Oct 14, 11:30 AM</span>
+<h4 class="font-body-md text-body-md text-primary font-medium">Resolution Pending</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Awaiting final confirmation from the venue manager. We will update you shortly.</p>
+</div>
+</div>
+<!-- Step 4: Future -->
+<div class="relative opacity-50">
+<div class="absolute -left-[30px] top-1 w-3 h-3 rounded-full bg-outline-variant ring-4 ring-surface"></div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-outline">Pending</span>
+<h4 class="font-body-md text-body-md text-outline font-medium">Resolved</h4>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Suppressed for this transactional view based on guidelines) -->
+</body></html>
