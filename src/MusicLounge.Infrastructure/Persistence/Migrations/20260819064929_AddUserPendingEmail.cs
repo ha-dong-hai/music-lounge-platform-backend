@@ -1,0 +1,29 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace MusicLounge.Infrastructure.Persistence.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddUserPendingEmail : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<string>(
+                name: "PendingEmail",
+                table: "users",
+                type: "nvarchar(256)",
+                maxLength: 256,
+                nullable: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "PendingEmail",
+                table: "users");
+        }
+    }
+}
