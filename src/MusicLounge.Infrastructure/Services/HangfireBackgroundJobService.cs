@@ -47,6 +47,10 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
             j => j.ExecuteAsync(toPhone, protectedCode, CancellationToken.None));
     }
 
+    public void EnqueueDuplicateRegistrationAlertEmail(string toEmail, string toName)
+        => BackgroundJob.Enqueue<SendDuplicateRegistrationAlertEmailJob>(
+            j => j.ExecuteAsync(toEmail, toName, CancellationToken.None));
+
     public void EnqueueModerationAiScoring(int moderationId)
         => BackgroundJob.Enqueue<ScoreModerationWithAiJob>(
             j => j.ExecuteAsync(moderationId, JobCancellationToken.Null));

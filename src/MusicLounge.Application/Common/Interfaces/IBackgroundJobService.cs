@@ -10,6 +10,7 @@ public interface IBackgroundJobService
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink);
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code);
     void EnqueuePhoneVerificationCode(string toPhone, string code);
+    void EnqueueDuplicateRegistrationAlertEmail(string toEmail, string toName);
 
     // Runs AI moderation scoring for a freshly-created EventModeration row in the background, so a
     // slow/unavailable AI vendor never delays the Publish/CreateLivestream response it's called from.

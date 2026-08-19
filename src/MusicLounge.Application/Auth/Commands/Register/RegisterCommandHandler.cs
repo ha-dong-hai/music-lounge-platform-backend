@@ -4,7 +4,6 @@ using MusicLounge.Application.Auth.DTOs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
-using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Auth.Commands.Register;
 
@@ -31,10 +30,22 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 
     public async Task<RegisterResultDto> Handle(RegisterCommand request, CancellationToken ct)
     {
-        var emailExists = await _uow.Repository<User, int>()
-            .AnyAsync(u => u.Email == request.Email, ct);
-        if (emailExists)
-            throw new ConflictException("Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.");
+        // Anti-enumeration (OWASP Authentication Cheat Sheet): registration must not reveal
+        // whether an email is already taken — an attacker could otherwise harvest which emails
+        // have MusicLounge accounts just by watching the response. On a duplicate, the REAL
+        // account owner gets an alert email instead (so a genuine account-takeover attempt is
+        // still visible to them), and the caller gets back the exact same response shape/content
+        // a fresh registration would produce, built from what THEY submitted, never from the
+        // existing account's real data (which would itself leak information back to the caller).
+        var existingUsers = await _uow.Repository<User, int>()
+            .FindAsync(u => u.Email == request.Email, ct);
+        var existingUser = existingUsers.FirstOrDefault();
+        if (existingUser is not null)
+        {
+            _backgroundJobs.EnqueueDuplicateRegistrationAlertEmail(existingUser.Email, existingUser.FullName);
+            return new RegisterResultDto(
+                request.Email, request.FullName, DateTimeOffset.UtcNow.Add(CodeLifetime));
+        }
 
         var code = GenerateVerificationCode();
         var expiresAt = DateTimeOffset.UtcNow.Add(CodeLifetime);
