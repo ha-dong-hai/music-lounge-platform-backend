@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge: Secure Verification (Final)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f2f1ec",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-fixed": "#1e1b18",
+                        "primary-fixed": "#e9e1dc",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-surface": "#1b1c19",
+                        "inverse-surface": "#30312e",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary": "#181512",
+                        "on-secondary-container": "#785a1a",
+                        "surface-bright": "#fbf9f4",
+                        "tertiary": "#310501",
+                        "background": "#fbf9f4",
+                        "secondary": "#775a19",
+                        "primary-container": "#2d2926",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "outline-variant": "#cfc4bd",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-surface-variant": "#4d4540",
+                        "surface-container": "#f0eee9",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-container-highest": "#e4e2dd",
+                        "tertiary-container": "#4d190e",
+                        "outline": "#7e756f",
+                        "surface-container-high": "#eae8e3",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#cdc5c0",
+                        "secondary-container": "#fed488",
+                        "on-primary-container": "#96908b",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#635d5a",
+                        "on-tertiary-container": "#cb7c6b",
+                        "surface": "#fbf9f4",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-secondary-fixed": "#261900",
+                        "secondary-fixed": "#ffdea5",
+                        "on-background": "#1b1c19",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "16px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "container-max": "1440px",
+                        "unit": "8px",
+                        "gutter": "32px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(207, 196, 189, 0.2);
+        }
+        
+        .code-input-group input {
+            text-align: center;
+            border-bottom: 2px solid theme('colors.outline-variant');
+            transition: all 0.3s ease;
+        }
+        
+        .code-input-group input:focus {
+            outline: none;
+            border-bottom-color: theme('colors.primary');
+            box-shadow: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Linear Flow: No Navigation Shell -->
+<main class="flex-grow flex items-center justify-center p-margin-mobile md:p-margin-desktop relative overflow-hidden">
+<!-- Abstract Background Element -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-multiply" data-alt="A soft, abstract, high-key image featuring gentle, flowing cream and beige gradients. Subtle, organic curves suggest a refined, calm atmosphere akin to luxurious silk or softly lit gallery walls. The lighting is diffused and modern, reinforcing a premium, minimalist aesthetic suitable for a high-end UI background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDKwEYBtr7ypLH9P_wwqlUK6_T0mwZf3bhN5TJ53IwD4f7mbK_q1mUhBKCieeCUnzAhWdD4SI9SdnSg5O0Re62yp0Oo9FJsq-wj0QeuQNJl5jeGwHVNP_t7Sf7VPe_xPPznlocjRFf1wjTF8POAjsMJe2ZA9N_aONTDI5MTJ31Q5Yrv2GbCdAm4ISYmK_wqa1RlqiqtagnKbdArkizTAg7jIiqSep4sZU5lPpmOAlDyXMFxpg-XQ22KuA')">
+</div>
+<div class="glass-panel relative z-10 w-full max-w-[480px] rounded-xl p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] flex flex-col items-center">
+<!-- Brand Icon -->
+<div class="mb-stack-md flex justify-center items-center w-16 h-16 rounded-full bg-surface-container-high text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="mark_email_read">mark_email_read</span>
+</div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-unit">
+                Verify your email
+            </h1>
+<p class="font-body-md text-body-md text-on-surface-variant text-center mb-stack-md max-w-[300px]">
+                We've sent a 6-digit code to <br/>
+<span class="text-primary font-medium">j***@gmail.com</span>
+</p>
+<form class="w-full flex flex-col items-center gap-stack-md">
+<!-- 6-Digit Code Input (Visual Representation) -->
+<div class="flex justify-between w-full gap-2 md:gap-4 code-input-group" id="code-inputs">
+<input aria-label="Digit 1" autofocus="" class="w-10 h-14 md:w-12 md:h-16 bg-transparent border-0 border-b-2 rounded-none font-display-md text-display-md text-center p-0 text-primary" maxlength="1" type="text"/>
+<input aria-label="Digit 2" class="w-10 h-14 md:w-12 md:h-16 bg-transparent border-0 border-b-2 rounded-none font-display-md text-display-md text-center p-0 text-primary" maxlength="1" type="text"/>
+<input aria-label="Digit 3" class="w-10 h-14 md:w-12 md:h-16 bg-transparent border-0 border-b-2 rounded-none font-display-md text-display-md text-center p-0 text-primary" maxlength="1" type="text"/>
+<input aria-label="Digit 4" class="w-10 h-14 md:w-12 md:h-16 bg-transparent border-0 border-b-2 rounded-none font-display-md text-display-md text-center p-0 text-primary" maxlength="1" type="text"/>
+<input aria-label="Digit 5" class="w-10 h-14 md:w-12 md:h-16 bg-transparent border-0 border-b-2 rounded-none font-display-md text-display-md text-center p-0 text-primary" maxlength="1" type="text"/>
+<input aria-label="Digit 6" class="w-10 h-14 md:w-12 md:h-16 bg-transparent border-0 border-b-2 rounded-none font-display-md text-display-md text-center p-0 text-primary" maxlength="1" type="text"/>
+</div>
+<div class="w-full flex flex-col gap-unit mt-unit">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded hover:bg-primary-container transition-colors duration-300" type="button">
+                        Verify
+                    </button>
+<button class="w-full bg-transparent text-on-surface-variant font-button text-button py-4 px-6 rounded hover:text-primary transition-colors duration-300 mt-2" type="button">
+                        Resend code
+                    </button>
+</div>
+</form>
+<a class="mt-stack-md font-button text-button flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_back">arrow_back</span>
+                Return to login
+            </a>
+</div>
+</main>
+<script>
+        // Simple auto-advance for code inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('#code-inputs input');
+            
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
+        });
+    </script>
+</body></html>

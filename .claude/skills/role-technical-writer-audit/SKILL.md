@@ -1,6 +1,6 @@
 ---
 name: role-technical-writer-audit
-description: Diffs published documentation (Swagger/OpenAPI, docs/API-STANDARDS.md, README-SETUP.md) against the real running behavior of the API by actually calling it — not by re-reading the same source annotations the docs were generated from, which would just confirm the docs agree with themselves. Also checks operational runbooks don't contradict business-facing specs, and spot-checks API contracts for the backend-checkable half of accessibility/inclusivity (plain-language locale-correct error messages, formatting fields) as a stand-in for role 10 (Accessibility Auditor), which otherwise needs the frontend repo. Covers role 14 (Technical Writer / Documentation) from the MusicLounge SDLC role charter. Use when asked to review documentation accuracy, API doc completeness, cross-document consistency, API-contract accessibility, or explicitly invoke the Technical Writer role.
+description: Diffs published documentation (Swagger/OpenAPI, docs/api/API-STANDARDS.md, README-SETUP.md) against the real running behavior of the API by actually calling it — not by re-reading the same source annotations the docs were generated from, which would just confirm the docs agree with themselves. Also checks operational runbooks don't contradict business-facing specs, and spot-checks API contracts for the backend-checkable half of accessibility/inclusivity (plain-language locale-correct error messages, formatting fields) as a stand-in for role 10 (Accessibility Auditor), which otherwise needs the frontend repo. Covers role 14 (Technical Writer / Documentation) from the MusicLounge SDLC role charter. Use when asked to review documentation accuracy, API doc completeness, cross-document consistency, API-contract accessibility, or explicitly invoke the Technical Writer role.
 license: Internal project tooling — MusicLounge repository, no separate license.
 ---
 
@@ -14,7 +14,7 @@ Work in order: **(1) Call real endpoints → (2) Walk the setup guide literally 
 
 ## 1. Call real endpoints and compare against documented contract
 
-Start the app against a real database. For a representative sample of endpoints across several modules (not just the ones easiest to test), call them for real and compare the actual response shape, status codes, and error format against what `docs/API-STANDARDS.md` and the Swagger spec claim. Specifically check:
+Start the app against a real database. For a representative sample of endpoints across several modules (not just the ones easiest to test), call them for real and compare the actual response shape, status codes, and error format against what `docs/api/API-STANDARDS.md` and the Swagger spec claim. Specifically check:
 - The error contract (`{success, message, errors}`) is actually what every sampled endpoint returns on failure, not just the ones documented as examples.
 - Status codes match documented expectations (a documented 404 that's actually a 400, or vice versa, breaks client error-handling silently).
 - Any endpoint whose documented behavior no longer matches reality — this is the highest-value finding this skill produces, since it means client integrators (including FE devs consuming this backend) are working from a stale contract.
@@ -43,6 +43,6 @@ For each documented claim found to be wrong: state the doc location, the actual 
 
 | Need | Go to |
 |---|---|
-| The documented API/response contract | `docs/API-STANDARDS.md` |
+| The documented API/response contract | `docs/api/API-STANDARDS.md` |
 | The most FE-facing onboarding doc, treat as high-value to keep accurate | `README-SETUP.md` |
 | Live Swagger UI for the running instance | `http://localhost:5289/swagger` once the app is running |

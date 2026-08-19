@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura AI Recommendations</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#eae8e3",
+                        "on-primary-fixed": "#1e1b18",
+                        "secondary-fixed": "#ffdea5",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-tertiary-container": "#cb7c6b",
+                        "tertiary-fixed": "#ffdad3",
+                        "surface-dim": "#dbdad5",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-secondary-container": "#785a1a",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary-fixed": "#261900",
+                        "background": "#fbf9f4",
+                        "tertiary": "#310501",
+                        "inverse-surface": "#30312e",
+                        "on-primary-container": "#96908b",
+                        "surface-bright": "#fbf9f4",
+                        "primary": "#181512",
+                        "on-background": "#1b1c19",
+                        "outline": "#7e756f",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f5f3ee",
+                        "tertiary-container": "#4d190e",
+                        "surface-variant": "#e4e2dd",
+                        "surface-tint": "#635d5a",
+                        "primary-container": "#2d2926",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface": "#fbf9f4",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "outline-variant": "#cfc4bd",
+                        "secondary-container": "#fed488",
+                        "on-surface": "#1b1c19",
+                        "surface-container": "#f0eee9",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#e9e1dc",
+                        "inverse-on-surface": "#f2f1ec",
+                        "error-container": "#ffdad6",
+                        "secondary": "#775a19",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "stack-lg": "80px",
+                        "gutter": "32px",
+                        "unit": "8px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "16px",
+                        "stack-md": "32px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .aura-glow {
+            background: radial-gradient(circle at center, rgba(203, 124, 107, 0.15) 0%, rgba(251, 249, 244, 0) 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col pb-24 md:hidden">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface-dim flex justify-between items-center px-margin-mobile py-4 w-full z-50">
+<button aria-label="Menu" class="text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity cursor-pointer transition-transform duration-200 active:scale-95 flex items-center justify-center w-10 h-10 rounded-full">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary dark:text-primary-fixed font-bold tracking-tight">AuraLounge</h1>
+<button class="font-button text-button text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity cursor-pointer transition-transform duration-200 active:scale-95 px-4 py-2">Join</button>
+</header>
+<main class="flex-1 flex flex-col pt-stack-sm pb-stack-lg gap-stack-md">
+<!-- Header Section -->
+<section class="px-margin-mobile text-center relative pt-stack-md pb-stack-sm">
+<div class="absolute inset-0 aura-glow -z-10 pointer-events-none"></div>
+<div class="inline-flex items-center gap-2 bg-surface-container-high px-4 py-1.5 rounded-full mb-4">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="auto_awesome" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Daily Mix Custom</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Curated for Your Aura</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">Based on your recent listening and lounge preferences.</p>
+</section>
+<!-- Top Matches Carousel -->
+<section class="w-full">
+<div class="px-margin-mobile mb-4 flex justify-between items-end">
+<h3 class="font-headline-md text-headline-md text-primary">Top Matches</h3>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Swipe to view</span>
+</div>
+<div class="flex overflow-x-auto gap-4 px-margin-mobile snap-x snap-mandatory no-scrollbar pb-4">
+<!-- Card 1 -->
+<div class="snap-center shrink-0 w-[280px] flex flex-col gap-3 group">
+<div class="relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-surface-container-high">
+<img alt="Match 1" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A highly detailed close-up shot of a jazz saxophone player in a dimly lit, high-end lounge setting. The scene is characterized by a sophisticated palette of warm ambers and deep charcoal blacks, with soft, directional spotlighting creating a dramatic, premium light-mode aesthetic. The mood is intimate, exclusive, and musically focused." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXldr-97VObf3Oj_zZ_tMENW6BLhI0bsTNg3HKwQQTsXY1z5hQif1Oa0TFdQTrybOfbaWJ9eMjJhroR51YEOvpOzPsfChx_2jbIpsWer_g4LUDWSoptvOpzlfQfEiz5ySnc121IEd9pvHbqGPUbS1fkjJy40-CyMb2Z3FtcM-P_CCrL3zILQ1WXeYeRSv81NVlh4LwUS3SD2K3qrhCurLyNQPnBkoNMtv4sbpZCytIqaEox-RPnnp9NA"/>
+<div class="absolute top-3 left-3 bg-surface/90 backdrop-blur-md px-2 py-1 rounded flex items-center gap-1 border border-outline/10">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="percent">percent</span>
+<span class="font-label-caps text-label-caps text-primary">99 Match</span>
+</div>
+</div>
+<div>
+<h4 class="font-button text-button text-primary mb-1 truncate">The Velvet Room Ensemble</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm truncate">Nu-Jazz • Intimate Setting</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="snap-center shrink-0 w-[280px] flex flex-col gap-3 group">
+<div class="relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-surface-container-high">
+<img alt="Match 2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A sophisticated shot of a modern, minimalist cocktail bar interior during the golden hour. The space features clean lines, cream-colored acoustic paneling, and subtle brass accents, adhering to a premium light-mode visual style. Soft, natural light streams in, highlighting the elegant, calm, and exclusive atmosphere tailored for discerning patrons." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCqE70f_4WXr9qbuVaTUIyiW3alIhDCj2zbHUC3oFVvCSTYMSaxi56zdj1JI0j9489vkTrfXxt1skk2C3YD48E7QbaBP49zyBId22qfWw_ajHApHfYYRRsOqYQQL7pC7e9BieDmQqM1yRi4cZ_lZW-SD_nnbf3fUloCrrHVB8yiIj4JROZ8GOIrDUpf9-NADZAW1eAff6613aP_GtpnfACnmRtbrOi__mxddfJbbV73C5GDCSfnU_kZw"/>
+<div class="absolute top-3 left-3 bg-surface/90 backdrop-blur-md px-2 py-1 rounded flex items-center gap-1 border border-outline/10">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="percent">percent</span>
+<span class="font-label-caps text-label-caps text-primary">95 Match</span>
+</div>
+</div>
+<div>
+<h4 class="font-button text-button text-primary mb-1 truncate">Echoes Lounge</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm truncate">Ambient Electronic • Low Lighting</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Events List -->
+<section class="px-margin-mobile flex flex-col gap-4">
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Upcoming Events for You</h3>
+<!-- List Item 1 -->
+<div class="flex gap-4 p-4 rounded-xl border border-outline/10 hover:bg-surface-container-low transition-colors bg-surface-container-lowest shadow-sm">
+<div class="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-surface-container-high">
+<img alt="Event 1" class="w-full h-full object-cover" data-alt="A minimalist, high-contrast black and white photograph of hands playing a grand piano. The image is bathed in soft, diffused studio lighting against a pristine white background, perfectly aligning with a premium light-mode design system. The composition is clean, elegant, and focused entirely on the artistry and tactile nature of the performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAejNGJpvOPLtsUFy4wi75GPpagtLhf_5EhSmd2jeOtYbVRV9B_Z-hmy6c_BFOi01nwiaJL8t-3aMCbA917hNnC0CJFNeTJ58MVXUypwMcYlnUrP1Bskg_poSx60qxf76S7BHeKv-3a-a7-EZok4gBbX-60wCOx4qv_C8YlAq4_Hnk9FiU3BLuU6PQ5yOFzDmq0W7nN2M6c_J0TLz37GUb5IDvJop1zyBq5WPI4sbzIhX6HTsE7g2mUaQ"/>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-button text-button text-primary truncate pr-2">Midnight Sonata</h4>
+<span class="font-label-caps text-label-caps text-secondary whitespace-nowrap">98%</span>
+</div>
+<p class="font-body-md text-[14px] leading-tight text-on-surface-variant truncate mb-2">Tonight, 10:00 PM • The Grand</p>
+<button class="self-start flex items-center gap-1 font-label-caps text-[10px] text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="thumb_down">thumb_down</span>
+                        NOT FOR ME
+                    </button>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="flex gap-4 p-4 rounded-xl border border-outline/10 hover:bg-surface-container-low transition-colors bg-surface-container-lowest shadow-sm">
+<div class="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-surface-container-high">
+<img alt="Event 2" class="w-full h-full object-cover" data-alt="A detailed, atmospheric view of an acoustic guitar resting against a vintage leather armchair in a bright, modern loft space. Sunlight pours in from large windows, casting long, soft shadows across light oak floors. The scene is styled for a premium light-mode aesthetic, evoking calm, creative energy, and acoustic warmth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEUe4sV4X4HiEOm-6a111pFt-OkURpjUYPjFKVfB_5j8SA1ZBLayHJOH1zd7F7UTIJmIkgjTWxFTbaSHbRoZkmvCQ0_VDQbYF1Wopst71Ft2kSvtMBlnVKtMPNWvcP3kQZRhmotCVg5dudrJJ0g9Z--979bQ1W_t2wT6wxetjKK_BQw9YkJtivEk5W25IKq2kQB6AVuPFmxGuBIctH1esEnh6WuA7h49RVVKB6Gdy3LDwR8fqzk0VyZQ"/>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-button text-button text-primary truncate pr-2">Acoustic Sessions</h4>
+<span class="font-label-caps text-label-caps text-secondary whitespace-nowrap">92%</span>
+</div>
+<p class="font-body-md text-[14px] leading-tight text-on-surface-variant truncate mb-2">Tomorrow, 8:00 PM • Cellar Bar</p>
+<button class="self-start flex items-center gap-1 font-label-caps text-[10px] text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="thumb_down">thumb_down</span>
+                        NOT FOR ME
+                    </button>
+</div>
+</div>
+<button class="mt-4 w-full py-4 border border-outline/20 rounded-lg font-button text-button text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+                Refresh Matches
+            </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center pt-3 pb-6 px-margin-mobile border-t border-outline/10 bg-surface/80 dark:bg-surface-container/80 backdrop-blur-xl shadow-[0_-4px_40px_rgba(24,21,18,0.05)] transition-all duration-300 ease-in-out">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-semibold hover:text-primary dark:hover:text-primary-fixed" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="explore" data-weight="fill" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-caps text-label-caps">Discovery</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="confirmation_number">confirmation_number</span>
+<span class="font-label-caps text-label-caps">Tickets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="account_circle">account_circle</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</nav>
+</body></html>

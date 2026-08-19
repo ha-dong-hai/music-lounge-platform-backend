@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>AURA - Complaint Status</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e4e2dd",
+                        "on-secondary-container": "#785a1a",
+                        "secondary-fixed": "#ffdea5",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-surface": "#1b1c19",
+                        "surface-variant": "#e4e2dd",
+                        "surface": "#fbf9f4",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "primary-container": "#2d2926",
+                        "background": "#fbf9f4",
+                        "surface-bright": "#fbf9f4",
+                        "surface-tint": "#635d5a",
+                        "secondary": "#775a19",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#fed488",
+                        "on-background": "#1b1c19",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-container": "#4d190e",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-primary-container": "#96908b",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#e9e1dc",
+                        "inverse-surface": "#30312e",
+                        "primary": "#181512",
+                        "surface-dim": "#dbdad5",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0eee9",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#261900",
+                        "surface-container-high": "#eae8e3",
+                        "on-tertiary-container": "#cb7c6b",
+                        "surface-container-low": "#f5f3ee",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-surface-variant": "#4d4540",
+                        "tertiary": "#310501",
+                        "outline": "#7e756f",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#cfc4bd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "32px",
+                        "container-max": "1440px",
+                        "stack-sm": "16px",
+                        "stack-lg": "80px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "unit": "8px",
+                        "stack-md": "32px"
+                    },
+                    "fontFamily": {
+                        "display-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "label-caps": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 23px;
+            top: 48px;
+            bottom: -16px;
+            width: 1px;
+            background-color: theme('colors.outline-variant');
+            opacity: 0.3;
+        }
+        .timeline-item:last-child .timeline-line::before {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen font-body-md antialiased selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+<!-- Header (No nav shell as this is a focused/sub-page view) -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 transition-all duration-300">
+<button aria-label="Back" class="flex items-center justify-center p-2 rounded-full hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="font-display-md text-display-md tracking-widest text-primary text-center absolute left-1/2 -translate-x-1/2">
+            AURA
+        </div>
+<div class="w-10"></div> <!-- Spacer for balance -->
+</header>
+<main class="pt-24 pb-stack-lg px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full flex flex-col md:flex-row gap-gutter">
+<!-- Left Column: Details -->
+<section class="w-full md:w-1/3 flex flex-col gap-stack-md">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-unit">Case #REF-992-A8</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Filed on Oct 12, 2023</p>
+</div>
+<div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+<div class="flex flex-col gap-unit mb-6">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Category</span>
+<span class="font-body-lg text-body-lg text-on-surface">Ticket Issue</span>
+</div>
+<div class="flex flex-col gap-unit mb-6">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Target Venue/Show</span>
+<span class="font-body-lg text-body-lg text-on-surface">The Velvet Room - Oct 10 Session</span>
+</div>
+<div class="flex flex-col gap-unit">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Status</span>
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-secondary-fixed/20 rounded-sm w-fit border border-secondary/20">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-secondary">Investigating</span>
+</div>
+</div>
+</div>
+<!-- Image representation of the venue/show to maintain gallery feel -->
+<div class="w-full h-64 md:h-auto md:aspect-[4/5] rounded-xl overflow-hidden relative border border-outline-variant/10 group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A moody, high-end jazz lounge interior with plush velvet seating, dim warm lighting, and a small stage. The aesthetic is luxurious minimalism with a sophisticated color palette of deep charcoals and warm creams. Professional architectural photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8vcEwK49CmpaQwUPE9zlG2kWaOLO8Skoqgd164nZrKjEdpDRgV7k7VdrGjYJy-aUOwVh3GYzCjZ8g6TF5LR5d1hHAoteFI4mkJExSeiZCs9zgTQso1LcsVwyRYFkSI3yt1ZokocS70vhhr7UpIWi-N4LDPyJAd66QS2ffWLFNNeW8Oj9Es3ytk5xGiVmgLN6AjDJM1QdNV-b8t3uRVS2f_J_Ey48GFUya7Y5JpFY8Nx60QtGWWUzg8Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 text-on-tertiary">
+<p class="font-label-caps text-label-caps opacity-80 mb-1">Venue</p>
+<p class="font-body-lg text-body-lg truncate">The Velvet Room</p>
+</div>
+</div>
+</section>
+<!-- Right Column: Timeline -->
+<section class="w-full md:w-2/3 md:pl-gutter border-t border-outline-variant/10 md:border-t-0 md:border-l pt-stack-md md:pt-0">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-md">Investigation Progress</h2>
+<div class="flex flex-col relative">
+<!-- Timeline Step 1: Resolved/Future -->
+<div class="flex gap-4 relative pb-stack-md timeline-item timeline-line">
+<div class="w-12 h-12 rounded-full bg-surface-container flex-shrink-0 flex items-center justify-center border border-outline-variant/20 z-10">
+<span class="material-symbols-outlined text-outline" data-icon="check_circle">check_circle</span>
+</div>
+<div class="pt-3">
+<h3 class="font-body-lg text-body-lg text-on-surface opacity-50">Resolution Reached</h3>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-50 mt-1">Pending admin finalization.</p>
+</div>
+</div>
+<!-- Timeline Step 2: Current -->
+<div class="flex gap-4 relative pb-stack-md timeline-item timeline-line">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex-shrink-0 flex items-center justify-center shadow-[0_0_30px_rgba(119,90,25,0.2)] z-10 relative">
+<div class="absolute inset-0 rounded-full border border-secondary/30 animate-ping opacity-50"></div>
+<span class="material-symbols-outlined text-secondary" data-icon="search">search</span>
+</div>
+<div class="pt-3 flex-grow">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-body-lg text-body-lg text-on-surface">Under Investigation</h3>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Oct 14, 2:30 PM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Our concierge team is currently reviewing your ticket transaction history and liaising with the venue manager.</p>
+<!-- Admin Notes Box -->
+<div class="bg-surface-container p-4 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="notes">notes</span>
+<span class="font-label-caps text-label-caps text-primary">Admin Note</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic">"Reaching out to Velvet Room management to confirm seating arrangement mismatch. Expecting response within 24h." - Support Agent J.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Step 3: Past -->
+<div class="flex gap-4 relative pb-stack-md timeline-item timeline-line">
+<div class="w-12 h-12 rounded-full bg-primary flex-shrink-0 flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-on-primary" data-icon="mark_email_read">mark_email_read</span>
+</div>
+<div class="pt-3">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-body-lg text-body-lg text-on-surface">Complaint Received</h3>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Oct 12, 9:15 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Your reference number was generated and case assigned to priority queue.</p>
+</div>
+</div>
+<!-- Timeline Step 4: Past -->
+<div class="flex gap-4 relative timeline-item timeline-line">
+<div class="w-12 h-12 rounded-full bg-primary flex-shrink-0 flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-on-primary" data-icon="edit_document">edit_document</span>
+</div>
+<div class="pt-3">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-body-lg text-body-lg text-on-surface">Complaint Filed</h3>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Oct 12, 9:14 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Guest submitted complaint via web portal regarding seating allocation.</p>
+</div>
+</div>
+</div>
+<div class="mt-stack-lg pt-stack-md border-t border-outline-variant/10 flex flex-col sm:flex-row gap-4 items-center">
+<button class="font-button text-button w-full sm:w-auto px-8 py-3 bg-primary text-on-primary rounded-full hover:opacity-90 transition-opacity flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add_comment">add_comment</span>
+                    Add Information
+                </button>
+<button class="font-button text-button w-full sm:w-auto px-8 py-3 border border-outline-variant text-on-surface rounded-full hover:bg-surface-variant transition-colors flex justify-center items-center">
+                    Contact Support
+                </button>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MusicLounge - Subscription Plans</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Custom Warm Tinted Shadow as per Style Guidance */
+        .shadow-warm-ambient {
+            box-shadow: 0 4px 8px rgba(43, 42, 39, 0.08);
+        }
+        .shadow-warm-ambient-lg {
+            box-shadow: 0 12px 24px rgba(43, 42, 39, 0.12);
+        }
+    </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fff9ed",
+                        "tertiary-container": "#68796c",
+                        "on-primary-fixed-variant": "#723609",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#ede7dd",
+                        "on-tertiary-container": "#f6fff5",
+                        "on-tertiary-fixed": "#101f16",
+                        "surface-dim": "#dfd9cf",
+                        "tertiary-fixed": "#d5e7d8",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#d9c2b6",
+                        "on-primary-fixed": "#321200",
+                        "background": "#fff9ed",
+                        "primary-container": "#aa6233",
+                        "outline": "#867369",
+                        "inverse-on-surface": "#f6f0e5",
+                        "surface-tint": "#8f4d20",
+                        "surface-container-low": "#f9f3e8",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#ffb68c",
+                        "surface-container-highest": "#e8e2d7",
+                        "on-tertiary-fixed-variant": "#3a4a3f",
+                        "on-background": "#1d1b15",
+                        "on-secondary-fixed": "#2c1600",
+                        "tertiary-fixed-dim": "#b9cbbd",
+                        "primary": "#8c4a1e",
+                        "secondary-fixed": "#ffdcbd",
+                        "secondary-fixed-dim": "#eabe95",
+                        "primary-fixed-dim": "#ffb68c",
+                        "on-secondary-fixed-variant": "#5e4021",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#333029",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e8e2d7",
+                        "on-secondary-container": "#7a5837",
+                        "on-primary-container": "#fffbff",
+                        "tertiary": "#4f6054",
+                        "surface-container": "#f3ede2",
+                        "on-surface-variant": "#53433b",
+                        "primary-fixed": "#ffdbc9",
+                        "surface": "#fff9ed",
+                        "on-error-container": "#93000a",
+                        "secondary": "#795836",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1d1b15",
+                        "secondary-container": "#ffd2a8",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "12px": "12px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "md": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "12px",
+                        "container-max": "1280px",
+                        "xl": "80px",
+                        "lg": "48px",
+                        "xs": "4px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Playfair Display"],
+                        "headline-sm": ["Playfair Display"],
+                        "title-lg": ["Inter"],
+                        "caption-handwriting": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "caption-handwriting": ["16px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface-bright text-on-surface font-body-lg min-h-screen flex flex-col antialiased">
+<!-- TopNavBar -->
+<header class="bg-surface-bright/80 backdrop-blur-xl shadow-sm dark:shadow-none w-full sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-base md:px-lg py-md max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-primary tracking-tight">MusicLounge</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-md text-label-md" href="#">Venues</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-md text-label-md" href="#">Shows</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-md text-label-md" href="#">Finance</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-semibold font-label-md text-label-md" href="#">Settings</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-primary hover:opacity-80 transition-all duration-300 scale-95 duration-200 ease-in-out">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-primary hover:opacity-80 transition-all duration-300 scale-95 duration-200 ease-in-out">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-base md:px-lg py-xl flex flex-col items-center">
+<!-- Header Section -->
+<div class="text-center mb-16 max-w-2xl">
+<h1 class="font-display-lg text-display-lg md:text-display-lg text-on-surface mb-4">
+                Chọn gói phù hợp với phòng trà của bạn
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                Nâng tầm không gian âm nhạc của bạn với các tính năng độc quyền.
+            </p>
+</div>
+<!-- Pricing Cards Container -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+<!-- Card 1: Cơ bản -->
+<div class="bg-surface-container-lowest rounded-12px shadow-warm-ambient p-8 flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Cơ bản</h3>
+<div class="mb-6">
+<span class="font-title-lg text-title-lg text-on-surface">299.000đ</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/tháng</span>
+</div>
+<ul class="flex flex-col gap-4 mb-8 flex-grow">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">Tối đa 100 vé mỗi show</span>
+</li>
+<li class="flex items-start gap-3 text-on-surface-variant/60">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock">lock</span>
+<span class="font-body-md text-body-md">Poster AI</span>
+</li>
+<li class="flex items-start gap-3 text-on-surface-variant/60">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock">lock</span>
+<span class="font-body-md text-body-md">Tour ảo 360</span>
+</li>
+</ul>
+<button class="w-full py-3 rounded-12px border border-outline text-on-surface hover:bg-surface-container-low transition-colors duration-300 font-label-md text-label-md">
+                    Chọn gói
+                </button>
+</div>
+<!-- Card 2: Tiêu chuẩn (Recommended) -->
+<div class="bg-surface-container-lowest rounded-12px shadow-warm-ambient-lg p-8 flex flex-col relative border-t-4 border-[#c97b4a] scale-105 z-10">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#c97b4a] text-white px-4 py-1 rounded-full font-label-md text-label-md whitespace-nowrap">
+                    Phổ biến nhất
+                </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Tiêu chuẩn</h3>
+<div class="mb-6">
+<span class="font-title-lg text-title-lg text-[#c97b4a]">799.000đ</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/tháng</span>
+</div>
+<ul class="flex flex-col gap-4 mb-8 flex-grow">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[#c97b4a] text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">Tối đa 300 vé mỗi show</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[#c97b4a] text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">5 poster AI mỗi tháng</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[#c97b4a] text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">5 cảnh tour ảo 360</span>
+</li>
+</ul>
+<button class="w-full py-3 rounded-12px bg-[#c97b4a] text-white hover:opacity-90 transition-opacity duration-300 font-label-md text-label-md shadow-md shadow-[#c97b4a]/20">
+                    Chọn gói
+                </button>
+</div>
+<!-- Card 3: Cao cấp -->
+<div class="bg-surface-container-lowest rounded-12px shadow-warm-ambient p-8 flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Cao cấp</h3>
+<div class="mb-6">
+<span class="font-title-lg text-title-lg text-on-surface">1.999.000đ</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/tháng</span>
+</div>
+<ul class="flex flex-col gap-4 mb-8 flex-grow">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">Tối đa 1000 vé mỗi show</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">20 poster AI mỗi tháng</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check">check</span>
+<span class="font-body-md text-body-md text-on-surface">20 cảnh tour ảo 360</span>
+</li>
+</ul>
+<button class="w-full py-3 rounded-12px border border-outline text-on-surface hover:bg-surface-container-low transition-colors duration-300 font-label-md text-label-md">
+                    Chọn gói
+                </button>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container w-full border-t border-outline-variant/20 mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-base md:px-lg py-lg max-w-container-max mx-auto gap-md">
+<div class="font-headline-sm text-headline-sm text-on-surface">MusicLounge</div>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all opacity-90 hover:opacity-100 font-label-md text-label-md" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all opacity-90 hover:opacity-100 font-label-md text-label-md" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all opacity-90 hover:opacity-100 font-label-md text-label-md" href="#">Contact Support</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline transition-all opacity-90 hover:opacity-100 font-label-md text-label-md" href="#">Press Kit</a>
+</div>
+<div class="text-secondary font-body-md text-body-md">
+                © 2024 MusicLounge Atelier. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>

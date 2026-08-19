@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge Management - Subscriptions &amp; Users</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e4e2dd",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#96908b",
+                    "on-tertiary-container": "#cb7c6b",
+                    "primary-container": "#2d2926",
+                    "surface-container-high": "#eae8e3",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4a4",
+                    "secondary-fixed-dim": "#e9c176",
+                    "tertiary-container": "#4d190e",
+                    "on-background": "#1b1c19",
+                    "on-primary-fixed": "#1e1b18",
+                    "inverse-surface": "#30312e",
+                    "on-error-container": "#93000a",
+                    "surface": "#fbf9f4",
+                    "background": "#fbf9f4",
+                    "surface-container-highest": "#e4e2dd",
+                    "surface-tint": "#635d5a",
+                    "tertiary-fixed": "#ffdad3",
+                    "secondary-container": "#fed488",
+                    "inverse-on-surface": "#f2f1ec",
+                    "tertiary": "#310501",
+                    "outline": "#7e756f",
+                    "on-primary-fixed-variant": "#4b4642",
+                    "on-surface-variant": "#4d4540",
+                    "on-secondary-fixed": "#261900",
+                    "on-secondary-container": "#785a1a",
+                    "inverse-primary": "#cdc5c0",
+                    "primary": "#181512",
+                    "on-tertiary-fixed": "#3a0a03",
+                    "on-surface": "#1b1c19",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#775a19",
+                    "surface-container-low": "#f5f3ee",
+                    "surface-bright": "#fbf9f4",
+                    "on-secondary-fixed-variant": "#5d4201",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f0eee9",
+                    "primary-fixed-dim": "#cdc5c0",
+                    "secondary-fixed": "#ffdea5",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "outline-variant": "#cfc4bd",
+                    "primary-fixed": "#e9e1dc",
+                    "on-tertiary-fixed-variant": "#723527",
+                    "surface-dim": "#dbdad5",
+                    "on-secondary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-lg": "80px",
+                    "stack-sm": "16px",
+                    "unit": "8px",
+                    "stack-md": "32px",
+                    "margin-desktop": "64px",
+                    "container-max": "1440px",
+                    "margin-mobile": "20px",
+                    "gutter": "32px"
+            },
+            "fontFamily": {
+                    "button": [
+                            "Manrope"
+                    ],
+                    "display-lg": [
+                            "Libre Caslon Text"
+                    ],
+                    "body-md": [
+                            "Manrope"
+                    ],
+                    "display-md": [
+                            "Libre Caslon Text"
+                    ],
+                    "headline-lg": [
+                            "Libre Caslon Text"
+                    ],
+                    "label-caps": [
+                            "Manrope"
+                    ],
+                    "headline-lg-mobile": [
+                            "Libre Caslon Text"
+                    ],
+                    "headline-md": [
+                            "Libre Caslon Text"
+                    ],
+                    "body-lg": [
+                            "Manrope"
+                    ]
+            },
+            "fontSize": {
+                    "button": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "64px",
+                            {
+                                    "lineHeight": "72px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-md": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface-container dark:bg-surface-container-high text-primary dark:text-primary-fixed font-body-md fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 flex-col py-8 px-6 gap-stack-sm z-50">
+<div class="mb-stack-md">
+<h1 class="text-headline-md font-headline-md text-primary tracking-tight">Management</h1>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-unit">Staff Access</p>
+</div>
+<div class="flex flex-col gap-unit flex-grow">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+                Events
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+                Livestreams
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold bg-surface-container-highest/50 translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+                Staff
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<div class="flex flex-col gap-unit mt-auto border-t border-outline-variant/10 pt-4">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant/70 hover:text-primary transition-colors text-button font-button" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant/70 hover:text-primary transition-colors text-button font-button" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Log Out
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg min-h-screen">
+<header class="mb-stack-lg flex flex-col md:flex-row md:justify-between md:items-end gap-stack-sm border-b border-outline-variant/10 pb-stack-sm">
+<div>
+<h2 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary">User Directory &amp; Subscriptions</h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2 max-w-2xl">Manage platform access, tier assignments, and review active member accounts across the AuraLounge ecosystem.</p>
+</div>
+<div class="flex gap-4">
+<button class="bg-surface-container-highest text-on-surface px-6 py-3 rounded border border-outline-variant/20 text-button font-button hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export CSV
+                </button>
+<button class="bg-primary text-on-primary px-6 py-3 rounded text-button font-button hover:bg-primary/90 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Invite User
+                </button>
+</div>
+</header>
+<!-- Subscription Packages Section -->
+<section class="mb-stack-lg">
+<h3 class="text-headline-md font-headline-md text-primary mb-stack-md flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">loyalty</span>
+                Subscription Tiers
+            </h3>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Tier Card: Basic -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-lg p-6 relative group overflow-hidden">
+<div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Edit">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-2">TIER 01</p>
+<h4 class="text-headline-md font-headline-md text-primary mb-1">Standard Access</h4>
+<div class="text-body-lg font-body-lg text-primary mb-6">$15 <span class="text-body-md font-body-md text-on-surface-variant">/ mo</span></div>
+<ul class="text-body-md font-body-md text-on-surface-variant space-y-3 mb-8">
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-outline mt-0.5">check</span> Base platform access</li>
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-outline mt-0.5">check</span> Standard quality audio</li>
+<li class="flex items-start gap-2 text-on-surface-variant/50"><span class="material-symbols-outlined text-[18px] mt-0.5">close</span> Exclusive event presales</li>
+</ul>
+<div class="pt-4 border-t border-outline-variant/10 text-body-md font-body-md text-on-surface-variant flex justify-between">
+<span>Active Members:</span>
+<span class="text-primary font-medium">1,245</span>
+</div>
+</div>
+<!-- Tier Card: Premium (Highlighted) -->
+<div class="bg-surface-container border border-primary/20 rounded-lg p-6 relative group overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
+<div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Edit">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<p class="text-label-caps font-label-caps text-secondary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">star</span>
+                        TIER 02
+                    </p>
+<h4 class="text-headline-md font-headline-md text-primary mb-1">Resonance Member</h4>
+<div class="text-body-lg font-body-lg text-primary mb-6">$45 <span class="text-body-md font-body-md text-on-surface-variant">/ mo</span></div>
+<ul class="text-body-md font-body-md text-on-surface-variant space-y-3 mb-8">
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-outline mt-0.5">check</span> Full platform access</li>
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-outline mt-0.5">check</span> Lossless audio streaming</li>
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-outline mt-0.5">check</span> Early access to select venues</li>
+</ul>
+<div class="pt-4 border-t border-outline-variant/10 text-body-md font-body-md text-on-surface-variant flex justify-between">
+<span>Active Members:</span>
+<span class="text-primary font-medium">432</span>
+</div>
+</div>
+<!-- Tier Card: VIP -->
+<div class="bg-primary text-on-primary rounded-lg p-6 relative group overflow-hidden">
+<div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-primary/70 hover:text-on-primary transition-colors p-1" title="Edit">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<p class="text-label-caps font-label-caps text-inverse-primary mb-2">TIER 03</p>
+<h4 class="text-headline-md font-headline-md mb-1">VIP Collector</h4>
+<div class="text-body-lg font-body-lg mb-6">$150 <span class="text-body-md font-body-md text-on-primary/70">/ mo</span></div>
+<ul class="text-body-md font-body-md text-on-primary/80 space-y-3 mb-8">
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-inverse-primary mt-0.5">check</span> All Resonance benefits</li>
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-inverse-primary mt-0.5">check</span> Guaranteed VIP entry</li>
+<li class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-inverse-primary mt-0.5">check</span> Annual private curation session</li>
+</ul>
+<div class="pt-4 border-t border-on-primary/20 text-body-md font-body-md text-on-primary/80 flex justify-between">
+<span>Active Members:</span>
+<span class="text-on-primary font-medium">89</span>
+</div>
+</div>
+</div>
+</section>
+<!-- User Directory Section -->
+<section>
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-stack-md gap-4 border-b border-outline-variant/10 pb-4">
+<h3 class="text-headline-md font-headline-md text-primary flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">manage_accounts</span>
+                    Directory
+                </h3>
+<div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+<!-- Search -->
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant/30 text-body-md font-body-md text-primary placeholder:text-on-surface-variant/50 rounded pl-10 pr-4 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Search users..." type="text"/>
+</div>
+<!-- Filters -->
+<div class="flex gap-2">
+<select class="bg-surface-container-low border border-outline-variant/30 text-body-md font-body-md text-on-surface-variant rounded px-4 py-2 focus:outline-none focus:border-primary">
+<option>All Roles</option>
+<option>Guest</option>
+<option>Staff</option>
+<option>Owner</option>
+</select>
+<select class="bg-surface-container-low border border-outline-variant/30 text-body-md font-body-md text-on-surface-variant rounded px-4 py-2 focus:outline-none focus:border-primary">
+<option>All Statuses</option>
+<option>Active</option>
+<option>Pending</option>
+<option>Suspended</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/20">
+<th class="py-4 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal">USER</th>
+<th class="py-4 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal">SUBSCRIPTION</th>
+<th class="py-4 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal">ROLE</th>
+<th class="py-4 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal">STATUS</th>
+<th class="py-4 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="text-body-md font-body-md text-primary divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A polished, professional headshot of a young woman with dark hair in a well-lit studio setting, looking directly at the camera with a subtle smile. High-key lighting, minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuvhEvsUOvUd9DgU6BfCiQpbGKh_i6xAvb__hqV9v3o4gqk8iR83ij9v4JWn8wJmgjXEJKJ4oNcmRh3NYqZF0marn-x3NJMjAKj9ncfvCmnGH_NE7XoU5NCnWE6IEevnnkKzRYD9vPbNDtvqOII5DDGUhXIUKWiXbg8NBU2nUOwRBb7286hj9WlN8sDglf5aMMGkPaFnGh74etdGkH9YLEmEugY2vZDUbiEre7iwgz_7JozQuNrFC0Zg"/>
+</div>
+<div>
+<div class="font-medium">Elena Rostova</div>
+<div class="text-on-surface-variant/70 text-[14px]">elena.r@example.com</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="bg-surface-container-high px-2 py-1 rounded-[2px] text-label-caps font-label-caps text-on-surface-variant">VIP COLLECTOR</span>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">Guest</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    Active
+                                </span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant font-medium">
+                                        JD
+                                    </div>
+<div>
+<div class="font-medium">Julian Davies</div>
+<div class="text-on-surface-variant/70 text-[14px]">jdavies.curator@lounge.co</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="bg-surface-container-high px-2 py-1 rounded-[2px] text-label-caps font-label-caps text-on-surface-variant">N/A</span>
+</td>
+<td class="py-4 px-4 text-primary font-medium">Staff</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    Active
+                                </span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A moody, stylized black and white portrait of a man wearing glasses in a dimly lit jazz club environment. High contrast, film noir aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfOcKXMkdrqul0-sQjyhoVEqs0q2VsURZzDsCS0xQ7Gw16nDKP5JZsZ4MN8rWqdEBLvJavpxDepDK58Z0R2a9F7icydoeoXsvj5qZo4l_LFjXYPxbyKiP_AwxqAYIwp-KlE7GLApPbMUlHDqCY5xJPnAiqvlN2F_Akdrfxqi5ZpfCamkiAz8kh4lMMvgEPvdF9L4se1oXlmT1HwgDdjge9JyC1bKSCyVt0XAw8sqr0sqgCsRSs7JeZEg"/>
+</div>
+<div>
+<div class="font-medium">Marcus Chen</div>
+<div class="text-on-surface-variant/70 text-[14px]">m.chen@soundscapes.net</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4">
+<span class="bg-surface-container-high px-2 py-1 rounded-[2px] text-label-caps font-label-caps text-on-surface-variant">RESONANCE MEMBER</span>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">Guest</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 opacity-60">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                                    Pending
+                                </span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="mt-8 flex justify-between items-center text-body-md font-body-md text-on-surface-variant border-t border-outline-variant/10 pt-4">
+<span>Showing 1-3 of 42 users</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 border border-outline-variant/30 rounded hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">Prev</button>
+<button class="px-3 py-1 border border-outline-variant/30 rounded hover:bg-surface-container-low transition-colors">Next</button>
+</div>
+</div>
+</section>
+</main>
+</body></html>

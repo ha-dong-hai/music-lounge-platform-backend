@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Management - Aura Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1b1c19",
+                        "background": "#fbf9f4",
+                        "surface-container-highest": "#e4e2dd",
+                        "surface-tint": "#635d5a",
+                        "on-secondary-container": "#785a1a",
+                        "outline-variant": "#cfc4bd",
+                        "primary-fixed": "#e9e1dc",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "primary": "#181512",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fed488",
+                        "secondary": "#775a19",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-secondary-fixed": "#261900",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface-container-low": "#f5f3ee",
+                        "inverse-surface": "#30312e",
+                        "surface-container": "#f0eee9",
+                        "surface": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#ffdea5",
+                        "on-primary-fixed": "#1e1b18",
+                        "tertiary-fixed": "#ffdad3",
+                        "surface-variant": "#e4e2dd",
+                        "on-background": "#1b1c19",
+                        "primary-container": "#2d2926",
+                        "on-primary-container": "#96908b",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-tertiary-container": "#cb7c6b",
+                        "inverse-primary": "#cdc5c0",
+                        "surface-dim": "#dbdad5",
+                        "tertiary-container": "#4d190e",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#eae8e3",
+                        "outline": "#7e756f",
+                        "tertiary": "#310501",
+                        "surface-bright": "#fbf9f4",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-surface-variant": "#4d4540",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "gutter": "32px",
+                        "stack-md": "32px",
+                        "stack-sm": "16px",
+                        "margin-mobile": "20px",
+                        "unit": "8px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        [data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-surface-container-lowest fixed left-0 top-0 h-screen w-64 z-40 border-r border-outline/10 flex flex-col py-stack-md hidden md:flex">
+<div class="px-6 mb-8 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden flex-shrink-0">
+<img alt="Venue logo" class="w-full h-full object-cover" data-alt="A minimalist logo for a luxury lounge, featuring a stylized letter A in deep charcoal on a cream background. The design is elegant and understated, perfect for a high-end management interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0geaujN3IAHjFbG6pCCoO9ptK6Bw8FALV2WSmDJVQdW_7GtII2FCjB0woQvdzRQ3cCJIOUWuoR6FT-PHa0DxTnqRE5OG-l78lhB6M3T8bb-Q7tb0Eu0C_YrKIGSSyQlk9sQ858murNjOl9grPRKGNFFmuzDLrtGVjbYFGTu-lGO3SaptoxKYqyTa_E0h5T4NaapsE5lstt2GKZlJ16GQzYDqqfDFgkurS9gyRguM32n_p2mvNLoRyEA"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed">Aura Admin</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Lounge Management</p>
+</div>
+</div>
+<div class="px-4 mb-8">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 rounded-DEFAULT flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Add New Event
+            </button>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 py-3 pl-4 text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 pl-4 text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">storefront</span>
+                        Venue Operations
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 pl-4 text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">insights</span>
+                        Analytics
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 text-primary dark:text-primary-fixed border-l-4 border-secondary font-bold pl-4 hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps bg-surface-container-high/50" href="#">
+<span class="material-symbols-outlined" data-weight="fill">group</span>
+                        Staff Management
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-3 pl-4 text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+                        Schedule
+                    </a>
+</li>
+</ul>
+</div>
+<div class="mt-auto px-4 border-t border-outline/10 pt-4">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 py-2 pl-4 text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                        Help Center
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 py-2 pl-4 text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                        Log Out
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- Header area -->
+<header class="px-margin-desktop py-stack-md flex items-center justify-between">
+<div>
+<h2 class="font-display-md text-display-md text-primary">Staff Roster</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2">Manage your lounge personnel and permissions.</p>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="px-margin-desktop flex-1 pb-stack-lg max-w-container-max w-full">
+<!-- Search & Actions Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-stack-md bg-surface-container p-4 rounded-lg">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface border border-outline/20 rounded-DEFAULT pl-12 pr-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary transition-colors" placeholder="Search staff by email or name..." type="email"/>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-3 border border-outline/20 text-primary font-button text-button rounded-DEFAULT flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter Roles
+                    </button>
+<button class="px-6 py-3 bg-primary text-on-primary font-button text-button rounded-DEFAULT flex items-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+                        Invite Staff
+                    </button>
+</div>
+</div>
+<!-- Staff List Table (Bento/Card hybrid approach for elegance) -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 px-6 py-3 border-b border-outline/10 font-label-caps text-label-caps text-on-surface-variant">
+<div class="col-span-4">Team Member</div>
+<div class="col-span-3">Role &amp; Access</div>
+<div class="col-span-2">Joined Date</div>
+<div class="col-span-2">Status</div>
+<div class="col-span-1 text-right">Actions</div>
+</div>
+<!-- Staff Item 1 -->
+<div class="group grid grid-cols-12 gap-4 items-center px-6 py-4 bg-surface hover:bg-surface-container-low transition-colors rounded-lg border border-outline/5">
+<div class="col-span-4 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female lounge manager in her 30s. She is smiling subtly, wearing a tailored charcoal blazer. The background is a soft, out-of-focus cream color, lit with natural daylight, conveying a calm, approachable authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj-RbO_sc5ddA7UDrX73oHBo7SR8AaTGIzi1819MkxKLC7s3WxAMqQ1YQZZP1fsJaFHNvLoxhkFizF0ciQg-AsAdGDNlE8B8rXRlk5zXgnatOQbe3H4yY-4-BEjEkUrFYk9vwsE8l-8dv32mgoI3hVmXod7xWAEDtuYcw_BhRt5p0Xt7hWcTfKNWrv4dvtDjyvRtZzoQuSHxIJRZGj0SCwSNwn5eRotoRkaJ5f5M4ICmKa3lE_J4E8JQ"/>
+</div>
+<div>
+<p class="font-button text-button text-primary">Sarah Jenkins</p>
+<p class="font-body-md text-[14px] text-on-surface-variant">sarah.j@auralounge.com</p>
+</div>
+</div>
+<div class="col-span-3 flex flex-col gap-1">
+<span class="font-body-md text-body-md text-on-surface">General Manager</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-caps bg-secondary-container/30 text-on-secondary-container w-fit">Full Admin</span>
+</div>
+<div class="col-span-2 font-body-md text-[14px] text-on-surface-variant">
+                        Oct 12, 2023
+                    </div>
+<div class="col-span-2">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#4CAF50]"></div>
+<span class="font-body-md text-[14px] text-on-surface">Active</span>
+</div>
+</div>
+<div class="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Edit Permissions">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Staff Item 2 -->
+<div class="group grid grid-cols-12 gap-4 items-center px-6 py-4 bg-surface hover:bg-surface-container-low transition-colors rounded-lg border border-outline/5">
+<div class="col-span-4 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="A portrait of a male mixologist in his 20s. He has short hair and is wearing a dark, minimal collared shirt. He looks focused and creative. The lighting is slightly dramatic but clean, highlighting his features against a neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpyT84J-42u5YC4v7Om24d0i16DsqW4ehGe-X2_y2I4aWT7BZZ7eYgYhRaT7MvSdqPgBQh4ftLw-7t_XQoJFuEHSx41EcvupXYVWse3tkZWGeHY2tXAxeZomfiYIcb0BRjy7rvOxenestMSW072LRbUcDBdu_oxI3BvCF4W9ap_aaeR4HueV8ajB2WdhYxae6o4nq2_UiUyxaFtElaQrXMGeWqAEnNB4g99KWWXm7Kox5FfiTxtOxKwQ"/>
+</div>
+<div>
+<p class="font-button text-button text-primary">Marcus Thorne</p>
+<p class="font-body-md text-[14px] text-on-surface-variant">marcus.t@auralounge.com</p>
+</div>
+</div>
+<div class="col-span-3 flex flex-col gap-1">
+<span class="font-body-md text-body-md text-on-surface">Lead Mixologist</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-caps bg-surface-variant text-on-surface-variant w-fit">Staff</span>
+</div>
+<div class="col-span-2 font-body-md text-[14px] text-on-surface-variant">
+                        Jan 05, 2024
+                    </div>
+<div class="col-span-2">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#4CAF50]"></div>
+<span class="font-body-md text-[14px] text-on-surface">Active</span>
+</div>
+</div>
+<div class="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Edit Permissions">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination / Load More (Minimalist) -->
+<div class="mt-8 flex justify-center">
+<button class="font-button text-button text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2">
+                    Load More <span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+</div>
+</main>
+</body></html>

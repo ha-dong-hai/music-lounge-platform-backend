@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Admin - Bank Account Verification</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface": "#fbf9f4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-tint": "#635d5a",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-highest": "#e4e2dd",
+                      "secondary": "#775a19",
+                      "on-surface": "#1b1c19",
+                      "inverse-on-surface": "#f2f1ec",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-secondary": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#fed488",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#181512",
+                      "outline-variant": "#cfc4bd",
+                      "on-error": "#ffffff",
+                      "on-background": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "surface-bright": "#fbf9f4",
+                      "outline": "#7e756f",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-primary-container": "#96908b",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed": "#261900",
+                      "on-secondary-container": "#785a1a",
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "tertiary-container": "#4d190e",
+                      "primary-container": "#2d2926",
+                      "surface-container-high": "#eae8e3",
+                      "inverse-surface": "#30312e",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-dim": "#dbdad5",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary-fixed": "#ffdea5",
+                      "on-surface-variant": "#4d4540",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "primary-fixed": "#e9e1dc",
+                      "background": "#fbf9f4",
+                      "tertiary": "#310501"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px",
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex">
+<!-- SideNavBar (Admin) -->
+<nav class="hidden md:flex bg-surface-container-low dark:bg-surface-container-lowest fixed left-0 top-0 h-screen w-64 z-40 border-r border-outline/10 flex-col h-full py-stack-md">
+<div class="px-6 mb-stack-md flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline/10">
+<img alt="Venue logo" class="w-full h-full object-cover" data-alt="A minimalist, high-end venue logo featuring a stylized sound wave icon in muted charcoal grey on a cream background, designed for a luxury music lounge. The lighting is soft and flat, emphasizing the geometric precision of the logo mark." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ4ldSV80eL0RPegb7TdVkyF3WBUmZGvLBDVUEX8bRKOaZbOJyDfWXjybnYfaVqBoC1ynXt8bIc74lVbL07pyhqVl0wvtqcLiqGlg1VBaozjjSPFv3nOtOI24mOGcU9qSSk0SwyULqedpwD5XMcZhM2caph7txqj5cQQpiwYNZbA7-tqaL45Y6128p5JdWmjXJcRKdDemRA6FDGiKB5HVt3Hs8dccVDNyOkQuNzED-1H-OLQUQnHph7g"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed m-0 leading-tight">Aura Admin</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant dark:text-on-primary-fixed-variant mt-1">Lounge Management</p>
+</div>
+</div>
+<div class="px-6 mb-stack-md">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded flex items-center justify-center space-x-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Add New Event</span>
+</button>
+</div>
+<ul class="flex-grow space-y-2 px-4 font-label-caps text-label-caps">
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-primary dark:text-primary-fixed border-l-4 border-secondary font-bold bg-surface-container-high/50 dark:bg-surface-container/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span>Venue Operations</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">insights</span>
+<span>Analytics</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Staff Management</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span>Schedule</span>
+</a>
+</li>
+</ul>
+<ul class="space-y-2 px-4 mt-auto font-label-caps text-label-caps border-t border-outline/10 pt-4">
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span>Help Center</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-4 py-3 rounded text-on-surface-variant dark:text-on-primary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span>Log Out</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow ml-0 md:ml-64 p-margin-mobile md:p-margin-desktop bg-surface min-h-screen">
+<!-- Breadcrumbs & Header -->
+<div class="mb-stack-lg max-w-container-max mx-auto">
+<div class="flex items-center space-x-2 font-label-caps text-label-caps text-on-surface-variant mb-4">
+<a class="hover:text-primary transition-colors" href="#">Venue Operations</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Financial Setup</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary">Verification</span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-display-md text-display-md text-primary mb-2">Review Bank Details</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Review and verify the submitted banking information for "The Velvet Room".</p>
+</div>
+<div class="hidden lg:flex space-x-4">
+<span class="inline-flex items-center px-3 py-1 rounded bg-secondary-container/20 border border-secondary/20 font-label-caps text-label-caps text-secondary-container">
+<span class="material-symbols-outlined text-[14px] mr-1">pending</span>
+                        Pending Review
+                    </span>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Details -->
+<div class="lg:col-span-8 space-y-stack-md">
+<!-- Business Info Card -->
+<div class="bg-surface-container-lowest border border-outline/10 p-8 rounded-DEFAULT">
+<h3 class="font-headline-md text-headline-md text-primary border-b border-outline/10 pb-4 mb-6">Lounge Information</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Legal Entity Name</p>
+<p class="font-body-lg text-body-lg text-on-surface">Velvet Room Enterprises LLC</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Doing Business As (DBA)</p>
+<p class="font-body-lg text-body-lg text-on-surface">The Velvet Room</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Tax ID / EIN</p>
+<p class="font-body-lg text-body-lg text-on-surface">XX-XXX4592</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Registered Address</p>
+<p class="font-body-lg text-body-lg text-on-surface">1240 N State Pkwy, Chicago, IL 60610</p>
+</div>
+</div>
+</div>
+<!-- Banking Details Card -->
+<div class="bg-surface-container-lowest border border-outline/10 p-8 rounded-DEFAULT relative overflow-hidden">
+<!-- Subtle background decoration -->
+<div class="absolute -right-16 -top-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<h3 class="font-headline-md text-headline-md text-primary border-b border-outline/10 pb-4 mb-6">Bank Account Information</h3>
+<div class="space-y-6 relative z-10">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Account Holder Name</p>
+<p class="font-body-lg text-body-lg text-on-surface">Velvet Room Enterprises LLC</p>
+<div class="mt-2 flex items-center text-secondary text-sm">
+<span class="material-symbols-outlined text-[16px] mr-1">check_circle</span>
+<span>Matches Legal Entity Name</span>
+</div>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Institution Name</p>
+<p class="font-body-lg text-body-lg text-on-surface">Chase Bank N.A.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Routing Number</p>
+<div class="flex items-center space-x-4">
+<p class="font-body-lg text-body-lg text-on-surface font-mono tracking-widest">123456789</p>
+</div>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Account Number</p>
+<div class="flex items-center space-x-4">
+<p class="font-body-lg text-body-lg text-on-surface font-mono tracking-widest">•••• •••• 8492</p>
+</div>
+</div>
+</div>
+<div class="pt-4">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Account Type</p>
+<p class="font-body-lg text-body-lg text-on-surface">Business Checking</p>
+</div>
+</div>
+</div>
+<!-- Supporting Documents -->
+<div class="bg-surface-container-lowest border border-outline/10 p-8 rounded-DEFAULT">
+<h3 class="font-headline-md text-headline-md text-primary border-b border-outline/10 pb-4 mb-6">Supporting Documents</h3>
+<div class="flex items-center justify-between p-4 border border-outline/10 rounded hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-on-surface-variant">description</span>
+</div>
+<div>
+<p class="font-body-md text-on-surface font-medium">voided_check_velvetroom.pdf</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Uploaded 2 days ago • 1.2 MB</p>
+</div>
+</div>
+<button class="text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Actions & Notes -->
+<div class="lg:col-span-4 space-y-stack-md">
+<!-- Decision Panel -->
+<div class="bg-surface-container-lowest border border-outline/10 p-6 rounded-DEFAULT sticky top-8">
+<h3 class="font-headline-md text-headline-md text-primary mb-6">Review Decision</h3>
+<div class="space-y-4 mb-8">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2" for="internal-notes">Internal Notes (Required for rejection)</label>
+<textarea class="w-full bg-surface border border-outline/20 rounded p-3 font-body-md text-on-surface focus:border-primary focus:ring-0 resize-none" id="internal-notes" placeholder="Add notes regarding this verification review..." rows="4"></textarea>
+</div>
+</div>
+<div class="space-y-3">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded flex items-center justify-center space-x-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Approve Account</span>
+</button>
+<button class="w-full bg-transparent border border-error text-error font-button text-button py-3 px-6 rounded flex items-center justify-center space-x-2 hover:bg-error/5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span>Reject Details</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

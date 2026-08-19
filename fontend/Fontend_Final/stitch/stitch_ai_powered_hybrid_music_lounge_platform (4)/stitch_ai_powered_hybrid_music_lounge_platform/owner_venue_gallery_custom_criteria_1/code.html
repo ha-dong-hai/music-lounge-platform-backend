@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Owner: Venue Gallery &amp; atmospheric Metrics (Final)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-error": "#ffffff",
+                      "outline-variant": "#cfc4bd",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-container": "#f0eee9",
+                      "primary-container": "#2d2926",
+                      "tertiary": "#310501",
+                      "on-background": "#1b1c19",
+                      "inverse-surface": "#30312e",
+                      "on-surface": "#1b1c19",
+                      "on-error-container": "#93000a",
+                      "tertiary-container": "#4d190e",
+                      "secondary-fixed-dim": "#e9c176",
+                      "inverse-primary": "#cdc5c0",
+                      "on-primary-container": "#96908b",
+                      "primary-fixed": "#e9e1dc",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-surface-variant": "#4d4540",
+                      "outline": "#7e756f",
+                      "background": "#fbf9f4",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-tint": "#635d5a",
+                      "on-secondary-fixed": "#261900",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-bright": "#fbf9f4",
+                      "primary": "#181512",
+                      "surface": "#fbf9f4",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-variant": "#e4e2dd",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-container-highest": "#e4e2dd",
+                      "secondary-container": "#fed488",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-container-high": "#eae8e3",
+                      "on-secondary-container": "#785a1a",
+                      "surface-dim": "#dbdad5",
+                      "secondary": "#775a19",
+                      "on-primary": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "on-tertiary-container": "#cb7c6b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "16px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px",
+                      "unit": "8px",
+                      "margin-desktop": "64px",
+                      "gutter": "32px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom scrollbar for gallery */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface-container-low dark:bg-primary-container text-primary dark:text-primary-fixed font-label-caps text-label-caps font-body-md text-body-md docked left-0 h-screen w-64 border-r border-outline-variant opacity-100 flex-col py-stack-md px-4 gap-stack-sm flex-shrink-0 z-10 sticky top-0">
+<!-- Header -->
+<div class="mb-stack-md px-4">
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight">AuraLounge</h1>
+<div class="mt-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
+<img alt="System Manager" class="w-full h-full object-cover" data-alt="A sophisticated close-up portrait of a lounge manager in a sharply tailored dark suit, shot in high-key lighting against a pristine cream background. The image exudes quiet luxury and professional authority, aligning perfectly with the minimalist, high-end gallery aesthetic of the administrative portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd9mxEsLanymrD89slBW2S3AxX7iCioYNo19zhcIW-6Ea5bU-A_kFM81wJky8yK4yGfxXRuh2dF8Fa127Nnn0J9u7Dzd6kn1FcYaFxODtm-lwHG-aIkVOqykS2HbJ8hCMHLEd3TJdteiU0I0GpErBZCM2Wfoc_K4tyZVawdBJXRTfIW7weOcb_xqr6zkE2T_ynN6_tXLSFlgGr65vb7C-gJRQkWDOV1p_0lTU4HcdNr8yZBNctEZtDUw"/>
+</div>
+<div>
+<div class="font-button text-button text-on-surface">System Management</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">Global Dashboard</div>
+</div>
+</div>
+</div>
+<!-- Main Navigation -->
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 py-3 rounded-lg text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-300" data-icon="group">group</span>
+<span>Users</span>
+</a>
+<a class="flex items-center gap-3 py-3 rounded-lg text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-300" data-icon="inventory_2">inventory_2</span>
+<span>Packages</span>
+</a>
+<a class="flex items-center gap-3 py-3 rounded-lg text-primary font-bold border-l-2 border-primary pl-4 bg-surface-container-high/50 transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined" data-icon="rule" data-weight="fill" style="font-variation-settings: 'FILL' 1;">rule</span>
+<span>Criteria</span>
+</a>
+<a class="flex items-center gap-3 py-3 rounded-lg text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors duration-300" data-icon="analytics">analytics</span>
+<span>Reports</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="px-4 mt-auto mb-6">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 rounded-DEFAULT hover:bg-inverse-surface transition-colors duration-300">
+                Add New Resource
+            </button>
+</div>
+<!-- Footer Navigation -->
+<div class="flex flex-col gap-2 border-t border-outline-variant/20 pt-4 px-4">
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium hover:text-primary transition-colors duration-300 cursor-pointer" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant font-medium hover:text-primary transition-colors duration-300 cursor-pointer" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="logout">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background relative">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center w-full px-margin-mobile py-4 bg-surface dark:bg-surface border-b border-outline-variant opacity-100 z-20 sticky top-0">
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight text-3xl">AuraLounge Admin</h1>
+<div class="flex gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<!-- Content Container -->
+<div class="flex-1 overflow-y-auto w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-md flex flex-col gap-stack-lg">
+<!-- Page Header -->
+<header class="max-w-3xl">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Venue Configuration</p>
+<h2 class="font-headline-lg text-headline-lg md:font-display-md md:text-display-md text-on-background mb-4">Custom Criteria &amp; Gallery</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Curate the atmospheric parameters and visual presentation of your lounge to attract the right discerning audience.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Criteria Form -->
+<div class="lg:col-span-5 flex flex-col gap-stack-md">
+<section class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/20">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Define New Criteria</h3>
+<span class="material-symbols-outlined text-outline" data-icon="tune">tune</span>
+</div>
+<form class="flex flex-col gap-6">
+<!-- Input Group -->
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="criteria-name">Criteria Name</label>
+<input class="w-full bg-transparent border border-outline-variant/50 rounded-lg py-3 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline-variant/60" id="criteria-name" placeholder="e.g., Acoustic Resonance" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="criteria-key">Technical Key</label>
+<input class="w-full bg-transparent border border-outline-variant/50 rounded-lg py-3 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline-variant/60 font-mono text-sm" id="criteria-key" placeholder="acoustic_resonance" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="data-type">Data Type</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg py-3 px-4 font-body-md text-body-md text-on-surface appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer" id="data-type">
+<option value="boolean">Boolean (Yes/No)</option>
+<option value="scale">Scale (1-10)</option>
+<option value="string">Text Description</option>
+<option value="select">Multiple Choice</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="description">Description (Optional)</label>
+<textarea class="w-full bg-transparent border border-outline-variant/50 rounded-lg py-3 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline-variant/60 resize-none" id="description" placeholder="Brief explanation of this criteria..." rows="3"></textarea>
+</div>
+<button class="mt-4 bg-primary text-on-primary font-button text-button py-3 px-6 rounded-DEFAULT hover:bg-inverse-surface transition-colors duration-300 w-fit self-start" type="button">
+                                Add Criteria
+                            </button>
+</form>
+</section>
+<!-- Active Criteria List -->
+<section>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-4 pl-2">Active Venue Criteria</h4>
+<div class="flex flex-col gap-3">
+<!-- Criteria Item -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-4 flex justify-between items-center group hover:border-outline-variant/50 transition-colors">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-medium">Ambient Lighting Level</div>
+<div class="font-label-caps text-label-caps text-outline mt-1">Scale (1-10)</div>
+</div>
+<button class="text-outline hover:text-error transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+<!-- Criteria Item -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-4 flex justify-between items-center group hover:border-outline-variant/50 transition-colors">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-medium">Vinyl Collection Size</div>
+<div class="font-label-caps text-label-caps text-outline mt-1">Text Description</div>
+</div>
+<button class="text-outline hover:text-error transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Gallery Management -->
+<div class="lg:col-span-7 flex flex-col gap-stack-md">
+<section class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/20 h-full flex flex-col">
+<div class="flex justify-between items-end mb-8 border-b border-outline-variant/20 pb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Venue Gallery</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage the visual narrative of your space.</p>
+</div>
+<button class="flex items-center gap-2 bg-surface text-on-surface border border-outline-variant font-button text-button py-2 px-4 rounded-DEFAULT hover:bg-surface-variant transition-colors duration-300">
+<span class="material-symbols-outlined text-sm" data-icon="upload">upload</span>
+                                Upload Photos
+                            </button>
+</div>
+<!-- Bento Grid Gallery -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[160px]">
+<!-- Featured Image (Spans 2 rows, 2 cols) -->
+<div class="col-span-2 row-span-2 relative group rounded-lg overflow-hidden bg-surface-variant">
+<img alt="Main Venue View" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A wide, sweeping shot of an exclusive, minimalist listening lounge. The room features bespoke mid-century modern furniture, a glowing high-end analog mixing console, and subtle, warm ambient lighting. The aesthetic is sophisticated, airy, and bathed in a light-mode friendly soft daylight filtering through sheer curtains. Shot on 35mm film, high contrast, elegant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoRvW_W-WeIJ9Oq5GfjZY-AJAuVGyZ4wKWYBHQuuCEO39cVgRLPD7PanBEATATfZYtDEIbCHlsH0HiEbiCO8CTQkEpXOSpIk5DQBUiOtg6KP0EunGzRqNIOwMGZzL9J7RFTwnWwy4FUZ9nzKnIzfUP-mHTU4AyD-y3_nw4Hhoj6_CFP_utzPtABvwOCMMBgvpF6hVfeLr3s7n4WryQwk8HkC82-Mm8mI_oC9gWNegMm-3IgytNlgDOgw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+<div class="w-full flex justify-between items-center text-on-primary">
+<span class="font-label-caps text-label-caps tracking-widest">Main Room</span>
+<div class="flex gap-2">
+<button class="hover:text-secondary-container transition-colors"><span class="material-symbols-outlined text-sm" data-icon="edit">edit</span></button>
+<button class="hover:text-error transition-colors"><span class="material-symbols-outlined text-sm" data-icon="delete">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Image -->
+<div class="col-span-1 row-span-1 relative group rounded-lg overflow-hidden bg-surface-variant">
+<img alt="Audio Equipment Detail" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A close-up, highly detailed shot of a vintage turntable needle resting on a spinning vinyl record. The lighting is moody yet bright enough to fit a high-end minimalist UI. The textures of the brushed aluminum and grooved vinyl are prominent. Quiet luxury aesthetic, cream and charcoal color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUFnbLNSvq6nxxyuTc3tCRhutyRMczWYIT9J_s-fggZluCC2FDEmfZr88Ulde4836gagqksZFvFCjTbqn6rDcd3iFRHbWYaR9IIVXPEiBbT4QVyK-5d1-iU6onuhpd_pdIXKBMLj80T5RX45cpeNN9sg7zIDy7TlaSmeDIdn6DutUJnM83iIu4qDlVQ7LkT7R8sDqYx0gqH3JWjwxoy3HYHaZ3DH30xphDXCoXernhFTkO2eUyMNx8RA"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+<button class="text-white hover:text-secondary-container transition-colors"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+<button class="text-white hover:text-error transition-colors"><span class="material-symbols-outlined" data-icon="delete">delete</span></button>
+</div>
+</div>
+<!-- Tertiary Image -->
+<div class="col-span-1 row-span-1 relative group rounded-lg overflow-hidden bg-surface-variant">
+<img alt="Bar Area" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="An artistic composition showing an elegant craft cocktail sitting on a minimalist marble bar top. In the softly blurred background, a sophisticated patron enjoys the atmosphere. The color palette emphasizes warm golds, creams, and deep browns, fitting a premium, high-end lifestyle brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV8q8BYvny5DLPFsEbGX76oyMUV4z5IKXi4vF77bI6efiApszX0kGaJ7FPNzNfnqqHuxwreke2jFqen11lfodicKTCwO3VqxinJh816czm4BAJYO0rGbBb_5z_W9si5_kIbjcPguc7u49HLkhCLvQFiAwOgbPifN5lH8Edg-eWUU19BZ6-IWADtjiJbGSb4PRmTojhK-oN33rRdsl1VCTzfYXzdDcH6BJBXerf_kXZmFONvE5LeetY5A"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+<button class="text-white hover:text-secondary-container transition-colors"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+<button class="text-white hover:text-error transition-colors"><span class="material-symbols-outlined" data-icon="delete">delete</span></button>
+</div>
+</div>
+<!-- Quaternary Image -->
+<div class="col-span-1 row-span-1 relative group rounded-lg overflow-hidden bg-surface-variant">
+<img alt="Acoustic Details" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="An architectural detail shot of acoustic wood paneling intersecting with smooth, minimalist cream-colored walls in a gallery-like lounge space. The lighting casts subtle, geometric shadows. High-key lighting, emphasizing structural elegance and quiet luxury." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI7HpW7UMo79gZlYU4FeKyxjh8-7Y9QkYnMze3ZVqoQARI15y7hcUX8Qy3qRs7CukDE1C-d4DW3lQSI3EK1FzyHc27gtKpECMk2p8rg4cArmMGkVsaaSeFup8YwRFN_LC2nVNXO-zLWbdH4gFX3fh7i86pQPUlt_YMZPlmlbVwzzg6yfddPbj1eQtJismWcgejTKog5UU4MzT1bkA_DQnxThq4aojF9cRM-xuQxuarW09E8I-zc1-s4w"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+<button class="text-white hover:text-secondary-container transition-colors"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+<button class="text-white hover:text-error transition-colors"><span class="material-symbols-outlined" data-icon="delete">delete</span></button>
+</div>
+</div>
+<!-- Empty Upload Slot -->
+<div class="col-span-2 row-span-1 border border-dashed border-outline-variant/60 rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="add_photo_alternate">add_photo_alternate</span>
+<span class="font-label-caps text-label-caps text-outline group-hover:text-primary transition-colors">Add Image</span>
+</div>
+</div>
+<div class="mt-auto pt-8 flex justify-end">
+<button class="bg-primary text-on-primary font-button text-button py-3 px-8 rounded-DEFAULT hover:bg-inverse-surface transition-colors duration-300">
+                                Save Gallery Order
+                            </button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+</body></html>

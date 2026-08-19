@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Guestbook - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#e4e2dd",
+                      "primary": "#181512",
+                      "on-background": "#1b1c19",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-secondary-fixed": "#261900",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#f5f3ee",
+                      "inverse-surface": "#30312e",
+                      "inverse-primary": "#cdc5c0",
+                      "secondary-fixed": "#ffdea5",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface-variant": "#4d4540",
+                      "surface-container": "#f0eee9",
+                      "tertiary-fixed": "#ffdad3",
+                      "secondary": "#775a19",
+                      "on-primary-fixed": "#1e1b18",
+                      "secondary-container": "#fed488",
+                      "surface-variant": "#e4e2dd",
+                      "outline": "#7e756f",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "tertiary": "#310501",
+                      "on-error-container": "#93000a",
+                      "on-primary-container": "#96908b",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-container": "#785a1a",
+                      "primary-container": "#2d2926",
+                      "surface": "#fbf9f4",
+                      "on-tertiary": "#ffffff",
+                      "on-surface": "#1b1c19",
+                      "inverse-on-surface": "#f2f1ec",
+                      "background": "#fbf9f4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "outline-variant": "#cfc4bd",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#dbdad5",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "tertiary-container": "#4d190e",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-tint": "#635d5a",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "on-error": "#ffffff",
+                      "surface-bright": "#fbf9f4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "stack-md": "32px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .journal-texture {
+            background-color: #fbf9f4;
+            background-image: 
+                linear-gradient(90deg, transparent 95%, rgba(0,0,0,0.02) 95%),
+                linear-gradient(0deg, transparent 95%, rgba(0,0,0,0.02) 95%);
+            background-size: 24px 24px;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased journal-texture min-h-screen">
+<!-- TopAppBar (Web) -->
+<header class="hidden md:flex bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed w-full top-0 sticky flex justify-between items-center px-margin-desktop py-4 w-full z-50">
+<div class="flex items-center gap-4 cursor-pointer transition-transform duration-200 active:scale-95">
+<span class="material-symbols-outlined hover:opacity-80 transition-opacity">menu</span>
+<span class="font-display-md text-display-md font-bold tracking-tight">AuraLounge</span>
+</div>
+<nav class="flex gap-8">
+<a class="text-on-surface-variant dark:text-outline font-button text-button hover:opacity-80 transition-opacity" href="#">Discovery</a>
+<a class="text-primary dark:text-primary-fixed font-button text-button font-bold hover:opacity-80 transition-opacity" href="#">Guestbook</a>
+<a class="text-on-surface-variant dark:text-outline font-button text-button hover:opacity-80 transition-opacity" href="#">Tickets</a>
+<a class="text-on-surface-variant dark:text-outline font-button text-button hover:opacity-80 transition-opacity" href="#">Profile</a>
+</nav>
+<button class="bg-primary text-on-primary font-button text-button px-6 py-2 rounded flex items-center gap-2 hover:opacity-80 transition-opacity">
+<span>Join</span>
+</button>
+</header>
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed w-full top-0 sticky flex justify-between items-center px-margin-mobile py-4 w-full z-50">
+<div class="flex items-center gap-3 cursor-pointer transition-transform duration-200 active:scale-95">
+<span class="material-symbols-outlined hover:opacity-80 transition-opacity">menu</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold">AuraLounge</span>
+</div>
+<button class="text-primary dark:text-primary-fixed font-button text-button hover:opacity-80 transition-opacity">
+            Join
+        </button>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop pt-stack-md md:pt-stack-lg pb-32">
+<!-- Header Section -->
+<section class="text-center max-w-2xl mx-auto mb-stack-lg">
+<h1 class="font-display-lg text-display-lg text-primary mb-4 italic">The Guestbook</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                A curated collection of memories, thoughts, and resonances from the AuraLounge community. Leave your mark on the evening.
+            </p>
+<button class="mt-8 bg-primary text-on-primary font-button text-button px-8 py-4 rounded hover:bg-primary-container transition-colors inline-flex items-center gap-2 group">
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">edit</span>
+                Leave a Note
+            </button>
+</section>
+<!-- Bento Grid / Journal Layout -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Featured Entry (Spans 2 cols) -->
+<article class="md:col-span-2 bg-surface-container-lowest p-8 border border-outline/10 flex flex-col justify-between min-h-[400px]">
+<div>
+<div class="flex items-center gap-3 mb-6">
+<img alt="Avatar" class="w-12 h-12 rounded-full object-cover grayscale opacity-80" data-alt="A sophisticated black and white portrait of an artist or musician looking thoughtfully away from the camera, high key lighting, soft focus, minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJZ-Loe09jOzpjCtx571SfrJvq_7UaZbVY83tInkK3KbD4DS3gDUbYIH3Z0-HgcrfOBg7BF3V2iTTLuPE_3PeWggGE4O86nVs2dVFr0OA1ZfPQmoULGCJAM1y_hQmN4YDMTFWeX8rTrYujZdYf-Q1v4GDvLaPm9Tv1TDBD9yPoEzGPt8QfqGL0_gRtEQA5ogrWTKpZCUPyGHbgnZvNptWhQZEkny5F-9vDXoYsjn4VQRSz6wMUIfpyCA"/>
+<div>
+<p class="font-label-caps text-label-caps text-primary tracking-widest">Elias V.</p>
+<p class="font-body-md text-body-md text-outline text-[12px]">Last Night • The Midnight Room</p>
+</div>
+</div>
+<p class="font-headline-md text-headline-md text-primary leading-relaxed italic pr-8">
+                        "The acoustics in the back room were otherworldly. Felt like the cello was being played inside my own chest. A perfect, quiet escape from the noise of the city."
+                    </p>
+</div>
+<div class="flex justify-end mt-8">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+<span class="font-label-caps text-[10px]">24</span>
+</button>
+</div>
+</article>
+<!-- Standard Entry 1 -->
+<article class="bg-surface-container-lowest p-6 border border-outline/10 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="font-label-caps text-primary text-[10px]">M</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-primary tracking-widest">Maria S.</p>
+<p class="font-body-md text-body-md text-outline text-[10px]">Oct 12 • Main Hall</p>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                        Incredible curation. The transition between the ambient set and the jazz trio was seamless. Will be back.
+                    </p>
+</div>
+<div class="flex justify-end mt-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">favorite</span>
+<span class="font-label-caps text-[10px]">8</span>
+</button>
+</div>
+</article>
+<!-- Standard Entry 2 -->
+<article class="bg-surface-container-lowest p-6 border border-outline/10 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="font-label-caps text-primary text-[10px]">J</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-primary tracking-widest">James K.</p>
+<p class="font-body-md text-body-md text-outline text-[10px]">Oct 10 • The Atrium</p>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                        An evening well spent. The signature cocktail paired perfectly with the moody lighting.
+                    </p>
+</div>
+<div class="flex justify-end mt-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">favorite</span>
+<span class="font-label-caps text-[10px]">12</span>
+</button>
+</div>
+</article>
+<!-- Image/Mood Entry (Spans 2 cols) -->
+<article class="md:col-span-2 relative min-h-[300px] border border-outline/10 group overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A moody, cinematic photograph of a high-end lounge interior, dimly lit with warm amber lighting, showing empty leather chairs and a grand piano in the background. Minimalist aesthetic, luxury vibe." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDxB773S5n9Y-LAznxSmKU-oSKGDur_FesGJT3k7ZJ1d74k1umI0tTsZ1nJ_Gsg-XF4GeqewEnFEuieKY2xJGokw4ZEUUv5A9S3S9fWc-YKW0uH96u4_w5bjvyrcxUJmMIqfKPWzM9hU6cVYD7NicyJVI8N8RAzptEQAL-yuyF7Ew5vDWxThDhGpsuhNHmm0xrsWl7_-9omsIdXqDL8A5JvsKneG01pZhG_27YiDnDTnRTIWYpIk58gXQ')"></div>
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-[2px]"></div>
+<div class="relative h-full p-8 flex flex-col justify-end text-on-primary">
+<p class="font-headline-md text-headline-md italic mb-2">
+                        "Caught this moment just before the final set began. Pure anticipation."
+                    </p>
+<div class="flex items-center gap-2">
+<p class="font-label-caps text-label-caps tracking-widest">Sarah W.</p>
+<span class="text-on-primary/60 text-[10px]">• Oct 08</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Load More CTA -->
+<div class="mt-16 text-center">
+<button class="font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:text-on-surface-variant transition-colors">
+                Read More Pages
+            </button>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface/80 dark:bg-surface-container/80 backdrop-blur-xl border-t border-outline/10 bg-surface/80 backdrop-blur-xl shadow-[0_-4px_40px_rgba(24,21,18,0.05)] fixed bottom-0 w-full z-50 flex justify-around items-center pt-3 pb-6 px-margin-mobile">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">explore</span>
+<span class="font-label-caps text-label-caps mt-1 text-[10px]">Discovery</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">confirmation_number</span>
+<span class="font-label-caps text-label-caps mt-1 text-[10px]">Tickets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-semibold hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out group" href="#">
+<!-- Active state uses 'Guestbook' conceptual match. Since it's not in the JSON, I must map to the closest intent or highlight nothing. Since it's a community feature, I will highlight none perfectly, but mapping 'Guestbook' -> 'Discovery' or 'Profile' is weak. Let's keep Profile inactive as it's not a personal settings page. 
+                 Actually, according to instructions: "If the JSON says icons: ["explore", "confirmation_number", "account_circle"]... determine active". Guestbook is browsing content. Let's map to Discovery. -->
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">explore</span>
+<span class="font-label-caps text-label-caps mt-1 text-[10px]">Discovery</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">account_circle</span>
+<span class="font-label-caps text-label-caps mt-1 text-[10px]">Profile</span>
+</a>
+</nav>
+</body></html>

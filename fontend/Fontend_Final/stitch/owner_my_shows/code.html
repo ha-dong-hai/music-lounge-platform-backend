@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Show của bạn - MusicLounge Atelier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "secondary": "#795836",
+                        "background": "#fff9ed",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#3a4a3f",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#eabe95",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#7a5837",
+                        "on-secondary-fixed-variant": "#5e4021",
+                        "on-primary-fixed": "#321200",
+                        "primary": "#8c4a1e",
+                        "tertiary-container": "#68796c",
+                        "inverse-primary": "#ffb68c",
+                        "on-secondary-fixed": "#2c1600",
+                        "outline-variant": "#d9c2b6",
+                        "tertiary": "#4f6054",
+                        "outline": "#867369",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#8f4d20",
+                        "inverse-on-surface": "#f6f0e5",
+                        "primary-fixed": "#ffdbc9",
+                        "on-primary-fixed-variant": "#723609",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#dfd9cf",
+                        "on-tertiary-fixed": "#101f16",
+                        "tertiary-fixed": "#d5e7d8",
+                        "surface-container-low": "#f9f3e8",
+                        "secondary-container": "#ffd2a8",
+                        "on-primary-container": "#fffbff",
+                        "primary-container": "#aa6233",
+                        "tertiary-fixed-dim": "#b9cbbd",
+                        "surface-container-high": "#ede7dd",
+                        "surface-variant": "#e8e2d7",
+                        "on-surface": "#1d1b15",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#53433b",
+                        "on-background": "#1d1b15",
+                        "surface-container-highest": "#e8e2d7",
+                        "surface-container": "#f3ede2",
+                        "surface-bright": "#fff9ed",
+                        "secondary-fixed": "#ffdcbd",
+                        "inverse-surface": "#333029",
+                        "primary-fixed-dim": "#ffb68c",
+                        "surface": "#fff9ed",
+                        "on-tertiary-container": "#f6fff5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "container-max": "1280px",
+                        "lg": "48px",
+                        "xs": "4px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Playfair Display"],
+                        "caption-handwriting": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "title-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "caption-handwriting": ["16px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .warm-shadow {
+            box-shadow: 0 4px 24px rgba(43, 42, 39, 0.08);
+        }
+        .list-row {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .list-row:hover {
+            background-color: theme('colors.surface-container-lowest');
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(43, 42, 39, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col">
+<!-- TopNavBar (Reused from SCREEN_17 concept, based on JSON) -->
+<header class="w-full top-0 sticky bg-surface/80 dark:bg-surface/80 backdrop-blur-xl bg-surface dark:bg-surface shadow-sm z-50">
+<div class="max-w-container-max mx-auto px-gutter h-20 flex items-center justify-between">
+<!-- Brand Logo -->
+<div class="font-display-lg text-headline-sm text-primary dark:text-primary-fixed-dim">
+                MusicLounge Atelier
+            </div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-70" href="#">Venues</a>
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 cursor-pointer active:opacity-70" href="#">Shows</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-70" href="#">Finance</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-70" href="#">Settings</a>
+</nav>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-all cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<img alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border border-outline-variant/30" data-alt="A small, circular, high-quality photograph of a sophisticated individual in a warm, warmly lit jazz club setting, serving as a user profile avatar. The lighting is moody and editorial, capturing a sense of refined taste. Warm beige and soft brown tones dominate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRJ2RkLNWuREJFYZRe5fMsoVz_L5humRKIiTCGbKDMRPwtZJgb0nlFuxlvKtay7mp0RwQeJgufrn0NqDT00RPEg0vswVJKPJLrstBxKHQ8XVz_MDwhEzBJG0gfGVnx3450vUZYRF094MiHLVMms_AHV-jUm1xWAiO3mDeGrdy5h9-Jg4_2BkZGcLruhkQo-w_OWnb-1ekAxBH_Dp8OJGSuo650u4QIt-7Kd8mU_UWmaL6IbZS6OpFYUnmkU72XMsOxtmvK7BL55v7Y"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow max-w-container-max mx-auto px-gutter w-full py-xl">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-md">
+<h1 class="font-headline-md text-headline-md text-on-background">Show của bạn</h1>
+<button class="bg-primary text-on-primary font-headline-sm text-[18px] py-sm px-md rounded-lg flex items-center gap-xs hover:bg-surface-tint transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                Tạo show mới
+            </button>
+</div>
+<!-- Editorial List -->
+<div class="flex flex-col border-t border-outline-variant/30">
+<!-- Item 1 -->
+<div class="list-row flex items-center gap-md py-md border-b border-outline-variant/30 px-sm md:px-md rounded-lg -mx-sm md:-mx-md cursor-pointer">
+<img alt="Thumbnail" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0 shadow-sm" data-alt="A square, high-end editorial photograph of a vintage acoustic guitar leaning against a dark velvet chair in a dimly lit, luxurious room. Warm amber lighting highlights the wood grain, creating a nostalgic and sophisticated mood perfect for a classic Vietnamese music night." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsq90oLTFWjnHCYtU4fj9uKZiNeuw3YEe418ac0x2kQeo14o9duTpw9Zbs7ZYBYTnRR3vFmYLjVrRnNvDCV_soD_ezCxi-5CsQE0-n4Pa5YYvI_WUJPUU-La-oOFczxYIuGWKO9TovXU9VkvMcnLrYjhRq5bTvfJjIivra3_L4ohMbB6YP5pQgp7CXOYA66sN5RWi4KT4TEdircL87YDU1uBKrTrPG8E6AucauPeZPNstigZxXPLRimd9MP0AFjOTnlilNw_UzXQAF"/>
+<div class="flex-grow min-w-0">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate mb-xs">Đêm Nhạc Trịnh: Lời Huyền Thoại</h3>
+<div class="font-body-md text-body-md text-on-surface-variant flex flex-col md:flex-row md:items-center gap-xs md:gap-md">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>Cõi Nhớ (Quận 1)</span>
+<span class="hidden md:inline text-outline-variant">•</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>20/10/2024</span>
+</div>
+</div>
+<div class="flex-shrink-0 text-right">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span> Đang diễn ra
+                    </span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="list-row flex items-center gap-md py-md border-b border-outline-variant/30 px-sm md:px-md rounded-lg -mx-sm md:-mx-md cursor-pointer">
+<img alt="Thumbnail" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0 shadow-sm" data-alt="A square, moody photograph of a gleaming brass saxophone bathed in soft, deep blue and warm gold stage lighting. The aesthetic is upscale jazz lounge, exuding elegance and late-night sophistication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD94RZ-zp4jsgZX5yzT8dQmR0mQpP7_ZOZNEBg93lCsEL7Bt4I7XXUWDIWLgNinA99WVPRFGZwg9iQ94RYt1OLBexuB3LjcP12gw6wtenLvaTtMFepoSyZJbU20OcALPISQw0zRS09JC_TH6HSbggvmKWMaJiv0wUgUPFwxtup0UfAqYADiu4rFjmWdNjWXBzREgyHMRlPW3KufxCYT0nUPRdE30TQS7q9GTbr_ssS4keaZlP4C9ntgmdyWmyBsChYvE08LMFEh4oge"/>
+<div class="flex-grow min-w-0">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate mb-xs">Jazz Under The Stars</h3>
+<div class="font-body-md text-body-md text-on-surface-variant flex flex-col md:flex-row md:items-center gap-xs md:gap-md">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>Lullaby Lounge (Quận 3)</span>
+<span class="hidden md:inline text-outline-variant">•</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>25/10/2024</span>
+</div>
+</div>
+<div class="flex-shrink-0 text-right">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-surface-container-high text-on-surface font-label-md text-label-md border border-outline-variant/50">
+                        Đã xuất bản
+                    </span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="list-row flex items-center gap-md py-md border-b border-outline-variant/30 px-sm md:px-md rounded-lg -mx-sm md:-mx-md cursor-pointer">
+<img alt="Thumbnail" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0 shadow-sm" data-alt="A square, intimate photo of a vintage microphone standing in focus against a beautifully blurred background of warm string lights in a rustic, cozy music loft. The tones are sepia and honey-colored, emphasizing a soulful, acoustic vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFLP2ESzzmtiZGg0fkkeR3_p37tnxTRXQu9TyTN65E2IyGAkib5XfXsFGb5qENAU2nzJ6B7golKjq2A5N0sWCz9nO1VJGMAXoLn4L5GXSoiQUTrCj-dNs3LnveePK1575Oh4eJCIDWPl2CDsgdnKQYN0bFzh90V6aQzZZXnQgjHfNoTFxG18ClfiTpkQc2IwF0rtR194NTaL3DFUWh9uDV8oqmrRL7JA8Cx6eUnWDdBZtfEfKkI6OtsyRPOc0kZK_iMMJYDKomEdhf"/>
+<div class="flex-grow min-w-0">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate mb-xs">Acoustic Soul Session</h3>
+<div class="font-body-md text-body-md text-on-surface-variant flex flex-col md:flex-row md:items-center gap-xs md:gap-md">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>Gác Xép Âm Nhạc (Quận 7)</span>
+<span class="hidden md:inline text-outline-variant">•</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>30/10/2024</span>
+</div>
+</div>
+<div class="flex-shrink-0 text-right">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">
+                        Chờ duyệt
+                    </span>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="list-row flex items-center gap-md py-md border-b border-outline-variant/30 px-sm md:px-md rounded-lg -mx-sm md:-mx-md cursor-pointer opacity-80">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-lg flex-shrink-0 bg-surface-variant flex items-center justify-center border border-outline-variant/50 border-dashed">
+<span class="material-symbols-outlined text-outline text-[32px]" data-icon="image">image</span>
+</div>
+<div class="flex-grow min-w-0">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate mb-xs">Nhạc Khúc Mùa Thu</h3>
+<div class="font-body-md text-body-md text-on-surface-variant flex flex-col md:flex-row md:items-center gap-xs md:gap-md">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>Studio B (Quận 1)</span>
+<span class="hidden md:inline text-outline-variant">•</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>15/10/2024</span>
+</div>
+</div>
+<div class="flex-shrink-0 text-right">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-surface-dim text-on-surface-variant font-label-md text-label-md">
+                        Bản nháp
+                    </span>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="list-row flex items-center gap-md py-md border-b border-outline-variant/30 px-sm md:px-md rounded-lg -mx-sm md:-mx-md cursor-pointer opacity-60 grayscale-[50%]">
+<img alt="Thumbnail" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0 shadow-sm" data-alt="A square, slightly desaturated image of a grand piano sitting quietly in an elegant, dimly lit cellar space with exposed concrete and brick walls. The lighting is cool and subdued, reflecting a canceled or quiet state, maintaining a premium editorial feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5VlD7Xf56msE6FE8FfYwhuxA00vuor_kE9IQ-rlB0vPBsHFMn_7ScVrz64q7lXDzfQ0PvDSGWxkaqMo2XvFnEftbKbKyKqA9HWY7EIReTaGmocan0rQVYYXiBamCG983xLOQEPtMQ-a-qjiJudmNl0_qH81MSK3ZBFYaxaDK00BP34iKez0fOWaaLxvMp7uH69osHGML_KMrTzt37er4hzumZah8UDjpdl_Azxr7jikjQrEbYQTrSwof1zt_M5aaSj8JxdATb5TZh"/>
+<div class="flex-grow min-w-0">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate mb-xs">Hòa Nhạc Cổ Điển</h3>
+<div class="font-body-md text-body-md text-on-surface-variant flex flex-col md:flex-row md:items-center gap-xs md:gap-md">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>The Concrete Cellar (Quận 5)</span>
+<span class="hidden md:inline text-outline-variant">•</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>10/10/2024</span>
+</div>
+</div>
+<div class="flex-shrink-0 text-right">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-error-container text-on-error-container font-label-md text-label-md">
+                        Đã hủy
+                    </span>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Based on JSON) -->
+<footer class="w-full py-lg mt-xl bg-surface-container dark:bg-surface-container-highest border-t border-outline-variant/20">
+<div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="font-display-lg text-title-lg text-secondary">
+                MusicLounge Atelier
+            </div>
+<div class="flex gap-md font-body-md text-label-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:opacity-80" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:opacity-80" href="#">Terms</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:opacity-80" href="#">Support</a>
+</div>
+<div class="font-body-md text-label-md text-secondary dark:text-secondary-fixed-dim">
+                © 2024 MusicLounge Atelier. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>

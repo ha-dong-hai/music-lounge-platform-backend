@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Profile &amp; Wallet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#dbdad5",
+                      "tertiary": "#310501",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-tint": "#635d5a",
+                      "on-primary-container": "#96908b",
+                      "primary": "#181512",
+                      "outline-variant": "#cfc4bd",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "inverse-surface": "#30312e",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#4d190e",
+                      "on-secondary-fixed": "#261900",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary": "#775a19",
+                      "on-surface": "#1b1c19",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-container-highest": "#e4e2dd",
+                      "outline": "#7e756f",
+                      "inverse-on-surface": "#f2f1ec",
+                      "secondary-container": "#fed488",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "secondary-fixed": "#ffdea5",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#fbf9f4",
+                      "inverse-primary": "#cdc5c0",
+                      "primary-container": "#2d2926",
+                      "on-primary": "#ffffff",
+                      "on-background": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "on-error": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-secondary-container": "#785a1a",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-container": "#cb7c6b",
+                      "background": "#fbf9f4",
+                      "primary-fixed": "#e9e1dc",
+                      "surface": "#fbf9f4",
+                      "error-container": "#ffdad6",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "stack-sm": "16px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "gutter": "32px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[style*="font-variation-settings: 'FILL' 1"] {
+          font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased pt-20">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-surface-container-high/80 border-b border-outline-variant/15">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<a class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight hover:opacity-80 transition-opacity" href="#">AuraLounge</a>
+<div class="hidden md:flex gap-gutter items-center">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">Artists</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">Lounges</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">Events</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">Schedule</a>
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1 hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">Profile</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:opacity-70 transition-opacity" data-icon="search">search</span>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30 cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A close up portrait of Sarah Jenkins, a sophisticated woman with a subtle smile. High-key lighting, cream and charcoal tones, conveying quiet luxury." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOq7A4yTByVFjBFVcF_DtHJViuxtBWwhkJqRGP_hV6SKPTOJJDXgG6Eymt-td1jkCBrgIcw-0sAS34An2wTEfbzAKz79pxbESNck2_jODqNxOBO5z9v67ewEQVN3tXzvIYc5myODyU4d2g3TUE0mB7cQL3cyzBy4i9Fkbz12OCVIRmbdKPEy7KALx_uLP2Pub-6fXYs8jAs7M5qKPJEAItGXh2XCPri_lA2FD6CnkWkI0gA_eYZTuVEw"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+<!-- Header Section -->
+<header class="mb-stack-lg flex flex-col md:flex-row justify-between items-start md:items-end gap-stack-sm border-b border-outline-variant/15 pb-stack-sm">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary mb-2">Sarah Jenkins</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Curating the atmosphere.</p>
+</div>
+<button class="font-button text-button bg-surface-container border border-outline-variant/30 px-6 py-3 rounded hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+                Edit Profile
+            </button>
+</header>
+<!-- Main Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Aura Pass Wallet (Left Col) -->
+<section class="lg:col-span-7 flex flex-col gap-stack-sm">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-headline-lg text-headline-lg text-primary">Aura Pass Wallet</h2>
+<span class="font-label-caps text-label-caps text-on-surface-variant bg-surface-container px-3 py-1 rounded">2 Upcoming</span>
+</div>
+<!-- Ticket Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant/15 p-stack-sm flex flex-col sm:flex-row gap-stack-sm relative overflow-hidden group">
+<div class="w-full sm:w-1/3 aspect-[3/4] relative bg-surface-variant rounded-sm overflow-hidden">
+<img alt="Event visual" class="w-full h-full object-cover" data-alt="Abstract atmospheric photography of a dimly lit jazz lounge. Smoke, warm amber lighting against deep shadows, conveying an exclusive, intimate musical event." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJgntDhS2ePMqRDYbS2BbVdLHxYFWoT6C8PghEvTofkHL1RP99ildaUDp0NQnvLdh4WW90VyT0YcB8I4UEys3GIl5AQzCywVTvg1PkO_FCz8OTm32msDBexVnuSOdsd3-P7uLOQWQ7lqrWqvzOl0x8BzAg2jOuKeGSQ7wABR8MCESa0PIgx1zVOnl_sfMJxlN-_phI9S4QJCv_5MDHBRfuThivsLlC3BHdZuWlkUDq1bi7khouGbuTZQ"/>
+</div>
+<div class="flex-1 flex flex-col justify-between py-2">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-secondary tracking-widest">VIP ENTRY</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Oct 24</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Miles &amp; Muses Quartet</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">The Velvet Room, NYC</p>
+</div>
+<div class="flex items-center gap-4 mt-auto pt-4 border-t border-outline-variant/15">
+<button class="font-button text-button bg-primary text-on-primary px-6 py-2 rounded flex-1 hover:bg-primary-container transition-colors">
+                                Show QR Code
+                            </button>
+<button class="font-button text-button border border-outline-variant/30 px-4 py-2 rounded text-on-surface hover:bg-surface-container transition-colors" title="Transfer Ticket">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+<button class="font-button text-button border border-outline-variant/30 px-4 py-2 rounded text-on-surface hover:bg-surface-container transition-colors" title="Resell">
+<span class="material-symbols-outlined" data-icon="sell">sell</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Ticket Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant/15 p-stack-sm flex flex-col sm:flex-row gap-stack-sm relative overflow-hidden group opacity-80">
+<div class="w-full sm:w-1/3 aspect-[3/4] relative bg-surface-variant rounded-sm overflow-hidden">
+<img alt="Event visual" class="w-full h-full object-cover" data-alt="Minimalist architectural photography of a modern concrete building interior. Sharp shadows, muted tones, representing a contemporary electronic music venue." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV9ZMw4tQCBM3Lo1lCRXwvC_KrxLaOadkncp2UfnVgcWfSWWLTuD_JvsxYw-P7wgR9RttiouzjQifg3OHLSEbl6Q1IQMls9aZAh6d3zAGz0VD4jcJMhZmvBo7QhyFl3kqjZZVDYyIHPJiBxHq6-M2DmjlIRmP9kc7wIegnQDcn53wui-M93U_s3yEKVhU1Dbhsv1T1KXIYl8eBIFujyORyPTmri2pqpQyMpPQ0azrinf9kNFiCqON02Q"/>
+</div>
+<div class="flex-1 flex flex-col justify-between py-2">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-widest">GENERAL</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Nov 12</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Echoes of Detroit</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Sub-Basement 4</p>
+</div>
+<div class="flex items-center gap-4 mt-auto pt-4 border-t border-outline-variant/15">
+<button class="font-button text-button bg-primary text-on-primary px-6 py-2 rounded flex-1 hover:bg-primary-container transition-colors">
+                                Show QR Code
+                            </button>
+<button class="font-button text-button border border-outline-variant/30 px-4 py-2 rounded text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Wishlist & Preferences (Right Col) -->
+<section class="lg:col-span-5 flex flex-col gap-stack-md mt-stack-md lg:mt-0 lg:pl-gutter border-t lg:border-t-0 lg:border-l border-outline-variant/15 pt-stack-md lg:pt-0">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        Curated Wishlist
+                    </h2>
+<ul class="flex flex-col gap-4">
+<li class="flex items-center gap-4 p-3 hover:bg-surface-container transition-colors border-b border-outline-variant/10 pb-4 cursor-pointer">
+<div class="w-16 h-16 rounded-sm bg-surface-variant overflow-hidden">
+<img alt="Lounge thumbnail" class="w-full h-full object-cover" data-alt="A dimly lit, luxurious lounge interior with leather seating and brass accents. Warm, moody aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf2fDckggWKvNdw3ggXa8OmC20jlZxiKRMQYJMXvFs8zwvUU3hIW0W_m99rxOMzbVPOAz-W2aTJcM-Qmbxkce5mh99zcVkk2wixtWTLXDi5vsF4rZ15q3a-LNRUBmOTAdjSevRASks9d-Qj1d3eRxVbR2kpXJrwAQdd0dcgI4XAtYZ1PA9UDQVWGoZUIzU8bE_lzxfDIORamsNRPqBQ3X3fhef-2afUYCTwUzY8vKGfwUGIuSEuTj-FA"/>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg text-primary">The Obsidian Room</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Lounge • Paris</p>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</li>
+<li class="flex items-center gap-4 p-3 hover:bg-surface-container transition-colors border-b border-outline-variant/10 pb-4 cursor-pointer">
+<div class="w-16 h-16 rounded-sm bg-surface-variant overflow-hidden">
+<img alt="Artist thumbnail" class="w-full h-full object-cover" data-alt="Black and white portrait of a jazz saxophonist playing, moody lighting, high contrast, capturing raw emotion." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChhHnmo8EOKJAxK88usLz1WiRDbjhu6SVnSbWO0wMqZD2GLt0cKBdtuRfE-U39pgaMBMOqpOwyRLAqkUXJRbfzsQXV-dDhqB_gST__SUEkxJL41Hl7rTVUyt6uNIV_9h9_Z6KXaLKLGNWVOuSWsibtTH_6sPoCLf2qrwCsjdOxlfNfDHIRU0Fsz3V8P5N6d1zfVbDj0YXHMYC0uwXkBZSCnk5d2dLFT2LwEMuqaddqbWWBBrmZEF5dmQ"/>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg text-primary">Julian Vance</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Artist • Jazz</p>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</li>
+<li class="flex items-center gap-4 p-3 hover:bg-surface-container transition-colors border-b border-outline-variant/10 pb-4 cursor-pointer">
+<div class="w-16 h-16 rounded-sm bg-surface-variant overflow-hidden">
+<img alt="Artist thumbnail" class="w-full h-full object-cover" data-alt="A sleek, modern record player bathed in soft, indirect light, emphasizing high-fidelity audio culture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX2EIPUtBM_Qlr7G-O8Zxj0CvS7VwNpdblQgBbU7qmjPPC__tCCPHtwWztIduLhuua6CQOLOqIGq7WuZPzgRnf3YuurFfAHlXC_AZnB5bpM_gqBm8MR1BWbDA9glEPIDte-ZZyH4kSGzW1nLYvkFpafd_sTKA-_bS3wvB-ECA89ZvO0xJ9lS5euL7V6D3efN-XEhq7HNnTBLqy-XSgG5pHhV-dxpTiig_tGsOhqo4i-MZCMwmTFE-QYw"/>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg text-primary">Sonic Architecture</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Collective • Ambient</p>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</li>
+</ul>
+<button class="font-button text-button text-secondary mt-4 hover:underline underline-offset-4 decoration-1">View Full Wishlist</button>
+</div>
+<div class="bg-surface-container p-stack-sm rounded-sm">
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Sonic Profile</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Your listening habits indicate a preference for intimate venues and acoustic instrumentation.</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface border border-outline-variant/20 rounded-sm font-label-caps text-label-caps text-on-surface">JAZZ</span>
+<span class="px-3 py-1 bg-surface border border-outline-variant/20 rounded-sm font-label-caps text-label-caps text-on-surface">AMBIENT</span>
+<span class="px-3 py-1 bg-surface border border-outline-variant/20 rounded-sm font-label-caps text-label-caps text-on-surface">ACOUSTIC</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg bg-surface-container dark:bg-primary-container border-t border-outline-variant/10 mt-stack-lg">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed mb-4 block">AuraLounge</span>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-primary-container opacity-60">© 2024 AuraLounge. The Quiet Luxury of Sound.</p>
+</div>
+<div class="flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-start">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">About</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Support</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Press</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Careers</a>
+</div>
+</div>
+</footer>
+</body></html>

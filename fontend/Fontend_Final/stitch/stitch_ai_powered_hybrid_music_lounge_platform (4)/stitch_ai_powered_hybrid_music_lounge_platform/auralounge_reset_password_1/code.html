@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Aura - Reset Password</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-low": "#f5f3ee",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed": "#1e1b18",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-variant": "#e4e2dd",
+                      "on-primary-container": "#96908b",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-high": "#eae8e3",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-secondary-fixed": "#261900",
+                      "background": "#fbf9f4",
+                      "tertiary-fixed": "#ffdad3",
+                      "tertiary": "#310501",
+                      "surface-container": "#f0eee9",
+                      "error-container": "#ffdad6",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-error": "#ffffff",
+                      "primary-container": "#2d2926",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-dim": "#dbdad5",
+                      "on-secondary-container": "#785a1a",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-surface-variant": "#4d4540",
+                      "surface-bright": "#fbf9f4",
+                      "on-surface": "#1b1c19",
+                      "error": "#ba1a1a",
+                      "inverse-surface": "#30312e",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-container-highest": "#e4e2dd",
+                      "primary": "#181512",
+                      "surface-tint": "#635d5a",
+                      "primary-fixed": "#e9e1dc",
+                      "secondary-container": "#fed488",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-container": "#4d190e",
+                      "outline": "#7e756f",
+                      "surface": "#fbf9f4",
+                      "on-primary": "#ffffff",
+                      "on-background": "#1b1c19",
+                      "secondary": "#775a19",
+                      "outline-variant": "#cfc4bd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px",
+                      "unit": "8px",
+                      "stack-md": "32px",
+                      "margin-mobile": "20px",
+                      "stack-sm": "16px",
+                      "gutter": "32px"
+              },
+              "fontFamily": {
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+          font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom input underline style */
+        .input-underline {
+            border: none;
+            border-bottom: 1px solid theme('colors.outline-variant');
+            border-radius: 0;
+            padding: 8px 0;
+            background-color: transparent;
+            box-shadow: none !important;
+            transition: border-color 0.2s ease;
+        }
+        .input-underline:focus {
+            outline: none;
+            border-bottom: 1px solid theme('colors.primary');
+        }
+        
+        /* Ambient subtle background glow */
+        .ambient-glow {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle at 50% 50%, rgba(205, 197, 192, 0.15) 0%, rgba(251, 249, 244, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen relative overflow-hidden flex flex-col items-center justify-center font-body-md">
+<div class="ambient-glow"></div>
+<div class="w-full max-w-md px-margin-mobile flex flex-col h-screen md:h-auto md:py-margin-desktop justify-between md:justify-center z-10 relative bg-surface md:rounded-xl md:shadow-[0_40px_100px_rgba(24,21,18,0.05)] md:border md:border-outline-variant/20 md:p-12">
+<div class="pt-8 md:pt-0">
+<!-- Back Action -->
+<button class="mb-12 flex items-center text-on-surface-variant hover:text-primary transition-colors group">
+<span class="material-symbols-outlined mr-2 text-[20px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span class="font-button text-button">Back to login</span>
+</button>
+<!-- Header -->
+<div class="mb-12">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4">Reset Password</h1>
+<p class="text-on-surface-variant font-body-md text-body-md opacity-80 max-w-[280px]">
+                    Create a new, secure password for your Aura account.
+                </p>
+</div>
+<!-- Form -->
+<form class="space-y-stack-md w-full">
+<!-- New Password Field -->
+<div class="relative w-full">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2" for="new-password">NEW PASSWORD</label>
+<div class="relative flex items-center w-full">
+<input class="input-underline w-full font-body-md text-body-md text-primary placeholder-on-surface-variant/40 pr-10" id="new-password" placeholder="Enter new password" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-0 text-on-surface-variant/60 hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility_off</span>
+</button>
+</div>
+<!-- Password Strength Indicator -->
+<div class="mt-4 flex gap-1 h-1 w-full opacity-60">
+<div class="h-full bg-primary/20 flex-1 rounded-full"></div>
+<div class="h-full bg-primary/20 flex-1 rounded-full"></div>
+<div class="h-full bg-primary/20 flex-1 rounded-full"></div>
+<div class="h-full bg-primary/20 flex-1 rounded-full"></div>
+</div>
+<p class="font-label-caps text-[10px] tracking-wider text-on-surface-variant/60 mt-2 text-right uppercase">Weak</p>
+</div>
+<!-- Confirm Password Field -->
+<div class="relative w-full">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2" for="confirm-password">CONFIRM PASSWORD</label>
+<div class="relative flex items-center w-full">
+<input class="input-underline w-full font-body-md text-body-md text-primary placeholder-on-surface-variant/40 pr-10" id="confirm-password" placeholder="Re-enter new password" type="password"/>
+<!-- Validation Indicator (Success state example) -->
+<span class="absolute right-0 text-outline-variant transition-colors opacity-0 pointer-events-none" id="match-icon">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</span>
+</div>
+</div>
+</form>
+</div>
+<!-- Bottom Action Area -->
+<div class="pb-12 md:pb-0 pt-stack-lg w-full">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded-DEFAULT hover:opacity-90 transition-opacity flex justify-center items-center active:scale-[0.98]" type="submit">
+                Reset Password
+            </button>
+</div>
+</div>
+<script>
+        // Simple interactions for demonstration
+        document.addEventListener('DOMContentLoaded', () => {
+            const newPassword = document.getElementById('new-password');
+            const confirmPassword = document.getElementById('confirm-password');
+            const matchIcon = document.getElementById('match-icon');
+            
+            // Toggle visibility logic (mock)
+            const toggleBtns = document.querySelectorAll('button[aria-label="Toggle password visibility"]');
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const input = e.currentTarget.previousElementSibling;
+                    const icon = e.currentTarget.querySelector('span');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.textContent = 'visibility';
+                    } else {
+                        input.type = 'password';
+                        icon.textContent = 'visibility_off';
+                    }
+                });
+            });
+
+            // Mock match validation
+            confirmPassword.addEventListener('input', () => {
+                if(confirmPassword.value.length > 0 && confirmPassword.value === newPassword.value) {
+                    matchIcon.classList.remove('opacity-0', 'text-outline-variant');
+                    matchIcon.classList.add('opacity-100', 'text-secondary'); // Using secondary color for subtle success state per Aura brand
+                } else {
+                    matchIcon.classList.add('opacity-0', 'text-outline-variant');
+                    matchIcon.classList.remove('opacity-100', 'text-secondary');
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Velvet Room - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#dbdad5",
+                        "tertiary": "#310501",
+                        "tertiary-fixed": "#ffdad3",
+                        "surface-tint": "#635d5a",
+                        "on-primary-container": "#96908b",
+                        "primary": "#181512",
+                        "outline-variant": "#cfc4bd",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "inverse-surface": "#30312e",
+                        "on-surface-variant": "#4d4540",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-container-high": "#eae8e3",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#4d190e",
+                        "on-secondary-fixed": "#261900",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary": "#775a19",
+                        "on-surface": "#1b1c19",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-container-highest": "#e4e2dd",
+                        "outline": "#7e756f",
+                        "inverse-on-surface": "#f2f1ec",
+                        "secondary-container": "#fed488",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "secondary-fixed": "#ffdea5",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#fbf9f4",
+                        "inverse-primary": "#cdc5c0",
+                        "primary-container": "#2d2926",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c19",
+                        "surface-container": "#f0eee9",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-secondary-container": "#785a1a",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-container": "#cb7c6b",
+                        "background": "#fbf9f4",
+                        "primary-fixed": "#e9e1dc",
+                        "surface": "#fbf9f4",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#1e1b18",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "stack-sm": "16px",
+                        "margin-mobile": "20px",
+                        "container-max": "1440px",
+                        "stack-lg": "80px",
+                        "stack-md": "32px",
+                        "gutter": "32px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "label-caps": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.surface');
+            color: theme('colors.on-surface');
+        }
+        /* Custom scrollbar for gallery */
+        .gallery-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        .gallery-scroll::-webkit-scrollbar-track {
+            background: theme('colors.surface-container'); 
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant'); 
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md min-h-screen flex flex-col pt-20">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-surface-container-high/80 border-b border-outline-variant/15">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-20">
+<!-- Brand Logo -->
+<a class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight" href="#">
+                AuraLounge
+            </a>
+<!-- Desktop Navigation -->
+<ul class="hidden md:flex gap-gutter font-body-md text-body-md">
+<li><a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Artists</a></li>
+<li><a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1 hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Lounges</a></li>
+<li><a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Events</a></li>
+<li><a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Schedule</a></li>
+</ul>
+<!-- Trailing Action / Profile -->
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:text-outline transition-colors" data-icon="search">search</span>
+<a class="hidden md:flex items-center gap-2 font-button text-button text-primary dark:text-primary-fixed hover:opacity-70 transition-opacity" href="#">
+<img alt="User profile avatar" class="w-8 h-8 rounded-full object-cover border border-outline-variant/20" data-alt="A minimalist, high-end profile avatar featuring subtle warm neutral tones, capturing the refined aesthetic of AuraLounge." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJphgnL3C8E-5vPhHTxjW1QAdLikoeWkCWSyHePXrxyaVwHwXIE4RuIaDgm5OZzkuNRDYhRdAzqd37YCss2KAh44uzRpuFJrEeaI_Go9rNHaJsjE4QTuNgZ3h191n_SsdqqSDeaxQSBup_cMPCig2uNL6xxtqNlsZkvYHyAm5MQY_uJHrNC2iMItz8nIVudaykz__EtRc0YXdvYCOSwfg4iIOOo2xcIrW_txhdept_W9rkyYCZEm3gKA"/>
+                    Profile
+                </a>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col w-full">
+<!-- Hero Section: Gallery & Title -->
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full pt-stack-md pb-stack-lg">
+<header class="mb-stack-md text-center md:text-left">
+<p class="font-label-caps text-label-caps text-secondary mb-unit uppercase tracking-widest">Featured Lounge</p>
+<h1 class="font-headline-lg-mobile md:font-display-lg text-headline-lg-mobile md:text-display-lg text-primary mb-unit">The Velvet Room</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">A sanctuary of plush acoustics and curated spirits, designed for intimate performances and discerning palates.</p>
+</header>
+<!-- Minimalist Photo Gallery (Horizontal Scroll on Mobile, Grid on Desktop) -->
+<div class="flex overflow-x-auto md:grid md:grid-cols-12 gap-unit md:gap-gutter gallery-scroll pb-4 md:pb-0">
+<div class="w-80 shrink-0 md:w-auto md:col-span-8 aspect-[4/3] md:aspect-[16/9] relative rounded overflow-hidden group">
+<img alt="The Velvet Room Main Stage" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A luxurious, dimly lit lounge interior. Plush velvet seating in warm neutral tones surrounds small, intimate tables. Soft, high-end lighting highlights the textures of the room, creating an atmosphere of quiet luxury and acoustic perfection." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXSQ8XJfCUVOUi8Bqq90u2qACNige1zNApBJueh0SxZ92U53eZKaXYSrTiMyEOeQ7ObbdwqWS3UQF7Gj8ZMJQ7EOegmLLrABEdITr66ryzi_B0Qaqa-_t0lo7N_Dhw3XBM4oqPvSTmsd2MOpZGp25ocihHpDKJmSH5koHVF8IrVh3JqSD06rKcQD1FS6TgCay9_CNx5kfm4X7H9JuG7EY0WvUToHLIfNap6EdAXFeyU67Z6AB6SdJLDQ"/>
+</div>
+<div class="flex flex-col gap-unit md:col-span-4 w-60 shrink-0 md:w-auto">
+<div class="aspect-[4/3] md:h-1/2 relative rounded overflow-hidden group">
+<img alt="Signature Cocktail" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Close up of a meticulously crafted cocktail resting on a dark, polished wood table in a high-end lounge. Warm, ambient lighting reflects off the crystal glass, emphasizing the warm neutral color palette and sophisticated atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5HxCtHZvY5sF3yHsZ_11j_T8D-gXAczlXWWC5YB_yNLwLpDM_AI0reqeVZXfSbfYqnPeIgWsjSLSrnXaA2tCuyfbMzsWKd1jAwQ7y-1F9ltIKL5e6oSsSF7jGqSBlKxX_P4roy72VgX47mIkMi1tdWN3lgwxnvexl_o1oAkj-7JEFbryPezUNAZVdRpBqugyLzXr_yTVPXvwR_C270wELl5rdcfijYcaEliGt4UOgd72klOOuvkok7w"/>
+</div>
+<div class="aspect-[4/3] md:h-1/2 relative rounded overflow-hidden group hidden md:block">
+<img alt="Acoustic Detail" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Detail shot of vintage audio equipment integrated seamlessly into modern, minimalist lounge decor. Rich textures of wood and brushed metal are illuminated by soft gallery-style lighting, emphasizing exclusivity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrgeiTyx4LtXqKXLZbefli4V6Ks5B3pC1leV_05uZBXM2MYbZySrvJKIb2o-STt96hKL0PoaqbZSCtwTpO6P1dIwgDHpod5c0nGKGyW-ntg3XsM_v8fjcAN1RbH36QIGz7EaIkumPlo5Tkczeqx7vtvXXUgyMKH1bMxQ4NhbfnPW0oqwAX5Al6lXU1H92voInvmBC8QeCDtxSekGOC1lueVKBVlkbschRH0eQl5fC5ClgqDDQTTl3WBA"/>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg bg-surface-container dark:bg-primary-container border-t border-outline-variant/10 mt-auto">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Brand & Copyright -->
+<div class="flex flex-col gap-unit">
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed">
+                    AuraLounge
+                </span>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-primary-container mt-auto">
+                    © 2024 AuraLounge. The Quiet Luxury of Sound.
+                </p>
+</div>
+<!-- Links -->
+<div class="flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-end font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">About</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Support</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Press</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Careers</a>
+</div>
+</div>
+</footer>
+</body></html>

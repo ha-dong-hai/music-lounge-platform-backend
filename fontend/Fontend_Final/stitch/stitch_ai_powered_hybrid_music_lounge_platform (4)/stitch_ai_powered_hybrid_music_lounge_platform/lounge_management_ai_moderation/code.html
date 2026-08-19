@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge Management Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#f0eee9",
+                        "outline-variant": "#cfc4bd",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#eae8e3",
+                        "surface-container-highest": "#e4e2dd",
+                        "secondary": "#775a19",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c19",
+                        "tertiary": "#310501",
+                        "on-surface-variant": "#4d4540",
+                        "inverse-surface": "#30312e",
+                        "surface-container-low": "#f5f3ee",
+                        "on-primary-container": "#96908b",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-tint": "#635d5a",
+                        "on-secondary-container": "#785a1a",
+                        "primary-container": "#2d2926",
+                        "secondary-fixed-dim": "#e9c176",
+                        "tertiary-container": "#4d190e",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fbf9f4",
+                        "surface-bright": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "background": "#fbf9f4",
+                        "primary": "#181512",
+                        "surface-dim": "#dbdad5",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#ffdea5",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-tertiary-container": "#cb7c6b",
+                        "inverse-primary": "#cdc5c0",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "outline": "#7e756f",
+                        "secondary-container": "#fed488",
+                        "on-secondary-fixed": "#261900",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-surface": "#1b1c19",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e4e2dd",
+                        "primary-fixed": "#e9e1dc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "32px",
+                        "stack-sm": "16px",
+                        "margin-mobile": "20px",
+                        "unit": "8px",
+                        "stack-lg": "80px",
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "stack-md": "32px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        .glass-panel { background: rgba(251, 249, 244, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    </style>
+</head>
+<body class="antialiased flex h-screen overflow-hidden selection:bg-primary selection:text-on-primary">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col bg-surface-container dark:bg-surface-container-high fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 py-8 px-6 gap-stack-sm z-50">
+<div class="mb-stack-md">
+<h1 class="text-headline-md font-headline-md text-primary">Management</h1>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">Staff Access</p>
+</div>
+<div class="flex flex-col gap-2 flex-grow">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center gap-3 px-4 py-3 text-primary dark:text-primary-fixed font-bold bg-surface-container-highest/50 rounded-lg translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-body-md font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">event</span>
+<span class="text-body-md font-body-md">Events</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">sensors</span>
+<span class="text-body-md font-body-md">Livestreams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="text-body-md font-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-body-md font-body-md">Staff</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="text-body-md font-body-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-body-md font-body-md">Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-64 overflow-y-auto h-full">
+<!-- Top App Bar (Mobile mainly, or contextual actions on desktop) -->
+<header class="flex md:hidden items-center justify-between px-margin-mobile h-20 bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 sticky top-0 z-40">
+<h1 class="text-headline-md font-headline-md text-primary tracking-tight">Management</h1>
+<button class="text-primary p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<div class="px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto space-y-stack-lg">
+<!-- Header Section -->
+<header>
+<h2 class="text-display-md font-display-md text-primary mb-2">Lounge Overview</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant">The Velvet Room Management Portal.</p>
+</header>
+<!-- Key Metrics Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-low border border-outline-variant/10 p-6 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Total Revenue (MTD)</span>
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+</div>
+<div class="text-headline-lg font-headline-lg text-primary">$124,500</div>
+<div class="text-body-md font-body-md text-secondary mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">arrow_upward</span>
+                        12% vs Last Month
+                    </div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container-low border border-outline-variant/10 p-6 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Upcoming Events (7 Days)</span>
+<span class="material-symbols-outlined text-primary">event</span>
+</div>
+<div class="text-headline-lg font-headline-lg text-primary">8</div>
+<div class="text-body-md font-body-md text-on-surface-variant mt-2">
+                        Next: Jazz Night (Tomorrow)
+                    </div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container-low border border-outline-variant/10 p-6 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Pending Approvals</span>
+<span class="material-symbols-outlined text-error">pending_actions</span>
+</div>
+<div class="text-headline-lg font-headline-lg text-primary">12</div>
+<div class="text-body-md font-body-md text-error mt-2 flex items-center gap-1">
+                        Requires attention
+                    </div>
+</div>
+</section>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Schedule / Data Table Column (Spans 2) -->
+<div class="lg:col-span-2 space-y-6">
+<div class="flex justify-between items-end border-b border-outline-variant/20 pb-4">
+<h3 class="text-headline-md font-headline-md text-primary">Scheduled Events</h3>
+<a class="text-label-caps font-label-caps text-secondary hover:text-primary transition-colors" href="#">View Full Calendar</a>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant/10">
+<th class="py-4 px-2 font-normal">Date</th>
+<th class="py-4 px-2 font-normal">Event Name</th>
+<th class="py-4 px-2 font-normal">Status</th>
+<th class="py-4 px-2 font-normal text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-body-md font-body-md text-primary">
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-2">Oct 24, 2024</td>
+<td class="py-4 px-2">Midnight Jazz Session</td>
+<td class="py-4 px-2"><span class="px-2 py-1 bg-surface-container text-xs rounded-full">Confirmed</span></td>
+<td class="py-4 px-2 text-right">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-sm">edit</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-2">Oct 26, 2024</td>
+<td class="py-4 px-2">Acoustic Lounge w/ Sarah Jenkins</td>
+<td class="py-4 px-2"><span class="px-2 py-1 bg-surface-container text-xs rounded-full">Confirmed</span></td>
+<td class="py-4 px-2 text-right">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-sm">edit</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-2">Oct 31, 2024</td>
+<td class="py-4 px-2">Halloween Noir Special</td>
+<td class="py-4 px-2"><span class="px-2 py-1 bg-surface-container text-xs rounded-full">Pending Staff</span></td>
+<td class="py-4 px-2 text-right">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-sm">edit</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Moderation / AI Content Column -->
+<div class="lg:col-span-1 space-y-6">
+<div class="flex justify-between items-end border-b border-outline-variant/20 pb-4">
+<h3 class="text-headline-md font-headline-md text-primary">Pending AI Content</h3>
+</div>
+<!-- Approval Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-xl overflow-hidden group">
+<div class="h-48 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="A moody, high-contrast poster design for a jazz night, featuring a stylized saxophone silhouette against a deep charcoal background with subtle cream typography. The style is modern, minimalist, and sophisticated, suited for a high-end lounge event." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSs4ny_kcA5gAG-XNUU3vYvyTRYd_C_YZtG7jlsXNvD5D8GQNubBUrCTYBWWh29RHOZC4E0mhuWZ9aZMHpcK4iIgtqV49byfTNgDPExid40k8IxkZvaVMkCx-qNqT99TcPqAcUiq-IEHfs1FX6cNXMs0t6PDP0zKwsl6tRhSCq09N9aAz5a6zFNfHywHs1oc1KwbmzmNGT2Pc6eER6-ip-KTOGW0X7kvM3oKneD0FXE7i65gwaDhBZlA"/>
+<div class="absolute top-2 right-2 bg-surface/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider text-primary border border-outline-variant/20">AI Generated</div>
+</div>
+<div class="p-4 space-y-3">
+<h4 class="text-body-lg font-body-lg text-primary">Jazz Poster Concept A</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2">"Experience the sultry sounds of midnight jazz in an intimate setting..."</p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-primary text-on-primary py-2 text-button font-button rounded hover:bg-primary/90 transition-colors">Approve</button>
+<button class="flex-1 border border-outline-variant/30 text-primary py-2 text-button font-button rounded hover:bg-surface-container transition-colors">Reject</button>
+</div>
+</div>
+</div>
+<!-- Approval Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-xl overflow-hidden group">
+<div class="h-48 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="An abstract, elegant promotional image for an acoustic music event. It features soft, warm lighting illuminating a vintage microphone, set against a cream and pale gold background. The aesthetic is calm, luxurious, and inviting, with a focus on high-quality textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFZXfnBenkGHCg7fPxA6f7bSrfQd3gUuTxKJaLD8x8QJxWpaY5uITtYJmbz6453ikj-OWIJt13HMqWQ7yvwZHuCSsEbDLzWUOQOyC9eL56zAUOycz2ODC4jmEaqZXlEBfgAuIGRDQJvcy_t7kagvgUuRhaj2f74I3jo8c13_WL9TIUSaJKj_9oHfxweQSRvf5Av9AY5DhKIyjIRMVf73EgvvN62U61A-1GBF7sR1hQQwp4lGL3T_V9Mg"/>
+</div>
+<div class="p-4 space-y-3">
+<h4 class="text-body-lg font-body-lg text-primary">Acoustic Promo Copy</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2">"Unplug and unwind with our curated selection of acoustic artists this weekend."</p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-primary text-on-primary py-2 text-button font-button rounded hover:bg-primary/90 transition-colors">Approve</button>
+<button class="flex-1 border border-outline-variant/30 text-primary py-2 text-button font-button rounded hover:bg-surface-container transition-colors">Reject</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

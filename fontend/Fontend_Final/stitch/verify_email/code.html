@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Verify Email - MusicLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#8c4a1e",
+                      "on-error": "#ffffff",
+                      "outline": "#867369",
+                      "on-secondary-fixed-variant": "#5e4021",
+                      "background": "#fff9ed",
+                      "on-surface": "#1d1b15",
+                      "inverse-primary": "#ffb68c",
+                      "surface-container-high": "#ede7dd",
+                      "inverse-on-surface": "#f6f0e5",
+                      "inverse-surface": "#333029",
+                      "on-surface-variant": "#53433b",
+                      "primary-container": "#aa6233",
+                      "surface-tint": "#8f4d20",
+                      "tertiary-fixed-dim": "#b9cbbd",
+                      "primary-fixed-dim": "#ffb68c",
+                      "tertiary": "#4f6054",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed": "#321200",
+                      "on-background": "#1d1b15",
+                      "on-error-container": "#93000a",
+                      "on-primary-container": "#fffbff",
+                      "secondary": "#795836",
+                      "surface-container-highest": "#e8e2d7",
+                      "secondary-fixed": "#ffdcbd",
+                      "surface-container": "#f3ede2",
+                      "on-primary": "#ffffff",
+                      "surface-container-low": "#f9f3e8",
+                      "outline-variant": "#d9c2b6",
+                      "on-secondary-container": "#7a5837",
+                      "surface": "#fff9ed",
+                      "on-tertiary": "#ffffff",
+                      "surface-dim": "#dfd9cf",
+                      "primary-fixed": "#ffdbc9",
+                      "on-primary-fixed-variant": "#723609",
+                      "secondary-fixed-dim": "#eabe95",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#ffd2a8",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#fff9ed",
+                      "tertiary-fixed": "#d5e7d8",
+                      "surface-variant": "#e8e2d7",
+                      "on-tertiary-container": "#f6fff5",
+                      "tertiary-container": "#68796c",
+                      "on-tertiary-fixed-variant": "#3a4a3f",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#2c1600",
+                      "on-tertiary-fixed": "#101f16"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "xs": "4px",
+                      "container-max": "1280px",
+                      "sm": "12px",
+                      "xl": "80px",
+                      "base": "8px",
+                      "gutter": "24px",
+                      "md": "24px",
+                      "lg": "48px"
+              },
+              "fontFamily": {
+                      "headline-md": ["Playfair Display"],
+                      "body-lg": ["Inter"],
+                      "display-lg-mobile": ["Playfair Display"],
+                      "display-lg": ["Playfair Display"],
+                      "label-md": ["Inter"],
+                      "body-md": ["Inter"],
+                      "title-lg": ["Inter"],
+                      "caption-handwriting": ["Playfair Display"],
+                      "headline-sm": ["Playfair Display"]
+              },
+              "fontSize": {
+                      "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "caption-handwriting": ["16px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .polaroid-shadow {
+            box-shadow: 0 12px 32px rgba(43, 42, 39, 0.12), 0 4px 8px rgba(43, 42, 39, 0.04);
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(var(--rotation)); }
+            50% { transform: translateY(-10px) rotate(calc(var(--rotation) + 1deg)); }
+            100% { transform: translateY(0px) rotate(var(--rotation)); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-500 { animation-delay: 500ms; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .shake-error {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: #ba1a1a !important; /* Tailwind error color */
+        }
+
+        /* Sound visualizer loading animation */
+        .loading-bar {
+            width: 4px;
+            height: 12px;
+            background-color: currentColor;
+            border-radius: 2px;
+            animation: pulse-height 1s ease-in-out infinite;
+            display: inline-block;
+            margin: 0 2px;
+        }
+        .loading-bar:nth-child(1) { animation-delay: 0s; }
+        .loading-bar:nth-child(2) { animation-delay: 0.2s; }
+        .loading-bar:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse-height {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.8); }
+        }
+
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen flex text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Left Panel: Visual Motif (Hidden on mobile) -->
+<div class="hidden lg:flex w-1/2 relative overflow-hidden bg-surface-container-low items-center justify-center p-12 border-r border-outline-variant/20" id="parallax-container">
+<!-- Abstract background texture suggestion -->
+<div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at center, var(--tw-colors-surface-variant) 0%, transparent 70%);"></div>
+<div class="relative w-full max-w-lg aspect-square flex items-center justify-center">
+<!-- Polaroid 1: Background Left -->
+<div class="absolute w-56 bg-white p-4 pb-14 polaroid-shadow rounded-sm animate-float delay-100 transition-transform duration-700 ease-out translate-y-8 opacity-0 fade-in-item parallax-layer" data-speed="0.02" style="--rotation: -8deg; z-index: 10; left: 5%; top: 15%;">
+<div class="w-full aspect-square bg-surface-variant overflow-hidden mb-3">
+<img class="w-full h-full object-cover grayscale-[20%] sepia-[30%]" data-alt="A vintage close-up of a textured, aged parchment envelope resting on a dark walnut wooden table. A rich, crimson red wax seal is prominently displayed, partially stamped with a classic musical note emblem. The lighting is warm, moody, and cinematic, reminiscent of a dimly lit, high-end jazz lounge, casting soft shadows that highlight the tactile fibers of the paper and the glossy, uneven edges of the hardened wax. The composition suggests an exclusive invitation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCToTjDC6GaymTZVYORYMHA2nI7RkUc-Gz53zkioCtaEY3NyThrjg7JueXoRVj3ZL-OXdsojIwwwClRPVopZdsbHgXOJ5Kfq65CZ7kbodV-GarU6YU-3jzIw1k86iZCf78lrjXa20FsabYVqHChoBYc_Vo_b2epnoPhdqx6UlUfAh3mRVHXRJKXcZdhgRssXOc1tX5o0uLhfaYRUPndPbz97SCyMJ_69QYkxyr-REQmPacQvjR8F9yJnA"/>
+</div>
+</div>
+<!-- Polaroid 2: Background Right -->
+<div class="absolute w-48 bg-white p-3 pb-12 polaroid-shadow rounded-sm animate-float delay-300 transition-transform duration-700 ease-out translate-y-8 opacity-0 fade-in-item parallax-layer" data-speed="0.04" style="--rotation: 12deg; z-index: 15; right: 8%; top: 35%;">
+<div class="w-full aspect-square bg-surface-variant overflow-hidden mb-2">
+<img class="w-full h-full object-cover grayscale-[10%] sepia-[20%]" data-alt="A macro shot of a brass saxophone key mechanism, bathed in warm, golden amber light against a deep, almost black background. The focus is extremely shallow, highlighting the intricate mechanical joints and Mother-of-Pearl button inlays. The metal surface shows subtle signs of wear and patina, conveying a sense of history and countless hours of play. The overall aesthetic is intimate, luxurious, and deeply focused on the craftsmanship of the instrument." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCokkYdr2ivgQ5VKmzVexHeJo2bpJg_VNd5E2EYmia1WnU7NwxSa-dWDCLskxc_rDIrlNx-GGMi_IISHC7E0HoUaOYynKjazYdKFki9HVuBvVCEx9IeQPLU2igzAeNv2oNr365GJkMhWjOUPdP0J4yFEhwaIYxo2MPo5fbgifGaml946Fw14mFzqG-K1aiPJvY52X-3FqB7BJoStcBgfiFsKHjZic1oiFuJ1IKp7-tCQelArhVVTTFnnw"/>
+</div>
+</div>
+<!-- Polaroid 3: Foreground Main -->
+<div class="absolute w-64 bg-white p-4 pb-16 polaroid-shadow rounded-sm animate-float delay-500 transition-transform duration-700 ease-out translate-y-8 opacity-0 fade-in-item parallax-layer" data-speed="0.06" style="--rotation: -2deg; z-index: 20; top: 45%; left: 25%;">
+<div class="w-full aspect-square bg-surface-variant overflow-hidden mb-4">
+<img class="w-full h-full object-cover" data-alt="A cozy, inviting corner of a high-end listening room. A plush, terracotta-colored velvet armchair sits next to a low, mid-century modern teak side table. On the table, a vintage tube amplifier glows softly, emitting a warm orange light. In the background, out of focus, rows of vinyl records are neatly organized on wooden shelves. The lighting is predominantly natural, filtered through a subtle sheer curtain, creating a soft, relaxed, and sophisticated afternoon lounge atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD29bxnpWRQmQi4vvd6s6T1PY8-CJN3TZJtLQhhXmfamKYh_DscA0r9KqvHGIsr8kVVpGMfGT3W1DmusoIkRaZNJ3gBdilWZgbUIAvM7lh8Ut_zPCWzHU7hvHMD3E22Hv2ag4f4hnxbSiN9jpRBn-LiRBvH9LTVNIKSs9yQBnV_pBcZ8Xenfi6TbUFCYt-vkazX03J_71FiGwwqJN1lTMyz0Kh-cSw9A4XOzBLF_zrhtWf1mnCv5AlzxA"/>
+</div>
+<div class="font-caption-handwriting text-caption-handwriting text-on-surface-variant opacity-80 text-center">
+                    The entry pass.
+                </div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Interaction Form -->
+<div class="flex flex-col w-full lg:w-1/2 justify-center items-center px-margin-mobile sm:px-12 md:px-24 py-12 relative z-10">
+<!-- Subtle back button for escape hatch (though strictly an onboarding flow, it's good UX, mapping to 'Quay lại') -->
+<div class="absolute top-8 left-8 hidden sm:block">
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                Trở lại
+            </a>
+</div>
+<div class="w-full max-w-md">
+<!-- Brand Anchor -->
+<div class="mb-10 flex flex-col items-center lg:items-start">
+<div class="font-display-lg-mobile md:font-display-lg text-headline-sm text-primary tracking-tight mb-2">MusicLounge</div>
+</div>
+<!-- Content -->
+<div class="text-center lg:text-left mb-8">
+<h1 class="font-headline-md text-headline-md text-on-surface mb-3">Xác thực email của bạn</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Mã xác thực đã được gửi tới <span class="font-medium text-on-surface">ng**n@gmail.com</span>
+</p>
+</div>
+<!-- OTP Form -->
+<form class="w-full" id="otp-form">
+<div class="flex gap-2 sm:gap-3 mb-6 justify-center lg:justify-start" id="otp-container">
+<input aria-label="Digit 1" autofocus="" class="otp-input w-12 h-14 sm:w-14 sm:h-16 bg-surface border border-outline-variant rounded-xl text-center font-body-lg text-[24px] font-semibold text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" maxlength="1" type="text"/>
+<input aria-label="Digit 2" class="otp-input w-12 h-14 sm:w-14 sm:h-16 bg-surface border border-outline-variant rounded-xl text-center font-body-lg text-[24px] font-semibold text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" maxlength="1" type="text"/>
+<input aria-label="Digit 3" class="otp-input w-12 h-14 sm:w-14 sm:h-16 bg-surface border border-outline-variant rounded-xl text-center font-body-lg text-[24px] font-semibold text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" maxlength="1" type="text"/>
+<input aria-label="Digit 4" class="otp-input w-12 h-14 sm:w-14 sm:h-16 bg-surface border border-outline-variant rounded-xl text-center font-body-lg text-[24px] font-semibold text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" maxlength="1" type="text"/>
+<input aria-label="Digit 5" class="otp-input w-12 h-14 sm:w-14 sm:h-16 bg-surface border border-outline-variant rounded-xl text-center font-body-lg text-[24px] font-semibold text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" maxlength="1" type="text"/>
+<input aria-label="Digit 6" class="otp-input w-12 h-14 sm:w-14 sm:h-16 bg-surface border border-outline-variant rounded-xl text-center font-body-lg text-[24px] font-semibold text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" maxlength="1" type="text"/>
+</div>
+<div class="mb-10 text-center lg:text-left">
+<p class="font-label-md text-label-md text-on-surface-variant flex items-center justify-center lg:justify-start gap-1">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+                        Mã có hiệu lực trong <span class="font-medium text-primary">09:47</span>
+</p>
+</div>
+<!-- Primary Action -->
+<button class="w-full h-[56px] rounded-xl bg-primary text-on-primary font-title-lg text-title-lg disabled:opacity-50 disabled:bg-surface-variant disabled:text-on-surface-variant transition-all duration-300 relative overflow-hidden flex justify-center items-center group" disabled="" id="submit-btn" type="submit">
+<span id="btn-text">Xác thực</span>
+<div class="hidden absolute inset-0 flex items-center justify-center bg-primary" id="btn-loader">
+<div class="loading-bar"></div>
+<div class="loading-bar"></div>
+<div class="loading-bar"></div>
+</div>
+</button>
+<p class="text-error font-label-md text-label-md mt-2 text-center h-5 opacity-0 transition-opacity" id="error-message">Mã không hợp lệ. Vui lòng thử lại.</p>
+<!-- Footer Links -->
+<div class="flex justify-between items-center mt-8 px-2">
+<button class="text-secondary font-label-md text-label-md hover:text-primary hover:underline decoration-primary/30 underline-offset-4 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-1 -mx-1" type="button">
+                        Gửi lại mã
+                    </button>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors flex items-center gap-1 sm:hidden" href="#">
+                        Quay lại
+                    </a>
+<a class="hidden sm:inline-block text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">
+                        Quay lại đăng ký
+                    </a>
+</div>
+</form>
+</div>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Trigger entry animations
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in-item').forEach(el => {
+                    el.classList.remove('translate-y-8', 'opacity-0');
+                });
+            }, 100);
+
+            // Simple Parallax Effect
+            const parallaxContainer = document.getElementById('parallax-container');
+            const layers = document.querySelectorAll('.parallax-layer');
+
+            if(parallaxContainer && layers.length > 0) {
+                parallaxContainer.addEventListener('mousemove', (e) => {
+                    const rect = parallaxContainer.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+
+                    layers.forEach(layer => {
+                        const speed = layer.getAttribute('data-speed');
+                        const xOffset = (centerX - x) * speed;
+                        const yOffset = (centerY - y) * speed;
+                        
+                        // We need to preserve the rotation from the CSS variable
+                        layer.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(var(--rotation))`;
+                    });
+                });
+                
+                parallaxContainer.addEventListener('mouseleave', () => {
+                     layers.forEach(layer => {
+                        layer.style.transform = `translate(0px, 0px) rotate(var(--rotation))`;
+                    });
+                });
+            }
+
+            // OTP Input Logic
+            const inputs = document.querySelectorAll('.otp-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const form = document.getElementById('otp-form');
+            const errorMsg = document.getElementById('error-message');
+
+            const checkInputs = () => {
+                let allFilled = true;
+                let val = '';
+                inputs.forEach(input => {
+                    if (!input.value) allFilled = false;
+                    val += input.value;
+                });
+                submitBtn.disabled = !allFilled;
+                return val;
+            };
+
+            inputs.forEach((input, index) => {
+                // Focus styling helper
+                input.addEventListener('focus', () => {
+                    input.select();
+                });
+
+                input.addEventListener('input', (e) => {
+                    // Only allow numbers
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                    
+                    // Clear error state on typing
+                    inputs.forEach(inp => inp.classList.remove('shake-error'));
+                    errorMsg.classList.remove('opacity-100');
+                    errorMsg.classList.add('opacity-0');
+
+                    checkInputs();
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+
+                // Paste support
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text/plain').slice(0, inputs.length).replace(/[^0-9]/g, '');
+                    
+                    if(pastedData) {
+                        for (let i = 0; i < pastedData.length; i++) {
+                            if (inputs[i]) {
+                                inputs[i].value = pastedData[i];
+                            }
+                        }
+                        const focusIndex = Math.min(pastedData.length, inputs.length - 1);
+                        inputs[focusIndex].focus();
+                        checkInputs();
+                    }
+                });
+            });
+
+            // Form Submit Simulation
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = checkInputs();
+                
+                if(code.length === 6) {
+                    // Simulate Loading
+                    const btnText = document.getElementById('btn-text');
+                    const btnLoader = document.getElementById('btn-loader');
+                    
+                    btnText.classList.add('invisible');
+                    btnLoader.classList.remove('hidden');
+                    inputs.forEach(inp => inp.disabled = true);
+                    submitBtn.disabled = true;
+
+                    // Simulate API Call
+                    setTimeout(() => {
+                        if(code === '000000') {
+                            // Simulate Error
+                            btnText.classList.remove('invisible');
+                            btnLoader.classList.add('hidden');
+                            inputs.forEach(inp => {
+                                inp.disabled = false;
+                                inp.classList.add('shake-error');
+                            });
+                            errorMsg.classList.remove('opacity-0');
+                            errorMsg.classList.add('opacity-100');
+                            submitBtn.disabled = false;
+                            inputs[5].focus();
+                        } else {
+                            // Simulate Success (just reset for demo)
+                            btnText.classList.remove('invisible');
+                            btnText.innerText = 'Thành công!';
+                            btnLoader.classList.add('hidden');
+                            submitBtn.classList.replace('bg-primary', 'bg-tertiary');
+                        }
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+</body></html>

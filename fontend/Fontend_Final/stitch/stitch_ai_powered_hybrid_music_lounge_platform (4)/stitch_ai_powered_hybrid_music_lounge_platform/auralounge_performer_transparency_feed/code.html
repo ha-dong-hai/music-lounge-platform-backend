@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge: Performer Transparency Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#e4e2dd",
+                      "on-secondary-container": "#785a1a",
+                      "secondary-fixed": "#ffdea5",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-surface": "#1b1c19",
+                      "surface-variant": "#e4e2dd",
+                      "surface": "#fbf9f4",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "primary-container": "#2d2926",
+                      "background": "#fbf9f4",
+                      "surface-bright": "#fbf9f4",
+                      "surface-tint": "#635d5a",
+                      "secondary": "#775a19",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#fed488",
+                      "on-background": "#1b1c19",
+                      "inverse-primary": "#cdc5c0",
+                      "tertiary-container": "#4d190e",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-primary-container": "#96908b",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed": "#e9e1dc",
+                      "inverse-surface": "#30312e",
+                      "primary": "#181512",
+                      "surface-dim": "#dbdad5",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#261900",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-container-low": "#f5f3ee",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary": "#310501",
+                      "outline": "#7e756f",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "outline-variant": "#cfc4bd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "32px",
+                      "container-max": "1440px",
+                      "stack-sm": "16px",
+                      "stack-lg": "80px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "stack-md": "32px"
+              },
+              "fontFamily": {
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col pt-16 pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b-0 flat no shadows flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 w-full">
+<button aria-label="Menu" class="text-on-surface-variant hover:opacity-70 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[24px]">menu</span>
+</button>
+<div class="font-display-md text-display-md tracking-widest text-primary dark:text-primary-fixed-dim">
+            AURA
+        </div>
+<button aria-label="Shopping Bag" class="text-on-surface-variant hover:opacity-70 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-md flex flex-col gap-stack-lg">
+<!-- Header Section -->
+<section class="flex flex-col items-center text-center mt-stack-md">
+<div class="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden mb-6 border border-outline-variant/20 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A sophisticated black and white portrait of a classical pianist, soft dramatic lighting highlighting their focused expression. The background is a blurred concert hall, emphasizing the artist. The overall mood is elegant, serious, and deeply artistic, fitting a premium cultural platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjbfYnNAUJb0jOispE-5_I-IneZmxm56iG1W4ig2tNP1OSpkanWM_5ccNQmi5NYi7brEfrEFxfnOSINzj5DyOAoaUV9X3mgXw5IoIpwcdlh0geQiXT6K-ciSvjqfdG2p5rjcABMi-8MQvMtplIEqVquFj1PduFNU3uNdHQ1F3XN9UqYQ5XWk6_ifPWIjwmVpCx-CzkZkHBSUKqu8U1QkR_V2C8vICr0Pw7aD7MkFuqexf-T2qjTZ0K9g"/>
+</div>
+<h1 class="font-display-md text-display-md text-primary mb-2">Elena Rostova</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                Transparency Ledger
+            </p>
+<div class="mt-8 flex flex-col items-center p-6 bg-surface-container-low rounded-xl border border-outline-variant/10 min-w-[300px]">
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">Total Resonances Received</span>
+<span class="font-headline-lg text-headline-lg text-primary">€ 14,520.00</span>
+</div>
+</section>
+<!-- Ledger Data Table -->
+<section class="w-full">
+<div class="flex justify-between items-end mb-6">
+<h2 class="font-headline-md text-headline-md text-primary">Donation History</h2>
+<button class="flex items-center gap-2 font-button text-button text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                    Filter
+                </button>
+</div>
+<div class="w-full overflow-x-auto bg-surface border border-outline-variant/10 rounded-xl">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant/10">
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Date</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Donor</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Show Name</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant text-right whitespace-nowrap">Amount</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-6 whitespace-nowrap">Oct 24, 2023</td>
+<td class="py-4 px-6 font-medium">Anonymous</td>
+<td class="py-4 px-6 text-on-surface-variant">Nocturne Variations</td>
+<td class="py-4 px-6 text-right font-medium">€ 500.00</td>
+</tr>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-6 whitespace-nowrap">Oct 18, 2023</td>
+<td class="py-4 px-6 font-medium">Nguyen V.</td>
+<td class="py-4 px-6 text-on-surface-variant">Nocturne Variations</td>
+<td class="py-4 px-6 text-right font-medium">€ 150.00</td>
+</tr>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-6 whitespace-nowrap">Sep 05, 2023</td>
+<td class="py-4 px-6 font-medium">Sarah Jenkins</td>
+<td class="py-4 px-6 text-on-surface-variant">Autumn Echoes</td>
+<td class="py-4 px-6 text-right font-medium">€ 1,200.00</td>
+</tr>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-6 whitespace-nowrap">Aug 22, 2023</td>
+<td class="py-4 px-6 font-medium">Anonymous</td>
+<td class="py-4 px-6 text-on-surface-variant">Studio Session Live</td>
+<td class="py-4 px-6 text-right font-medium">€ 50.00</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-4 px-6 whitespace-nowrap">Aug 10, 2023</td>
+<td class="py-4 px-6 font-medium">Marcus T.</td>
+<td class="py-4 px-6 text-on-surface-variant">Studio Session Live</td>
+<td class="py-4 px-6 text-right font-medium">€ 300.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="mt-8 flex justify-center items-center gap-4">
+<button aria-label="Previous Page" class="p-2 text-on-surface-variant opacity-50 cursor-not-allowed border border-outline-variant/10 rounded-lg" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded-full bg-primary text-on-primary font-button flex items-center justify-center">1</button>
+<button class="w-8 h-8 rounded-full text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-button flex items-center justify-center">2</button>
+<button class="w-8 h-8 rounded-full text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-button flex items-center justify-center">3</button>
+<span class="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>
+<button class="w-8 h-8 rounded-full text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-button flex items-center justify-center">12</button>
+</div>
+<button aria-label="Next Page" class="p-2 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors border border-outline-variant/10 rounded-lg">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</section>
+</main>
+</body></html>

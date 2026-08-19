@@ -1,0 +1,278 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Reset Password - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#96908b",
+                        "outline": "#7e756f",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#775a19",
+                        "surface-dim": "#dbdad5",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "secondary-fixed-dim": "#e9c176",
+                        "primary": "#181512",
+                        "on-tertiary-container": "#cb7c6b",
+                        "surface-container": "#f0eee9",
+                        "surface-container-highest": "#e4e2dd",
+                        "tertiary-container": "#4d190e",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-surface": "#1b1c19",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-background": "#1b1c19",
+                        "inverse-on-surface": "#f2f1ec",
+                        "tertiary-fixed": "#ffdad3",
+                        "tertiary": "#310501",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "surface-container-low": "#f5f3ee",
+                        "on-error-container": "#93000a",
+                        "background": "#fbf9f4",
+                        "inverse-primary": "#cdc5c0",
+                        "secondary-container": "#fed488",
+                        "primary-container": "#2d2926",
+                        "surface": "#fbf9f4",
+                        "secondary-fixed": "#ffdea5",
+                        "on-primary-fixed": "#1e1b18",
+                        "surface-bright": "#fbf9f4",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-tint": "#635d5a",
+                        "on-secondary-fixed": "#261900",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "surface-container-high": "#eae8e3",
+                        "on-secondary-container": "#785a1a",
+                        "outline-variant": "#cfc4bd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "32px",
+                        "unit": "8px",
+                        "stack-sm": "16px",
+                        "container-max": "1440px",
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                        "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "button": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "display-md": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-ambient {
+            background: radial-gradient(circle at top right, rgba(233, 193, 118, 0.05), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(126, 117, 111, 0.05), transparent 40%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md bg-ambient">
+<!-- TopNavBar (Suppressed Navigation Layout) -->
+<header class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-8 max-w-container-max mx-auto border-b border-outline/10">
+<div class="font-display-md text-display-md text-primary tracking-tight">AuraLounge</div>
+<!-- Intentionally left blank to suppress navigation on transactional screen -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center py-stack-lg px-margin-mobile md:px-margin-desktop relative">
+<!-- Decorative subtle background element -->
+<div class="absolute inset-0 pointer-events-none opacity-30 flex items-center justify-center overflow-hidden">
+<div class="w-[800px] h-[800px] rounded-full border-[1px] border-outline-variant opacity-20 transform -translate-y-1/4"></div>
+<div class="w-[1200px] h-[1200px] rounded-full border-[1px] border-outline-variant opacity-10 absolute transform translate-y-1/4 translate-x-1/4"></div>
+</div>
+<div class="w-full max-w-md relative z-10 space-y-stack-md">
+<!-- State Controller (For Demonstration) -->
+<div class="flex justify-center space-x-unit mb-stack-md">
+<button class="text-label-caps font-label-caps px-4 py-2 rounded-DEFAULT bg-surface-container-highest text-on-surface hover:bg-surface-dim transition-colors" onclick="showState('form')">Form State</button>
+<button class="text-label-caps font-label-caps px-4 py-2 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:bg-surface-dim transition-colors" onclick="showState('error')">Error State</button>
+<button class="text-label-caps font-label-caps px-4 py-2 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:bg-surface-dim transition-colors" onclick="showState('success')">Success State</button>
+</div>
+<!-- PRIMARY STATE: Form -->
+<div class="bg-surface-container-lowest p-stack-md rounded-lg border border-outline/10 shadow-[0_20px_60px_-15px_rgba(24,21,18,0.05)] transition-all duration-500 transform opacity-100 translate-y-0" id="state-form">
+<div class="text-center mb-stack-sm">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-unit">Reset your resonance</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Create a new, secure password for your account.</p>
+</div>
+<form class="space-y-stack-sm">
+<div>
+<div class="relative">
+<input class="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-on-surface transition-colors placeholder:text-outline-variant" id="new-password" placeholder="New password" type="password">
+<button class="absolute right-0 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" onclick="togglePasswordVisibility('new-password', 'icon-new-pwd')" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="visibility_off" id="icon-new-pwd">visibility_off</span>
+</button>
+</div><div class="relative mt-stack-sm">
+<input class="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-on-surface transition-colors placeholder:text-outline-variant" id="confirm-password" placeholder="Confirm new password" type="password">
+<button class="absolute right-0 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" onclick="togglePasswordVisibility('confirm-password', 'icon-confirm-pwd')" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="visibility_off" id="icon-confirm-pwd">visibility_off</span>
+</button>
+</div>
+<p class="font-body-md text-[13px] text-outline mt-2 leading-tight">Passwords must match.</p>
+<!-- Password Strength Meter -->
+<div class="mt-3">
+<div class="flex gap-1 h-1 w-full rounded-full overflow-hidden bg-surface-variant">
+<div class="h-full bg-secondary-fixed-dim w-1/4 transition-all duration-300"></div>
+<div class="h-full bg-transparent w-1/4 transition-all duration-300"></div>
+<div class="h-full bg-transparent w-1/4 transition-all duration-300"></div>
+<div class="h-full bg-transparent w-1/4 transition-all duration-300"></div>
+</div>
+<p class="font-body-md text-[13px] text-outline mt-2 leading-tight">Minimum 15 characters. Prioritize length over complexity.</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded-DEFAULT hover:bg-primary-container transition-colors duration-300 mt-stack-sm opacity-30" type="button" disabled="true">
+                        Reset Password
+                    </button>
+<div class="text-center mt-stack-sm">
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors inline-flex items-center gap-2 group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform" data-icon="arrow_back">arrow_back</span>
+                            Return to login
+                        </a>
+</div>
+</form>
+</div>
+<!-- ERROR STATE: Invalid/Expired Link -->
+<div class="bg-surface-container-lowest p-stack-md rounded-lg border border-outline/10 shadow-[0_20px_60px_-15px_rgba(24,21,18,0.05)] transition-all duration-500 transform opacity-0 translate-y-4 hidden" id="state-error">
+<div class="text-center space-y-stack-sm flex flex-col items-center">
+<div class="w-16 h-16 rounded-full bg-error-container flex items-center justify-center text-error mb-unit">
+<span class="material-symbols-outlined text-[32px]" data-icon="error_outline">error_outline</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-unit">Link Expired</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">This reset link has expired or is invalid. For your security, reset links are only valid for 30 minutes.</p>
+</div>
+<button class="w-full bg-surface-variant text-on-surface font-button text-button py-4 px-6 rounded-DEFAULT border border-outline/10 hover:bg-surface-dim transition-colors duration-300 mt-stack-sm" type="button">
+                        Send new reset link
+                    </button>
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors inline-flex items-center gap-2 mt-unit" href="#">
+                        Return to login
+                    </a>
+</div>
+</div>
+<!-- SUCCESS STATE: Password Changed -->
+<div class="bg-surface-container-lowest p-stack-md rounded-lg border border-outline/10 shadow-[0_20px_60px_-15px_rgba(24,21,18,0.05)] transition-all duration-500 transform opacity-0 translate-y-4 hidden" id="state-success">
+<div class="text-center space-y-stack-sm flex flex-col items-center">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest border border-outline/20 flex items-center justify-center text-secondary-container mb-unit">
+<span class="material-symbols-outlined text-[32px] text-primary" data-icon="check_circle">check_circle</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-unit">Resonance restored</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">Password successfully changed. You can now use your new password to access your lounge.</p>
+</div>
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded-DEFAULT hover:bg-primary-container transition-colors duration-300 mt-stack-sm" type="button">
+                        Login to continue
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-sm max-w-container-max mx-auto border-t border-outline/10 bg-surface">
+<div class="font-label-caps text-label-caps text-outline mb-4 md:mb-0">
+            © 2024 AuraLounge. The Quiet Luxury of Sound.
+        </div>
+<div class="flex space-x-stack-sm font-label-caps text-label-caps">
+<a class="text-outline hover:text-primary transition-colors duration-300" href="#">Privacy Policy</a>
+<a class="text-outline hover:text-primary transition-colors duration-300" href="#">Terms of Service</a>
+<a class="text-outline hover:text-primary transition-colors duration-300" href="#">Security</a>
+</div>
+</footer>
+<script>
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+
+        function showState(stateName) {
+            const states = ['form', 'error', 'success'];
+            
+            states.forEach(state => {
+                const el = document.getElementById(`state-${state}`);
+                if (state === stateName) {
+                    el.classList.remove('hidden');
+                    // Small delay to allow display block to apply before animating opacity/transform
+                    setTimeout(() => {
+                        el.classList.remove('opacity-0', 'translate-y-4');
+                        el.classList.add('opacity-100', 'translate-y-0');
+                    }, 50);
+                } else {
+                    el.classList.add('opacity-0', 'translate-y-4');
+                    el.classList.remove('opacity-100', 'translate-y-0');
+                    setTimeout(() => {
+                        if (!el.classList.contains('opacity-100')) {
+                            el.classList.add('hidden');
+                        }
+                    }, 500); // match transition duration
+                }
+            });
+
+            // Update button styles for demo
+            const buttons = document.querySelectorAll('.flex.justify-center.space-x-unit.mb-stack-md button');
+            buttons.forEach((btn, index) => {
+                const targetState = states[index];
+                if (targetState === stateName) {
+                    btn.classList.replace('bg-surface-container', 'bg-surface-container-highest');
+                    btn.classList.replace('text-on-surface-variant', 'text-on-surface');
+                } else {
+                    btn.classList.replace('bg-surface-container-highest', 'bg-surface-container');
+                    btn.classList.replace('text-on-surface', 'text-on-surface-variant');
+                }
+            });
+        }
+    </script>
+
+
+</body></html>

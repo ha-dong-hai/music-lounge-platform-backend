@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AuraLounge - Discovery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#96908b",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#fed488",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-surface-variant": "#4d4540",
+                        "tertiary-container": "#4d190e",
+                        "surface-variant": "#e4e2dd",
+                        "on-background": "#1b1c19",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-container-high": "#eae8e3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "secondary-fixed": "#ffdea5",
+                        "secondary": "#775a19",
+                        "surface-tint": "#635d5a",
+                        "background": "#fbf9f4",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "surface-container-low": "#f5f3ee",
+                        "on-surface": "#1b1c19",
+                        "primary": "#181512",
+                        "inverse-primary": "#cdc5c0",
+                        "outline-variant": "#cfc4bd",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-fixed": "#261900",
+                        "surface-container-highest": "#e4e2dd",
+                        "surface": "#fbf9f4",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "primary-fixed": "#e9e1dc",
+                        "on-secondary-container": "#785a1a",
+                        "outline": "#7e756f",
+                        "primary-container": "#2d2926",
+                        "surface-container": "#f0eee9",
+                        "tertiary": "#310501",
+                        "surface-bright": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#dbdad5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "container-max": "1440px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "margin-desktop": "64px",
+                        "unit": "8px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen pb-24 flex flex-col md:hidden overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md flex items-center justify-between px-margin-mobile h-16">
+<button aria-label="Menu" class="text-primary dark:text-on-background hover:opacity-70 transition-opacity scale-95 active:transition-transform">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-display-md text-headline-md text-primary dark:text-primary-fixed-dim tracking-tighter">AuraLounge</h1>
+<button aria-label="Notifications" class="text-primary dark:text-on-background hover:opacity-70 transition-opacity scale-95 active:transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-20 px-margin-mobile flex flex-col gap-stack-md">
+<!-- Hero Section -->
+<section class="relative w-full h-80 rounded-xl overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105" data-alt="A moody, atmospheric jazz club interior setting. Rich, warm lighting casts soft glows over a vintage acoustic guitar resting on a velvet stool. The color palette emphasizes deep charcoal, warm cream, and subtle gold accents. The scene conveys a sense of high-end, quiet luxury and exclusive cultural depth, fitting for a premium music lounge application." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBZUlJ7ineOD2gQpp4_F_IFWjkD4QTVrLryDDHuKlNm2-CRMMBV37nMjofpxbzxtTiBujgMHc0z_ESpZivC_GeNyLMwKxBK-T1-D1NL0dto78GFrNPgPmzAJTslg9y0GnNrSj9aPzLGYnl79Lfx-PJvgwuTkKL7E_XZpZfJRZJw47Q8-LCKJv1BVRPWjB01wkH8R-SlgGTQ9tCC0I9tO_rPITE8RFTbNx_mqrq-y3S5HLURi4nTLHXfIg')"></div>
+<!-- Subtle gradient overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-4 flex flex-col justify-end">
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim mb-2 uppercase tracking-widest">Featured Acoustic</span>
+<h2 class="font-headline-lg-mobile text-[24px] leading-tight text-surface-container-lowest mb-1">The Velvet Room: Midnight Jazz</h2>
+<p class="font-body-md text-sm text-surface-container-lowest/80 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+                    Downtown Arts District
+                </p>
+</div>
+<!-- Floating Play Button -->
+<button class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-surface-container-lowest/20 backdrop-blur-md rounded-full flex items-center justify-center text-surface-container-lowest border border-surface-container-lowest/30 shadow-[0_0_40px_rgba(24,21,18,0.2)] hover:bg-surface-container-lowest/30 transition-colors">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</section>
+<!-- For You (Horizontal Scroll) -->
+<section class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-md text-[20px] text-primary">For You</h3>
+<button class="font-label-caps text-label-caps text-outline hover:text-primary transition-colors">View All</button>
+</div>
+<div class="flex overflow-x-auto gap-4 hide-scrollbar pb-4 -mx-margin-mobile px-margin-mobile snap-x">
+<!-- Card 1 -->
+<div class="snap-start min-w-[240px] flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full h-32 rounded-lg overflow-hidden border border-outline-variant/20">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="An elegant, dimly lit cocktail lounge characterized by sleek, dark obsidian surfaces and subtle amber backlighting. The setting is minimal yet deeply atmospheric, focusing on premium materials and a quiet, sophisticated ambiance. Warm cream highlights contrast with deep charcoal shadows, capturing the essence of 'The Quiet Luxury of Sound'." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDfU8991zNVKlKc-EN6URH5CF5DRWKGpQqhdTmcfeqZK7sB-22u2rxgQmqiFLsqo63HB-oPHp5yaPNAC9t7sRi28oKvVrMBA0aLU5qWFkQlifYtBFZV_zWaExazsKHtbgW-5jzuwspIovMMFO3bSymSfR9CsOUQODeF3QMzYLQZM-oe_0rJp0AEW8Nb2NOwc_tl9z1yLuQHgacJJa-w0BBeJHnlCtNyidgd3NkX1ZYCIoPKGrm1IfJpSA')"></div>
+</div>
+<div>
+<h4 class="font-body-lg text-[16px] font-semibold text-primary">The Obsidian Room</h4>
+<p class="font-body-md text-sm text-on-surface-variant flex justify-between items-center mt-1">
+<span>Electronic / Ambient</span>
+<span class="flex items-center text-xs gap-1"><span class="material-symbols-outlined text-[14px]">star</span> 4.9</span>
+</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="snap-start min-w-[240px] flex flex-col gap-3 group cursor-pointer">
+<div class="relative w-full h-32 rounded-lg overflow-hidden border border-outline-variant/20">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="A bright, airy architectural space with expansive, smooth concrete walls designed to enhance acoustic reverberations. Natural light filters in through high windows, illuminating a modern, minimalist stage area. The color scheme is predominantly warm cream and light stone, accented by very subtle, low-contrast charcoal outlines, conveying a sense of serene, high-end artistic purity." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC8eEdBPnbDlImsBPc3GclN9fou-Rk4kJ6bYqYHWmfZkbjKeXp14BAMbi0nDNqt8v5_psZ_kky7NgnzqRYJh1Q8JmEytXku77BqLNjcgX1EyZYOjPX_Kw3ycbt5d2LXmWMUeNtdlYP51-8GnCJ7CXinhZpc_zLYd_rqZESIpLYpfLZ5bo1_bNOal6PjG6uJYjWJkevco9feYua6Cvj7Ozf2zWPIeUTtaRTfvgBop_yw6b-mPYVOFSeLYw')"></div>
+</div>
+<div>
+<h4 class="font-body-lg text-[16px] font-semibold text-primary">Echo Annex</h4>
+<p class="font-body-md text-sm text-on-surface-variant flex justify-between items-center mt-1">
+<span>Acoustic / Folk</span>
+<span class="flex items-center text-xs gap-1"><span class="material-symbols-outlined text-[14px]">star</span> 4.7</span>
+</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Curated Playlists (Bento-ish layout) -->
+<section class="flex flex-col gap-4 mb-8">
+<h3 class="font-headline-md text-[20px] text-primary">Curated Atmospheres</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="col-span-2 relative h-40 rounded-lg overflow-hidden flex items-end p-4 border border-outline-variant/20 group cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Abstract visualization of sound waves morphing into organic, flowing shapes. The composition uses a sophisticated gradient of deep tertiary reds transitioning into warm charcoal and cream. The visual style is abstract, luxurious, and minimalistic, resembling a modern art piece rather than a literal object, evoking a sense of deep, focused listening." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_aso42VQv73wMHZu9KPZfePieV8PZ-0mBczaTXaUi065h_mGni4pYJxSllzmMPNZue_PemQja9Xt5ZWNAgurDURyyeQBDe93EuzPGb29Ry-fflj-mvIAuMvgTsJ0nJATrRU2EmR8p5B1PsmKcaKZtC-Q_bF4PoXf8bLXOLTqOD7AYcZwazPqW3V3MwqcSkr9PgWVZyicLyuk5HUqlOct9WJBWEcNF4abtajfEAOChL3iCDsV8j7-eww')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+<div class="relative z-10 w-full flex justify-between items-end">
+<div>
+<span class="font-label-caps text-[10px] text-secondary-fixed-dim uppercase">Deep Focus</span>
+<h4 class="font-headline-md text-[18px] text-surface-container-lowest">Ambient Textures</h4>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest/20 backdrop-blur-sm flex items-center justify-center text-surface-container-lowest border border-surface-container-lowest/30">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="relative h-32 rounded-lg overflow-hidden flex items-end p-3 border border-outline-variant/20 group cursor-pointer bg-surface-container">
+<div class="absolute inset-0 bg-gradient-to-tr from-surface-variant to-transparent opacity-50"></div>
+<div class="relative z-10">
+<h4 class="font-body-lg text-[14px] font-semibold text-primary">Late Night Lounge</h4>
+</div>
+</div>
+<div class="relative h-32 rounded-lg overflow-hidden flex items-end p-3 border border-outline-variant/20 group cursor-pointer bg-surface-container">
+<div class="absolute inset-0 bg-gradient-to-tr from-surface-variant to-transparent opacity-50"></div>
+<div class="relative z-10">
+<h4 class="font-body-lg text-[14px] font-semibold text-primary">Sunday Morning</h4>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 dark:bg-surface-container-highest/90 border-t border-outline-variant/10 backdrop-blur-xl">
+<div class="fixed bottom-0 left-0 w-full flex justify-around items-center py-2 px-4">
+<!-- Discovery (Active) -->
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim bg-secondary-container/30 rounded-full px-4 py-1 tap-highlight-transparent active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-caps text-label-caps">Discovery</span>
+</button>
+<!-- Tickets (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-colors tap-highlight-transparent active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1">confirmation_number</span>
+<span class="font-label-caps text-[10px] uppercase tracking-widest font-semibold">Tickets</span>
+</button>
+<!-- Profile (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-colors tap-highlight-transparent active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-caps text-[10px] uppercase tracking-widest font-semibold">Profile</span>
+</button>
+</div>
+</nav>
+</body></html>

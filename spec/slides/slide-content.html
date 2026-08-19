@@ -1,0 +1,1568 @@
+<title>MusicLounge Defence Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: light dark;
+  --ground:      #fbfaf8;
+  --surface:     #ffffff;
+  --surface-alt: #f3f1ed;
+  --ink:         #1c1a17;
+  --ink-soft:    #57524a;
+  --ink-faint:   #8a8378;
+  --rule:        #ddd8cf;
+  --accent:      #14595c;
+  --accent-soft: #e4efee;
+  --warn:        #8a5300;
+  --warn-soft:   #fbf0dc;
+  --warn-rule:   #e0b86a;
+  --star:        #7a4b12;
+  --weak:        #a8322b;
+  --measure: 74ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #16171a;
+    --surface:     #1d1f23;
+    --surface-alt: #24272c;
+    --ink:         #e9e6e0;
+    --ink-soft:    #b0aaa1;
+    --ink-faint:   #7e7970;
+    --rule:        #34383e;
+    --accent:      #6fc4c2;
+    --accent-soft: #1b3234;
+    --warn:        #e3ae5c;
+    --warn-soft:   #2e2519;
+    --warn-rule:   #6b5226;
+    --star:        #e0b06a;
+    --weak:        #c9564a;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:      #16171a;
+  --surface:     #1d1f23;
+  --surface-alt: #24272c;
+  --ink:         #e9e6e0;
+  --ink-soft:    #b0aaa1;
+  --ink-faint:   #7e7970;
+  --rule:        #34383e;
+  --accent:      #6fc4c2;
+  --accent-soft: #1b3234;
+  --warn:        #e3ae5c;
+  --warn-soft:   #2e2519;
+  --warn-rule:   #6b5226;
+  --star:        #e0b06a;
+  --weak:        #c9564a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 8rem;
+}
+
+/* ── masthead ───────────────────────────────────────────────────────────── */
+header.mast {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.6rem;
+  margin-bottom: 3rem;
+}
+header.mast .eyebrow {
+  font-size: .74rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0 0 .7rem;
+}
+header.mast h1 {
+  font-family: "Source Serif 4", ui-serif, Georgia, serif;
+  font-size: clamp(2rem, 4.6vw, 2.9rem);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  text-wrap: balance;
+  margin: 0 0 .6rem;
+}
+header.mast .sub { color: var(--ink-soft); max-width: var(--measure); margin: 0; }
+
+/* ── headings ───────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: "Source Serif 4", ui-serif, Georgia, serif;
+  font-weight: 600;
+  text-wrap: balance;
+  letter-spacing: -.01em;
+}
+h1 { font-size: 1.9rem; margin: 4rem 0 1rem; }
+h2 {
+  font-size: 1.05rem;
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 4.5rem 0 1.4rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--rule);
+}
+/* Each slide opens with a full-width bar, so a reader scrolling fast can find the
+   slide boundaries without reading them. */
+h3 {
+  font-size: 1.16rem;
+  margin: 2.6rem 0 1.2rem;
+  padding: .85rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 5px;
+}
+h4 { font-size: 1rem; margin: 2rem 0 .5rem; color: var(--ink-soft); }
+
+p, ul, ol { max-width: var(--measure); }
+p { margin: 0 0 1rem; }
+ul, ol { margin: 0 0 1rem; padding-left: 1.3rem; }
+li { margin-bottom: .35rem; }
+li::marker { color: var(--ink-faint); }
+
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px;
+}
+
+strong { font-weight: 650; }
+hr { border: none; border-top: 1px solid var(--rule); margin: 2.6rem 0; }
+
+/* ── code & filenames ───────────────────────────────────────────────────── */
+code {
+  font-family: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: .855em;
+  background: var(--surface-alt);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: .1em .38em;
+  word-break: break-word;
+}
+pre {
+  background: var(--surface-alt);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code { background: none; border: none; padding: 0; font-size: .84rem; }
+
+/* ── tables ─────────────────────────────────────────────────────────────── */
+.tablewrap { overflow-x: auto; margin: 0 0 1.4rem; border-radius: 6px; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 32rem;
+  font-size: .92rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+}
+th, td {
+  text-align: left;
+  padding: .58rem .8rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+thead th {
+  background: var(--surface-alt);
+  font-size: .76rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--rule);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+td code { font-size: .8em; }
+
+/* ── callouts ───────────────────────────────────────────────────────────── */
+blockquote {
+  margin: 0 0 1.4rem;
+  padding: .8rem 1.1rem;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 5px 5px 0;
+  color: var(--ink-soft);
+  font-size: .94rem;
+  max-width: var(--measure);
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+.warn {
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-rule);
+  border-left: 3px solid var(--warn-rule);
+  border-radius: 0 5px 5px 0;
+  padding: .85rem 1.1rem;
+  margin: 0 0 1.2rem;
+  color: var(--warn);
+  max-width: var(--measure);
+}
+.warn strong { color: var(--warn); }
+.warn code { background: transparent; border-color: var(--warn-rule); }
+
+/* ── badges inside slide headings ───────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  padding: .17em .5em;
+  border-radius: 3px;
+  vertical-align: .18em;
+  margin-left: .45rem;
+  white-space: nowrap;
+}
+.tag-core   { background: var(--accent); color: var(--ground); }
+.tag-backup { background: var(--surface-alt); color: var(--ink-soft); border: 1px solid var(--rule); }
+.tag-weak   { background: var(--weak); color: var(--ground); }
+h3.weak     { border-left-color: var(--weak); }
+.tag-star   { color: var(--star); font-size: .95rem; margin-left: .3rem; letter-spacing: 0; }
+
+/* ── speaker note ───────────────────────────────────────────────────────── */
+.note-vi {
+  border-left: 3px solid var(--rule);
+  padding-left: .95rem;
+  color: var(--ink-soft);
+  font-size: .95rem;
+}
+
+@media (max-width: 640px) {
+  .wrap { padding: 2.5rem 1rem 5rem; }
+  body { font-size: 16px; }
+  h3 { padding: .85rem .9rem .65rem; }
+}
+</style>
+<div class="wrap">
+<header class="mast">
+  <p class="eyebrow">SEP490 · Group GSU26SE68 · build specification</p>
+  <h1>MusicLounge</h1>
+  <p class="sub">Slide-by-slide content for the capstone defence deck: exact on-slide text, the diagram to place on each slide, and a Vietnamese speaker note. Structured against the reference SEP490 template. Generated from <code>SLIDE-CONTENT.md</code> — edit that file, not this page.</p>
+</header>
+<p><strong>Purpose of this file.</strong> It is a build spec for whoever assembles the PowerPoint — a
+human or another AI. Every slide below gives the exact on-slide text, the image file to
+place, and the layout it should follow. Nothing here is a placeholder unless it is
+explicitly marked <code>⚠️ NEEDS INPUT</code>.</p>
+<p><strong>Structure source.</strong> The slide order, section breakdown and layout patterns are copied
+from the reference deck <code>914268931-SEP490-G30-HouseCleaners-Network-Platform-Slide.pdf</code>
+(46 slides). Where MusicLounge has more material than the reference (10 use case
+diagrams instead of 5, 9 ER diagrams instead of 2), the extra slides are marked
+<span class="tag tag-backup">backup</span> and sit after Q&amp;A so the main deck stays defence-length.</p>
+<p><strong>Language.</strong> On-slide text is <strong>English</strong>, matching the reference deck and the SEP490
+document requirement. Each slide also carries a <strong>Vietnamese speaker note</strong> for the
+person presenting. Do not put the Vietnamese on the slide.</p>
+<p><strong>Images.</strong> All 34 diagrams are in <code>images/</code> beside this file. Every filename below is
+exact. Do not regenerate or redraw them — they are produced by a validated toolchain
+(<code>diagrams/</code>) that mechanically proves no overlapping shapes, no connector crossing an
+unrelated element, and no label sitting on the wrong line.</p>
+<hr />
+<h2>⚠️ Read this before building — three real constraints</h2>
+<p><strong>1. Most diagrams are portrait; a 16:9 slide is not.</strong>
+A 0.5-aspect image scaled to fit slide height fills only ~28% of the slide width, so its
+text is small. This is unavoidable — the diagrams are one-column by design because a
+two-column ERD layout was mathematically proven unable to keep connector labels off
+unrelated lines. The reference deck has the same issue on its own slides 20–24 and
+accepts it. Placement rule for every diagram: <strong>fit to slide height, centre
+horizontally, keep the aspect ratio, never stretch.</strong></p>
+<p>Diagrams that genuinely will not read on one slide (aspect &lt; 0.56, height &gt; 4000px) and
+should be <strong>split across two slides</strong> (top half / bottom half, with a "1 of 2" marker):</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Size</th>
+<th>Split?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flow-owner.png</code></td>
+<td>3600×6932</td>
+<td>yes — 2 slides</td>
+</tr>
+<tr>
+<td><code>flow-audience.png</code></td>
+<td>3360×6188</td>
+<td>yes — 2 slides</td>
+</tr>
+<tr>
+<td><code>erd-show-catalogue.png</code></td>
+<td>2336×5142</td>
+<td>yes — 2 slides</td>
+</tr>
+<tr>
+<td><code>erd-personalisation.png</code></td>
+<td>2064×4378</td>
+<td>yes — 2 slides</td>
+</tr>
+<tr>
+<td><code>flow-admin.png</code></td>
+<td>3000×4608</td>
+<td>borderline — 1 slide acceptable</td>
+</tr>
+<tr>
+<td><code>uc-staff.png</code></td>
+<td>1432×3296</td>
+<td>borderline — 1 slide acceptable</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2. Two items still need the team's own input</strong> — marked <code>⚠️ NEEDS INPUT</code> on slides
+3, 9 and 10. I did not invent student IDs, contact details, or market statistics.</p>
+<p><strong>3. Sections 02 and 05 describe process, not code.</strong> Slides 14–18 (Scrum, tools,
+Jira/Meet/GitHub screenshots) and 40 (testing tools) need <strong>your own screenshots</strong>. I
+have written the text; the screenshots are yours to capture.</p>
+<hr />
+<h2>Deck map</h2>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Slides</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cover &amp; Team</td>
+<td>1–4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>01 Project Introduction</td>
+<td>5–12</td>
+<td>8</td>
+</tr>
+<tr>
+<td>02 Project Management Plan</td>
+<td>13–18</td>
+<td>6</td>
+</tr>
+<tr>
+<td>03 Software Requirement Specification</td>
+<td>19–28</td>
+<td>10</td>
+</tr>
+<tr>
+<td>04 Software Design Description</td>
+<td>29–40</td>
+<td>12</td>
+</tr>
+<tr>
+<td>05 Software Testing</td>
+<td>41–45</td>
+<td>5</td>
+</tr>
+<tr>
+<td>06 Demo · 07 Q&amp;A · Close</td>
+<td>46–48</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>Main deck</strong></td>
+<td><strong>1–48</strong></td>
+<td><strong>48</strong></td>
+</tr>
+<tr>
+<td>Backup / appendix</td>
+<td>B1–B15</td>
+<td>15 (5 of them split over 2 slides → 20 physical)</td>
+</tr>
+</tbody>
+</table>
+<p>Every slide except section dividers carries the reference deck's furniture: FPT
+University + project logo top-left, product URL top-right, slide number bottom-left,
+product name bottom-right.</p>
+<hr />
+<h1>Cover &amp; Team</h1>
+<h3 class="qh">Slide 1 — Cover <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 1. Large two-line product name left, logo right, two QR
+codes side by side beneath, presenter block bottom-left.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>MusicLounge</strong></li>
+<li>Subtitle: <strong>Live-Music Venue Ticketing, Livestream &amp; Donation Platform</strong></li>
+<li>Badge: <code>SOFTWARE ENGINEERING CAPSTONE PROJECT</code></li>
+<li>Two QR codes, labelled <strong>FOR AUDIENCE</strong> and <strong>FOR VENUE OWNER</strong> ⚠️ generate from the
+  deployed URLs</li>
+<li><code>PRESENTED BY</code> / <strong>GROUP GSU26SE68</strong></li>
+<li>Top-right URL: ⚠️ your deployed site URL</li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Mở bằng một câu duy nhất — MusicLounge là nền tảng bán vé,
+livestream và donate dành riêng cho phòng trà nhạc sống nhỏ tại Việt Nam. Đừng giải
+thích kiến trúc ở slide này.</p>
+<hr />
+<h3 class="qh">Slide 2 — About Our Team: Supervisor <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 2. Photo left, name card right.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Heading: <strong>About Our Team</strong></li>
+<li><strong>Nguyễn Trọng Tài</strong> — Supervisor</li>
+<li><code>taint@fpt.edu.vn</code></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Giới thiệu ngắn, 1 câu cảm ơn giảng viên hướng dẫn.</p>
+<hr />
+<h3 class="qh">Slide 3 — About Our Team: Members <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 3. Row of portrait photos on a connecting line, name badge
+under each, student ID below that.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Heading: <strong>About Our Team</strong></li>
+<li>Subtitle: <em>Four engineers, one platform — from database schema to deployed cloud.</em></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Role</th>
+<th>Student ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hà Đông Hải</td>
+<td>Leader</td>
+<td>⚠️ NEEDS INPUT</td>
+</tr>
+<tr>
+<td>Huỳnh Trung Nhiên</td>
+<td>Member</td>
+<td>⚠️ NEEDS INPUT</td>
+</tr>
+<tr>
+<td>Nguyễn Quang Anh Khoa</td>
+<td>Member</td>
+<td>⚠️ NEEDS INPUT</td>
+</tr>
+<tr>
+<td>Nguyễn Huy Phúc</td>
+<td>Member</td>
+<td>⚠️ NEEDS INPUT</td>
+</tr>
+</tbody>
+</table>
+<div class="warn"><p>⚠️ <strong>NEEDS INPUT:</strong> student IDs (HE######) and photos. The reference deck shows 5
+members; we have 4 — lay the row out as 4 evenly spaced, not 5 with a gap.</p></div>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Mỗi người 1 câu: tên + mảng phụ trách. Tổng cộng dưới 30 giây.</p>
+<hr />
+<h3 class="qh">Slide 4 — Table of Content <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 4. Solid colour panel, numbered list, generous line spacing.</p>
+<p><strong>On-slide text</strong></p>
+<pre><code>01  PROJECT INTRODUCTION
+02  PROJECT MANAGEMENT PLAN
+03  SOFTWARE REQUIREMENT SPECIFICATION
+04  SOFTWARE DESIGN DESCRIPTION
+05  SOFTWARE TESTING
+06  DEMO
+07  Q &amp; A
+</code></pre>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Đọc lướt, không dừng. Nói rõ phần Demo nằm gần cuối để hội đồng
+biết sẽ được xem sản phẩm chạy thật.</p>
+<hr />
+<h1>01 — Project Introduction</h1>
+<h3 class="qh">Slide 5 — Section divider <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 5. Photo panel left, oversized two-line heading right.
+<strong>On-slide text:</strong> <strong>Project Introduction</strong>
+<strong>Image:</strong> ⚠️ a photo of a small live-music venue / acoustic café interior.
+<strong>Speaker note (VI):</strong> Chuyển cảnh, không nói gì thêm.</p>
+<hr />
+<h3 class="qh">Slide 6 — 1.1 Project Scope <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 6. Five vertical rounded pillars, icon in a circle at the
+top of each, <code>01</code>–<code>05</code> badge at the foot.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Eyebrow: <code>1. PROJECT INTRODUCTION</code> / <code>1.1 Project Scope</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Pillar</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td><strong>Ticketing built for a venue, not an event</strong></td>
+<td>Online and walk-in sales, seating zones and tiers, whole-evening validity, QR check-in at the door.</td>
+</tr>
+<tr>
+<td>02</td>
+<td><strong>Gated livestream</strong></td>
+<td>Only a genuine ticket holder can watch, with a per-ticket device limit.</td>
+</tr>
+<tr>
+<td>03</td>
+<td><strong>Transparent performer donations</strong></td>
+<td>Every tip is traceable from the audience member to the performer's payout, on a double-entry ledger.</td>
+</tr>
+<tr>
+<td>04</td>
+<td><strong>In-venue operations</strong></td>
+<td>Food and drink ordering from the table, a staff order board, and counter ticket sales.</td>
+</tr>
+<tr>
+<td>05</td>
+<td><strong>Venue presence</strong></td>
+<td>A 360° virtual tour, AI-generated posters, and personalised show recommendations.</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nhấn trụ cột 1 và 3 — đó là hai thứ khác biệt so với nền tảng bán
+vé thông thường. Trụ 4 và 5 là phần mở rộng, nói nhanh.</p>
+<hr />
+<h3 class="qh">Slide 7 — 1.2 Business Opportunity <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 7. Photo + oversized section number left, three stacked
+colour boxes right, closing paragraph beneath.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Big label: <strong>1.2 BUSINESS OPPORTUNITY</strong></li>
+<li>Box 1 — <strong>A SEGMENT NOBODY BUILT FOR</strong> — General ticketing platforms assume one fixed
+  showtime. A lounge runs a different show most nights and keeps selling after the music
+  starts.</li>
+<li>Box 2 — <strong>STREAMING WITH NO TICKET GATE</strong> — General streaming platforms cannot limit a
+  broadcast to people who actually paid.</li>
+<li>Box 3 — <strong>TIPS WITH NO PAPER TRAIL</strong> — Performer tips happen as cash or ad-hoc
+  transfers, with no shared record of what was collected or paid out.</li>
+<li>Closing line: <em>No existing product brings ticketing, gated livestream, auditable
+  donations and in-venue operations together for this segment. That gap is the
+  opportunity.</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Đây là slide "vì sao làm". Nói theo trình tự: chủ phòng trà đang
+dùng 3 công cụ rời rạc, và tiền tip cho nghệ sĩ hiện không ai kiểm soát được.</p>
+<hr />
+<h3 class="qh">Slide 8 — 1.3 Motivation Factors <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 8. Four boxes in a 2×2 grid, oversized ghost number in each.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Eyebrow: <code>1. PROJECT INTRODUCTION</code> / <code>1.3 Project Background — Motivation Factors</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Heading</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td><strong>RISING DEMAND FOR INTIMATE LIVE MUSIC</strong></td>
+<td>Music lounges, acoustic cafés and <em>phòng trà</em> are drawing younger audiences back to small rooms.</td>
+</tr>
+<tr>
+<td>02</td>
+<td><strong>THE ROOM HAS A CEILING</strong></td>
+<td>A venue can only sell as many tickets as it has seats; livestream is the only way past that limit.</td>
+</tr>
+<tr>
+<td>03</td>
+<td><strong>MANUAL, PAPER-BASED OPERATIONS</strong></td>
+<td>Door sales are cash and paper; there is no shared record between the counter, the door and the owner.</td>
+</tr>
+<tr>
+<td>04</td>
+<td><strong>PERFORMERS CANNOT SEE THEIR OWN MONEY</strong></td>
+<td>A performer has no way to verify what the venue collected on their behalf.</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Bốn yếu tố này chính là bốn thứ dẫn tới bốn nhóm chức năng chính.
+Nếu hội đồng hỏi "vì sao cần livestream", câu trả lời nằm ở ô 02.</p>
+<hr />
+<h3 class="qh">Slide 9 — 1.4 Market Situation (World) <span class="tag tag-core">core</span> ⚠️ NEEDS INPUT</h3>
+<p><strong>Layout:</strong> Reference slide 9. Infographic-heavy: a chart, a map, and two labelled
+callout blocks.</p>
+<div class="warn"><p>⚠️ <strong>I have not written figures for this slide, on purpose.</strong> No market-size data exists
+anywhere in the project repository, and inventing a number that a committee can check is
+a worse outcome than an honest gap. Source these before the defence and cite them on the
+slide the way the reference deck does (<code>Source: Statista (2024)</code>):</p></div>
+<ul>
+<li>Global live-music / live-events market size and CAGR — try <strong>Statista</strong>, <strong>IFPI Global
+  Music Report</strong>, <strong>PwC Global Entertainment &amp; Media Outlook</strong>.</li>
+<li>Livestream-concert or virtual-events market size — try <strong>Grand View Research</strong>,
+  <strong>MarketsandMarkets</strong>.</li>
+<li>Creator-tipping / virtual-gifting volume — try <strong>Streamlabs / Stream Hatchet</strong>
+  quarterly reports.</li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Chỉ nêu 2–3 con số, mỗi con số kèm nguồn. Không đọc hết bảng.</p>
+<hr />
+<h3 class="qh">Slide 10 — 1.5 Market Situation (Vietnam) <span class="tag tag-core">core</span> ⚠️ NEEDS INPUT</h3>
+<p><strong>Layout:</strong> Reference slide 10. Three or four icon + big-number pairs, source line at
+the bottom right.</p>
+<div class="warn"><p>⚠️ <strong>Same as slide 9 — figures needed.</strong> What to source:</p></div>
+<ul>
+<li>Number of live-music venues / cafés with live performance in Hà Nội and TP.HCM.</li>
+<li>Vietnamese online event-ticketing market value (<strong>Ticketbox</strong>, <strong>VNPay</strong>, or
+  <strong>Statista Vietnam</strong> publish partial figures).</li>
+<li>Vietnamese digital-payment adoption rate — supports the VNPay-only design decision.</li>
+<li>Smartphone / mobile-internet penetration — supports the mobile Staff and F&amp;B apps.</li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Slide này quan trọng vì chứng minh thị trường VN đủ lớn. Cố gắng
+lấy được ít nhất 1 con số về số lượng phòng trà / quán cà phê nhạc sống.</p>
+<hr />
+<h3 class="qh">Slide 11 — 1.6 Existing Systems <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 11. Three product logos across the top, comparison table
+beneath with the criteria as rows.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Eyebrow: <code>1. PROJECT INTRODUCTION</code> / <code>1.6 Existing Systems</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Ticketbox</strong></th>
+<th><strong>Twitch + Streamlabs</strong></th>
+<th><strong>Veeps</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What it is</td>
+<td>Vietnam's largest general event ticketing platform</td>
+<td>Global live-stream + real-time tipping</td>
+<td>Ticketed livestream for touring artists (Live Nation)</td>
+</tr>
+<tr>
+<td>Ticketing</td>
+<td>✅ QR entry, seat &amp; zone</td>
+<td>❌</td>
+<td>✅ pay-per-view / subscription</td>
+</tr>
+<tr>
+<td>Gated livestream</td>
+<td>❌</td>
+<td>❌ open to anyone</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Performer tipping</td>
+<td>❌</td>
+<td>✅ but paid direct to the individual</td>
+<td>⚠️ fixed charity option only</td>
+</tr>
+<tr>
+<td>In-venue F&amp;B / door tools</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Per-venue recurring tooling</td>
+<td>❌ each event is standalone</td>
+<td>❌</td>
+<td>❌ built for large venues</td>
+</tr>
+<tr>
+<td>Venue-side settlement</td>
+<td>❌</td>
+<td>❌ no venue in the money path</td>
+<td>❌ money goes artist-direct</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Footer line: <em>Each covers part of the problem. None covers a venue that runs a different
+  show every night and is legally the intermediary handling a performer's money.</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Đây là slide dễ bị hỏi nhất. Chuẩn bị sẵn: "Veeps gần nhất với mô
+hình của chúng em — hybrid vừa diễn trực tiếp vừa livestream — nhưng Veeps làm cho nghệ
+sĩ lưu diễn ở venue lớn, và tiền đi thẳng từ vé sang nghệ sĩ, không có bước đối soát ở
+phía venue."</p>
+<hr />
+<h3 class="qh">Slide 12 — 1.7 Regulatory Basis <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Two columns of three cards. Decree number as the card heading, one line of
+consequence beneath. <em>(No reference-deck equivalent — this is a MusicLounge-specific
+strength worth its own slide.)</em></p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Heading: <strong>Built Against Vietnamese Regulation, Not Retrofitted</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Regulation</th>
+<th>What it forced into the design</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Decree 52/2024</strong> — payment intermediation</td>
+<td>All money moves through licensed intermediary VNPay; the platform never touches card data.</td>
+</tr>
+<tr>
+<td><strong>Decree 117/2025</strong> — withholding tax</td>
+<td>Tax withheld per transaction, posted to a dedicated tax ledger account.</td>
+</tr>
+<tr>
+<td><strong>Decree 147/2024</strong> — takedown &amp; phone verification</td>
+<td>A 24-hour moderation SLA with an internal warning at ~20 hours; verified-phone field on the user record.</td>
+</tr>
+<tr>
+<td><strong>Decree 85/2021</strong> — mandatory complaint channel</td>
+<td>The complaint entity plus a guest-accessible filing and lookup path.</td>
+</tr>
+<tr>
+<td><strong>Law 91/2025/QH15</strong> — personal data protection</td>
+<td>AI consent defaults off; export and erasure on request; erasure anonymises in place so legally-retained financial records survive.</td>
+</tr>
+<tr>
+<td><strong>Decree 144/2020 + VCPMC</strong> — performance licensing</td>
+<td>A permit reference, and a royalty reference where applicable, required before a show may be submitted for review.</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Slide "ăn điểm". Nhấn ý cuối: xoá dữ liệu cá nhân là <strong>ẩn danh
+tại chỗ</strong>, không xoá cứng — vì Luật Kế toán yêu cầu giữ chứng từ 10 năm. Đây là chỗ hai
+luật xung đột và nhóm đã xử lý có chủ đích.</p>
+<hr />
+<h1>02 — Project Management Plan</h1>
+<h3 class="qh">Slide 13 — Section divider <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 12. Agile lifecycle wheel left, oversized two-line heading
+right.
+<strong>On-slide text:</strong> <strong>Software</strong> / <strong>LIFE CYCLE</strong>
+<strong>Speaker note (VI):</strong> Chuyển cảnh.</p>
+<hr />
+<h3 class="qh">Slide 14 — How We Applied Scrum <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 13. Sprint diagram left, five numbered rows right.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Heading: <strong>HOW WE APPLIED</strong></li>
+<li>Project duration: <strong>20/05/2026 – 31/08/2026 · 15 weeks · 101 days</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Ceremony</th>
+<th>What we did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td><strong>SPRINT PLANNING</strong></td>
+<td>Define sprint goals; pull items from the product backlog into the sprint backlog.</td>
+</tr>
+<tr>
+<td>02</td>
+<td><strong>DAILY SCRUM</strong></td>
+<td>15-minute stand-up: what was done, what is next, what is blocked.</td>
+</tr>
+<tr>
+<td>03</td>
+<td><strong>DEVELOPMENT &amp; TESTING</strong></td>
+<td>Implement user stories; run unit, integration and acceptance tests continuously.</td>
+</tr>
+<tr>
+<td>04</td>
+<td><strong>SPRINT REVIEW</strong></td>
+<td>Demo completed features to the supervisor; collect feedback.</td>
+</tr>
+<tr>
+<td>05</td>
+<td><strong>SPRINT RETROSPECTIVE</strong></td>
+<td>Reflect on the process; agree actions for the next sprint.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Callout: <strong>Total estimated effort: 488 man-days across 75 work-breakdown items</strong></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nếu bị hỏi sprint dài bao nhiêu, trả lời theo đúng thực tế của
+nhóm — đừng nói con số đẹp mà Jira không chứng minh được.</p>
+<hr />
+<h3 class="qh">Slide 15 — Tools Used <span class="tag tag-core">core</span> ⚠️ NEEDS SCREENSHOT</h3>
+<p><strong>Layout:</strong> Reference slide 14. Tool logos connected by thin lines around a centre.</p>
+<p><strong>On-slide text</strong> — Heading: <strong>TOOLS USED</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Jira</strong></td>
+<td>Backlog and sprint tracking (Kanban)</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>Source control and pull-request review</td>
+</tr>
+<tr>
+<td><strong>GitHub Actions</strong></td>
+<td>CI/CD — build, test, deploy to Azure</td>
+</tr>
+<tr>
+<td><strong>Google Meet</strong></td>
+<td>Sprint planning and review with the supervisor</td>
+</tr>
+<tr>
+<td><strong>Discord / Messenger</strong></td>
+<td>Internal daily communication</td>
+</tr>
+<tr>
+<td><strong>Figma + Google Stitch</strong></td>
+<td>UI design and prototyping</td>
+</tr>
+<tr>
+<td><strong>Visual Studio / VS Code</strong></td>
+<td>Development</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nói nhanh, đây là slide hình.</p>
+<hr />
+<h3 class="qh">Slide 16 — Project Tracking <span class="tag tag-core">core</span> ⚠️ NEEDS SCREENSHOT</h3>
+<p><strong>Layout:</strong> Reference slide 15 — full-bleed Jira board screenshot, thin caption.
+<strong>On-slide text:</strong> Heading <strong>PROJECT TRACKING</strong>; caption: <em>Jira board — sprint backlog,
+in-progress and done columns.</em>
+<strong>Speaker note (VI):</strong> Chỉ vào cột Done, nói số story hoàn thành ở sprint gần nhất.</p>
+<hr />
+<h3 class="qh">Slide 17 — Sprint Review <span class="tag tag-core">core</span> ⚠️ NEEDS SCREENSHOT</h3>
+<p><strong>Layout:</strong> Reference slide 16 — Google Meet recording screenshot with participant tiles.
+<strong>On-slide text:</strong> Heading <strong>SPRINT REVIEW</strong>
+<strong>Speaker note (VI):</strong> 1 câu: mỗi sprint đều demo cho giảng viên hướng dẫn và ghi nhận
+feedback.</p>
+<hr />
+<h3 class="qh">Slide 18 — Manage Code <span class="tag tag-core">core</span> ⚠️ NEEDS SCREENSHOT</h3>
+<p><strong>Layout:</strong> Reference slide 17 — GitHub commit history screenshot, dark theme.
+<strong>On-slide text:</strong> Heading <strong>MANAGE CODE</strong>; caption: <em>Feature-branch workflow — every
+change reviewed in a pull request before merge.</em>
+<strong>Speaker note (VI):</strong> Nếu hội đồng hỏi ai làm gì, mở GitHub Insights → Contributors.</p>
+<hr />
+<h1>03 — Software Requirement Specification</h1>
+<h3 class="qh">Slide 19 — Section divider <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 18. Photo panel left, three-line oversized heading right.
+<strong>On-slide text:</strong> <strong>Software</strong> / <strong>Requirement</strong> / <strong>Specification</strong></p>
+<hr />
+<h3 class="qh">Slide 20 — Context Diagram <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/context.png</code> — 3800×2092, aspect 1.82. <strong>Fits 16:9 well — place
+nearly full-bleed.</strong>
+<strong>Layout:</strong> Reference slide 19. Small title top-left, diagram filling the rest.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>Context Diagram</strong></li>
+<li>Optional footnote: <em>DFD notation (Yourdon / DeMarco): the system is one process, every
+  external party is a rectangle, every arrow is named for the data it carries.</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Chỉ vào hình tròn giữa — toàn bộ hệ thống. 10 thực thể ngoài chia
+hai nhóm: người dùng bên trái, dịch vụ bên phải. Nhấn: mỗi mũi tên đặt tên theo <strong>dữ
+liệu</strong>, không phải hành động — đó là đúng chuẩn DFD.</p>
+<hr />
+<h3 class="qh">Slide 21 — Actors &amp; Roles <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Six cards, 3×2 grid. Role name as heading, one-line description, a small
+badge showing whether the role has a login.</p>
+<p><strong>On-slide text</strong> — Heading: <strong>Actors</strong></p>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Login?</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Guest</strong></td>
+<td>no</td>
+<td>Browses published shows and venues, explores a 360° tour, files a complaint with a reference number — but cannot buy, watch or donate.</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>✅</td>
+<td>Discovers shows, buys and manages tickets, watches gated livestreams, tips performers, orders food and drink in-venue, rates shows.</td>
+</tr>
+<tr>
+<td><strong>Owner</strong></td>
+<td>✅</td>
+<td>Registers a venue, manages seating zones and the 360° tour, creates and operates shows, handles donations, views earnings. Pays a platform subscription.</td>
+</tr>
+<tr>
+<td><strong>Staff</strong></td>
+<td>✅</td>
+<td>Assigned by an Owner to exactly one venue. Sells walk-in tickets, checks tickets at the door, works the F&amp;B board, starts and ends a broadcast.</td>
+</tr>
+<tr>
+<td><strong>Admin</strong></td>
+<td>✅</td>
+<td>Approves venues, moderates shows and livestreams, processes refunds, verifies bank accounts, issues penalties, resolves complaints, monitors the ledger.</td>
+</tr>
+<tr>
+<td><strong>Performer</strong></td>
+<td><strong>no</strong></td>
+<td>Appears in a show's line-up and receives donations. Has a public profile and a payout bank account, but no login — the Owner maintains the record.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Footer: <strong>6 actors · 4 login roles · 109 use cases</strong></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Hai chỗ dễ bị hỏi. (1) Performer <strong>không có tài khoản đăng nhập</strong> —
+đây là quyết định có chủ đích, chủ venue quản lý hộ. (2) Admin được tạo thẳng trong CSDL,
+cố ý không có đường tự đăng ký.</p>
+<hr />
+<h3 class="qh">Slide 22 — Use Case Diagram: Guest <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/uc-guest.png</code> — 2036×3260, aspect 0.62. Fit to height, centred.
+<strong>On-slide text:</strong> Title <strong>UCD for Guest</strong> · badge <code>14 use cases</code>
+<strong>Speaker note (VI):</strong> Guest xem được nhưng không mua được. Đường <code>«include»</code> tới "Look
+up a complaint" là kênh bắt buộc theo Nghị định 85/2021.</p>
+<hr />
+<h3 class="qh">Slide 23 — Use Case Diagram: Audience — Account &amp; Discovery <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/uc-audience-account.png</code> — 1668×3116, aspect 0.54. Fit to height.
+<strong>On-slide text:</strong> Title <strong>UCD for Audience — Account &amp; Discovery</strong>
+<strong>Speaker note (VI):</strong> Nhóm tài khoản, đăng nhập, khám phá show và gợi ý cá nhân hoá.</p>
+<hr />
+<h3 class="qh">Slide 24 — Use Case Diagram: Audience — Transactions <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/uc-audience-transaction.png</code> — 2436×3580, aspect 0.68. Fit to height.
+<strong>On-slide text:</strong> Title <strong>UCD for Audience — Ticketing, Livestream, Donation &amp; F&amp;B</strong>
+<strong>Speaker note (VI):</strong> Slide trọng tâm của actor Audience. Nếu hội đồng hỏi về <code>«extend»</code>,
+giải thích: mũi tên đi <strong>từ</strong> use case mở rộng <strong>tới</strong> use case cơ sở, và chỉ chạy khi
+điều kiện đúng — khác với <code>«include»</code> luôn luôn chạy.</p>
+<hr />
+<h3 class="qh">Slide 25 — Use Case Diagram: Owner <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/uc-owner-show.png</code> — 2228×3224, aspect 0.69. Fit to height.
+<strong>On-slide text:</strong> Title <strong>UCD for Owner — Show Management</strong>
+<strong>Speaker note (VI):</strong> Owner tạo show ở trạng thái Draft, gửi duyệt, Admin duyệt mới
+Published. Không có đường tắt.</p>
+<blockquote>
+<p>Owner has two more use case diagrams — <code>uc-owner-venue.png</code> and <code>uc-owner-finance.png</code>
+— placed in the backup section as <strong>B1</strong> and <strong>B2</strong>.</p>
+</blockquote>
+<hr />
+<h3 class="qh">Slide 26 — Use Case Diagram: Staff <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/uc-staff.png</code> — 1432×3296, aspect 0.43. Fit to height; borderline
+legibility, consider splitting.
+<strong>On-slide text:</strong> Title <strong>UCD for Staff</strong> · badge <code>14 use cases</code>
+<strong>Speaker note (VI):</strong> Staff là actor duy nhất dùng app mobile trong lúc show đang diễn:
+bán vé tại quầy, soát vé, bảng order đồ ăn, bật/tắt phát sóng.</p>
+<hr />
+<h3 class="qh">Slide 27 — Use Case Diagram: Admin <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/uc-admin-moderation.png</code> — 1432×2264, aspect 0.63. Fit to height.
+<strong>On-slide text:</strong> Title <strong>UCD for Admin — Moderation &amp; Compliance</strong>
+<strong>Speaker note (VI):</strong> Kiểm duyệt venue, show, livestream; SLA 24 giờ theo Nghị định
+147/2024.</p>
+<blockquote>
+<p><code>uc-admin-platform.png</code> is backup slide <strong>B3</strong>.</p>
+</blockquote>
+<hr />
+<h3 class="qh">Slide 28 — Functional &amp; Non-functional Requirements <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 28. Two tables side by side, coloured header rows.</p>
+<p><strong>Left table — Functional Requirements</strong></p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Module</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IAM</td>
+<td>Identity &amp; Access Management</td>
+</tr>
+<tr>
+<td>VEN</td>
+<td>Venue Management</td>
+</tr>
+<tr>
+<td>SHW</td>
+<td>Show Management</td>
+</tr>
+<tr>
+<td>TKT</td>
+<td>Ticketing &amp; Check-in</td>
+</tr>
+<tr>
+<td>LIV</td>
+<td>Livestream</td>
+</tr>
+<tr>
+<td>DON</td>
+<td>Donation &amp; Performer Payout</td>
+</tr>
+<tr>
+<td>FNB</td>
+<td>Food &amp; Beverage Ordering</td>
+</tr>
+<tr>
+<td>PAY</td>
+<td>Payment &amp; Settlement</td>
+</tr>
+<tr>
+<td>SUB</td>
+<td>Subscription</td>
+</tr>
+<tr>
+<td>MOD</td>
+<td>Moderation &amp; Compliance</td>
+</tr>
+<tr>
+<td>NOT</td>
+<td>Notification</td>
+</tr>
+<tr>
+<td>ADM</td>
+<td>Admin Console</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Right table — Non-functional Requirements</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>User interfaces</strong></td>
+<td>Chrome, Firefox, Edge, Safari; responsive for desktop, tablet and mobile</td>
+</tr>
+<tr>
+<td><strong>External interfaces</strong></td>
+<td>Payment: VNPay · Video: Mux / Cloudflare Stream · Push: Firebase Cloud Messaging · SMS: Twilio · Identity: Google OAuth · Maps: Google Maps · AI: Gemini / OpenAI</td>
+</tr>
+<tr>
+<td><strong>Hardware interfaces</strong></td>
+<td>Desktop and mobile devices; camera required for QR check-in</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>JWT bearer authentication; secrets in Azure Key Vault; the platform never handles card data</td>
+</tr>
+<tr>
+<td><strong>Reliability</strong></td>
+<td>Payment confirmation is driven by a server-to-server IPN callback, so a ticket still confirms if the customer closes the browser</td>
+</tr>
+<tr>
+<td><strong>Auditability</strong></td>
+<td>Every money movement is a balanced double-entry ledger journal, verified by a daily integrity job</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Footer: <strong>25 controllers · 209 endpoints · 30 business rules · 68 entities</strong></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nhấn hai dòng cuối bảng phải — IPN và sổ cái kép. Đó là hai quyết
+định kỹ thuật bảo vệ được trước hội đồng.</p>
+<hr />
+<h1>04 — Software Design Description</h1>
+<h3 class="qh">Slide 29 — Section divider <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 29. Photo panel left, three-line oversized heading right.
+<strong>On-slide text:</strong> <strong>Software</strong> / <strong>Design</strong> / <strong>Description</strong></p>
+<hr />
+<h3 class="qh">Slide 30 — System Architecture <span class="tag tag-core">core</span> <span class="tag-star" title="key slide">★</span></h3>
+<p><strong>Image:</strong> <code>images/architecture-system.png</code> — 4200×2820, aspect 1.49. Fit to height,
+centred. <strong>This is the slide the reference deck's slide 30 corresponds to.</strong>
+<strong>Layout:</strong> Reference slide 30. Small title top-left, diagram filling the rest.</p>
+<p><strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>System Architecture</strong></li>
+<li>Optional caption strip: <em>ASP.NET Core 8 on Azure App Service · React 18 on Static Web
+  Apps · Azure SQL · 5 third-party services</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Đi theo đường dữ liệu, đừng đọc từng ô. "Người dùng → trình duyệt
+→ Static Web Apps tải bundle React; mọi lệnh gọi API đi thẳng vào App Service. Bên trong
+App Service là stack .NET: controller → MediatR → EF Core, cộng SignalR cho realtime và
+Hangfire cho job nền. Bên trái là dịch vụ Azure, bên phải là dịch vụ bên thứ ba." Nhấn:
+mỗi mũi tên hai đầu vì đều là request–response, và mỗi đường đều thẳng nên nhãn không thể
+bị đọc nhầm sang đường khác.</p>
+<hr />
+<h3 class="qh">Slide 31 — Layered Architecture <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/architecture-layers.png</code> — 3440×3560, aspect 0.97. Fit to height.
+<strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>Layered Architecture — Clean Architecture + CQRS</strong></li>
+<li>Callout: <em>Every dependency points inward. Domain references nothing at all.</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Slide này trả lời câu "cái gì phụ thuộc cái gì", khác slide trước
+là "cái gì chạy bằng công nghệ gì". Điểm nhấn: Infrastructure nằm <strong>ngoài</strong> nhưng mũi tên
+vẫn trỏ <strong>vào trong</strong> — vì Application khai báo interface, Infrastructure hiện thực. Nhờ
+vậy test được business rule mà không cần database.</p>
+<hr />
+<h3 class="qh">Slide 32 — Package Diagram <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/package-application.png</code> — 2600×2480, aspect 1.05. Fit to height.
+<strong>On-slide text:</strong> Title <strong>Package Diagram</strong> · footnote <em>UML 2.5.1 — dependencies use
+the <code>«use»</code> keyword.</em>
+<strong>Speaker note (VI):</strong> 28 feature folder trong Application, mỗi folder là một bounded
+context nhỏ.</p>
+<hr />
+<h3 class="qh">Slide 33 — Class Diagram (CQRS) <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/class-cqrs.png</code> — 3000×2800, aspect 1.07. Fit to height.
+<strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>Class Diagram — CQRS Request Pipeline</strong></li>
+<li>Callout: <em>Four pipeline behaviours run in a fixed order: Logging → Validation →
+  ActiveUser → Transaction.</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Chỉ vào tam giác rỗng — đó là ký hiệu realization (hiện thực
+interface) theo UML, không phải mũi tên thường. Nhấn: chỉ <code>TransactionBehavior</code> bị ràng
+buộc vào <code>ICommand</code>, nên query không mở transaction vô ích.</p>
+<hr />
+<h3 class="qh">Slide 34 — Deployment Diagram <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/deployment.png</code> — 3760×2840, aspect 1.32. Fit to height.
+<strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>Deployment Diagram — MusicLounge on Microsoft Azure</strong></li>
+<li>Footnote: <em>UML 2.5.1 — a communication path is an association: a plain line with no
+  arrowhead.</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nếu hội đồng hỏi vì sao đường không có mũi tên: theo UML, đường
+liên lạc trong deployment là <strong>association</strong>, mũi tên có hướng sẽ mang nghĩa dependency —
+sai chuẩn. App Service lấy secret từ Key Vault bằng managed identity nên không có bí mật
+nào nằm trong gói triển khai.</p>
+<hr />
+<h3 class="qh">Slide 35 — Database Design: Core <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/erd-core.png</code> — 3960×2560, aspect 1.55. Fit to height.
+<strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>Database Design — Core Entities</strong></li>
+<li>Footnote: <em>Crow's Foot / Information Engineering notation. Inner mark = minimum
+  (optionality), outer mark = maximum.</em></li>
+<li>Badge: <strong>68 entities · 95 relationships</strong></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> 20 thực thể cốt lõi trên tổng 68. Nếu bị hỏi vì sao một số quan hệ
+có vòng tròn thay vì gạch: vòng tròn = tối thiểu 0, tức khoá ngoại nullable trong code.
+Đây là đối chiếu trực tiếp từ entity C#, không vẽ theo cảm tính.</p>
+<hr />
+<h3 class="qh">Slide 36 — Database Design: Money <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/erd-money.png</code> — 1520×3124, aspect 0.49. Fit to height.
+<strong>On-slide text:</strong> Title <strong>Database Design — Payment, Settlement &amp; Ledger</strong>
+<strong>Speaker note (VI):</strong> Miền quan trọng nhất. Mỗi giao dịch tiền sinh ra một bút toán cân
+bằng nợ–có; có job chạy hằng ngày kiểm tra tính toàn vẹn sổ cái.</p>
+<blockquote>
+<p>The other 7 domain ERDs are backup slides <strong>B4–B10</strong>.</p>
+</blockquote>
+<hr />
+<h3 class="qh">Slide 37 — Sequence: Ticket Purchase <span class="tag tag-core">core</span> <span class="tag-star" title="key slide">★</span></h3>
+<p><strong>Image:</strong> <code>images/seq-ticket-purchase.png</code> — 3261×2899, aspect 1.12. Fit to height.
+<strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>Sequence Diagram — Ticket Purchase (hold → pay → confirm via VNPay IPN)</strong></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Kể như một câu chuyện. "Khán giả chọn hạng vé → hệ thống giữ chỗ
+15 phút dưới khoá đặt vé → tạo Payment và Ticket ở trạng thái Pending → chuyển sang
+VNPay." Điểm nhấn quan trọng nhất: <strong>IPN server-to-server mới là xác nhận có thẩm quyền,
+không phải redirect trình duyệt</strong> — nên khách tắt tab vé vẫn được xác nhận. Handler
+idempotent vì VNPay có retry. Nhánh dưới: hết 15 phút, job xoá bản ghi giữ chỗ; không cần
+hoàn lại bộ đếm nào vì số chỗ trống được tính động.</p>
+<hr />
+<h3 class="qh">Slide 38 — Sequence: Donation <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/seq-donation.png</code> — 3291×2462, aspect 1.34. Fit to height.
+<strong>On-slide text:</strong> Title <strong>Sequence Diagram — Performer Donation &amp; Split</strong>
+<strong>Speaker note (VI):</strong> Tỷ lệ chia được <strong>chốt lại tại thời điểm donate</strong> và lưu vào bản
+ghi, nên đổi cấu hình sau này không làm sai lệch giao dịch cũ.</p>
+<hr />
+<h3 class="qh">Slide 39 — Sequence: Moderation <span class="tag tag-core">core</span></h3>
+<p><strong>Image:</strong> <code>images/seq-moderation.png</code> — 3039×2391, aspect 1.27. Fit to height.
+<strong>On-slide text:</strong> Title <strong>Sequence Diagram — Show Moderation &amp; 24-hour SLA</strong>
+<strong>Speaker note (VI):</strong> Gemini chấm điểm rủi ro để xếp hàng ưu tiên, <strong>không tự quyết</strong> —
+người vẫn là người duyệt cuối. Nếu Gemini lỗi, hệ thống trả điểm trung tính chứ không
+chặn request.</p>
+<hr />
+<h3 class="qh">Slide 40 — State Machines <span class="tag tag-core">core</span></h3>
+<p><strong>Images:</strong> <code>images/state-show.png</code> (3308×2162) <strong>and</strong> <code>images/state-ticket.png</code>
+(2848×1764) — place <strong>side by side</strong>, each fit to height. Combined aspect works on 16:9.
+<strong>On-slide text</strong></p>
+<ul>
+<li>Title: <strong>State Machines — Show and Ticket lifecycle</strong></li>
+<li>Left caption: <em>LoungeShowStatus</em> · Right caption: <em>TicketStatus</em></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nếu hội đồng tinh ý sẽ hỏi về <code>Refunded</code>. Trả lời thẳng: enum có
+khai báo nhưng <strong>không nơi nào trong code gán giá trị đó</strong> — vé hoàn tiền kết thúc ở
+<code>Cancelled</code> kèm bút toán đảo. Nhóm vẽ nó vì trạng thái tồn tại trong schema, và ghi chú
+rõ là không tới được. Đây là điểm cộng về tính trung thực, đừng giấu.</p>
+<hr />
+<h1>05 — Software Testing</h1>
+<h3 class="qh">Slide 41 — Section divider <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 37. Illustration left, two-line oversized heading right.
+<strong>On-slide text:</strong> <strong>Software</strong> / <strong>Testing</strong></p>
+<hr />
+<h3 class="qh">Slide 42 — Testing Strategy <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 39. Four overlapping circles, <code>STEP 01</code>–<code>STEP 04</code>.</p>
+<p><strong>On-slide text</strong> — Heading: <strong>Testing Strategy</strong></p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Level</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td><strong>Unit</strong></td>
+<td>Domain rules and command/query handlers, isolated from database and network.</td>
+</tr>
+<tr>
+<td>02</td>
+<td><strong>Integration</strong></td>
+<td>Handler + EF Core + real database, including transaction rollback behaviour.</td>
+</tr>
+<tr>
+<td>03</td>
+<td><strong>Frontend component</strong></td>
+<td>React components and hooks against a mocked API.</td>
+</tr>
+<tr>
+<td>04</td>
+<td><strong>End-to-end</strong></td>
+<td>A real browser driving the deployed stack through complete user journeys.</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nhấn tầng 2 — test tích hợp chạy với database thật, nên bắt được
+lỗi rollback mà unit test không thấy.</p>
+<hr />
+<h3 class="qh">Slide 43 — Testing Tools <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 40. Logo row, generous whitespace.</p>
+<p><strong>On-slide text</strong> — Heading: <strong>Testing Tools</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>xUnit</strong> + <strong>FluentAssertions</strong></td>
+<td>Backend unit &amp; integration</td>
+</tr>
+<tr>
+<td><strong>Testcontainers / SQL Server</strong></td>
+<td>Integration database</td>
+</tr>
+<tr>
+<td><strong>Vitest</strong> + <strong>React Testing Library</strong></td>
+<td>Frontend component</td>
+</tr>
+<tr>
+<td><strong>Playwright</strong></td>
+<td>End-to-end</td>
+</tr>
+<tr>
+<td><strong>GitHub Actions</strong></td>
+<td>Runs every level on each pull request</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Nói 1 câu: toàn bộ 5 công cụ này chạy tự động trên mỗi pull request.</p>
+<hr />
+<h3 class="qh">Slide 44 — Test Results <span class="tag tag-core">core</span> <span class="tag-star" title="key slide">★</span></h3>
+<p><strong>Layout:</strong> Reference slides 41–43. Results table left, two charts right (a bar per
+level, a donut for pass rate).</p>
+<p><strong>On-slide text</strong> — Heading: <strong>Test Report</strong></p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Suites</th>
+<th>Tests</th>
+<th>Passed</th>
+<th>Failed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend (unit + integration)</td>
+<td>61</td>
+<td>460</td>
+<td>456</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Frontend component</td>
+<td>100</td>
+<td>307</td>
+<td>307</td>
+<td>0</td>
+</tr>
+<tr>
+<td>End-to-end</td>
+<td>1</td>
+<td>28</td>
+<td>28</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>162</strong></td>
+<td><strong>795</strong></td>
+<td><strong>791</strong></td>
+<td><strong>4</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Big number: <strong>99.5% pass rate</strong></li>
+</ul>
+<p class="note-vi"><strong>Speaker note (VI):</strong> ⚠️ Có 4 test fail và <strong>con số này nằm trên slide, không giấu</strong>.
+Chuẩn bị sẵn câu trả lời: đó là 4 test đã fail từ trước, không liên quan tới tính năng
+đang bảo vệ, và nhóm biết rõ nguyên nhân. Nếu bạn sửa được trước hôm bảo vệ thì cập nhật
+lại bảng — nhưng <strong>đừng sửa con số trên slide mà không sửa test</strong>.</p>
+<hr />
+<h3 class="qh">Slide 45 — Quality Gates <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Three cards.
+<strong>On-slide text</strong> — Heading: <strong>Beyond Tests — Automated Quality Gates</strong></p>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ledger integrity job</strong></td>
+<td>A daily job re-checks that every money journal still balances; a mismatch raises an alert.</td>
+</tr>
+<tr>
+<td><strong>Diagram conformance validator</strong></td>
+<td>Every diagram in this deck is checked against the source code — use case names, entity names and enum states must exist in <code>src/</code>, or the build fails.</td>
+</tr>
+<tr>
+<td><strong>CI on every pull request</strong></td>
+<td>Build, all 162 test suites, and deployment to Azure run automatically.</td>
+</tr>
+</tbody>
+</table>
+<p class="note-vi"><strong>Speaker note (VI):</strong> Điểm nhấn ở gate thứ 2 — sơ đồ trong slide này <strong>được kiểm tra tự
+động khớp với code</strong>, 109/109 use case và 68 thực thể. Không có sơ đồ nào vẽ tay rồi để
+lệch với hệ thống thật.</p>
+<hr />
+<h1>06 Demo · 07 Q&amp;A · Close</h1>
+<h3 class="qh">Slide 46 — DEMO <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 45. Oversized centred word, photo strip bottom.
+<strong>On-slide text:</strong> <strong>DEMO</strong>
+<strong>Speaker note (VI):</strong> Kịch bản demo đề xuất, theo đúng thứ tự tiền chạy:</p>
+<ol>
+<li>Khán giả tìm show → mua vé → thanh toán VNPay sandbox → nhận vé QR</li>
+<li>Staff quét QR soát vé tại cửa</li>
+<li>Bật livestream → chứng minh người không có vé <strong>không xem được</strong></li>
+<li>Khán giả donate cho nghệ sĩ → chỉ ra bút toán sổ cái vừa sinh ra</li>
+<li>Owner xem trang Finance → đối chiếu đúng số tiền vừa phát sinh</li>
+<li>Admin duyệt venue / xử lý hoàn tiền</li>
+</ol>
+<hr />
+<h3 class="qh">Slide 47 — Q &amp; A <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 46.
+<strong>On-slide text:</strong> <strong>Q &amp; A</strong></p>
+<hr />
+<h3 class="qh">Slide 48 — Thanks <span class="tag tag-core">core</span></h3>
+<p><strong>Layout:</strong> Reference slide 44. Oversized two-line heading, photo bottom-right.
+<strong>On-slide text:</strong> <strong>Thanks for</strong> / <strong>watching</strong></p>
+<hr />
+<h1>Backup / Appendix — after Q&amp;A</h1>
+<p>Keep these loaded but hidden. Pull them up only if the committee asks.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Title</th>
+<th>Image</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>B1</strong></td>
+<td>UCD for Owner — Venue Management</td>
+<td><code>images/uc-owner-venue.png</code></td>
+<td>1844×2976</td>
+</tr>
+<tr>
+<td><strong>B2</strong></td>
+<td>UCD for Owner — Finance &amp; Subscription</td>
+<td><code>images/uc-owner-finance.png</code></td>
+<td>1844×3292</td>
+</tr>
+<tr>
+<td><strong>B3</strong></td>
+<td>UCD for Admin — Platform Administration</td>
+<td><code>images/uc-admin-platform.png</code></td>
+<td>1432×2512</td>
+</tr>
+<tr>
+<td><strong>B4</strong></td>
+<td>UCD for System — background jobs</td>
+<td><code>images/uc-system.png</code></td>
+<td>1652×2440</td>
+</tr>
+<tr>
+<td><strong>B5</strong></td>
+<td>ERD — Identity &amp; Access</td>
+<td><code>images/erd-identity-access.png</code></td>
+<td>1112×2722</td>
+</tr>
+<tr>
+<td><strong>B6</strong></td>
+<td>ERD — Venue</td>
+<td><code>images/erd-venue.png</code></td>
+<td>1656×3294</td>
+</tr>
+<tr>
+<td><strong>B7</strong></td>
+<td>ERD — Show Catalogue <em>(split over 2 slides)</em></td>
+<td><code>images/erd-show-catalogue.png</code></td>
+<td>2336×5142</td>
+</tr>
+<tr>
+<td><strong>B8</strong></td>
+<td>ERD — Ticketing</td>
+<td><code>images/erd-ticketing.png</code></td>
+<td>2200×3656</td>
+</tr>
+<tr>
+<td><strong>B9</strong></td>
+<td>ERD — Food &amp; Beverage</td>
+<td><code>images/erd-food-beverage.png</code></td>
+<td>1384×2514</td>
+</tr>
+<tr>
+<td><strong>B10</strong></td>
+<td>ERD — Personalisation <em>(split over 2 slides)</em></td>
+<td><code>images/erd-personalisation.png</code></td>
+<td>2064×4378</td>
+</tr>
+<tr>
+<td><strong>B11</strong></td>
+<td>ERD — Operations</td>
+<td><code>images/erd-operations.png</code></td>
+<td>908×2144</td>
+</tr>
+<tr>
+<td><strong>B12</strong></td>
+<td>Screen Flow — Audience <em>(split over 2 slides)</em></td>
+<td><code>images/flow-audience.png</code></td>
+<td>3360×6188</td>
+</tr>
+<tr>
+<td><strong>B13</strong></td>
+<td>Screen Flow — Owner <em>(split over 2 slides)</em></td>
+<td><code>images/flow-owner.png</code></td>
+<td>3600×6932</td>
+</tr>
+<tr>
+<td><strong>B14</strong></td>
+<td>Screen Flow — Admin</td>
+<td><code>images/flow-admin.png</code></td>
+<td>3000×4608</td>
+</tr>
+<tr>
+<td><strong>B15</strong></td>
+<td>Activity Diagram — Payment</td>
+<td><code>images/activity-payment.png</code></td>
+<td>5984×3880</td>
+</tr>
+</tbody>
+</table>
+<p><strong>B4 speaker note (VI):</strong> "System" là actor không phải người — 8 use case chạy nền bởi
+Hangfire: huỷ thanh toán bỏ dở, giải phóng chỗ giữ quá hạn, đối soát, kiểm tra sổ cái,
+cảnh báo SLA kiểm duyệt.</p>
+<p><strong>B12–B14 speaker note (VI):</strong> 75 màn hình phân bổ: Audience Web 30 · Owner Web 27 ·
+Admin Web 16 · Staff Mobile 7 · Audience Mobile F&amp;B 2.</p>
+<hr />
+<h2>Numbers used in this deck — all from <code>spec/build/facts.py</code></h2>
+<p>Every figure below is generated from the repository and self-checked, not typed by hand.
+If a slide needs a number that is not here, it does not exist yet — do not invent it.</p>
+<table>
+<thead>
+<tr>
+<th>Figure</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Client surfaces</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Distinct screens</td>
+<td>75</td>
+</tr>
+<tr>
+<td>Entities</td>
+<td>68</td>
+</tr>
+<tr>
+<td>Controllers</td>
+<td>25</td>
+</tr>
+<tr>
+<td>API endpoints</td>
+<td>209</td>
+</tr>
+<tr>
+<td>Use cases</td>
+<td>109</td>
+</tr>
+<tr>
+<td>Actors / login roles</td>
+<td>6 / 4</td>
+</tr>
+<tr>
+<td>Hangfire job classes (recurring)</td>
+<td>30 (22)</td>
+</tr>
+<tr>
+<td>Business rules</td>
+<td>30</td>
+</tr>
+<tr>
+<td>Estimated effort</td>
+<td>488 man-days</td>
+</tr>
+<tr>
+<td>Project duration</td>
+<td>20/05/2026 – 31/08/2026 · 15 weeks</td>
+</tr>
+<tr>
+<td>Tests: backend / frontend / e2e</td>
+<td>460 / 307 / 28</td>
+</tr>
+<tr>
+<td>Tests: total, passed, rate</td>
+<td>795 · 791 · 99.5%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<script>
+document.querySelectorAll('table').forEach(t => {
+  if (t.parentElement.classList.contains('tablewrap')) return;
+  const w = document.createElement('div');
+  w.className = 'tablewrap';
+  t.replaceWith(w); w.appendChild(t);
+});
+</script>

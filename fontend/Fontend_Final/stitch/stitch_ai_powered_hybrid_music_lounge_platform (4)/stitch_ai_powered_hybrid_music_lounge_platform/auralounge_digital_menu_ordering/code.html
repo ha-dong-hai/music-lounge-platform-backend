@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Menu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e4e2dd",
+                        "primary": "#181512",
+                        "on-background": "#1b1c19",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-secondary-fixed": "#261900",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f5f3ee",
+                        "inverse-surface": "#30312e",
+                        "inverse-primary": "#cdc5c0",
+                        "secondary-fixed": "#ffdea5",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#4d4540",
+                        "surface-container": "#f0eee9",
+                        "tertiary-fixed": "#ffdad3",
+                        "secondary": "#775a19",
+                        "on-primary-fixed": "#1e1b18",
+                        "secondary-container": "#fed488",
+                        "surface-variant": "#e4e2dd",
+                        "outline": "#7e756f",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "tertiary": "#310501",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#96908b",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary-container": "#785a1a",
+                        "primary-container": "#2d2926",
+                        "surface": "#fbf9f4",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "inverse-on-surface": "#f2f1ec",
+                        "background": "#fbf9f4",
+                        "secondary-fixed-dim": "#e9c176",
+                        "outline-variant": "#cfc4bd",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#dbdad5",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "tertiary-container": "#4d190e",
+                        "surface-container-high": "#eae8e3",
+                        "on-tertiary-container": "#cb7c6b",
+                        "surface-tint": "#635d5a",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#fbf9f4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "stack-lg": "80px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "stack-md": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fbf9f4; /* bg-surface */
+            color: #181512; /* text-primary */
+        }
+        
+        /* Minimalist scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dbdad5;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cdc5c0;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface-dim flat no shadows z-40 transition-colors duration-300">
+<div class="flex justify-between items-center px-margin-mobile py-4 w-full">
+<button aria-label="Menu" class="text-on-surface-variant dark:text-outline hover:opacity-80 transition-opacity cursor-pointer transition-transform duration-200 active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed cursor-pointer transition-transform duration-200 active:scale-95 text-center flex-grow">
+                AuraLounge
+            </h1>
+<button class="text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity cursor-pointer transition-transform duration-200 active:scale-95 font-button text-button px-4 py-2 border border-outline/10 rounded-DEFAULT">
+                Join
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow px-margin-mobile md:px-margin-desktop py-stack-md md:py-stack-lg pb-stack-lg max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="text-center mb-stack-lg max-w-2xl mx-auto">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-unit">The Curated Menu</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">A selection of refined tastes, designed to complement the atmosphere.</p>
+</div>
+<!-- Menu Navigation (Sticky within main) -->
+<nav class="sticky top-20 bg-surface/90 backdrop-blur-md z-30 mb-stack-md -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 py-4 border-b border-outline/10">
+<ul class="flex gap-6 overflow-x-auto no-scrollbar font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap md:justify-center">
+<li><a class="text-primary border-b-2 border-primary pb-1 transition-colors" href="#cocktails">Signature Cocktails</a></li>
+<li><a class="hover:text-primary pb-1 transition-colors" href="#plates">Small Plates</a></li>
+<li><a class="hover:text-primary pb-1 transition-colors" href="#cellar">Cellar Selection</a></li>
+</ul>
+</nav>
+<!-- Signature Cocktails Section -->
+<section class="mb-stack-lg scroll-mt-32" id="cocktails">
+<h3 class="font-headline-md text-headline-md text-primary mb-stack-md border-b border-outline/10 pb-4 inline-block">Signature Cocktails</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-stack-sm">
+<!-- Item 1 -->
+<div class="group flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 border-b border-outline/5 hover:bg-surface-container-lowest transition-colors px-4 -mx-4 rounded-lg cursor-pointer" onclick="openOrderModal('Velvet Silence', '$22')">
+<div class="flex-grow pr-4">
+<div class="flex items-baseline justify-between w-full mb-1">
+<h4 class="font-headline-md text-headline-md text-primary text-[20px]">Velvet Silence</h4>
+<span class="font-headline-md text-headline-md text-primary text-[18px] sm:hidden">$22</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Japanese Whisky, Plum Wine, Smoked Tea Bitters.</p>
+</div>
+<div class="hidden sm:flex items-center gap-4">
+<span class="font-headline-md text-headline-md text-primary text-[20px]">$22</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-primary border border-outline/20 px-3 py-1 rounded-DEFAULT font-button text-button hover:bg-primary hover:text-on-primary">Add</button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 border-b border-outline/5 hover:bg-surface-container-lowest transition-colors px-4 -mx-4 rounded-lg cursor-pointer" onclick="openOrderModal('The Resonance', '$24')">
+<div class="flex-grow pr-4">
+<div class="flex items-baseline justify-between w-full mb-1">
+<h4 class="font-headline-md text-headline-md text-primary text-[20px]">The Resonance</h4>
+<span class="font-headline-md text-headline-md text-primary text-[18px] sm:hidden">$24</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Mezcal, Clarified Grapefruit, Sage, Black Salt.</p>
+</div>
+<div class="hidden sm:flex items-center gap-4">
+<span class="font-headline-md text-headline-md text-primary text-[20px]">$24</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-primary border border-outline/20 px-3 py-1 rounded-DEFAULT font-button text-button hover:bg-primary hover:text-on-primary">Add</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 border-t border-outline/10 bg-surface/80 backdrop-blur-xl shadow-[0_-4px_40px_rgba(24,21,18,0.05)]">
+<ul class="flex justify-around items-center pt-3 pb-6 px-margin-mobile">
+<li>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">explore</span>
+<span class="font-label-caps text-label-caps">Discovery</span>
+</a>
+</li>
+<li>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-semibold hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">restaurant_menu</span>
+<span class="font-label-caps text-label-caps">Menu</span>
+</a>
+</li>
+<li>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">confirmation_number</span>
+<span class="font-label-caps text-label-caps">Tickets</span>
+</a>
+</li>
+<li>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</li>
+</ul>
+</nav>
+<script>
+        function openOrderModal(itemName, itemPrice) {
+            console.log(`Opening modal for ${itemName} at ${itemPrice}`);
+            // In a real app, this would trigger the modal state
+        }
+    </script>
+</body></html>

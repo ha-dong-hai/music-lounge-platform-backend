@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Transparency Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#cb7c6b",
+                        "secondary": "#775a19",
+                        "on-background": "#1b1c19",
+                        "on-primary": "#ffffff",
+                        "primary": "#181512",
+                        "on-secondary-container": "#785a1a",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "outline": "#7e756f",
+                        "surface": "#fbf9f4",
+                        "outline-variant": "#cfc4bd",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "tertiary-fixed": "#ffdad3",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#2d2926",
+                        "on-secondary-fixed": "#261900",
+                        "surface-container-low": "#f5f3ee",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "surface-tint": "#635d5a",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-surface": "#30312e",
+                        "on-primary-container": "#96908b",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-fixed": "#1e1b18",
+                        "background": "#fbf9f4",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "secondary-fixed": "#ffdea5",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#eae8e3",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-container": "#4d190e",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fbf9f4",
+                        "secondary-container": "#fed488",
+                        "on-surface-variant": "#4d4540",
+                        "tertiary": "#310501",
+                        "surface-container": "#f0eee9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-md": "32px",
+                        "gutter": "32px",
+                        "margin-mobile": "20px",
+                        "container-max": "1440px",
+                        "stack-lg": "80px",
+                        "stack-sm": "16px",
+                        "margin-desktop": "64px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(207, 196, 189, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased selection:bg-secondary-container selection:text-on-secondary-container min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-surface-container-high/80 border-b border-outline-variant/15 transition-all duration-300" id="main-nav">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<!-- Brand -->
+<a class="font-display-md text-display-md text-primary dark:text-primary-fixed tracking-tight hover:opacity-80 transition-opacity" href="#">AuraLounge</a>
+<!-- Desktop Navigation -->
+<div class="hidden md:flex items-center space-x-8 font-body-md text-body-md text-on-surface-variant dark:text-outline-variant">
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Artists</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Lounges</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Events</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Schedule</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1" href="#">Ledger</a>
+</div>
+<!-- Trailing Action -->
+<div class="flex items-center space-x-4">
+<button aria-label="Search" class="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-surface-container-highest hover:bg-surface-dim transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+<button class="flex items-center space-x-2 font-button text-button text-primary hover:opacity-80 transition-opacity">
+<img alt="User profile avatar" class="w-8 h-8 rounded-full object-cover" data-alt="A small, circular avatar portrait of a person in black and white, minimal studio lighting, neutral expression, high-end gallery aesthetic, light mode." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBr3JkfW-Q_U7fGsZZO8djPkmOEWLqD2JT_Gg5bEcyk5KFcimjO9FQYVaFFtJ6yZXwBULrk1KN-gbmUqX_P9s5VMErb6WfsmtFt2GJqDSE9PfsMA3DS4Lzfu_BC-3miwc7OKyQSEEfCfVBMSg3zi4smghwHyCeQys4Rb1iZL6W6BUhfpF3p_WXT7fy7OcpkYdPmHO3jz5DjdzTOnTU7EMZ_Mr4VqwWoNa7ml3UMrN8OKKmPDU87EQjDUw"/>
+<span class="hidden md:inline">Profile</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow pt-32 pb-stack-lg max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full">
+<!-- Header Section -->
+<header class="mb-stack-lg text-center max-w-3xl mx-auto">
+<h1 class="font-display-lg text-display-lg md:text-display-lg text-headline-lg-mobile text-primary mb-4">Transparency Ledger</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">A public record of patronage. We believe in clear, accountable support for the artists and venues that shape our culture.</p>
+</header>
+<!-- Stats Overview (Bento-ish) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-unit mb-stack-lg">
+<div class="glass-panel p-6 rounded-lg flex flex-col justify-between h-32">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Total Patronage</span>
+<span class="font-headline-lg text-headline-lg text-primary">$1,245,000</span>
+</div>
+<div class="glass-panel p-6 rounded-lg flex flex-col justify-between h-32">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Active Campaigns</span>
+<span class="font-headline-lg text-headline-lg text-primary">142</span>
+</div>
+<div class="glass-panel p-6 rounded-lg flex flex-col justify-between h-32">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Avg. Platform Fee</span>
+<span class="font-headline-lg text-headline-lg text-primary">2.5%</span>
+</div>
+</section>
+<!-- Filters & Search -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-stack-sm gap-4">
+<div class="flex space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 hide-scrollbar">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-button text-button whitespace-nowrap">All Settled</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container transition-colors font-button text-button whitespace-nowrap">Artists</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container transition-colors font-button text-button whitespace-nowrap">Venues</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container transition-colors font-button text-button whitespace-nowrap">Events</button>
+</div>
+<div class="relative w-full md:w-64 border-b border-outline-variant pb-1">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-transparent border-none pl-8 pr-4 py-2 font-body-md text-body-md focus:ring-0 text-primary placeholder-on-surface-variant/50" placeholder="Search ledger..." type="text"/>
+</div>
+</div>
+<!-- Ledger Table -->
+<div class="w-full overflow-x-auto border border-outline-variant/15 rounded-lg bg-surface-container-lowest shadow-sm mb-8">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="border-b border-outline-variant/15 bg-surface-container-low/50">
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest w-1/5">Date</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest w-1/5">Patron</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest w-1/4">Recipient / Event</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest w-1/6 text-right">Amount</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest w-1/6 text-right">Fees (Aura/CC)</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="py-4 px-6 text-on-surface-variant">Oct 24, 2023</td>
+<td class="py-4 px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small, circular avatar portrait of a person in a minimalist setting, high key lighting, cream background, elegant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9vgG6U9PU-rF3E7mr0XIX3zBkHoiKVtX-senx1rW8voWYAcfoU-dJVQV5OpPB0q9VFEgg9OPc91mgJUgQv8MrCPS0LL532oZpjV4lIivoUYza-D8Nq6-OUmyP5rmNx_0-sRB4wsdDQcpqJWt-3StTx-Sbi54Iqw3cyjWgiRnveMpMwkomaseG7Q22-ivUofBM_dE7ITiwRscMx69DKHMvTSEq2M3mMv7S8VkFmgGVLb38CqjSxpLSzg"/>
+</div>
+<span>Sarah Jenkins</span>
+</td>
+<td class="py-4 px-6">
+<div>Julian Bream Quartet</div>
+<div class="text-sm text-on-surface-variant">Autumn Jazz Series</div>
+</td>
+<td class="py-4 px-6 text-right font-medium text-primary">$500.00</td>
+<td class="py-4 px-6 text-right text-on-surface-variant/70 text-sm">$12.50 / $14.80</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="py-4 px-6 text-on-surface-variant">Oct 24, 2023</td>
+<td class="py-4 px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">visibility_off</span>
+</div>
+<span class="italic text-on-surface-variant">Anonymous</span>
+</td>
+<td class="py-4 px-6">
+<div>The Velvet Room</div>
+<div class="text-sm text-on-surface-variant">Venue Preservation Fund</div>
+</td>
+<td class="py-4 px-6 text-right font-medium text-primary">$1,200.00</td>
+<td class="py-4 px-6 text-right text-on-surface-variant/70 text-sm">$30.00 / $35.10</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="py-4 px-6 text-on-surface-variant">Oct 23, 2023</td>
+<td class="py-4 px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimal avatar portrait of an older gentleman with glasses, soft studio lighting, high contrast black and white, luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0Vhmn7g3qN4EVNuDkI3Y5FM41vjum3cVE5AmMHsUHsDAliZ7GGtMD-9f5w7_AGSICbLS9EX0KSJYVA47aJ12ku89a7nEjeirqIJHGyCFxK9J9ybKp-XIoTRshA2ir1H7siBqbags-w7GbbF0zhvElEPaiVSPaSYMBpa3JbegsBiplrWzRzawYsSE_SixyElqgLXuNCgekGpLCnG4LbznFY-lL_b0Ikt84BxRaBh-vCpav_Pa5QDV5DQ"/>
+</div>
+<span>Marcus Wright</span>
+</td>
+<td class="py-4 px-6">
+<div>Elena Rostropovich</div>
+<div class="text-sm text-on-surface-variant">Debut Cello Recital</div>
+</td>
+<td class="py-4 px-6 text-right font-medium text-primary">$150.00</td>
+<td class="py-4 px-6 text-right text-on-surface-variant/70 text-sm">$3.75 / $4.65</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="py-4 px-6 text-on-surface-variant">Oct 23, 2023</td>
+<td class="py-4 px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center overflow-hidden">
+<span class="font-button text-xs text-on-surface-variant">EL</span>
+</div>
+<span>Eleanor Vance</span>
+</td>
+<td class="py-4 px-6">
+<div>Echoes Festival 2023</div>
+<div class="text-sm text-on-surface-variant">General Admission Support</div>
+</td>
+<td class="py-4 px-6 text-right font-medium text-primary">$75.00</td>
+<td class="py-4 px-6 text-right text-on-surface-variant/70 text-sm">$1.88 / $2.48</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="py-4 px-6 text-on-surface-variant">Oct 22, 2023</td>
+<td class="py-4 px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">visibility_off</span>
+</div>
+<span class="italic text-on-surface-variant">Anonymous</span>
+</td>
+<td class="py-4 px-6">
+<div>Julian Bream Quartet</div>
+<div class="text-sm text-on-surface-variant">Autumn Jazz Series</div>
+</td>
+<td class="py-4 px-6 text-right font-medium text-primary">$2,500.00</td>
+<td class="py-4 px-6 text-right text-on-surface-variant/70 text-sm">$62.50 / $72.80</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex justify-between items-center py-4 border-t border-outline-variant/15 mt-8">
+<span class="font-body-md text-sm text-on-surface-variant">Showing 1-5 of 3,421 entries</span>
+<div class="flex space-x-2">
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant/30 rounded text-on-surface-variant hover:bg-surface-container disabled:opacity-50 transition-colors" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center border border-primary bg-primary text-on-primary rounded font-button text-sm transition-colors">1</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant/30 rounded text-on-surface-variant hover:bg-surface-container font-button text-sm transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant/30 rounded text-on-surface-variant hover:bg-surface-container font-button text-sm transition-colors">3</button>
+<span class="w-10 h-10 flex items-center justify-center text-on-surface-variant">...</span>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant/30 rounded text-on-surface-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg bg-surface-container dark:bg-primary-container border-t border-outline-variant/10">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed mb-4">AuraLounge</div>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-primary-container">© 2024 AuraLounge. The Quiet Luxury of Sound.</p>
+</div>
+<div class="flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-end font-body-md text-body-md text-on-surface-variant dark:text-outline-variant">
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">About</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Support</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Press</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Careers</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple scroll effect for navbar
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-sm');
+                nav.classList.remove('border-transparent');
+            } else {
+                nav.classList.remove('shadow-sm');
+            }
+        });
+    </script>
+</body></html>

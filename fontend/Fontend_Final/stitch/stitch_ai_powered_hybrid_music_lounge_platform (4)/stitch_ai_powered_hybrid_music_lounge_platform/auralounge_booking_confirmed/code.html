@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Reservation Confirmed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#ffdea5",
+                        "surface-dim": "#dbdad5",
+                        "secondary-container": "#fed488",
+                        "inverse-primary": "#cdc5c0",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#775a19",
+                        "on-secondary-fixed": "#261900",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-bright": "#fbf9f4",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "surface": "#fbf9f4",
+                        "surface-container": "#f0eee9",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "outline-variant": "#cfc4bd",
+                        "tertiary": "#310501",
+                        "primary": "#181512",
+                        "on-primary-fixed": "#1e1b18",
+                        "surface-variant": "#e4e2dd",
+                        "background": "#fbf9f4",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-tertiary-container": "#cb7c6b",
+                        "surface-tint": "#635d5a",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "outline": "#7e756f",
+                        "on-surface": "#1b1c19",
+                        "on-secondary-container": "#785a1a",
+                        "on-surface-variant": "#4d4540",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-primary-container": "#96908b",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-on-surface": "#f2f1ec",
+                        "primary-container": "#2d2926",
+                        "tertiary-container": "#4d190e",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1b1c19",
+                        "surface-container-high": "#eae8e3",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "16px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "20px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "container-max": "1440px",
+                        "unit": "8px",
+                        "gutter": "32px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-center py-stack-lg px-margin-mobile md:px-margin-desktop">
+<!-- Main Content Container -->
+<main class="w-full max-w-[600px] flex flex-col items-center space-y-stack-md">
+<!-- Header -->
+<header class="text-center space-y-unit">
+<span class="material-symbols-outlined text-[48px] text-primary mb-4" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<h1 class="font-display-md text-display-md text-primary tracking-tighter">Reservation Confirmed</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Your evening awaits. Present this code upon arrival.</p>
+</header>
+<!-- Ticket Card (Glassmorphism inspired) -->
+<div class="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-stack-md flex flex-col items-center space-y-stack-md relative overflow-hidden">
+<!-- Subtle background tint -->
+<div class="absolute inset-0 bg-primary/5 blur-[80px] pointer-events-none"></div>
+<!-- QR Code Area -->
+<div class="relative z-10 bg-white p-4 rounded-lg shadow-sm border border-outline-variant/10">
+<img alt="Entry QR Code" class="w-48 h-48 object-cover rounded-md" data-alt="A high-fidelity, highly detailed close-up of a perfectly sharp QR code rendered in pure black against a pristine white background. The lighting is studio quality, ensuring absolute clarity and contrast. The aesthetic is clean, minimalist, and ultra-modern, suitable for a premium digital ticket. No other elements distract from the geometric precision of the code." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQn007VN32ZBqfcqNYtBadaLSoeaNGkcmJl3YlscBOVeR4qcNq30nd37VLaYRZFlYwX5rP3BNn9_KAGy4sxcrvoRC-xdCOjGSw6i3JvlKVDIjPytg_WOr5zR5ZQ5pbh5q5HYrXcTOwlsZEyvRHzsyFnGUe3Ich9GXJKtt9UTDSNrM5F-5WqFWhf2iU3jovxUOAOYEn813pzmKwh4MRAK0mlt0U7jmmj7xCRpVyNUtVpk8QvPCsPAVrCA"/>
+</div>
+<!-- Event Details -->
+<div class="relative z-10 w-full flex flex-col space-y-4 pt-4 border-t border-outline-variant/10">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Guest</span>
+<span class="font-body-md text-body-md text-primary font-medium">Alexander Wright</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Date &amp; Time</span>
+<span class="font-body-md text-body-md text-primary text-right">Oct 24, 2024<br/>9:00 PM</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Venue</span>
+<span class="font-body-md text-body-md text-primary text-right">AuraLounge Main Hall<br/>Table 12, VIP Section</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="w-full flex flex-col space-y-4 mt-stack-sm">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded-DEFAULT flex items-center justify-center space-x-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span>Add to Apple Wallet</span>
+</button>
+<button class="w-full bg-transparent border border-outline-variant text-primary font-button text-button py-4 px-6 rounded-DEFAULT flex items-center justify-center space-x-2 hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>View Digital Guestbook</span>
+</button>
+</div>
+<!-- Navigation Back -->
+<div class="mt-stack-md">
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors flex items-center space-x-1" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_back">arrow_back</span>
+<span>Return to Home</span>
+</a>
+</div>
+</main>
+<!-- Navigation shell suppressed as per logic for transactional/success screens -->
+</body></html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Midnight Echoes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-dim": "#dbdad5",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "inverse-surface": "#30312e",
+                        "background": "#fbf9f4",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface-container": "#f0eee9",
+                        "on-secondary-container": "#785a1a",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "tertiary-fixed": "#ffdad3",
+                        "surface-container-high": "#eae8e3",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "surface-container-highest": "#e4e2dd",
+                        "primary-container": "#2d2926",
+                        "secondary-fixed": "#ffdea5",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#cdc5c0",
+                        "error-container": "#ffdad6",
+                        "outline": "#7e756f",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e4e2dd",
+                        "primary": "#181512",
+                        "surface-container-low": "#f5f3ee",
+                        "on-primary-container": "#96908b",
+                        "inverse-on-surface": "#f2f1ec",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-bright": "#fbf9f4",
+                        "on-secondary-fixed": "#261900",
+                        "surface-tint": "#635d5a",
+                        "on-tertiary-container": "#cb7c6b",
+                        "outline-variant": "#cfc4bd",
+                        "on-surface-variant": "#4d4540",
+                        "surface": "#fbf9f4",
+                        "tertiary": "#310501",
+                        "secondary": "#775a19",
+                        "tertiary-container": "#4d190e",
+                        "secondary-container": "#fed488",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-background": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "margin-desktop": "64px",
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "display-md": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "button": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Subtle page transition/fade-in */
+        body {
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Glassmorphism for player/sticky elements */
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md text-primary dark:text-primary-fixed text-label-caps font-label-caps docked full-width top-0 z-50 border-b border-outline-variant/10 flat no shadows sticky">
+<div class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto w-full">
+<div class="text-headline-md font-headline-md text-primary dark:text-primary-fixed tracking-tight">
+                AuraLounge
+            </div>
+<div class="hidden md:flex gap-gutter items-center">
+<a class="text-on-surface-variant/70 dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 scale-95 duration-200" href="#">Discovery</a>
+<a class="text-on-surface-variant/70 dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 scale-95 duration-200" href="#">My Tickets</a>
+<a class="text-on-surface-variant/70 dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 scale-95 duration-200" href="#">Livestreams</a>
+<a class="text-on-surface-variant/70 dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 scale-95 duration-200" href="#">Transparency</a>
+</div>
+<div class="flex items-center gap-stack-sm">
+<button class="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-DEFAULT font-button text-button hover:bg-primary/90 transition-colors">
+                    Connect
+                </button>
+</div>
+</div>
+</nav>
+<main class="flex-grow w-full max-w-container-max mx-auto">
+<!-- Hero Section -->
+<section class="px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col lg:flex-row gap-stack-lg items-center min-h-[716px]">
+<div class="w-full lg:w-1/2 flex flex-col gap-stack-md z-10">
+<div class="flex flex-col gap-unit">
+<span class="text-label-caps font-label-caps text-on-surface-variant tracking-[0.2em] uppercase">Live Performance • Jazz</span>
+<h1 class="text-headline-lg-mobile md:text-display-lg font-headline-lg-mobile md:font-display-lg text-primary">Midnight Echoes</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-2 max-w-lg">
+                        An intimate evening of contemporary jazz featuring the Elias Thorne Quartet. Experience the quiet luxury of sound in our acoustically perfected main lounge.
+                    </p>
+</div>
+<div class="flex flex-col sm:flex-row gap-stack-md mt-4 border-y border-outline-variant/20 py-stack-sm w-max pr-8">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-outline mt-1">calendar_today</span>
+<div>
+<p class="font-button text-button text-primary">Friday, Nov 24</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">9:00 PM - 1:00 AM</p>
+</div>
+</div>
+<div class="hidden sm:block w-px bg-outline-variant/20 h-12"></div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-outline mt-1">location_on</span>
+<div>
+<p class="font-button text-button text-primary">The Velvet Room</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">AuraLounge Central</p>
+</div>
+</div>
+</div>
+<div class="mt-4 flex gap-4">
+<a class="bg-primary text-on-primary px-8 py-3 rounded-DEFAULT font-button text-button hover:bg-primary/90 transition-colors inline-block text-center" href="#tickets">
+                        View Tickets
+                    </a>
+<button class="border border-outline-variant/30 text-primary px-8 py-3 rounded-DEFAULT font-button text-button hover:bg-surface-variant/50 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                        Preview Artist
+                    </button>
+</div>
+</div>
+<div class="w-full lg:w-1/2 relative h-[512px] lg:h-[716px]">
+<div class="absolute inset-0 bg-surface-variant/30 rounded-DEFAULT overflow-hidden">
+<div class="bg-cover bg-center w-full h-full grayscale-[20%] hover:grayscale-0 transition-all duration-700" data-alt="A moody, high-end photograph of a jazz saxophone player performing on a dimly lit stage. The lighting is sophisticated and minimal, featuring soft spotlights cutting through a subtle haze. The overall aesthetic is quiet luxury, with deep charcoal shadows, warm brass tones from the instrument, and an intimate, exclusive lounge atmosphere. High-resolution, cinematic framing." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA7yRoNcYrgzWQ1-xa9mHJFCQIoduTfELuuV71gPSMESX1hIpzkPuCYaRxrpwL3GtR5uIKwBT9R_-49nLq-6nWhLSQ0aVyk-y3YHuB8ik7Yw3hdAR02l0W0DpD6jZ2ZMDdOzQrZP6NjHV-uOJUvlzrGPCOTOm3SmtfPlTxHLWsrEUqKPiOETMYQYY-3lhoJ2ZeExm2h_3ontmcD2ayzb5bs__IsLMKKKG7WYxtK_w9-DSmQWpHZS0NqjA')"></div>
+</div>
+<!-- Abstract decorative element -->
+<div class="absolute -bottom-8 -left-8 w-32 h-32 border border-outline-variant/20 rounded-full z-0"></div>
+<div class="absolute -top-8 -right-8 w-48 h-48 border border-outline-variant/20 rounded-full z-0"></div>
+</div>
+</section>
+<!-- The Performance / Lineup -->
+<section class="px-margin-mobile md:px-margin-desktop py-stack-lg border-t border-outline-variant/10">
+<div class="flex flex-col md:flex-row justify-between items-end mb-stack-md gap-4">
+<div>
+<h2 class="text-display-md font-display-md text-primary mb-2">The Performance</h2>
+<p class="text-body-md font-body-md text-on-surface-variant max-w-md">The Elias Thorne Quartet brings together four masters of modern jazz for a completely unscripted, improvisational journey.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Artist 1 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] mb-4 bg-surface-variant/20 rounded-DEFAULT overflow-hidden relative">
+<div class="bg-cover bg-center w-full h-full opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="A sophisticated black and white portrait of a jazz saxophonist, Elias Thorne. The lighting is dramatic, highlighting the contours of his face and the brass of his saxophone. He is dressed sharply in a tailored suit, embodying a quiet luxury aesthetic. The background is a dark, abstract void, focusing entirely on the artist's expression and instrument." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvdTiSFNGYYkin7T42tJKgQ6NNHFiUsRt3XBQAzSkVBPARt41GdLnMEt40zFyqw2QgEJcxRwlwzPV4wToDksaZBC3YEj3hwA6EjSZ64-hveBagCa74QavD2hrUBHEB7bsp_kiuc5A3azoY_OAzrPYVWn0VYELxyVAcvMk73RfmiLppYfNhZAG6Yh_8cKt9KFlzvSXVjoc3Ro0yGWapm94nkKiw78Z_UUG6xWNbKhNgLQJOZukZZmgFJQ')"></div>
+</div>
+<h3 class="text-headline-md font-headline-md text-primary">Elias Thorne</h3>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">Tenor Saxophone</p>
+</div>
+<!-- Artist 2 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] mb-4 bg-surface-variant/20 rounded-DEFAULT overflow-hidden relative">
+<div class="bg-cover bg-center w-full h-full opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="A moody, high-contrast portrait of a jazz pianist seated at a grand piano. The lighting focuses on her hands resting on the keys, with her face partially in soft shadow. The setting is a refined, minimalist space, reflecting an upscale lounge environment. The mood is focused and serene, emphasizing the artistry of the performance." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBaSR0X-iCu2KjWLo9Sawe6Yk79AHOb0gY-q7hzblXodQEt9f_yuGdvm1Crm2NNg3Od3kBG6K8HhL9fUJFO2lDCc5O2aKO_B5ffjJ66esK2oU5Vw3mLNFhUMQf4rnWrLUQtPkxdQ7v5Z5Ayy-8mJDYYvi-yAML6C58qCadyTBTeacv_4sbqrLcACbcIp3UzYnwSr1kk7fYetUWgRgfacB7vyQclp9o50ujgFDPAx4hzuwWCO5xtXdC2Sg')"></div>
+</div>
+<h3 class="text-headline-md font-headline-md text-primary">Sarah Jenkins</h3>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">Grand Piano</p>
+</div>
+<!-- Artist 3 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] mb-4 bg-surface-variant/20 rounded-DEFAULT overflow-hidden relative">
+<div class="bg-cover bg-center w-full h-full opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="An elegant, low-key portrait of an upright bass player. The warm wood tones of the instrument stand out against a dark, textured background. The musician is sharply dressed, exuding a calm, professional demeanor indicative of a high-end jazz ensemble. The lighting is soft and directional, creating a sense of depth and intimacy." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC0hJqImr7sdYPd72MFBhXxrkVlUB-mPJ3MFfzIrGROBwA31AxYDEFtELJx2rQnv5PNXVW0ACG4YL2Dpsutnutbrxqk2yFgC71iNf9l2jdGpIfS7kCrY9SzdM6yQ8amyirbMa9jLt5leM6vfC0mdyCJnTAQvHxIhBdmzV53f_JB5yey1bxGZJ4P7SKfpB6hhy6kh8jBE43BXEiWBGLTCB0ONO90CyrFHEq0SWCb2YdNqg3QYDQjwYwbsA')"></div>
+</div>
+<h3 class="text-headline-md font-headline-md text-primary">Marcus Reed</h3>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">Upright Bass</p>
+</div>
+<!-- Artist 4 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] mb-4 bg-surface-variant/20 rounded-DEFAULT overflow-hidden relative">
+<div class="bg-cover bg-center w-full h-full opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="A dynamic yet minimalist shot of a jazz drummer in action. The focus is on the shimmering cymbals and the drummer's focused expression. The setting is dimly lit, fitting a premium, exclusive live music venue. The aesthetic is clean, sophisticated, and deeply atmospheric, capturing the essence of rhythm in a quiet luxury setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyye1nsuPfTvyK_Czu-j1CML3ptIYbCxvYofhvJECCsA7abQ2_pM9YHFQRBO0f9DG419U89tJuX6KV_wIG_LKb6jU9Jln3LxA6x450fXltMjYqs-28SymBxNKSFmBT7cRecl8uC00TFUidLvOJcx98vNN6cjMf6f8r89OJgkLNUHD_tl1HDsZNKMtfTtZfmdx7lMGg5x8YkjXy5bIjrkTwB6NeUbzxoBcg35Y4xVLi7xSCseEMHPyVHA')"></div>
+</div>
+<h3 class="text-headline-md font-headline-md text-primary">David Chen</h3>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">Percussion</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed text-label-caps font-label-caps relative w-full border-t border-outline-variant/10 flat no shadows mt-stack-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 py-stack-lg px-margin-desktop max-w-container-max mx-auto">
+<div class="flex flex-col gap-4">
+<span class="text-headline-md font-headline-md">AuraLounge</span>
+<span class="text-on-surface-variant/60">© 2024 AuraLounge Connection. The Quiet Luxury of Sound.</span>
+</div>
+<div class="flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-start mt-8 md:mt-0">
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors" href="#">About</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors" href="#">Artists</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors" href="#">Venues</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors" href="#">Terms</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors" href="#">Press</a>
+</div>
+</div>
+</footer>
+</body></html>

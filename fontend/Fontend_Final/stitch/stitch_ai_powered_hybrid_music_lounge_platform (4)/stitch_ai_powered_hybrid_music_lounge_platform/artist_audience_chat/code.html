@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Artist Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-tertiary": "#ffffff",
+                            "surface-variant": "#e4e2dd",
+                            "surface-tint": "#635d5a",
+                            "on-secondary-container": "#785a1a",
+                            "secondary-fixed-dim": "#e9c176",
+                            "surface-bright": "#fbf9f4",
+                            "on-primary-fixed-variant": "#4b4642",
+                            "primary-fixed-dim": "#cdc5c0",
+                            "on-secondary": "#ffffff",
+                            "surface-container-lowest": "#ffffff",
+                            "on-tertiary-fixed": "#3a0a03",
+                            "on-tertiary-container": "#cb7c6b",
+                            "secondary": "#775a19",
+                            "on-error": "#ffffff",
+                            "outline-variant": "#cfc4bd",
+                            "tertiary-container": "#4d190e",
+                            "tertiary": "#310501",
+                            "surface": "#fbf9f4",
+                            "secondary-fixed": "#ffdea5",
+                            "on-tertiary-fixed-variant": "#723527",
+                            "tertiary-fixed": "#ffdad3",
+                            "surface-container": "#f0eee9",
+                            "on-secondary-fixed": "#261900",
+                            "tertiary-fixed-dim": "#ffb4a4",
+                            "primary-container": "#2d2926",
+                            "on-surface-variant": "#4d4540",
+                            "on-primary-container": "#96908b",
+                            "outline": "#7e756f",
+                            "surface-dim": "#dbdad5",
+                            "on-background": "#1b1c19",
+                            "surface-container-low": "#f5f3ee",
+                            "on-error-container": "#93000a",
+                            "error": "#ba1a1a",
+                            "on-primary-fixed": "#1e1b18",
+                            "on-secondary-fixed-variant": "#5d4201",
+                            "surface-container-highest": "#e4e2dd",
+                            "on-primary": "#ffffff",
+                            "primary-fixed": "#e9e1dc",
+                            "inverse-primary": "#cdc5c0",
+                            "on-surface": "#1b1c19",
+                            "inverse-on-surface": "#f2f1ec",
+                            "inverse-surface": "#30312e",
+                            "error-container": "#ffdad6",
+                            "primary": "#181512",
+                            "secondary-container": "#fed488",
+                            "background": "#fbf9f4",
+                            "surface-container-high": "#eae8e3"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "stack-lg": "80px",
+                            "margin-mobile": "20px",
+                            "unit": "8px",
+                            "margin-desktop": "64px",
+                            "container-max": "1440px",
+                            "gutter": "32px",
+                            "stack-sm": "16px",
+                            "stack-md": "32px"
+                    },
+                    "fontFamily": {
+                            "body-lg": ["Manrope"],
+                            "display-lg": ["Libre Caslon Text"],
+                            "headline-lg": ["Libre Caslon Text"],
+                            "label-caps": ["Manrope"],
+                            "button": ["Manrope"],
+                            "headline-lg-mobile": ["Libre Caslon Text"],
+                            "display-md": ["Libre Caslon Text"],
+                            "body-md": ["Manrope"],
+                            "headline-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                            "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                            "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                            "button": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                            "display-md": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-screen flex flex-col font-body-lg text-body-lg overflow-hidden selection:bg-surface-variant">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky border-b border-outline-variant/10 bg-surface dark:bg-surface-dim flat no shadows flex justify-between items-center px-margin-mobile h-16 z-50">
+<button class="flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<div class="flex flex-col items-center flex-1">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed tracking-tight">Marcus Reed</h1>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[10px]">Live Session</span>
+</div>
+</div>
+<button class="flex items-center justify-center text-primary dark:text-primary-fixed hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">more_horiz</span>
+</button>
+</header>
+<!-- Chat Canvas -->
+<main class="flex-1 overflow-y-auto px-margin-mobile py-stack-md flex flex-col gap-6 no-scrollbar relative" id="chat-container">
+<!-- System Message -->
+<div class="flex justify-center w-full my-4">
+<div class="bg-surface-container-low px-4 py-1.5 rounded-full border border-outline-variant/10 text-on-surface-variant font-label-caps text-label-caps uppercase text-[10px] tracking-wider text-center">
+                Welcome to the intimate listening room.
+            </div>
+</div>
+<!-- Audience Message -->
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant/20 bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="A small, circular profile picture of an audience member in an intimate, low-lit setting. Soft, warm tones, high-end minimalist styling, quiet luxury vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuABw4EJj5EUlNKcQWpfnRFLpEv6rPuP2WJSDwdzhTQdvbpqqWUq6DiHP6RdLVJj6n389O3281epoqAx-qZ0Owc7sZwJvlRag3rSehGPvCanf6Q6Hauz6zJ-YKiNt0NSDHn3_0VV-e-wRkBxAgHbNlnP04mRk_FyrRIgRShM15vvu46V4rffsbfVaTWAfwjd_VACBbzIxtBj9StGtUsuu9WvTtye6G-4X0OVtBLDQAx560YD-6vt7cuRuw"/>
+</div>
+<div class="flex flex-col gap-1 max-w-[80%]">
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[11px]">Elenor T.</span>
+<div class="bg-surface-container-low text-on-background px-4 py-3 rounded-lg rounded-tl-none border border-outline-variant/10 font-body-md text-body-md">
+                    The acoustics in here are incredible. Loving the subtle reverb on the piano.
+                </div>
+</div>
+</div>
+<!-- Audience Message -->
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant/20 bg-surface-container-high flex items-center justify-center text-on-surface-variant font-body-md">
+<span class="font-label-caps text-label-caps">J</span>
+</div>
+<div class="flex flex-col gap-1 max-w-[80%]">
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[11px]">Julian</span>
+<div class="bg-surface-container-low text-on-background px-4 py-3 rounded-lg rounded-tl-none border border-outline-variant/10 font-body-md text-body-md">
+                    Will you be playing 'Nocturne in D' tonight?
+                </div>
+</div>
+</div>
+<!-- Artist Message (Highlighted) -->
+<div class="flex items-start gap-4 flex-row-reverse">
+<div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-primary/20 bg-surface">
+<img class="w-full h-full object-cover" data-alt="A headshot of a handsome, sophisticated male artist (Marcus Reed) in a dimly lit, luxurious lounge setting. He is wearing a dark, tailored shirt. Soft, warm spotlighting. Premium, high-fashion aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmUoCiCzmMkxcP9_jr-4V2UFNeokxxJqMnqq9tW_XU8fQgLQq6XWiW9KKzCc0rB1zD9Lw5ZyPXKMRBSaHEivxwT7E2G7KiKKvqiOi5A45A2wEafLIfFee3LelIiy7iLHsvEV2dH-bYwUJqOHiUdwmtOk1kE_DW3vKltfQlmB5AeLLtJ0zmKm05pDO9x9IFM6eonev19-0t-cDKcaFQhVuCmI5tcphZ2yDvBNuyAqKJP4CEOoliDLnyTg"/>
+</div>
+<div class="flex flex-col gap-1 max-w-[80%] items-end">
+<span class="font-label-caps text-label-caps text-primary tracking-wider text-[11px]">Marcus Reed <span class="material-symbols-outlined text-[10px] align-middle ml-1" style="font-variation-settings: 'FILL' 1;">verified</span></span>
+<div class="bg-primary text-on-primary px-5 py-3.5 rounded-lg rounded-tr-none shadow-sm font-body-md text-body-md">
+                     Julian, that's exactly what I'm queuing up next. Stay tuned.
+                 </div>
+</div>
+</div>
+<!-- Audience Message with Tip -->
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant/20 bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="A small, circular profile picture of an elegant female patron in a modern gallery setting. Soft natural lighting, refined aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC35KoNZz3zUlogNvxU5xHAhjX8lsBy_FvHkFxfumj593gDZ51qgytdH8TrCHMDhPES_xP3Pyj_msHVhYtGd4uj9t4eEmu3zYNpC8V2FtXJBwDW8NCGIG1NXBS9Z37HMpjBhVEd-CpwgXAB864Np6nOSYFqb33hsYPvCWCl5WDaXdFfj_xPwwYWKeNRlhG2cWue25akm5ohygz7wt_2haj2sQ8QOB_l4kfQ-cv51jSwdKKDTcWmiOQBNQ"/>
+</div>
+<div class="flex flex-col gap-1 max-w-[80%]">
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[11px]">Sophia L.</span>
+<div class="bg-secondary-fixed/20 border border-secondary-fixed-dim/30 text-on-background px-4 py-3 rounded-lg rounded-tl-none font-body-md text-body-md relative overflow-hidden">
+<!-- Subtle shine effect -->
+<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] animate-[shimmer_3s_infinite]"></div>
+<div class="flex items-center gap-2 mb-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-caps text-label-caps text-[10px]">Tipped $50</span>
+</div>
+                    Absolutely beautiful set so far, Marcus. Thank you.
+                </div>
+</div>
+</div>
+</main>
+<!-- Bottom Input Area (Glassmorphism) -->
+<footer class="w-full sticky bottom-0 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl border-t border-outline-variant/10 px-margin-mobile py-4 pb-safe flex gap-3 items-center z-50">
+<!-- Tip Button -->
+<button class="flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">attach_money</span>
+</button>
+<!-- Input Field -->
+<div class="flex-1 relative">
+<input class="w-full bg-surface-container-low border border-outline-variant/20 rounded-full py-3 px-5 pr-12 font-body-md text-body-md text-on-background placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:ring-0 transition-colors" placeholder="Add to the conversation..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-primary hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</footer>
+<style>
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Safe area padding for mobile notches */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe {
+                padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+<script>
+        // Auto-scroll to bottom on load
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    </script>
+</body></html>

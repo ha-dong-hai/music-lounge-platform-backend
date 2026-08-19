@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AuraLounge - Login</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#eae8e3",
+                    "on-primary-fixed": "#1e1b18",
+                    "secondary-fixed": "#ffdea5",
+                    "on-primary-fixed-variant": "#4b4642",
+                    "surface-container-highest": "#e4e2dd",
+                    "on-tertiary-container": "#cb7c6b",
+                    "tertiary-fixed": "#ffdad3",
+                    "surface-dim": "#dbdad5",
+                    "secondary-fixed-dim": "#e9c176",
+                    "on-secondary-container": "#785a1a",
+                    "on-tertiary-fixed": "#3a0a03",
+                    "on-secondary-fixed": "#261900",
+                    "background": "#fbf9f4",
+                    "tertiary": "#310501",
+                    "inverse-surface": "#30312e",
+                    "on-primary-container": "#96908b",
+                    "surface-bright": "#fbf9f4",
+                    "primary": "#181512",
+                    "on-background": "#1b1c19",
+                    "outline": "#7e756f",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#f5f3ee",
+                    "tertiary-container": "#4d190e",
+                    "surface-variant": "#e4e2dd",
+                    "surface-tint": "#635d5a",
+                    "primary-container": "#2d2926",
+                    "primary-fixed-dim": "#cdc5c0",
+                    "surface": "#fbf9f4",
+                    "on-secondary-fixed-variant": "#5d4201",
+                    "outline-variant": "#cfc4bd",
+                    "secondary-container": "#fed488",
+                    "on-surface": "#1b1c19",
+                    "surface-container": "#f0eee9",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#e9e1dc",
+                    "inverse-on-surface": "#f2f1ec",
+                    "error-container": "#ffdad6",
+                    "secondary": "#775a19",
+                    "on-tertiary-fixed-variant": "#723527",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#4d4540",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#cdc5c0",
+                    "tertiary-fixed-dim": "#ffb4a4",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "20px",
+                    "stack-lg": "80px",
+                    "gutter": "32px",
+                    "unit": "8px",
+                    "margin-desktop": "64px",
+                    "stack-sm": "16px",
+                    "stack-md": "32px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "display-md": [
+                            "Libre Caslon Text"
+                    ],
+                    "headline-lg-mobile": [
+                            "Libre Caslon Text"
+                    ],
+                    "label-caps": [
+                            "Manrope"
+                    ],
+                    "button": [
+                            "Manrope"
+                    ],
+                    "headline-md": [
+                            "Libre Caslon Text"
+                    ],
+                    "body-lg": [
+                            "Manrope"
+                    ],
+                    "display-lg": [
+                            "Libre Caslon Text"
+                    ],
+                    "headline-lg": [
+                            "Libre Caslon Text"
+                    ],
+                    "body-md": [
+                            "Manrope"
+                    ]
+            },
+            "fontSize": {
+                    "display-md": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "button": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg": [
+                            "64px",
+                            {
+                                    "lineHeight": "72px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .tab-active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--on-surface);
+        }
+        .tab-inactive {
+            border-bottom: 2px solid transparent;
+            color: var(--on-surface-variant);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col antialiased selection:bg-surface-variant">
+<!-- Note: TopAppBar and BottomNavBar are suppressed as this is a transactional/linear flow (Login) -->
+<!-- Main Content -->
+<main class="flex-grow flex flex-col relative overflow-hidden">
+<!-- Subtle Ambient Background -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center opacity-30">
+<div class="w-[150vw] h-[150vw] rounded-full bg-surface-container-high filter blur-[100px] transform -translate-y-1/4"></div>
+</div>
+<div class="flex-grow flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-stack-md relative z-10 w-full max-w-md mx-auto">
+<!-- Header -->
+<div class="mb-stack-lg text-center">
+<h1 class="font-display-md text-display-md text-primary mb-unit tracking-tight">AuraLounge</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">The Quiet Luxury of Sound.</p>
+</div>
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant/30 mb-stack-md" id="auth-tabs">
+<button class="flex-1 pb-3 text-center font-button text-button transition-colors duration-200 tab-active" onclick="switchTab('login')">
+                    Log In
+                </button>
+<button class="flex-1 pb-3 text-center font-button text-button transition-colors duration-200 tab-inactive" onclick="switchTab('signup')">
+                    Sign Up
+                </button>
+</div>
+<!-- Login Form -->
+<div class="flex flex-col space-y-stack-sm animate-fade-in" id="login-form">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-stack-sm text-center">Welcome Back</h2>
+<div class="space-y-6">
+<!-- Email Input -->
+<div class="relative group">
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md text-on-surface placeholder-transparent peer transition-colors" id="login-email" placeholder="Email Address" type="email"/>
+<label class="absolute left-0 top-2 font-body-md text-body-md text-on-surface-variant transition-all peer-focus:-top-5 peer-focus:text-xs peer-focus:text-primary peer-not-placeholder-shown:-top-5 peer-not-placeholder-shown:text-xs" for="login-email">Email Address</label>
+</div>
+<!-- Password Input -->
+<div class="relative group">
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md text-on-surface placeholder-transparent peer transition-colors" id="login-password" placeholder="Password" type="password"/>
+<label class="absolute left-0 top-2 font-body-md text-body-md text-on-surface-variant transition-all peer-focus:-top-5 peer-focus:text-xs peer-focus:text-primary peer-not-placeholder-shown:-top-5 peer-not-placeholder-shown:text-xs" for="login-password">Password</label>
+<button class="absolute right-0 top-2 text-on-surface-variant hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-lg">visibility_off</span>
+</button>
+</div>
+</div>
+<div class="flex justify-end mt-2 mb-stack-sm">
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors" href="#">Forgot Password?</a>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 px-6 rounded font-button text-button hover:bg-primary/90 transition-colors flex justify-center items-center">
+                    Continue
+                    <span class="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
+</button>
+</div>
+<!-- Sign Up Form (Hidden by default) -->
+<div class="hidden flex-col space-y-stack-sm animate-fade-in" id="signup-form">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-stack-sm text-center">Join the Lounge</h2>
+<div class="space-y-6">
+<!-- Name Input -->
+<div class="relative group">
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md text-on-surface placeholder-transparent peer transition-colors" id="signup-name" placeholder="Full Name" type="text"/>
+<label class="absolute left-0 top-2 font-body-md text-body-md text-on-surface-variant transition-all peer-focus:-top-5 peer-focus:text-xs peer-focus:text-primary peer-not-placeholder-shown:-top-5 peer-not-placeholder-shown:text-xs" for="signup-name">Full Name</label>
+</div>
+<!-- Email Input -->
+<div class="relative group">
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md text-on-surface placeholder-transparent peer transition-colors" id="signup-email" placeholder="Email Address" type="email"/>
+<label class="absolute left-0 top-2 font-body-md text-body-md text-on-surface-variant transition-all peer-focus:-top-5 peer-focus:text-xs peer-focus:text-primary peer-not-placeholder-shown:-top-5 peer-not-placeholder-shown:text-xs" for="signup-email">Email Address</label>
+</div>
+<!-- Password Input -->
+<div class="relative group">
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md text-on-surface placeholder-transparent peer transition-colors" id="signup-password" placeholder="Create Password" type="password"/>
+<label class="absolute left-0 top-2 font-body-md text-body-md text-on-surface-variant transition-all peer-focus:-top-5 peer-focus:text-xs peer-focus:text-primary peer-not-placeholder-shown:-top-5 peer-not-placeholder-shown:text-xs" for="signup-password">Create Password</label>
+</div>
+</div>
+<div class="mt-stack-sm">
+<button class="w-full bg-primary text-on-primary py-4 px-6 rounded font-button text-button hover:bg-primary/90 transition-colors flex justify-center items-center">
+                        Request Access
+                        <span class="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Divider -->
+<div class="relative my-stack-md flex items-center justify-center">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant/30"></div>
+</div>
+<div class="relative bg-background px-4 font-label-caps text-label-caps text-on-surface-variant">
+                    OR
+                </div>
+</div>
+<!-- Social Logins -->
+<div class="space-y-unit">
+<button class="w-full border border-outline-variant/50 bg-surface text-on-surface py-3 px-6 rounded font-button text-button hover:bg-surface-container-low transition-colors flex items-center justify-center group">
+<svg class="w-5 h-5 mr-3 group-hover:opacity-80 transition-opacity" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"></path>
+</svg>
+                    Continue with Google
+                </button>
+<button class="w-full border border-outline-variant/50 bg-surface text-on-surface py-3 px-6 rounded font-button text-button hover:bg-surface-container-low transition-colors flex items-center justify-center group">
+<svg class="w-5 h-5 mr-3 group-hover:opacity-80 transition-opacity" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10C22 6.477 17.523 2 12 2zm3.328 15.172c-1.391.703-2.906.313-3.75-.484-.844-.797-1.125-2.281-.484-3.594.625-1.281 1.953-1.625 2.844-1.625 2.031 0 2.375 1.703 2.375 2.281 0 1.906-1.563 3.031-1.359 2.547.203-.484.5-1.047.5-1.578 0-.969-.531-1.469-1.266-1.469-.75 0-1.266.625-1.266 1.438 0 1.063.859 1.547 1.406 1.547.453 0 .828-.219.969-.594.203-.516.141-1.141-.125-1.594-.25-.438-.734-.688-1.266-.688-1.063 0-1.875 1.141-1.875 2.453 0 1.25.922 2.156 2.078 2.156.891 0 1.625-.453 1.922-1.188.094-.25.141-.531.141-.781 0-.078-.063-.094-.125-.094s-.125.047-.141.109c-.188.672-.891 1.156-1.656 1.156zM15.438 9.5c-.828 0-1.453-.781-1.453-1.781 0-.953.594-1.656 1.344-1.656.766 0 1.453.719 1.453 1.75 0 .969-.609 1.688-1.344 1.688z"></path>
+</svg>
+                    Continue with Apple
+                </button>
+</div>
+</div>
+</main>
+<script>
+        function switchTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const tabs = document.getElementById('auth-tabs').children;
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                loginForm.classList.add('flex');
+                signupForm.classList.add('hidden');
+                signupForm.classList.remove('flex');
+                
+                tabs[0].classList.add('tab-active');
+                tabs[0].classList.remove('tab-inactive');
+                tabs[1].classList.add('tab-inactive');
+                tabs[1].classList.remove('tab-active');
+            } else {
+                signupForm.classList.remove('hidden');
+                signupForm.classList.add('flex');
+                loginForm.classList.add('hidden');
+                loginForm.classList.remove('flex');
+                
+                tabs[1].classList.add('tab-active');
+                tabs[1].classList.remove('tab-inactive');
+                tabs[0].classList.add('tab-inactive');
+                tabs[0].classList.remove('tab-active');
+            }
+        }
+    </script>
+</body></html>

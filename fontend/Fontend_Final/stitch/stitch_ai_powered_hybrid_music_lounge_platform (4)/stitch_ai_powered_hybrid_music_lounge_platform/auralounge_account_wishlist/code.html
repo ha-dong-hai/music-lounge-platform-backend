@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Profile &amp; Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#e4e2dd",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-container": "#96908b",
+                      "on-tertiary-container": "#cb7c6b",
+                      "primary-container": "#2d2926",
+                      "surface-container-high": "#eae8e3",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "tertiary-container": "#4d190e",
+                      "on-background": "#1b1c19",
+                      "on-primary-fixed": "#1e1b18",
+                      "inverse-surface": "#30312e",
+                      "on-error-container": "#93000a",
+                      "surface": "#fbf9f4",
+                      "background": "#fbf9f4",
+                      "surface-container-highest": "#e4e2dd",
+                      "surface-tint": "#635d5a",
+                      "tertiary-fixed": "#ffdad3",
+                      "secondary-container": "#fed488",
+                      "inverse-on-surface": "#f2f1ec",
+                      "tertiary": "#310501",
+                      "outline": "#7e756f",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-surface-variant": "#4d4540",
+                      "on-secondary-fixed": "#261900",
+                      "on-secondary-container": "#785a1a",
+                      "inverse-primary": "#cdc5c0",
+                      "primary": "#181512",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-surface": "#1b1c19",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#775a19",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-bright": "#fbf9f4",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "secondary-fixed": "#ffdea5",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#cfc4bd",
+                      "primary-fixed": "#e9e1dc",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-dim": "#dbdad5",
+                      "on-secondary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-lg": "80px",
+                      "stack-sm": "16px",
+                      "unit": "8px",
+                      "stack-md": "32px",
+                      "margin-desktop": "64px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px",
+                      "gutter": "32px"
+              },
+              "fontFamily": {
+                      "button": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fbf9f4; /* surface */
+            color: #1b1c19; /* on-surface */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide scrollbar for clean aesthetic */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col md:flex-row pb-20 md:pb-0">
+<!-- Mobile Top App Bar -->
+<header class="md:hidden w-full top-0 sticky z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant/10">
+<div class="flex justify-between items-center px-margin-mobile h-16">
+<button class="text-on-surface-variant dark:text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-display-md text-display-md tracking-tighter text-primary dark:text-primary-fixed">AuraLounge</h1>
+<button class="text-on-surface-variant dark:text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+</button>
+</div>
+</header>
+<!-- Desktop Side Nav (Simulated for layout, hidden on mobile) -->
+<aside class="hidden md:flex flex-col w-64 border-r border-outline-variant/10 fixed h-full z-40 bg-surface">
+<div class="p-margin-desktop h-full flex flex-col">
+<h1 class="font-display-md text-display-md tracking-tighter text-primary mb-stack-lg">AuraLounge</h1>
+<nav class="flex-1 space-y-stack-sm">
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-primary transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-caps text-label-caps">Discovery</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-primary transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+<span class="font-label-caps text-label-caps">Tickets</span>
+</a>
+<a class="flex items-center gap-4 text-primary font-bold transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</nav>
+<div class="mt-auto">
+<button class="flex items-center gap-4 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Sign Out</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-stack-md md:pt-stack-lg pb-stack-lg">
+<!-- Profile Header Section -->
+<section class="mb-stack-lg flex flex-col md:flex-row items-start md:items-center gap-gutter">
+<div class="relative w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden shrink-0 border border-outline-variant/20">
+<img alt="Profile Picture" class="object-cover w-full h-full" data-alt="A close up, high key, elegant portrait of a stylish person in a minimalist gallery setting. Soft natural lighting from a window illuminates their features, casting subtle shadows. The mood is sophisticated and quiet luxury. The background is a blurred, muted off-white gallery wall. Focus on the subject's calm expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPlnvjkIo_cFiNUfF508heMQc5qGDIA2EQmOCqif7hDE-3fIMeJDllyxRg6X85FGYhbYT-5FlmY0oAEipK8rQCuBAeX9blpkvV53LdKkqcX7imwnsdVwi8a0O46-uIV_PzjJw1frWhOqzeQV8ruXE77imv_I1IO2OSPsBZ_tDcnlE9fhZvVVLUrA5U-jO7ftNfuYoOwSsQDBGS0Rc2M_KiHGACwDTzUnM3wv4zc9A0Sibge1EU9A5ldg"/>
+<button class="absolute bottom-2 right-2 bg-surface/80 backdrop-blur-md p-2 rounded-full border border-outline-variant/30 hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<div class="flex-1">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-unit">Elias Thorne</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-stack-sm">Curator &amp; Connoisseur • Member since 2023</p>
+<div class="flex flex-wrap gap-unit">
+<span class="px-3 py-1 bg-surface-container border border-outline-variant/30 rounded font-label-caps text-[10px] tracking-wider text-on-surface-variant">JAZZ</span>
+<span class="px-3 py-1 bg-surface-container border border-outline-variant/30 rounded font-label-caps text-[10px] tracking-wider text-on-surface-variant">NEO-SOUL</span>
+<span class="px-3 py-1 bg-surface-container border border-outline-variant/30 rounded font-label-caps text-[10px] tracking-wider text-on-surface-variant">INTIMATE VENUES</span>
+</div>
+</div>
+<div class="w-full md:w-auto mt-stack-sm md:mt-0 flex gap-unit">
+<button class="flex-1 md:flex-none px-6 py-3 border border-outline-variant text-primary font-button text-button rounded hover:bg-surface-container transition-colors">
+                    Edit Profile
+                </button>
+</div>
+</section>
+<!-- Bento Grid Layout for Settings & Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Navigation / Settings Categories -->
+<div class="lg:col-span-4 flex flex-col gap-unit">
+<!-- Settings Nav Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-stack-sm px-4">Account Settings</h3>
+<nav class="flex flex-col space-y-1">
+<button class="flex items-center justify-between w-full p-4 rounded-lg bg-surface-container text-primary text-left transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="person_outline">person_outline</span>
+<span class="font-button text-button">Personal Information</span>
+</div>
+</button>
+<button class="flex items-center justify-between w-full p-4 rounded-lg hover:bg-surface-container-low text-on-surface-variant text-left transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+<span class="font-button text-button">Security &amp; Password</span>
+</div>
+</button>
+<button class="flex items-center justify-between w-full p-4 rounded-lg hover:bg-surface-container-low text-on-surface-variant text-left transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+<span class="font-button text-button">Payment Methods</span>
+</div>
+</button>
+<button class="flex items-center justify-between w-full p-4 rounded-lg hover:bg-surface-container-low text-on-surface-variant text-left transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-button text-button">Notifications</span>
+</div>
+<span class="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full">2</span>
+</button>
+</nav>
+</div>
+<!-- Support Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-stack-sm mt-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-stack-sm px-4">Support</h3>
+<nav class="flex flex-col space-y-1">
+<button class="flex items-center justify-between w-full p-4 rounded-lg hover:bg-surface-container-low text-on-surface-variant text-left transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-button text-button">Help Center</span>
+</div>
+</button>
+</nav>
+</div>
+</div>
+<!-- Right Column: Active Context Area (e.g., Wishlist & Recent Activity) -->
+<div class="lg:col-span-8 flex flex-col gap-gutter">
+<!-- My Wishlist Section -->
+<section>
+<div class="flex items-center justify-between mb-stack-sm">
+<h3 class="font-headline-md text-headline-md text-primary">My Wishlist</h3>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">View All</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-unit">
+<!-- Wishlist Card 1 -->
+<div class="group relative rounded-xl overflow-hidden bg-surface-container-lowest border border-outline-variant/20 flex flex-col aspect-[4/3]">
+<div class="absolute inset-0 z-0">
+<img alt="Event Image" class="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-700" data-alt="A dimly lit, atmospheric jazz club interior shot from the perspective of an audience member. A solitary saxophone player is silhouetted against a warm amber spotlight on a small stage. The mood is intimate, exclusive, and moody. Deep blacks and warm golds dominate the palette, conveying quiet luxury and musical focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1g0CfokQ7wwHAEPQMXfSFAoB2TU2sG5KXCTZdY4E_41YaxSi7FSC3cSnE5pdASTOsa2dfmlAJlHegQrAzNR03If__W0iS0BBDM2sGFzUViQOl4ngHIQhboxmRbs2MevVVZ2XOmM1U1ZzQBbVXSCdxKuMbFtgDKsjDd5fzOW0t6R3V6yHA_O-IcN0zFjqFdgvdJpO2RkU4CPJlN-Xh3wRLy8dlEJqeKr4eY4Pk5Nc2yhnLEhc--mliZg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+</div>
+<button class="absolute top-4 right-4 z-10 p-2 rounded-full bg-surface/20 backdrop-blur-md text-surface hover:text-tertiary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite" data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<div class="mt-auto relative z-10 p-4 text-surface">
+<p class="font-label-caps text-[10px] tracking-widest text-surface-variant mb-1">OCT 24 • THE VELVET ROOM</p>
+<h4 class="font-headline-md text-headline-md leading-tight mb-2">Miles &amp; Echoes Trio</h4>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-sm opacity-80">Waitlist Open</span>
+<button class="bg-surface text-primary px-4 py-1.5 rounded font-button text-xs hover:bg-surface-variant transition-colors">Details</button>
+</div>
+</div>
+</div>
+<!-- Wishlist Card 2 -->
+<div class="group relative rounded-xl overflow-hidden bg-surface-container-lowest border border-outline-variant/20 flex flex-col aspect-[4/3]">
+<div class="absolute inset-0 z-0">
+<img alt="Event Image" class="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-700" data-alt="An abstract, macro shot of a grand piano's strings and hammers, bathed in cool, high-key natural light coming from a large unseen window. The aesthetic is extremely minimalist and modern, focusing on the geometry and texture of the instrument. The color palette is composed of crisp whites, soft greys, and pale wood tones. The mood is serene and refined." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTH6N8M_c2Jj3L_uVypGKBxv8NNqkxLAKhpPxNQ14a0n_cOyetQdGI2VBpmZrVK3uH9JuQCx1FgrXx9Nlh7iwEUwGVPMznXiCrBrHwBIO0ishUFbi4gjOu1lty0iaQfxlePtQW91RPsyeDNEjlGk9ZmYeWVXGZqjUz5-yagX8g21FxbtidpgbdL1LX4p2BnSFg_RoAyrjbrTQLiXGEe9YoGqs_jcPtKxKGQG7dMwJeWlW2_WG7utuY5g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+</div>
+<button class="absolute top-4 right-4 z-10 p-2 rounded-full bg-surface/20 backdrop-blur-md text-surface hover:text-tertiary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite" data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<div class="mt-auto relative z-10 p-4 text-surface">
+<p class="font-label-caps text-[10px] tracking-widest text-surface-variant mb-1">NOV 12 • LUMINA HALL</p>
+<h4 class="font-headline-md text-headline-md leading-tight mb-2">Acoustic Sessions: Clara V.</h4>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-sm text-secondary-fixed">Tickets Available Soon</span>
+<button class="bg-surface text-primary px-4 py-1.5 rounded font-button text-xs hover:bg-surface-variant transition-colors">Details</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Notifications Center Preview -->
+<section>
+<div class="flex items-center justify-between mb-stack-sm">
+<h3 class="font-headline-md text-headline-md text-primary">Recent Alerts</h3>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl divide-y divide-outline-variant/10">
+<!-- Notification Item 1 -->
+<div class="p-4 flex gap-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="mt-1 w-2 h-2 rounded-full bg-tertiary-container shrink-0"></div>
+<div class="flex-1">
+<h5 class="font-button text-button text-primary mb-1">Artist Match: The Modern Quintet</h5>
+<p class="font-body-md text-sm text-on-surface-variant">Based on your love for intimate jazz, we think you'd enjoy this upcoming performance at The Blue Note.</p>
+<span class="font-label-caps text-[10px] text-outline mt-2 block">2 HOURS AGO</span>
+</div>
+</div>
+<!-- Notification Item 2 -->
+<div class="p-4 flex gap-4 hover:bg-surface-container-low transition-colors cursor-pointer opacity-70">
+<div class="mt-1 w-2 h-2 rounded-full bg-transparent shrink-0"></div>
+<div class="flex-1">
+<h5 class="font-button text-button text-primary mb-1">Ticket Resale Alert</h5>
+<p class="font-body-md text-sm text-on-surface-variant">A pair of tickets just became available for 'Symphony Under the Stars' which you added to your wishlist.</p>
+<span class="font-label-caps text-[10px] text-outline mt-2 block">1 DAY AGO</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Nav Bar -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl border-t border-outline-variant/10">
+<div class="flex justify-around items-center h-20 px-margin-mobile pb-safe">
+<a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-caps text-label-caps mt-1">Discovery</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+<span class="font-label-caps text-label-caps mt-1">Tickets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-secondary-fixed-dim font-bold transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

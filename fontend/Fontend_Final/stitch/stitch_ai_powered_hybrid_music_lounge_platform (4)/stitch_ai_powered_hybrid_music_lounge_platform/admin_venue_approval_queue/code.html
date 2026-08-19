@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Venue Approval Dashboard - AuraLounge Admin</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#cfc4bd",
+                        "inverse-surface": "#30312e",
+                        "on-secondary-fixed": "#261900",
+                        "surface-tint": "#635d5a",
+                        "on-tertiary-container": "#cb7c6b",
+                        "primary-container": "#2d2926",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "on-secondary-container": "#785a1a",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "secondary-fixed-dim": "#e9c176",
+                        "tertiary-container": "#4d190e",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#775a19",
+                        "primary-fixed": "#e9e1dc",
+                        "on-primary-fixed": "#1e1b18",
+                        "background": "#fbf9f4",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-container": "#96908b",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "secondary-container": "#fed488",
+                        "inverse-primary": "#cdc5c0",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "surface-dim": "#dbdad5",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-bright": "#fbf9f4",
+                        "on-surface": "#1b1c19",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#310501",
+                        "surface": "#fbf9f4",
+                        "secondary-fixed": "#ffdea5",
+                        "on-secondary": "#ffffff",
+                        "primary": "#181512",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "outline": "#7e756f",
+                        "surface-container-high": "#eae8e3",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-background": "#1b1c19",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#f0eee9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "unit": "8px",
+                        "container-max": "1440px",
+                        "stack-sm": "16px",
+                        "gutter": "32px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Libre Caslon Text"],
+                        "label-caps": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex h-screen overflow-hidden antialiased selection:bg-surface-variant">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface-container-low dark:bg-primary-container font-label-caps text-label-caps font-body-md text-body-md docked left-0 h-screen w-64 border-r border-outline-variant opacity-100 shadow-none flex-col h-full py-stack-md px-4 gap-stack-sm flex-shrink-0 z-20">
+<!-- Header -->
+<div class="mb-stack-md flex items-center gap-3 pl-4">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high shrink-0">
+<img alt="System Manager" class="w-full h-full object-cover" data-alt="A minimalist headshot of a system administrator. The image features a clean, high-key lighting setup with a soft, neutral cream background. The subject is out of focus to emphasize privacy, creating an abstract, professional, and sophisticated vibe in line with 'Quiet Luxury'." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUtE_NXSmynqQ9Zgz4wuRVWJ_Kz1LsoCxdty4KcJ5KZf2ikrH8aYvlO1cZuXbuW7X6VEtx8OSAdJ0v2oIvAqtXQK1ZaQ46r3Sag9yHumU-3titYuGCeDuuaejM1XhSCvNxJYHGASne6WTsLYGJF_oPUnH04W-JL0gLTRMP1LFFmjbeqlpRcfHxKJ8M1bE9sOIB8eOSk5MyCmvWcdpO3I1HtA711T2EhpmsI5ckJn2XACbUIr0YhIU6Uw"/>
+</div>
+<div>
+<div class="text-primary dark:text-primary-fixed font-headline-md text-sm leading-tight font-semibold">System Management</div>
+<div class="text-on-surface-variant font-label-caps text-[10px]">Global Dashboard</div>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-2 flex-grow">
+<!-- Users - Inactive -->
+<li class="cursor-pointer active:scale-95 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Users</span>
+</li>
+<!-- Packages - Inactive -->
+<li class="cursor-pointer active:scale-95 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span>Packages</span>
+</li>
+<!-- Criteria - Active (closest semantic match for approval/review) -->
+<li class="cursor-pointer active:scale-95 text-primary font-bold border-l-2 border-primary pl-4 bg-surface-container-high/50 transition-all duration-300 rounded-r flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">rule</span>
+<span>Criteria</span>
+</li>
+<!-- Reports - Inactive -->
+<li class="cursor-pointer active:scale-95 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span>Reports</span>
+</li>
+</ul>
+<!-- CTA -->
+<button class="bg-primary text-on-primary font-button text-button py-3 px-6 rounded my-4 hover:opacity-90 transition-opacity">
+            Add New Resource
+        </button>
+<!-- Footer -->
+<ul class="flex flex-col gap-2 mt-auto">
+<li class="cursor-pointer active:scale-95 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+<span>Support</span>
+</li>
+<li class="cursor-pointer active:scale-95 text-on-surface-variant font-medium pl-4 hover:bg-surface-container-high transition-all duration-300 rounded flex items-center gap-3 py-3">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span>Sign Out</span>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col h-screen overflow-hidden bg-background">
+<!-- TopNavBar (Responsive adaptation for mobile, mostly decorative on desktop with sidebar) -->
+<header class="bg-surface dark:bg-surface text-primary dark:text-primary-fixed font-headline-md text-headline-md font-body-md text-body-md docked full-width top-0 border-b border-outline-variant/20 shadow-none flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 z-10 shrink-0">
+<!-- Brand -->
+<div class="font-display-md text-[24px] md:text-display-md text-primary dark:text-primary-fixed font-bold tracking-tight">
+                AuraLounge Admin
+            </div>
+<!-- Actions -->
+<div class="flex items-center gap-6">
+<!-- Search (Left aligned as per JSON, but pushed right in flex) -->
+<div class="hidden md:flex items-center border-b border-outline-variant pb-1 w-64">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none outline-none font-body-md text-body-md text-on-surface w-full placeholder:text-on-surface-variant/50 p-0 focus:ring-0" placeholder="Search venues..." type="text"/>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="cursor-pointer active:opacity-70 hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="cursor-pointer active:opacity-70 hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 border border-outline-variant/30 md:hidden">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A close-up abstract portrait of an administrator profile in a sophisticated, minimalist setting. Soft cinematic lighting highlights subtle textures. The color palette revolves around muted creams and soft charcoals, evoking a sense of quiet luxury and high-end exclusivity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8TRrKuK0l-mz17D_SJpv1TEXsESb0IxF3WnuXIovDCvJDYpqT5BLg7TkNoHl77dCvg43ynb8LwVSJsr6EM94en19fba5c7vuZj8GFM6KOenCCRZbmZaNlmPJiv3LogrRf0D56MmwqgFqNvOXfs3l144Nhvw3O03nd3W9SNTxECYNu7Y0sO0u0vgSsiLxk-Qanol_0BIIk3ICkMNlZk-MbxGB0lDJjsaIQxPiV17z7wtzrnwAU7jSgEQ"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-grow overflow-y-auto px-margin-mobile md:px-margin-desktop py-stack-md">
+<div class="max-w-[1200px] mx-auto">
+<!-- Page Header -->
+<div class="mb-stack-md flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Venue Approvals</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Review and manage pending venue applications.</p>
+</div>
+<!-- Filters -->
+<div class="flex gap-4 items-center">
+<div class="relative">
+<select class="appearance-none bg-transparent border border-outline-variant/30 rounded px-4 py-2 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+<option value="">All Cities</option>
+<option value="ny">New York</option>
+<option value="ldn">London</option>
+<option value="tyo">Tokyo</option>
+<option value="par">Paris</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">arrow_drop_down</span>
+</div>
+<button class="flex items-center gap-2 border border-outline-variant/30 rounded px-4 py-2 font-button text-button text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                            Filter
+                        </button>
+</div>
+</div>
+<!-- Bento Grid / Card Layout for Venues -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Venue Card 1 -->
+<article class="bg-surface-container-low border border-outline-variant/10 rounded flex flex-col overflow-hidden hover:border-outline-variant/30 transition-all duration-300">
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="A moody, high-end interior shot of a minimalist jazz lounge. Dim, warm lighting casts soft shadows across plush velvet seating and a polished grand piano in the background. The scene is sophisticated, conveying a sense of exclusivity and calm, utilizing a palette of deep charcoal, rich mahogany, and soft gold accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDS_OUGQ5uakGS1bR6Vv2DjtvmcsMa9AVVZHU2pyvDw0ZphnBkCN1Fs5TOZg3MOfebeQZJjCPStSBInQLSTcWXzsGMUzdNpKlhX8TALjufiuxyi-9W8puNyCEbaN3NNabwXA8cKuSoaZSPQbju4udZ816XTqXsWGvIu35OEM5wpntURlrNtSLYHg61y3vtL0oO9B0Nz5waQimAlWldbAw5RlaZIRpI90RR7yumjwcG56-0-4xCdjf4S5w"/>
+<div class="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-2 py-1 rounded font-label-caps text-label-caps text-on-surface border border-outline-variant/20">
+                                Pending Review
+                            </div>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="mb-4">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">The Velvet Note</h2>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-sm">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>New York, NY</span>
+</div>
+</div>
+<div class="space-y-2 mb-6 flex-grow">
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Owner</span>
+<span class="text-on-surface">Elias Vance</span>
+</div>
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Submitted</span>
+<span class="text-on-surface">Oct 12, 2023</span>
+</div>
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Capacity</span>
+<span class="text-on-surface">150</span>
+</div>
+</div>
+<div class="flex gap-3 mt-auto">
+<button class="flex-1 bg-primary text-on-primary font-button text-button py-2 px-4 rounded hover:bg-primary/90 transition-colors">
+                                    Approve
+                                </button>
+<button class="flex-1 border border-outline text-on-surface font-button text-button py-2 px-4 rounded hover:bg-surface-container-high transition-colors">
+                                    Reject
+                                </button>
+</div>
+</div>
+</article>
+<!-- Venue Card 2 -->
+<article class="bg-surface-container-low border border-outline-variant/10 rounded flex flex-col overflow-hidden hover:border-outline-variant/30 transition-all duration-300">
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="An expansive, light-filled contemporary art gallery space adapted for acoustic performances. Floor-to-ceiling windows draped in sheer white fabric diffuse bright, soft natural light across polished concrete floors. The aesthetic is ultra-minimalist, airy, and premium, dominated by vast whites, subtle creams, and structural shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo_chWfPOt-B7_1hFaZqmjdbpdJV41szy_oRQfqGwUGhSjm6OL8BrCZrUVXmEsXCTCBU0pVGqJM74GTE9aIla_c4DE_rAcgosB3N0of3oDb5JzGM9xbyXpwkLAW9yUaoyeyntni__X0HJ6FPOE4ojbFT3_I7Ycr3GAGCl7PrJFFetY6dujqv53PbjBFOhXEfElB7ySLo7PcqnF3AuLxvVD9Cv5HQ_BDOSj9t69BCW9dq3AwIH1-xnjeA"/>
+<div class="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-2 py-1 rounded font-label-caps text-label-caps text-on-surface border border-outline-variant/20">
+                                Pending Review
+                            </div>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="mb-4">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">Lumina Soundspace</h2>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-sm">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>London, UK</span>
+</div>
+</div>
+<div class="space-y-2 mb-6 flex-grow">
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Owner</span>
+<span class="text-on-surface">Sarah Jenkins</span>
+</div>
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Submitted</span>
+<span class="text-on-surface">Oct 14, 2023</span>
+</div>
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Capacity</span>
+<span class="text-on-surface">85</span>
+</div>
+</div>
+<div class="flex gap-3 mt-auto">
+<button class="flex-1 bg-primary text-on-primary font-button text-button py-2 px-4 rounded hover:bg-primary/90 transition-colors">
+                                    Approve
+                                </button>
+<button class="flex-1 border border-outline text-on-surface font-button text-button py-2 px-4 rounded hover:bg-surface-container-high transition-colors">
+                                    Reject
+                                </button>
+</div>
+</div>
+</article>
+<!-- Venue Card 3 -->
+<article class="bg-surface-container-low border border-outline-variant/10 rounded flex flex-col overflow-hidden hover:border-outline-variant/30 transition-all duration-300">
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="A subterranean, intimate listening room focused on audiophile experiences. The walls are paneled in dark, acoustic-treated wood. Vintage, high-end tube amplifiers glow faintly in the background. The lighting is cinematic and low-key, utilizing rich umbers and deep blacks to create a hushed, culturally deep atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVVD_xoiw4in1dleY6TGqAprbQWImHX69OwApH1z8QbwyBjo08PBj34MeCA26urz6TYRT7zt34MADD723FFMD4tk6-7rtV1g2hxx_GQe1lAGMgdWwjJLsEiO2ymbJAiP6faaFDCI9QlUh1T2WfMM8VrwV2t42_1e_BLpGDSZFLG-BVQla1fKTg6ON8zEErATMpgEmP-OPyjgFXDqJekiGJoi0wXuuJdPbwVlCdHusi3rD6dpaeZdDQLg"/>
+<div class="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-2 py-1 rounded font-label-caps text-label-caps text-on-surface border border-outline-variant/20">
+                                Pending Review
+                            </div>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="mb-4">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">The Frequency</h2>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-sm">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>Tokyo, JP</span>
+</div>
+</div>
+<div class="space-y-2 mb-6 flex-grow">
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Owner</span>
+<span class="text-on-surface">Kenji Sato</span>
+</div>
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Submitted</span>
+<span class="text-on-surface">Oct 15, 2023</span>
+</div>
+<div class="flex justify-between font-body-md text-sm">
+<span class="text-on-surface-variant">Capacity</span>
+<span class="text-on-surface">40</span>
+</div>
+</div>
+<div class="flex gap-3 mt-auto">
+<button class="flex-1 bg-primary text-on-primary font-button text-button py-2 px-4 rounded hover:bg-primary/90 transition-colors">
+                                    Approve
+                                </button>
+<button class="flex-1 border border-outline text-on-surface font-button text-button py-2 px-4 rounded hover:bg-surface-container-high transition-colors">
+                                    Reject
+                                </button>
+</div>
+</div>
+</article>
+</div>
+</div>
+</div>
+</main>
+</body></html>

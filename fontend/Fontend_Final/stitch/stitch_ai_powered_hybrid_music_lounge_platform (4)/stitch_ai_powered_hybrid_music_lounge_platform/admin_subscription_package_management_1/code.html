@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Subscription Management | AuraLounge</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#ffffff",
+                      "on-surface-variant": "#4d4540",
+                      "outline-variant": "#cfc4bd",
+                      "surface-container-highest": "#e4e2dd",
+                      "error-container": "#ffdad6",
+                      "background": "#fbf9f4",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "secondary-container": "#fed488",
+                      "surface": "#fbf9f4",
+                      "tertiary": "#310501",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-tint": "#635d5a",
+                      "on-error": "#ffffff",
+                      "primary-container": "#2d2926",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#f2f1ec",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-variant": "#e4e2dd",
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-fixed": "#261900",
+                      "outline": "#7e756f",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-bright": "#fbf9f4",
+                      "surface-container": "#f0eee9",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#775a19",
+                      "on-tertiary-container": "#cb7c6b",
+                      "tertiary-container": "#4d190e",
+                      "on-secondary": "#ffffff",
+                      "on-primary-container": "#96908b",
+                      "on-surface": "#1b1c19",
+                      "inverse-surface": "#30312e",
+                      "on-background": "#1b1c19",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "secondary-fixed": "#ffdea5",
+                      "inverse-primary": "#cdc5c0",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-container-low": "#f5f3ee",
+                      "on-secondary-container": "#785a1a",
+                      "primary": "#181512",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#dbdad5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "32px",
+                      "stack-md": "32px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px",
+                      "stack-sm": "16px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (Admin) -->
+<aside class="fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 bg-surface-container dark:bg-surface-container-high flex flex-col py-8 px-6 gap-stack-sm z-40 hidden md:flex">
+<!-- Header -->
+<div class="mb-stack-md px-2">
+<h1 class="text-headline-md font-headline-md text-primary tracking-tight">Management</h1>
+<p class="text-body-md font-body-md text-on-surface-variant/70 mt-1">Staff Access</p>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-body-md font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+<span class="text-body-md font-body-md">Events</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span class="text-body-md font-body-md">Livestreams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="text-body-md font-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-body-md font-body-md">Staff</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold bg-surface-container-highest/50 translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</a>
+</nav>
+<!-- Footer Tabs -->
+<div class="mt-auto flex flex-col gap-2 pt-stack-sm border-t border-outline-variant/10">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-body-md font-body-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error-container/20 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-body-md font-body-md">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full flex flex-col gap-stack-lg">
+<!-- Page Header -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-stack-sm pb-stack-sm border-b border-outline-variant/20">
+<div>
+<span class="text-label-caps font-label-caps text-on-surface-variant/60 block mb-2">Platform Administration</span>
+<h2 class="text-display-md font-display-md text-primary tracking-tight">Subscription Packages</h2>
+</div>
+<button class="bg-primary text-on-primary font-button text-button px-6 py-3 rounded-DEFAULT hover:bg-primary/90 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Create Package
+            </button>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Packages List (Left Column - 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-stack-sm">
+<!-- Package Card: Elite (Active) -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant/20 p-6 flex flex-col md:flex-row gap-6 relative group transition-all hover:border-outline-variant/40">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<h3 class="text-headline-md font-headline-md text-primary">Elite Curator</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-label-caps font-label-caps px-2 py-1 rounded-sm border border-outline-variant/10">Active</span>
+</div>
+<p class="text-display-md font-display-md text-on-surface mb-6">$299<span class="text-body-md font-body-md text-on-surface-variant/60 align-baseline">/mo</span></p>
+<div class="grid grid-cols-2 gap-y-4 gap-x-8">
+<div>
+<span class="block text-label-caps font-label-caps text-on-surface-variant/60 mb-1">Max Tickets / Event</span>
+<span class="text-body-lg font-body-lg text-on-surface">Unlimited</span>
+</div>
+<div>
+<span class="block text-label-caps font-label-caps text-on-surface-variant/60 mb-1">Max Tour Scenes</span>
+<span class="text-body-lg font-body-lg text-on-surface">15</span>
+</div>
+<div>
+<span class="block text-label-caps font-label-caps text-on-surface-variant/60 mb-1">AI Poster Generation</span>
+<span class="flex items-center gap-1 text-body-md font-body-md text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary">check_circle</span> Enabled
+                                </span>
+</div>
+</div>
+</div>
+<div class="flex md:flex-col gap-2 justify-start md:border-l border-outline-variant/10 md:pl-6 pt-4 md:pt-0 border-t md:border-t-0">
+<button class="flex-1 md:flex-none border border-outline-variant/30 text-on-surface font-button text-button px-4 py-2 rounded-DEFAULT hover:bg-surface-container-lowest transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit</span> Edit
+                        </button>
+<button class="flex-1 md:flex-none border border-outline-variant/10 text-error font-button text-button px-4 py-2 rounded-DEFAULT hover:bg-error-container/20 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">block</span> Deactivate
+                        </button>
+</div>
+</div>
+<!-- Package Card: Standard -->
+<div class="bg-surface rounded-lg border border-outline-variant/10 p-6 flex flex-col md:flex-row gap-6 relative group transition-all hover:border-outline-variant/30 opacity-80">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<h3 class="text-headline-md font-headline-md text-primary">Lounge Standard</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-label-caps font-label-caps px-2 py-1 rounded-sm border border-outline-variant/10">Active</span>
+</div>
+<p class="text-display-md font-display-md text-on-surface mb-6">$99<span class="text-body-md font-body-md text-on-surface-variant/60 align-baseline">/mo</span></p>
+<div class="grid grid-cols-2 gap-y-4 gap-x-8">
+<div>
+<span class="block text-label-caps font-label-caps text-on-surface-variant/60 mb-1">Max Tickets / Event</span>
+<span class="text-body-lg font-body-lg text-on-surface">500</span>
+</div>
+<div>
+<span class="block text-label-caps font-label-caps text-on-surface-variant/60 mb-1">Max Tour Scenes</span>
+<span class="text-body-lg font-body-lg text-on-surface">3</span>
+</div>
+<div>
+<span class="block text-label-caps font-label-caps text-on-surface-variant/60 mb-1">AI Poster Generation</span>
+<span class="flex items-center gap-1 text-body-md font-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">cancel</span> Disabled
+                                </span>
+</div>
+</div>
+</div>
+<div class="flex md:flex-col gap-2 justify-start md:border-l border-outline-variant/10 md:pl-6 pt-4 md:pt-0 border-t md:border-t-0">
+<button class="flex-1 md:flex-none border border-outline-variant/30 text-on-surface font-button text-button px-4 py-2 rounded-DEFAULT hover:bg-surface-container-lowest transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit</span> Edit
+                        </button>
+</div>
+</div>
+</div>
+<!-- Edit/Create Form (Right Column - 4 cols) -->
+<div class="lg:col-span-4 bg-surface-container-lowest rounded-lg border border-outline-variant/20 p-6 sticky top-8">
+<h3 class="text-headline-md font-headline-md text-primary mb-6">Edit Package</h3>
+<form class="flex flex-col gap-4">
+<div class="flex flex-col gap-1">
+<label class="text-label-caps font-label-caps text-on-surface-variant" for="pkg-name">Package Name</label>
+<input class="bg-transparent border border-outline-variant/40 rounded-DEFAULT px-4 py-3 text-body-md font-body-md focus:border-primary focus:ring-0 transition-colors" id="pkg-name" type="text" value="Elite Curator"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-label-caps font-label-caps text-on-surface-variant" for="pkg-price">Monthly Price ($)</label>
+<input class="bg-transparent border border-outline-variant/40 rounded-DEFAULT px-4 py-3 text-body-md font-body-md focus:border-primary focus:ring-0 transition-colors" id="pkg-price" type="number" value="299"/>
+</div>
+<div class="flex flex-col gap-1 mt-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant" for="pkg-tickets">Max Tickets Per Event</label>
+<select class="bg-transparent border border-outline-variant/40 rounded-DEFAULT px-4 py-3 text-body-md font-body-md focus:border-primary focus:ring-0 transition-colors appearance-none" id="pkg-tickets">
+<option value="100">100</option>
+<option value="500">500</option>
+<option value="1000">1000</option>
+<option selected="" value="unlimited">Unlimited</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-label-caps font-label-caps text-on-surface-variant" for="pkg-scenes">Max Tour Scenes</label>
+<input class="bg-transparent border border-outline-variant/40 rounded-DEFAULT px-4 py-3 text-body-md font-body-md focus:border-primary focus:ring-0 transition-colors" id="pkg-scenes" type="number" value="15"/>
+</div>
+<div class="mt-4 flex flex-col gap-4 border-t border-outline-variant/10 pt-4">
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-variant rounded-full peer-checked:bg-primary transition-colors border border-outline-variant/20"></div>
+<div class="absolute left-1 top-1 w-3 h-3 bg-surface-container-lowest rounded-full transition-transform peer-checked:translate-x-5"></div>
+</div>
+<span class="text-body-md font-body-md text-on-surface">Enable AI Poster Generation</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-variant rounded-full peer-checked:bg-primary transition-colors border border-outline-variant/20"></div>
+<div class="absolute left-1 top-1 w-3 h-3 bg-surface-container-lowest rounded-full transition-transform peer-checked:translate-x-5"></div>
+</div>
+<span class="text-body-md font-body-md text-on-surface">Package is Active</span>
+</label>
+</div>
+<div class="mt-6 flex gap-3">
+<button class="flex-1 border border-outline-variant/30 text-on-surface font-button text-button px-4 py-3 rounded-DEFAULT hover:bg-surface-container-high transition-colors" type="button">Cancel</button>
+<button class="flex-1 bg-primary text-on-primary font-button text-button px-4 py-3 rounded-DEFAULT hover:bg-primary/90 transition-colors" type="submit">Save Changes</button>
+</div>
+</form>
+</div>
+</div>
+</main>
+</body></html>

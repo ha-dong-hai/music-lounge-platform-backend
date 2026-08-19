@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Venue Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#310501",
+                      "surface": "#fbf9f4",
+                      "secondary": "#775a19",
+                      "on-secondary-fixed": "#261900",
+                      "inverse-on-surface": "#f2f1ec",
+                      "inverse-surface": "#30312e",
+                      "on-surface-variant": "#4d4540",
+                      "on-secondary-container": "#785a1a",
+                      "outline": "#7e756f",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-background": "#1b1c19",
+                      "surface-variant": "#e4e2dd",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "surface-container-low": "#f5f3ee",
+                      "on-error-container": "#93000a",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "error": "#ba1a1a",
+                      "background": "#fbf9f4",
+                      "inverse-primary": "#cdc5c0",
+                      "primary-fixed": "#e9e1dc",
+                      "tertiary-container": "#4d190e",
+                      "surface-dim": "#dbdad5",
+                      "secondary-container": "#fed488",
+                      "on-primary-container": "#96908b",
+                      "secondary-fixed-dim": "#e9c176",
+                      "primary": "#181512",
+                      "tertiary-fixed": "#ffdad3",
+                      "primary-container": "#2d2926",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e4e2dd",
+                      "error-container": "#ffdad6",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-bright": "#fbf9f4",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-container": "#f0eee9",
+                      "on-surface": "#1b1c19",
+                      "outline-variant": "#cfc4bd",
+                      "surface-tint": "#635d5a",
+                      "on-tertiary-fixed": "#3a0a03"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "gutter": "32px",
+                      "container-max": "1440px",
+                      "unit": "8px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "stack-sm": "16px",
+                      "margin-desktop": "64px"
+              },
+              "fontFamily": {
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+          body {
+              background-color: theme('colors.surface');
+              color: theme('colors.on-surface');
+          }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen pb-[100px]">
+<!-- Top Navigation (Mobile Only for Venue Detail - Subpage) -->
+<header class="w-full top-0 sticky z-50 bg-surface/90 backdrop-blur-md border-b border-outline-variant/10 flex justify-between items-center px-margin-mobile h-16 md:hidden">
+<button aria-label="Go back" class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tighter">The Blue Note</span>
+<button aria-label="Share" class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">ios_share</span>
+</button>
+</header>
+<!-- Top Navigation (Desktop - Subpage) -->
+<header class="hidden md:flex w-full top-0 sticky z-50 bg-surface/90 backdrop-blur-md border-b border-outline-variant/10 justify-between items-center px-margin-desktop h-24">
+<div class="flex items-center gap-4">
+<button aria-label="Go back" class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<span class="font-display-md text-display-md tracking-tighter text-primary">AuraLounge</span>
+</div>
+<nav class="flex gap-gutter">
+<a class="text-on-surface-variant font-button text-button hover:text-primary transition-colors" href="#">Venues</a>
+<a class="text-on-surface-variant font-button text-button hover:text-primary transition-colors" href="#">Artists</a>
+<a class="text-on-surface-variant font-button text-button hover:text-primary transition-colors" href="#">Curated</a>
+</nav>
+<button aria-label="Share" class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">ios_share</span>
+</button>
+</header>
+<main class="w-full max-w-container-max mx-auto md:px-margin-desktop md:py-stack-md">
+<!-- Hero Section -->
+<section class="relative w-full h-[442px] min-h-[400px] md:h-[618px] md:rounded-xl overflow-hidden mb-stack-md">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="High fidelity photography of a luxury jazz club interior. Moody lighting with deep amber and gold tones illuminating rich mahogany wood panelling and plush velvet seating. The atmosphere is quiet luxury, sophisticated, and intimate, reflecting a premium music lounge aesthetic in a light mode UI context. Crisp, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpSvfLayomeYSUhEZmopEpd6IXMSHN48xw8cS5LnYkhtohC3K6uOp65RSfNAz413a1wP3DJBn4vUDA38r20WlePFliVWnN8DB3luoB3RA2d2JWFC1SK23bxbR5La-nvxVI6L3qC3N3QAUR9Eo6hfpLLjsSAN84Ik_ejV33BS9x0MmwsV1qEg22Ptyhdw5asr1LX2FBWwte2an2rmKfMUAta4JvuNHy9ifTcHoj-k9M-VY2iPRy39chKg"/>
+<!-- Gradient Overlay for readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-full p-margin-mobile md:p-gutter flex flex-col md:flex-row md:items-end md:justify-between gap-stack-sm text-on-primary">
+<div>
+<div class="flex gap-2 mb-3">
+<span class="px-3 py-1 bg-surface/20 backdrop-blur-md rounded border border-white/20 font-label-caps text-label-caps text-on-primary uppercase tracking-widest">Acoustic Excellence</span>
+<span class="px-3 py-1 bg-surface/20 backdrop-blur-md rounded border border-white/20 font-label-caps text-label-caps text-on-primary uppercase tracking-widest">Intimate</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[80px] md:leading-[88px] tracking-tighter text-on-primary mb-2">The Blue Note</h1>
+<p class="font-body-lg text-body-lg text-on-primary/80 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                        131 W 3rd St, New York, NY 10012
+                    </p>
+</div>
+<button class="w-full md:w-auto px-8 py-4 bg-primary text-on-primary font-button text-button rounded hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 border border-outline/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">360</span>
+                    View 360° Tour
+                </button>
+</div>
+</section>
+<!-- Content Grid -->
+<div class="px-margin-mobile md:px-0 grid grid-cols-1 md:grid-cols-12 gap-stack-md md:gap-gutter">
+<!-- Left Column: Details & Description -->
+<div class="md:col-span-7 flex flex-col gap-stack-md">
+<section>
+<h2 class="font-headline-md text-headline-md text-primary mb-4 border-b border-outline-variant/20 pb-4">The Atmosphere</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        A sanctuary for sound in the heart of the city. The Blue Note offers an unparalleled acoustic environment, designed specifically for discerning listeners. The space features bespoke acoustic treatments integrated into rich mahogany walls, ensuring every note is delivered with pristine clarity. 
+                    </p>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-4">
+                        Seating is strictly limited to 150 guests per evening, fostering an intimate connection between artist and audience. The aesthetic is one of quiet luxury—understated elegance that allows the music to remain the absolute focal point of the evening.
+                    </p>
+</section>
+<section>
+<h2 class="font-headline-md text-headline-md text-primary mb-4 border-b border-outline-variant/20 pb-4">Curated Features</h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">wine_bar</span>
+<div>
+<h3 class="font-button text-button text-primary">Sommelier Selected</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Extensive rare vintage list</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">chair</span>
+<div>
+<h3 class="font-button text-button text-primary">Plush Seating</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Velvet upholstery</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">graphic_eq</span>
+<div>
+<h3 class="font-button text-button text-primary">Bespoke Acoustics</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Tuned listening environment</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">checkroom</span>
+<div>
+<h3 class="font-button text-button text-primary">Attended Cloakroom</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Complimentary service</p>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="font-headline-md text-headline-md text-primary mb-4 border-b border-outline-variant/20 pb-4">Location</h2>
+<div class="w-full h-48 bg-surface-variant rounded border border-outline-variant/20 overflow-hidden relative">
+<!-- Map Placeholder -->
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist map centered on Greenwich Village, New York. The style is light mode, utilizing subtle creams and light greys with a single, elegant charcoal pin marking the venue location. Quiet luxury aesthetic." data-location="New York, NY" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBChdgh7Dn1h7ZPZsm0CRKsmlo2sVpUixjGIC3jxb6rHZgUsP9NSfWc0VVy-w9e6h1ByY_U9yWZbzUf6KKKoc684x6QZOG6fqOc0EofAEEFVTTevxWBYSq4Jm3pnsksKmgL_zRKCsRpnbC8gIjGMcQcaElvpDcmBJRl6YB1btcj_qTOA4HW5e7Gn22sY08nA1bFygcUBPpZrvtnv3Oy-sYanTXRxjjUzpzG-F2LMISxX4s_Xpu0cqwV5g"/>
+</div>
+</section>
+</div>
+<!-- Right Column: Upcoming Shows (Bento Style) -->
+<div class="md:col-span-5 flex flex-col gap-stack-md">
+<section class="bg-surface-container-low rounded-xl p-margin-mobile md:p-gutter border border-outline-variant/10">
+<div class="flex justify-between items-baseline mb-6">
+<h2 class="font-headline-md text-headline-md text-primary">Upcoming Sessions</h2>
+<a class="font-button text-button text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1" href="#">
+                            View Calendar <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Show Card 1 -->
+<div class="group flex gap-4 p-4 rounded bg-surface hover:bg-surface-variant/50 transition-colors cursor-pointer border border-outline-variant/10">
+<div class="w-20 h-20 shrink-0 overflow-hidden rounded">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Black and white portrait photography of a jazz saxophonist playing passionately. High contrast, clean white background, conveying sophisticated artistry in a premium gallery style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH7quiiDkidFL9xFp-FN4yyAPrxqjcCjjKzKHxmFNa9yJ_p_3fpk3eYYZMr6B3-bdHcKorFaFz48WUXja-wIHmunFaSrsqCPVslMzfPsUsKq6qhegIjhpQO__zAXPBB0e_AdpOjqXHqrEHjXLMWyFTTEM2K38lZLe_JSdWB02f1IHqafmEQSamKkabHx62PZgKE7Pg_CPv3eotegVT4HsWqT9AVUz9f-6CwMLJ2bgrRMRG6t3sWp8cXQ"/>
+</div>
+<div class="flex flex-col justify-center flex-grow">
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Oct 24 • 8:00 PM</span>
+<h3 class="font-headline-sm text-headline-lg-mobile text-primary tracking-tight leading-tight">Kamasi Washington Trio</h3>
+<span class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Modern Jazz / Fusion</span>
+</div>
+</div>
+<!-- Show Card 2 -->
+<div class="group flex gap-4 p-4 rounded bg-surface hover:bg-surface-variant/50 transition-colors cursor-pointer border border-outline-variant/10">
+<div class="w-20 h-20 shrink-0 overflow-hidden rounded">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract macro photography of piano keys. Soft lighting, shallow depth of field, cream and charcoal tones. Minimalist luxury aesthetic for a jazz performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9UyBIhJ0WFi8rgJVF2HQLHg6EwUxQsq4ofx7XmSMmKufL5iMd4RzVotjjDNypDddk4rTaTCXrmeTh_3U7XNMNB7lL_y4OxwsE3DD9WSvdUKeP-HfoT8B5gsXI_IleFrqkTR1N1g2uWNUUg-mF6hB2vf-_UhpCT1tmWYaeciOnh0TUv3kFnfDovxXUhtnPpemJWmPJXNcgWUX47JBIu55kMaJDyMFNt7Ah_NEoEhSYR2R8nrIrVm_tCg"/>
+</div>
+<div class="flex flex-col justify-center flex-grow">
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Oct 26 • 9:30 PM</span>
+<h3 class="font-headline-sm text-headline-lg-mobile text-primary tracking-tight leading-tight">Brad Mehldau Solo</h3>
+<span class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Acoustic Piano</span>
+</div>
+</div>
+<!-- Show Card 3 -->
+<div class="group flex gap-4 p-4 rounded bg-surface hover:bg-surface-variant/50 transition-colors cursor-pointer border border-outline-variant/10">
+<div class="w-20 h-20 shrink-0 overflow-hidden rounded">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Elegant close up of a double bass scroll and strings. Warm ambient lighting against a neutral cream background. Sophisticated, high-end visual tone suitable for a premium music platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5Nyax7A2_ijoMSr-CTcvz-VT-lsbmWPEtl14RnRD8OC-eOQ9T77HhcFVPYy1cC8PFL3Fdt1CEVT9ODsQmxrGB2rTv3lLh7-h0WL-V61QTMqHCANDCNEmeyQ_sWazROHqZ_MgyKB5PG0xRTIG-FCSH3MHICV_fx6lb3qXtCMbROfMpYn3kjDbY7C-q9BI8ZnPldkZjioSdQ4S7imqLgwWMztwlBKKPPNL38nW0AAxQGsLp2ejiPGlyyQ"/>
+</div>
+<div class="flex flex-col justify-center flex-grow">
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Oct 28 • 7:00 PM</span>
+<h3 class="font-headline-sm text-headline-lg-mobile text-primary tracking-tight leading-tight">Christian McBride Band</h3>
+<span class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Classic Quartet</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura - File a Complaint</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#fbf9f4",
+                      "error": "#ba1a1a",
+                      "inverse-primary": "#cdc5c0",
+                      "outline": "#7e756f",
+                      "background": "#fbf9f4",
+                      "on-error-container": "#93000a",
+                      "primary-fixed": "#e9e1dc",
+                      "inverse-on-surface": "#f2f1ec",
+                      "secondary": "#775a19",
+                      "on-background": "#1b1c19",
+                      "surface-container-highest": "#e4e2dd",
+                      "primary-container": "#2d2926",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "outline-variant": "#cfc4bd",
+                      "surface-container": "#f0eee9",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "on-surface-variant": "#4d4540",
+                      "on-primary-container": "#96908b",
+                      "on-tertiary-container": "#cb7c6b",
+                      "on-secondary-container": "#785a1a",
+                      "surface-dim": "#dbdad5",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-error": "#ffffff",
+                      "surface": "#fbf9f4",
+                      "on-secondary": "#ffffff",
+                      "primary": "#181512",
+                      "inverse-surface": "#30312e",
+                      "tertiary": "#310501",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-container-high": "#eae8e3",
+                      "tertiary-fixed": "#ffdad3",
+                      "tertiary-container": "#4d190e",
+                      "secondary-container": "#fed488",
+                      "on-secondary-fixed": "#261900",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-surface": "#1b1c19",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-tint": "#635d5a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "unit": "8px",
+                      "gutter": "32px",
+                      "margin-desktop": "64px",
+                      "stack-sm": "16px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(126, 117, 111, 0.15);
+        }
+        
+        .input-underline {
+            border: none;
+            border-bottom: 1px solid rgba(126, 117, 111, 0.3);
+            background: transparent;
+            border-radius: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        .input-underline:focus {
+            box-shadow: none;
+            border-bottom-color: #181512;
+        }
+
+        .category-chip input[type="radio"]:checked + div {
+            background-color: #181512;
+            color: #ffffff;
+            border-color: #181512;
+        }
+        
+        /* Hide scrollbar for category chips but allow scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface h-full flex flex-col font-body-md antialiased md:hidden"> <!-- Mobile only as per prompt -->
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 backdrop-blur-md bg-surface/80 dark:bg-surface/80 border-b border-outline-variant/10">
+<div class="flex justify-between items-center h-20 px-margin-mobile w-full">
+<button aria-label="Back" class="text-primary dark:text-primary-fixed-dim hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-display-md text-display-md uppercase tracking-widest text-primary dark:text-primary-fixed-dim tracking-[0.2em]">AURA</h1>
+<div class="w-6"></div> <!-- Spacer for centering -->
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto pt-24 pb-32 px-margin-mobile">
+<div class="max-w-md mx-auto space-y-stack-md">
+<!-- Page Header -->
+<div class="space-y-unit">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Report an Issue</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Your feedback helps us curate a better atmosphere. Please provide details below.</p>
+</div>
+<form class="space-y-stack-md">
+<!-- Category Selection (Horizontal Scroll Chips) -->
+<div class="space-y-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase">Category</label>
+<div class="flex overflow-x-auto no-scrollbar gap-unit pb-2 -mx-margin-mobile px-margin-mobile">
+<label class="category-chip shrink-0 cursor-pointer">
+<input checked="" class="sr-only" name="category" type="radio" value="ticket"/>
+<div class="px-4 py-2 border border-outline-variant/50 rounded text-sm transition-colors duration-200 bg-surface">
+                                Ticket Issue
+                            </div>
+</label>
+<label class="category-chip shrink-0 cursor-pointer">
+<input class="sr-only" name="category" type="radio" value="donation"/>
+<div class="px-4 py-2 border border-outline-variant/50 rounded text-sm transition-colors duration-200 bg-surface">
+                                Donation
+                            </div>
+</label>
+<label class="category-chip shrink-0 cursor-pointer">
+<input class="sr-only" name="category" type="radio" value="conduct"/>
+<div class="px-4 py-2 border border-outline-variant/50 rounded text-sm transition-colors duration-200 bg-surface">
+                                Venue Conduct
+                            </div>
+</label>
+<label class="category-chip shrink-0 cursor-pointer">
+<input class="sr-only" name="category" type="radio" value="other"/>
+<div class="px-4 py-2 border border-outline-variant/50 rounded text-sm transition-colors duration-200 bg-surface">
+                                Other
+                            </div>
+</label>
+</div>
+</div>
+<!-- Target Search (Show/Venue) -->
+<div class="space-y-unit relative">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="target">Related Show or Venue</label>
+<div class="relative">
+<input class="w-full input-underline py-2 font-body-md text-body-md text-primary placeholder:text-outline-variant focus:ring-0" id="target" placeholder="Search for event or location..." type="text"/>
+<span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none" data-icon="search">search</span>
+</div>
+</div>
+<!-- Phone Number (Required for Guests) -->
+<div class="space-y-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="phone">Contact Number <span class="text-error">*</span></label>
+<input class="w-full input-underline py-2 font-body-md text-body-md text-primary placeholder:text-outline-variant focus:ring-0" id="phone" placeholder="(555) 000-0000" required="" type="tel"/>
+</div>
+<!-- Description Area -->
+<div class="space-y-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="description">Description</label>
+<textarea class="w-full input-underline py-2 font-body-md text-body-md text-primary placeholder:text-outline-variant focus:ring-0 resize-none" id="description" placeholder="Please provide specific details..." rows="4"></textarea>
+</div>
+<!-- Photo Evidence Upload (Glassmorphism Bento Style) -->
+<div class="space-y-unit">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase">Photo Evidence (Optional)</label>
+<div class="glass-panel rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container-low transition-colors duration-200 border-dashed border-2 border-outline-variant/30 relative overflow-hidden group">
+<input accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" multiple="" type="file"/>
+<span class="material-symbols-outlined text-3xl text-outline mb-2 group-hover:text-primary transition-colors" data-icon="add_a_photo" data-weight="fill" style="font-variation-settings: 'FILL' 1;">add_a_photo</span>
+<p class="font-body-md text-sm text-on-surface-variant group-hover:text-primary transition-colors">Tap to upload photos</p>
+<p class="font-body-md text-xs text-outline-variant mt-1">JPEG, PNG up to 5MB</p>
+</div>
+</div>
+<!-- Submit Button -->
+<div class="pt-stack-sm">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded hover:opacity-90 transition-opacity flex items-center justify-center space-x-2" type="button">
+<span>Submit Report</span>
+<span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+</main>
+<!-- BottomNavBar (Suppressed as this is a task-focused, transactional screen with a back button) -->
+<!-- Navigation shell is deliberately excluded here following the Semantic Shell Mandate for focused journeys. -->
+<script>
+        // Simple micro-interaction for the file upload area
+        const fileInput = document.querySelector('input[type="file"]');
+        const uploadArea = document.querySelector('.glass-panel');
+        const uploadText = uploadArea.querySelector('p.text-sm');
+        const uploadIcon = uploadArea.querySelector('.material-symbols-outlined');
+
+        if(fileInput && uploadArea) {
+            fileInput.addEventListener('change', (e) => {
+                if(e.target.files.length > 0) {
+                    const count = e.target.files.length;
+                    uploadText.textContent = `${count} file${count > 1 ? 's' : ''} selected`;
+                    uploadText.classList.add('text-primary', 'font-medium');
+                    uploadIcon.textContent = 'check_circle';
+                    uploadIcon.classList.add('text-primary');
+                    uploadArea.classList.add('border-primary/50', 'bg-surface-container-low');
+                } else {
+                    uploadText.textContent = 'Tap to upload photos';
+                    uploadText.classList.remove('text-primary', 'font-medium');
+                    uploadIcon.textContent = 'add_a_photo';
+                    uploadIcon.classList.remove('text-primary');
+                    uploadArea.classList.remove('border-primary/50', 'bg-surface-container-low');
+                }
+            });
+        }
+    </script>
+</body></html>

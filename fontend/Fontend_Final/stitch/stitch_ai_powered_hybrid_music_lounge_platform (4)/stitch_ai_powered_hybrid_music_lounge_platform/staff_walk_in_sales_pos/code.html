@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Staff Walk-in Sales</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-primary": "#cdc5c0",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "outline-variant": "#cfc4bd",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-secondary-fixed": "#261900",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-container-low": "#f5f3ee",
+                      "surface-container-lowest": "#ffffff",
+                      "background": "#fbf9f4",
+                      "error": "#ba1a1a",
+                      "secondary-container": "#fed488",
+                      "surface": "#fbf9f4",
+                      "secondary-fixed": "#ffdea5",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "surface-tint": "#635d5a",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-dim": "#dbdad5",
+                      "primary-fixed": "#e9e1dc",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "secondary": "#775a19",
+                      "inverse-surface": "#30312e",
+                      "on-primary-container": "#96908b",
+                      "on-error": "#ffffff",
+                      "primary": "#181512",
+                      "on-primary-fixed": "#1e1b18",
+                      "error-container": "#ffdad6",
+                      "outline": "#7e756f",
+                      "surface-bright": "#fbf9f4",
+                      "on-secondary-container": "#785a1a",
+                      "surface-variant": "#e4e2dd",
+                      "on-surface-variant": "#4d4540",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-container-highest": "#e4e2dd",
+                      "tertiary-fixed": "#ffdad3",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#2d2926",
+                      "on-error-container": "#93000a",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#310501",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "surface-container": "#f0eee9",
+                      "on-surface": "#1b1c19",
+                      "tertiary-container": "#4d190e",
+                      "surface-container-high": "#eae8e3",
+                      "on-background": "#1b1c19"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "16px",
+                      "gutter": "32px",
+                      "unit": "8px",
+                      "margin-desktop": "64px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "container-max": "1440px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { background-color: #fbf9f4; color: #181512; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex h-screen overflow-hidden font-body-md text-body-md">
+<!-- SideNavBar (Staff context, so keeping side nav) -->
+<nav class="bg-surface-container-low dark:bg-surface-container-lowest h-screen w-64 fixed left-0 top-0 border-r border-outline-variant/15 flex flex-col py-stack-sm z-50">
+<div class="px-8 pb-8">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed">AuraLounge</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Management Portal</p>
+</div>
+<div class="px-8 mb-8">
+<button class="w-full bg-primary text-on-primary font-button text-button py-3 px-6 rounded hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                New Event
+            </button>
+</div>
+<ul class="flex flex-col flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+</li>
+<li>
+<!-- Active Navigation: Venue Operations mapped to Walk-in Sales -->
+<a class="flex items-center gap-4 py-3 px-8 cursor-pointer text-primary font-bold border-r-2 border-primary pr-4 hover:bg-surface-container-highest/50 transition-all duration-200 bg-surface-container-highest/30" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span class="font-label-caps text-label-caps">Venue Operations</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-label-caps">Analytics</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-caps text-label-caps">Staff Management</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 py-3 px-8 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-caps text-label-caps">Schedule</span>
+</a>
+</li>
+</ul>
+<ul class="mt-auto flex flex-col space-y-2 pt-4 border-t border-outline-variant/15 mx-4">
+<li>
+<a class="flex items-center gap-4 py-3 px-4 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 rounded" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 py-3 px-4 cursor-pointer text-on-surface-variant font-medium hover:bg-surface-container-highest/50 transition-all duration-200 rounded" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 h-screen flex flex-col bg-background">
+<!-- TopAppBar (Minimal for context) -->
+<header class="h-16 px-gutter flex items-center justify-between border-b border-outline-variant/15 bg-surface z-40 shrink-0">
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Walk-in Sales</h2>
+<div class="flex items-center gap-4 text-primary">
+<div class="font-label-caps text-label-caps px-3 py-1 bg-surface-container-high rounded border border-outline-variant/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">point_of_sale</span>
+                    Terminal 03
+                </div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A tightly cropped, high-resolution portrait of a professional lounge administrator or staff member. The lighting is soft and flattering, highlighting a clean, minimal aesthetic. The background is a subtle, out-of-focus beige or cream tone that matches the UI's neutral palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXSVrcsJjeZnhyCXpOd1qzkxf7Yycsm081tnuWcB92a0x_1PhmieIYbKrc3uUqwdbYjYsrzMztU4N27pUPIbSB7lKJ-O3rRFBm7Dl8KIPlWd34dL2LEh1FTGGoQb4N_3SirG7Gr1Z63TBbrshtBxjvZn3SyfTgVzNFFWfktUfXsG6B1KLusg2NUH2_SY32ZY0bf_UaDM_CbRIhyQUx4zaQWNCmUejb-F-9wZr9EQQUCugGCTXVeFppOg"/>
+</div>
+</div>
+</header>
+<!-- POS Interface Grid -->
+<div class="flex-1 p-gutter overflow-hidden flex gap-gutter max-w-container-max mx-auto w-full">
+<!-- Left Column: Search & Selection -->
+<div class="flex-1 flex flex-col gap-stack-md overflow-hidden">
+<!-- Quick Search -->
+<div class="relative shrink-0">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest border border-outline-variant/30 rounded font-body-lg text-body-lg text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-on-surface-variant/50 shadow-sm" placeholder="Search tonight's shows or enter ticket code..." type="text"/>
+</div>
+<!-- Tonight's Shows Grid -->
+<div class="flex-1 overflow-y-auto pr-2 pb-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4">Live Now &amp; Upcoming (Tonight)</h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Active Show Selection -->
+<button class="text-left bg-surface-container-lowest border-2 border-primary rounded p-4 relative overflow-hidden group shadow-sm transition-all">
+<div class="absolute inset-0 bg-primary/5 opacity-100 transition-opacity"></div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<span class="font-label-caps text-label-caps px-2 py-1 bg-primary text-on-primary rounded text-[10px]">DOORS OPEN</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="mt-auto">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">MAIN ROOM • 10:00 PM</p>
+<h4 class="font-headline-md text-headline-md text-primary leading-tight">The Midnight Syndicate</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">group</span> 450/500 Capacity
+                                    </p>
+</div>
+</div>
+</button>
+<!-- Inactive Show -->
+<button class="text-left bg-surface-container-lowest border border-outline-variant/20 rounded p-4 relative overflow-hidden group hover:border-outline-variant/50 transition-all shadow-sm">
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<span class="font-label-caps text-label-caps px-2 py-1 bg-surface-container-high text-on-surface-variant rounded text-[10px]">LATE SET</span>
+</div>
+<div class="mt-auto">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">LOUNGE B • 12:30 AM</p>
+<h4 class="font-headline-md text-headline-md text-primary leading-tight opacity-70 group-hover:opacity-100 transition-opacity">DJ Koto: Deep House Session</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">group</span> 120/200 Capacity
+                                    </p>
+</div>
+</div>
+</button>
+</div>
+<!-- Ticket Tiers for Selected Show -->
+<div class="mt-8">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4">Select Ticket Tier</h3>
+<div class="flex flex-col gap-3">
+<!-- Tier 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded p-4 flex items-center justify-between hover:border-outline-variant/50 transition-all cursor-pointer">
+<div>
+<h5 class="font-body-lg text-body-lg text-primary font-bold">General Admission</h5>
+<p class="font-body-md text-body-md text-on-surface-variant">Standard floor access.</p>
+</div>
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md text-primary">$45</span>
+<div class="flex items-center border border-outline-variant/30 rounded bg-surface-container-high">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">remove</span></button>
+<span class="w-8 text-center font-body-lg text-body-lg text-primary font-bold">2</span>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">add</span></button>
+</div>
+</div>
+</div>
+<!-- Tier 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded p-4 flex items-center justify-between hover:border-outline-variant/50 transition-all cursor-pointer">
+<div>
+<h5 class="font-body-lg text-body-lg text-primary font-bold">VIP Mezzanine</h5>
+<p class="font-body-md text-body-md text-on-surface-variant">Includes dedicated bar access.</p>
+</div>
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md text-primary opacity-50">$85</span>
+<div class="flex items-center border border-outline-variant/30 rounded bg-surface-container-low opacity-50">
+<button class="p-2 text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">remove</span></button>
+<span class="w-8 text-center font-body-lg text-body-lg text-primary">0</span>
+<button class="p-2 text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">add</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Cart & Checkout (Bento Style) -->
+<div class="w-[400px] shrink-0 flex flex-col gap-4">
+<!-- Cart Summary -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-6 shadow-sm flex flex-col flex-1">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-6 border-b border-outline-variant/20 pb-2">Current Order</h3>
+<div class="flex-1 overflow-y-auto">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="font-body-lg text-body-lg text-primary font-bold">General Admission x2</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">The Midnight Syndicate</p>
+</div>
+<span class="font-body-lg text-body-lg text-primary">$90.00</span>
+</div>
+</div>
+<div class="border-t border-outline-variant/20 pt-4 mt-auto">
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Subtotal</span>
+<span class="font-body-md text-body-md text-primary">$90.00</span>
+</div>
+<div class="flex justify-between items-center mb-4">
+<span class="font-body-md text-body-md text-on-surface-variant">Facility Fee</span>
+<span class="font-body-md text-body-md text-primary">$10.00</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-headline-md text-headline-md text-primary">Total</span>
+<span class="font-display-md text-display-md text-primary font-bold tracking-tight">$100.00</span>
+</div>
+</div>
+</div>
+<!-- Payment Methods -->
+<div class="grid grid-cols-2 gap-4 shrink-0">
+<button class="bg-primary text-on-primary p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm group">
+<span class="material-symbols-outlined text-[32px] group-active:scale-95 transition-transform" style="font-variation-settings: 'FILL' 1;">credit_card</span>
+<span class="font-button text-button">Credit Card</span>
+</button>
+<button class="bg-surface-container-highest text-primary border border-outline-variant/30 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-surface-container-low transition-all shadow-sm group">
+<span class="material-symbols-outlined text-[32px] group-active:scale-95 transition-transform">payments</span>
+<span class="font-button text-button">Cash</span>
+</button>
+<button class="col-span-2 bg-secondary text-on-secondary p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-secondary/90 transition-all shadow-sm group">
+<span class="material-symbols-outlined text-[24px] group-active:scale-95 transition-transform" style="font-variation-settings: 'FILL' 1;">contactless</span>
+<span class="font-button text-button">Aura Pay (Tap to Phone)</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

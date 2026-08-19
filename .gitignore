@@ -23,12 +23,13 @@ appsettings.Production.json
 .env
 .env.local
 **/secrets.json
-docs/Google_Sign-In/
+docs/secrets/
 
 # Node / frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
+fontend/**/node_modules/
+fontend/**/dist/
+fontend/**/.vite/
+fontend/**/*.tsbuildinfo
 
 # Python (services/panorama-stitcher)
 __pycache__/
@@ -46,3 +47,7 @@ Thumbs.db
 
 # Old source snapshot — kept on disk for reference, not part of this repo's history
 MLF_Zalo/
+
+# Regeneratable from a committed source, never worth committing itself
+spec/extracted/
+fontend/Fontend_Final/stitch/_unused-earlier-exports/

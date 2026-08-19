@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MusicLounge - Venue Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#867369",
+                        "primary": "#8c4a1e",
+                        "primary-container": "#aa6233",
+                        "tertiary-fixed-dim": "#b9cbbd",
+                        "on-primary-fixed-variant": "#723609",
+                        "surface-container": "#f3ede2",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e8e2d7",
+                        "on-tertiary-fixed": "#101f16",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#8f4d20",
+                        "on-error": "#ffffff",
+                        "surface": "#fff9ed",
+                        "surface-dim": "#dfd9cf",
+                        "on-surface": "#1d1b15",
+                        "inverse-on-surface": "#f6f0e5",
+                        "surface-container-high": "#ede7dd",
+                        "on-secondary-fixed-variant": "#5e4021",
+                        "secondary-fixed-dim": "#eabe95",
+                        "on-primary-container": "#fffbff",
+                        "on-surface-variant": "#53433b",
+                        "background": "#fff9ed",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#2c1600",
+                        "surface-container-highest": "#e8e2d7",
+                        "on-tertiary-fixed-variant": "#3a4a3f",
+                        "tertiary-fixed": "#d5e7d8",
+                        "on-secondary-container": "#7a5837",
+                        "primary-fixed": "#ffdbc9",
+                        "tertiary": "#4f6054",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#f6fff5",
+                        "tertiary-container": "#68796c",
+                        "inverse-primary": "#ffb68c",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#333029",
+                        "surface-container-low": "#f9f3e8",
+                        "on-primary-fixed": "#321200",
+                        "secondary-container": "#ffd2a8",
+                        "surface-bright": "#fff9ed",
+                        "on-background": "#1d1b15",
+                        "primary-fixed-dim": "#ffb68c",
+                        "outline-variant": "#d9c2b6",
+                        "secondary-fixed": "#ffdcbd",
+                        "secondary": "#795836"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "lg": "48px",
+                        "md": "24px",
+                        "xl": "80px",
+                        "xs": "4px",
+                        "margin-mobile": "16px",
+                        "base": "8px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "caption-handwriting": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "caption-handwriting": ["16px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #fff9ed;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .nav-item-hover:hover .nav-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .nav-text {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-on-background min-h-screen flex selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden">
+<!-- Top Navigation (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center px-margin-mobile py-4 w-full bg-surface/90 backdrop-blur-md fixed top-0 z-50 border-b border-outline-variant/10">
+<h1 class="font-display-lg-mobile text-headline-sm text-primary tracking-tight">MusicLounge</h1>
+<button class="text-on-surface-variant">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+</header>
+<!-- Side Navigation (Desktop) -->
+<!-- Main Content -->
+<main class="flex-1 transition-all duration-500 min-h-screen pt-20 md:pt-0">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-lg py-xl px-4">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-12">
+<div>
+<p class="font-label-md text-label-md text-secondary uppercase tracking-[0.2em] mb-4">Curated Spaces</p>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface max-w-2xl leading-tight">Your bespoke listening environments.</h1>
+</div>
+<button class="group flex items-center gap-4 text-primary hover:text-primary-container transition-colors duration-300">
+<span class="font-headline-sm text-sm uppercase tracking-[0.15em] border-b border-transparent group-hover:border-primary-container pb-1 transition-all">Add New Space</span>
+<div class="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center group-hover:border-primary-container group-hover:bg-primary/5 transition-all">
+<span class="material-symbols-outlined font-light text-2xl">add</span>
+</div>
+</button>
+</div>
+<!-- Venues Gallery -->
+<div class="space-y-16">
+<!-- Approved Venue 1 -->
+<article class="relative group">
+<div class="w-full rounded-none overflow-hidden relative shadow-[0_24px_60px_rgba(43,42,39,0.08)] aspect-square">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-in-out" data-alt="A warmly lit, high-end jazz lounge interior. Dark wood paneling, velvet armchairs in deep burgundy, softly glowing amber wall sconces. A vintage upright piano sits in the corner. The atmosphere is intimate, exclusive, and acoustic-focused. High-quality editorial architectural photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsR4QyETbAtn9hZg_FSZBSHmBnd6vx02TdTsTpJmiTeoJPJUQ3s7afUgoxgQOGBW56TAvGjNFu6bG6Kd7hG_1Zl0N1clAB74obuATzfyjAjpjD7Bq4sq8Cgy-tBoQGOkUbo7T74aCOqwz2askDaUxWhDHr81dmT8a24a-Kh_5e-k50DtMMofs3wiozVRqAap9HM0iGdagi6RGIGHYxT4PQnMjOGfN0pW6ld0Bx5bJi6J2C4D07uMfdgg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+<div class="absolute inset-0 ring-1 ring-inset ring-white/10 pointer-events-none mix-blend-overlay"></div>
+<div class="absolute bottom-0 left-0 p-8 md:p-12 w-full flex flex-col md:flex-row justify-between items-end gap-6">
+<div>
+<h2 class="font-display-lg text-headline-md md:text-display-lg text-white mb-2">The Velvet Room</h2>
+<p class="font-label-md text-label-md text-white/80 tracking-widest uppercase">Acoustic &amp; Jazz • 45 Cap</p>
+</div>
+<div class="flex gap-4">
+<button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-all duration-300 border border-white/20">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-all duration-300 border border-white/20">
+<span class="material-symbols-outlined">analytics</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Pending Venue -->
+<article class="relative flex flex-col md:flex-row gap-12 items-center opacity-80 hover:opacity-100 transition-opacity duration-500">
+<div class="w-full md:w-2/5 aspect-[4/5] relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[30%]" data-alt="Close up of a vintage analog mixing console and a reel-to-reel tape machine in a sophisticated home studio environment. Warm afternoon light streaming in, highlighting the brushed aluminum and wood veneer textures. Quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBJPuwsV4yiVbupVZxWDi7J_s2G22HCMFv9j2ArjlYZC8Wc3w72ZRGtI2oIL4GJvwWMZGQRBsZ_3I4dXlH0QtB_Fm-BtrH_C6gKPWvrN1-7HzWwNxxM43lc8kXXpA0QQcSXuKbv2eAuthutBzLWkYDaLRyXxD5OqBWv4L-FqWbBba2l3QFun4Tgkp23UINtkj683mlkTigrtjHJwA90f74R_zxR30NfTZVlUixp_pmP_BEt957Tqtcqg"/>
+<!-- Thin golden hairline for pending -->
+<div class="absolute left-0 top-0 h-full w-[2px] bg-secondary-fixed"></div>
+</div>
+<div class="w-full md:w-3/5 space-y-6">
+<div class="inline-flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+<span class="font-label-md text-label-md text-secondary uppercase tracking-[0.15em]">Under Review</span>
+</div>
+<h2 class="font-display-lg text-headline-md text-on-surface">Studio B - Analog Suite</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg leading-relaxed">
+                            Currently undergoing acoustic verification and editorial review. Our curation team typically responds within 48 hours to ensure our high-fidelity standards are met.
+                        </p>
+<div class="pt-8 border-t border-outline-variant/20 flex gap-8">
+<div>
+<p class="font-label-md text-xs text-on-surface-variant uppercase tracking-widest mb-1">Submitted</p>
+<p class="font-body-md text-on-surface">Oct 24, 2024</p>
+</div>
+<div>
+<p class="font-label-md text-xs text-on-surface-variant uppercase tracking-widest mb-1">Type</p>
+<p class="font-body-md text-on-surface">Listening Room</p>
+</div>
+</div>
+</div>
+</article>
+<!-- Rejected Venue -->
+<article class="relative flex flex-col md:flex-row-reverse gap-12 items-center">
+<div class="w-full md:w-2/5 aspect-square relative overflow-hidden bg-surface-variant flex items-center justify-center p-8">
+<img class="w-full h-full object-cover opacity-40 mix-blend-luminosity" data-alt="A blurry, poorly lit photo of an empty dive bar corner. Harsh fluorescent lighting, cluttered background, cheap furniture. The mood is cold and uninviting, contrasting with the luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYL1VNUk30mRkrp_13DjatrvkCXrdZBmfPhLRRhNFN3Ru0LNYMTPrj3suXbV9w3VV5riO16IruCZ8l6lKYIfqLJlXKV0yY0XiMnb31qCxUzgTUfJuP__IXBOnsNL2_8gS6tcCM7FNH7urIZQiclHgZ_QUuA_yexY3dcCJePBFx5aSRu8nWTf8FY6uJ98zzSFVxm_-X81ke-p-QU5-rjxYRIRh3bpuB2iR90FC0lY_ttIzyE92D6WZZLQ"/>
+</div>
+<div class="w-full md:w-3/5 space-y-6">
+<div class="inline-flex items-center gap-3">
+<span class="w-2 h-[2px] bg-error"></span>
+<span class="font-label-md text-label-md text-error uppercase tracking-[0.15em]">Revision Required</span>
+</div>
+<h2 class="font-display-lg text-headline-md text-on-surface opacity-60 line-through decoration-1">The Concrete Cellar</h2>
+<div class="bg-surface-container-low p-6 rounded-none border-l-[3px] border-error/70">
+<h3 class="font-title-lg text-sm text-on-surface mb-2 uppercase tracking-widest">Curation Notes</h3>
+<p class="font-body-md text-on-surface-variant italic">
+                                "The provided imagery does not meet our minimum lighting requirements for the editorial showcase. Furthermore, acoustic dampening details are missing from the equipment manifest."
+                            </p>
+</div>
+<button class="font-label-md text-label-md text-primary hover:text-primary-container transition-colors uppercase tracking-[0.1em] border-b border-primary/30 pb-1 mt-4">
+                            Update Submission
+                        </button>
+</div>
+</article>
+</div>
+</div>
+<!-- Footer Component -->
+<footer class="w-full py-xl mt-32 bg-surface-container-highest dark:bg-surface-container flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-lg border-t border-outline-variant/10">
+<p class="font-body-md text-body-md text-secondary dark:text-secondary-fixed mb-4 md:mb-0">© 2024 MusicLounge. High-Fidelity Discovery.</p>
+<div class="flex gap-6">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline decoration-primary/30 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline decoration-primary/30 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline decoration-primary/30 underline-offset-4 transition-all duration-200" href="#">Instagram</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline decoration-primary/30 underline-offset-4 transition-all duration-200" href="#">Journal</a>
+</div>
+</footer>
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 z-50 flex justify-around items-center py-4 px-6"><a class="flex flex-col items-center text-primary" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span><span class="text-[10px] uppercase tracking-widest mt-1">Home</span></a><a class="flex flex-col items-center text-on-surface-variant" href="#"><span class="material-symbols-outlined">library_music</span><span class="text-[10px] uppercase tracking-widest mt-1">Music</span></a><a class="flex flex-col items-center text-on-surface-variant" href="#"><span class="material-symbols-outlined">event_available</span><span class="text-[10px] uppercase tracking-widest mt-1">Bookings</span></a><a class="flex flex-col items-center text-on-surface-variant" href="#"><span class="material-symbols-outlined">account_circle</span><span class="text-[10px] uppercase tracking-widest mt-1">Profile</span></a></nav></main>
+</body></html>

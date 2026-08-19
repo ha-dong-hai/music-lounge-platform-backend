@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Privacy &amp; Data Rights - AURA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#cfc4bd",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-container": "#f0eee9",
+                        "primary-container": "#2d2926",
+                        "tertiary": "#310501",
+                        "on-background": "#1b1c19",
+                        "inverse-surface": "#30312e",
+                        "on-surface": "#1b1c19",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#4d190e",
+                        "secondary-fixed-dim": "#e9c176",
+                        "inverse-primary": "#cdc5c0",
+                        "on-primary-container": "#96908b",
+                        "primary-fixed": "#e9e1dc",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#4d4540",
+                        "outline": "#7e756f",
+                        "background": "#fbf9f4",
+                        "on-primary-fixed": "#1e1b18",
+                        "surface-tint": "#635d5a",
+                        "on-secondary-fixed": "#261900",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "secondary-fixed": "#ffdea5",
+                        "surface-bright": "#fbf9f4",
+                        "primary": "#181512",
+                        "surface": "#fbf9f4",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-variant": "#e4e2dd",
+                        "tertiary-fixed": "#ffdad3",
+                        "surface-container-highest": "#e4e2dd",
+                        "secondary-container": "#fed488",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-container-high": "#eae8e3",
+                        "on-secondary-container": "#785a1a",
+                        "surface-dim": "#dbdad5",
+                        "secondary": "#775a19",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "on-tertiary-container": "#cb7c6b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "16px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "unit": "8px",
+                        "margin-desktop": "64px",
+                        "gutter": "32px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px",
+                        "safe": "env(safe-area-inset-bottom)"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Manrope", "sans-serif"],
+                        "headline-lg": ["Libre Caslon Text", "serif"],
+                        "headline-md": ["Libre Caslon Text", "serif"],
+                        "button": ["Manrope", "sans-serif"],
+                        "display-md": ["Libre Caslon Text", "serif"],
+                        "body-lg": ["Manrope", "sans-serif"],
+                        "headline-lg-mobile": ["Libre Caslon Text", "serif"],
+                        "label-caps": ["Manrope", "sans-serif"],
+                        "display-lg": ["Libre Caslon Text", "serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-panel {
+            background: rgba(24bf9f4, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(126, 117, 111, 0.15);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col selection:bg-primary selection:text-on-primary">
+<!-- Header (No Nav Shell for sub-pages like Settings per guidelines) -->
+<header class="sticky top-0 w-full z-50 bg-background/90 backdrop-blur-md flex items-center px-margin-mobile h-20 border-b border-outline/10">
+<button class="p-2 -ml-2 text-primary hover:opacity-70 transition-opacity active:scale-95 flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<div class="flex-1 text-center pr-8">
+<h1 class="font-headline-md text-headline-md text-primary">Privacy &amp; Data Rights</h1>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 px-margin-mobile pt-stack-md pb-stack-lg max-w-container-max mx-auto w-full flex flex-col gap-stack-md">
+<!-- Intro Section -->
+<section class="mb-stack-sm">
+<p class="font-body-md text-body-md text-on-surface-variant">
+                Manage your personal data and privacy settings in accordance with Data Protection Law 91/2025/QH15. We respect your right to control your digital footprint.
+            </p>
+</section>
+<!-- Data Rights Grid (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit md:gap-stack-sm">
+<!-- Export Data Card -->
+<div class="glass-panel rounded-xl p-6 flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary mb-2" style="font-variation-settings: 'FILL' 0;">download</span>
+<h2 class="font-headline-md text-headline-md text-primary">Export My Data</h2>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Request a copy of your personal data in a structured, commonly used, and machine-readable format. This process may take up to 72 hours.
+                </p>
+<button class="mt-auto self-start border border-primary/20 text-primary px-6 py-3 rounded hover:bg-primary/5 transition-colors font-button text-button">
+                    Request Archive
+                </button>
+</div>
+<!-- Manage Preferences Card -->
+<div class="glass-panel rounded-xl p-6 flex flex-col gap-4">
+<div class="flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary mb-2" style="font-variation-settings: 'FILL' 0;">tune</span>
+<h2 class="font-headline-md text-headline-md text-primary">Consent Preferences</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Review and adjust your consent for marketing communications, analytical tracking, and third-party data sharing.
+                </p>
+<button class="mt-auto self-start border border-primary/20 text-primary px-6 py-3 rounded hover:bg-primary/5 transition-colors font-button text-button">
+                    Manage Settings
+                </button>
+</div>
+</div>
+<!-- Danger Zone -->
+<section class="mt-stack-sm border border-error/20 bg-error-container/20 rounded-xl p-6 flex flex-col gap-stack-sm">
+<div>
+<h3 class="font-label-caps text-label-caps text-error mb-2 tracking-widest uppercase">Danger Zone</h3>
+<h2 class="font-headline-md text-headline-md text-on-background mb-4">Account Termination</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+                    These actions are permanent and cannot be undone. Please proceed with caution.
+                </p>
+</div>
+<div class="flex flex-col gap-unit">
+<!-- Deactivate -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface rounded-lg border border-outline/10 gap-4">
+<div class="flex-1">
+<h4 class="font-button text-button text-on-background mb-1">Deactivate Account</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">
+                            Temporarily hide your profile. You can reactivate anytime by logging in.
+                        </p>
+</div>
+<button class="shrink-0 border border-outline/20 text-on-background px-6 py-3 rounded hover:bg-surface-variant transition-colors font-button text-button">
+                        Deactivate
+                    </button>
+</div>
+<!-- Delete -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface rounded-lg border border-error/30 gap-4">
+<div class="flex-1">
+<h4 class="font-button text-button text-error mb-1">Delete My Data</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">
+                            Permanently erase all personal data, purchase history, and account details.
+                        </p>
+</div>
+<button class="shrink-0 bg-error text-on-error px-6 py-3 rounded hover:bg-error/90 transition-colors font-button text-button flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">delete_forever</span>
+                        Delete Account
+                    </button>
+</div>
+</div>
+</section>
+</main>
+</body></html>

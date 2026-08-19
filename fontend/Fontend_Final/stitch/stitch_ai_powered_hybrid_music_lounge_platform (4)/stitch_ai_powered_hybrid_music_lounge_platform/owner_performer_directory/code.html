@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Performers</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Libre+Caslon+Text:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#e9c176",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#775a19",
+                        "tertiary": "#310501",
+                        "tertiary-container": "#4d190e",
+                        "surface-tint": "#635d5a",
+                        "on-primary-fixed": "#1e1b18",
+                        "background": "#fbf9f4",
+                        "surface-bright": "#fbf9f4",
+                        "primary-container": "#2d2926",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "inverse-primary": "#cdc5c0",
+                        "primary": "#181512",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#7e756f",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "on-background": "#1b1c19",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#eae8e3",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "surface-dim": "#dbdad5",
+                        "surface-container-low": "#f5f3ee",
+                        "secondary-container": "#fed488",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-variant": "#e4e2dd",
+                        "surface-container": "#f0eee9",
+                        "on-secondary-container": "#785a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#ffdea5",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "outline-variant": "#cfc4bd",
+                        "surface": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#4d4540",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-surface": "#1b1c19",
+                        "on-tertiary-container": "#cb7c6b",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-secondary-fixed": "#261900",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-primary-container": "#96908b",
+                        "inverse-on-surface": "#f2f1ec"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "gutter": "32px",
+                        "stack-sm": "16px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "20px",
+                        "unit": "8px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "button": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+<!-- SideNavBar (from JSON) -->
+<nav class="hidden md:flex flex-col py-8 px-6 gap-stack-sm bg-surface-container dark:bg-surface-container-high border-r border-outline-variant/10 fixed left-0 top-0 h-full w-64 z-40">
+<div class="mb-stack-md">
+<h1 class="text-headline-md font-headline-md text-primary tracking-tight">Management</h1>
+<p class="text-label-caps font-label-caps text-on-surface-variant/70 mt-1 uppercase tracking-wider">Staff Access</p>
+</div>
+<ul class="flex flex-col gap-2 flex-grow">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">event</span>
+                    Events
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">sensors</span>
+                    Livestreams
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">leaderboard</span>
+                    Analytics
+                </a>
+</li>
+<li>
+<!-- Active State: 'Staff' closest match to Performers/Roster management -->
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-primary dark:text-primary-fixed font-bold bg-surface-container-highest/50 rounded-lg translate-x-1 duration-200" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">group</span>
+                    Staff
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<div class="mt-auto pt-stack-sm border-t border-outline-variant/10">
+<ul class="flex flex-col gap-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">help</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-body-md font-body-md text-on-surface-variant dark:text-outline hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined text-lg">logout</span>
+                        Log Out
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto w-full">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-stack-sm mb-stack-lg">
+<div>
+<h2 class="text-display-md font-display-md text-primary tracking-tight">Performers</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-2 max-w-2xl">Manage your roster of resident artists and guest performers.</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded text-button font-button flex items-center justify-center gap-2 hover:bg-primary-container transition-colors duration-300 w-full md:w-auto">
+<span aria-hidden="true" class="material-symbols-outlined text-sm">add</span>
+                Add Performer
+            </button>
+</header>
+<!-- Filters & Search Bar -->
+<section class="flex flex-col md:flex-row gap-4 mb-stack-md">
+<div class="relative flex-1 max-w-md">
+<span aria-hidden="true" class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-lg text-body-md font-body-md focus:outline-none focus:border-outline focus:ring-1 focus:ring-outline transition-colors" placeholder="Search artists..." type="text"/>
+</div>
+<div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+<button class="px-4 py-2 border border-outline-variant/30 rounded-full text-label-caps font-label-caps whitespace-nowrap bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface">All Types</button>
+<button class="px-4 py-2 border border-outline-variant/30 rounded-full text-label-caps font-label-caps whitespace-nowrap bg-surface hover:bg-surface-container transition-colors text-on-surface-variant">Solo</button>
+<button class="px-4 py-2 border border-outline-variant/30 rounded-full text-label-caps font-label-caps whitespace-nowrap bg-surface hover:bg-surface-container transition-colors text-on-surface-variant">Band</button>
+<button class="px-4 py-2 border border-outline-variant/30 rounded-full text-label-caps font-label-caps whitespace-nowrap bg-surface hover:bg-surface-container transition-colors text-on-surface-variant flex items-center gap-1">
+                    Genre
+                    <span aria-hidden="true" class="material-symbols-outlined text-sm">arrow_drop_down</span>
+</button>
+</div>
+</section>
+<!-- Performers Table/List -->
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant/10">
+<tr>
+<th class="py-4 px-6 text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider font-semibold">Artist</th>
+<th class="py-4 px-6 text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider font-semibold">Type</th>
+<th class="py-4 px-6 text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider font-semibold hidden md:table-cell">Genres</th>
+<th class="py-4 px-6 text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors group">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-variant overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A striking portrait of a sophisticated male jazz pianist in a dimly lit, luxurious lounge setting. Warm amber lighting highlights his features against a deep, dark background. The image exudes a premium, quiet luxury aesthetic typical of high-end editorial photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQSJ8q7TcTyXs8vN7e-emrSt79_GPU321mLJxoapBuTx5uOvIf0ob-rUNOVURTI7uoCTS2MVgSnanbElY0Yp2njHV4dy_2NC1aGuz_pkXZmPPEC1SA1Lf_DQpjMPpB3e3Q65QksHNXgvDeb1zVXYYnYgD3If7r8we0RRjbL46q7r3eML2iiGJfYLALcpwLJeCGJ0C_zrX1C6kgn0_LO6JmDk2bOmYxkgwG8yV4o7_ev29_nzXwQvfxhw"/>
+</div>
+<div>
+<p class="text-body-md font-body-md font-medium text-primary">Elias Thorne</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1 md:hidden">Jazz, Blues</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-body-md font-body-md text-on-surface-variant">Solo</td>
+<td class="py-4 px-6 hidden md:table-cell">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-[10px] uppercase tracking-wider font-semibold">Jazz</span>
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-[10px] uppercase tracking-wider font-semibold">Blues</span>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<div class="flex items-center justify-end gap-3">
+<button aria-label="View Schedule" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">calendar_today</span>
+</button>
+<button aria-label="Edit Performer" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors group">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-variant overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A sophisticated group portrait of a contemporary neo-soul band in a minimalist studio setting. The lighting is soft and natural, emphasizing the texture of their instruments and clothing. The aesthetic is clean, elegant, and highly curated, fitting a premium music platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwHq6YOLd4devi49QzV3G3QTw4op7xmgEnnMeb6oymgklEsU9TiNQKfMkr4ry_10YWBa4CGVMIZg6VURyQnPA755cfQ9v_5IXWNb7EMjpplhnKYangEweGj6AebyzQX-DPlQf0vJPivW03DttZC3y4V-FhzRbxXskQJpG3kcfLxQrVNncnKAMkBtVYY2LQQ-PI_g9Aa0CqeVp1Yya6zqq9XkUc1tesae2huX6HsAt730D6Z6jHgDMA9g"/>
+</div>
+<div>
+<p class="text-body-md font-body-md font-medium text-primary">The Miles Quintet</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1 md:hidden">Neo-Soul, Funk</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-body-md font-body-md text-on-surface-variant">Band</td>
+<td class="py-4 px-6 hidden md:table-cell">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-[10px] uppercase tracking-wider font-semibold">Neo-Soul</span>
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-[10px] uppercase tracking-wider font-semibold">Funk</span>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<div class="flex items-center justify-end gap-3">
+<button aria-label="View Schedule" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">calendar_today</span>
+</button>
+<button aria-label="Edit Performer" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors group">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-variant overflow-hidden flex-shrink-0">
+<div class="w-full h-full flex items-center justify-center bg-surface-variant text-on-surface-variant text-headline-md font-headline-md">
+                                             S
+                                         </div>
+</div>
+<div>
+<p class="text-body-md font-body-md font-medium text-primary">Sarah Jenkins</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1 md:hidden">Acoustic, Indie</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-body-md font-body-md text-on-surface-variant">Solo</td>
+<td class="py-4 px-6 hidden md:table-cell">
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-[10px] uppercase tracking-wider font-semibold">Acoustic</span>
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded text-[10px] uppercase tracking-wider font-semibold">Indie</span>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<div class="flex items-center justify-end gap-3">
+<button aria-label="View Schedule" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">calendar_today</span>
+</button>
+<button aria-label="Edit Performer" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination (Simple) -->
+<div class="px-6 py-4 border-t border-outline-variant/10 flex items-center justify-between bg-surface-container-low text-body-md text-on-surface-variant">
+<span>Showing 1 to 3 of 12 performers</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded border border-outline-variant/30 hover:bg-surface-container transition-colors disabled:opacity-50" disabled="">Prev</button>
+<button class="px-3 py-1 rounded border border-outline-variant/30 hover:bg-surface-container transition-colors">Next</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

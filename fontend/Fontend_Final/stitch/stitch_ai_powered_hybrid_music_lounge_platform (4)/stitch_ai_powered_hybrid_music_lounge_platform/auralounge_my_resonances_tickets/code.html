@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Resonances - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed": "#ffdea5",
+                      "surface-dim": "#dbdad5",
+                      "secondary-container": "#fed488",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#775a19",
+                      "on-secondary-fixed": "#261900",
+                      "primary-fixed": "#e9e1dc",
+                      "surface-bright": "#fbf9f4",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "surface": "#fbf9f4",
+                      "surface-container": "#f0eee9",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "outline-variant": "#cfc4bd",
+                      "tertiary": "#310501",
+                      "primary": "#181512",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-variant": "#e4e2dd",
+                      "background": "#fbf9f4",
+                      "secondary-fixed-dim": "#e9c176",
+                      "on-tertiary-container": "#cb7c6b",
+                      "surface-tint": "#635d5a",
+                      "on-secondary": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "outline": "#7e756f",
+                      "on-surface": "#1b1c19",
+                      "on-secondary-container": "#785a1a",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-primary-container": "#96908b",
+                      "surface-container-highest": "#e4e2dd",
+                      "inverse-on-surface": "#f2f1ec",
+                      "primary-container": "#2d2926",
+                      "tertiary-container": "#4d190e",
+                      "on-error-container": "#93000a",
+                      "on-background": "#1b1c19",
+                      "surface-container-high": "#eae8e3",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "16px",
+                      "margin-desktop": "64px",
+                      "margin-mobile": "20px",
+                      "stack-md": "32px",
+                      "stack-lg": "80px",
+                      "container-max": "1440px",
+                      "unit": "8px",
+                      "gutter": "32px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Libre Caslon Text", "serif"],
+                      "headline-lg-mobile": ["Libre Caslon Text", "serif"],
+                      "headline-md": ["Libre Caslon Text", "serif"],
+                      "label-caps": ["Manrope", "sans-serif"],
+                      "button": ["Manrope", "sans-serif"],
+                      "body-lg": ["Manrope", "sans-serif"],
+                      "display-md": ["Libre Caslon Text", "serif"],
+                      "body-md": ["Manrope", "sans-serif"],
+                      "headline-lg": ["Libre Caslon Text", "serif"]
+              },
+              "fontSize": {
+                      "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "button": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-md": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { background-color: #fbf9f4; color: #1b1c19; }
+        .glass-panel { background: rgba(240, 238, 233, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(207, 196, 189, 0.2); }
+        .hover-lift { transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/15">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<div class="font-display-md text-display-md text-primary tracking-tight">AuraLounge</div>
+<div class="hidden md:flex items-center space-x-gutter">
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#">Artists</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#">Lounges</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#">Events</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#">Schedule</a>
+</div>
+<div class="flex items-center gap-4 cursor-pointer active:opacity-70 text-primary font-bold border-b-2 border-primary pb-1">
+<span class="font-button text-button">Profile</span>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A close up, high quality, soft lit portrait of a sophisticated lounge goer, minimal background, high fashion, elegant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgKxvAjL4ckrXQWzHbc55ybvHTFfnuNmRvBPQtkh3TCSbKWmSkSEtBeDSXWryfM8ZplofmsA130m7f-rRdRFhynlZN5DApwWkmcDWocez2WROf1C4gSau8slZUCA2JtueOPLptcnz1n3MlTN5KwdaiD4gPHeDSvfrfwpL8qcLKueGZrmnKGmfqa0ogE2sVlwg0cTLIsl75HAYV5EG2hHuQJ5z_2nIoREiqR-TUmaekgkvUwFAP3bAOMg"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow pt-32 pb-stack-lg max-w-container-max mx-auto w-full px-margin-desktop">
+<header class="mb-stack-lg flex justify-between items-end">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary mb-2">My Resonances</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Your curated collection of upcoming experiences and cherished auditory memories.</p>
+</div>
+</header>
+<!-- Upcoming Reservations (Bento Grid) -->
+<section class="mb-stack-lg">
+<div class="flex items-center justify-between mb-stack-md border-b border-outline-variant/20 pb-4">
+<h2 class="font-headline-lg text-headline-lg text-primary">Upcoming</h2>
+<button class="font-button text-button text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2">
+                    View Calendar <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Primary Ticket Card -->
+<div class="md:col-span-8 glass-panel rounded-xl overflow-hidden hover-lift flex flex-col md:flex-row relative group">
+<div class="w-full md:w-2/5 h-64 md:h-auto relative">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A moody, atmospheric shot of an underground jazz lounge, thick smoke, spotlight on a brass saxophone, rich mahogany tones, high end film photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAny5I_eK2JxB9hRPfZ-0daPy6Z0OItS75WO5fb_bSeJgfPRKybNqnEeNuCmNIlzOHnJoAMij9hd547KTJpSatXwdtWsXBjQxnwGsMXmdCDWZV4s7f3aGZj_J4cTjgyMmJ8sy17-sLUPOY49wu9Z49QxpJFTkmK8VPzaqc7iG8ztVW3HLyMk-TyET_tPN7qrVRJ7KBZot52Tfc4BmnQlrSk3edfmBmgwi2HcdDXvnWeC16gA5g05RShHQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-6">
+<span class="inline-block px-3 py-1 bg-surface-container/30 backdrop-blur-md rounded border border-white/20 font-label-caps text-label-caps text-white mb-2 w-max">Tonight</span>
+<div class="text-white font-body-md text-body-md flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">location_on</span> The Velvet Room</div>
+</div>
+</div>
+<div class="p-8 flex-grow flex flex-col justify-between bg-surface-container-low">
+<div>
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Ethereal Frequencies:<br/>Cello &amp; Synth</h3>
+<div class="text-right">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Entry Code</div>
+<div class="font-button text-button text-primary tracking-widest">VL-8829</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Date</div>
+<div class="font-body-md text-body-md text-on-surface">Oct 24, 2024</div>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Time</div>
+<div class="font-body-md text-body-md text-on-surface">9:00 PM - 1:00 AM</div>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Tier</div>
+<div class="font-body-md text-body-md text-on-surface">Gallery Seating</div>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Guests</div>
+<div class="font-body-md text-body-md text-on-surface">2</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 pt-4 border-t border-outline-variant/30">
+<button class="bg-primary text-on-primary px-6 py-3 font-button text-button rounded flex-grow flex justify-center items-center gap-2 hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">qr_code_scanner</span> Show Pass
+                            </button>
+<button class="px-6 py-3 border border-outline-variant text-primary font-button text-button rounded hover:bg-surface-container transition-colors">
+                                Details
+                            </button>
+</div>
+</div>
+</div>
+<!-- Secondary Ticket Card -->
+<div class="md:col-span-4 glass-panel rounded-xl overflow-hidden hover-lift flex flex-col bg-surface-container-low p-6">
+<div class="flex justify-between items-start mb-6">
+<span class="inline-block px-2 py-1 bg-surface-variant rounded font-label-caps text-label-caps text-on-surface-variant">Nov 12</span>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div class="mb-auto">
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Silent Disco:<br/>Botanical Garden</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Flora Conservatory</p>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex justify-between items-center">
+<div class="font-label-caps text-label-caps text-on-surface-variant">VIP Access</div>
+<button class="text-primary font-button text-button hover:underline decoration-1 underline-offset-4">View Pass</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Past Memories (Masonry-ish List) -->
+<section>
+<div class="flex items-center justify-between mb-stack-md border-b border-outline-variant/20 pb-4">
+<h2 class="font-headline-lg text-headline-lg text-primary">Past Memories</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Memory Item 1 -->
+<div class="group cursor-pointer">
+<div class="w-full aspect-[4/5] rounded-xl overflow-hidden mb-4 relative bg-surface-variant">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A beautiful black and white photograph of a string quartet playing in a minimalist concrete space, dramatic lighting, high contrast, artistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzN83KBDsFTej_Up9eRbMcHbhUCcgDovpiqyneVL-E1HeJmyfLRyQrfMM5nxX8pgm9wde3ciElffK8AaQJIV7Q9Ce0J9pfkO_enUqmMJ4Td1vGZ8cQh0eEA0tu-h596ZKcOon0gsD51Il569_QE8IlaJQWWE9wWO-RXieoSPuUnhcAvAKU4FUW9IvDlc0oIglhvk24no48TYx36OkxscwimUOScYluO5SHTO7J1Z6vdy9KMlInK7OC0g"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur rounded-full w-12 h-12 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">photo_library</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Sep 04, 2024</div>
+<h4 class="font-body-lg text-body-lg text-primary font-bold">Acoustic Shadows</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">The Concrete Hall</p>
+</div>
+<button class="p-2 border border-outline-variant/50 rounded-full hover:bg-surface-variant transition-colors text-primary" title="Digital Guestbook">
+<span class="material-symbols-outlined text-[18px]">book</span>
+</button>
+</div>
+</div>
+<!-- Memory Item 2 -->
+<div class="group cursor-pointer md:mt-12">
+<div class="w-full aspect-[4/5] rounded-xl overflow-hidden mb-4 relative bg-surface-variant">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Warm, golden hour lighting pouring into an industrial loft space with exposed brick, a DJ spinning vinyl records, relaxed lounge atmosphere, premium." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjRmHa7LOdCrW4a8BSmsSJ8DhC-PrJpYd1GE8rO8gt1-GoIKIQeQ7WDXZnIytcZcckdoYW5W0N-v3rJIWn7Aw70D4CwIkJOtLOFp3jaNCFtmxUQ9GEPX0x5jYkv75jNEHSpNxBD2GEd62bsQ6C34G-FGvXIkgf4NVKV7NglOcdAxchsdH22yC_wmtO3STNtAuIp2cGleOgjgyIjXALdmHG5GxgE0R8bzgiaM_Du1JtIvjvgiQI_8EVQQ"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur rounded-full w-12 h-12 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">photo_library</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Aug 18, 2024</div>
+<h4 class="font-body-lg text-body-lg text-primary font-bold">Lo-Fi Sunday Sessions</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Brick &amp; Timber Studio</p>
+</div>
+<button class="p-2 border border-outline-variant/50 rounded-full hover:bg-surface-variant transition-colors text-primary" title="Digital Guestbook">
+<span class="material-symbols-outlined text-[18px]">book</span>
+</button>
+</div>
+</div>
+<!-- Memory Item 3 -->
+<div class="group cursor-pointer">
+<div class="w-full aspect-[4/5] rounded-xl overflow-hidden mb-4 relative bg-surface-variant">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Abstract close up of a grand piano keyboard bathed in deep blue and purple neon light, soft focus, luxurious and intimate club setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBSHA-vpAF2LuuwS3ZhbFypxZT6xV1eue4I5PH1Sh7C2Is1PXch5it2S-KS-DyX9s7LtK50CGjqKLbfgkaEQZH7bkgEWhFQRyertURihRhPwjSgBJhoeiEf_6m9hoolUAkEjR7UY1cCCD_YbqlEO53D1et1wMa12mCnUId1XiW1ZtWHBtqsRCLrnqqbrIg9aqNCFPL7lRTMo0ZLIi40UqRPXOxhRX2MzDsryqHSXNRfBkVPIhoZ7ZxLw"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur rounded-full w-12 h-12 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">photo_library</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Jul 22, 2024</div>
+<h4 class="font-body-lg text-body-lg text-primary font-bold">Midnight Keys</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">The Blue Room</p>
+</div>
+<button class="p-2 border border-outline-variant/50 rounded-full hover:bg-surface-variant transition-colors text-primary" title="Digital Guestbook">
+<span class="material-symbols-outlined text-[18px]">book</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg border-t border-outline-variant/10 bg-surface-container">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="font-display-md text-display-md text-primary">AuraLounge</div>
+<div class="flex flex-col items-start md:items-end justify-between h-full">
+<div class="flex flex-wrap gap-4 md:gap-8 mb-8 md:mb-0">
+<a class="text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">About</a>
+<a class="text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Terms</a>
+<a class="text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Support</a>
+<a class="text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Press</a>
+<a class="text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200 font-body-md text-body-md" href="#">Careers</a>
+</div>
+<div class="text-on-surface font-body-md text-body-md">© 2024 AuraLounge. The Quiet Luxury of Sound.</div>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Payment Result - AURA</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fbf9f4",
+                        "tertiary": "#310501",
+                        "on-tertiary-container": "#cb7c6b",
+                        "tertiary-container": "#4d190e",
+                        "surface": "#fbf9f4",
+                        "outline": "#7e756f",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "primary-fixed": "#e9e1dc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#723527",
+                        "tertiary-fixed-dim": "#ffb4a4",
+                        "surface-container-high": "#eae8e3",
+                        "tertiary-fixed": "#ffdad3",
+                        "on-secondary-container": "#785a1a",
+                        "on-primary-container": "#96908b",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "outline-variant": "#cfc4bd",
+                        "surface-container-highest": "#e4e2dd",
+                        "surface-tint": "#635d5a",
+                        "error-container": "#ffdad6",
+                        "secondary": "#775a19",
+                        "surface-container-low": "#f5f3ee",
+                        "secondary-fixed": "#ffdea5",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#1e1b18",
+                        "on-secondary-fixed": "#261900",
+                        "primary-container": "#2d2926",
+                        "inverse-on-surface": "#f2f1ec",
+                        "primary": "#181512",
+                        "on-surface-variant": "#4d4540",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "inverse-surface": "#30312e",
+                        "secondary-fixed-dim": "#e9c176",
+                        "secondary-container": "#fed488",
+                        "inverse-primary": "#cdc5c0",
+                        "surface-container": "#f0eee9",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "background": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#dbdad5",
+                        "on-tertiary-fixed": "#3a0a03",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "on-background": "#1b1c19",
+                        "surface-variant": "#e4e2dd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "gutter": "32px",
+                        "margin-mobile": "20px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "stack-sm": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "display-md": ["Libre Caslon Text"],
+                        "button": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "button": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-effect {
+            background: rgba(251, 249, 244, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .success-animation-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(126, 117, 111, 0.2);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .success-circle-inner {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background-color: rgba(233, 225, 220, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: .5;
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Suppress scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-surface-dim selection:text-primary">
+<!-- Top Navigation (Transactional, minimal) -->
+<header class="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-md flex justify-between items-center px-margin-mobile h-20 border-b border-outline/5 transition-all duration-300" id="mainHeader">
+<div class="flex items-center gap-4">
+<!-- No back button on success screen to prevent double submission issues, replaced with logo -->
+<span class="font-display-md text-display-md tracking-widest text-primary">AURA</span>
+</div>
+<button aria-label="Support" class="text-on-surface-variant hover:opacity-70 transition-opacity p-2 flex items-center justify-center rounded-full bg-surface-container-low">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 pt-24 pb-safe flex flex-col justify-center px-margin-mobile relative z-10 min-h-[884px]">
+<!-- Background Ambient Element -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[150vw] h-[150vw] rounded-full bg-surface-container-highest/20 blur-[80px]"></div>
+</div>
+<div class="relative z-10 flex flex-col items-center max-w-md mx-auto w-full mt-stack-md">
+<!-- Status Visualizer -->
+<div class="success-animation-wrapper mb-stack-md">
+<div class="success-circle"></div>
+<div class="success-circle-inner">
+<span class="material-symbols-outlined text-secondary" style="font-size: 48px; font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Header Text -->
+<div class="text-center mb-stack-lg w-full">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Payment Successful</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Your transaction has been securely processed.</p>
+</div>
+<!-- Receipt Card (Glassmorphism/Minimalist) -->
+<div class="w-full bg-surface-container-lowest border border-outline/10 rounded-xl p-6 mb-stack-lg relative overflow-hidden">
+<!-- Subtle decorative top line -->
+<div class="absolute top-0 left-0 w-full h-1 bg-surface-variant"></div>
+<div class="flex justify-between items-end mb-6 pb-6 border-b border-outline/10">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase">Total Paid</span>
+<span class="font-headline-md text-headline-md text-primary">$185.00</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary bg-secondary-fixed/30 px-3 py-1 rounded-sm uppercase tracking-wider">Confirmed</span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Order Ref</span>
+<span class="font-body-md text-body-md text-primary font-medium">#AU-992-K8</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Date</span>
+<span class="font-body-md text-body-md text-primary font-medium">Oct 24, 2023</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Payment Method</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 18px;">credit_card</span>
+<span class="font-body-md text-body-md text-primary font-medium">•••• 4242</span>
+</div>
+</div>
+</div>
+<!-- Ticket Summary Mini -->
+<div class="mt-6 pt-6 border-t border-outline/10 flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-md flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">local_activity</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-primary font-medium line-clamp-1">Symphony of Silence</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">2x VIP Admission</p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="w-full flex flex-col gap-4 mb-stack-md">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded-DEFAULT flex justify-center items-center gap-2 hover:bg-primary/90 transition-colors active:scale-[0.98]">
+<span>View My Tickets</span>
+<span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+</button>
+<button class="w-full bg-transparent border border-outline/20 text-primary font-button text-button py-4 px-6 rounded-DEFAULT flex justify-center items-center hover:bg-surface-container-low transition-colors active:scale-[0.98]">
+                    Back to Discovery
+                </button>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-60 text-center mt-auto">A receipt has been sent to your email.</p>
+</div>
+</main>
+<!-- Navigation Shell Suppressed as per guidelines (Transactional/Success screen) -->
+</body></html>

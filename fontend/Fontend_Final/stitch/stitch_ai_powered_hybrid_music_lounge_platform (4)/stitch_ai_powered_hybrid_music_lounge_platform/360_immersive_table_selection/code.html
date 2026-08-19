@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AuraLounge - Seating Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#30312e",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary-fixed": "#ffdea5",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-error": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#4d190e",
+                      "surface-bright": "#fbf9f4",
+                      "inverse-on-surface": "#f2f1ec",
+                      "surface-variant": "#e4e2dd",
+                      "outline-variant": "#cfc4bd",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed": "#1e1b18",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "secondary-container": "#fed488",
+                      "secondary-fixed-dim": "#e9c176",
+                      "primary-container": "#2d2926",
+                      "on-background": "#1b1c19",
+                      "tertiary": "#310501",
+                      "surface-container-low": "#f5f3ee",
+                      "tertiary-fixed": "#ffdad3",
+                      "on-tertiary": "#ffffff",
+                      "surface-tint": "#635d5a",
+                      "on-surface-variant": "#4d4540",
+                      "surface": "#fbf9f4",
+                      "on-secondary": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "surface-dim": "#dbdad5",
+                      "background": "#fbf9f4",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "on-primary-container": "#96908b",
+                      "on-secondary-container": "#785a1a",
+                      "on-surface": "#1b1c19",
+                      "secondary": "#775a19",
+                      "primary": "#181512",
+                      "on-tertiary-container": "#cb7c6b",
+                      "inverse-primary": "#cdc5c0",
+                      "surface-container-high": "#eae8e3",
+                      "primary-fixed": "#e9e1dc",
+                      "outline": "#7e756f",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#261900",
+                      "primary-fixed-dim": "#cdc5c0"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "container-max": "1440px",
+                      "stack-sm": "16px",
+                      "stack-md": "32px",
+                      "margin-mobile": "20px",
+                      "gutter": "32px",
+                      "stack-lg": "80px",
+                      "margin-desktop": "64px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        .hotspot {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid theme('colors.primary');
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .hotspot:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            background-color: theme('colors.primary');
+            color: theme('colors.on-primary');
+        }
+        
+        .hotspot.active {
+            background-color: theme('colors.primary');
+            color: theme('colors.on-primary');
+            box-shadow: 0 0 0 4px rgba(24, 21, 18, 0.2);
+        }
+        
+        .hotspot-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            animation: pulse 2s infinite;
+            z-index: -1;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        /* Custom scrollbar for minimalist look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md antialiased overflow-hidden">
+<!-- Top Navigation (Transactional intent - simplified shell) -->
+<header class="bg-surface/80 backdrop-blur-md w-full border-b border-outline-variant/10 z-50 flex-shrink-0">
+<div class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-button text-button group">
+<span class="material-symbols-outlined text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Back to Event
+                </button>
+</div>
+<div class="text-headline-md font-headline-md text-primary tracking-tight">AuraLounge</div>
+<div class="w-24"></div> <!-- Spacer for centering -->
+</div>
+</header>
+<!-- Main Content Area - Full height minus header -->
+<main class="flex-1 flex w-full max-w-container-max mx-auto h-[calc(100vh-80px)] overflow-hidden">
+<!-- Left Side: 360 Viewer & Thumbnails (Gallery Margin on left) -->
+<div class="flex-1 flex flex-col pl-margin-desktop pr-gutter py-stack-md h-full overflow-hidden">
+<!-- 360 Viewer Canvas -->
+<div class="relative w-full flex-1 rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container-low mb-stack-sm" id="viewer-container">
+<!-- Background Image representing 360 view -->
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] ease-linear hover:scale-105 cursor-grab active:cursor-grabbing" data-alt="A wide panoramic, high-resolution interior photograph of a luxurious, moody lounge called 'The Velvet Room'. The room features dark, rich velvet textures, low ambient warm lighting, and elegant, sparsely placed seating arrangements designed for exclusive viewing. The aesthetic is high-end minimalism, with deep charcoal tones and subtle golden accents. A sense of quiet luxury pervades the sophisticated space." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAePVg4_SdMituAfsdEkgrrPZPUdjxHWAkBwjB9CGVGu39m1zGbubEuYz83Ulyfx6E9rYz5BBiDCfnsr-2U-NqicXXjxvefXo06VaZpqMJUgnpmN4PnYhb4HatGXRdl3Z-bwRVUjbpktYnT3pr5wf1NMYz4O6P2EylxOiArC00-OzgW5DqgM6ljBx-AgtZkwvbGrKIwpb2cMOmhshV4OfQEhNF1ACc3FiP2cjGeS1lwypby_icoVKbBRA')"></div>
+<!-- Overlay Gradient for contrast -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+<!-- Hotspots -->
+<div class="hotspot active" data-price="450" data-table="V2" style="top: 45%; left: 30%;">
+<div class="hotspot-pulse"></div>
+<span class="font-button text-xs font-bold">V2</span>
+</div>
+<div class="hotspot" data-price="350" data-table="V3" style="top: 55%; left: 60%;">
+<span class="font-button text-xs font-bold text-primary">V3</span>
+</div>
+<div class="hotspot" data-price="600" data-table="V4" style="top: 35%; left: 75%;">
+<span class="font-button text-xs font-bold text-primary">V4</span>
+</div>
+<!-- Viewer Controls Overlay -->
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none">
+<div class="bg-surface/90 backdrop-blur-sm px-4 py-2 rounded-lg border border-outline-variant/20 pointer-events-auto">
+<h2 class="font-headline-md text-headline-md text-primary m-0 leading-tight">The Velvet Room</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Premium Viewing Area</p>
+</div>
+<div class="flex gap-2 pointer-events-auto">
+<button class="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm border border-outline-variant/20 flex items-center justify-center text-primary hover:bg-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0;">zoom_in</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm border border-outline-variant/20 flex items-center justify-center text-primary hover:bg-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0;">zoom_out</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Room Navigation Thumbnails -->
+<div class="h-28 flex-shrink-0 flex gap-4 overflow-x-auto pb-2 scroll-smooth">
+<!-- Current Room -->
+<div class="relative w-40 h-full rounded-lg overflow-hidden border border-primary cursor-pointer group flex-shrink-0">
+<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A small thumbnail image showing a moody, luxurious lounge interior with dark velvet furniture and warm ambient lighting. Matches the 'Velvet Room' aesthetic, high-end minimalism." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNLEcZqCmdp9qCWgV_NWGxtvXXsd1Z3gh53GSGbM_EpJ4W7ypeCsSbhzdmEk9Y_cg-3YD6jr5vy4fu77Tz5naZR-jICrlfwPbTSAgGI3E-ZixcrdhWeG4UOBAVeg5pclyVGauQmMW3MulzihSJHzgxN9KzM_XKIiZTW6_AxPoZbEWvGtRCYrZlxndIUUuii-aNfJMST2kTEa2-1iInB2tjDLYR0g6OLRgw0S_LwD-MM-9IkukaD996Lw')"></div>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors"></div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-caps text-[10px] text-white tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-sm">VELVET ROOM</span>
+</div>
+</div>
+<!-- Other Rooms -->
+<div class="relative w-40 h-full rounded-lg overflow-hidden border border-outline-variant/30 cursor-pointer group flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A small thumbnail image showing a bright, airy architectural atrium space with glass ceilings and light-colored modern furniture. High-end, clean, light-mode aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaHy7sskgct2tTe5AyLQJgA_SSM-BWBd_JgiMjIG_MgGDMfm70oG0M7D7yMRi4etWoACSyvi43p80lmNpMJsmJKGHA1vdYqngjirMoevWoyn2eibFTuBETkJFFsrc586YmcgQiOy8ojdBdeMAx53SiC_kIWiVQ4fJj15yNXl0S3wGL42AQgbPK-O037B_Xbq2hgmOvMh1cWrAWIeQKGVsldj7amWse7TDBoSyWUUSqUgMuuoJSyaJFFg')"></div>
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-caps text-[10px] text-white tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-sm">THE ATRIUM</span>
+</div>
+</div>
+<div class="relative w-40 h-full rounded-lg overflow-hidden border border-outline-variant/30 cursor-pointer group flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A small thumbnail image showing a grand main hall with classical architecture mixed with modern acoustic treatments. Elegant, spacious, premium concert hall feel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDP5znZBHyrpHErVpRcSxM7jNLMY3okFDMMNmB3Qzu7N36Su1H0kG8mCf-KTli85WkYnDNwt7ZpY-DHEJeryufPXXev6Nx4e7eYLI1Gq5rqGWaW5kLS1_Rolc1ATkIOm9-30o_BPYLFvCjcQr46608rXHiiJhgHS7sn-S3QB7JMRERuaDY_pxbE3nMqYWWyFfPsaWf6GYSUXrZnxlEfF1NyW3obPtmrKzWMy_Sx_NyzYQvM4PlPcrZHnA')"></div>
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="font-label-caps text-[10px] text-white tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-sm">MAIN HALL</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Booking Sidebar (Gallery Margin on right) -->
+<div class="w-[400px] flex-shrink-0 border-l border-outline-variant/10 bg-surface flex flex-col h-full pr-margin-desktop py-stack-md">
+<div class="pl-gutter flex flex-col h-full">
+<!-- Sidebar Header -->
+<div class="mb-stack-md">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-2">RESERVATION DETAILS</h3>
+<h1 class="font-display-md text-display-md text-primary m-0 leading-tight">Table V2</h1>
+</div>
+<!-- Details Card (Glassmorphism inspired, minimal) -->
+<div class="bg-surface-container-low border border-outline-variant/10 rounded-xl p-6 mb-stack-md flex-1">
+<div class="flex items-start gap-4 mb-6">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">chair</span>
+<div>
+<h4 class="font-button text-button text-primary m-0">Lounge Area</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">The Velvet Room</p>
+</div>
+</div>
+<div class="flex items-start gap-4 mb-6">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">group</span>
+<div>
+<h4 class="font-button text-button text-primary m-0">Capacity</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Up to 4 Guests</p>
+</div>
+</div>
+<div class="flex items-start gap-4 mb-6">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">visibility</span>
+<div>
+<h4 class="font-button text-button text-primary m-0">View Quality</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Premium Obstructed</p>
+</div>
+</div>
+<div class="w-full h-px bg-outline-variant/20 my-6"></div>
+<div class="flex justify-between items-end">
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-1">TOTAL AMOUNT</h4>
+<div class="font-headline-lg text-headline-lg text-primary">$450</div>
+</div>
+<div class="font-body-sm text-sm text-on-surface-variant/70 text-right">
+                            Includes taxes<br/>&amp; fees
+                        </div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="mt-auto">
+<p class="font-body-md text-sm text-on-surface-variant mb-4 text-center">
+                        Requires a minimum spend of $200 per guest.
+                    </p>
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                        Confirm Booking
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple interactivity for hotspots
+        document.addEventListener('DOMContentLoaded', () => {
+            const hotspots = document.querySelectorAll('.hotspot');
+            const titleEl = document.querySelector('.font-display-md');
+            const priceEl = document.querySelector('.font-headline-lg');
+            
+            hotspots.forEach(spot => {
+                spot.addEventListener('click', () => {
+                    // Remove active from all
+                    hotspots.forEach(h => {
+                        h.classList.remove('active');
+                        // Remove pulse if exists
+                        const pulse = h.querySelector('.hotspot-pulse');
+                        if (pulse) pulse.remove();
+                        // Reset text color
+                        const text = h.querySelector('span');
+                        if(text) text.classList.add('text-primary');
+                    });
+                    
+                    // Add active to clicked
+                    spot.classList.add('active');
+                    
+                    // Add pulse
+                    const pulse = document.createElement('div');
+                    pulse.className = 'hotspot-pulse';
+                    spot.insertBefore(pulse, spot.firstChild);
+                    
+                    // Update text color
+                    const text = spot.querySelector('span');
+                    if(text) text.classList.remove('text-primary');
+                    
+                    // Update sidebar data
+                    const table = spot.getAttribute('data-table');
+                    const price = spot.getAttribute('data-price');
+                    
+                    titleEl.textContent = `Table ${table}`;
+                    priceEl.textContent = `$${price}`;
+                    
+                    // Add subtle highlight animation to sidebar
+                    const sidebarCard = document.querySelector('.bg-surface-container-low');
+                    sidebarCard.style.backgroundColor = 'var(--tw-colors-surface-variant)';
+                    setTimeout(() => {
+                        sidebarCard.style.backgroundColor = 'var(--tw-colors-surface-container-low)';
+                    }, 300);
+                });
+            });
+        });
+    </script>
+</body></html>

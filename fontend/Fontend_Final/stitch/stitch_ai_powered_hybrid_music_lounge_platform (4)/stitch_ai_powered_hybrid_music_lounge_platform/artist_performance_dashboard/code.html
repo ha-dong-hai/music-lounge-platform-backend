@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Artist Performance Dashboard - AuraLounge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#dbdad5",
+                      "tertiary": "#310501",
+                      "tertiary-fixed": "#ffdad3",
+                      "surface-tint": "#635d5a",
+                      "on-primary-container": "#96908b",
+                      "primary": "#181512",
+                      "outline-variant": "#cfc4bd",
+                      "on-tertiary-fixed": "#3a0a03",
+                      "on-secondary-fixed-variant": "#5d4201",
+                      "inverse-surface": "#30312e",
+                      "on-surface-variant": "#4d4540",
+                      "tertiary-fixed-dim": "#ffb4a4",
+                      "surface-container-high": "#eae8e3",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#4d190e",
+                      "on-secondary-fixed": "#261900",
+                      "on-tertiary-fixed-variant": "#723527",
+                      "secondary": "#775a19",
+                      "on-surface": "#1b1c19",
+                      "primary-fixed-dim": "#cdc5c0",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed-dim": "#e9c176",
+                      "surface-container-highest": "#e4e2dd",
+                      "outline": "#7e756f",
+                      "inverse-on-surface": "#f2f1ec",
+                      "secondary-container": "#fed488",
+                      "on-primary-fixed-variant": "#4b4642",
+                      "secondary-fixed": "#ffdea5",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#fbf9f4",
+                      "inverse-primary": "#cdc5c0",
+                      "primary-container": "#2d2926",
+                      "on-primary": "#ffffff",
+                      "on-background": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "on-error": "#ffffff",
+                      "surface-variant": "#e4e2dd",
+                      "on-secondary-container": "#785a1a",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary-container": "#cb7c6b",
+                      "background": "#fbf9f4",
+                      "primary-fixed": "#e9e1dc",
+                      "surface": "#fbf9f4",
+                      "error-container": "#ffdad6",
+                      "on-primary-fixed": "#1e1b18",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "stack-sm": "16px",
+                      "margin-mobile": "20px",
+                      "container-max": "1440px",
+                      "stack-lg": "80px",
+                      "stack-md": "32px",
+                      "gutter": "32px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "button": [
+                              "Manrope"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-md": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/15 transition-all duration-300" id="top-nav">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-20">
+<div class="flex items-center gap-8">
+<a class="font-display-md text-display-md text-primary tracking-tight" href="#">AuraLounge</a>
+<nav class="hidden md:flex gap-6">
+<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-primary pb-1 cursor-pointer active:opacity-70" href="#">Artists</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Lounges</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Events</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Schedule</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-2 border-b border-outline-variant pb-1">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 font-body-md text-body-md placeholder:text-outline-variant w-48 p-0" placeholder="Search..." type="text"/>
+</div>
+<a class="font-button text-button bg-primary text-on-primary px-6 py-2 rounded flex items-center gap-2 hover:bg-primary-container transition-colors duration-300" href="#">
+                    Profile
+                </a>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow pt-32 pb-stack-lg max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop">
+<!-- Welcome Section -->
+<section class="mb-stack-lg animate-fade-in-up">
+<h1 class="font-display-lg text-display-lg text-primary mb-2">Welcome back, Marcus Reed</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Here is a summary of your upcoming performances and recent engagement.</p>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Analytics & Schedule (Bento Style) -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Analytics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Donations Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 p-8 rounded-lg flex flex-col justify-between hover:border-outline-variant/50 transition-colors duration-300">
+<div class="flex justify-between items-start mb-6">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Total Donations</h3>
+<span class="material-symbols-outlined text-outline">volunteer_activism</span>
+</div>
+<div>
+<div class="font-display-md text-display-md text-primary mb-1">$4,250</div>
+<div class="font-body-md text-body-md text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">trending_up</span>
+                                +12% from last month
+                            </div>
+</div>
+</div>
+<!-- Audience Reach Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 p-8 rounded-lg flex flex-col justify-between hover:border-outline-variant/50 transition-colors duration-300">
+<div class="flex justify-between items-start mb-6">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Audience Reach</h3>
+<span class="material-symbols-outlined text-outline">group</span>
+</div>
+<div>
+<div class="font-display-md text-display-md text-primary mb-1">12.4k</div>
+<div class="font-body-md text-body-md text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">trending_up</span>
+                                +5.2% from last month
+                            </div>
+</div>
+</div>
+</div>
+<!-- Upcoming Schedule -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 p-8 rounded-lg">
+<div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
+<h2 class="font-headline-lg text-headline-lg text-primary">Upcoming Schedule</h2>
+<a class="font-button text-button text-secondary hover:text-primary transition-colors flex items-center gap-1" href="#">View All <span class="material-symbols-outlined text-[18px]">arrow_forward</span></a>
+</div>
+<div class="space-y-6">
+<!-- Event Item 1 -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:bg-surface-container-low transition-colors duration-200 rounded-md -mx-4 group cursor-pointer border border-transparent hover:border-outline-variant/10">
+<div class="flex items-start gap-4 mb-3 sm:mb-0">
+<div class="bg-surface-container-high rounded p-3 text-center min-w-[70px]">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">OCT</div>
+<div class="font-headline-md text-headline-md text-primary">12</div>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-primary mb-1">The Velvet Room Session</h4>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span> The Velvet Room, NYC
+                                    </p>
+</div>
+</div>
+<div class="font-body-md text-body-md text-outline sm:text-right w-full sm:w-auto">
+                                9:00 PM - 11:30 PM
+                            </div>
+</div>
+<!-- Event Item 2 -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:bg-surface-container-low transition-colors duration-200 rounded-md -mx-4 group cursor-pointer border border-transparent hover:border-outline-variant/10">
+<div class="flex items-start gap-4 mb-3 sm:mb-0">
+<div class="bg-surface-container-high rounded p-3 text-center min-w-[70px]">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">OCT</div>
+<div class="font-headline-md text-headline-md text-primary">18</div>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-primary mb-1">Acoustic Evening</h4>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span> Blue Note Cafe, Brooklyn
+                                    </p>
+</div>
+</div>
+<div class="font-body-md text-body-md text-outline sm:text-right w-full sm:w-auto">
+                                8:00 PM - 10:00 PM
+                            </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Gallery Management -->
+<div class="lg:col-span-4">
+<div class="bg-surface-container-lowest border border-outline-variant/20 p-8 rounded-lg h-full">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md text-primary">Gallery Management</h2>
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors">add_photo_alternate</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Manage the visuals that define your artist profile.</p>
+<div class="grid grid-cols-2 gap-4">
+<div class="aspect-square relative group overflow-hidden rounded-md bg-surface-container">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A moody, high-contrast black and white photograph of a jazz musician playing a saxophone under a single spotlight in a dark, atmospheric lounge. The style is quiet luxury, emphasizing texture and shadow. High-end editorial photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbaNeOEf2QQ8q2s76k0ehfSEe82Ub5WBVaO4ykQktDcSUCSvgRO2qJiNvfSsIqLh-PFGMNCRvvv8P-efdOuOGCqTYPQoMhjVCNHGN2Rjiux3F_aoEUGceo24l1d0kwXAwEeZ_fprXWmES_FetJMtviEKng7phCoKUgFO4oK0bEcc6soWJRVZAYxiyp_gy7HfdaSva8LLkjT3Jcyi5WgWcu2Mdf7aXlZQBV5PQcE3sBVkOa_2lrYjZU_Q"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+<button class="material-symbols-outlined text-on-primary hover:text-secondary-fixed">edit</button>
+<button class="material-symbols-outlined text-on-primary hover:text-error">delete</button>
+</div>
+</div>
+<div class="aspect-square relative group overflow-hidden rounded-md bg-surface-container">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A wide architectural shot of a luxurious, dimly lit music lounge interior. Deep charcoal walls, plush cream seating, and subtle ambient lighting. A grand piano sits in the background. Minimalist, premium aesthetic, 35mm photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA70tvQbGNq9Hs9wTPuajj-e9oqO2yAChPjhL4NDjic9wmaFrnNJ5o6r_A0H1KX1DJB5SWDR9u2mtOst1rssXL82YWLf0aZoVMC_gJrsUqLuOnpl03NdoSMN5VFVaQ-uLNxv-ptso86-Hgatk7ON1DVMSHVPCTJB_9kPkUnl0CyDhrVbz23bMkRIy3ammibj2di2ISy9dAxMk1JULX0kaa60fEfEPStH0QLW2PqwU3-jG0ow1nxqrZwkA"/>
+<div class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+<button class="material-symbols-outlined text-on-primary hover:text-secondary-fixed">edit</button>
+<button class="material-symbols-outlined text-on-primary hover:text-error">delete</button>
+</div>
+</div>
+<div class="aspect-square relative group overflow-hidden rounded-md border border-dashed border-outline-variant hover:border-primary transition-colors cursor-pointer flex flex-col items-center justify-center text-outline hover:text-primary">
+<span class="material-symbols-outlined mb-2">upload</span>
+<span class="font-label-caps text-label-caps uppercase tracking-wider">Upload</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-stack-lg border-t border-outline-variant/10 bg-surface-container mt-auto">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<p class="font-display-md text-display-md text-primary mb-4 tracking-tight">AuraLounge</p>
+<p class="font-body-md text-body-md text-on-surface">© 2024 AuraLounge. The Quiet Luxury of Sound.</p>
+</div>
+<div class="flex flex-wrap gap-x-6 gap-y-4 md:justify-end items-end">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200" href="#">About</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Privacy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Terms</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Support</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Press</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline decoration-1 underline-offset-4 transition-all duration-200" href="#">Careers</a>
+</div>
+</div>
+</footer>
+<style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+    </style>
+<script>
+        // Simple scroll effect for TopNavBar shadow
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('top-nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-[0_4px_30px_rgba(0,0,0,0.05)]');
+            } else {
+                nav.classList.remove('shadow-[0_4px_30px_rgba(0,0,0,0.05)]');
+            }
+        });
+    </script>
+</body></html>

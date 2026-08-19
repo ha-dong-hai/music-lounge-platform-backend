@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura AI: Taste Profile Setup</title>
+<!-- Google Fonts: Libre Caslon Text & Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Design System -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fbf9f4",
+                    "tertiary": "#310501",
+                    "on-tertiary-container": "#cb7c6b",
+                    "tertiary-container": "#4d190e",
+                    "surface": "#fbf9f4",
+                    "outline": "#7e756f",
+                    "on-secondary-fixed-variant": "#5d4201",
+                    "primary-fixed": "#e9e1dc",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed-variant": "#723527",
+                    "tertiary-fixed-dim": "#ffb4a4",
+                    "surface-container-high": "#eae8e3",
+                    "tertiary-fixed": "#ffdad3",
+                    "on-secondary-container": "#785a1a",
+                    "on-primary-container": "#96908b",
+                    "on-error": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#1b1c19",
+                    "outline-variant": "#cfc4bd",
+                    "surface-container-highest": "#e4e2dd",
+                    "surface-tint": "#635d5a",
+                    "error-container": "#ffdad6",
+                    "secondary": "#775a19",
+                    "surface-container-low": "#f5f3ee",
+                    "secondary-fixed": "#ffdea5",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#1e1b18",
+                    "on-secondary-fixed": "#261900",
+                    "primary-container": "#2d2926",
+                    "inverse-on-surface": "#f2f1ec",
+                    "primary": "#181512",
+                    "on-surface-variant": "#4d4540",
+                    "primary-fixed-dim": "#cdc5c0",
+                    "inverse-surface": "#30312e",
+                    "secondary-fixed-dim": "#e9c176",
+                    "secondary-container": "#fed488",
+                    "inverse-primary": "#cdc5c0",
+                    "surface-container": "#f0eee9",
+                    "error": "#ba1a1a",
+                    "on-secondary": "#ffffff",
+                    "background": "#fbf9f4",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dbdad5",
+                    "on-tertiary-fixed": "#3a0a03",
+                    "on-primary-fixed-variant": "#4b4642",
+                    "on-background": "#1b1c19",
+                    "surface-variant": "#e4e2dd"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "margin-desktop": "64px",
+                    "container-max": "1440px",
+                    "gutter": "32px",
+                    "margin-mobile": "20px",
+                    "stack-md": "32px",
+                    "stack-lg": "80px",
+                    "stack-sm": "16px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Manrope"],
+                    "headline-lg-mobile": ["Libre Caslon Text"],
+                    "headline-lg": ["Libre Caslon Text"],
+                    "body-md": ["Manrope"],
+                    "headline-md": ["Libre Caslon Text"],
+                    "body-lg": ["Manrope"],
+                    "display-lg": ["Libre Caslon Text"],
+                    "display-md": ["Libre Caslon Text"],
+                    "button": ["Manrope"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "display-md": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                    "button": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom Checkbox as Toggle */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #181512;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #181512;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+        .chip-selected {
+            background-color: #181512 !important;
+            color: #ffffff !important;
+            border-color: #181512 !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen relative antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Ambient Background Texture -->
+<div class="absolute inset-0 z-[-1] opacity-[0.03] bg-cover bg-center pointer-events-none mix-blend-multiply" data-alt="A soft, abstract, out-of-focus background representing music and sound waves. The image features smooth, flowing gradients in subtle cream, warm charcoal, and soft taupe tones. The lighting is ambient and high-end, creating a calm, luxurious, light-mode minimalist aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuArcM2lXkXoJgo_yCU5m4jtXWcnE7Mc0msPfs1914rRFYt4tS1oRtGQRHbqPEWFt-FdL9Ggzf6_xR_akyFagg-5zkBLtO73wEmIff_UDmQai7EX_a6ZLIaNZAKVV8u3Qi4urts7G9Xg134ZenvJeCYMl2B4go97h_KG4Mo1Ff0bUuF2-Pgh_tQ7Z2gQoo0bPZY72f7QtCJCthvBxW6Izr6fS4UemG2WRIG7ubCJbNh3jnn241rUXFdNLw')"></div>
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-background/80 backdrop-blur-md fixed top-0 w-full z-50 flat no shadows flex items-center justify-between px-margin-mobile h-16">
+<button aria-label="menu" class="scale-95 active:transition-transform hover:opacity-70 transition-opacity text-primary dark:text-on-background flex items-center justify-center p-2 -ml-2 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-display-md text-headline-md text-primary dark:text-primary-fixed-dim tracking-tighter">AuraLounge</h1>
+<button aria-label="notifications" class="scale-95 active:transition-transform hover:opacity-70 transition-opacity text-primary dark:text-on-background flex items-center justify-center p-2 -mr-2 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="pt-[88px] pb-stack-lg px-margin-mobile flex flex-col gap-stack-md max-w-[600px] mx-auto">
+<!-- Header Section -->
+<section class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-on-surface-variant mb-1">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+<span class="font-label-caps text-label-caps uppercase">Aura AI Setup</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Taste Profile</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">
+                Select the moods and genres that resonate with you. We use this to curate bespoke listening experiences and recommend intimate venues.
+            </p>
+</section>
+<!-- Taste Selection Area -->
+<section class="flex flex-col gap-stack-sm">
+<!-- Category: Moods -->
+<div class="flex flex-col gap-3">
+<h3 class="font-label-caps text-label-caps text-outline uppercase tracking-widest border-b border-outline-variant/20 pb-2">Atmosphere &amp; Mood</h3>
+<div class="flex flex-wrap gap-2" id="mood-chips">
+<!-- Chips: Small, rectangular with 2px radius (rounded-DEFAULT) -->
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Ambient</button>
+<button class="chip chip-selected border border-primary rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Acoustic Warmth</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Introspective</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Late Night Lounge</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Cinematic</button>
+</div>
+</div>
+<!-- Category: Genres -->
+<div class="flex flex-col gap-3 mt-4">
+<h3 class="font-label-caps text-label-caps text-outline uppercase tracking-widest border-b border-outline-variant/20 pb-2">Core Genres</h3>
+<div class="flex flex-wrap gap-2" id="genre-chips">
+<button class="chip chip-selected border border-primary rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Neo-Soul</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Intimate Jazz</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Modern Classical</button>
+<button class="chip chip-selected border border-primary rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Lo-Fi Beats</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Indie Folk</button>
+<button class="chip border border-outline-variant/40 rounded-DEFAULT px-4 py-2 font-body-md text-[14px] text-on-surface bg-surface-container-lowest hover:border-outline transition-colors duration-200">Deep House</button>
+</div>
+</div>
+</section>
+<!-- AI Toggle Section (Glassmorphism/Card variation) -->
+<section class="mt-4 p-5 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-start justify-between gap-4 shadow-[0_4px_30px_rgba(0,0,0,0.02)] relative overflow-hidden">
+<!-- Subtle gradient accent -->
+<div class="absolute top-0 left-0 w-1 h-full bg-primary/20"></div>
+<div class="flex flex-col gap-1 pr-4">
+<label class="font-body-lg text-body-lg text-primary cursor-pointer" for="ai-toggle">Enable Aura Recommendations</label>
+<p class="font-body-md text-[14px] text-on-surface-variant leading-relaxed">
+                    Allow our AI to analyze your selections and listening habits to suggest niche artists, hidden venues, and curated playlists tailored to your specific atmosphere.
+                </p>
+</div>
+<!-- Custom Toggle Switch -->
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1 shrink-0">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-2 border-outline-variant appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out peer" id="ai-toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200 ease-in-out" for="ai-toggle"></label>
+</div>
+</section>
+<!-- Action Area -->
+<section class="mt-stack-md pt-4 border-t border-outline-variant/10">
+<button class="w-full bg-primary text-on-primary font-button text-button py-4 px-6 rounded-full flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]">
+<span>Save Preferences</span>
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+</button>
+</section>
+</main>
+<script>
+        // Simple script to handle chip selection toggling for demonstration
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                this.classList.toggle('chip-selected');
+                
+                // Toggle classes to swap colors between selected/unselected states
+                if(this.classList.contains('chip-selected')) {
+                    this.classList.replace('border-outline-variant/40', 'border-primary');
+                } else {
+                    this.classList.replace('border-primary', 'border-outline-variant/40');
+                }
+            });
+        });
+    </script>
+</body></html>
