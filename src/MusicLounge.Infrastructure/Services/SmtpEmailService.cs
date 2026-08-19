@@ -67,6 +67,7 @@ internal sealed class SmtpEmailService : IEmailService
         };
 
         await client.SendMailAsync(message, ct);
+        _logger.LogInformation("Password reset email sent via SMTP to {Email}", toEmail);
     }
 
     public async Task SendEmailVerificationCodeAsync(
@@ -109,5 +110,52 @@ internal sealed class SmtpEmailService : IEmailService
         };
 
         await client.SendMailAsync(message, ct);
+        _logger.LogInformation("Email verification code sent via SMTP to {Email}", toEmail);
+    }
+
+    public async Task SendDuplicateRegistrationAlertEmailAsync(
+        string toEmail, string toName, CancellationToken ct = default)
+    {
+        var subject = "Có người vừa thử đăng ký bằng email của bạn — MusicLounge";
+        var body = $"""
+            Xin chào {toName},
+
+            Ai đó vừa thử tạo tài khoản MusicLounge mới bằng địa chỉ email này — nhưng bạn đã có
+            tài khoản rồi, nên chúng tôi không tạo tài khoản mới.
+
+            Nếu đó là bạn, hãy đăng nhập bình thường, hoặc dùng chức năng "Quên mật khẩu" nếu bạn
+            không nhớ mật khẩu.
+
+            Nếu không phải bạn, bạn không cần làm gì cả — tài khoản của bạn vẫn an toàn, không có
+            gì thay đổi.
+            """;
+
+        if (string.IsNullOrWhiteSpace(_settings.Host))
+        {
+            _logger.LogWarning(
+                "EmailSettings:Host chưa cấu hình — không gửi email thật. Cảnh báo đăng ký trùng cho {Email}.",
+                toEmail);
+            return;
+        }
+
+        using var message = new MailMessage
+        {
+            From = new MailAddress(_settings.FromAddress, _settings.FromName),
+            Subject = subject,
+            SubjectEncoding = Encoding.UTF8,
+            Body = body,
+            BodyEncoding = Encoding.UTF8,
+            IsBodyHtml = false
+        };
+        message.To.Add(new MailAddress(toEmail, toName));
+
+        using var client = new SmtpClient(_settings.Host, _settings.Port)
+        {
+            EnableSsl = _settings.EnableSsl,
+            Credentials = new NetworkCredential(_settings.Username, _settings.Password)
+        };
+
+        await client.SendMailAsync(message, ct);
+        _logger.LogInformation("Duplicate-registration alert email sent via SMTP to {Email}", toEmail);
     }
 }

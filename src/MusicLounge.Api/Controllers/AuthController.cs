@@ -56,15 +56,15 @@ public sealed class AuthController : ControllerBase
         return Ok(ApiResponse<AuthResultDto>.Ok(result));
     }
 
-    /// <summary>Luôn trả 204 bất kể email có tồn tại hay đã xác thực hay không — tránh lộ thông tin tài khoản.</summary>
+    /// <summary>Luôn trả cùng shape response bất kể email có tồn tại hay đã xác thực hay không — tránh lộ thông tin tài khoản.</summary>
     [HttpPost("resend-verification-code")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ApiResponse<ResendVerificationCodeResultDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResendVerificationCode(
         [FromBody] ResendVerificationCodeCommand command, CancellationToken ct = default)
     {
-        await _sender.Send(command, ct);
-        return NoContent();
+        var result = await _sender.Send(command, ct);
+        return Ok(ApiResponse<ResendVerificationCodeResultDto>.Ok(result));
     }
 
     [HttpPost("login")]
