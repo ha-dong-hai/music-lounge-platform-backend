@@ -24,6 +24,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.TermsVersion).HasMaxLength(50);
         b.Property(u => u.PasswordResetTokenHash).HasMaxLength(64);
         b.Property(u => u.EmailVerificationCodeHash).HasMaxLength(64);
+        b.Property(u => u.PendingEmail).HasMaxLength(256);
         // Ciphertext (IPiiEncryptionService), much longer than the raw 9-12 digit number —
         // Data Protection's Protect() output carries key-ring metadata overhead.
         b.Property(u => u.CitizenCardNumber).HasMaxLength(500);

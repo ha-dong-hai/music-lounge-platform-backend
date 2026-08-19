@@ -38,6 +38,10 @@ public sealed class User : Common.AuditableEntity<int>
     public DateTimeOffset? EmailVerifiedAt { get; set; }
     public string? EmailVerificationCodeHash { get; set; }      // SHA256 hex cua ma OTP 6 so — khong luu ma tho
     public DateTimeOffset? EmailVerificationCodeExpiresAt { get; set; }
+    // Change-email flow reuses EmailVerificationCodeHash/ExpiresAt above (same OTP mechanism as
+    // initial registration) but must not overwrite the current, already-verified Email until the
+    // OTP sent to the NEW address is actually confirmed — this holds the candidate in the meantime.
+    public string? PendingEmail { get; set; }
     // CMND (9 so) hoac CCCD (12 so) — ma hoa tai nghi (IPiiEncryptionService), khong luu plaintext.
     // Ma hoa khong deterministic nen khong the doi chieu/unique truc tiep tren cot nay — dung
     // CitizenCardNumberHash (SHA256, deterministic) cho viec do.

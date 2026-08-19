@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Users.Commands.ChangePassword;
+using MusicLounge.Application.Users.Commands.ConfirmChangeEmail;
 using MusicLounge.Application.Users.Commands.DeactivateMyAccount;
+using MusicLounge.Application.Users.Commands.RequestChangeEmail;
 using MusicLounge.Application.Users.Commands.RequestDataErasure;
 using MusicLounge.Application.Users.Commands.RequestPhoneVerification;
 using MusicLounge.Application.Users.Commands.SubmitCitizenCard;
@@ -69,6 +72,53 @@ public sealed class MeController : ControllerBase
     public async Task<IActionResult> UpdateProfile(
         [FromBody] UpdateMyProfileCommand command,
         CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Đổi mật khẩu khi đang đăng nhập, biết mật khẩu hiện tại — trước đây chỉ có luồng quên mật
+    /// khẩu qua OTP email (POST /auth/forgot-password), bắt người dùng đi vòng qua email dù đã biết
+    /// mật khẩu cũ. Chỉ áp dụng cho tài khoản đăng nhập bằng mật khẩu (không phải Google).
+    /// </summary>
+    [HttpPut("password")]
+    [EnableRateLimiting("auth")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Bước 1/2 đổi email — gửi mã OTP 6 số về địa chỉ MỚI để xác minh quyền sở hữu trước khi đổi
+    /// thật. Trước đây không có cách nào đổi email đã đăng ký.
+    /// </summary>
+    [HttpPost("email/change-request")]
+    [EnableRateLimiting("auth")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RequestChangeEmail(
+        [FromBody] RequestChangeEmailCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>Bước 2/2 đổi email — xác nhận mã OTP gửi ở bước 1, chính thức đổi email đăng nhập.</summary>
+    [HttpPost("email/change-confirm")]
+    [EnableRateLimiting("auth")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ConfirmChangeEmail(
+        [FromBody] ConfirmChangeEmailCommand command, CancellationToken ct = default)
     {
         await _sender.Send(command, ct);
         return NoContent();
