@@ -1,0 +1,14 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+opencv-python-headless==4.10.0.84
+numpy==2.1.2
+requests==2.32.3
+Pillow==11.0.0
+
+# LoFTR rescue matcher (see _rescue_disconnected_with_loftr in main.py) - CPU-only torch build via
+# --extra-index-url, so pip doesn't pull the much larger default CUDA wheel (no GPU assumed in
+# this deployment). The `+cpu` local-version suffix is what actually forces the CPU build - it
+# doesn't exist on PyPI's own `torch` package, so pip is forced onto this index for it.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.13.0+cpu
+kornia==0.8.3

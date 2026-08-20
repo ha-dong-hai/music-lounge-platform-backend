@@ -3,12 +3,14 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MusicLounge.Application.Auth.Commands.ForgotPassword;
 using MusicLounge.Application.Auth.Commands.GoogleLogin;
 using MusicLounge.Application.Auth.Commands.Login;
 using MusicLounge.Application.Auth.Commands.Logout;
 using MusicLounge.Application.Auth.Commands.RefreshToken;
 using MusicLounge.Application.Auth.Commands.Register;
 using MusicLounge.Application.Auth.Commands.ResendVerificationCode;
+using MusicLounge.Application.Auth.Commands.ResetPassword;
 using MusicLounge.Application.Auth.Commands.VerifyEmail;
 using MusicLounge.Application.Auth.DTOs;
 using MusicLounge.Application.Common.Models;
@@ -95,6 +97,30 @@ public sealed class AuthController : ControllerBase
     {
         var result = await _sender.Send(command, ct);
         return Ok(ApiResponse<AuthResultDto>.Ok(result));
+    }
+
+    /// <summary>Luôn trả 204 bất kể email có tồn tại hay không — tránh lộ email nào đã đăng ký.</summary>
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
     }
 
     /// <summary>Không cần Bearer access token còn hạn — bản thân refresh token trong body là thứ
