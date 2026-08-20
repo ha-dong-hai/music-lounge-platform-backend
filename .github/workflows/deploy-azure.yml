@@ -1,0 +1,91 @@
+# Tu dong build, test, roi deploy MusicLounge.Api len Azure App Service moi khi co push len nhanh
+# deploy-src. Xem huong dan goc: docs/ops/25-deploy-azure.md (Buoc 6).
+#
+# deploy-src la gi / vi sao khong dung "master": nhanh "master" tren origin dang duoc xay dung DAN
+# theo tung task Jira (moi PR chi mang 1 tinh nang) - tai bat ky thoi diem nao no CHUA CHAC da la
+# ban code moi nhat/day du nhat so voi local master. "deploy-src" la nhanh rieng cho muc dich deploy:
+# nguoi dung tu push nhanh master cua may local (ban code day du nhat) len day khi muon lam moi ban
+# demo tren Azure - tach biet hoan toan khoi qua trinh PR-tung-task tren "master". Vi du:
+#   git push origin master:deploy-src
+# Day la buoc thu cong DUY NHAT con lai (khong the tu dong hoa - GitHub Actions khong the tu quan
+# sat 1 nhanh chi ton tai o may local ai do). Sau buoc do, moi thu ben duoi chay tu dong.
+#
+# Vi sao build+test nam NGAY TRONG workflow nay thay vi tach thanh workflow CI rieng roi dung
+# workflow_run de theo doi: da thu cach do truoc, nhung nhanh "master" tren origin khong co san
+# file ci.yml (chi ton tai o local master) - workflow_run cho 1 workflow khong ton tai tren nhanh
+# dich se KHONG BAO GIO chay, deploy im lang khong bao gio kich hoat ma khong co canh bao gi. Gop
+# build+test vao chung workflow nay loai bo hoan toan phu thuoc cheo do: 1 file, 1 dieu kien kich
+# hoat (push len deploy-src), test fail thi dung ngay o buoc test - GitHub Actions tu dung job khi
+# 1 step fail, khong bao gio chay toi buoc deploy phia sau.
+#
+# Vi sao KHONG dung action azure/webapps-deploy + publish profile: action do goi Kudu zip-deploy
+# KHONG co tuy chon --clean true. Thieu co nay tung gay loi that (file da bi xoa khoi build van con
+# sot lai tren server - xem docs/ops/25-deploy-azure.md Buoc 6 Cach A va memory
+# musiclounge_kudu_incremental_deploy_orphan_bug). Workflow nay goi thang `az webapp deploy
+# --clean true` qua Azure CLI (can service principal, khong phai publish profile) de luon don sach
+# truoc khi ghi de.
+name: Deploy Backend to Azure
+
+on:
+  push:
+    branches: [deploy-src]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-azure
+  cancel-in-progress: false
+
+env:
+  AZURE_RESOURCE_GROUP: rg-musiclounge
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore MusicLounge.sln
+
+      - name: Build
+        run: dotnet build MusicLounge.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test MusicLounge.sln --no-build --configuration Release --logger "console;verbosity=normal"
+
+      - name: Publish
+        run: dotnet publish src/MusicLounge.Api/MusicLounge.Api.csproj -c Release -o ./publish-tmp
+
+      - name: Zip artifact
+        # Chay tren ubuntu-latest nen lenh `zip` luon ghi duong dan kieu Unix (dau /) - tranh dung
+        # loi Compress-Archive tren Windows PowerShell 5.1 ghi nham dau \ khien Kudu (Linux) giai
+        # nen sai cau truc thu muc long nhau (runtimes/win-x64/...), da ghi trong
+        # docs/ops/25-deploy-azure.md Buoc 6 Cach A.
+        run: |
+          cd publish-tmp
+          zip -r ../publish.zip .
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy (--clean true, tranh sot file cu)
+        run: |
+          az webapp deploy \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+            --src-path publish.zip \
+            --type zip \
+            --clean true
+
+      - name: Azure logout
+        if: always()
+        run: az logout
