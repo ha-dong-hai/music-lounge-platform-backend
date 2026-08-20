@@ -1,0 +1,53 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# User-uploaded content — never commit real uploads, only the wwwroot scaffold
+src/MusicLounge.Api/wwwroot/uploads/*
+!src/MusicLounge.Api/wwwroot/uploads/.gitkeep
+
+# Private uploads (citizen card images etc.) — outside wwwroot on purpose, never commit real PII
+src/MusicLounge.Api/App_Data/
+
+# Logs
+logs/
+*.log
+
+# Secrets — never commit real credentials. Base appsettings.json ships with empty
+# placeholders on purpose; real values belong in appsettings.*.Local.json, User
+# Secrets, or environment variables/a secret manager in production.
+appsettings.*.Local.json
+appsettings.Production.json
+.env
+.env.local
+**/secrets.json
+docs/secrets/
+
+# Node / frontend
+fontend/**/node_modules/
+fontend/**/dist/
+fontend/**/.vite/
+fontend/**/*.tsbuildinfo
+
+# Python (services/panorama-stitcher)
+__pycache__/
+*.pyc
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Old source snapshot — kept on disk for reference, not part of this repo's history
+MLF_Zalo/
+
+# Regeneratable from a committed source, never worth committing itself
+spec/extracted/
+fontend/Fontend_Final/stitch/_unused-earlier-exports/
