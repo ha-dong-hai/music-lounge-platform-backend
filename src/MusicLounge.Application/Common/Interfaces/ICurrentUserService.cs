@@ -6,4 +6,5 @@ public interface ICurrentUserService
     string Role { get; }
     int? LoungeId { get; }
     bool IsAuthenticated { get; }
+    Guid SecurityStamp { get; }
 }

@@ -7,4 +7,6 @@ public sealed record AuthResultDto(
     string Email,
     string FullName,
     string Role,
-    int? LoungeId = null);
+    int? LoungeId = null,
+    string? RefreshToken = null,
+    DateTimeOffset? RefreshTokenExpiresAt = null);
