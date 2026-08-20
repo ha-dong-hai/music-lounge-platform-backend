@@ -37,4 +37,11 @@ internal sealed class CurrentUserService : ICurrentUserService
             return claim is not null ? int.Parse(claim) : null;
         }
     }
+
+    // Same fail-closed reasoning as UserId — every real caller sits behind [Authorize], so
+    // sec_stamp is always present on a validly-issued token.
+    public Guid SecurityStamp =>
+        Guid.TryParse(User?.FindFirstValue("sec_stamp"), out var stamp)
+            ? stamp
+            : throw new UnauthorizedException("Không xác định được phiên đăng nhập hiện tại.");
 }

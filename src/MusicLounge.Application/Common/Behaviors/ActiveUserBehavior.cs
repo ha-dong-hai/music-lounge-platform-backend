@@ -20,6 +20,12 @@ namespace MusicLounge.Application.Common.Behaviors;
 /// venue — the account itself stays active, so the check above doesn't catch it. Without this,
 /// a removed Staff member keeps full Staff privileges (sell tickets, view stream credentials,
 /// create livestreams) on their existing JWT until it naturally expires.
+///
+/// Also compares the token's "sec_stamp" claim against User.SecurityStamp — this is what makes
+/// LogoutCommand's stamp rotation actually revoke the token instead of just being data nobody
+/// reads. Without this check, LoginCommand/JwtTokenService already embed sec_stamp in every token
+/// for nothing: logout would flip the column but the old, cryptographically-still-valid JWT would
+/// keep working for its full remaining lifetime.
 /// </summary>
 internal sealed class ActiveUserBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
@@ -41,6 +47,9 @@ internal sealed class ActiveUserBehavior<TRequest, TResponse> : IPipelineBehavio
             var user = await _uow.Repository<User, int>().GetByIdAsync(_currentUser.UserId, ct);
             if (user is null || !user.IsActive)
                 throw new UnauthorizedException("Tài khoản đã bị khóa hoặc không còn tồn tại.");
+
+            if (_currentUser.SecurityStamp != user.SecurityStamp)
+                throw new UnauthorizedException("Phiên đăng nhập đã hết hiệu lực, vui lòng đăng nhập lại.");
 
             if (_currentUser.Role == Roles.Staff && _currentUser.LoungeId is { } loungeId)
             {
