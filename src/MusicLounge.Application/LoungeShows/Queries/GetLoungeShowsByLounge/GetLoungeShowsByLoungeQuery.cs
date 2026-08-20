@@ -1,0 +1,11 @@
+using MusicLounge.Application.Common.Abstractions;
+using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.LoungeShows.DTOs;
+
+namespace MusicLounge.Application.LoungeShows.Queries.GetLoungeShowsByLounge;
+
+public sealed record GetLoungeShowsByLoungeQuery(
+    int LoungeId,
+    int Page = 1,
+    int PageSize = 10)
+    : IQuery<PaginatedResult<LoungeShowListItemDto>>;

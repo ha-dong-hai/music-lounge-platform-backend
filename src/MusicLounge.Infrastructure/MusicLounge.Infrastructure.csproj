@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MusicLounge.Application\MusicLounge.Application.csproj" />
+    <ProjectReference Include="..\MusicLounge.Domain\MusicLounge.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets tests instantiate internal services directly (e.g. VnPayService) for focused unit
+         tests, instead of only being able to test them indirectly through the full HTTP/DB stack
+         via ApiFactory — which for VnPayService specifically isn't even possible, since ApiFactory
+         always substitutes FakeVnPayService and nothing had ever tested the real signature logic. -->
+    <InternalsVisibleTo Include="MusicLounge.Tests.Integration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.17" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.17" />
+    <PackageReference Include="Microsoft.ML" Version="5.0.0" />
+    <PackageReference Include="Microsoft.ML.Recommender" Version="0.23.0" />
+  </ItemGroup>
+
+</Project>
