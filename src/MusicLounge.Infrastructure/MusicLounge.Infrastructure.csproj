@@ -24,6 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Pinned above EF Core 8.0.11's transitive 5.1.6: that version's Linux SNI implementation can
+         throw on SSRP (UDP instance-discovery) resolution even when the connection string has an
+         explicit port, instead of falling back to a direct TCP connect - fatal on Azure App Service
+         Linux, which blocks outbound UDP. Fixed by 5.2.x's rewritten managed SNI provider. -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
