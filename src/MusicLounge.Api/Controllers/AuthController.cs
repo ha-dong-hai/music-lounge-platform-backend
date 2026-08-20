@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MusicLounge.Application.Auth.Commands.GoogleLogin;
 using MusicLounge.Application.Auth.Commands.Login;
+using MusicLounge.Application.Auth.Commands.Logout;
+using MusicLounge.Application.Auth.Commands.RefreshToken;
 using MusicLounge.Application.Auth.Commands.Register;
 using MusicLounge.Application.Auth.Commands.ResendVerificationCode;
 using MusicLounge.Application.Auth.Commands.VerifyEmail;
@@ -17,9 +19,9 @@ namespace MusicLounge.Api.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/auth")]
 [EnableRateLimiting("auth")]
-// [AllowAnonymous] applied per-action, not at class level — this controller will later also host
-// Logout (MLACP-22), which needs [Authorize] to actually require a token. A class-level
-// [AllowAnonymous] bypasses every [Authorize] underneath it regardless of ordering/specificity.
+// [AllowAnonymous] applied per-action, not at class level — Logout below needs [Authorize] to
+// actually require a token, and a class-level [AllowAnonymous] bypasses every [Authorize]
+// underneath it regardless of ordering/specificity.
 public sealed class AuthController : ControllerBase
 {
     private readonly ISender _sender;
@@ -93,6 +95,32 @@ public sealed class AuthController : ControllerBase
     {
         var result = await _sender.Send(command, ct);
         return Ok(ApiResponse<AuthResultDto>.Ok(result));
+    }
+
+    /// <summary>Không cần Bearer access token còn hạn — bản thân refresh token trong body là thứ
+    /// chứng minh danh tính, vì access token hết hạn chính là lý do gọi endpoint này.</summary>
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    [ProducesResponseType<ApiResponse<AuthResultDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh(
+        [FromBody] RefreshTokenCommand command, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(command, ct);
+        return Ok(ApiResponse<AuthResultDto>.Ok(result));
+    }
+
+    /// <summary>Yêu cầu access token hợp lệ — xoay SecurityStamp của user hiện tại, vô hiệu hóa mọi
+    /// access/refresh token đã cấp trước đó ngay lập tức.</summary>
+    [Authorize]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(CancellationToken ct = default)
+    {
+        await _sender.Send(new LogoutCommand(), ct);
+        return NoContent();
     }
 }
 

@@ -104,10 +104,13 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
         }
 
         var (token, expiresAt) = _jwtTokenService.GenerateToken(user, loungeId);
+        var (refreshToken, refreshExpiresAt) = _jwtTokenService.GenerateRefreshToken(user);
 
         _logger.LogInformation(
             "Login succeeded: UserId={UserId} Role={Role} at {At}", user.Id, user.Role, DateTimeOffset.UtcNow);
 
-        return new AuthResultDto(token, expiresAt, user.Id, user.Email, user.FullName, user.Role.ToString(), loungeId);
+        return new AuthResultDto(
+            token, expiresAt, user.Id, user.Email, user.FullName, user.Role.ToString(), loungeId,
+            refreshToken, refreshExpiresAt);
     }
 }

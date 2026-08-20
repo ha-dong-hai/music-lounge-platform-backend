@@ -103,7 +103,10 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
         }
 
         var (token, expiresAt) = _jwtTokenService.GenerateToken(user, loungeId);
+        var (refreshToken, refreshExpiresAt) = _jwtTokenService.GenerateRefreshToken(user);
 
-        return new AuthResultDto(token, expiresAt, user.Id, user.Email, user.FullName, user.Role.ToString(), loungeId);
+        return new AuthResultDto(
+            token, expiresAt, user.Id, user.Email, user.FullName, user.Role.ToString(), loungeId,
+            refreshToken, refreshExpiresAt);
     }
 }
