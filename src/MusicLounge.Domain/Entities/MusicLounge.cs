@@ -1,22 +1,29 @@
-using MusicLounge.Domain.Common;
+using MusicLounge.Domain.Enums;
+using MusicLounge.Domain.ValueObjects;
 
 namespace MusicLounge.Domain.Entities;
 
-public class MusicLounge : AuditableEntity<int>
+public sealed class MusicLounge : Common.AuditableEntity<int>
 {
     public int OwnerId { get; set; }
-    // Catalog item managed by Admin — affects AI atmosphere matching (CF2)
-    public int? AtmosphereId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string Address { get; set; } = string.Empty;
-    public decimal? Latitude { get; set; }
-    public decimal? Longitude { get; set; }
+    public string? PrimaryImageUrl { get; set; }
     public string? AreaLayoutImageUrl { get; set; }
-    // Required for Admin approval — venue must upload before going live
     public string? BusinessLicenseUrl { get; set; }
-    // Determines settlement tier: <3.5 = New (50%), 3.5–4.2 = Standard (70%), ≥4.2 = Premium (80%)
-    public decimal ReputationScore { get; set; } = 0;
-    // pending / approved / warned / suspended / locked — controlled by Admin only
-    public string Status { get; set; } = "pending";
+    // Tour ao 3D: file .glb/.gltf that Owner upload cho khong gian phong tra. Null = dung scene
+    // mau dung code (khong can noi dung 3D that de co san chuc nang tu ngay dau).
+    public string? Model3DUrl { get; set; }
+    public int? AtmosphereId { get; set; }
+    public LoungeStatus Status { get; set; } = LoungeStatus.Pending;
+    public decimal ReputationScore { get; set; } = 0m;  // D3: star-rating scale 0–5, thresholds at 3.5 / 4.2
+
+    // Owned Value Object — map thành cột phẳng trong bảng Lounges
+    public VenueAddress Address { get; set; } = new();
+
+    public User Owner { get; set; } = null!;
+    public VenueAtmosphere? Atmosphere { get; set; }
+    public ICollection<LoungeShow> LoungeShows { get; set; } = [];
+    public ICollection<Follow> Follows { get; set; } = [];
+    public ICollection<FnbMenu> Menus { get; set; } = [];
 }

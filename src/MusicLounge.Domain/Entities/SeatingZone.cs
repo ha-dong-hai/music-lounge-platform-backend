@@ -1,17 +1,27 @@
-// CoreFlow: CF1 (Event Management), CF3 (Ticket Booking)
-// Physical seating area within a venue — exists at venue level and reused across many shows.
-// e.g. "VIP Zone", "Standard Area", "Bar Area"
-using MusicLounge.Domain.Common;
-
 namespace MusicLounge.Domain.Entities;
 
-public class SeatingZone : BaseEntity<int>
+// D1: Venue-level zones — reused across multiple shows
+public sealed class SeatingZone : Common.BaseEntity<int>
 {
     public int LoungeId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    // Maximum physical capacity of this zone — can be overridden per show via TicketPrice.Quota
+    public string Name { get; set; } = string.Empty;    // VIP / Standard / Bar Area
     public int Capacity { get; set; }
     public string? Description { get; set; }
     public int DisplayOrder { get; set; } = 0;
     public bool IsActive { get; set; } = true;
+
+    // Vi tri tren ban do 2D (% 0-100 tren canvas so do phong tra) — null = chua ve, dung auto-layout
+    public string? LayoutColor { get; set; }
+    public double? Layout2DX { get; set; }
+    public double? Layout2DY { get; set; }
+    public double? Layout2DWidth { get; set; }
+    public double? Layout2DHeight { get; set; }
+    public double? Layout2DRotationDeg { get; set; }
+
+    // Vi tri marker trong khong gian 3D (world-space unit cua chinh scene) — null = chua gan
+    public double? Layout3DX { get; set; }
+    public double? Layout3DY { get; set; }
+    public double? Layout3DZ { get; set; }
+
+    public MusicLounge Lounge { get; set; } = null!;
 }
