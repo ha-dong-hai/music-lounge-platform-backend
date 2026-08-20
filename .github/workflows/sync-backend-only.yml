@@ -1,16 +1,24 @@
-# Auto-syncs the "backend-only" branch (a generated, whitelist-filtered mirror of master used for
-# lean backend-only deploys/checkouts) on every push to master, via scripts/export-backend-only-branch.ps1.
+# Auto-syncs the "backend-only" branch (a generated, whitelist-filtered mirror used for lean
+# backend-only deploys/checkouts) on every push to deploy-src, via scripts/export-backend-only-branch.ps1.
 #
 # Added 2026-08-21 after that script had to be run by hand more than once and drifted out of sync
 # with real merged work (backend-only was missing an entire merged feature until someone remembered
 # to re-run it) — the whole point of the script existing is defeated if running it is a manual,
-# easy-to-forget step. This closes that gap permanently: every push to master keeps backend-only
+# easy-to-forget step. This closes that gap permanently: every push to deploy-src keeps backend-only
 # current without anyone needing to remember to do anything.
+#
+# Why "deploy-src" and not "master": originally this triggered on push to origin's master branch,
+# but master is deliberately built up gradually one Jira task per PR — at any given point it is NOT
+# guaranteed to be the fullest/most current backend code (that's local master, the actual source of
+# truth). Sourcing from master risked silently REGRESSING backend-only back down to whatever subset
+# of features had been ported to master so far. deploy-src is a separate branch the developer pushes
+# local master to whenever they want to refresh what's deployed/mirrored — see deploy-azure.yml for
+# the other half of this same reasoning.
 name: Sync backend-only branch
 
 on:
   push:
-    branches: [master]
+    branches: [deploy-src]
 
 permissions:
   contents: write
@@ -23,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: master
+          ref: deploy-src
 
       - name: Configure git identity for the export commit
         run: |
@@ -32,4 +40,4 @@ jobs:
 
       - name: Run export script
         shell: pwsh
-        run: ./scripts/export-backend-only-branch.ps1 -SourceRef master -Push
+        run: ./scripts/export-backend-only-branch.ps1 -SourceRef deploy-src -Push
