@@ -1,21 +1,20 @@
-// CoreFlow: CF6 (Payment & Revenue)
-// IMMUTABLE double-entry bookkeeping record — append only, never UPDATE or DELETE.
-// Each journal must satisfy: SUM(debit) = SUM(credit) across all entries sharing the same JournalId.
-// To correct an error, write a reversal entry — never modify existing rows (see D8).
-using MusicLounge.Domain.Common;
-
 namespace MusicLounge.Domain.Entities;
 
-public class LedgerEntry : BaseEntity<int>
+// D8: Append-only — no UpdatedAt, never UPDATE or DELETE. SUM(debit) == SUM(credit) per JournalId.
+// Every entry belongs to a logical ledger account (D8) and traces back to its business origin
+// via ReferenceType/ReferenceId; PaymentId is set only when the journal originates from a gateway payment.
+public sealed class LedgerEntry : Common.BaseEntity<int>
 {
-    // Groups related debit/credit lines into one balanced journal transaction
     public string JournalId { get; set; } = string.Empty;
     public int AccountId { get; set; }
-    public decimal Debit { get; set; } = 0;
-    public decimal Credit { get; set; } = 0;
-    public string ReferenceType { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public bool IsDebit { get; set; }
+    public string ReferenceType { get; set; } = string.Empty;   // "payment" | "settlement" | "donation" | "refund"
     public string ReferenceId { get; set; } = string.Empty;
+    public int? PaymentId { get; set; }
     public string? Description { get; set; }
-    // No UpdatedAt — this record must never be changed after creation
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public Account Account { get; set; } = null!;
+    public Payment? Payment { get; set; }
 }

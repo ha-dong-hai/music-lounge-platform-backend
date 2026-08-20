@@ -2,7 +2,8 @@ namespace MusicLounge.Domain.Enums;
 
 public enum SettlementStatus
 {
-    Pending = 1,
-    Processed = 2,
-    Failed = 3
+    Scheduled,      // waiting for release date
+    Released,       // funds transferred to lounge
+    Cancelled,      // cancelled (show cancelled / refunded)
+    PendingReview   // D16: actual_duration < threshold — Admin must decide
 }

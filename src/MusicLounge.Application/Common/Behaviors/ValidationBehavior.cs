@@ -1,40 +1,36 @@
-// CoreFlow: All — second behavior in the pipeline; runs all FluentValidation validators for the request.
-// Invalid requests are rejected here before reaching the handler, keeping handlers clean.
-// If no validator is registered for a request type, this behavior is a no-op.
 using FluentValidation;
 using MediatR;
+using AppValidationException = MusicLounge.Application.Common.Exceptions.ValidationException;
 
 namespace MusicLounge.Application.Common.Behaviors;
 
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+internal sealed class ValidationBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
     public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
-    {
-        _validators = validators;
-    }
+        => _validators = validators;
 
     public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
+        TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        // Skip validation entirely when no validator is registered for this request type
         if (!_validators.Any())
             return await next();
 
         var context = new ValidationContext<TRequest>(request);
+        var results = await Task.WhenAll(
+            _validators.Select(v => v.ValidateAsync(context, ct)));
 
-        var failures = _validators
-            .Select(v => v.Validate(context))
+        var errors = results
             .SelectMany(r => r.Errors)
-            .Where(f => f != null)
-            .ToList();
+            .Where(f => f is not null)
+            .GroupBy(f => f.PropertyName, f => f.ErrorMessage)
+            .ToDictionary(g => g.Key, g => g.ToArray());
 
-        if (failures.Count != 0)
-            throw new ValidationException(failures);
+        if (errors.Count > 0)
+            throw new AppValidationException(errors);
 
         return await next();
     }

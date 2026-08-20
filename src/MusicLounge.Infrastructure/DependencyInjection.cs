@@ -1,0 +1,290 @@
+using Hangfire;
+using Hangfire.SqlServer;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MusicLounge.Application.Auth.Jobs;
+using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
+using MusicLounge.Infrastructure.Hubs;
+using MusicLounge.Infrastructure.Jobs;
+using MusicLounge.Infrastructure.Persistence;
+using MusicLounge.Infrastructure.Repositories;
+using MusicLounge.Infrastructure.Security;
+using MusicLounge.Infrastructure.Services;
+using MusicLounge.Infrastructure.Settings;
+
+namespace MusicLounge.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("DefaultConnection")!;
+
+        // Typed configuration
+        services.Configure<VnPaySettings>(configuration.GetSection("VnPay"));
+        services.Configure<BusinessSettings>(configuration.GetSection("Business"));
+        services.Configure<CloudflareSettings>(configuration.GetSection("Cloudflare"));
+        services.Configure<MuxSettings>(configuration.GetSection("Mux"));
+        services.Configure<LivestreamSettings>(configuration.GetSection("Livestream"));
+        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<FirebaseSettings>(configuration.GetSection("Firebase"));
+        services.Configure<EmailSettings>(configuration.GetSection("Email"));
+        services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
+        services.Configure<OpenAiSettings>(configuration.GetSection("OpenAi"));
+        services.Configure<SecurityDetectionSettings>(configuration.GetSection("SecurityDetection"));
+        services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
+
+        // DbContext
+        services.AddDbContext<ApplicationDbContext>(opts =>
+            opts.UseSqlServer(connectionString));
+
+        // Generic Repository + UnitOfWork
+        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Specific Repositories
+        services.AddScoped<ILoungeShowRepository, LoungeShowRepository>();
+        services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<ILivestreamRepository, LivestreamRepository>();
+        services.AddScoped<IEventModerationRepository, EventModerationRepository>();
+        services.AddScoped<IDonationRepository, DonationRepository>();
+        services.AddScoped<IFollowRepository, FollowRepository>();
+        services.AddScoped<ILoungeRepository, LoungeRepository>();
+        services.AddScoped<IComplaintRepository, ComplaintRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ILedgerEntryRepository, LedgerEntryRepository>();
+
+        // Services
+        services.AddHttpContextAccessor();
+        services.AddMemoryCache();
+        services.AddScoped<ISystemConfigService, SystemConfigService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IAIRecommendationService, MLNetRecommendationService>();
+        services.AddScoped<IAiModerationService, GeminiModerationService>();
+        services.AddScoped<IImageModerationService, GeminiImageModerationService>();
+        services.AddScoped<IImageModerationGate, ImageModerationGate>();
+        services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
+        services.AddScoped<IAiImageGenerationService, OpenAiImageGenerationService>();
+        services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
+        services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+        services.AddScoped<IVnPayService, VnPayService>();
+        services.AddScoped<IFcmService, FcmService>();
+        services.AddScoped<ILivestreamHubService, LivestreamHubService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<ISmsService, SmsService>();
+        // Default key ring (%LOCALAPPDATA%\ASP.NET\DataProtection-Keys, protected via per-user
+        // DPAPI) is fine for a single interactive dev session but is a real risk for this app's
+        // actual self-hosted deployment: it's tied to whichever Windows user profile the process
+        // happens to run under, so a service-account change, a different machine, or profile loss
+        // silently makes every already-encrypted CitizenCardNumber (IPiiEncryptionService) and any
+        // in-flight Hangfire job argument (ISecretProtector) permanently undecryptable. Persisting
+        // to a fixed path on disk with machine-level (not user-profile-level) DPAPI protection
+        // survives all of that as long as it's the same machine. Scoped to this project's current
+        // single-machine deployment — horizontal scaling to multiple instances/containers would
+        // need a shared key store (e.g. a network share or blob storage) instead.
+        var dataProtection = services.AddDataProtection()
+            .SetApplicationName("MusicLounge")
+            .PersistKeysToFileSystem(new DirectoryInfo(
+                Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "dataprotection-keys")));
+        // Machine-level DPAPI is Windows-only (this app's actual deployment) — guarded rather than
+        // called unconditionally so this doesn't crash if ever run on Linux; falls back to Data
+        // Protection's own OS-appropriate default key protection there instead.
+        if (OperatingSystem.IsWindows())
+            dataProtection.ProtectKeysWithDpapi(protectToLocalMachine: true);
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+        services.AddSingleton<IPiiEncryptionService, PiiEncryptionService>();
+        services.AddScoped<IAuthAttemptTracker, AuthAttemptTracker>();
+        // Singleton: the per-show semaphore dictionary must be shared process-wide, not per-request.
+        services.AddSingleton<IShowBookingLock, ShowBookingLock>();
+        services.AddSingleton<IAsyncKeyedLock, AsyncKeyedLock>();
+        services.AddSingleton<IChatRateLimiter, ChatRateLimiter>();
+        services.AddScoped<ReleaseExpiredHoldsJob>();
+        services.AddScoped<RefreshRecommendationsJob>();
+        services.AddScoped<RecomputeUserEventScoresJob>();
+        services.AddScoped<RefreshUserRecommendationJob>();
+        services.AddScoped<AutoConfirmDonationsJob>();
+        services.AddScoped<ExpireStuckDonationsJob>();
+        services.AddScoped<CancelAbandonedPaymentsJob>();
+        services.AddScoped<SettlementReleaseJob>();
+        services.AddScoped<TicketTransferExpiryJob>();
+        services.AddScoped<SubscriptionExpiryWarningJob>();
+        services.AddScoped<ExpireSubscriptionsJob>();
+        services.AddScoped<ApplyDuePenaltiesJob>();
+        services.AddScoped<AutoApproveOverdueAppealsJob>();
+        services.AddScoped<ModerationSlaBreachAlertJob>();
+        services.AddScoped<ComplaintSlaBreachAlertJob>();
+        services.AddScoped<ScoreModerationWithAiJob>();
+        services.AddScoped<StitchVenueTourSceneJob>();
+        services.AddScoped<LoginSpikeDetectionJob>();
+        services.AddScoped<AdminRoleDriftDetectionJob>();
+        // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing
+        // from DI — Hangfire would throw InvalidOperationException ("No service for type...")
+        // the first time either fired, silently breaking event reminders and overdue-donation
+        // checks in production. Found by empirically exercising every job under test.
+        services.AddScoped<EventReminderJob>();
+        services.AddScoped<DonationOverdueCheckJob>();
+        // Same class of bug as EventReminderJob/DonationOverdueCheckJob above — LogUserBehaviourJob
+        // is enqueued via BackgroundJob.Enqueue<LogUserBehaviourJob> but was never registered, so
+        // Hangfire's activator would throw "No service for type... has been registered" the first
+        // time it tried to run, silently breaking AI-recommendation behaviour logging in production
+        // (never noticed because it's fire-and-forget from GetLoungeShowDetail/GetRecommendedLoungeShows,
+        // with nothing surfacing the failure to a caller). SendPasswordResetEmailJob/
+        // SendEmailVerificationCodeJob registered alongside since they're new as of this fix.
+        services.AddScoped<LogUserBehaviourJob>();
+        services.AddScoped<SendPasswordResetEmailJob>();
+        services.AddScoped<SendEmailVerificationCodeJob>();
+        // Same registration discipline as the two jobs above — see comment there.
+        services.AddScoped<SendPhoneVerificationCodeJob>();
+
+        // Livestream provider abstraction
+        // Explicit timeout — HttpClient's default is 100s, long enough that one slow/hanging
+        // third-party call (Cloudflare/Mux/Firebase) can tie up a request thread and, under load,
+        // contribute to pool exhaustion for unrelated requests.
+        var externalCallTimeout = TimeSpan.FromSeconds(30);
+        services.AddHttpClient("cloudflare").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient("mux").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        // Image generation can run noticeably longer than the other external calls this app makes —
+        // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
+        // (not hung) generation doesn't get cut off right as it would have succeeded.
+        services.AddHttpClient("openai").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(90));
+        // Stitching several phone photos can genuinely take a while (feature detection + matching
+        // + blending scales with image count/resolution) — longer than the other external calls.
+        services.AddHttpClient("panorama-stitcher").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(120));
+        services.AddKeyedTransient<ILivestreamService, CloudflareStreamService>("cloudflare");
+        services.AddKeyedTransient<ILivestreamService, MuxStreamService>("mux");
+        services.AddScoped<ILivestreamServiceFactory, LivestreamServiceFactory>();
+
+        // Hangfire
+        services.AddHangfire(cfg => cfg
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+            {
+                CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                QueuePollInterval = TimeSpan.Zero,
+                UseRecommendedIsolationLevel = true,
+                DisableGlobalLocks = true
+            }));
+
+        services.AddHangfireServer();
+
+        return services;
+    }
+
+    public static void ConfigureRecurringJobs()
+    {
+        RecurringJob.AddOrUpdate<ReleaseExpiredHoldsJob>(
+            "release-expired-holds",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Minutely());
+
+        // Must run before refresh-recommendations so the collaborative-filtering matrix it feeds
+        // (user_event_scores) is fresh when MLNetRecommendationService reads it — daily cadence
+        // matches UserEventScore's own "aggregated periodically from behaviour logs" design intent,
+        // not hourly like the recommendation refresh itself (aggregating every table this job reads
+        // hourly would be wasted work for a signal that doesn't meaningfully shift that often).
+        RecurringJob.AddOrUpdate<RecomputeUserEventScoresJob>(
+            "recompute-user-event-scores",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Daily(3)); // 03:00 UTC, ahead of every hourly refresh-recommendations run that day
+
+        RecurringJob.AddOrUpdate<RefreshRecommendationsJob>(
+            "refresh-recommendations",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<AutoConfirmDonationsJob>(
+            "auto-confirm-donations",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<ExpireStuckDonationsJob>(
+            "expire-stuck-donations",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<CancelAbandonedPaymentsJob>(
+            "cancel-abandoned-payments",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Minutely());
+
+        RecurringJob.AddOrUpdate<SettlementReleaseJob>(
+            "release-due-settlements",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Daily());
+
+        RecurringJob.AddOrUpdate<EventReminderJob>(
+            "send-event-reminders",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<DonationOverdueCheckJob>(
+            "check-overdue-donations",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Daily());
+
+        RecurringJob.AddOrUpdate<TicketTransferExpiryJob>(
+            "expire-ticket-transfers",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<SubscriptionExpiryWarningJob>(
+            "warn-expiring-subscriptions",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Daily());
+
+        RecurringJob.AddOrUpdate<ExpireSubscriptionsJob>(
+            "expire-subscriptions",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Daily());
+
+        RecurringJob.AddOrUpdate<ApplyDuePenaltiesJob>(
+            "apply-due-venue-penalties",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<AutoApproveOverdueAppealsJob>(
+            "auto-approve-overdue-appeals",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<ModerationSlaBreachAlertJob>(
+            "alert-moderation-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<ComplaintSlaBreachAlertJob>(
+            "alert-complaint-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        // Every 5 minutes against a 10-minute detection window, so a spike is never more than one
+        // extra run away from being caught, while still cheap enough to poll this often.
+        RecurringJob.AddOrUpdate<LoginSpikeDetectionJob>(
+            "detect-login-spikes",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            "*/5 * * * *");
+
+        RecurringJob.AddOrUpdate<AdminRoleDriftDetectionJob>(
+            "detect-admin-role-drift",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+    }
+}

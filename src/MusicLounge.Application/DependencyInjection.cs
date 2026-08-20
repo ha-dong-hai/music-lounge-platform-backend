@@ -1,28 +1,33 @@
-// CoreFlow: All — wires up all Application layer services into the DI container.
-// Called once from the API layer. Keeps each layer responsible for its own registration.
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Application.Common.Behaviors;
-using System.Reflection;
+using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Services;
 
 namespace MusicLounge.Application;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Register all IRequestHandler implementations found in this assembly
         services.AddMediatR(cfg =>
-            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
-        // Register all AbstractValidator<T> implementations found in this assembly
-        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 
-        // Pipeline executes in registration order: Logging → Validation → Transaction → Handler
+        // MediatR executes pipeline behaviors in registration order (outermost first). Validation
+        // runs before ActiveUser so a structurally-invalid request fails on cheap FluentValidation
+        // checks alone, instead of paying a DB roundtrip (ActiveUserBehavior's IsActive re-check,
+        // on every single authenticated request) before ever inspecting whether the input is even
+        // well-formed.
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ActiveUserBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+
+        services.AddScoped<ILedgerService, LedgerService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }

@@ -1,0 +1,35 @@
+{
+  "_comment": "Copy file nay thanh 'appsettings.Development.Local.json' (bo phan .example o cuoi ten file) roi dien connection string SQL Server that cua ban vao o duoi. File appsettings.Development.Local.json da duoc .gitignore loai tru san nen se khong bao gio bi commit nham.",
+
+  "ConnectionStrings": {
+    "_comment_ConnectionStrings": "2 kieu ket noi pho bien: (1) Windows Authentication (SQL Server cai local, dang nhap bang tai khoan Windows) -- vi du: Server=localhost;Database=SU26SE039;Trusted_Connection=True;TrustServerCertificate=True; (2) SQL Authentication (dang nhap bang username/password rieng) -- vi du: Server=localhost;Database=SU26SE039;User Id=sa;Password=MAT_KHAU_CUA_BAN;TrustServerCertificate=True; -- Neu SQL Server cai dang Named Instance (vd SQLEXPRESS) thi doi 'Server=localhost' thanh 'Server=localhost\\SQLEXPRESS' (2 dau backslash trong JSON).",
+    "DefaultConnection": "Server=localhost;Database=SU26SE039;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+
+  "Jwt": {
+    "_comment_Jwt": "Secret nay chi dung de ky JWT token cho moi truong local cua rieng ban, khong lien quan he thong that -- co the giu nguyen gia tri duoi day, khong can doi.",
+    "Secret": "lJOH5hz4oIfpChtCoxriXLeA4YWxiPMw3n08bFStCwpbGDsakHPr2YRTYQofNygw"
+  },
+
+  "VnPay": {
+    "_comment_VnPay": "Chi can dien neu ban dang test luong thanh toan ve (mua ve/donate qua VNPay). Neu chua can, de trong cung duoc -- cac API khac van chay binh thuong, chi rieng luong thanh toan se loi khi goi toi.",
+    "TmnCode": "",
+    "HashSecret": ""
+  },
+
+  "Mux": {
+    "_comment_Mux": "Chi can dien neu ban dang test tinh nang livestream (video qua Mux). De trong neu chua can.",
+    "TokenId": "",
+    "TokenSecret": ""
+  },
+
+  "Gemini": {
+    "_comment_Gemini": "API key cho tinh nang AI cham diem uu tien duyet show/livestream (lay tu Google AI Studio). De trong neu chua can -- moderation van chay binh thuong, chi khong co diem uu tien AI.",
+    "ApiKey": ""
+  },
+
+  "OpenAi": {
+    "_comment_OpenAi": "API key cho tinh nang tao poster AI (lay tu platform.openai.com/api-keys, project phai da bat billing). De trong neu chua can -- tao poster se bao loi ro rang va khong tru han muc cua Owner, khong lam sap he thong.",
+    "ApiKey": ""
+  }
+}

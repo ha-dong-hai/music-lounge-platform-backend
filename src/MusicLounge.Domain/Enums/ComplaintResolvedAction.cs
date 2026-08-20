@@ -1,11 +1,16 @@
-// CoreFlow: CF5 (Interaction & Feedback)
-// Action taken by Admin when resolving a complaint.
 namespace MusicLounge.Domain.Enums;
 
 public enum ComplaintResolvedAction
 {
-    Refund = 1,
-    IssueWarning = 2,
-    Dismiss = 3,
-    Compensate = 4
+    Refund,
+    IssueWarning,
+    Dismiss,
+    Compensate,
+
+    // NĐ 147/2024/NĐ-CP: platform must be able to remove violating content upon a substantiated
+    // complaint. Only valid when Complaint.TargetType == "show" — ResolveComplaintCommandHandler
+    // reuses CancelLoungeShowCommand (100% refund to every confirmed ticket holder, same as an
+    // owner-initiated cancel) rather than a separate takedown path, so a taken-down show gets
+    // exactly the same buyer protection as any other cancellation.
+    TakeDownContent
 }
