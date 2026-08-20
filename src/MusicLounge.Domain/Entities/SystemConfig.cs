@@ -1,21 +1,17 @@
-// CoreFlow: CF6 (Payment & Revenue), CF7 (Analytics & Reporting)
-// Key-value store for all business parameters — commission rates, hold minutes, settlement thresholds.
-// No business logic value should be hardcoded in application code (see D9).
-// Financial config changes require Admin password confirmation and notify affected Owners.
-// All changes are audited in SystemConfigHistory (immutable).
-using MusicLounge.Domain.Common;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public class SystemConfig : BaseEntity<int>
+// D9: ALL business parameters live here — never hardcode in code
+public sealed class SystemConfig : Common.BaseEntity<int>
 {
-    public string ConfigKey { get; set; } = string.Empty;
-    // Always stored as string — parsed using DataType field
+    public string ConfigKey { get; set; } = string.Empty;   // UNIQUE
     public string ConfigValue { get; set; } = string.Empty;
-    public SystemConfigDataType DataType { get; set; }
+    public ConfigDataType DataType { get; set; }
     public string? Description { get; set; }
-    // Nullable — SET NULL when updater account is deleted
     public int? UpdatedBy { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public User? UpdatedByUser { get; set; }
+    public ICollection<SystemConfigHistory> History { get; set; } = [];
 }

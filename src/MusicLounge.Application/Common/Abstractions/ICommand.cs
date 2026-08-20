@@ -1,14 +1,18 @@
-// CoreFlow: All — marker interfaces that distinguish write operations from read operations.
-// Pipeline behaviors use IBaseCommand to apply transactions only to commands, never to queries.
 using MediatR;
 
 namespace MusicLounge.Application.Common.Abstractions;
 
-// Shared marker so TransactionBehavior can identify any command without knowing the return type
-public interface IBaseCommand { }
+public interface ICommand<TResponse> : IRequest<TResponse> { }
+public interface ICommand : ICommand<Unit> { }
 
-// Command that returns a value (e.g. CreateShowCommand → returns new ShowId)
-public interface ICommand<TResponse> : IRequest<TResponse>, IBaseCommand { }
-
-// Command that returns nothing (e.g. CancelShowCommand → void)
-public interface ICommand : IRequest<Unit>, IBaseCommand { }
+/// <summary>
+/// Opts a command out of TransactionBehavior's ambient transaction. Needed by any command whose
+/// handler writes through IAuthAttemptTracker (or another connection independent of the ambient
+/// IUnitOfWork) — that write must commit immediately so it survives a failure the handler itself
+/// goes on to throw, but SQLite (the test provider) single-writer-locks the whole database while
+/// any transaction is open, so a second connection's write deadlocks/times out for as long as this
+/// command's own transaction stays open. Only opt out commands, like Login/VerifyEmail, that don't
+/// otherwise need cross-statement atomicity — EF Core still wraps each individual SaveChangesAsync
+/// call in its own implicit transaction regardless.
+/// </summary>
+public interface INoTransactionCommand { }

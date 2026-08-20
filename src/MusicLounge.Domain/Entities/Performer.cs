@@ -1,15 +1,16 @@
-using MusicLounge.Domain.Common;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public class Performer : BaseEntity<int>
+public sealed class Performer : Common.AuditableEntity<int>
 {
-    public PerformerType Type { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? AvatarUrl { get; set; }
     public string? Bio { get; set; }
-    public string? PhotoUrl { get; set; }
-    // Nullable — SET NULL when creator account is deleted (BVDLCN 2025)
+    public PerformerType Type { get; set; } = PerformerType.Solo;
     public int? CreatedByUserId { get; set; }
-    public DateTime CreatedAt { get; set; }
+
+    public User? CreatedByUser { get; set; }
+    public ICollection<PerformerGenre> Genres { get; set; } = [];
+    public ICollection<Performance> Performances { get; set; } = [];
 }

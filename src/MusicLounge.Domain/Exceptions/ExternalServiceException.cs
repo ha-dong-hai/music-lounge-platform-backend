@@ -2,11 +2,6 @@ namespace MusicLounge.Domain.Exceptions;
 
 public class ExternalServiceException : Exception
 {
-    public string ServiceName { get; }
-
-    public ExternalServiceException(string serviceName, string message)
-        : base(message)
-    {
-        ServiceName = serviceName;
-    }
+    public ExternalServiceException(string service, string message, Exception? inner = null)
+        : base($"[{service}] {message}", inner) { }
 }

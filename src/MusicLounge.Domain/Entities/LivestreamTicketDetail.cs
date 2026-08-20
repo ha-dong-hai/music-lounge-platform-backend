@@ -1,15 +1,13 @@
-using MusicLounge.Domain.Common;
-
 namespace MusicLounge.Domain.Entities;
 
-public class LivestreamTicketDetail : BaseEntity<int>
+public sealed class LivestreamTicketDetail
 {
     public Guid TicketId { get; set; }
-    public int LivestreamId { get; set; }
-    // Secret token used to verify viewer has a valid ticket before granting stream access
-    public string AccessToken { get; set; } = string.Empty;
-    // Null = viewer has not joined yet
-    public DateTime? FirstAccessedAt { get; set; }
-    // Tracked to detect abandoned streams and measure engagement duration
-    public DateTime? LastAccessedAt { get; set; }
+    public int LivestreamId { get; set; }               // FK→livestreams RESTRICT — query all tokens for a stream
+    public string? AccessToken { get; set; }            // D10: per-user secret — verify quyền xem, có thể revoke
+    public DateTimeOffset? FirstAccessedAt { get; set; }
+    public DateTimeOffset? LastAccessedAt { get; set; }
+
+    public Ticket Ticket { get; set; } = null!;
+    public Livestream Livestream { get; set; } = null!;
 }

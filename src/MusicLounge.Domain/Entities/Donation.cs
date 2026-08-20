@@ -1,36 +1,46 @@
-// CoreFlow: CF6 (Payment & Revenue)
-// Records a donation from an audience member to a performer via the Owner.
-// Follows a 2-stage flow: Audience → Owner → Performer (see D4 in complete_reference.md).
-using MusicLounge.Domain.Common;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public class Donation : BaseEntity<int>
+public sealed class Donation : Common.BaseEntity<int>
 {
-    // Nullable — SET NULL when donor account is deleted (BVDLCN 2025)
     public int? DonorUserId { get; set; }
-    // Links to a specific performer in a specific show
     public int PerformanceId { get; set; }
+
     public decimal Gross { get; set; }
-    // Amount performer actually receives — used for Ledger journal J2
     public decimal Net { get; set; }
-    public DonationStatus Status { get; set; } = DonationStatus.PendingOwnerAck;
-    // True if Owner did not confirm within 24h — system auto-confirmed (flagged for Admin)
+
+    public DonationStatus Status { get; set; } = DonationStatus.PendingPayment;
     public bool AutoConfirmed { get; set; } = false;
-    public DateTime? OwnerAckAt { get; set; }
-    public DateTime? OwnerPaidAt { get; set; }
-    // Bank transfer reference when Owner pays performer
+    public DateTimeOffset? OwnerAckAt { get; set; }
+    public DateTimeOffset? OwnerPaidAt { get; set; }
+
     public string? PaymentRef { get; set; }
-    // Bank statement image uploaded by Owner as proof of payment
     public string? PaymentEvidenceUrl { get; set; }
-    // Snapshot of performer bank account at time of payment — preserved for dispute resolution (D12)
-    public int? BankAccountId { get; set; }
-    public DateTime? PerformerConfirmedAt { get; set; }
+
     public bool IsAnonymous { get; set; } = false;
     public string? DisplayName { get; set; }
     public bool IsAmountPublic { get; set; } = true;
     public string? Message { get; set; }
     public bool IsMessagePublic { get; set; } = true;
-    public DateTime CreatedAt { get; set; }
+
+    public string? GatewayRef { get; set; }
+    public int? BankAccountId { get; set; }                 // D12: FK snapshot — performer bank account paid to (W31)
+
+    // D12: snapshot of system_config.donation_performer_share_rate, set once ProcessDonationPaymentCommandHandler
+    // confirms the donation is real (same moment Net becomes authoritative). ConfirmDonationPaidCommandHandler
+    // (chặng 2 — the actual owner-to-performer forward, which can happen days/weeks later) reads THIS, not a
+    // fresh system_config lookup, so a later Admin rate change can't retroactively change what a performer
+    // was promised for a donation that already happened. Null only for donations created before this column
+    // existed — those fall back to a live config read as before.
+    public decimal? PerformerShareRateSnapshot { get; set; }
+
+    // Set when VNPay confirms payment. The 24h auto-confirm window starts from here, not CreatedAt.
+    public DateTimeOffset? PaymentConfirmedAt { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public User? Donor { get; set; }
+    public Performance Performance { get; set; } = null!;
+    public BankAccount? BankAccount { get; set; }
 }

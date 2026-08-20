@@ -1,32 +1,28 @@
-using MusicLounge.Domain.Common;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public class Livestream : BaseEntity<int>
+public sealed class Livestream : Common.AuditableEntity<int>
 {
-    public int ShowId { get; set; }
-    // Secret RTMP key — visible to Owner only, never exposed in public API response
-    public string StreamKey { get; set; } = string.Empty;
-    // HLS playback URL — set after Cloudflare/Mux initializes the stream
-    public string? StreamUrl { get; set; }
-    public string? RecordingUrl { get; set; }
-    // Null = no rewatch; set to allow replay access until this datetime
-    public DateTime? RewatchUntil { get; set; }
-    // False = requires a Livestream ticket to watch
-    public bool IsFree { get; set; } = false;
+    public int LoungeShowId { get; set; }
+    public string? Provider { get; set; }
+    public string? ProviderRef { get; set; }
+    public string? RtmpUrl { get; set; }
+    public string? StreamKey { get; set; }
+    public string? HlsUrl { get; set; }
     public LivestreamStatus Status { get; set; } = LivestreamStatus.Scheduled;
-    public int ViewerCount { get; set; } = 0;
-    public int PeakViewerCount { get; set; } = 0;
-    public int TotalViews { get; set; } = 0;
+    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? EndedAt { get; set; }
+    public bool IsFree { get; set; } = true;
     public bool ChatEnabled { get; set; } = true;
-    public DateTime? StartedAt { get; set; }
-    public DateTime? EndedAt { get; set; }
-    // Set when Admin force-terminates the stream for policy violation
+    public int ViewerCount { get; set; }
+    public int PeakViewerCount { get; set; }
+    public int TotalViews { get; set; }
+    public string? RecordingUrl { get; set; }
     public int? TerminatedById { get; set; }
     public string? TerminatedReason { get; set; }
-    // Stored so EndStream always calls the provider that created the stream,
-    // even if config changes after stream was created (cloudflare or mux)
-    public string Provider { get; set; } = string.Empty;
-    public string? ProviderRef { get; set; }
+
+    public LoungeShow LoungeShow { get; set; } = null!;
+    public User? TerminatedBy { get; set; }
+    public ICollection<LivestreamChatMessage> ChatMessages { get; set; } = [];
 }
