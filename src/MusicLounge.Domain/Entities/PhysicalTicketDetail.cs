@@ -1,18 +1,14 @@
-// CoreFlow: CF3 (Ticket Booking)
-// Additional details for physical (in-person) tickets only — 1-to-1 with Ticket.
-using MusicLounge.Domain.Common;
-
 namespace MusicLounge.Domain.Entities;
 
-public class PhysicalTicketDetail : BaseEntity<int>
+public sealed class PhysicalTicketDetail
 {
     public Guid TicketId { get; set; }
-    // Separate UUID used for QR code — can be regenerated if compromised without changing TicketId
-    public string QrCode { get; set; } = string.Empty;
-    // Null = purchased online; set when Staff sells ticket at venue counter
+    public string? SeatInfo { get; set; }
     public int? SoldByStaffId { get; set; }
-    public int? CheckedInById { get; set; }
-    public DateTime? CheckedInAt { get; set; }
-    // Free-text seat note e.g. "Table A3"
-    public string? SeatNote { get; set; }
+    public DateTimeOffset? CheckedInAt { get; set; }
+    public int? CheckedInByStaffId { get; set; }
+
+    public Ticket Ticket { get; set; } = null!;
+    public User? SoldByStaff { get; set; }
+    public User? CheckedInByStaff { get; set; }
 }

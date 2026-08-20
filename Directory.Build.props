@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Applies to every project in this repo. Added 2026-08-09 alongside the committed
+    packages.lock.json files (one per project): without this, "dotnet restore" silently ignores
+    the lockfiles and lets transitive dependency versions float even though direct dependencies
+    were already pinned exactly, defeating the point of committing them. Regenerate a lockfile
+    after intentionally changing a package reference with the force evaluate restore flag.
+  -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+</Project>

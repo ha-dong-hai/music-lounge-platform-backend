@@ -1,18 +1,17 @@
-// CoreFlow: CF3 (Ticket Booking — F&B ordering during show)
-// Food and beverage items on a venue's menu.
-using MusicLounge.Domain.Common;
-
 namespace MusicLounge.Domain.Entities;
 
-public class FnbMenuItem : BaseEntity<int>
+public sealed class FnbMenuItem : Common.BaseEntity<int>
 {
-    public int LoungeId { get; set; }
-    public string Category { get; set; } = string.Empty;
+    public int MenuId { get; set; }
+    public string Category { get; set; } = string.Empty;   // Food / Drink / etc.
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public decimal Price { get; set; }
     public string? ImageUrl { get; set; }
     public bool IsAvailable { get; set; } = true;
     public int DisplayOrder { get; set; } = 0;
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public FnbMenu Menu { get; set; } = null!;
+    public ICollection<OrderItem> OrderItems { get; set; } = [];
 }

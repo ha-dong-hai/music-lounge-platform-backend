@@ -2,7 +2,9 @@ namespace MusicLounge.Domain.Enums;
 
 public enum AccountType
 {
-    Customer = 1,
-    Staff = 2,
-    Admin = 3
+    Gateway,
+    Platform,
+    Tax,
+    User,
+    Performer
 }

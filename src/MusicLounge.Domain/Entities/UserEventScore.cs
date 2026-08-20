@@ -1,14 +1,14 @@
-using MusicLounge.Domain.Common;
-
 namespace MusicLounge.Domain.Entities;
 
-public class UserEventScore : BaseEntity<int>
+// AI CF matrix — aggregated from user_behaviour_log (retained 6 months then aggregated here)
+public sealed class UserEventScore
 {
     public int UserId { get; set; }
     public int ShowId { get; set; }
-    // Composite score computed from attended, rated, donated, wishlisted, viewed signals
-    public decimal Score { get; set; } = 0;
-    // JSON breakdown: { attended, rating, donated, wishlist, view }
-    public string? Breakdown { get; set; }
-    public DateTime ComputedAt { get; set; }
+    public decimal Score { get; set; } = 0m;
+    public string? Breakdown { get; set; }  // JSON: {attended, rating, donated, wishlist, view}
+    public DateTimeOffset ComputedAt { get; set; }
+
+    public User User { get; set; } = null!;
+    public LoungeShow Show { get; set; } = null!;
 }

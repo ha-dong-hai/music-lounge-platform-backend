@@ -1,31 +1,39 @@
-// CoreFlow: CF3 (Ticket Booking), CF6 (Payment & Revenue)
-// Records every financial transaction on the platform.
-// Polymorphic — reference_type + reference_id identify what was paid for.
-// All monetary fields are snapshots taken at payment time and must never be updated (see D12).
-using MusicLounge.Domain.Common;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public class Payment : BaseEntity<int>
+public sealed class Payment : Common.BaseEntity<int>
 {
-    public PaymentReferenceType ReferenceType { get; set; }
-    // UUID string for ticket payments; integer string for all other types
-    public string ReferenceId { get; set; } = string.Empty;
-    // Nullable — SET NULL when payer account is deleted (BVDLCN 2025)
-    public int? PayerId { get; set; }
-    public decimal Gross { get; set; }
-    public decimal GatewayFee { get; set; } = 0;
-    public decimal PlatformFee { get; set; } = 0;
-    public decimal TaxWithheld { get; set; } = 0;
-    // Net = Gross - GatewayFee - PlatformFee - TaxWithheld
-    public decimal Net { get; set; }
-    public PaymentMethod Method { get; set; }
+    public string OrderId { get; set; } = string.Empty;     // vnp_TxnRef — unique
+    public int? PayerId { get; set; }                        // FK→users SET NULL (BVDLCN 2025)
+    public decimal GrossAmount { get; set; }                 // buyer-facing amount
+    public decimal GatewayFee { get; set; }                  // VNPay processing fee
+    public decimal PlatformFee { get; set; }                 // platform commission
+    public decimal TaxWithheld { get; set; }                 // VAT/FCIT withheld
+    public decimal NetAmount { get; set; }                   // gross - gatewayFee - platformFee - tax
+    public PaymentMethod Method { get; set; } = PaymentMethod.Gateway;
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public PaymentSettlementStatus SettlementStatus { get; set; } = PaymentSettlementStatus.NotApplicable;
-    // VNPay or other gateway transaction reference
-    public string? GatewayRef { get; set; }
-    // Prevents duplicate payments on retry — checked before processing (NĐ 52/2024)
-    public string? IdempotencyKey { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public string? IdempotencyKey { get; set; }              // prevent double-charge across all payment types
+    public string? TransactionId { get; set; }              // vnp_TransactionNo
+    public string? VnPayResponseCode { get; set; }
+    public string ReferenceType { get; set; } = string.Empty;  // "TicketHold"
+    public string ReferenceId { get; set; } = string.Empty;    // holdId.ToString()
+
+    // D12-style snapshot for Subscription payments only (null for every other ReferenceType) —
+    // captured at checkout (SubscribeToPackageCommandHandler) so an admin editing
+    // SubscriptionPackage.MaxTicketsPerEvent/HasAiPoster between checkout and VNPay confirming
+    // can't change what the owner actually receives for what they already paid for. Mirrors why
+    // GrossAmount itself is captured once at checkout instead of re-read from the package later.
+    public int? SubscriptionMaxTicketsPerEventSnapshot { get; set; }
+    public bool? SubscriptionHasAiPosterSnapshot { get; set; }
+    public int? SubscriptionMaxAiPostersPerMonthSnapshot { get; set; }
+    public int? SubscriptionMaxTourScenesSnapshot { get; set; }
+    public DateTimeOffset? PaidAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
+
+    public User? Payer { get; set; }
+    public ICollection<Ticket> Tickets { get; set; } = [];
+    public ICollection<LedgerEntry> LedgerEntries { get; set; } = [];
 }

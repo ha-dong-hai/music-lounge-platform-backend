@@ -1,22 +1,19 @@
-// CoreFlow: CF2 (Event Discovery)
-// Venue-defined custom matching criteria for AI recommendation.
-// Each venue can define its own criteria (e.g. "Performance Language", "Has Acoustic Set?").
-// Users can set preferences for these criteria which the AI uses to improve recommendations.
-using MusicLounge.Domain.Common;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public class CustomCriteria : BaseEntity<int>
+// AI custom: each venue defines its own criteria for recommendation
+public sealed class CustomCriteria : Common.BaseEntity<int>
 {
     public int LoungeId { get; set; }
-    // Human-readable label e.g. "Ngôn ngữ biểu diễn"
-    public string Name { get; set; } = string.Empty;
-    // Machine-readable key e.g. "performance_language"
-    public string Key { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;       // "Ngôn ngữ biểu diễn"
+    public string Key { get; set; } = string.Empty;        // machine-readable: "performance_language"
     public CustomCriteriaDataType DataType { get; set; }
-    // JSON: select → ["VI","EN"] | range → { min, max, step } | null for boolean/text
-    public string? Options { get; set; }
+    public string? Options { get; set; }    // JSON: select→["VI","EN"] / range→{min,max,step}
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public MusicLounge Lounge { get; set; } = null!;
+    public ICollection<EventCustomValue> EventValues { get; set; } = [];
+    public ICollection<UserCustomPreference> UserPreferences { get; set; } = [];
 }
