@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Tests.Integration.Helpers;
 
@@ -17,16 +19,20 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
     public const string HeaderRole = "X-Test-User-Role";
     public const string HeaderLoungeId = "X-Test-Lounge-Id";
 
+    private readonly ApplicationDbContext _db;
+
     public TestAuthHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
-        UrlEncoder encoder)
-        : base(options, logger, encoder) { }
+        UrlEncoder encoder,
+        ApplicationDbContext db)
+        : base(options, logger, encoder)
+        => _db = db;
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.TryGetValue(HeaderUserId, out var userIdValues))
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
 
         var claims = new List<Claim>
         {
@@ -38,8 +44,22 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
         if (Request.Headers.TryGetValue(HeaderLoungeId, out var loungeId))
             claims.Add(new Claim("lounge_id", loungeId.ToString()));
 
+        // ActiveUserBehavior compares this against the real User.SecurityStamp — a stale/missing
+        // claim here would 401 every authenticated test request, not just ones that actually care
+        // about logout/token revocation, so it has to reflect the DB's current value, not a fixed
+        // stub.
+        if (int.TryParse(userIdValues.ToString(), out var userId))
+        {
+            var securityStamp = await _db.Users
+                .Where(u => u.Id == userId)
+                .Select(u => (Guid?)u.SecurityStamp)
+                .FirstOrDefaultAsync();
+            if (securityStamp is { } stamp)
+                claims.Add(new Claim("sec_stamp", stamp.ToString()));
+        }
+
         var identity = new ClaimsIdentity(claims, SchemeName);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName);
-        return Task.FromResult(AuthenticateResult.Success(ticket));
+        return AuthenticateResult.Success(ticket);
     }
 }
