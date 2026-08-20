@@ -1,0 +1,76 @@
+# Tu dong deploy MusicLounge.Api len Azure App Service sau khi workflow CI (ci.yml) chay xong va
+# PASS tren nhanh master. Xem huong dan day du: docs/ops/25-deploy-azure.md (Buoc 6).
+#
+# Vi sao KHONG dung action azure/webapps-deploy + publish profile (cach "Cach B" mac dinh trong
+# tai lieu Buoc 6): action do goi Kudu zip-deploy KHONG co tuy chon --clean true. Thieu co nay tung
+# gay loi that (file da bi xoa khoi build van con sot lai tren server - xem docs/ops/25-deploy-azure.md
+# Buoc 6 Cach A va memory musiclounge_kudu_incremental_deploy_orphan_bug). Workflow nay goi thang
+# `az webapp deploy --clean true` qua Azure CLI (can service principal, khong phai publish profile)
+# de luon don sach truoc khi ghi de.
+#
+# Vi sao trigger la workflow_run thay vi push truc tiep: "tu dong" khong nen dong nghia "deploy ca
+# code chua qua build+test len server dang tinh tien that". Chi deploy khi CI vua chay xong tren
+# master VA ket qua la success - dung dung commit CI vua kiem tra (head_sha), khong phai commit moi
+# hon co the da phat sinh sau do.
+name: Deploy Backend to Azure
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [master]
+    types: [completed]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-azure
+  cancel-in-progress: false
+
+env:
+  AZURE_RESOURCE_GROUP: rg-musiclounge
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish
+        run: dotnet publish src/MusicLounge.Api/MusicLounge.Api.csproj -c Release -o ./publish-tmp
+
+      - name: Zip artifact
+        # Chay tren ubuntu-latest nen lenh `zip` luon ghi duong dan kieu Unix (dau /) - day chinh
+        # la ly do docs/ops/25-deploy-azure.md Buoc 6 Cach A phai tu dung ZipArchive thay vi
+        # Compress-Archive khi chay tren Windows PowerShell (ghi nham dau \ khien Kudu/Linux giai
+        # nen sai cau truc thu muc long nhau nhu runtimes/win-x64/...). Tren ubuntu-latest van de
+        # nay khong ton tai tu dau.
+        run: |
+          cd publish-tmp
+          zip -r ../publish.zip .
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy (--clean true, tranh sot file cu)
+        run: |
+          az webapp deploy \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+            --src-path publish.zip \
+            --type zip \
+            --clean true
+
+      - name: Azure logout
+        if: always()
+        run: az logout
