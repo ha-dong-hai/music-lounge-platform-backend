@@ -3,6 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MusicLounge.Application.Auth.Commands.GoogleLogin;
+using MusicLounge.Application.Auth.Commands.Login;
 using MusicLounge.Application.Auth.Commands.Register;
 using MusicLounge.Application.Auth.Commands.ResendVerificationCode;
 using MusicLounge.Application.Auth.Commands.VerifyEmail;
@@ -62,4 +64,36 @@ public sealed class AuthController : ControllerBase
         await _sender.Send(command, ct);
         return NoContent();
     }
+
+    [AllowAnonymous]
+    [HttpPost("login")]
+    [ProducesResponseType<ApiResponse<AuthResultDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest body, CancellationToken ct = default)
+    {
+        // IpAddress is deliberately NOT part of the request body a client could bind directly —
+        // LoginSpikeDetectionJob keys entirely on this value, so a client-supplied one would let an
+        // attacker spoof or rotate it to dodge detection. Read from the connection itself, same
+        // "best-effort, not proxy-aware" approach SubscribeToPackageCommandHandler already uses for
+        // its own IP capture.
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _sender.Send(new LoginCommand(body.Email, body.Password, ip), ct);
+        return Ok(ApiResponse<AuthResultDto>.Ok(result));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("google")]
+    [ProducesResponseType<ApiResponse<AuthResultDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Google(
+        [FromBody] GoogleLoginCommand command, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(command, ct);
+        return Ok(ApiResponse<AuthResultDto>.Ok(result));
+    }
 }
+
+public sealed record LoginRequest(string Email, string Password);
