@@ -309,7 +309,11 @@ try
     // the {success,message,errors} shape this API otherwise guarantees for every error.
     app.UseExceptionHandler();
 
-    if (app.Environment.IsDevelopment())
+    // Swagger:EnabledInProduction is a narrow, explicit opt-in for exposing API docs outside
+    // Development (e.g. so FE devs can browse the live Azure API) — deliberately NOT done by
+    // flipping ASPNETCORE_ENVIRONMENT to Development, since that also disables UseHsts() below
+    // and (see appsettings.*.Local.json loading above) changes which config files get loaded.
+    if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Swagger:EnabledInProduction"))
     {
         app.UseSwagger();
         app.UseSwaggerUI();

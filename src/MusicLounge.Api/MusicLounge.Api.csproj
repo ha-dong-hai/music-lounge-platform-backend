@@ -11,6 +11,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- appsettings.*.Local.json (see Program.cs) is each developer's personal, gitignored
+         override file — never ship it. The SDK's default glob picks up any appsettings.*.json
+         as Content, and this file has higher config precedence than App Settings/env vars
+         (loaded after them in Program.cs), so if it were ever published, it would silently
+         override the real production config with whatever's on the deploying dev's machine. -->
+    <Content Remove="appsettings.*.Local.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
