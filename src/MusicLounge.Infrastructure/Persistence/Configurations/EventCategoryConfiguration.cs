@@ -14,5 +14,13 @@ internal sealed class EventCategoryConfiguration : IEntityTypeConfiguration<Even
         b.HasIndex(x => x.Name).IsUnique();
         b.Property(x => x.Description).HasMaxLength(500);
         b.Property(x => x.IsActive).HasDefaultValue(true);
+
+        // MLACP-14: danh mục loại sự kiện mặc định cho form tạo sự kiện.
+        b.HasData(
+            new EventCategory { Id = 1, Name = "Đêm nhạc thường", IsActive = true },
+            new EventCategory { Id = 2, Name = "Mini Show", IsActive = true },
+            new EventCategory { Id = 3, Name = "Sự kiện riêng", IsActive = true },
+            new EventCategory { Id = 4, Name = "Họp báo", IsActive = true }
+        );
     }
 }
