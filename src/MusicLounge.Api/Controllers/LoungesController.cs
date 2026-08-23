@@ -6,6 +6,8 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Lounges.Commands.CreateLounge;
+using MusicLounge.Application.Lounges.Commands.DeleteLounge;
+using MusicLounge.Application.Lounges.Commands.UpdateLounge;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
 using MusicLounge.Application.Lounges.Queries.GetLounges;
@@ -13,7 +15,7 @@ using MusicLounge.Application.Lounges.Queries.GetLoungeZones;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (D3-BE1-3 sua/xoa...) se chi them method vao file nay, khong tao lai.
+// Luu y: cac task sau se chi them method vao file nay, khong tao lai.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/lounges")]
@@ -76,4 +78,45 @@ public sealed class LoungesController : ControllerBase
         var id = await _sender.Send(command, ct);
         return Ok(ApiResponse<int>.Ok(id));
     }
+
+    /// <summary>Chỉ đúng Owner sở hữu (hoặc Admin) mới sửa được — người khác nhận 403.</summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(
+        int id, [FromBody] UpdateLoungeRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new UpdateLoungeCommand(
+            id, body.Name, body.Description, body.AtmosphereId,
+            body.Street, body.Ward, body.District, body.City, body.Latitude, body.Longitude), ct);
+        return NoContent();
+    }
+
+    /// <summary>Chỉ đúng Owner sở hữu (hoặc Admin) mới xóa được; bị chặn (409) nếu phòng trà còn
+    /// bất kỳ sự kiện nào (mọi trạng thái, tránh mất lịch sử show đã kết thúc/hủy).</summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeleteLoungeCommand(id), ct);
+        return NoContent();
+    }
 }
+
+public sealed record UpdateLoungeRequest(
+    string Name,
+    string? Description,
+    int? AtmosphereId,
+    string Street,
+    string Ward,
+    string District,
+    string City,
+    double? Latitude,
+    double? Longitude);
