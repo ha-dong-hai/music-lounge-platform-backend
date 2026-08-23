@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Lounges.Commands.AddLoungeGalleryImage;
 using MusicLounge.Application.Lounges.Commands.CreateLounge;
 using MusicLounge.Application.Lounges.Commands.DeleteLounge;
+using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
 using MusicLounge.Application.Lounges.Commands.UpdateLounge;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
@@ -108,7 +110,40 @@ public sealed class LoungesController : ControllerBase
         await _sender.Send(new DeleteLoungeCommand(id), ct);
         return NoContent();
     }
+
+    /// <summary>Ảnh đầu tiên tự động là đại diện (PrimaryImageUrl) — xem
+    /// AddLoungeGalleryImageCommandHandler. Upload file thật qua POST /uploads/images trước, lấy
+    /// URL trả về rồi mới gọi endpoint này.</summary>
+    [HttpPost("{id:int}/gallery")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddGalleryImage(
+        int id, [FromBody] AddLoungeGalleryImageRequest body, CancellationToken ct = default)
+    {
+        var imageId = await _sender.Send(new AddLoungeGalleryImageCommand(id, body.ImageUrl, body.Caption), ct);
+        return CreatedAtAction(nameof(GetDetail), new { id, version = "1.0" }, ApiResponse<int>.Ok(imageId));
+    }
+
+    /// <summary>Owner tự chọn đổi ảnh đại diện sang 1 ảnh khác (thường lấy từ gallery đã upload).</summary>
+    [HttpPut("{id:int}/image")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetImage(
+        int id, [FromBody] SetLoungeImageRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetLoungeImageCommand(id, body.ImageUrl), ct);
+        return NoContent();
+    }
 }
+
+public sealed record AddLoungeGalleryImageRequest(string ImageUrl, string? Caption);
+
+public sealed record SetLoungeImageRequest(string ImageUrl);
 
 public sealed record UpdateLoungeRequest(
     string Name,
