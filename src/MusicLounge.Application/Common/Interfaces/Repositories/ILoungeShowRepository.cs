@@ -12,9 +12,11 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
         int page, int pageSize, LoungeShowSortBy sortBy,
         bool includeSoldOut, CancellationToken ct = default);
 
-    /// <summary>All shows (any status, including Draft) belonging to the given owner's lounges.</summary>
+    /// <summary>Shows belonging to the given owner's lounges. Any status (including Draft) when
+    /// <paramref name="status"/> is null; otherwise only that status.</summary>
     Task<PaginatedResult<LoungeShow>> GetMineAsync(
-        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy, CancellationToken ct = default);
+        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
+        LoungeShowStatus? status = null, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams searchParams, CancellationToken ct = default);
