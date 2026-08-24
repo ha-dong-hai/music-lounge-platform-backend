@@ -16,6 +16,7 @@ using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
+using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
@@ -29,6 +30,27 @@ public sealed class LoungeShowsController : ControllerBase
     private readonly ISender _sender;
 
     public LoungeShowsController(ISender sender) => _sender = sender;
+
+    /// <summary>Tìm kiếm sự kiện công khai theo thể loại nhạc/dòng nhạc/không gian (kết hợp được
+    /// nhiều bộ lọc cùng lúc) — chỉ trả sự kiện đã duyệt công khai (Published/Ongoing) và sắp diễn.
+    /// Format/thời gian/từ khóa sẽ bổ sung ở task kế tiếp.</summary>
+    [HttpGet("search")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Search(
+        [FromQuery] int[]? genreIds,
+        [FromQuery] int[]? moodIds,
+        [FromQuery] int[]? atmosphereIds,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(
+            new SearchLoungeShowsQuery(genreIds, moodIds, atmosphereIds, page, pageSize, sortBy), ct);
+        return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
+    }
 
     /// <summary>Chỉ Owner của đúng phòng trà được chọn mới tạo được (403 nếu khác). Cần có gói
     /// subscription đang hoạt động tại thời điểm tạo (không phải lúc publish). Sự kiện mới luôn ở
