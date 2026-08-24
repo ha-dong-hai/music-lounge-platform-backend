@@ -6,4 +6,10 @@ namespace MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 // page/pageSize sai khong nen tra 400, chi can tu dong sua ve gia tri hop le.
 public sealed class SearchLoungeShowsQueryValidator : AbstractValidator<SearchLoungeShowsQuery>
 {
+    public SearchLoungeShowsQueryValidator()
+    {
+        RuleFor(x => x.Keyword)
+            .MaximumLength(200)
+            .When(x => x.Keyword is not null);
+    }
 }

@@ -31,9 +31,11 @@ public sealed class LoungeShowsController : ControllerBase
 
     public LoungeShowsController(ISender sender) => _sender = sender;
 
-    /// <summary>Tìm kiếm sự kiện công khai theo thể loại nhạc/dòng nhạc/không gian (kết hợp được
-    /// nhiều bộ lọc cùng lúc) — chỉ trả sự kiện đã duyệt công khai (Published/Ongoing) và sắp diễn.
-    /// Format/thời gian/từ khóa sẽ bổ sung ở task kế tiếp.</summary>
+    /// <summary>Tìm kiếm sự kiện công khai — kết hợp được nhiều bộ lọc cùng lúc: thể loại
+    /// nhạc/dòng nhạc/không gian, hình thức tổ chức, khoảng thời gian diễn ra, từ khóa trong tên/mô
+    /// tả. Chỉ trả sự kiện đã duyệt công khai (Published/Ongoing) và sắp diễn. Kết quả phân trang,
+    /// mỗi sự kiện kèm giá thấp nhất/cao nhất và thông tin phòng trà (đã có sẵn trong
+    /// LoungeShowListItemDto).</summary>
     [HttpGet("search")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
@@ -42,13 +44,18 @@ public sealed class LoungeShowsController : ControllerBase
         [FromQuery] int[]? genreIds,
         [FromQuery] int[]? moodIds,
         [FromQuery] int[]? atmosphereIds,
+        [FromQuery] string? keyword,
+        [FromQuery] LoungeShowFormat? format,
+        [FromQuery] DateTimeOffset? dateFrom,
+        [FromQuery] DateTimeOffset? dateTo,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(
-            new SearchLoungeShowsQuery(genreIds, moodIds, atmosphereIds, page, pageSize, sortBy), ct);
+        var result = await _sender.Send(new SearchLoungeShowsQuery(
+            genreIds, moodIds, atmosphereIds, keyword, format, dateFrom, dateTo,
+            page, pageSize, sortBy), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 
