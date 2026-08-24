@@ -16,6 +16,7 @@ using MusicLounge.Application.Catalog.Commands.UpdateMood;
 using MusicLounge.Application.Catalog.Commands.UpdateMusicGenre;
 using MusicLounge.Application.Catalog.Commands.UpdateVenueAtmosphere;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Moderations.Commands.ReviewShow;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -164,9 +165,27 @@ public sealed class AdminController : ControllerBase
         await _sender.Send(new DeleteEventCategoryCommand(id), ct);
         return NoContent();
     }
+
+    // ---- Duyệt sự kiện ----
+
+    /// <summary>Duyệt (Approved → Published) hoặc từ chối (Rejected → về lại Draft để Owner sửa và
+    /// nộp lại) một event đang chờ duyệt (Pending). Chỉ xử lý được 1 lần — duyệt lại event đã có
+    /// quyết định trả về 409.</summary>
+    [HttpPost("shows/{id:int}/review")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReviewShow(
+        int id, [FromBody] ReviewShowRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewShowCommand(id, body.Decision, body.ReviewNote), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdateMusicGenreRequest(string Name, string? NameEn);
 public sealed record UpdateMoodRequest(string Name);
 public sealed record UpdateVenueAtmosphereRequest(string Name);
 public sealed record UpdateEventCategoryRequest(string Name, string? Description, bool IsActive);
+public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
