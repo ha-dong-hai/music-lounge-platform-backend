@@ -5,11 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.LoungeShows.Commands.AddPerformance;
 using MusicLounge.Application.LoungeShows.Commands.CancelLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeleteLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.DeletePerformance;
 using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
@@ -132,6 +135,55 @@ public sealed class LoungeShowsController : ControllerBase
         await _sender.Send(new CancelLoungeShowCommand(id), ct);
         return NoContent();
     }
+
+    /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — chỉ khi sự kiện còn Draft (422 nếu khác).
+    /// Trả 409 nếu nghệ sĩ này đã có trong line-up của đúng sự kiện này.</summary>
+    [HttpPost("{id:int}/performances")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> AddPerformance(
+        int id, [FromBody] AddPerformanceRequest body, CancellationToken ct = default)
+    {
+        var performanceId = await _sender.Send(new AddPerformanceCommand(
+            id, body.PerformerId, body.PerformerName, body.Role,
+            body.OrderIndex, body.SetTime, body.AcceptsDonation), ct);
+        return CreatedAtAction(nameof(GetDetail), new { id, version = "1.0" }, ApiResponse<int>.Ok(performanceId));
+    }
+
+    /// <summary>Sửa vai trò/thứ tự/giờ diễn/bật-tắt nhận donate của 1 nghệ sĩ trong line-up — chỉ
+    /// khi sự kiện còn Draft (422 nếu khác). Đổi sang nghệ sĩ khác: xóa rồi thêm lại.</summary>
+    [HttpPut("{id:int}/performances/{performanceId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdatePerformance(
+        int id, int performanceId, [FromBody] UpdatePerformanceRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new UpdatePerformanceCommand(
+            performanceId, body.Role, body.OrderIndex, body.SetTime, body.AcceptsDonation), ct);
+        return NoContent();
+    }
+
+    /// <summary>Xóa 1 nghệ sĩ khỏi danh sách biểu diễn — chỉ khi sự kiện còn Draft (422 nếu khác).</summary>
+    [HttpDelete("{id:int}/performances/{performanceId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> DeletePerformance(int id, int performanceId, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeletePerformanceCommand(performanceId), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdateLoungeShowRequest(
@@ -142,3 +194,17 @@ public sealed record UpdateLoungeShowRequest(
     int? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota);
+
+public sealed record AddPerformanceRequest(
+    int? PerformerId,
+    string? PerformerName,
+    string Role,
+    int OrderIndex,
+    TimeOnly? SetTime,
+    bool AcceptsDonation);
+
+public sealed record UpdatePerformanceRequest(
+    string Role,
+    int OrderIndex,
+    TimeOnly? SetTime,
+    bool AcceptsDonation);
