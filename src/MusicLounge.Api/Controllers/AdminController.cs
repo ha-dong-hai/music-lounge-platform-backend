@@ -17,6 +17,8 @@ using MusicLounge.Application.Catalog.Commands.UpdateMusicGenre;
 using MusicLounge.Application.Catalog.Commands.UpdateVenueAtmosphere;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
+using MusicLounge.Application.Moderations.DTOs;
+using MusicLounge.Application.Moderations.Queries.GetPendingLoungeShows;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -167,6 +169,19 @@ public sealed class AdminController : ControllerBase
     }
 
     // ---- Duyệt sự kiện ----
+
+    /// <summary>Danh sách sự kiện đang chờ duyệt (Pending), kèm tên/phòng trà/ngày diễn và tín hiệu
+    /// AI moderation (điểm rủi ro, lý do gắn cờ) để Admin ưu tiên xử lý — sắp xếp theo điểm rủi ro
+    /// AI giảm dần. Xem chi tiết đầy đủ 1 event: dùng GET /lounge-shows/{id} (Admin xem được cả
+    /// Draft/Pending).</summary>
+    [HttpGet("shows/pending")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<PendingLoungeShowDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPendingShows(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPendingLoungeShowsQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<PendingLoungeShowDto>>.Ok(result));
+    }
 
     /// <summary>Duyệt (Approved → Published) hoặc từ chối (Rejected → về lại Draft để Owner sửa và
     /// nộp lại) một event đang chờ duyệt (Pending). Chỉ xử lý được 1 lần — duyệt lại event đã có
