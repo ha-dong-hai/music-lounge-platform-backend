@@ -60,9 +60,12 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetMineAsync(
-        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy, CancellationToken ct = default)
+        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
+        LoungeShowStatus? status = null, CancellationToken ct = default)
     {
         var query = WithDetails().Where(s => s.Lounge.OwnerId == ownerId);
+        if (status.HasValue)
+            query = query.Where(s => s.Status == status.Value);
         return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }
 
