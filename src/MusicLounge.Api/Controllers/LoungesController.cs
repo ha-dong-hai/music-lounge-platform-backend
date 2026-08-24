@@ -8,6 +8,8 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Lounges.Commands.AddLoungeGalleryImage;
 using MusicLounge.Application.Lounges.Commands.CreateLounge;
 using MusicLounge.Application.Lounges.Commands.DeleteLounge;
+using MusicLounge.Application.Lounges.Commands.RemoveLoungeGalleryImage;
+using MusicLounge.Application.Lounges.Commands.ReorderLoungeGalleryImages;
 using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
 using MusicLounge.Application.Lounges.Commands.UpdateLounge;
 using MusicLounge.Application.Lounges.DTOs;
@@ -139,7 +141,36 @@ public sealed class LoungesController : ControllerBase
         await _sender.Send(new SetLoungeImageCommand(id, body.ImageUrl), ct);
         return NoContent();
     }
+
+    /// <summary>Chỉ đúng Owner sở hữu (hoặc Admin) mới xóa được ảnh.</summary>
+    [HttpDelete("{id:int}/gallery/{imageId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveGalleryImage(int id, int imageId, CancellationToken ct = default)
+    {
+        await _sender.Send(new RemoveLoungeGalleryImageCommand(id, imageId), ct);
+        return NoContent();
+    }
+
+    /// <summary>Body phải là hoán vị đầy đủ Id các ảnh hiện có của phòng trà (thiếu/dư/lạc Id đều
+    /// bị từ chối) — vị trí trong mảng chính là thứ tự hiển thị mới.</summary>
+    [HttpPut("{id:int}/gallery/order")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReorderGalleryImages(
+        int id, [FromBody] ReorderGalleryImagesRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReorderLoungeGalleryImagesCommand(id, body.OrderedImageIds), ct);
+        return NoContent();
+    }
 }
+
+public sealed record ReorderGalleryImagesRequest(List<int> OrderedImageIds);
 
 public sealed record AddLoungeGalleryImageRequest(string ImageUrl, string? Caption);
 
