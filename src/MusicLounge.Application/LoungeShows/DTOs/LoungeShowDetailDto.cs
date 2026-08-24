@@ -17,11 +17,21 @@ public sealed record LoungeShowDetailDto(
     IReadOnlyList<PerformerSummaryDto> Performers,
     IReadOnlyList<TicketTierSummaryDto> TicketTiers,
     IReadOnlyList<GenreDto> Genres,
+    IReadOnlyList<MoodDto> Moods,
+    IReadOnlyList<AtmosphereDto> Atmospheres,
     RatingSummaryDto Ratings,
+    IReadOnlyList<FeaturedRatingDto> FeaturedRatings,
     bool? IsWishlisted,
     bool? UserHasTicket,
     bool? UserHasRated,
-    string? LegalApprovalReference,
     bool LegalApprovalConfirmed,
-    string? VcpmcRoyaltyReference,
     LivestreamPlaybackMode PlaybackMode);
+
+// MLACP-60: "danh sach danh gia noi bat" — top danh gia co diem cao nhat va co binh luan (rating
+// khong kem binh luan khong dang de hien thi thanh mot "review"). Loai danh gia da bi go (IsRemoved).
+public sealed record FeaturedRatingDto(
+    int Score,
+    string Comment,
+    string ReviewerName,
+    string? ReviewerAvatarUrl,
+    DateTimeOffset CreatedAt);
