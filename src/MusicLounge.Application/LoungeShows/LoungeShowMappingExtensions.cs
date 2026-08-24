@@ -43,23 +43,25 @@ internal static class LoungeShowMappingExtensions
     internal static LoungeShowDetailDto ToDetailDto(
         this LoungeShow show, IReadOnlySet<int> wishlistedIds,
         bool? userHasTicket = null, bool? userHasRated = null,
-        IReadOnlyDictionary<int, int>? soldAndHeld = null)
+        IReadOnlyDictionary<int, int>? soldAndHeld = null,
+        IReadOnlyList<LoungeGalleryImageDto>? galleryImages = null)
         => new(show.Id, show.Name, show.Description, show.CoverImageUrl,
                show.ScheduledStart, show.ScheduledEnd, show.Format, show.Status,
                show.Status == LoungeShowStatus.Ongoing,
                show.Livestream?.Id,
-               show.Lounge.ToSummaryDto(),
+               show.Lounge.ToSummaryDto(galleryImages ?? []),
                show.Performances.OrderBy(p => p.OrderIndex)
-                   .Select(p => p.Performer.ToSummaryDto(p.Id, p.AcceptsDonation)).ToList(),
+                   .Select(p => p.Performer.ToSummaryDto(p.Id, p.AcceptsDonation, p.Role, p.SetTime)).ToList(),
                show.TicketTiers.Select(t => t.ToSummaryDto(soldAndHeld)).ToList(),
                show.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
+               show.Moods.Select(m => new MoodDto(m.Mood.Id, m.Mood.Name)).ToList(),
+               show.Atmospheres.Select(a => new AtmosphereDto(a.Atmosphere.Id, a.Atmosphere.Name)).ToList(),
                show.Ratings.ToRatingSummaryDto(),
+               show.Ratings.ToFeaturedRatingDtos(),
                wishlistedIds.Contains(show.Id),
                userHasTicket,
                userHasRated,
-               show.LegalApprovalReference,
                show.LegalApprovalConfirmedAt.HasValue,
-               show.VcpmcRoyaltyReference,
                show.PlaybackMode);
 
     internal static RecommendedLoungeShowDto ToRecommendedDto(
@@ -84,19 +86,24 @@ internal static class LoungeShowMappingExtensions
                performer.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
                shows);
 
-    private static LoungeSummaryDto ToSummaryDto(this Domain.Entities.MusicLounge lounge)
+    private static LoungeSummaryDto ToSummaryDto(
+        this Domain.Entities.MusicLounge lounge, IReadOnlyList<LoungeGalleryImageDto> galleryImages)
         => new(lounge.Id, lounge.Name,
                lounge.Address.Street, lounge.Address.Ward,
                lounge.Address.District, lounge.Address.City,
                lounge.Address.FullAddress,
                lounge.Address.Latitude, lounge.Address.Longitude,
                lounge.PrimaryImageUrl,
-               lounge.Model3DUrl);
+               lounge.Model3DUrl,
+               lounge.Atmosphere?.Name,
+               galleryImages);
 
-    private static PerformerSummaryDto ToSummaryDto(this Performer performer, int performanceId, bool acceptsDonation)
+    private static PerformerSummaryDto ToSummaryDto(
+        this Performer performer, int performanceId, bool acceptsDonation,
+        PerformerRole role, TimeOnly? setTime)
         => new(performer.Id, performer.Name, performer.AvatarUrl, performer.Bio,
                performer.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
-               performanceId, acceptsDonation);
+               performanceId, acceptsDonation, role, setTime);
 
     private static TicketTierSummaryDto ToSummaryDto(
         this TicketTier tier, IReadOnlyDictionary<int, int>? soldAndHeld)
@@ -119,4 +126,17 @@ internal static class LoungeShowMappingExtensions
         => ratings.Count == 0
             ? new RatingSummaryDto(0, 0)
             : new RatingSummaryDto(ratings.Average(r => r.Score), ratings.Count);
+
+    // MLACP-60: chi lay danh gia con hieu luc (chua bi go), co binh luan, diem cao nhat truoc —
+    // ratings 5 sao khong binh luan gi khong dang hien thi thanh "danh gia noi bat" tren trang cong khai.
+    private static IReadOnlyList<FeaturedRatingDto> ToFeaturedRatingDtos(
+        this ICollection<LoungeShowRating> ratings)
+        => ratings
+            .Where(r => !r.IsRemoved && !string.IsNullOrWhiteSpace(r.Comment) && r.User is not null)
+            .OrderByDescending(r => r.Score)
+            .ThenByDescending(r => r.CreatedAt)
+            .Take(5)
+            .Select(r => new FeaturedRatingDto(
+                r.Score, r.Comment!, r.User!.FullName, r.User.AvatarUrl, r.CreatedAt))
+            .ToList();
 }
