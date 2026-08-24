@@ -26,8 +26,14 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .Include(s => s.TicketTiers).ThenInclude(t => t.Prices);
 
     public async Task<LoungeShow?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
+        // Moods/Atmospheres/Lounge.Atmosphere/Ratings.User chi can cho trang chi tiet 1 show —
+        // khong them vao WithDetails() dung chung, tranh cac danh sach (Search/GetPublished/...)
+        // phai ganh them join khong dung toi.
         => await WithDetails()
-            .Include(s => s.Ratings)
+            .Include(s => s.Moods).ThenInclude(m => m.Mood)
+            .Include(s => s.Atmospheres).ThenInclude(a => a.Atmosphere)
+            .Include(s => s.Lounge).ThenInclude(l => l.Atmosphere)
+            .Include(s => s.Ratings).ThenInclude(r => r.User)
             .Include(s => s.Livestream)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
