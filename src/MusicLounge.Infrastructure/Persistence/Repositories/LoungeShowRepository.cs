@@ -72,8 +72,11 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     public async Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams p, CancellationToken ct = default)
     {
+        // MLACP-58 DONE WHEN: "chi hien thi su kien da duoc duyet cong khai" — truoc day chi loai
+        // Draft, de lot Pending (dang cho Admin duyet, chua cong khai) vao ket qua tim kiem cong
+        // khai. Loai them Pending o day; Ended/Cancelled van do rieng IncludeEnded ben duoi quyet dinh.
         var query = WithDetails()
-            .Where(s => s.Status != LoungeShowStatus.Draft);
+            .Where(s => s.Status != LoungeShowStatus.Draft && s.Status != LoungeShowStatus.Pending);
 
         if (!string.IsNullOrWhiteSpace(p.Keyword))
             // Contains() (khong phai EF.Functions.Like voi chuoi noi truoc trong C#) — SQL Server
