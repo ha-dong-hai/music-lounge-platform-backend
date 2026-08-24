@@ -6,6 +6,8 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.DeleteLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
@@ -13,7 +15,7 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (sua, publish...) se chi them method vao file nay.
+// Luu y: cac task sau (publish, doi trang thai...) se chi them method vao file nay.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/lounge-shows")]
@@ -66,4 +68,45 @@ public sealed class LoungeShowsController : ControllerBase
         var result = await _sender.Send(new GetLoungeShowDetailQuery(id), ct);
         return Ok(ApiResponse<LoungeShowDetailDto>.Ok(result));
     }
+
+    /// <summary>Chỉ sửa được khi sự kiện còn ở trạng thái Draft (422 nếu đã gửi duyệt/đã đăng);
+    /// chỉ đúng Owner sở hữu venue mới sửa được (403 nếu khác).</summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Update(
+        int id, [FromBody] UpdateLoungeShowRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new UpdateLoungeShowCommand(
+            id, body.Name, body.Description, body.ScheduledStart, body.ScheduledEnd,
+            body.CategoryId, body.OfflineQuota, body.OnlineQuota), ct);
+        return NoContent();
+    }
+
+    /// <summary>Xóa thật (hard delete) — chỉ áp dụng cho sự kiện còn ở trạng thái Draft (422 nếu
+    /// khác); sự kiện đã publish/đang diễn ra phải dùng huỷ (Cancel), không xóa được nữa.</summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeleteLoungeShowCommand(id), ct);
+        return NoContent();
+    }
 }
+
+public sealed record UpdateLoungeShowRequest(
+    string Name,
+    string Description,
+    DateTimeOffset ScheduledStart,
+    DateTimeOffset? ScheduledEnd,
+    int? CategoryId,
+    int? OfflineQuota,
+    int? OnlineQuota);
