@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.LoungeShows.Commands.CancelLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeleteLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
@@ -15,7 +17,7 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (publish, doi trang thai...) se chi them method vao file nay.
+// Luu y: cac task sau (duyet/tu choi cua Admin, doi trang thai khac...) se chi them method vao file nay.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/lounge-shows")]
@@ -98,6 +100,36 @@ public sealed class LoungeShowsController : ControllerBase
     public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteLoungeShowCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>Gửi duyệt: chuyển Draft → Pending, tạo bản ghi kiểm duyệt cho Admin. Bắt buộc đã có
+    /// ≥1 hạng vé, ≥1 nghệ sĩ trong line-up, văn bản chấp thuận biểu diễn (NĐ 144/2020 Điều 10), và
+    /// nộp trước tối thiểu N ngày làm việc so với ngày diễn — thiếu bất kỳ điều kiện nào trả về lỗi
+    /// nêu rõ (422).</summary>
+    [HttpPost("{id:int}/submit")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Submit(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new PublishLoungeShowCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>Hủy sự kiện đã đăng — vé đã Confirmed được hủy kèm tạo yêu cầu hoàn 100% tiền
+    /// (RefundRequest) và thông báo tới từng người mua.</summary>
+    [HttpPost("{id:int}/cancel")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Cancel(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new CancelLoungeShowCommand(id), ct);
         return NoContent();
     }
 }
