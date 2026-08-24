@@ -6,11 +6,13 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.TicketTiers.Commands.CreateTicketTier;
+using MusicLounge.Application.TicketTiers.Commands.DeleteTicketTier;
+using MusicLounge.Application.TicketTiers.Commands.UpdateTicketTier;
 using MusicLounge.Application.TicketTiers.Queries.GetTicketTiers;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (sua/xoa muc gia...) se chi them method vao file nay.
+// Luu y: cac task sau se chi them method vao file nay.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/ticket-tiers")]
@@ -46,4 +48,35 @@ public sealed class TicketTiersController : ControllerBase
         var id = await _sender.Send(command, ct);
         return Ok(ApiResponse<int>.Ok(id));
     }
+
+    /// <summary>Chỉ sửa được khi sự kiện còn Draft (422 nếu khác); tăng TotalCapacity vẫn bị kiểm
+    /// tra lại giới hạn subscription giống lúc tạo.</summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Update(
+        int id, [FromBody] UpdateTicketTierRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new UpdateTicketTierCommand(id, body.Name, body.Description, body.TotalCapacity), ct);
+        return NoContent();
+    }
+
+    /// <summary>Xóa thật (hard delete) — chỉ áp dụng khi sự kiện còn Draft (422 nếu khác).</summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeleteTicketTierCommand(id), ct);
+        return NoContent();
+    }
 }
+
+public sealed record UpdateTicketTierRequest(string Name, string? Description, int? TotalCapacity);
