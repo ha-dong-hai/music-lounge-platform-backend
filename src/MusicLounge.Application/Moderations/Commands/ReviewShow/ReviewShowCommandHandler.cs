@@ -4,6 +4,7 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Moderations.Commands.ReviewShow;
 
@@ -12,17 +13,23 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IEventModerationRepository _moderationRepo;
+    private readonly IFollowRepository _followRepo;
+    private readonly INotificationService _notifications;
     private readonly IAsyncKeyedLock _lock;
 
     public ReviewShowCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         IEventModerationRepository moderationRepo,
+        IFollowRepository followRepo,
+        INotificationService notifications,
         IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _moderationRepo = moderationRepo;
+        _followRepo = followRepo;
+        _notifications = notifications;
         _lock = @lock;
     }
 
@@ -72,6 +79,39 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
         }
 
         showRepo.Update(show);
+
+        // MLACP-79: Owner phai duoc bao ngay ket qua duyet, ca 2 chieu — khong chi khi Approved.
+        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
+        if (lounge is not null)
+        {
+            await _notifications.NotifyAsync(
+                lounge.OwnerId,
+                NotificationType.ModerationResult,
+                decision == ModerationDecision.Approved ? "Chương trình đã được duyệt" : "Chương trình bị từ chối",
+                decision == ModerationDecision.Approved
+                    ? $"\"{show.Name}\" đã được duyệt và xuất bản."
+                    : $"\"{show.Name}\" bị từ chối duyệt. Lý do: {request.ReviewNote}.",
+                referenceType: "show",
+                referenceId: show.Id.ToString(),
+                ct: ct);
+
+            if (decision == ModerationDecision.Approved)
+            {
+                var followerIds = await _followRepo.GetFollowerUserIdsAsync(show.LoungeId, ct);
+                foreach (var userId in followerIds)
+                {
+                    await _notifications.NotifyAsync(
+                        userId,
+                        NotificationType.NewEvent,
+                        "Chương trình mới",
+                        $"{lounge.Name} vừa đăng chương trình mới: \"{show.Name}\".",
+                        referenceType: "show",
+                        referenceId: show.Id.ToString(),
+                        ct: ct);
+                }
+            }
+        }
+
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
     }
