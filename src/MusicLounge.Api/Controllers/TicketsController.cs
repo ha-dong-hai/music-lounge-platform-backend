@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Tickets.Commands.HoldTicket;
+using MusicLounge.Application.Tickets.Commands.PurchaseTicket;
 using MusicLounge.Application.Tickets.DTOs;
 
 namespace MusicLounge.Api.Controllers;
@@ -37,4 +38,25 @@ public sealed class TicketsController : ControllerBase
         var result = await _sender.Send(command, ct);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<HoldTicketResultDto>.Ok(result));
     }
+
+    /// <summary>Tạo đơn hàng (Payment Pending + vé Pending) từ 1 hold còn hiệu lực, tính đúng tổng
+    /// tiền = đơn giá × số lượng. PaymentUrl hiện là placeholder rỗng — tích hợp cổng thanh toán
+    /// thật (VNPay) là MLACP-93.</summary>
+    [HttpPost("purchase")]
+    [ProducesResponseType<ApiResponse<PaymentInitiationDto>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Purchase(
+        [FromBody] PurchaseTicketRequest body, CancellationToken ct = default)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _sender.Send(new PurchaseTicketCommand(body.HoldId, ip), ct);
+        // Handler da persist 1 ban ghi Payment (Pending) truoc khi tra ve — dung 201 giong
+        // Donations.Create (cung ban chat "khoi tao thanh toan", cung persist Payment).
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<PaymentInitiationDto>.Ok(result));
+    }
 }
+
+public sealed record PurchaseTicketRequest(int HoldId);
