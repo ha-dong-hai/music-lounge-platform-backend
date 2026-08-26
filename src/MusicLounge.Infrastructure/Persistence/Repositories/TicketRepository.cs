@@ -64,11 +64,15 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
             .FirstOrDefaultAsync(t => t.QrCode == qrCode, ct);
 
     public async Task<PaginatedResult<Ticket>> GetByBuyerAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default)
+        int userId, int page, int pageSize, TicketStatus? status = null, CancellationToken ct = default)
     {
         var query = WithDetails()
-            .Where(t => t.BuyerId == userId)
-            .OrderByDescending(t => t.CreatedAt);
+            .Where(t => t.BuyerId == userId);
+
+        if (status.HasValue)
+            query = query.Where(t => t.Status == status.Value);
+
+        query = query.OrderByDescending(t => t.CreatedAt);
 
         var total = await query.CountAsync(ct);
         var items = await query

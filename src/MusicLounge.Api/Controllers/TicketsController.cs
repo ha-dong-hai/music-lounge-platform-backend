@@ -7,7 +7,9 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Tickets.Commands.HoldTicket;
 using MusicLounge.Application.Tickets.Commands.PurchaseTicket;
 using MusicLounge.Application.Tickets.DTOs;
+using MusicLounge.Application.Tickets.Queries.GetMyTickets;
 using MusicLounge.Application.Tickets.Queries.GetTicketByQr;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -56,6 +58,22 @@ public sealed class TicketsController : ControllerBase
         // Handler da persist 1 ban ghi Payment (Pending) truoc khi tra ve — dung 201 giong
         // Donations.Create (cung ban chat "khoi tao thanh toan", cung persist Payment).
         return StatusCode(StatusCodes.Status201Created, ApiResponse<PaymentInitiationDto>.Ok(result));
+    }
+
+    /// <summary>Toàn bộ vé đã mua của user đang đăng nhập, sắp xếp theo thời gian mua mới nhất
+    /// trước — lọc theo trạng thái qua query param `status` nếu có (Pending/Confirmed/Used/
+    /// Cancelled/Refunded).</summary>
+    [HttpGet("my")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<TicketListItemDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMyTickets(
+        [FromQuery] TicketStatus? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyTicketsQuery(status, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<TicketListItemDto>>.Ok(result));
     }
 
     /// <summary>Tra cứu vé bằng mã QR — dùng để quét check-in tại cửa hoặc để chính chủ vé xem lại.
