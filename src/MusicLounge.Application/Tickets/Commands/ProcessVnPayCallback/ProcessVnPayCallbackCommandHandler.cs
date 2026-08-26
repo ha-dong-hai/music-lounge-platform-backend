@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.Tickets.Events;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
@@ -11,17 +13,29 @@ internal sealed class ProcessVnPayCallbackCommandHandler
 {
     private readonly IUnitOfWork _uow;
     private readonly IVnPayService _vnPay;
+    private readonly ILoungeShowRepository _showRepo;
+    private readonly ILivestreamRepository _livestreamRepo;
+    private readonly ITicketRepository _ticketRepo;
+    private readonly IPublisher _publisher;
     private readonly IAsyncKeyedLock _lock;
     private readonly ILogger<ProcessVnPayCallbackCommandHandler> _logger;
 
     public ProcessVnPayCallbackCommandHandler(
         IUnitOfWork uow,
         IVnPayService vnPay,
+        ILoungeShowRepository showRepo,
+        ILivestreamRepository livestreamRepo,
+        ITicketRepository ticketRepo,
+        IPublisher publisher,
         IAsyncKeyedLock @lock,
         ILogger<ProcessVnPayCallbackCommandHandler> logger)
     {
         _uow = uow;
         _vnPay = vnPay;
+        _showRepo = showRepo;
+        _livestreamRepo = livestreamRepo;
+        _ticketRepo = ticketRepo;
+        _publisher = publisher;
         _lock = @lock;
         _logger = logger;
     }
@@ -91,14 +105,54 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             payment.UpdatedAt = DateTimeOffset.UtcNow;
             paymentRepo.Update(payment);
 
-            // QrCode + PhysicalTicketDetail/LivestreamTicketDetail + notification: MLACP-95.
+            // QrCode: dinh danh khong the doan duoc — Guid ngau nhien, khong phai chuoi tang dan/
+            // rut gon tu ID nao co the du doan.
             foreach (var ticket in tickets)
             {
                 ticket.Status = TicketStatus.Confirmed;
+                ticket.QrCode = Guid.NewGuid().ToString("N");
                 ticketRepo.Update(ticket);
             }
 
+            // Chi tiet ve theo AccessType cua tier — moi Payment chi thuoc 1 tier duy nhat
+            // (PurchaseTicketCommandHandler tao tat ca ve tu cung 1 hold, cung 1 price/tier).
+            var firstTicket = tickets.FirstOrDefault();
+            if (firstTicket is not null)
+            {
+                var tier = await _uow.Repository<TicketTier, int>().GetByIdAsync(firstTicket.TierId, ct);
+                if (tier?.AccessType == AccessType.Livestream)
+                {
+                    var livestream = await _livestreamRepo.GetByShowIdAsync(firstTicket.ShowId, ct);
+                    if (livestream is not null)
+                    {
+                        foreach (var ticket in tickets)
+                            _livestreamRepo.AddTicketDetail(new LivestreamTicketDetail
+                            {
+                                TicketId = ticket.Id,
+                                LivestreamId = livestream.Id,
+                                AccessToken = Guid.NewGuid().ToString("N")
+                            });
+                    }
+                }
+                else if (tier?.AccessType == AccessType.Physical)
+                {
+                    foreach (var ticket in tickets)
+                        _ticketRepo.AddPhysicalDetail(new PhysicalTicketDetail { TicketId = ticket.Id });
+                }
+            }
+
             await _uow.SaveChangesAsync(ct);
+
+            var ownerId = firstTicket is not null
+                ? await _showRepo.GetLoungeOwnerIdAsync(firstTicket.ShowId, ct) ?? 0
+                : 0;
+
+            await _publisher.Publish(new TicketPaymentConfirmed(
+                PaymentId: payment.Id,
+                UserId: firstTicket?.BuyerId ?? 0,
+                OwnerId: ownerId,
+                TicketIds: tickets.Select(t => t.Id).ToArray(),
+                LivestreamId: null), ct);
 
             _logger.LogInformation(
                 "VNPay ticket callback confirmed: PaymentId={PaymentId} TxnRef={TxnRef} TicketCount={TicketCount} at {At}",
