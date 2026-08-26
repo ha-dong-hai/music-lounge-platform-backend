@@ -201,21 +201,24 @@ public sealed class AdminController : ControllerBase
 
     // ---- Hoàn tiền ----
 
-    /// <summary>Duyệt hoặc từ chối 1 yêu cầu hoàn tiền (Pending). Approved: ghi đảo bút toán sổ cái
-    /// (D8) đúng tỷ lệ số tiền được duyệt, co giãn settlement tranche chưa release, đánh dấu
-    /// Payment.Refunded nếu tổng đã hoàn = GrossAmount. Chỉ xử lý được 1 lần (409 nếu đã xử lý).
-    /// LƯU Ý: chưa gọi API hoàn tiền thật của VNPay (IVnPayService chưa có method refund — xem
-    /// TODO trong handler) — cần 1 task riêng có quyền test sandbox để thêm và xác minh chữ ký.</summary>
+    /// <summary>Duyệt hoặc từ chối 1 yêu cầu hoàn tiền (Pending). Approved: gọi VNPay Merchant API
+    /// (vnp_Command=refund) hoàn tiền thật trước, chỉ ghi đảo bút toán sổ cái (D8) và co giãn
+    /// settlement tranche chưa release nếu VNPay xác nhận thành công; đánh dấu Payment.Refunded nếu
+    /// tổng đã hoàn = GrossAmount. Chỉ xử lý được 1 lần (409 nếu đã xử lý). LƯU Ý: VNPay mặc định
+    /// khóa chức năng hoàn tiền trên tài khoản sandbox — cần liên hệ VNPay để mở trước khi gọi được
+    /// thành công, không phụ thuộc vào code đúng hay sai (503 nếu VNPay từ chối/lỗi).</summary>
     [HttpPost("refund-requests/{id:int}/process")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> ProcessRefundRequest(
         int id, [FromBody] ProcessRefundRequestBody body, CancellationToken ct = default)
     {
-        await _sender.Send(new ProcessRefundRequestCommand(id, body.Decision, body.ApprovedAmount), ct);
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        await _sender.Send(new ProcessRefundRequestCommand(id, body.Decision, body.ApprovedAmount, ip), ct);
         return NoContent();
     }
 }
