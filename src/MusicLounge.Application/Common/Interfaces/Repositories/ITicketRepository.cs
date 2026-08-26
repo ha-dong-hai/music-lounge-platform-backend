@@ -10,7 +10,8 @@ public interface ITicketRepository : IRepository<Ticket, Guid>
     Task<Ticket?> GetByQrCodeTrackedAsync(string qrCode, CancellationToken ct = default);
     Task<Ticket?> GetByIdWithDetailsAsync(Guid ticketId, CancellationToken ct = default);
     Task<Ticket?> GetByIdWithDetailsTrackedAsync(Guid ticketId, CancellationToken ct = default);
-    Task<PaginatedResult<Ticket>> GetByBuyerAsync(int userId, int page, int pageSize, CancellationToken ct = default);
+    Task<PaginatedResult<Ticket>> GetByBuyerAsync(
+        int userId, int page, int pageSize, TicketStatus? status = null, CancellationToken ct = default);
     Task<PaginatedResult<Ticket>> GetByShowAsync(int showId, int page, int pageSize, CancellationToken ct = default);
     Task<IReadOnlyList<Ticket>> GetIncomingTransfersAsync(int recipientUserId, CancellationToken ct = default);
     Task<int> CountConfirmedByPriceAsync(int priceId, CancellationToken ct = default);
