@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Tickets.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -12,13 +14,18 @@ internal sealed class PurchaseTicketCommandHandler
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IVnPayService _vnPay;
+    private readonly BusinessSettings _settings;
     private readonly IAsyncKeyedLock _lock;
 
     public PurchaseTicketCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
+        IUnitOfWork uow, ICurrentUserService currentUser,
+        IVnPayService vnPay, IOptions<BusinessSettings> settings, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _vnPay = vnPay;
+        _settings = settings.Value;
         _lock = @lock;
     }
 
@@ -102,9 +109,12 @@ internal sealed class PurchaseTicketCommandHandler
 
         await _uow.SaveChangesAsync(ct);
 
-        // MLACP-92 (tao don hang) chua goi cong thanh toan that — PaymentUrl la placeholder,
-        // MLACP-93 se thay bang IVnPayService.CreatePaymentUrl(...) that su.
-        var paymentUrl = string.Empty;
+        var paymentUrl = _vnPay.CreatePaymentUrl(new VnPayPaymentRequest(
+            OrderId: orderId,
+            Amount: totalAmount,
+            OrderInfo: $"MusicLounge ticket purchase - {hold.Quantity} ticket(s)",
+            ReturnUrl: _settings.TicketPaymentReturnUrl,
+            IpAddress: request.ClientIpAddress));
 
         return new PaymentInitiationDto(
             payment.Id,
