@@ -19,6 +19,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.DTOs;
 using MusicLounge.Application.Moderations.Queries.GetPendingLoungeShows;
+using MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -197,6 +198,26 @@ public sealed class AdminController : ControllerBase
         await _sender.Send(new ReviewShowCommand(id, body.Decision, body.ReviewNote), ct);
         return NoContent();
     }
+
+    // ---- Hoàn tiền ----
+
+    /// <summary>Duyệt hoặc từ chối 1 yêu cầu hoàn tiền (Pending). Approved: ghi đảo bút toán sổ cái
+    /// (D8) đúng tỷ lệ số tiền được duyệt, co giãn settlement tranche chưa release, đánh dấu
+    /// Payment.Refunded nếu tổng đã hoàn = GrossAmount. Chỉ xử lý được 1 lần (409 nếu đã xử lý).
+    /// LƯU Ý: chưa gọi API hoàn tiền thật của VNPay (IVnPayService chưa có method refund — xem
+    /// TODO trong handler) — cần 1 task riêng có quyền test sandbox để thêm và xác minh chữ ký.</summary>
+    [HttpPost("refund-requests/{id:int}/process")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ProcessRefundRequest(
+        int id, [FromBody] ProcessRefundRequestBody body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ProcessRefundRequestCommand(id, body.Decision, body.ApprovedAmount), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdateMusicGenreRequest(string Name, string? NameEn);
@@ -204,3 +225,4 @@ public sealed record UpdateMoodRequest(string Name);
 public sealed record UpdateVenueAtmosphereRequest(string Name);
 public sealed record UpdateEventCategoryRequest(string Name, string? Description, bool IsActive);
 public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
+public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
