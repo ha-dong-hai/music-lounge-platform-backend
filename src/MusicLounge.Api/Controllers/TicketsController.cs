@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Tickets.Commands.CancelTicket;
 using MusicLounge.Application.Tickets.Commands.HoldTicket;
 using MusicLounge.Application.Tickets.Commands.PurchaseTicket;
 using MusicLounge.Application.Tickets.DTOs;
@@ -102,6 +103,23 @@ public sealed class TicketsController : ControllerBase
     {
         var result = await _sender.Send(new GetTicketDetailQuery(id), ct);
         return Ok(ApiResponse<TicketDetailDto>.Ok(result));
+    }
+
+    /// <summary>Hủy vé theo chính sách hủy của event (CancellationAllowed/CancellationDeadlineHours/
+    /// RefundPercentage) — chỉ chính chủ vé được hủy (403 nếu khác). Vé Pending (chưa từng thanh
+    /// toán thật) hủy ngay không áp dụng chính sách. Vé Confirmed tạo `RefundRequest` (Pending) với
+    /// số tiền hoàn theo đúng % quy định của event, trả về id yêu cầu hoàn tiền (0 nếu là vé
+    /// Pending, không tạo yêu cầu hoàn tiền).</summary>
+    [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct = default)
+    {
+        var refundRequestId = await _sender.Send(new CancelTicketCommand(id), ct);
+        return Ok(ApiResponse<int>.Ok(refundRequestId));
     }
 }
 
