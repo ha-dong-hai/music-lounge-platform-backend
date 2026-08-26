@@ -9,6 +9,7 @@ using MusicLounge.Application.Tickets.Commands.PurchaseTicket;
 using MusicLounge.Application.Tickets.DTOs;
 using MusicLounge.Application.Tickets.Queries.GetMyTickets;
 using MusicLounge.Application.Tickets.Queries.GetTicketByQr;
+using MusicLounge.Application.Tickets.Queries.GetTicketDetail;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
@@ -87,6 +88,19 @@ public sealed class TicketsController : ControllerBase
     public async Task<IActionResult> GetByQrCode(string qrCode, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetTicketByQrQuery(qrCode), ct);
+        return Ok(ApiResponse<TicketDetailDto>.Ok(result));
+    }
+
+    /// <summary>Chi tiết đầy đủ 1 vé — QR code, thông tin sự kiện, khu vực/chỗ ngồi (nếu Physical),
+    /// trạng thái. Chỉ chính chủ vé xem được (403 nếu khác).</summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<ApiResponse<TicketDetailDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDetail(Guid id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetTicketDetailQuery(id), ct);
         return Ok(ApiResponse<TicketDetailDto>.Ok(result));
     }
 }
