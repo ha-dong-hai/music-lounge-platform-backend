@@ -14,6 +14,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     private readonly ICurrentUserService _currentUser;
     private readonly ILedgerService _ledger;
     private readonly IPaymentRepository _paymentRepo;
+    private readonly IVnPayService _vnPay;
     private readonly ILogger<ProcessRefundRequestCommandHandler> _logger;
 
     public ProcessRefundRequestCommandHandler(
@@ -21,12 +22,14 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         ICurrentUserService currentUser,
         ILedgerService ledger,
         IPaymentRepository paymentRepo,
+        IVnPayService vnPay,
         ILogger<ProcessRefundRequestCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
         _ledger = ledger;
         _paymentRepo = paymentRepo;
+        _vnPay = vnPay;
         _logger = logger;
     }
 
@@ -78,14 +81,25 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         var ownerId = await _paymentRepo.GetTicketShowOwnerIdAsync(payment.Id, ct)
             ?? throw new DomainException("Không xác định được chủ phòng trà cho giao dịch này.");
 
-        // MLACP-100 DONE WHEN: "Hoàn tiền được xử lý qua VNPay sandbox" — CHƯA làm. IVnPayService
-        // hiện chỉ có CreatePaymentUrl/VerifyCallback (luồng redirect thanh toán), không có method
-        // gọi API hoàn tiền thật (VNPay Merchant API, vnp_Command=refund, ký khác hoàn toàn 2 luồng
-        // trên). Comment trong VnPayService.cs cho thấy chữ ký callback/request của VNPay có những
-        // khác biệt chỉ phát hiện được bằng cách gọi thật vào sandbox (đã từng sai 1 lần với
-        // callback) — không tự viết code ký chưa kiểm chứng cho 1 API di chuyển tiền thật. Phần dưới
-        // đây (sổ cái) đã đúng và đầy đủ; phần gọi VNPay cần làm ở 1 task riêng có quyền test sandbox.
-        // TODO: gọi IVnPayService (method refund chưa tồn tại) tại đây, chỉ ghi sổ cái nếu gọi thành công.
+        // MLACP-100: goi VNPay Merchant API that su TRUOC khi dong bo cai — chi ghi so cai/chuyen
+        // trang thai neu VNPay xac nhan da hoan tien thanh cong. Chua live-verify duoc chu ky nay
+        // voi sandbox that (VNPay mac dinh khoa refund tren tai khoan sandbox, can lien he VNPay
+        // de mo — xem comment trong IVnPayService.RefundAsync).
+        var vnPayResult = await _vnPay.RefundAsync(new VnPayRefundRequest(
+            TxnRef: payment.OrderId,
+            Amount: amountApproved,
+            OrderInfo: $"Hoan tien yeu cau #{refund.Id}",
+            IsFullRefund: amountApproved >= payment.GrossAmount,
+            TransactionNo: payment.TransactionId,
+            TransactionDate: payment.PaidAt ?? payment.CreatedAt,
+            CreatedBy: _currentUser.UserId.ToString(),
+            IpAddress: request.ClientIpAddress), ct);
+
+        if (!vnPayResult.IsSuccess)
+            throw new ExternalServiceException(
+                "VNPay",
+                $"Gọi API hoàn tiền VNPay thất bại (mã lỗi {vnPayResult.ResponseCode}): {vnPayResult.Message}. " +
+                "Yêu cầu hoàn tiền vẫn ở trạng thái Pending, chưa ghi sổ cái.");
 
         // Proportional reversal of the original purchase journal (D8 — reverse via offsetting
         // lines, never mutate the original). Owner's share is the remainder rather than its own
