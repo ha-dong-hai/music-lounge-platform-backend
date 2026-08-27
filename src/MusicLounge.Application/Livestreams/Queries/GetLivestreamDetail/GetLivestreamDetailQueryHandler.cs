@@ -67,8 +67,15 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
         // Admin/Staff/Owner hitting this endpoint to monitor their own stream isn't behavioural
         // interest and would otherwise pollute the collaborative-filtering matrix.
         if (isGenuineTicketHolder)
+        {
             _backgroundJobs.EnqueueLogUserBehaviour(
                 _currentUser.UserId, livestream.LoungeShowId, BehaviourAction.WatchLivestream);
+
+            // MLACP-140: day la thoi diem duy nhat chung minh chu ve that su nhan duoc HlsUrl phat —
+            // tuong duong "check-in" cho ve Livestream (khong co quay quet QR nao khac ton tai cho
+            // ho). Chuyen ve sang Used de RateShowCommandHandler cho phep danh gia.
+            _backgroundJobs.EnqueueLivestreamCheckIn(_currentUser.UserId, livestream.LoungeShowId);
+        }
 
         // MLACP-121: cung quyen xem nhu HlsUrl (PPV/mien phi/van hanh venue), CONG THEM het han xem
         // lai bi chan — ReplayAvailableUntil null nghia la chua co ban ghi (asset.ready chua toi)
