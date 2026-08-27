@@ -77,6 +77,7 @@ public static class DependencyInjection
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
+        services.AddScoped<IMuxWebhookVerifier, MuxWebhookVerifier>();
         services.AddScoped<IFcmService, FcmService>();
         services.AddScoped<ILivestreamHubService, LivestreamHubService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
