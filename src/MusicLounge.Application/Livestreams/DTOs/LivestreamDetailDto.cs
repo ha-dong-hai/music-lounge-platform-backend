@@ -12,4 +12,5 @@ public sealed record LivestreamDetailDto(
     DateTimeOffset? StartedAt,
     DateTimeOffset? EndedAt,
     string? TerminatedReason,
-    bool UserHasAccess);
+    bool UserHasAccess,
+    string? RecordingUrl);

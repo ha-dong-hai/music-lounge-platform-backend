@@ -19,6 +19,9 @@ public sealed class Livestream : Common.AuditableEntity<int>
     public int PeakViewerCount { get; set; }
     public int TotalViews { get; set; }
     public string? RecordingUrl { get; set; }
+    // MLACP-121: set cung luc voi RecordingUrl khi Mux bao asset (ban ghi) da san sang
+    // (video.asset.ready) - null nghia la chua co ban ghi hoac khong gioi han thoi gian xem lai.
+    public DateTimeOffset? ReplayAvailableUntil { get; set; }
     public int? TerminatedById { get; set; }
     public string? TerminatedReason { get; set; }
 
