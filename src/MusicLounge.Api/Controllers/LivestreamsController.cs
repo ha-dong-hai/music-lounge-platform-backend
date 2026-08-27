@@ -7,15 +7,17 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Livestreams.Commands.CreateLivestream;
 using MusicLounge.Application.Livestreams.Commands.EndLivestream;
 using MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
+using MusicLounge.Application.Livestreams.Commands.SetChatEnabled;
 using MusicLounge.Application.Livestreams.Commands.StartLivestream;
 using MusicLounge.Application.Livestreams.Commands.TerminateLivestream;
 using MusicLounge.Application.Livestreams.DTOs;
+using MusicLounge.Application.Livestreams.Queries.GetChatHistory;
 using MusicLounge.Application.Livestreams.Queries.GetLivestreamCredentials;
 using MusicLounge.Application.Livestreams.Queries.GetLivestreamDetail;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (chat, PPV...) se chi them method vao file nay.
+// Luu y: cac task sau (PPV...) se chi them method vao file nay.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/livestreams")]
@@ -100,6 +102,36 @@ public sealed class LivestreamsController : ControllerBase
         return Ok(ApiResponse<LivestreamCredentialsDto>.Ok(result));
     }
 
+    /// <summary>Lịch sử chat của livestream (phân trang) — dùng để khán giả vào xem trễ bắt kịp
+    /// nội dung đã trôi qua; tin nhắn mới trong lúc đang xem đến qua kênh realtime của
+    /// LivestreamHub (SignalR), không qua endpoint này. Cùng quy tắc quyền xem như GetDetail: stream
+    /// miễn phí cho mọi khán giả đã đăng nhập, stream PPV chỉ cho người có vé.</summary>
+    [HttpGet("{id:int}/chat")]
+    [Authorize(Policy = Policies.RequireAuthenticated)]
+    [ProducesResponseType<ApiResponse<PaginatedResult<ChatMessageDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetChatHistory(
+        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetChatHistoryQuery(id, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<ChatMessageDto>>.Ok(result));
+    }
+
+    /// <summary>Owner/Staff bật/tắt chat cho livestream — có hiệu lực ngay: mọi tin nhắn gửi qua
+    /// LivestreamHub sau lệnh này đều được kiểm tra lại giá trị mới nhất, không có độ trễ cache.</summary>
+    [HttpPost("{id:int}/chat-enabled")]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetChatEnabled(
+        int id, [FromBody] SetChatEnabledRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetChatEnabledCommand(id, body.Enabled), ct);
+        return NoContent();
+    }
+
     /// <summary>Nhận webhook từ Mux (đăng ký URL này trong Mux Dashboard > Settings > Webhooks) khi
     /// stream chuyển trạng thái. Xác thực bằng header Mux-Signature (HMAC-SHA256), không dùng JWT —
     /// gọi trực tiếp từ hạ tầng Mux, không qua trình duyệt người dùng. Chỉ tự động đóng livestream
@@ -140,3 +172,4 @@ public sealed class LivestreamsController : ControllerBase
 }
 
 public sealed record TerminateLivestreamRequest(string Reason);
+public sealed record SetChatEnabledRequest(bool Enabled);
