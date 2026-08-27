@@ -6,6 +6,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Livestreams.Commands.CreateLivestream;
 using MusicLounge.Application.Livestreams.Commands.EndLivestream;
+using MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
 using MusicLounge.Application.Livestreams.Commands.StartLivestream;
 using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Application.Livestreams.Queries.GetLivestreamCredentials;
@@ -79,5 +80,26 @@ public sealed class LivestreamsController : ControllerBase
     {
         var result = await _sender.Send(new GetLivestreamCredentialsQuery(id), ct);
         return Ok(ApiResponse<LivestreamCredentialsDto>.Ok(result));
+    }
+
+    /// <summary>Nhận webhook từ Mux (đăng ký URL này trong Mux Dashboard > Settings > Webhooks) khi
+    /// stream chuyển trạng thái. Xác thực bằng header Mux-Signature (HMAC-SHA256), không dùng JWT —
+    /// gọi trực tiếp từ hạ tầng Mux, không qua trình duyệt người dùng. Chỉ tự động đóng livestream
+    /// khi Mux xác nhận encoder đã ngắt hẳn (video.live_stream.idle) và hệ thống đang ghi nhận Live —
+    /// KHÔNG tự động mở (video.live_stream.active) để không bỏ qua cổng kiểm duyệt Admin (W08) và
+    /// yêu cầu khai báo tác quyền VCPMC (D19) mà endpoint /start đang bắt buộc. Mux không trả về số
+    /// người xem trong webhook — số liệu đó lấy từ LivestreamHub (SignalR), không phải từ đây.</summary>
+    [HttpPost("webhooks/mux")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MuxWebhook(CancellationToken ct = default)
+    {
+        using var reader = new StreamReader(Request.Body);
+        var rawBody = await reader.ReadToEndAsync(ct);
+        var signature = Request.Headers["Mux-Signature"].ToString();
+
+        var verified = await _sender.Send(new ProcessMuxWebhookCommand(rawBody, signature), ct);
+        return verified ? Ok() : Unauthorized();
     }
 }
