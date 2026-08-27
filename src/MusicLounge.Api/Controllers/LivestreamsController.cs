@@ -10,6 +10,7 @@ using MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
 using MusicLounge.Application.Livestreams.Commands.StartLivestream;
 using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Application.Livestreams.Queries.GetLivestreamCredentials;
+using MusicLounge.Application.Livestreams.Queries.GetLivestreamDetail;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -22,6 +23,22 @@ public sealed class LivestreamsController : ControllerBase
     private readonly ISender _sender;
 
     public LivestreamsController(ISender sender) => _sender = sender;
+
+    /// <summary>Chi tiết livestream + kiểm soát quyền xem PPV: Admin và Owner/Staff của đúng venue
+    /// luôn xem được (giám sát stream); stream miễn phí (IsFree) cho mọi khán giả đã đăng nhập xem
+    /// mà không cần vé; stream PPV chỉ trả `HlsUrl` cho người có vé Livestream-tier Confirmed cho
+    /// đúng show này (`UserHasAccess=false`, `HlsUrl=null` nếu không có vé — không lộ URL phát).
+    /// Access token của vé PPV lấy qua GET /tickets/{id} (LivestreamDetail.AccessToken), không lặp
+    /// lại ở đây.</summary>
+    [HttpGet("{id:int}")]
+    [Authorize(Policy = Policies.RequireAuthenticated)]
+    [ProducesResponseType<ApiResponse<LivestreamDetailDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDetail(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetLivestreamDetailQuery(id), ct);
+        return Ok(ApiResponse<LivestreamDetailDto>.Ok(result));
+    }
 
     /// <summary>Owner/Staff của venue tạo phiên livestream cho 1 show — mỗi show chỉ có đúng 1
     /// livestream (409 nếu đã tồn tại). Hệ thống tự sinh stream key bí mật qua provider đang active
