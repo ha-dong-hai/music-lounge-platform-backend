@@ -11,6 +11,7 @@ using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeleteLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeletePerformance;
 using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.RateShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
@@ -245,6 +246,24 @@ public sealed class LoungeShowsController : ControllerBase
         await _sender.Send(new DeletePerformanceCommand(performanceId), ct);
         return NoContent();
     }
+
+    /// <summary>Chấm sao 1-5 + nhận xét sau khi show kết thúc — chỉ mở trong 7 ngày kể từ lúc kết
+    /// thúc (§6.13). Bắt buộc đã "check-in" thật (vé vào cửa đã quét QR, hoặc vé xem livestream đã
+    /// từng thực sự nhận được URL phát — xem RateShowCommandHandler), không chỉ cần có vé Confirmed.
+    /// Mỗi người chỉ đánh giá được 1 lần cho 1 show (409 nếu đã đánh giá).</summary>
+    [HttpPost("{id:int}/rate")]
+    [Authorize(Policy = Policies.RequireAuthenticated)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Rate(
+        int id, [FromBody] RateShowRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new RateShowCommand(id, body.Score, body.Comment), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdateLoungeShowRequest(
@@ -269,3 +288,5 @@ public sealed record UpdatePerformanceRequest(
     int OrderIndex,
     TimeOnly? SetTime,
     bool AcceptsDonation);
+
+public sealed record RateShowRequest(int Score, string? Comment);
