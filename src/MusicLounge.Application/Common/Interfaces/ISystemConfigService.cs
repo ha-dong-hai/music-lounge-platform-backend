@@ -52,6 +52,10 @@ public static class ConfigKeys
     // `AddDays(7)` that happened to match this key's seeded value by coincidence, not by wiring.
     public const string RatingWindowDays = "rating_window_days";
 
+    // MLACP-121: so ngay khan gia co ve duoc xem lai ban ghi livestream sau khi asset san sang
+    // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
+    public const string LivestreamReplayDays = "livestream_replay_days";
+
     // §6.17 — hours an Admin has to resolve a venue's penalty appeal before AutoApproveOverdueAppealsJob
     // auto-overturns it. Same dead-seed situation as RatingWindowDays: seeded since the original
     // migration, but SubmitAppealCommandHandler hardcoded `AddHours(48)` independently.
