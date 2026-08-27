@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Livestreams.Commands.CreateLivestream;
+using MusicLounge.Application.Livestreams.Commands.EndLivestream;
+using MusicLounge.Application.Livestreams.Commands.StartLivestream;
 using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Application.Livestreams.Queries.GetLivestreamCredentials;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (bat dau/ket thuc stream, chat, PPV, terminate...) se chi them method vao file nay.
+// Luu y: cac task sau (chat, PPV, terminate...) se chi them method vao file nay.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/livestreams")]
@@ -35,6 +37,35 @@ public sealed class LivestreamsController : ControllerBase
     {
         var id = await _sender.Send(command, ct);
         return Created($"api/v1/livestreams/{id}", ApiResponse<int>.Ok(id));
+    }
+
+    /// <summary>Owner/Staff bắt đầu phát sóng — yêu cầu Admin đã duyệt livestream (W08) và show đã
+    /// khai báo tác quyền VCPMC (D19); ghi nhận thời điểm bắt đầu, đồng bộ show sang Ongoing, và
+    /// thông báo tới người đã mua vé/theo dõi venue.</summary>
+    [HttpPost("{id:int}/start")]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Start(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new StartLivestreamCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>Owner/Staff kết thúc phát sóng — ghi nhận thời điểm kết thúc, đồng bộ show sang
+    /// Ended và mở cửa sổ đánh giá (§6.13).</summary>
+    [HttpPost("{id:int}/end")]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> End(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new EndLivestreamCommand(id), ct);
+        return NoContent();
     }
 
     /// <summary>Staff/Admin của venue xem RTMP URL + Stream Key để cắm OBS. Không lộ ra viewer.</summary>
