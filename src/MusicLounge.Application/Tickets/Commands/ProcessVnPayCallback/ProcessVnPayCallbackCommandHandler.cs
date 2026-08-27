@@ -152,7 +152,8 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 UserId: firstTicket?.BuyerId ?? 0,
                 OwnerId: ownerId,
                 TicketIds: tickets.Select(t => t.Id).ToArray(),
-                LivestreamId: null), ct);
+                LivestreamId: null,
+                ShowId: firstTicket?.ShowId ?? 0), ct);
 
             _logger.LogInformation(
                 "VNPay ticket callback confirmed: PaymentId={PaymentId} TxnRef={TxnRef} TicketCount={TicketCount} at {At}",
