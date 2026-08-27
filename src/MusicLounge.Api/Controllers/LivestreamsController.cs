@@ -9,6 +9,7 @@ using MusicLounge.Application.Livestreams.Commands.EndLivestream;
 using MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
 using MusicLounge.Application.Livestreams.Commands.SetChatEnabled;
 using MusicLounge.Application.Livestreams.Commands.StartLivestream;
+using MusicLounge.Application.Livestreams.Commands.TerminateLivestream;
 using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Application.Livestreams.Queries.GetChatHistory;
 using MusicLounge.Application.Livestreams.Queries.GetLivestreamCredentials;
@@ -16,7 +17,7 @@ using MusicLounge.Application.Livestreams.Queries.GetLivestreamDetail;
 
 namespace MusicLounge.Api.Controllers;
 
-// Luu y: cac task sau (PPV, terminate...) se chi them method vao file nay.
+// Luu y: cac task sau (PPV...) se chi them method vao file nay.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/livestreams")]
@@ -151,6 +152,24 @@ public sealed class LivestreamsController : ControllerBase
         var verified = await _sender.Send(new ProcessMuxWebhookCommand(rawBody, signature), ct);
         return verified ? Ok() : Unauthorized();
     }
+
+    /// <summary>W22 — Admin dừng ngay 1 livestream đang phát vì vi phạm nội dung. Ghi lại
+    /// người dừng (TerminatedById) + lý do (TerminatedReason), chuyển trạng thái sang Terminated —
+    /// trạng thái cuối, Start/End không còn nhận vào từ đây nên stream không thể tiếp tục. Đồng bộ
+    /// show sang Ended. Thông báo mọi viewer đang kết nối qua LivestreamHub để client ngừng gọi lại
+    /// HLS endpoint.</summary>
+    [HttpPost("{id:int}/terminate")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Terminate(
+        int id, [FromBody] TerminateLivestreamRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new TerminateLivestreamCommand(id, body.Reason), ct);
+        return NoContent();
+    }
 }
 
+public sealed record TerminateLivestreamRequest(string Reason);
 public sealed record SetChatEnabledRequest(bool Enabled);
