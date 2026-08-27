@@ -259,6 +259,27 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
                 && (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing))
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<LoungeShow>> GetSimilarAsync(
+        int showId, int loungeId, IReadOnlyList<int> genreIds, int limit, CancellationToken ct = default)
+    {
+        var query = WithDetails()
+            .Where(s => s.Id != showId
+                && (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing)
+                && (s.LoungeId == loungeId || s.Genres.Any(g => genreIds.Contains(g.GenreId))));
+
+        // Materialize then sort/take client-side — same SQLite-translation caution used throughout
+        // this file (combining the boolean "matches both criteria" expression with ScheduledStart
+        // ordering in one query doesn't reliably translate under the test provider).
+        var candidates = await query.ToListAsync(ct);
+        if (candidates.Count == 0) return [];
+
+        return candidates
+            .OrderByDescending(s => s.LoungeId == loungeId && s.Genres.Any(g => genreIds.Contains(g.GenreId)))
+            .ThenBy(s => s.ScheduledStart)
+            .Take(limit)
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<string>> GetDistinctCitiesAsync(CancellationToken ct = default)
         => await _ctx.Lounges
             .AsNoTracking()
