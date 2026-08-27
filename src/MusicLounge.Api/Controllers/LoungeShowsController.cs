@@ -16,6 +16,7 @@ using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
+using MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 using MusicLounge.Application.Tickets.DTOs;
 using MusicLounge.Application.Tickets.Queries.GetShowTicketStats;
@@ -103,6 +104,20 @@ public sealed class LoungeShowsController : ControllerBase
     {
         var result = await _sender.Send(new GetLoungeShowDetailQuery(id), ct);
         return Ok(ApiResponse<LoungeShowDetailDto>.Ok(result));
+    }
+
+    /// <summary>Tối đa 6 sự kiện "tương tự" cho trang chi tiết — cùng phòng trà HOẶC chung ít nhất 1
+    /// thể loại nhạc với sự kiện đang xem, luôn loại trừ chính sự kiện đó, chỉ show Published/
+    /// Ongoing. Ưu tiên show khớp cả 2 tiêu chí trước, còn lại theo ngày diễn gần nhất.</summary>
+    [HttpGet("{id:int}/similar")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSimilar(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetSimilarLoungeShowsQuery(id), ct);
+        return Ok(ApiResponse<IReadOnlyList<LoungeShowListItemDto>>.Ok(result));
     }
 
     /// <summary>Thống kê vé đã bán của sự kiện cho Owner: tổng vé, doanh thu, số vé đã check-in,
