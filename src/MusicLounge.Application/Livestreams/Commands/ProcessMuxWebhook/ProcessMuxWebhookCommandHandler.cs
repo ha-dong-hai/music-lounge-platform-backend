@@ -19,6 +19,11 @@ namespace MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
 //     quyen VCPMC (D19). Chi log de doi chieu/quan sat.
 //   video.live_stream.disconnected, .warning: tin hieu "su co" tam thoi/canh bao - chi log, khong
 //     doi trang thai (disconnected co the tu ket noi lai truoc khi Mux gui idle).
+//   video.asset.ready (MLACP-121): Mux tu dong tao 1 Asset (ban ghi VOD) khi live stream duoc tao
+//     voi new_asset_settings (MuxStreamService.CreateStreamAsync da bat san) va stream ket thuc.
+//     Asset nay tra ve live_stream_id (lien ket nguoc ve Livestream.ProviderRef) va playback_ids[] -
+//     dung playback_id public dau tien de dung URL HLS xem lai, luu vao RecordingUrl kem
+//     ReplayAvailableUntil = now + livestream_replay_days (system_config).
 //   Cac event khac (created/connected/recording/updated/enabled/disabled/deleted): bo qua.
 //
 // So nguoi xem realtime: Mux KHONG tra ve viewer count trong bat ky live-stream webhook nao (xac
@@ -63,10 +68,22 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
             return true; // signature was valid — acknowledge so Mux stops retrying an unparsable body
         }
 
-        var providerRef = envelope?.Data?.Id;
-        if (envelope is null || string.IsNullOrEmpty(providerRef))
+        if (envelope?.Data is null || string.IsNullOrEmpty(envelope.Type))
         {
-            _logger.LogInformation("Mux webhook ignored — missing type/data.id at {At}", DateTimeOffset.UtcNow);
+            _logger.LogInformation("Mux webhook ignored — missing type/data at {At}", DateTimeOffset.UtcNow);
+            return true;
+        }
+
+        if (envelope.Type == "video.asset.ready")
+            return await HandleAssetReadyAsync(envelope.Data, ct);
+
+        // Voi moi event live_stream.* con lai, data.id chinh la live stream id (khac voi
+        // video.asset.ready o tren, noi data.id la asset id — lien ket ve live stream qua
+        // data.live_stream_id thay vi data.id).
+        var providerRef = envelope.Data.Id;
+        if (string.IsNullOrEmpty(providerRef))
+        {
+            _logger.LogInformation("Mux webhook ignored — missing data.id at {At}", DateTimeOffset.UtcNow);
             return true;
         }
 
@@ -81,6 +98,11 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
         if (envelope.Type != "video.live_stream.idle")
             return true; // bao gom ca video.live_stream.active — co chu dich khong tu chuyen Scheduled->Live
 
+        return await HandleLiveStreamIdleAsync(providerRef, ct);
+    }
+
+    private async Task<bool> HandleLiveStreamIdleAsync(string providerRef, CancellationToken ct)
+    {
         var livestreams = await _uow.Repository<Livestream, int>()
             .FindAsync(l => l.ProviderRef == providerRef, ct);
         var livestream = livestreams.FirstOrDefault();
@@ -132,10 +154,64 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
         return true;
     }
 
+    private async Task<bool> HandleAssetReadyAsync(MuxWebhookData data, CancellationToken ct)
+    {
+        var liveStreamId = data.LiveStreamId;
+        if (string.IsNullOrEmpty(liveStreamId))
+        {
+            // Asset khong duoc tao tu live stream (vd upload truc tiep) — khong lien quan gi den
+            // he thong nay, moi Asset cua chung ta deu phai xuat phat tu 1 Livestream.
+            _logger.LogInformation(
+                "Mux asset.ready ignored — no live_stream_id (not created from a livestream) at {At}",
+                DateTimeOffset.UtcNow);
+            return true;
+        }
+
+        var playbackId = data.PlaybackIds?.FirstOrDefault(p => p.Policy == "public")?.Id;
+        if (playbackId is null)
+        {
+            _logger.LogWarning(
+                "Mux asset.ready — no public playback_id for LiveStreamProviderRef={ProviderRef} at {At}",
+                liveStreamId, DateTimeOffset.UtcNow);
+            return true;
+        }
+
+        var livestreams = await _uow.Repository<Livestream, int>()
+            .FindAsync(l => l.ProviderRef == liveStreamId, ct);
+        var livestream = livestreams.FirstOrDefault();
+        if (livestream is null)
+        {
+            _logger.LogInformation(
+                "Mux asset.ready ignored — no Livestream found for ProviderRef={ProviderRef} at {At}",
+                liveStreamId, DateTimeOffset.UtcNow);
+            return true;
+        }
+
+        var replayDays = await _config.GetIntAsync(ConfigKeys.LivestreamReplayDays, 30, ct);
+        var now = DateTimeOffset.UtcNow;
+
+        livestream.RecordingUrl = $"https://stream.mux.com/{playbackId}.m3u8";
+        livestream.ReplayAvailableUntil = now.AddDays(replayDays);
+        _uow.Repository<Livestream, int>().Update(livestream);
+        await _uow.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Mux asset.ready — recording saved for LivestreamId={LivestreamId} ReplayAvailableUntil={ReplayAvailableUntil} at {At}",
+            livestream.Id, livestream.ReplayAvailableUntil, now);
+
+        return true;
+    }
+
     private sealed record MuxWebhookEnvelope(
         [property: JsonPropertyName("type")] string Type,
         [property: JsonPropertyName("data")] MuxWebhookData? Data);
 
     private sealed record MuxWebhookData(
-        [property: JsonPropertyName("id")] string? Id);
+        [property: JsonPropertyName("id")] string? Id,
+        [property: JsonPropertyName("live_stream_id")] string? LiveStreamId,
+        [property: JsonPropertyName("playback_ids")] MuxPlaybackId[]? PlaybackIds);
+
+    private sealed record MuxPlaybackId(
+        [property: JsonPropertyName("id")] string Id,
+        [property: JsonPropertyName("policy")] string Policy);
 }

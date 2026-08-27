@@ -70,6 +70,13 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             _backgroundJobs.EnqueueLogUserBehaviour(
                 _currentUser.UserId, livestream.LoungeShowId, BehaviourAction.WatchLivestream);
 
+        // MLACP-121: cung quyen xem nhu HlsUrl (PPV/mien phi/van hanh venue), CONG THEM het han xem
+        // lai bi chan — ReplayAvailableUntil null nghia la chua co ban ghi (asset.ready chua toi)
+        // hoac khong gioi han, con lai phai con hieu luc tai thoi diem goi.
+        var now = DateTimeOffset.UtcNow;
+        var replayStillValid = livestream.ReplayAvailableUntil is null || now <= livestream.ReplayAvailableUntil;
+        var recordingUrl = userHasAccess && replayStillValid ? livestream.RecordingUrl : null;
+
         return new LivestreamDetailDto(
             livestream.Id,
             livestream.LoungeShowId,
@@ -80,6 +87,7 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             livestream.StartedAt,
             livestream.EndedAt,
             livestream.TerminatedReason,
-            userHasAccess);
+            userHasAccess,
+            recordingUrl);
     }
 }
