@@ -17,6 +17,8 @@ using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
+using MusicLounge.Application.Tickets.DTOs;
+using MusicLounge.Application.Tickets.Queries.GetShowTicketStats;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
@@ -101,6 +103,21 @@ public sealed class LoungeShowsController : ControllerBase
     {
         var result = await _sender.Send(new GetLoungeShowDetailQuery(id), ct);
         return Ok(ApiResponse<LoungeShowDetailDto>.Ok(result));
+    }
+
+    /// <summary>Thống kê vé đã bán của sự kiện cho Owner: tổng vé, doanh thu, số vé đã check-in,
+    /// và breakdown theo từng mức giá — đếm trực tiếp trên bảng Ticket tại thời điểm gọi (không
+    /// dùng field đếm sẵn nào) nên luôn phản ánh đúng thời điểm hiện tại. Chỉ Owner của venue (hoặc
+    /// Admin) xem được (403 nếu khác).</summary>
+    [HttpGet("{id:int}/ticket-stats")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<ShowTicketStatsDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTicketStats(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetShowTicketStatsQuery(id), ct);
+        return Ok(ApiResponse<ShowTicketStatsDto>.Ok(result));
     }
 
     /// <summary>Chỉ sửa được khi sự kiện còn ở trạng thái Draft (422 nếu đã gửi duyệt/đã đăng);
