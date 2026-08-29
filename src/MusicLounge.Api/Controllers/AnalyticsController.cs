@@ -6,6 +6,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
+using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 using MusicLounge.Application.Common.Models;
 
 namespace MusicLounge.Api.Controllers;
@@ -53,5 +54,19 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetAdminPlatformOverviewQuery(from, to), ct);
         return Ok(ApiResponse<AdminPlatformOverviewDto>.Ok(result));
+    }
+
+    /// <summary>Owner — thống kê hiệu suất 1 sự kiện: lượt xem trang, tỷ lệ chuyển đổi sang mua vé,
+    /// check-in thực tế so với vé bán, số người xem live.</summary>
+    [HttpGet("shows/{showId:int}/performance")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<ShowPerformanceDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetShowPerformance(int showId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetShowPerformanceQuery(showId), ct);
+        return Ok(ApiResponse<ShowPerformanceDto>.Ok(result));
     }
 }
