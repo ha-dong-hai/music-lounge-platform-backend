@@ -129,7 +129,7 @@ try
             "Set it via appsettings.{Environment}.Local.json (gitignored), an environment " +
             "variable, or a secret manager — never a real value in the tracked appsettings.json.");
 
-    // Same fail-fast reasoning as Jwt:Secret above. These six used to default to a hardcoded
+    // Same fail-fast reasoning as Jwt:Secret above. These seven used to default to a hardcoded
     // "https://musiclounge.vn/..." URL baked into BusinessSettings — a deployment that forgot to
     // configure them would silently send real users/VNPay redirects to that URL instead of
     // failing loudly, and a future domain change would need a code change instead of a config one.
@@ -137,7 +137,7 @@ try
     string[] requiredBusinessUrlKeys =
     [
         "TicketPaymentReturnUrl", "DonationPaymentReturnUrl", "SubscriptionPaymentReturnUrl",
-        "PaymentSuccessUrl", "PaymentFailedUrl", "PasswordResetUrl"
+        "FnbOrderPaymentReturnUrl", "PaymentSuccessUrl", "PaymentFailedUrl", "PasswordResetUrl"
     ];
     var missingBusinessUrls = requiredBusinessUrlKeys
         .Where(key => string.IsNullOrWhiteSpace(businessSection[key]))
