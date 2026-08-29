@@ -3,7 +3,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
+using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Users.Commands.UpdateAiPreferences;
+using MusicLounge.Application.Users.DTOs;
+using MusicLounge.Application.Users.Queries.GetOwnerTransactionHistory;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -32,5 +35,25 @@ public sealed class MeController : ControllerBase
     {
         await _sender.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>Lịch sử giao dịch hợp nhất của Owner (vé bán được, donate nhận, quyết toán đã nhận
+    /// — cùng một nguồn sổ cái D8) — lọc theo khoảng thời gian và loại giao dịch
+    /// (payment/donation/settlement).</summary>
+    [HttpGet("transactions")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<PaginatedResult<OwnerTransactionDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyTransactionHistory(
+        [FromQuery] string? type,
+        [FromQuery] DateTimeOffset? from,
+        [FromQuery] DateTimeOffset? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerTransactionHistoryQuery(type, from, to, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<OwnerTransactionDto>>.Ok(result));
     }
 }
