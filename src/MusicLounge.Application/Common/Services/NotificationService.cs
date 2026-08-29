@@ -39,7 +39,7 @@ internal sealed class NotificationService : INotificationService
             CreatedAt = DateTimeOffset.UtcNow
         });
 
-        _jobs.EnqueueFcmNotification(userId, title, body);
+        _jobs.EnqueueFcmNotification(userId, title, body, referenceType, referenceId);
         return Task.CompletedTask;
     }
 }
