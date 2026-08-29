@@ -17,6 +17,7 @@ using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
+using MusicLounge.Application.LoungeShows.Queries.GetShowRatings;
 using MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 using MusicLounge.Application.Tickets.DTOs;
@@ -263,6 +264,22 @@ public sealed class LoungeShowsController : ControllerBase
     {
         await _sender.Send(new RateShowCommand(id, body.Score, body.Comment), ct);
         return NoContent();
+    }
+
+    /// <summary>Danh sách đánh giá công khai của 1 sự kiện — điểm trung bình + phân bố sao (1-5)
+    /// tính trên toàn bộ đánh giá còn hiệu lực, danh sách nhận xét phân trang sắp mới nhất lên
+    /// trước. Đánh giá đã bị Admin gỡ (IsRemoved) không tính vào điểm trung bình/phân bố và không
+    /// xuất hiện trong danh sách.</summary>
+    [HttpGet("{id:int}/ratings")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<ShowRatingsDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRatings(
+        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetShowRatingsQuery(id, page, pageSize), ct);
+        return Ok(ApiResponse<ShowRatingsDto>.Ok(result));
     }
 }
 
