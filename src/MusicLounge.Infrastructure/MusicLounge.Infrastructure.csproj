@@ -38,6 +38,7 @@
     <PackageReference Include="Hangfire.SqlServer" Version="1.8.17" />
     <PackageReference Include="Microsoft.ML" Version="5.0.0" />
     <PackageReference Include="Microsoft.ML.Recommender" Version="0.23.0" />
+    <PackageReference Include="FirebaseAdmin" Version="3.6.0" />
   </ItemGroup>
 
 </Project>
