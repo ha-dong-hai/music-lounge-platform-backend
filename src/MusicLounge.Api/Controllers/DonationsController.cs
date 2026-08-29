@@ -7,10 +7,12 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Donations.Commands.AcknowledgeDonation;
+using MusicLounge.Application.Donations.Commands.ConfirmDonationPaid;
 using MusicLounge.Application.Donations.Commands.CreateDonation;
 using MusicLounge.Application.Donations.Commands.ProcessDonationPayment;
 using MusicLounge.Application.Donations.DTOs;
 using MusicLounge.Application.Donations.Queries.GetMyDonations;
+using MusicLounge.Application.Donations.Queries.GetOwnerReceivedDonations;
 using MusicLounge.Application.Donations.Queries.GetPendingDonations;
 using MusicLounge.Application.Donations.Queries.GetPublicDonationHistory;
 
@@ -106,6 +108,17 @@ public sealed class DonationsController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<PendingDonationDto>>.Ok(result));
     }
 
+    /// <summary>W21 Chặng 2 — donation Owner đã nhận (OwnerReceived), đang chờ chuyển cho nghệ sĩ.</summary>
+    [HttpGet("awaiting-payout")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<PaginatedResult<PendingDonationDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAwaitingPayout(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerReceivedDonationsQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<PendingDonationDto>>.Ok(result));
+    }
+
     /// <summary>W21 Chặng 1 — Owner xác nhận đã nhận tiền từ VNPay.</summary>
     [HttpPost("{id:int}/acknowledge")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -116,6 +129,22 @@ public sealed class DonationsController : ControllerBase
     public async Task<IActionResult> Acknowledge(int id, CancellationToken ct = default)
     {
         await _sender.Send(new AcknowledgeDonationCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>W21 Chặng 2 — Owner xác nhận đã chuyển khoản cho nghệ sĩ.</summary>
+    [HttpPost("{id:int}/confirm-paid")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ConfirmPaid(
+        int id,
+        [FromBody] ConfirmDonationPaidRequest body,
+        CancellationToken ct = default)
+    {
+        await _sender.Send(new ConfirmDonationPaidCommand(id, body.PaymentRef, body.PaymentEvidenceUrl), ct);
         return NoContent();
     }
 }
@@ -151,3 +180,5 @@ public sealed record CreateDonationRequest(
     bool IsAnonymous = false,
     string? Message = null,
     bool IsMessagePublic = true);
+
+public sealed record ConfirmDonationPaidRequest(string PaymentRef, string? PaymentEvidenceUrl);
