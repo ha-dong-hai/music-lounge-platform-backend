@@ -67,4 +67,5 @@ public sealed class User : Common.AuditableEntity<int>
     public ICollection<AiRecommendation> AiRecommendations { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
     public ICollection<TicketHold> TicketHolds { get; set; } = [];
+    public ICollection<DeviceToken> DeviceTokens { get; set; } = [];
 }
