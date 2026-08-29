@@ -10,4 +10,6 @@ public interface INotificationRepository : IRepository<Notification, int>
         int userId, int page, int pageSize, CancellationToken ct = default);
 
     Task MarkAllAsReadAsync(int userId, CancellationToken ct = default);
+
+    Task<int> GetUnreadCountAsync(int userId, CancellationToken ct = default);
 }
