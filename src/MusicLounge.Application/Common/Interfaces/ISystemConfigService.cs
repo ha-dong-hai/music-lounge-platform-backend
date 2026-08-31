@@ -78,6 +78,11 @@ public static class ConfigKeys
     public const string PenaltySuspensionNoticeHours = "penalty_suspension_notice_hours";
     public const string PenaltyBanNoticeDays = "penalty_ban_notice_days";
 
+    // MLACP-199: so ngay Owner duoc phep gui khang cao ke tu luc phat duoc ban hanh (IssuedAt) —
+    // khac voi AppealSlaHours (thoi han Admin phai xu ly SAU KHI da nhan khang cao). Khong seed
+    // san — dung mac dinh tai noi doc.
+    public const string PenaltyAppealWindowDays = "penalty_appeal_window_days";
+
     // Anti-abuse ceilings on a single hold/walk-in-sale/donation — not statutory figures, but
     // operational limits that should be Admin-tunable (D9) rather than baked into validator code.
     // Defaults preserve this system's existing behavior exactly; only the storage moved.
