@@ -16,6 +16,7 @@ using MusicLounge.Application.Catalog.Commands.UpdateMood;
 using MusicLounge.Application.Catalog.Commands.UpdateMusicGenre;
 using MusicLounge.Application.Catalog.Commands.UpdateVenueAtmosphere;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.LoungeShows.Commands.RemoveRating;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.DTOs;
 using MusicLounge.Application.Moderations.Queries.GetPendingLoungeShows;
@@ -218,6 +219,22 @@ public sealed class AdminController : ControllerBase
         await _sender.Send(new ProcessRefundRequestCommand(id, body.Decision, body.ApprovedAmount), ct);
         return NoContent();
     }
+
+    // ---- Đánh giá ----
+
+    /// <summary>Gỡ 1 đánh giá vi phạm nội quy — không xoá cứng, chỉ đánh dấu IsRemoved kèm lý do nên
+    /// vẫn còn trong hệ thống để đối soát, nhưng bị GetShowRatingsQueryHandler lọc khỏi trang sự
+    /// kiện công khai. Chỉ xử lý được 1 lần (409 nếu đã gỡ trước đó).</summary>
+    [HttpPost("ratings/{id:int}/remove")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RemoveRating(
+        int id, [FromBody] RemoveRatingRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new RemoveRatingCommand(id, body.Reason), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdateMusicGenreRequest(string Name, string? NameEn);
@@ -226,3 +243,4 @@ public sealed record UpdateVenueAtmosphereRequest(string Name);
 public sealed record UpdateEventCategoryRequest(string Name, string? Description, bool IsActive);
 public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
 public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
+public sealed record RemoveRatingRequest(string Reason);
