@@ -7,6 +7,7 @@ using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Analytics.Queries.ExportOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetAdminContentOverview;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
+using MusicLounge.Application.Analytics.Queries.GetAudienceEngagementStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerLivestreamHistory;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
@@ -152,5 +153,22 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetOwnerLivestreamHistoryQuery(loungeId, page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<LivestreamHistoryItemDto>>.Ok(result));
+    }
+
+    /// <summary>Admin — thống kê tương tác khán giả: số follow mới, số wishlist mới, số đánh giá
+    /// mới trong kỳ (mặc định tháng hiện tại, giờ VN), và tỷ lệ khán giả mua vé ≥2 sự kiện khác
+    /// nhau trong cùng kỳ ("tỷ lệ quay lại").</summary>
+    [HttpGet("audience-engagement")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<AudienceEngagementStatsDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetAudienceEngagementStats(
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetAudienceEngagementStatsQuery(from, to), ct);
+        return Ok(ApiResponse<AudienceEngagementStatsDto>.Ok(result));
     }
 }
