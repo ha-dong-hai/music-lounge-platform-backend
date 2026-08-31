@@ -7,6 +7,7 @@ using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
+using MusicLounge.Application.Analytics.Queries.GetTicketSalesTrend;
 using MusicLounge.Application.Common.Models;
 
 namespace MusicLounge.Api.Controllers;
@@ -68,5 +69,19 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetShowPerformanceQuery(showId), ct);
         return Ok(ApiResponse<ShowPerformanceDto>.Ok(result));
+    }
+
+    /// <summary>Owner — biểu đồ bán vé theo ngày trong thời gian mở bán của 1 sự kiện, cùng tỷ lệ
+    /// bán theo từng loại vé.</summary>
+    [HttpGet("shows/{showId:int}/ticket-sales-trend")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<TicketSalesTrendDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTicketSalesTrend(int showId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetTicketSalesTrendQuery(showId), ct);
+        return Ok(ApiResponse<TicketSalesTrendDto>.Ok(result));
     }
 }
