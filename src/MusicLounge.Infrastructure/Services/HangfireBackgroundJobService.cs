@@ -1,6 +1,7 @@
 using Hangfire;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Livestreams.Jobs;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
 using MusicLounge.Application.Tickets.Commands.CheckInLivestreamViewer;
 using MusicLounge.Domain.Enums;
@@ -26,6 +27,10 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     public void EnqueueLivestreamCheckIn(int userId, int showId)
         => BackgroundJob.Enqueue<CheckInLivestreamViewerJob>(
             j => j.ExecuteAsync(userId, showId));
+
+    public void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay)
+        => BackgroundJob.Schedule<LivestreamReconnectTimeoutJob>(
+            j => j.ExecuteAsync(livestreamId, disconnectedAt), delay);
 
     public void EnqueueFcmNotification(
         int userId, string title, string body, string? referenceType = null, string? referenceId = null)

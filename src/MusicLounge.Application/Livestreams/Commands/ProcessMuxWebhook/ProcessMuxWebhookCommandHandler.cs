@@ -17,8 +17,14 @@ namespace MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
 //     nguon that duy nhat, Owner co the bat OBS thang toi Mux ma khong can goi qua
 //     StartLivestreamCommand - bo qua kiem duyet noi dung cua Admin (W08) va yeu cau khai bao tac
 //     quyen VCPMC (D19). Chi log de doi chieu/quan sat.
-//   video.live_stream.disconnected, .warning: tin hieu "su co" tam thoi/canh bao - chi log, khong
-//     doi trang thai (disconnected co the tu ket noi lai truoc khi Mux gui idle).
+//   video.live_stream.disconnected (MLACP-191): encoder mat ket noi dot ngot trong khi dang Live ->
+//     chuyen Status sang Reconnecting (ghi DisconnectedAt), bao khan gia qua SignalR ("dang ket noi
+//     lai" thay vi man hinh den), va len lich 1 job kiem tra sau livestream_reconnect_timeout_minutes
+//     (mac dinh 5 phut) - neu van con Reconnecting luc do thi moi danh dau Failed that su.
+//   video.live_stream.connected (MLACP-191): encoder da ket noi lai. Neu dang Reconnecting thi
+//     chuyen ve Live (xoa DisconnectedAt, bao khan gia phat song tiep tuc). Neu khong (vd lan connect
+//     dau tien) thi bo qua - khong tu dong Scheduled -> Live, cung triet ly voi .active o duoi.
+//   video.live_stream.warning: chi canh bao chat luong, khong phai mat ket noi - chi log.
 //   video.asset.ready (MLACP-121): Mux tu dong tao 1 Asset (ban ghi VOD) khi live stream duoc tao
 //     voi new_asset_settings (MuxStreamService.CreateStreamAsync da bat san) va stream ket thuc.
 //     Asset nay tra ve live_stream_id (lien ket nguoc ve Livestream.ProviderRef) va playback_ids[] -
@@ -35,17 +41,23 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
     private readonly IUnitOfWork _uow;
     private readonly IMuxWebhookVerifier _verifier;
     private readonly ISystemConfigService _config;
+    private readonly ILivestreamHubService _hubService;
+    private readonly IBackgroundJobService _backgroundJobs;
     private readonly ILogger<ProcessMuxWebhookCommandHandler> _logger;
 
     public ProcessMuxWebhookCommandHandler(
         IUnitOfWork uow,
         IMuxWebhookVerifier verifier,
         ISystemConfigService config,
+        ILivestreamHubService hubService,
+        IBackgroundJobService backgroundJobs,
         ILogger<ProcessMuxWebhookCommandHandler> logger)
     {
         _uow = uow;
         _verifier = verifier;
         _config = config;
+        _hubService = hubService;
+        _backgroundJobs = backgroundJobs;
         _logger = logger;
     }
 
@@ -87,7 +99,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
             return true;
         }
 
-        if (envelope.Type is "video.live_stream.disconnected" or "video.live_stream.warning")
+        if (envelope.Type == "video.live_stream.warning")
         {
             _logger.LogWarning(
                 "Mux webhook signal: Type={Type} ProviderRef={ProviderRef} at {At}",
@@ -95,10 +107,74 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
             return true;
         }
 
+        if (envelope.Type == "video.live_stream.disconnected")
+            return await HandleLiveStreamDisconnectedAsync(providerRef, ct);
+
+        if (envelope.Type == "video.live_stream.connected")
+            return await HandleLiveStreamConnectedAsync(providerRef, ct);
+
         if (envelope.Type != "video.live_stream.idle")
             return true; // bao gom ca video.live_stream.active — co chu dich khong tu chuyen Scheduled->Live
 
         return await HandleLiveStreamIdleAsync(providerRef, ct);
+    }
+
+    private async Task<bool> HandleLiveStreamDisconnectedAsync(string providerRef, CancellationToken ct)
+    {
+        var livestreams = await _uow.Repository<Livestream, int>()
+            .FindAsync(l => l.ProviderRef == providerRef, ct);
+        var livestream = livestreams.FirstOrDefault();
+        if (livestream is null || livestream.Status != LivestreamStatus.Live)
+        {
+            _logger.LogInformation(
+                "Mux disconnected webhook no-op — ProviderRef={ProviderRef} Status={Status} at {At}",
+                providerRef, livestream?.Status, DateTimeOffset.UtcNow);
+            return true;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        livestream.Status = LivestreamStatus.Reconnecting;
+        livestream.DisconnectedAt = now;
+        _uow.Repository<Livestream, int>().Update(livestream);
+        await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Livestream disconnected — waiting for reconnect. LivestreamId={LivestreamId} ProviderRef={ProviderRef} at {At}",
+            livestream.Id, providerRef, now);
+
+        await _hubService.BroadcastLivestreamReconnectingAsync(livestream.Id, ct);
+
+        var timeoutMinutes = await _config.GetIntAsync(ConfigKeys.LivestreamReconnectTimeoutMinutes, 5, ct);
+        _backgroundJobs.EnqueueLivestreamReconnectTimeout(livestream.Id, now, TimeSpan.FromMinutes(timeoutMinutes));
+
+        return true;
+    }
+
+    private async Task<bool> HandleLiveStreamConnectedAsync(string providerRef, CancellationToken ct)
+    {
+        var livestreams = await _uow.Repository<Livestream, int>()
+            .FindAsync(l => l.ProviderRef == providerRef, ct);
+        var livestream = livestreams.FirstOrDefault();
+        if (livestream is null || livestream.Status != LivestreamStatus.Reconnecting)
+        {
+            _logger.LogInformation(
+                "Mux connected webhook no-op — ProviderRef={ProviderRef} Status={Status} at {At}",
+                providerRef, livestream?.Status, DateTimeOffset.UtcNow);
+            return true;
+        }
+
+        livestream.Status = LivestreamStatus.Live;
+        livestream.DisconnectedAt = null;
+        _uow.Repository<Livestream, int>().Update(livestream);
+        await _uow.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Livestream reconnected — back to Live. LivestreamId={LivestreamId} ProviderRef={ProviderRef} at {At}",
+            livestream.Id, providerRef, DateTimeOffset.UtcNow);
+
+        await _hubService.BroadcastLivestreamReconnectedAsync(livestream.Id, ct);
+
+        return true;
     }
 
     private async Task<bool> HandleLiveStreamIdleAsync(string providerRef, CancellationToken ct)
@@ -116,6 +192,11 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
 
         if (livestream.Status != LivestreamStatus.Live)
         {
+            // MLACP-191: khi dang Reconnecting, LivestreamReconnectTimeoutJob (bam theo
+            // livestream_reconnect_timeout_minutes cua he thong) moi la nguon quyet dinh khi nao
+            // that su danh dau Failed — Mux idle co the den truoc do (reconnect_window mac dinh cua
+            // Mux ngan hon nhieu, thuong 60s) va khong duoc phep rut ngan thoi gian cho da hua voi
+            // khan gia. Chi log, khong doi trang thai.
             _logger.LogInformation(
                 "Mux idle webhook no-op — LivestreamId={LivestreamId} already {Status} at {At}",
                 livestream.Id, livestream.Status, DateTimeOffset.UtcNow);
