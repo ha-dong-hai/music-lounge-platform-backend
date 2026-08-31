@@ -14,6 +14,12 @@ public interface IBackgroundJobService
     // Livestream Confirmed cua user+show nay sang Used, de RateShowCommandHandler dung chung 1
     // dieu kien Status=Used cho ca 2 loai ve thay vi phai mien check-in rieng cho ve online.
     void EnqueueLivestreamCheckIn(int userId, int showId);
+
+    // MLACP-191: len lich kiem tra sau `delay` (system_config: livestream_reconnect_timeout_minutes)
+    // xem livestream con dang Reconnecting voi dung DisconnectedAt da ghi nhan luc enqueue khong —
+    // neu con thi danh dau Failed. disconnectedAt lam guard chong job cu bi tre sau 1 chu ky ngat/
+    // ket noi lai khac da xay ra.
+    void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay);
     void EnqueueFcmNotification(
         int userId, string title, string body, string? referenceType = null, string? referenceId = null);
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink);

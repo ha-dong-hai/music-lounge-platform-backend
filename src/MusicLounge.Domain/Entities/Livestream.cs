@@ -13,6 +13,10 @@ public sealed class Livestream : Common.AuditableEntity<int>
     public LivestreamStatus Status { get; set; } = LivestreamStatus.Scheduled;
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
+    // MLACP-191: moc thoi gian nhan tin hieu ngat ket noi gan nhat (video.live_stream.disconnected) —
+    // null khi khong o trang thai Reconnecting. Dung de doi chieu voi job timeout 5 phut (guard chong
+    // job cu bi tre khi da co 1 chu ky ngat/ket noi lai khac xay ra sau do).
+    public DateTimeOffset? DisconnectedAt { get; set; }
     public bool IsFree { get; set; } = true;
     public bool ChatEnabled { get; set; } = true;
     public int ViewerCount { get; set; }
