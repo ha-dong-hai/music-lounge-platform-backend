@@ -2,6 +2,7 @@ using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Analytics.Common;
 
@@ -106,11 +107,37 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         var totalFnb = fnbOrders.Sum(o => o.TotalAmount);
         var totalDonation = donations.Sum(d => d.Gross);
 
+        // ---- Quyet toan da nhan + phi nen tang da tra (MLACP-207) ----
+        // Settlement.OwnerId la User.Id (co the co nhieu venue) — thu hep dung venue nay qua
+        // PaymentId cua chinh cac ve thuoc loungeId (Settlement khong co LoungeId/ShowId truc tiep).
+        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(loungeId, ct);
+        var ticketPaymentIds = allTickets
+            .Where(t => t.PaymentId.HasValue)
+            .Select(t => t.PaymentId!.Value)
+            .ToHashSet();
+
+        var totalSettlementReceived = 0m;
+        var totalPlatformFeePaid = 0m;
+        if (lounge is not null && ticketPaymentIds.Count > 0)
+        {
+            var allSettlements = await _uow.Repository<Settlement, int>().FindAsync(
+                s => s.OwnerId == lounge.OwnerId
+                    && ticketPaymentIds.Contains(s.PaymentId)
+                    && s.Status == SettlementStatus.Released, ct);
+            var releasedSettlements = allSettlements
+                .Where(s => s.ReleasedAt.HasValue && InRange(s.ReleasedAt.Value))
+                .ToList();
+            totalSettlementReceived = releasedSettlements.Sum(s => s.NetAmount);
+            totalPlatformFeePaid = releasedSettlements.Sum(s => s.GrossAmount - s.NetAmount);
+        }
+
         return new OwnerRevenueReportDto(
             TotalTicketRevenue: totalTicket,
             TotalFnbRevenue: totalFnb,
             TotalDonationRevenue: totalDonation,
             GrandTotal: totalTicket + totalFnb + totalDonation,
+            TotalSettlementReceived: totalSettlementReceived,
+            TotalPlatformFeePaid: totalPlatformFeePaid,
             ByEvent: byEvent,
             ByMonth: byMonth);
     }
