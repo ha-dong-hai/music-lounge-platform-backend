@@ -11,7 +11,7 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
     // xac minh ton tai qua Livestream.Id (khac voi "show", tro toi LoungeShow.Id).
     private static readonly string[] ValidTargetTypes = ["show", "venue", "donation", "ticket", "penalty", "livestream"];
 
-    public CreateComplaintCommandValidator(IUnitOfWork uow)
+    public CreateComplaintCommandValidator(IUnitOfWork uow, ISystemConfigService config)
     {
         RuleFor(x => x.TargetType)
             .Must(t => ValidTargetTypes.Contains(t))
@@ -26,6 +26,18 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
             .MustAsync((command, targetId, ct) => TargetExistsAsync(uow, command.TargetType, targetId, ct))
             .When(x => ValidTargetTypes.Contains(x.TargetType) && x.TargetId > 0)
             .WithMessage("Đối tượng bị khiếu nại (TargetType/TargetId) không tồn tại.");
+
+        // MLACP-197: chi cho tao khieu nai "donate chua duoc tra" khi donate that su chua tra
+        // (Status != PerformerPaid) VA da qua so ngay cho phep (system_config donation_hold_days,
+        // dung chung 1 nguon voi phan loai Overdue cua GetOwnerDonationHistoryQueryHandler —
+        // MLACP-200 — de tranh 2 noi tinh "qua han" ra 2 moc thoi gian khac nhau cho cung 1 donate).
+        RuleFor(x => x.TargetId)
+            .MustAsync((command, targetId, ct) => DonationEligibleForNotPaidComplaintAsync(uow, config, targetId, ct))
+            .When(x => x.TargetType == "donation"
+                && x.TargetId > 0
+                && Enum.TryParse<ComplaintCategory>(x.Category, true, out var cat)
+                && cat == ComplaintCategory.DonationNotPaid)
+            .WithMessage("Chỉ có thể khiếu nại donate chưa được trả sau khi đã quá hạn giữ tiền quy định.");
 
         RuleFor(x => x.Category)
             .Must(c => Enum.TryParse<ComplaintCategory>(c, true, out _))
@@ -55,4 +67,15 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
         "livestream" => uow.Repository<Livestream, int>().AnyAsync(l => l.Id == targetId, ct),
         _ => Task.FromResult(false)
     };
+
+    private static async Task<bool> DonationEligibleForNotPaidComplaintAsync(
+        IUnitOfWork uow, ISystemConfigService config, int donationId, CancellationToken ct)
+    {
+        var donation = await uow.Repository<Donation, int>().GetByIdAsync(donationId, ct);
+        if (donation is null || donation.Status == DonationStatus.PerformerPaid) return false;
+        if (donation.PaymentConfirmedAt is null) return false;
+
+        var holdDays = await config.GetIntAsync(ConfigKeys.DonationHoldDays, 14, ct);
+        return DateTimeOffset.UtcNow > donation.PaymentConfirmedAt.Value.AddDays(holdDays);
+    }
 }
