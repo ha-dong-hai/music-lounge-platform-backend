@@ -69,6 +69,8 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
         sb.AppendLine(Csv("F&B", report.TotalFnbRevenue.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine(Csv("Donate", report.TotalDonationRevenue.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine(Csv("Tổng cộng", report.GrandTotal.ToString(CultureInfo.InvariantCulture)));
+        sb.AppendLine(Csv("Quyết toán đã nhận", report.TotalSettlementReceived.ToString(CultureInfo.InvariantCulture)));
+        sb.AppendLine(Csv("Phí nền tảng đã trả", report.TotalPlatformFeePaid.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine();
 
         sb.AppendLine(Csv("Theo sự kiện"));
