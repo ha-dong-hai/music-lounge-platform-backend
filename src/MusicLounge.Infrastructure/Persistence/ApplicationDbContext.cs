@@ -86,6 +86,7 @@ public sealed class ApplicationDbContext : DbContext
 
     // --- N14: Notifications ---
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<LoginFailureLog> LoginFailureLogs => Set<LoginFailureLog>();
     public DbSet<LoginSpikeAlertState> LoginSpikeAlertStates => Set<LoginSpikeAlertState>();
     public DbSet<KnownAdminSnapshot> KnownAdminSnapshots => Set<KnownAdminSnapshot>();

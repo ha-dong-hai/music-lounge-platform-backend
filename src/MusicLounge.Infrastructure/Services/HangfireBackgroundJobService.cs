@@ -27,9 +27,16 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
         => BackgroundJob.Enqueue<CheckInLivestreamViewerJob>(
             j => j.ExecuteAsync(userId, showId));
 
-    public void EnqueueFcmNotification(int userId, string title, string body)
-        => BackgroundJob.Enqueue<IFcmService>(
-            f => f.SendAsync(userId, title, body, CancellationToken.None));
+    public void EnqueueFcmNotification(
+        int userId, string title, string body, string? referenceType = null, string? referenceId = null)
+    {
+        var data = new Dictionary<string, string>();
+        if (referenceType is not null) data["referenceType"] = referenceType;
+        if (referenceId is not null) data["referenceId"] = referenceId;
+
+        BackgroundJob.Enqueue<IFcmService>(
+            f => f.SendAsync(userId, title, body, data, CancellationToken.None));
+    }
 
     public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink)
     {

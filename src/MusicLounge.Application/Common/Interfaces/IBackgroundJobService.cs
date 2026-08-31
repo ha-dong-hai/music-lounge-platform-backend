@@ -14,7 +14,8 @@ public interface IBackgroundJobService
     // Livestream Confirmed cua user+show nay sang Used, de RateShowCommandHandler dung chung 1
     // dieu kien Status=Used cho ca 2 loai ve thay vi phai mien check-in rieng cho ve online.
     void EnqueueLivestreamCheckIn(int userId, int showId);
-    void EnqueueFcmNotification(int userId, string title, string body);
+    void EnqueueFcmNotification(
+        int userId, string title, string body, string? referenceType = null, string? referenceId = null);
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink);
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code);
     void EnqueuePhoneVerificationCode(string toPhone, string code);
