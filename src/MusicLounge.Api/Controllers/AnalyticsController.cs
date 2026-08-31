@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Analytics.DTOs;
+using MusicLounge.Application.Analytics.Queries.ExportOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
@@ -39,6 +40,24 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetOwnerRevenueReportQuery(loungeId, from, to), ct);
         return Ok(ApiResponse<OwnerRevenueReportDto>.Ok(result));
+    }
+
+    /// <summary>Owner — xuất báo cáo doanh thu ra file CSV (UTF-8 BOM, mở trực tiếp bằng Excel)
+    /// để lưu trữ/nộp kế toán. Cùng số liệu với GET revenue-report (dùng chung 1 nguồn tính toán).</summary>
+    [HttpGet("revenue-report/export")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ExportRevenueReport(
+        [FromQuery] int loungeId,
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        CancellationToken ct = default)
+    {
+        var file = await _sender.Send(new ExportOwnerRevenueReportQuery(loungeId, from, to), ct);
+        return File(file.Content, file.ContentType, file.FileName);
     }
 
     /// <summary>Admin — tổng quan nền tảng: số phòng trà đang hoạt động (hiện tại, không theo kỳ),
