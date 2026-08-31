@@ -21,5 +21,6 @@ public enum NotificationType
     SubscriptionExpiring,   // D14: 30/7/1 day before expiry
     DuplicatePaymentDetected, // owner double-submitted Subscribe and both VNPay payments succeeded
     ModerationSlaBreached,  // NĐ 147/2024: flagged content past its review deadline, still undecided
-    SecurityAlert           // credential-stuffing spike, unexpected new Admin, other security drift
+    SecurityAlert,          // credential-stuffing spike, unexpected new Admin, other security drift
+    FnbOrderUpdate          // Staff moved an F&B order to Preparing/Served/Cancelled
 }
