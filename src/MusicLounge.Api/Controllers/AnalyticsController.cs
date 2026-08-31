@@ -8,6 +8,7 @@ using MusicLounge.Application.Analytics.Queries.ExportOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetAdminContentOverview;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
+using MusicLounge.Application.Analytics.Queries.GetOwnerLivestreamHistory;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 using MusicLounge.Application.Analytics.Queries.GetTicketSalesTrend;
@@ -133,5 +134,23 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetAdminContentOverviewQuery(), ct);
         return Ok(ApiResponse<AdminContentOverviewDto>.Ok(result));
+    }
+
+    /// <summary>Owner — lịch sử các phiên livestream đã kết thúc (Ended/Terminated/Failed) của
+    /// venue, mới nhất trước: peak viewer, tổng lượt xem, doanh thu PPV, tổng donate trong phiên.</summary>
+    [HttpGet("livestream-history")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<PaginatedResult<LivestreamHistoryItemDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLivestreamHistory(
+        [FromQuery] int loungeId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerLivestreamHistoryQuery(loungeId, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<LivestreamHistoryItemDto>>.Ok(result));
     }
 }
