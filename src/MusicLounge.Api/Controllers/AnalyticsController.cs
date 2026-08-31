@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Analytics.Queries.ExportOwnerRevenueReport;
+using MusicLounge.Application.Analytics.Queries.GetAdminContentOverview;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
@@ -118,5 +119,19 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetOwnerArtistDonationStatsQuery(loungeId), ct);
         return Ok(ApiResponse<OwnerArtistDonationReportDto>.Ok(result));
+    }
+
+    /// <summary>Admin — thống kê nội dung &amp; giám sát: số sự kiện chờ duyệt, số khiếu nại chưa
+    /// xử lý, số vi phạm phát sinh trong tháng hiện tại (giờ VN), và bảng xếp hạng phòng trà theo
+    /// điểm uy tín (ReputationScore).</summary>
+    [HttpGet("admin-content-overview")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<AdminContentOverviewDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetAdminContentOverview(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetAdminContentOverviewQuery(), ct);
+        return Ok(ApiResponse<AdminContentOverviewDto>.Ok(result));
     }
 }
