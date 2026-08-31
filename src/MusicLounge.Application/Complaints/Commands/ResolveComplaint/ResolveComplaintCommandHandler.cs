@@ -5,6 +5,7 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Complaints.Commands.ResolveComplaint;
 
@@ -56,6 +57,11 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
 
             await TakeDownShowAsync(complaint.TargetId, ct);
         }
+
+        // MLACP-198: "phạt venue" phải thực sự tạo VenuePenalty — truoc day IssueWarning chi la 1
+        // nhan luu tren Complaint, khong co hau qua that nao (venue van hoat dong binh thuong).
+        if (newStatus == ComplaintStatus.Resolved && resolvedAction == ComplaintResolvedAction.IssueWarning)
+            await IssueVenuePenaltyAsync(complaint, ct);
 
         complaint.Status = newStatus;
         complaint.AdminId = _currentUser.UserId;
@@ -161,5 +167,65 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                     referenceId: show.Id.ToString(),
                     ct: ct);
         }
+    }
+
+    // Mirrors IssuePenaltyCommandHandler's Warning path (immediate effect, no notice delay) rather
+    // than composing it via ISender.Send — same nested-transaction restriction as TakeDownShowAsync.
+    private async Task IssueVenuePenaltyAsync(Complaint complaint, CancellationToken ct)
+    {
+        var loungeId = await ResolveLoungeIdAsync(complaint, ct)
+            ?? throw new DomainException(
+                "Không thể xác định venue để xử phạt từ khiếu nại này (TargetType không liên kết được tới 1 venue cụ thể).");
+
+        var loungeRepo = _uow.Repository<MusicLoungeEntity, int>();
+        var lounge = await loungeRepo.GetByIdAsync(loungeId, ct)
+            ?? throw new NotFoundException(nameof(MusicLoungeEntity), loungeId);
+
+        var now = DateTimeOffset.UtcNow;
+        var penalty = new VenuePenalty
+        {
+            LoungeId = loungeId,
+            PenaltyType = PenaltyType.Warning,
+            Reason = $"Xử lý theo khiếu nại #{complaint.Id}: {complaint.Description}",
+            IssuedBy = _currentUser.UserId,
+            IssuedAt = now,
+            EffectiveAt = now,
+            Status = PenaltyStatus.Active
+        };
+        _uow.Repository<VenuePenalty, int>().Add(penalty);
+
+        lounge.Status = LoungeStatus.Warned;
+        loungeRepo.Update(lounge);
+
+        await _notifications.NotifyAsync(
+            lounge.OwnerId,
+            NotificationType.PenaltyIssued,
+            "Phòng trà bị cảnh cáo",
+            $"\"{lounge.Name}\" nhận cảnh cáo theo khiếu nại #{complaint.Id}: {complaint.Description}",
+            referenceType: "venue_penalty",
+            referenceId: penalty.Id.ToString(),
+            ct: ct);
+    }
+
+    private async Task<int?> ResolveLoungeIdAsync(Complaint complaint, CancellationToken ct) =>
+        complaint.TargetType switch
+        {
+            "venue" => complaint.TargetId,
+            "show" => (await _uow.Repository<LoungeShow, int>().GetByIdAsync(complaint.TargetId, ct))?.LoungeId,
+            "livestream" => (await _livestreamRepo.GetByIdAsync(complaint.TargetId, ct)) is { } livestream
+                ? (await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct))?.LoungeId
+                : null,
+            "donation" => await ResolveLoungeIdFromDonationAsync(complaint.TargetId, ct),
+            _ => null
+        };
+
+    private async Task<int?> ResolveLoungeIdFromDonationAsync(int donationId, CancellationToken ct)
+    {
+        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(donationId, ct);
+        if (donation is null) return null;
+        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(donation.PerformanceId, ct);
+        if (performance is null) return null;
+        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct);
+        return show?.LoungeId;
     }
 }
