@@ -35,4 +35,19 @@ public sealed class LivestreamHubService : ILivestreamHubService
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamTerminated", new { reason }, ct);
+
+    public Task BroadcastLivestreamReconnectingAsync(int livestreamId, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("LivestreamReconnecting", new { }, ct);
+
+    public Task BroadcastLivestreamReconnectedAsync(int livestreamId, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("LivestreamReconnected", new { }, ct);
+
+    public Task BroadcastLivestreamFailedAsync(int livestreamId, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("LivestreamFailed", new { }, ct);
 }

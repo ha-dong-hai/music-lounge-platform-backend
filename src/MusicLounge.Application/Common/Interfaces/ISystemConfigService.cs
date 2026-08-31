@@ -56,6 +56,10 @@ public static class ConfigKeys
     // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
     public const string LivestreamReplayDays = "livestream_replay_days";
 
+    // MLACP-191: so phut cho encoder tu ket noi lai sau khi Mux bao video.live_stream.disconnected
+    // truoc khi he thong tu danh dau livestream la Failed. Khong seed san — dung mac dinh tai noi doc.
+    public const string LivestreamReconnectTimeoutMinutes = "livestream_reconnect_timeout_minutes";
+
     // §6.17 — hours an Admin has to resolve a venue's penalty appeal before AutoApproveOverdueAppealsJob
     // auto-overturns it. Same dead-seed situation as RatingWindowDays: seeded since the original
     // migration, but SubmitAppealCommandHandler hardcoded `AddHours(48)` independently.
