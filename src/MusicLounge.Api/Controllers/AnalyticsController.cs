@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
+using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 using MusicLounge.Application.Analytics.Queries.GetTicketSalesTrend;
@@ -83,5 +84,20 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetTicketSalesTrendQuery(showId), ct);
         return Ok(ApiResponse<TicketSalesTrendDto>.Ok(result));
+    }
+
+    /// <summary>Owner — tổng donate theo từng nghệ sĩ, tổng hợp qua toàn bộ sự kiện của venue,
+    /// kèm nghệ sĩ được donate nhiều nhất.</summary>
+    [HttpGet("artist-donations")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<OwnerArtistDonationReportDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetArtistDonationStats(
+        [FromQuery] int loungeId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerArtistDonationStatsQuery(loungeId), ct);
+        return Ok(ApiResponse<OwnerArtistDonationReportDto>.Ok(result));
     }
 }
