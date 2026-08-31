@@ -206,7 +206,8 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
             if (showReservedTotal + quantity > activeSub.MaxTicketsPerEventSnapshot)
                 throw new DomainException(
-                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
+                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại. " +
+                    "Owner của venue có thể nâng cấp gói để tăng giới hạn này (xem GET /subscriptions/packages).");
         }
     }
 }

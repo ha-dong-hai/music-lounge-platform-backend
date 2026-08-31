@@ -57,7 +57,8 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
                 if (totalCapacity > activeSub.MaxTicketsPerEventSnapshot)
                     throw new DomainException(
                         $"Tổng số vé cho event này ({totalCapacity}) vượt quá giới hạn " +
-                        $"{activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
+                        $"{activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại. " +
+                        "Owner của venue có thể nâng cấp gói để tăng giới hạn này (xem GET /subscriptions/packages).");
             }
         }
 
