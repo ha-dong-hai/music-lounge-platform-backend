@@ -46,6 +46,13 @@ public static class ConfigKeys
 
     public const string ModerationSlaHours = "moderation_sla_hours";
 
+    // MLACP-222: NĐ 147/2024/NĐ-CP quy định 2 mốc SLA khác nhau cho gỡ nội dung vi phạm — 48h khi
+    // yêu cầu đến từ NGƯỜI DÙNG mạng xã hội (đúng trường hợp report của khán giả ở đây), 24h chỉ
+    // khi yêu cầu đến từ CƠ QUAN QUẢN LÝ NHÀ NƯỚC có thẩm quyền. Tách riêng khỏi ModerationSlaHours
+    // (dùng cho cổng duyệt AI trước khi đăng — không phải yêu cầu từ người dùng) để không áp nhầm
+    // mốc 24h của trường hợp kia vào đây.
+    public const string ContentReportSlaHours = "content_report_sla_hours";
+
     // §6.13 — window after a show ends during which a buyer may submit a rating. Seeded since the
     // original migration but never actually read — TerminateLivestreamCommandHandler/
     // EndLivestreamCommandHandler/EndLoungeShowCommandHandler each hardcoded their own literal
