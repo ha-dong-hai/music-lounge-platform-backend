@@ -1,5 +1,9 @@
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Infrastructure.Settings;
@@ -9,9 +13,16 @@ namespace MusicLounge.Infrastructure.Services;
 internal sealed class VnPayService : IVnPayService
 {
     private readonly VnPaySettings _settings;
+    private readonly IHttpClientFactory _httpFactory;
+    private readonly ILogger<VnPayService> _logger;
 
-    public VnPayService(IOptions<VnPaySettings> options)
-        => _settings = options.Value;
+    public VnPayService(
+        IOptions<VnPaySettings> options, IHttpClientFactory httpFactory, ILogger<VnPayService> logger)
+    {
+        _settings = options.Value;
+        _httpFactory = httpFactory;
+        _logger = logger;
+    }
 
     public string CreatePaymentUrl(VnPayPaymentRequest request)
     {
@@ -76,6 +87,87 @@ internal sealed class VnPayService : IVnPayService
         return new VnPayCallbackResult(isValid, isSuccess, transactionId, responseCode, amount);
     }
 
+    // Merchant API (refund/querydr) — POST JSON to a DIFFERENT base URL than the browser-redirect
+    // flow above, and signed with a THIRD encoding scheme: raw values joined by '|' in a fixed
+    // documented field order, no URL-encoding at all (unlike either encoder used above). Per
+    // VNPay's official Payment Gateway Techspec 2.1.0, "Truy vấn & Hoàn tiền" section — NOT
+    // live-verified against a real sandbox call the way the two flows above were (VNPay restricts
+    // refund on sandbox accounts by default; contacting VNPay support to enable it is a
+    // prerequisite independent of whether this code is correct).
+    public async Task<VnPayRefundResult> RefundAsync(VnPayRefundRequest request, CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
+        var transactionDate = request.TransactionDate.ToOffset(TimeSpan.FromHours(7));
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var transactionType = request.IsFullRefund ? "02" : "03";
+        var amountStr = ((long)(request.Amount * 100)).ToString();
+        var transactionNo = request.TransactionNo ?? string.Empty;
+        var transactionDateStr = transactionDate.ToString("yyyyMMddHHmmss");
+        var createDateStr = now.ToString("yyyyMMddHHmmss");
+
+        // Fixed field order per spec — do NOT alphabetize/reorder like the SortedDictionary used
+        // for the other two flows above; this hash is positional, not key-sorted.
+        var signData = string.Join('|',
+            requestId, _settings.Version, "refund", _settings.TmnCode,
+            transactionType, request.TxnRef, amountStr, transactionNo,
+            transactionDateStr, request.CreatedBy, createDateStr, request.IpAddress, request.OrderInfo);
+        var signature = ComputeHmacSha512(_settings.HashSecret, signData);
+
+        var body = new VnPayRefundApiRequest(
+            vnp_RequestId: requestId,
+            vnp_Version: _settings.Version,
+            vnp_Command: "refund",
+            vnp_TmnCode: _settings.TmnCode,
+            vnp_TransactionType: transactionType,
+            vnp_TxnRef: request.TxnRef,
+            vnp_Amount: amountStr,
+            vnp_OrderInfo: request.OrderInfo,
+            vnp_TransactionNo: transactionNo,
+            vnp_TransactionDate: transactionDateStr,
+            vnp_CreateBy: request.CreatedBy,
+            vnp_CreateDate: createDateStr,
+            vnp_IpAddr: request.IpAddress,
+            vnp_SecureHash: signature);
+
+        try
+        {
+            var http = _httpFactory.CreateClient("vnpay");
+            using var response = await http.PostAsJsonAsync(_settings.RefundApiUrl, body, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogError(
+                    "VNPay refund call failed: TxnRef={TxnRef} Status={Status} Body={Body}",
+                    request.TxnRef, response.StatusCode, errorBody);
+                return new VnPayRefundResult(false, response.StatusCode.ToString(), "VNPay HTTP error", null);
+            }
+
+            var payload = await response.Content.ReadFromJsonAsync<VnPayRefundApiResponse>(cancellationToken: ct);
+            if (payload is null)
+            {
+                _logger.LogError("VNPay refund call: TxnRef={TxnRef} — empty/unparseable response body.", request.TxnRef);
+                return new VnPayRefundResult(false, "", "Empty response from VNPay", null);
+            }
+
+            var isSuccess = payload.vnp_ResponseCode == "00";
+            if (!isSuccess)
+                _logger.LogWarning(
+                    "VNPay refund rejected: TxnRef={TxnRef} ResponseCode={ResponseCode} Message={Message}",
+                    request.TxnRef, payload.vnp_ResponseCode, payload.vnp_Message);
+
+            return new VnPayRefundResult(
+                isSuccess, payload.vnp_ResponseCode ?? "", payload.vnp_Message ?? "", payload.vnp_TransactionNo);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            if (ex is TaskCanceledException && ct.IsCancellationRequested) throw;
+            _logger.LogError(ex, "VNPay refund call threw: TxnRef={TxnRef}", request.TxnRef);
+            return new VnPayRefundResult(false, "", "VNPay call threw an exception", null);
+        }
+    }
+
     // VNPay's own reference implementation signs/builds the query using WebUtility.UrlEncode
     // (application/x-www-form-urlencoded — space -> '+'), NOT Uri.EscapeDataString (space -> '%20').
     // Using the wrong encoder produces a different byte string to hash whenever any signed value
@@ -123,4 +215,33 @@ internal sealed class VnPayService : IVnPayService
         using var hmac = new HMACSHA512(keyBytes);
         return Convert.ToHexString(hmac.ComputeHash(dataBytes)).ToLower();
     }
+
+    private sealed record VnPayRefundApiRequest(
+        [property: JsonPropertyName("vnp_RequestId")] string vnp_RequestId,
+        [property: JsonPropertyName("vnp_Version")] string vnp_Version,
+        [property: JsonPropertyName("vnp_Command")] string vnp_Command,
+        [property: JsonPropertyName("vnp_TmnCode")] string vnp_TmnCode,
+        [property: JsonPropertyName("vnp_TransactionType")] string vnp_TransactionType,
+        [property: JsonPropertyName("vnp_TxnRef")] string vnp_TxnRef,
+        [property: JsonPropertyName("vnp_Amount")] string vnp_Amount,
+        [property: JsonPropertyName("vnp_OrderInfo")] string vnp_OrderInfo,
+        [property: JsonPropertyName("vnp_TransactionNo")] string vnp_TransactionNo,
+        [property: JsonPropertyName("vnp_TransactionDate")] string vnp_TransactionDate,
+        [property: JsonPropertyName("vnp_CreateBy")] string vnp_CreateBy,
+        [property: JsonPropertyName("vnp_CreateDate")] string vnp_CreateDate,
+        [property: JsonPropertyName("vnp_IpAddr")] string vnp_IpAddr,
+        [property: JsonPropertyName("vnp_SecureHash")] string vnp_SecureHash);
+
+    private sealed record VnPayRefundApiResponse(
+        [property: JsonPropertyName("vnp_ResponseId")] string? vnp_ResponseId,
+        [property: JsonPropertyName("vnp_Command")] string? vnp_Command,
+        [property: JsonPropertyName("vnp_ResponseCode")] string? vnp_ResponseCode,
+        [property: JsonPropertyName("vnp_Message")] string? vnp_Message,
+        [property: JsonPropertyName("vnp_TmnCode")] string? vnp_TmnCode,
+        [property: JsonPropertyName("vnp_TxnRef")] string? vnp_TxnRef,
+        [property: JsonPropertyName("vnp_Amount")] string? vnp_Amount,
+        [property: JsonPropertyName("vnp_TransactionNo")] string? vnp_TransactionNo,
+        [property: JsonPropertyName("vnp_TransactionType")] string? vnp_TransactionType,
+        [property: JsonPropertyName("vnp_TransactionStatus")] string? vnp_TransactionStatus,
+        [property: JsonPropertyName("vnp_SecureHash")] string? vnp_SecureHash);
 }
