@@ -159,6 +159,7 @@ public static class DependencyInjection
         services.AddHttpClient("mux").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient("vnpay").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         // Image generation can run noticeably longer than the other external calls this app makes —
         // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
         // (not hung) generation doesn't get cut off right as it would have succeeded.
