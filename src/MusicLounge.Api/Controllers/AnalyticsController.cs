@@ -6,6 +6,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Analytics.Queries.ExportOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetAdminContentOverview;
+using MusicLounge.Application.Analytics.Queries.GetAiRecommendationPerformance;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetAudienceEngagementStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
@@ -170,5 +171,22 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetAudienceEngagementStatsQuery(from, to), ct);
         return Ok(ApiResponse<AudienceEngagementStatsDto>.Ok(result));
+    }
+
+    /// <summary>Admin — hiệu suất AI gợi ý trong kỳ (mặc định tháng hiện tại, giờ VN): tỷ lệ khán
+    /// giả xem/bấm vào sự kiện được gợi ý (click-through), tỷ lệ mua vé sau khi được gợi ý
+    /// (conversion) — tính theo từng cặp (user, sự kiện) duy nhất từng được gợi ý trong kỳ.</summary>
+    [HttpGet("ai-recommendation-performance")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<AiRecommendationPerformanceDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetAiRecommendationPerformance(
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetAiRecommendationPerformanceQuery(from, to), ct);
+        return Ok(ApiResponse<AiRecommendationPerformanceDto>.Ok(result));
     }
 }
