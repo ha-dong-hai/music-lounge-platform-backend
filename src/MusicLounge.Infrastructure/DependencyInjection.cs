@@ -126,6 +126,7 @@ public static class DependencyInjection
         services.AddScoped<ApplyDuePenaltiesJob>();
         services.AddScoped<AutoApproveOverdueAppealsJob>();
         services.AddScoped<ModerationSlaBreachAlertJob>();
+        services.AddScoped<ContentReportSlaBreachAlertJob>();
         services.AddScoped<ComplaintSlaBreachAlertJob>();
         services.AddScoped<ScoreModerationWithAiJob>();
         services.AddScoped<StitchVenueTourSceneJob>();
@@ -269,6 +270,11 @@ public static class DependencyInjection
 
         RecurringJob.AddOrUpdate<ModerationSlaBreachAlertJob>(
             "alert-moderation-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<ContentReportSlaBreachAlertJob>(
+            "alert-content-report-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
