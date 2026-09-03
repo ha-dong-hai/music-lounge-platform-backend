@@ -15,6 +15,7 @@ using MusicLounge.Application.LoungeShows.Commands.EndLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.RateShow;
 using MusicLounge.Application.LoungeShows.Commands.RescheduleLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.SetLegalApprovalReference;
 using MusicLounge.Application.LoungeShows.Commands.StartLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
@@ -23,6 +24,7 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowSuggestions;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
+using MusicLounge.Application.LoungeShows.Queries.GetPublishedLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetShowRatings;
 using MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetTrendingLoungeShows;
@@ -42,6 +44,26 @@ public sealed class LoungeShowsController : ControllerBase
     private readonly ISender _sender;
 
     public LoungeShowsController(ISender sender) => _sender = sender;
+
+    /// <summary>Danh sách sự kiện công khai (Published/Ongoing), hoặc sự kiện của chính Owner đang
+    /// gọi (mine=true, mọi trạng thái kể cả Draft) — khác /search ở chỗ không có bộ lọc, dùng cho
+    /// trang chủ/"sự kiện của tôi".</summary>
+    [HttpGet]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPublished(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
+        [FromQuery] bool includeSoldOut = true,
+        [FromQuery] bool mine = false,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(
+            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine), ct);
+        return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
+    }
 
     /// <summary>Tìm kiếm sự kiện công khai — kết hợp được nhiều bộ lọc cùng lúc: thể loại
     /// nhạc/dòng nhạc/không gian, hình thức tổ chức, khoảng thời gian diễn ra, từ khóa trong tên/mô
@@ -187,6 +209,21 @@ public sealed class LoungeShowsController : ControllerBase
         await _sender.Send(new UpdateLoungeShowCommand(
             id, body.Name, body.Description, body.ScheduledStart, body.ScheduledEnd,
             body.CategoryId, body.OfflineQuota, body.OnlineQuota), ct);
+        return NoContent();
+    }
+
+    /// <summary>D18 (NĐ 144/2020 Điều 10): Owner khai báo số văn bản/liên kết "văn bản chấp thuận
+    /// tổ chức biểu diễn" trước khi nộp duyệt — chỉ sửa được khi event còn Draft.</summary>
+    [HttpPut("{id:int}/legal-approval")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetLegalApprovalReference(
+        int id, [FromBody] SetLegalApprovalReferenceRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetLegalApprovalReferenceCommand(id, body.LegalApprovalReference), ct);
         return NoContent();
     }
 
@@ -395,3 +432,5 @@ public sealed record UpdatePerformanceRequest(
     bool AcceptsDonation);
 
 public sealed record RateShowRequest(int Score, string? Comment);
+
+public sealed record SetLegalApprovalReferenceRequest(string LegalApprovalReference);
