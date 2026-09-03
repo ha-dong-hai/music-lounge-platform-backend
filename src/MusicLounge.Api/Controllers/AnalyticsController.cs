@@ -9,9 +9,11 @@ using MusicLounge.Application.Analytics.Queries.GetAdminContentOverview;
 using MusicLounge.Application.Analytics.Queries.GetAiRecommendationPerformance;
 using MusicLounge.Application.Analytics.Queries.GetAdminPlatformOverview;
 using MusicLounge.Application.Analytics.Queries.GetAudienceEngagementStats;
+using MusicLounge.Application.Analytics.Queries.GetOwnerAnalytics;
 using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerLivestreamHistory;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
+using MusicLounge.Application.Analytics.Queries.GetPlatformAnalytics;
 using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 using MusicLounge.Application.Analytics.Queries.GetTicketSalesTrend;
 using MusicLounge.Application.Common.Models;
@@ -27,6 +29,37 @@ public sealed class AnalyticsController : ControllerBase
     private readonly ISender _sender;
 
     public AnalyticsController(ISender sender) => _sender = sender;
+
+    /// <summary>Owner — bảng tổng quan nhanh của 1 venue: tổng/số sự kiện sắp tới/đã qua, vé bán
+    /// (offline/online), doanh thu (vé+F&amp;B), đánh giá trung bình, donate chờ nghệ sĩ nhận, xu
+    /// hướng doanh thu 6 tháng gần nhất, top 5 show doanh thu cao nhất — mọi thời gian, không lọc
+    /// theo kỳ (khác revenue-report/admin-overview vốn lọc theo kỳ, dùng khi cần báo cáo chi tiết
+    /// hơn theo khoảng thời gian cụ thể).</summary>
+    [HttpGet("my-lounge")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<OwnerAnalyticsDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyLounge([FromQuery] int loungeId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerAnalyticsQuery(loungeId), ct);
+        return Ok(ApiResponse<OwnerAnalyticsDto>.Ok(result));
+    }
+
+    /// <summary>Admin — bảng tổng quan nhanh toàn nền tảng: tổng venue, tổng show đã publish, tổng
+    /// user, tổng vé đã bán, GMV, tổng donate, số moderation đang chờ — mọi thời gian (khác
+    /// admin-overview vốn lọc theo kỳ).</summary>
+    [HttpGet("platform")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<PlatformAnalyticsDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetPlatform(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPlatformAnalyticsQuery(), ct);
+        return Ok(ApiResponse<PlatformAnalyticsDto>.Ok(result));
+    }
 
     /// <summary>Báo cáo doanh thu tổng hợp: vé + F&B + donate, tổng hợp theo sự kiện và theo
     /// tháng, lọc theo khoảng thời gian tuỳ chọn (mặc định toàn bộ lịch sử).</summary>
