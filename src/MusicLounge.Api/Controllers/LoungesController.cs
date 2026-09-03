@@ -16,6 +16,11 @@ using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
 using MusicLounge.Application.Lounges.Queries.GetLounges;
 using MusicLounge.Application.Lounges.Queries.GetLoungeZones;
+using MusicLounge.Application.Staffing.Commands.AssignStaff;
+using MusicLounge.Application.Staffing.Commands.DeactivateStaff;
+using MusicLounge.Application.Staffing.DTOs;
+using MusicLounge.Application.Staffing.Queries.FindUserByEmail;
+using MusicLounge.Application.Staffing.Queries.GetLoungeStaff;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -73,14 +78,14 @@ public sealed class LoungesController : ControllerBase
     /// (LoungeStatus.Pending mặc định).</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create(
         [FromBody] CreateLoungeCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return CreatedAtAction(nameof(GetDetail), new { id, version = "1.0" }, ApiResponse<int>.Ok(id));
     }
 
     /// <summary>Chỉ đúng Owner sở hữu (hoặc Admin) mới sửa được — người khác nhận 403.</summary>
@@ -96,6 +101,51 @@ public sealed class LoungesController : ControllerBase
         await _sender.Send(new UpdateLoungeCommand(
             id, body.Name, body.Description, body.AtmosphereId,
             body.Street, body.Ward, body.District, body.City, body.Latitude, body.Longitude), ct);
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/staff")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeStaffDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStaff(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetLoungeStaffQuery(id), ct);
+        return Ok(ApiResponse<IReadOnlyList<LoungeStaffDto>>.Ok(result));
+    }
+
+    [HttpGet("staff/lookup")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<UserLookupDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> LookupUserByEmail([FromQuery] string email, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new FindUserByEmailQuery(email), ct);
+        return Ok(ApiResponse<UserLookupDto>.Ok(result));
+    }
+
+    [HttpPost("{id:int}/staff")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AssignStaff(
+        int id, [FromBody] AssignStaffRequest body, CancellationToken ct = default)
+    {
+        var staffId = await _sender.Send(new AssignStaffCommand(id, body.UserId), ct);
+        return CreatedAtAction(nameof(GetStaff), new { id, version = "1.0" }, ApiResponse<int>.Ok(staffId));
+    }
+
+    [HttpDelete("{id:int}/staff/{staffId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeactivateStaff(
+        int id, int staffId, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeactivateStaffCommand(staffId), ct);
         return NoContent();
     }
 
@@ -186,3 +236,5 @@ public sealed record UpdateLoungeRequest(
     string City,
     double? Latitude,
     double? Longitude);
+
+public sealed record AssignStaffRequest(int UserId);
