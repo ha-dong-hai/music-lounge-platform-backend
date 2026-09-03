@@ -16,6 +16,7 @@ using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.RateShow;
 using MusicLounge.Application.LoungeShows.Commands.RescheduleLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.SetLegalApprovalReference;
+using MusicLounge.Application.LoungeShows.Commands.SetVcpmcRoyaltyReference;
 using MusicLounge.Application.LoungeShows.Commands.StartLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
@@ -242,6 +243,24 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>D19: Owner khai báo đã thanh toán tác quyền âm nhạc VCPMC — khác D18 (văn bản Nhà
+    /// nước, phải nộp trước 7 ngày làm việc lúc nộp duyệt), hợp đồng li-xăng VCPMC là thỏa thuận
+    /// dân sự nên có thể khai báo bất kỳ lúc nào trước khi show Ongoing/Ended/Cancelled — bắt buộc
+    /// phải có trước khi bắt đầu show (xem StartLoungeShow).</summary>
+    [HttpPut("{id:int}/vcpmc-royalty")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SetVcpmcRoyaltyReference(
+        int id, [FromBody] SetVcpmcRoyaltyReferenceRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetVcpmcRoyaltyReferenceCommand(id, body.VcpmcRoyaltyReference), ct);
+        return NoContent();
+    }
+
     /// <summary>Xóa thật (hard delete) — chỉ áp dụng cho sự kiện còn ở trạng thái Draft (422 nếu
     /// khác); sự kiện đã publish/đang diễn ra phải dùng huỷ (Cancel), không xóa được nữa.</summary>
     [HttpDelete("{id:int}")]
@@ -449,3 +468,5 @@ public sealed record UpdatePerformanceRequest(
 public sealed record RateShowRequest(int Score, string? Comment);
 
 public sealed record SetLegalApprovalReferenceRequest(string LegalApprovalReference);
+
+public sealed record SetVcpmcRoyaltyReferenceRequest(string VcpmcRoyaltyReference);
