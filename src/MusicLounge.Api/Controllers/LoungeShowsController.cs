@@ -15,10 +15,13 @@ using MusicLounge.Application.LoungeShows.Commands.RateShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
+using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
+using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowSuggestions;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetShowRatings;
 using MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
+using MusicLounge.Application.LoungeShows.Queries.GetTrendingLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 using MusicLounge.Application.Tickets.DTOs;
 using MusicLounge.Application.Tickets.Queries.GetShowTicketStats;
@@ -62,6 +65,34 @@ public sealed class LoungeShowsController : ControllerBase
             genreIds, moodIds, atmosphereIds, keyword, format, dateFrom, dateTo,
             page, pageSize, sortBy), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
+    }
+
+    [HttpGet("trending")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTrending(
+        [FromQuery] int limit = 10,
+        [FromQuery] string? city = null,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetTrendingLoungeShowsQuery(limit, city), ct);
+        return Ok(ApiResponse<IReadOnlyList<LoungeShowListItemDto>>.Ok(result));
+    }
+
+    [HttpGet("suggestions")]
+    [AllowAnonymous]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeShowSuggestionItem>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSuggestions(
+        [FromQuery] string q,
+        [FromQuery] int limit = 8,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return Ok(ApiResponse<IReadOnlyList<LoungeShowSuggestionItem>>.Ok([]));
+
+        var result = await _sender.Send(new GetLoungeShowSuggestionsQuery(q, limit), ct);
+        return Ok(ApiResponse<IReadOnlyList<LoungeShowSuggestionItem>>.Ok(result));
     }
 
     /// <summary>Chỉ Owner của đúng phòng trà được chọn mới tạo được (403 nếu khác). Cần có gói
