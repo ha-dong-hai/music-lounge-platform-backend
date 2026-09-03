@@ -21,6 +21,13 @@ using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.DTOs;
 using MusicLounge.Application.Moderations.Queries.GetPendingLoungeShows;
 using MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
+using MusicLounge.Application.Users.Commands.DeactivateUserAccount;
+using MusicLounge.Application.Users.Commands.ReactivateUserAccount;
+using MusicLounge.Application.Users.DTOs;
+using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
+using MusicLounge.Application.Users.Queries.GetUserDetail;
+using MusicLounge.Application.Users.Queries.GetUsers;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -236,6 +243,60 @@ public sealed class AdminController : ControllerBase
         int id, [FromBody] RemoveRatingRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new RemoveRatingCommand(id, body.Reason), ct);
+        return NoContent();
+    }
+
+    // ---- Người dùng ----
+
+    [HttpGet("users")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<UserAdminDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] string? searchText,
+        [FromQuery] UserRole? role,
+        [FromQuery] bool? isActive,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetUsersQuery(searchText, role, isActive, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<UserAdminDto>>.Ok(result));
+    }
+
+    [HttpGet("users/{id:int}")]
+    [ProducesResponseType<ApiResponse<UserAdminDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserDetail(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetUserDetailQuery(id), ct);
+        return Ok(ApiResponse<UserAdminDto>.Ok(result));
+    }
+
+    /// <summary>Admin xem ảnh CCCD/CMND của user để xác thực danh tính — file nằm ngoài wwwroot, không đoán URL được.</summary>
+    [HttpGet("users/{id:int}/citizen-card/{side}")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserCitizenCardImage(int id, string side, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetCitizenCardImageQuery(id, side), ct);
+        return File(result.Content, result.ContentType);
+    }
+
+    [HttpPost("users/{id:int}/deactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeactivateUserAccount(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeactivateUserAccountCommand(id), ct);
+        return NoContent();
+    }
+
+    [HttpPost("users/{id:int}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReactivateUserAccount(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReactivateUserAccountCommand(id), ct);
         return NoContent();
     }
 }
