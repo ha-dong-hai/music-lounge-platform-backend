@@ -12,10 +12,12 @@ using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeleteLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeletePerformance;
 using MusicLounge.Application.LoungeShows.Commands.EndLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.GeneratePoster;
 using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.RateShow;
 using MusicLounge.Application.LoungeShows.Commands.RescheduleLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.SetLegalApprovalReference;
+using MusicLounge.Application.LoungeShows.Commands.SetShowPoster;
 using MusicLounge.Application.LoungeShows.Commands.SetVcpmcRoyaltyReference;
 using MusicLounge.Application.LoungeShows.Commands.StartLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
@@ -25,6 +27,7 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowSuggestions;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
+using MusicLounge.Application.LoungeShows.Queries.GetPosterGenerationHistory;
 using MusicLounge.Application.LoungeShows.Queries.GetPublishedLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetShowRatings;
 using MusicLounge.Application.LoungeShows.Queries.GetShowSeatingMap;
@@ -128,7 +131,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// trạng thái nháp (LoungeShowStatus.Draft).</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -136,7 +139,7 @@ public sealed class LoungeShowsController : ControllerBase
         [FromBody] CreateLoungeShowCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return CreatedAtAction(nameof(GetDetail), new { id }, ApiResponse<int>.Ok(id));
     }
 
     /// <summary>Chỉ trả sự kiện của đúng Owner đang đăng nhập (mọi trạng thái, kể cả Draft) — lọc
@@ -259,6 +262,53 @@ public sealed class LoungeShowsController : ControllerBase
     {
         await _sender.Send(new SetVcpmcRoyaltyReferenceCommand(id, body.VcpmcRoyaltyReference), ct);
         return NoContent();
+    }
+
+    /// <summary>W02: tạo poster bằng AI (Gemini) — chỉ Owner có gói subscription bao gồm
+    /// HasAiPoster. 2 giới hạn độc lập: MaxAiPostersPerMonth (hạn mức tính phí, chỉ tính lần thành
+    /// công) và ai_poster_max_attempts_per_show (chống lạm dụng, tính mọi lần thử kể cả thất bại).
+    /// 503 nếu vendor AI lỗi — lần thử thất bại KHÔNG bị trừ vào hạn mức.</summary>
+    [HttpPost("{id:int}/ai-poster")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<PosterGenerationResultDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> GeneratePoster(
+        int id, [FromBody] GeneratePosterRequest? body, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GeneratePosterCommand(id, body?.StyleHint), ct);
+        return Ok(ApiResponse<PosterGenerationResultDto>.Ok(result));
+    }
+
+    /// <summary>Đối chứng thủ công của tạo poster AI — Owner tự tải poster riêng thay vì dùng AI
+    /// (hoặc không có gói subscription hỗ trợ tính năng này). Ghi đè và bỏ cờ PosterByAi nếu trước
+    /// đó đã có poster do AI tạo.</summary>
+    [HttpPut("{id:int}/poster")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetPoster(
+        int id, [FromBody] SetShowPosterRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetShowPosterCommand(id, body.ImageUrl), ct);
+        return NoContent();
+    }
+
+    /// <summary>Lịch sử các lần tạo poster AI của show — Owner tự tra được lần nào thành công, lần
+    /// nào thất bại và vì sao, xác nhận lần thất bại không bị trừ hạn mức.</summary>
+    [HttpGet("{id:int}/ai-poster/history")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPosterGenerationHistory(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPosterGenerationHistoryQuery(id), ct);
+        return Ok(ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>.Ok(result));
     }
 
     /// <summary>Xóa thật (hard delete) — chỉ áp dụng cho sự kiện còn ở trạng thái Draft (422 nếu
@@ -470,3 +520,7 @@ public sealed record RateShowRequest(int Score, string? Comment);
 public sealed record SetLegalApprovalReferenceRequest(string LegalApprovalReference);
 
 public sealed record SetVcpmcRoyaltyReferenceRequest(string VcpmcRoyaltyReference);
+
+public sealed record GeneratePosterRequest(string? StyleHint);
+
+public sealed record SetShowPosterRequest(string ImageUrl);

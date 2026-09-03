@@ -37,7 +37,12 @@ public sealed class ModerationAiScoringTests
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
             GenreIds = Array.Empty<int>(),
-            Performances = Array.Empty<object>()
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
+            Performances = new[]
+            {
+                new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+            }
         });
         res.EnsureSuccessStatusCode();
         var body = await res.Content.ReadFromJsonAsync<IdResponse>();
@@ -64,7 +69,7 @@ public sealed class ModerationAiScoringTests
             }
         });
 
-        var publishRes = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var publishRes = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
         publishRes.EnsureSuccessStatusCode();
 
         return showId;
