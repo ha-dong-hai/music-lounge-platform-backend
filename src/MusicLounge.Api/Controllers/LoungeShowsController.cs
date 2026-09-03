@@ -7,11 +7,15 @@ using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.LoungeShows.Commands.AddPerformance;
 using MusicLounge.Application.LoungeShows.Commands.CancelLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.ChangeLoungeShowFormat;
 using MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeleteLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.DeletePerformance;
+using MusicLounge.Application.LoungeShows.Commands.EndLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.RateShow;
+using MusicLounge.Application.LoungeShows.Commands.RescheduleLoungeShow;
+using MusicLounge.Application.LoungeShows.Commands.StartLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
@@ -230,6 +234,56 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:int}/reschedule")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Reschedule(
+        int id, [FromBody] RescheduleLoungeShowRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new RescheduleLoungeShowCommand(id, body.NewScheduledStart), ct);
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/start")]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Start(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new StartLoungeShowCommand(id), ct);
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/end")]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> End(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new EndLoungeShowCommand(id), ct);
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/format")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangeFormat(
+        int id, [FromBody] ChangeLoungeShowFormatRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ChangeLoungeShowFormatCommand(id, body.NewFormat), ct);
+        return NoContent();
+    }
+
     /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — chỉ khi sự kiện còn Draft (422 nếu khác).
     /// Trả 409 nếu nghệ sĩ này đã có trong line-up của đúng sự kiện này.</summary>
     [HttpPost("{id:int}/performances")]
@@ -313,6 +367,9 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<ShowRatingsDto>.Ok(result));
     }
 }
+
+public sealed record RescheduleLoungeShowRequest(DateTimeOffset NewScheduledStart);
+public sealed record ChangeLoungeShowFormatRequest(LoungeShowFormat NewFormat);
 
 public sealed record UpdateLoungeShowRequest(
     string Name,

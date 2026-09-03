@@ -6,6 +6,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Users.Commands.UpdateAiPreferences;
 using MusicLounge.Application.Users.DTOs;
+using MusicLounge.Application.Users.Queries.GetMyEarnings;
 using MusicLounge.Application.Users.Queries.GetOwnerTransactionHistory;
 
 namespace MusicLounge.Api.Controllers;
@@ -55,5 +56,18 @@ public sealed class MeController : ControllerBase
     {
         var result = await _sender.Send(new GetOwnerTransactionHistoryQuery(type, from, to, page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<OwnerTransactionDto>>.Ok(result));
+    }
+
+    /// <summary>Tổng quan thu nhập của Owner từ settlement — đã nhận (Released), đang chờ
+    /// (Scheduled/PendingReview), và 10 settlement gần nhất.</summary>
+    [HttpGet("earnings")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<EarningsSummaryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyEarnings(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyEarningsQuery(), ct);
+        return Ok(ApiResponse<EarningsSummaryDto>.Ok(result));
     }
 }
