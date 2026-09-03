@@ -125,7 +125,11 @@ public sealed class OwnerGoldenPathTests
             Format = "Offline", ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
             ScheduledEnd = (DateTimeOffset?)null, CategoryId = (int?)null,
             OfflineQuota = 100, OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(), Performances = Array.Empty<object>()
+            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
+            Performances = new[]
+            {
+                new { PerformerId = (int?)null, PerformerName = "Golden Path Performer", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+            }
         });
         showRes.StatusCode.Should().Be(HttpStatusCode.Created);
         var showId = (await showRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
@@ -154,7 +158,7 @@ public sealed class OwnerGoldenPathTests
         legalRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // ── 9. Publish = submit for moderation (Draft → Pending, NOT visible yet) ──────
-        var publishRes = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var publishRes = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
         publishRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var beforeApprovalListing = await anon.GetAsync("/api/v1/lounge-shows?pageSize=100");
