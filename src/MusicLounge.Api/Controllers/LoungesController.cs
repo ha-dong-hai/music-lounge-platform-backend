@@ -10,7 +10,10 @@ using MusicLounge.Application.Lounges.Commands.CreateLounge;
 using MusicLounge.Application.Lounges.Commands.DeleteLounge;
 using MusicLounge.Application.Lounges.Commands.RemoveLoungeGalleryImage;
 using MusicLounge.Application.Lounges.Commands.ReorderLoungeGalleryImages;
+using MusicLounge.Application.Lounges.Commands.SetLoungeAreaLayoutImage;
 using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
+using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
+using MusicLounge.Application.Lounges.Commands.SetZoneLayout3D;
 using MusicLounge.Application.Lounges.Commands.UpdateLounge;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
@@ -168,11 +171,56 @@ public sealed class LoungesController : ControllerBase
         await _sender.Send(new ReorderLoungeGalleryImagesCommand(id, body.OrderedImageIds), ct);
         return NoContent();
     }
+
+    [HttpPut("{id:int}/zones/{zoneId:int}/layout-2d")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetZoneLayout2D(
+        int id, int zoneId, [FromBody] SetZoneLayout2DRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetZoneLayout2DCommand(
+            zoneId, body.X, body.Y, body.Width, body.Height, body.RotationDeg, body.Color), ct);
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/zones/{zoneId:int}/layout-3d")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetZoneLayout3D(
+        int id, int zoneId, [FromBody] SetZoneLayout3DRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetZoneLayout3DCommand(zoneId, body.X, body.Y, body.Z), ct);
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/area-layout-image")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetAreaLayoutImage(
+        int id, [FromBody] SetAreaLayoutImageRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetLoungeAreaLayoutImageCommand(id, body.ImageUrl), ct);
+        return NoContent();
+    }
 }
 
 public sealed record ReorderGalleryImagesRequest(List<int> OrderedImageIds);
 
 public sealed record AddLoungeGalleryImageRequest(string ImageUrl, string? Caption);
+
+public sealed record SetZoneLayout2DRequest(
+    double X, double Y, double Width, double Height, double RotationDeg, string? Color);
+public sealed record SetZoneLayout3DRequest(double? X, double? Y, double? Z);
+public sealed record SetAreaLayoutImageRequest(string? ImageUrl);
 
 public sealed record SetLoungeImageRequest(string ImageUrl);
 

@@ -24,6 +24,7 @@ using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowSuggestions;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetShowRatings;
+using MusicLounge.Application.LoungeShows.Queries.GetShowSeatingMap;
 using MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetTrendingLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
@@ -141,6 +142,20 @@ public sealed class LoungeShowsController : ControllerBase
     {
         var result = await _sender.Send(new GetLoungeShowDetailQuery(id), ct);
         return Ok(ApiResponse<LoungeShowDetailDto>.Ok(result));
+    }
+
+    /// <summary>Bản đồ khu vực chỗ ngồi cho 1 show — chỉ gồm zone có ít nhất 1 hạng vé trong show
+    /// này (không phải toàn bộ zone của venue), kèm số chỗ còn trống/khoảng giá live-computed.
+    /// Draft ẩn giống GetDetail (404 với người ngoài, kể cả Owner venue khác).</summary>
+    [HttpGet("{id:int}/seating-map")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<SeatingMapDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSeatingMap(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetShowSeatingMapQuery(id), ct);
+        return Ok(ApiResponse<SeatingMapDto>.Ok(result));
     }
 
     /// <summary>Tối đa 6 sự kiện "tương tự" cho trang chi tiết — cùng phòng trà HOẶC chung ít nhất 1
