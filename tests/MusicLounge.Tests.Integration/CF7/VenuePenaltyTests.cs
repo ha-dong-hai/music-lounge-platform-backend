@@ -420,7 +420,7 @@ public sealed class VenuePenaltyTests
         }
 
         var client = _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId);
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
