@@ -16,7 +16,7 @@ namespace MusicLounge.Tests.Integration.CF1;
 /// <summary>
 /// CF1 W01/W04/W05/W07 — Venue, Event lifecycle, Staff assignment, Admin approval
 /// POST /api/v1/lounges | /api/v1/lounges/{id}/staff
-/// POST /api/v1/lounge-shows | .../publish | .../cancel
+/// POST /api/v1/lounge-shows | .../submit | .../cancel
 /// POST /api/v1/ticket-tiers
 /// POST /api/v1/moderations/shows/{id}/review
 /// </summary>
@@ -46,6 +46,8 @@ public sealed class EventManagementTests
             OfflineQuota = 100,
             OnlineQuota = format == "Online" ? 200 : (int?)null,
             GenreIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
             Performances = new[]
             {
                 new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
@@ -224,6 +226,8 @@ public sealed class EventManagementTests
             OfflineQuota = (int?)null,
             OnlineQuota = (int?)null,
             GenreIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
             Performances = Array.Empty<object>()
         });
 
@@ -236,7 +240,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -248,7 +252,7 @@ public sealed class EventManagementTests
         await CreateTierAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -263,7 +267,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
@@ -283,7 +287,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
@@ -303,7 +307,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var res = await ownerClient.PostAsJsonAsync(
             $"/api/v1/moderations/shows/{showId}/review",
@@ -318,7 +322,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var first = await adminClient.PostAsJsonAsync(
@@ -339,7 +343,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
@@ -361,7 +365,7 @@ public sealed class EventManagementTests
         await CreateTierAsync(showId, "Livestream");
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -377,7 +381,7 @@ public sealed class EventManagementTests
         lsRes.EnsureSuccessStatusCode();
 
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        var res = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
