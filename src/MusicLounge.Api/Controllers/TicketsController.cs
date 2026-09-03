@@ -4,10 +4,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Refunds.DTOs;
+using MusicLounge.Application.Refunds.Queries.GetMyRefundRequests;
+using MusicLounge.Application.Tickets.Commands.AcceptTicketTransfer;
 using MusicLounge.Application.Tickets.Commands.CancelTicket;
+using MusicLounge.Application.Tickets.Commands.CancelTicketTransfer;
+using MusicLounge.Application.Tickets.Commands.CheckInTicket;
 using MusicLounge.Application.Tickets.Commands.HoldTicket;
+using MusicLounge.Application.Tickets.Commands.InitiateTicketTransfer;
 using MusicLounge.Application.Tickets.Commands.PurchaseTicket;
+using MusicLounge.Application.Tickets.Commands.SellWalkInTicket;
 using MusicLounge.Application.Tickets.DTOs;
+using MusicLounge.Application.Tickets.Queries.GetIncomingTicketTransfers;
 using MusicLounge.Application.Tickets.Queries.GetMyTickets;
 using MusicLounge.Application.Tickets.Queries.GetTicketByQr;
 using MusicLounge.Application.Tickets.Queries.GetTicketDetail;
@@ -121,6 +129,111 @@ public sealed class TicketsController : ControllerBase
         var refundRequestId = await _sender.Send(new CancelTicketCommand(id), ct);
         return Ok(ApiResponse<int>.Ok(refundRequestId));
     }
+
+    /// <summary>Bán vé vật lý tại quầy (Staff/Owner của đúng venue) — thanh toán Cash, xác nhận
+    /// ngay, không qua flow hold/VNPay. Chịu chung mọi giới hạn quota (mức giá/tier/zone/
+    /// access-type/subscription cap) như đường mua online, khóa theo show để tránh bán vượt khi
+    /// nhiều quầy/nhiều request cùng bán lúc gần hết vé.</summary>
+    [HttpPost("walk-in")]
+    [ProducesResponseType<ApiResponse<WalkInSaleResultDto>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SellWalkIn(
+        [FromBody] SellWalkInTicketCommand command, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(command, ct);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<WalkInSaleResultDto>.Ok(result));
+    }
+
+    /// <summary>Check-in vé vật lý tại cửa bằng mã QR (Staff/Owner của đúng venue) — chỉ áp dụng khi
+    /// show đang Ongoing, vé Confirmed và chưa từng check-in; khóa theo QrCode để cùng 1 vé bị quét
+    /// 2 cửa cùng lúc không tạo ra 2 lượt check-in.</summary>
+    [HttpPost("check-in")]
+    [ProducesResponseType<ApiResponse<TicketDetailDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CheckIn(
+        [FromBody] CheckInTicketCommand command, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(command, ct);
+        return Ok(ApiResponse<TicketDetailDto>.Ok(result));
+    }
+
+    /// <summary>Lịch sử yêu cầu hoàn tiền của chính người dùng đang đăng nhập — chỗ duy nhất để
+    /// khán giả tự tra lại kết quả yêu cầu hoàn tiền đã tạo qua Cancel (Admin-only
+    /// /admin/refund-requests không dùng được cho vai trò này).</summary>
+    [HttpGet("refund-requests/my")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<RefundRequestDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMyRefundRequests(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyRefundRequestsQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<RefundRequestDto>>.Ok(result));
+    }
+
+    // ---- Chuyển nhượng vé ----
+
+    /// <summary>Khởi tạo chuyển nhượng vé cho người nhận qua email — chỉ chủ vé, vé phải Confirmed,
+    /// show chưa Ended/Cancelled, vé chưa check-in/chưa dùng livestream, chưa có yêu cầu chuyển
+    /// nhượng nào khác đang chờ. Tự động hết hạn sau 48h nếu người nhận không phản hồi
+    /// (TicketTransferExpiryJob).</summary>
+    [HttpPost("{id:guid}/transfer")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> InitiateTransfer(
+        Guid id, [FromBody] InitiateTransferRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new InitiateTicketTransferCommand(id, body.RecipientEmail), ct);
+        return NoContent();
+    }
+
+    /// <summary>Danh sách vé đang được chuyển nhượng đến người dùng đang đăng nhập, chờ chấp nhận.</summary>
+    [HttpGet("incoming-transfers")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<IncomingTicketTransferDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetIncomingTransfers(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetIncomingTicketTransfersQuery(), ct);
+        return Ok(ApiResponse<IReadOnlyList<IncomingTicketTransferDto>>.Ok(result));
+    }
+
+    /// <summary>Người nhận chấp nhận chuyển nhượng — chuyển quyền sở hữu vé, cấp lại mã QR mới (vô
+    /// hiệu hóa mã cũ) và access token livestream mới nếu có.</summary>
+    [HttpPost("{id:guid}/transfer/accept")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> AcceptTransfer(Guid id, CancellationToken ct = default)
+    {
+        await _sender.Send(new AcceptTicketTransferCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>Hủy chuyển nhượng — người gửi hủy trước khi được nhận, hoặc người nhận từ chối.</summary>
+    [HttpPost("{id:guid}/transfer/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelTransfer(Guid id, CancellationToken ct = default)
+    {
+        await _sender.Send(new CancelTicketTransferCommand(id), ct);
+        return NoContent();
+    }
 }
+
+public sealed record InitiateTransferRequest(string RecipientEmail);
 
 public sealed record PurchaseTicketRequest(int HoldId);

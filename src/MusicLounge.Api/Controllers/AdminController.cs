@@ -21,6 +21,8 @@ using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.DTOs;
 using MusicLounge.Application.Moderations.Queries.GetPendingLoungeShows;
 using MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
+using MusicLounge.Application.Refunds.DTOs;
+using MusicLounge.Application.Refunds.Queries.GetPendingRefundRequests;
 using MusicLounge.Application.Users.Commands.DeactivateUserAccount;
 using MusicLounge.Application.Users.Commands.ReactivateUserAccount;
 using MusicLounge.Application.Users.DTOs;
@@ -208,6 +210,16 @@ public sealed class AdminController : ControllerBase
     }
 
     // ---- Hoàn tiền ----
+
+    /// <summary>Danh sách các yêu cầu hoàn tiền đang chờ xử lý (Pending), mới nhất trước.</summary>
+    [HttpGet("refund-requests")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<RefundRequestDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPendingRefundRequests(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPendingRefundRequestsQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<RefundRequestDto>>.Ok(result));
+    }
 
     /// <summary>Duyệt hoặc từ chối 1 yêu cầu hoàn tiền (Pending). Approved: gọi VNPay Merchant API
     /// (vnp_Command=refund) hoàn tiền thật trước, chỉ ghi đảo bút toán sổ cái (D8) và co giãn
