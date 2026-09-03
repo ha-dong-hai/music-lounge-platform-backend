@@ -37,6 +37,8 @@ public sealed class AiPosterGenerationTests
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
             GenreIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
             Performances = Array.Empty<object>()
         });
         res.EnsureSuccessStatusCode();

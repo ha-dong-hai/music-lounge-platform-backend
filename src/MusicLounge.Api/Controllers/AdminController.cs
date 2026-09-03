@@ -15,6 +15,8 @@ using MusicLounge.Application.Catalog.Commands.UpdateEventCategory;
 using MusicLounge.Application.Catalog.Commands.UpdateMood;
 using MusicLounge.Application.Catalog.Commands.UpdateMusicGenre;
 using MusicLounge.Application.Catalog.Commands.UpdateVenueAtmosphere;
+using MusicLounge.Application.Admin.DTOs;
+using MusicLounge.Application.Admin.Queries.GetLedgerIntegrity;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.LoungeShows.Commands.RemoveRating;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
@@ -45,6 +47,19 @@ public sealed class AdminController : ControllerBase
     private readonly ISender _sender;
 
     public AdminController(ISender sender) => _sender = sender;
+
+    // ---- Sổ cái ----
+
+    /// <summary>Rà soát tính toàn vẹn sổ cái kép: bút toán mất cân bằng (tổng nợ ≠ tổng có trong 1
+    /// journal) và callback VNPay bị xử lý trùng (2 journal riêng biệt cho cùng 1 lần xác nhận
+    /// thanh toán) — trả về rỗng nếu sổ cái cân bằng hoàn toàn.</summary>
+    [HttpGet("ledger/integrity-check")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<LedgerIntegrityIssueDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LedgerIntegrityCheck(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetLedgerIntegrityQuery(), ct);
+        return Ok(ApiResponse<IReadOnlyList<LedgerIntegrityIssueDto>>.Ok(result));
+    }
 
     // ---- Thể loại nhạc ----
 

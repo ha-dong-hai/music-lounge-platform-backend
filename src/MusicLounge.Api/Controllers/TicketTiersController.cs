@@ -38,7 +38,7 @@ public sealed class TicketTiersController : ControllerBase
     /// vượt giới hạn vé/event của gói subscription đang hoạt động.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -46,7 +46,7 @@ public sealed class TicketTiersController : ControllerBase
         [FromBody] CreateTicketTierCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
     }
 
     /// <summary>Chỉ sửa được khi sự kiện còn Draft (422 nếu khác); tăng TotalCapacity vẫn bị kiểm
