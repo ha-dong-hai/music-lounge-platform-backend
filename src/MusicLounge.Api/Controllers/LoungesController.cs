@@ -6,19 +6,27 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Swagger;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Lounges.Commands.AddLoungeGalleryImage;
+using MusicLounge.Application.Lounges.Commands.AddVenueTourHotspot;
+using MusicLounge.Application.Lounges.Commands.AddVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.CreateLounge;
 using MusicLounge.Application.Lounges.Commands.DeleteLounge;
 using MusicLounge.Application.Lounges.Commands.RemoveLoungeGalleryImage;
+using MusicLounge.Application.Lounges.Commands.RemoveVenueTourHotspot;
+using MusicLounge.Application.Lounges.Commands.RemoveVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.ReorderLoungeGalleryImages;
 using MusicLounge.Application.Lounges.Commands.SetLoungeAreaLayoutImage;
 using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
+using MusicLounge.Application.Lounges.Commands.SetVenueTourScenePosition;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout3D;
+using MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.UpdateLounge;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
 using MusicLounge.Application.Lounges.Queries.GetLounges;
 using MusicLounge.Application.Lounges.Queries.GetLoungeZones;
+using MusicLounge.Application.Lounges.Queries.GetVenueTour;
+using MusicLounge.Application.Lounges.Queries.GetVenueTourStitchAttempt;
 using MusicLounge.Application.Staffing.Commands.AssignStaff;
 using MusicLounge.Application.Staffing.Commands.DeactivateStaff;
 using MusicLounge.Application.Staffing.DTOs;
@@ -261,11 +269,141 @@ public sealed class LoungesController : ControllerBase
         await _sender.Send(new SetLoungeAreaLayoutImageCommand(id, body.ImageUrl), ct);
         return NoContent();
     }
+
+    // ---- Tour ảo 360° ----
+
+    /// <summary>Tour ảo 360° kiểu Louvre/bảo tàng — công khai, không cần đăng nhập (khán giả xem
+    /// trước khi mua vé), khác Model3DUrl (1 file .glb duy nhất).</summary>
+    [HttpGet("{id:int}/tour")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<VenueTourDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTour(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetVenueTourQuery(id), ct);
+        return Ok(ApiResponse<VenueTourDto>.Ok(result));
+    }
+
+    /// <summary>Thêm 1 scene panorama đã chụp sẵn (upload qua POST /uploads/images trước) — giới
+    /// hạn theo MaxTourScenes của gói subscription đang hoạt động (chụp tại thời điểm subscribe,
+    /// D12).</summary>
+    [HttpPost("{id:int}/tour/scenes")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> AddTourScene(
+        int id, [FromBody] AddVenueTourSceneRequest body, CancellationToken ct = default)
+    {
+        var sceneId = await _sender.Send(new AddVenueTourSceneCommand(id, body.ImageUrl, body.Name), ct);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(sceneId));
+    }
+
+    /// <summary>Ghép nhiều ảnh chụp xoay vòng thành 1 panorama qua microservice panorama-stitcher
+    /// riêng — dành cho Owner không có app chụp 360° gốc. Chạy nền (StitchVenueTourSceneJob), trả
+    /// 202 kèm id lần thử để tự tra kết quả qua GET .../stitch/{attemptId}. Cùng giới hạn
+    /// MaxTourScenes như thêm ảnh trực tiếp, cộng thêm giới hạn chống lạm dụng riêng (ghép ảnh tốn
+    /// CPU server, không như gọi vendor AI trả phí).</summary>
+    [HttpPost("{id:int}/tour/scenes/stitch")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> StitchTourScene(
+        int id, [FromBody] StitchVenueTourSceneRequest body, CancellationToken ct = default)
+    {
+        var attemptId = await _sender.Send(
+            new StitchVenueTourSceneCommand(id, body.SourceImageUrls, body.Name), ct);
+        return StatusCode(StatusCodes.Status202Accepted, ApiResponse<int>.Ok(attemptId));
+    }
+
+    /// <summary>Owner tự tra kết quả 1 lần ghép ảnh đã gửi (Pending/Succeeded/Failed).</summary>
+    [HttpGet("{id:int}/tour/scenes/stitch/{attemptId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<VenueTourStitchAttemptDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTourStitchAttempt(
+        int id, int attemptId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetVenueTourStitchAttemptQuery(id, attemptId), ct);
+        return Ok(ApiResponse<VenueTourStitchAttemptDto>.Ok(result));
+    }
+
+    /// <summary>Xóa 1 scene — dọn luôn mọi hotspot ở scene khác đang trỏ (Navigate) tới scene này,
+    /// tránh vi phạm FK.</summary>
+    [HttpDelete("{id:int}/tour/scenes/{sceneId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveTourScene(int id, int sceneId, CancellationToken ct = default)
+    {
+        await _sender.Send(new RemoveVenueTourSceneCommand(id, sceneId), ct);
+        return NoContent();
+    }
+
+    /// <summary>Đặt vị trí đánh dấu của 1 scene trên ảnh mặt bằng (area-layout-image) — X/Y theo %
+    /// (0-100). Truyền cả 2 null để xóa vị trí đã đặt.</summary>
+    [HttpPut("{id:int}/tour/scenes/{sceneId:int}/position")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetTourScenePosition(
+        int id, int sceneId, [FromBody] SetVenueTourScenePositionRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetVenueTourScenePositionCommand(id, sceneId, body.X, body.Y), ct);
+        return NoContent();
+    }
+
+    /// <summary>Thêm hotspot vào 1 scene — Navigate (dẫn sang scene khác, bắt buộc TargetSceneId)
+    /// hoặc Info (hiện chú thích tĩnh).</summary>
+    [HttpPost("{id:int}/tour/scenes/{sceneId:int}/hotspots")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddTourHotspot(
+        int id, int sceneId, [FromBody] AddVenueTourHotspotRequest body, CancellationToken ct = default)
+    {
+        var hotspotId = await _sender.Send(new AddVenueTourHotspotCommand(
+            id, sceneId, body.Type, body.Yaw, body.Pitch, body.Label, body.TargetSceneId, body.InfoText), ct);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(hotspotId));
+    }
+
+    /// <summary>Xóa 1 hotspot.</summary>
+    [HttpDelete("{id:int}/tour/hotspots/{hotspotId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveTourHotspot(int id, int hotspotId, CancellationToken ct = default)
+    {
+        await _sender.Send(new RemoveVenueTourHotspotCommand(id, hotspotId), ct);
+        return NoContent();
+    }
 }
 
 public sealed record ReorderGalleryImagesRequest(List<int> OrderedImageIds);
 
 public sealed record AddLoungeGalleryImageRequest(string ImageUrl, string? Caption);
+
+public sealed record AddVenueTourSceneRequest(string ImageUrl, string? Name);
+
+public sealed record StitchVenueTourSceneRequest(IReadOnlyList<string> SourceImageUrls, string? Name);
+
+public sealed record SetVenueTourScenePositionRequest(double? X, double? Y);
+
+public sealed record AddVenueTourHotspotRequest(
+    string Type, double Yaw, double Pitch, string? Label, int? TargetSceneId, string? InfoText);
 
 public sealed record SetZoneLayout2DRequest(
     double X, double Y, double Width, double Height, double RotationDeg, string? Color);
