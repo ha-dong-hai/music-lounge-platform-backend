@@ -354,6 +354,111 @@ public sealed class SubscriptionTests
         body.Should().Contain("không còn mở đăng ký");
     }
 
+    // ─── Cancel (hiệu lực NGAY LẬP TỨC, không hoàn tiền — xem CancelSubscriptionCommand) ──────────
+
+    [Fact]
+    public async Task Cancel_NoSubscriptionEver_Returns422()
+    {
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task Cancel_ActiveSubscription_Returns204_AndPersistsCancelledStatus()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var sub = await db.OwnerSubscriptions.SingleAsync(s => s.OwnerId == ownerId);
+        sub.Status.Should().Be(SubscriptionStatus.Cancelled);
+        sub.CancelledAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Cancel_ThenSubscribeToAnotherPackage_Succeeds()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var otherPackageId = await CreatePackageAsync(price: 400_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+        await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
+
+        // Hủy phải mở khóa đăng ký gói khác NGAY, không cần đợi ExpiresAt — đây là mục đích chính
+        // của tính năng, khác hẳn khuyến nghị SaaS chuẩn "hiệu lực cuối kỳ".
+        var res = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = otherPackageId });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Cancel_AlreadyCancelled_Returns409()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+        await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Cancel_WhileSuspended_Returns409_CannotEscapePenaltyByCancelling()
+    {
+        var packageId = await CreatePackageAsync(price: 250_000m);
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var subscribeRes = await ownerClient.PostAsJsonAsync(
+            "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
+        var initiation = await subscribeRes.Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var sub = await db.OwnerSubscriptions.SingleAsync(s => s.OwnerId == ownerId);
+            sub.Status = SubscriptionStatus.Suspended;
+            await db.SaveChangesAsync();
+        }
+
+        var res = await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
     private sealed record IdResponse(bool Success, int Data);
     private sealed record SubscriptionInitiationData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record SubscriptionInitiationResponse(bool Success, SubscriptionInitiationData Data);
