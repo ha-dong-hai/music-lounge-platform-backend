@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.Subscriptions.Commands.CancelSubscription;
 using MusicLounge.Application.Subscriptions.Commands.CreateSubscriptionPackage;
 using MusicLounge.Application.Subscriptions.Commands.ProcessSubscriptionPayment;
 using MusicLounge.Application.Subscriptions.Commands.RenewSubscription;
@@ -101,6 +102,21 @@ public sealed class SubscriptionsController : ControllerBase
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
         var result = await _sender.Send(new RenewSubscriptionCommand(ip), ct);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<SubscriptionPaymentInitiationDto>.Ok(result));
+    }
+
+    // Hủy có hiệu lực NGAY LẬP TỨC, không hoàn tiền phần thời gian chưa dùng — xem comment trong
+    // CancelSubscriptionCommand. Route gốc "cancel", không phải "{id}/cancel", vì subscription
+    // luôn ngầm định "của user đang gọi" (khớp convention "subscribe"/"renew" phía trên).
+    [HttpPost("cancel")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cancel(CancellationToken ct = default)
+    {
+        await _sender.Send(new CancelSubscriptionCommand(), ct);
+        return NoContent();
     }
 
     [HttpGet("vnpay-return")]
