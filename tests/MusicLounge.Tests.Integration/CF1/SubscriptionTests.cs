@@ -144,7 +144,7 @@ public sealed class SubscriptionTests
             CategoryId = (int?)null,
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
             Performances = Array.Empty<object>()
         });
 
@@ -168,7 +168,7 @@ public sealed class SubscriptionTests
             CategoryId = (int?)null,
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
             Performances = Array.Empty<object>()
         });
 
