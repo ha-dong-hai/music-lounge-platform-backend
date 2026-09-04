@@ -9,6 +9,8 @@ using MusicLounge.Application.Lounges.Commands.AddLoungeGalleryImage;
 using MusicLounge.Application.Lounges.Commands.AddVenueTourHotspot;
 using MusicLounge.Application.Lounges.Commands.AddVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.CreateLounge;
+using MusicLounge.Application.Lounges.Commands.CreateSeatingZone;
+using MusicLounge.Application.Lounges.Commands.DeactivateSeatingZone;
 using MusicLounge.Application.Lounges.Commands.DeleteLounge;
 using MusicLounge.Application.Lounges.Commands.RemoveLoungeGalleryImage;
 using MusicLounge.Application.Lounges.Commands.RemoveVenueTourHotspot;
@@ -21,6 +23,7 @@ using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout3D;
 using MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.UpdateLounge;
+using MusicLounge.Application.Lounges.Commands.UpdateSeatingZone;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.Lounges.Queries.GetLoungeDetail;
 using MusicLounge.Application.Lounges.Queries.GetLounges;
@@ -83,6 +86,50 @@ public sealed class LoungesController : ControllerBase
     {
         var result = await _sender.Send(new GetLoungeZonesQuery(id, activeOnly), ct);
         return Ok(ApiResponse<IReadOnlyList<SeatingZoneDto>>.Ok(result));
+    }
+
+    /// <summary>Thêm khu vực chỗ ngồi mới cho venue (tên/sức chứa/mô tả).</summary>
+    [HttpPost("{id:int}/zones")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CreateZone(
+        int id, [FromBody] CreateSeatingZoneRequest body, CancellationToken ct = default)
+    {
+        var zoneId = await _sender.Send(
+            new CreateSeatingZoneCommand(id, body.Name, body.Description, body.Capacity), ct);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(zoneId));
+    }
+
+    /// <summary>Cập nhật tên/sức chứa/mô tả của 1 khu vực chỗ ngồi.</summary>
+    [HttpPut("zones/{zoneId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateZone(
+        int zoneId, [FromBody] UpdateSeatingZoneRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new UpdateSeatingZoneCommand(zoneId, body.Name, body.Description, body.Capacity), ct);
+        return NoContent();
+    }
+
+    /// <summary>Ngưng dùng 1 khu vực chỗ ngồi — không xóa cứng: một zone từng được dùng để bán vé
+    /// vẫn phải giữ nguyên tham chiếu lịch sử (mức giá vé cũ, đơn hàng cũ) nên chỉ đánh dấu ngưng
+    /// hoạt động (IsActive=false, ẩn khỏi GetZones khi activeOnly=true), khớp đúng thiết kế IsActive
+    /// đã có sẵn trên entity từ trước.</summary>
+    [HttpDelete("zones/{zoneId:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeactivateZone(int zoneId, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeactivateSeatingZoneCommand(zoneId), ct);
+        return NoContent();
     }
 
     /// <summary>Chỉ Chủ phòng trà (Owner) tạo được — phòng trà mới luôn ở trạng thái chờ Admin duyệt
@@ -404,6 +451,10 @@ public sealed record SetVenueTourScenePositionRequest(double? X, double? Y);
 
 public sealed record AddVenueTourHotspotRequest(
     string Type, double Yaw, double Pitch, string? Label, int? TargetSceneId, string? InfoText);
+
+public sealed record CreateSeatingZoneRequest(string Name, string? Description, int Capacity);
+
+public sealed record UpdateSeatingZoneRequest(string Name, string? Description, int Capacity);
 
 public sealed record SetZoneLayout2DRequest(
     double X, double Y, double Width, double Height, double RotationDeg, string? Color);
