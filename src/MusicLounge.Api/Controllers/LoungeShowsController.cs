@@ -50,9 +50,9 @@ public sealed class LoungeShowsController : ControllerBase
 
     public LoungeShowsController(ISender sender) => _sender = sender;
 
-    /// <summary>Danh sách sự kiện công khai (Published/Ongoing), hoặc sự kiện của chính Owner đang
+    /// <summary>Danh sách buổi diễn công khai (Published/Ongoing), hoặc buổi diễn của chính Owner đang
     /// gọi (mine=true, mọi trạng thái kể cả Draft) — khác /search ở chỗ không có bộ lọc, dùng cho
-    /// trang chủ/"sự kiện của tôi".</summary>
+    /// trang chủ/"buổi diễn của tôi".</summary>
     [HttpGet]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
@@ -70,10 +70,10 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 
-    /// <summary>Tìm kiếm sự kiện công khai — kết hợp được nhiều bộ lọc cùng lúc: thể loại
+    /// <summary>Tìm kiếm buổi diễn công khai — kết hợp được nhiều bộ lọc cùng lúc: thể loại
     /// nhạc/dòng nhạc/không gian, hình thức tổ chức, khoảng thời gian diễn ra, từ khóa trong tên/mô
-    /// tả. Chỉ trả sự kiện đã duyệt công khai (Published/Ongoing) và sắp diễn. Kết quả phân trang,
-    /// mỗi sự kiện kèm giá thấp nhất/cao nhất và thông tin phòng trà (đã có sẵn trong
+    /// tả. Chỉ trả buổi diễn đã duyệt công khai (Published/Ongoing) và sắp diễn. Kết quả phân trang,
+    /// mỗi buổi diễn kèm giá thấp nhất/cao nhất và thông tin phòng trà (đã có sẵn trong
     /// LoungeShowListItemDto).</summary>
     [HttpGet("search")]
     [AllowAnonymous]
@@ -142,7 +142,7 @@ public sealed class LoungeShowsController : ControllerBase
         return CreatedAtAction(nameof(GetDetail), new { id }, ApiResponse<int>.Ok(id));
     }
 
-    /// <summary>Chỉ trả sự kiện của đúng Owner đang đăng nhập (mọi trạng thái, kể cả Draft) — lọc
+    /// <summary>Chỉ trả buổi diễn của đúng Owner đang đăng nhập (mọi trạng thái, kể cả Draft) — lọc
     /// theo trạng thái qua query param `status` nếu có.</summary>
     [HttpGet("mine")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -184,8 +184,8 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<SeatingMapDto>.Ok(result));
     }
 
-    /// <summary>Tối đa 6 sự kiện "tương tự" cho trang chi tiết — cùng phòng trà HOẶC chung ít nhất 1
-    /// thể loại nhạc với sự kiện đang xem, luôn loại trừ chính sự kiện đó, chỉ show Published/
+    /// <summary>Tối đa 6 buổi diễn "tương tự" cho trang chi tiết — cùng phòng trà HOẶC chung ít nhất 1
+    /// thể loại nhạc với buổi diễn đang xem, luôn loại trừ chính buổi diễn đó, chỉ show Published/
     /// Ongoing. Ưu tiên show khớp cả 2 tiêu chí trước, còn lại theo ngày diễn gần nhất.</summary>
     [HttpGet("{id:int}/similar")]
     [AllowAnonymous]
@@ -198,7 +198,7 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<LoungeShowListItemDto>>.Ok(result));
     }
 
-    /// <summary>Thống kê vé đã bán của sự kiện cho Owner: tổng vé, doanh thu, số vé đã check-in,
+    /// <summary>Thống kê vé đã bán của buổi diễn cho Owner: tổng vé, doanh thu, số vé đã check-in,
     /// và breakdown theo từng mức giá — đếm trực tiếp trên bảng Ticket tại thời điểm gọi (không
     /// dùng field đếm sẵn nào) nên luôn phản ánh đúng thời điểm hiện tại. Chỉ Owner của venue (hoặc
     /// Admin) xem được (403 nếu khác).</summary>
@@ -213,7 +213,7 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<ShowTicketStatsDto>.Ok(result));
     }
 
-    /// <summary>Chỉ sửa được khi sự kiện còn ở trạng thái Draft (422 nếu đã gửi duyệt/đã đăng);
+    /// <summary>Chỉ sửa được khi buổi diễn còn ở trạng thái Draft (422 nếu đã gửi duyệt/đã đăng);
     /// chỉ đúng Owner sở hữu venue mới sửa được (403 nếu khác).</summary>
     [HttpPut("{id:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -311,8 +311,8 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>.Ok(result));
     }
 
-    /// <summary>Xóa thật (hard delete) — chỉ áp dụng cho sự kiện còn ở trạng thái Draft (422 nếu
-    /// khác); sự kiện đã publish/đang diễn ra phải dùng huỷ (Cancel), không xóa được nữa.</summary>
+    /// <summary>Xóa thật (hard delete) — chỉ áp dụng cho buổi diễn còn ở trạng thái Draft (422 nếu
+    /// khác); buổi diễn đã publish/đang diễn ra phải dùng huỷ (Cancel), không xóa được nữa.</summary>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -341,7 +341,7 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Hủy sự kiện đã đăng — vé đã Confirmed được hủy kèm tạo yêu cầu hoàn 100% tiền
+    /// <summary>Hủy buổi diễn đã đăng — vé đã Confirmed được hủy kèm tạo yêu cầu hoàn 100% tiền
     /// (RefundRequest) và thông báo tới từng người mua.</summary>
     [HttpPost("{id:int}/cancel")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -405,8 +405,8 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — chỉ khi sự kiện còn Draft (422 nếu khác).
-    /// Trả 409 nếu nghệ sĩ này đã có trong line-up của đúng sự kiện này.</summary>
+    /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — chỉ khi buổi diễn còn Draft (422 nếu khác).
+    /// Trả 409 nếu nghệ sĩ này đã có trong line-up của đúng buổi diễn này.</summary>
     [HttpPost("{id:int}/performances")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
@@ -425,7 +425,7 @@ public sealed class LoungeShowsController : ControllerBase
     }
 
     /// <summary>Sửa vai trò/thứ tự/giờ diễn/bật-tắt nhận donate của 1 nghệ sĩ trong line-up — chỉ
-    /// khi sự kiện còn Draft (422 nếu khác). Đổi sang nghệ sĩ khác: xóa rồi thêm lại.</summary>
+    /// khi buổi diễn còn Draft (422 nếu khác). Đổi sang nghệ sĩ khác: xóa rồi thêm lại.</summary>
     [HttpPut("{id:int}/performances/{performanceId:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -441,7 +441,7 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Xóa 1 nghệ sĩ khỏi danh sách biểu diễn — chỉ khi sự kiện còn Draft (422 nếu khác).</summary>
+    /// <summary>Xóa 1 nghệ sĩ khỏi danh sách biểu diễn — chỉ khi buổi diễn còn Draft (422 nếu khác).</summary>
     [HttpDelete("{id:int}/performances/{performanceId:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -472,7 +472,7 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Danh sách đánh giá công khai của 1 sự kiện — điểm trung bình + phân bố sao (1-5)
+    /// <summary>Danh sách đánh giá công khai của 1 buổi diễn — điểm trung bình + phân bố sao (1-5)
     /// tính trên toàn bộ đánh giá còn hiệu lực, danh sách nhận xét phân trang sắp mới nhất lên
     /// trước. Đánh giá đã bị Admin gỡ (IsRemoved) không tính vào điểm trung bình/phân bố và không
     /// xuất hiện trong danh sách.</summary>

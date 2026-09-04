@@ -100,7 +100,7 @@ public sealed class TicketsController : ControllerBase
         return Ok(ApiResponse<TicketDetailDto>.Ok(result));
     }
 
-    /// <summary>Chi tiết đầy đủ 1 vé — QR code, thông tin sự kiện, khu vực/chỗ ngồi (nếu Physical),
+    /// <summary>Chi tiết đầy đủ 1 vé — QR code, thông tin buổi diễn, khu vực/chỗ ngồi (nếu Physical),
     /// trạng thái. Chỉ chính chủ vé xem được (403 nếu khác).</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType<ApiResponse<TicketDetailDto>>(StatusCodes.Status200OK)]

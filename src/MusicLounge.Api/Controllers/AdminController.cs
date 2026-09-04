@@ -36,7 +36,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Api.Controllers;
 
 /// <summary>Admin quản lý 4 danh mục dùng chung toàn nền tảng (thể loại nhạc, dòng nhạc/cảm xúc,
-/// phong cách không gian, loại sự kiện). Xóa bị chặn (409) nếu danh mục còn đang được show/nghệ
+/// phong cách không gian, loại buổi diễn). Xóa bị chặn (409) nếu danh mục còn đang được show/nghệ
 /// sĩ/người dùng nào tham chiếu — buộc gỡ liên kết trước, không âm thầm để lại dữ liệu mồ côi.</summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -160,7 +160,7 @@ public sealed class AdminController : ControllerBase
         return NoContent();
     }
 
-    // ---- Loại sự kiện ----
+    // ---- Loại buổi diễn ----
 
     [HttpPost("event-categories")]
     [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
@@ -194,9 +194,9 @@ public sealed class AdminController : ControllerBase
         return NoContent();
     }
 
-    // ---- Duyệt sự kiện ----
+    // ---- Duyệt buổi diễn ----
 
-    /// <summary>Danh sách sự kiện đang chờ duyệt (Pending), kèm tên/phòng trà/ngày diễn và tín hiệu
+    /// <summary>Danh sách buổi diễn đang chờ duyệt (Pending), kèm tên/phòng trà/ngày diễn và tín hiệu
     /// AI moderation (điểm rủi ro, lý do gắn cờ) để Admin ưu tiên xử lý — sắp xếp theo điểm rủi ro
     /// AI giảm dần. Xem chi tiết đầy đủ 1 event: dùng GET /lounge-shows/{id} (Admin xem được cả
     /// Draft/Pending).</summary>

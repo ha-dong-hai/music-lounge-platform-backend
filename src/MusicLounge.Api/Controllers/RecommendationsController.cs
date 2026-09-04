@@ -9,7 +9,7 @@ using MusicLounge.Application.LoungeShows.Queries.GetRecommendedLoungeShows;
 
 namespace MusicLounge.Api.Controllers;
 
-/// <summary>Danh sách sự kiện gợi ý riêng cho người dùng đang đăng nhập — cá nhân hóa theo sở thích
+/// <summary>Danh sách buổi diễn gợi ý riêng cho người dùng đang đăng nhập — cá nhân hóa theo sở thích
 /// (MLACP-129/130) + hành vi, lấy từ cache do RefreshRecommendationsJob/RefreshUserRecommendationJob
 /// tính sẵn (không tính trực tiếp trong request). Chưa bật AiConsent hoặc cache rỗng/hết hạn: trả về
 /// show đang thịnh hành (trending) thay vì lỗi hay danh sách trống.</summary>

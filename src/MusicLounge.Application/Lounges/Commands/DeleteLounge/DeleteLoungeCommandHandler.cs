@@ -32,7 +32,7 @@ internal sealed class DeleteLoungeCommandHandler : IRequestHandler<DeleteLoungeC
         var hasAnyShow = await _uow.Repository<LoungeShow, int>()
             .AnyAsync(s => s.LoungeId == request.LoungeId, ct);
         if (hasAnyShow)
-            throw new ConflictException("Phòng trà đang có sự kiện, không thể xóa.");
+            throw new ConflictException("Phòng trà đang có buổi diễn, không thể xóa.");
 
         repo.Remove(lounge);
         await _uow.SaveChangesAsync(ct);

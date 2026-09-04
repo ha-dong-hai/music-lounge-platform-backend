@@ -34,7 +34,7 @@ public sealed class TicketTiersController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<TicketTierSummaryDto>>.Ok(result));
     }
 
-    /// <summary>Chỉ thêm được khi sự kiện còn Draft. Tổng TotalCapacity của mọi hạng vé không được
+    /// <summary>Chỉ thêm được khi buổi diễn còn Draft. Tổng TotalCapacity của mọi hạng vé không được
     /// vượt giới hạn vé/event của gói subscription đang hoạt động.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -49,7 +49,7 @@ public sealed class TicketTiersController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
     }
 
-    /// <summary>Chỉ sửa được khi sự kiện còn Draft (422 nếu khác); tăng TotalCapacity vẫn bị kiểm
+    /// <summary>Chỉ sửa được khi buổi diễn còn Draft (422 nếu khác); tăng TotalCapacity vẫn bị kiểm
     /// tra lại giới hạn subscription giống lúc tạo.</summary>
     [HttpPut("{id:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -65,7 +65,7 @@ public sealed class TicketTiersController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Xóa thật (hard delete) — chỉ áp dụng khi sự kiện còn Draft (422 nếu khác).</summary>
+    /// <summary>Xóa thật (hard delete) — chỉ áp dụng khi buổi diễn còn Draft (422 nếu khác).</summary>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

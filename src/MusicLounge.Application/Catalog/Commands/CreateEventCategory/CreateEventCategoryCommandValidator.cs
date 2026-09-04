@@ -7,7 +7,7 @@ public sealed class CreateEventCategoryCommandValidator : AbstractValidator<Crea
     public CreateEventCategoryCommandValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Tên loại sự kiện không được để trống.")
+            .NotEmpty().WithMessage("Tên loại buổi diễn không được để trống.")
             .MaximumLength(100);
 
         RuleFor(x => x.Description).MaximumLength(500);

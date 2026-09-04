@@ -13,7 +13,7 @@ internal sealed class MoodConfiguration : IEntityTypeConfiguration<Mood>
         b.Property(m => m.Name).HasMaxLength(100).IsRequired();
         b.HasIndex(m => m.Name).IsUnique();
 
-        // MLACP-14: danh mục dòng nhạc/cảm xúc mặc định cho form tạo sự kiện.
+        // MLACP-14: danh mục dòng nhạc/cảm xúc mặc định cho form tạo buổi diễn.
         b.HasData(
             new Mood { Id = 1, Name = "Hoài niệm" },
             new Mood { Id = 2, Name = "Tiền chiến" },

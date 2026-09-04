@@ -13,7 +13,7 @@ public sealed class GeminiModerationService : IAiModerationService
 
     private const string PromptTemplate = """
         Bạn là hệ thống kiểm duyệt nội dung cho một nền tảng đặt vé nhạc sống (phòng trà) tại Việt Nam.
-        Đánh giá nội dung sự kiện dưới đây có dấu hiệu vi phạm chính sách không (nội dung phản cảm,
+        Đánh giá nội dung buổi diễn dưới đây có dấu hiệu vi phạm chính sách không (nội dung phản cảm,
         lừa đảo, spam, ngôn từ thù ghét, quảng cáo trá hình, hoặc thông tin sai sự thật).
 
         Trả lời DUY NHẤT một JSON object đúng theo format sau, không thêm chữ nào khác, không dùng markdown:

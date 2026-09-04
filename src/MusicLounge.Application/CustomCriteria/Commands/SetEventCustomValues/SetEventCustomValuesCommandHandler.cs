@@ -27,7 +27,7 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId)
-            throw new ForbiddenException("Bạn không có quyền gắn tiêu chí cho sự kiện này.");
+            throw new ForbiddenException("Bạn không có quyền gắn tiêu chí cho buổi diễn này.");
 
         if (request.Values.Count == 0) return Unit.Value;
 

@@ -11,7 +11,7 @@ using MusicLounge.Application.Common.Models;
 
 namespace MusicLounge.Api.Controllers;
 
-/// <summary>4 danh mục dùng chung toàn hệ thống, phục vụ form tạo sự kiện và trang onboarding.
+/// <summary>4 danh mục dùng chung toàn hệ thống, phục vụ form tạo buổi diễn và trang onboarding.
 /// Toàn bộ endpoint trong controller này công khai (không yêu cầu đăng nhập) — không có endpoint
 /// nào khác cần bảo vệ nên [AllowAnonymous] đặt ở class level là an toàn ở đây.</summary>
 [ApiController]

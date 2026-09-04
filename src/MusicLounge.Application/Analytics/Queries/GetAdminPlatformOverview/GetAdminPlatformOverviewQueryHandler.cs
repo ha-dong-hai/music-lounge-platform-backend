@@ -20,7 +20,7 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
     public async Task<AdminPlatformOverviewDto> Handle(
         GetAdminPlatformOverviewQuery request, CancellationToken ct)
     {
-        // "Tổng sự kiện TRONG THÁNG" reads as a default period, not an always-required filter —
+        // "Tổng buổi diễn TRONG THÁNG" reads as a default period, not an always-required filter —
         // default to the current calendar month (VN local) when Admin doesn't pick a custom range.
         DateTimeOffset from, to;
         if (request.From.HasValue && request.To.HasValue)

@@ -10,7 +10,7 @@ namespace MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 internal sealed class GetSimilarLoungeShowsQueryHandler
     : IRequestHandler<GetSimilarLoungeShowsQuery, IReadOnlyList<LoungeShowListItemDto>>
 {
-    // DONE WHEN: "tối đa 6 sự kiện" — quy định cố định của tính năng, không phải tham số client
+    // DONE WHEN: "tối đa 6 buổi diễn" — quy định cố định của tính năng, không phải tham số client
     // được phép tuỳ chỉnh.
     private const int MaxResults = 6;
 

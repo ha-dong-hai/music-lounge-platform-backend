@@ -39,10 +39,10 @@ internal sealed class CheckInTicketCommandHandler : IRequestHandler<CheckInTicke
             ?? throw new NotFoundException("Ticket", request.QrCode);
 
         if (!VenueOperatorAccess.CanOperate(_currentUser, ticket.Show.LoungeId, ticket.Show.Lounge.OwnerId))
-            throw new ForbiddenException("Bạn không có quyền check-in vé cho sự kiện này.");
+            throw new ForbiddenException("Bạn không có quyền check-in vé cho buổi diễn này.");
 
         if (ticket.Show.Status != LoungeShowStatus.Ongoing)
-            throw new DomainException("Chỉ có thể check-in khi sự kiện đang diễn ra.");
+            throw new DomainException("Chỉ có thể check-in khi buổi diễn đang diễn ra.");
 
         if (ticket.Tier.AccessType != AccessType.Physical)
             throw new DomainException("Vé online không cần check-in tại cửa.");

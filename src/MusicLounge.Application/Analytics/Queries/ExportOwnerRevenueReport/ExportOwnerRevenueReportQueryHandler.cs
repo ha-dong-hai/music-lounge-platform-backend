@@ -73,9 +73,9 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
         sb.AppendLine(Csv("Phí nền tảng đã trả", report.TotalPlatformFeePaid.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine();
 
-        sb.AppendLine(Csv("Theo sự kiện"));
+        sb.AppendLine(Csv("Theo buổi diễn"));
         sb.AppendLine(Csv(
-            "Mã sự kiện", "Tên sự kiện", "Ngày diễn", "Doanh thu vé", "Doanh thu F&B", "Doanh thu donate", "Tổng"));
+            "Mã buổi diễn", "Tên buổi diễn", "Ngày diễn", "Doanh thu vé", "Doanh thu F&B", "Doanh thu donate", "Tổng"));
         foreach (var e in report.ByEvent)
         {
             sb.AppendLine(Csv(
