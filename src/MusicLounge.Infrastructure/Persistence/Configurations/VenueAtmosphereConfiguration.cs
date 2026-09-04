@@ -13,7 +13,7 @@ internal sealed class VenueAtmosphereConfiguration : IEntityTypeConfiguration<Ve
         b.Property(a => a.Name).HasMaxLength(100).IsRequired();
         b.HasIndex(a => a.Name).IsUnique();
 
-        // MLACP-14: danh mục phong cách không gian mặc định cho form tạo sự kiện.
+        // MLACP-14: danh mục phong cách không gian mặc định cho form tạo buổi diễn.
         b.HasData(
             new VenueAtmosphere { Id = 1, Name = "Ấm cúng" },
             new VenueAtmosphere { Id = 2, Name = "Sang trọng" },

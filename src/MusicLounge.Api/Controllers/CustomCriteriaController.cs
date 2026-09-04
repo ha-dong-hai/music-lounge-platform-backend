@@ -22,7 +22,7 @@ public sealed class CustomCriteriaController : ControllerBase
     public CustomCriteriaController(ISender sender) => _sender = sender;
 
     /// <summary>Owner — thêm 1 tiêu chí phân loại tùy chỉnh cho venue mình (vd: ngôn ngữ biểu diễn,
-    /// acoustic/electric, phụ thu bàn). Dùng cho AI gợi ý và hiển thị khi tạo sự kiện tại venue đó.
+    /// acoustic/electric, phụ thu bàn). Dùng cho AI gợi ý và hiển thị khi tạo buổi diễn tại venue đó.
     /// Key phải duy nhất trong venue (409 nếu trùng).</summary>
     [HttpPost]
     [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
@@ -38,7 +38,7 @@ public sealed class CustomCriteriaController : ControllerBase
     }
 
     /// <summary>Owner — danh sách tiêu chí tùy chỉnh (đang active) của 1 venue mình sở hữu, dùng để
-    /// hiển thị form khi tạo sự kiện tại venue đó.</summary>
+    /// hiển thị form khi tạo buổi diễn tại venue đó.</summary>
     [HttpGet]
     [ProducesResponseType<ApiResponse<IReadOnlyList<CustomCriteriaDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -50,8 +50,8 @@ public sealed class CustomCriteriaController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<CustomCriteriaDto>>.Ok(result));
     }
 
-    /// <summary>Owner — gắn/cập nhật giá trị các tiêu chí tùy chỉnh cho 1 sự kiện (upsert theo
-    /// CriteriaId). Chỉ chấp nhận tiêu chí thuộc đúng venue của sự kiện đó. Dữ liệu dùng cho AI
+    /// <summary>Owner — gắn/cập nhật giá trị các tiêu chí tùy chỉnh cho 1 buổi diễn (upsert theo
+    /// CriteriaId). Chỉ chấp nhận tiêu chí thuộc đúng venue của buổi diễn đó. Dữ liệu dùng cho AI
     /// matching nâng cao.</summary>
     [HttpPost("shows/{showId:int}/values")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

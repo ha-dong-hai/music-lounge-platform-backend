@@ -208,7 +208,7 @@ public sealed class LoungesController : ControllerBase
     }
 
     /// <summary>Chỉ đúng Owner sở hữu (hoặc Admin) mới xóa được; bị chặn (409) nếu phòng trà còn
-    /// bất kỳ sự kiện nào (mọi trạng thái, tránh mất lịch sử show đã kết thúc/hủy).</summary>
+    /// bất kỳ buổi diễn nào (mọi trạng thái, tránh mất lịch sử show đã kết thúc/hủy).</summary>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

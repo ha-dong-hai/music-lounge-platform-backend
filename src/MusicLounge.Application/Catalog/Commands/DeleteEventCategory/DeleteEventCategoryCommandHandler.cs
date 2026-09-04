@@ -21,7 +21,7 @@ internal sealed class DeleteEventCategoryCommandHandler : IRequestHandler<Delete
         // bang join rieng nhu Genre/Mood/Atmosphere.
         var inUse = await _uow.Repository<LoungeShow, int>().AnyAsync(x => x.CategoryId == request.Id, ct);
         if (inUse)
-            throw new ConflictException($"Loại sự kiện '{category.Name}' đang được sử dụng, không thể xóa.");
+            throw new ConflictException($"Loại buổi diễn '{category.Name}' đang được sử dụng, không thể xóa.");
 
         repo.Remove(category);
         await _uow.SaveChangesAsync(ct);

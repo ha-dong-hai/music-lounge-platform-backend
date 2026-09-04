@@ -32,7 +32,7 @@ public sealed class FollowsController : ControllerBase
     }
 
     /// <summary>Follow 1 phòng trà — dùng làm đầu vào tín hiệu gợi ý AI (FollowedVenueBoost) và để
-    /// nhận thông báo khi venue có sự kiện mới. 409 nếu đã follow trước đó (không follow trùng).</summary>
+    /// nhận thông báo khi venue có buổi diễn mới. 409 nếu đã follow trước đó (không follow trùng).</summary>
     [HttpPost("lounges/{loungeId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

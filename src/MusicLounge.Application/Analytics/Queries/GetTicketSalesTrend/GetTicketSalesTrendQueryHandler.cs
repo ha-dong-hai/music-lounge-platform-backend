@@ -33,7 +33,7 @@ internal sealed class GetTicketSalesTrendQueryHandler
             ?? throw new NotFoundException(nameof(Domain.Entities.MusicLounge), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId)
-            throw new ForbiddenException("Bạn không có quyền xem thống kê bán vé của sự kiện này.");
+            throw new ForbiddenException("Bạn không có quyền xem thống kê bán vé của buổi diễn này.");
 
         // "Đã bán" — Confirmed hoặc đã Used (check-in rồi vẫn tính là đã bán); Pending/Cancelled/
         // Refunded không tính vào doanh số thực.

@@ -32,7 +32,7 @@ internal sealed class GetShowPerformanceQueryHandler
             ?? throw new NotFoundException(nameof(Domain.Entities.MusicLounge), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId)
-            throw new ForbiddenException("Bạn không có quyền xem thống kê của sự kiện này.");
+            throw new ForbiddenException("Bạn không có quyền xem thống kê của buổi diễn này.");
 
         // Only counts logged-in, AiConsent==true visits (LogUserBehaviourJob's own gate) —
         // anonymous browsing and non-consenting users are not represented here. This is the only

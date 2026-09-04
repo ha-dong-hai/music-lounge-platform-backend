@@ -16,7 +16,7 @@ internal sealed class CreateEventCategoryCommandHandler : IRequestHandler<Create
         var nameExists = await _uow.Repository<EventCategory, int>()
             .AnyAsync(c => c.Name == request.Name, ct);
         if (nameExists)
-            throw new ConflictException($"Loại sự kiện '{request.Name}' đã tồn tại.");
+            throw new ConflictException($"Loại buổi diễn '{request.Name}' đã tồn tại.");
 
         var category = new EventCategory
         {

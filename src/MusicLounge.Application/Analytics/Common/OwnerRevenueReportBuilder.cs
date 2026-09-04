@@ -54,7 +54,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
             d => performanceIds.Contains(d.PerformanceId) && d.PaymentConfirmedAt != null, ct);
         var donations = allDonations.Where(d => InRange(d.PaymentConfirmedAt!.Value)).ToList();
 
-        // ---- Theo sự kiện ----
+        // ---- Theo buổi diễn ----
         var ticketsByShow = tickets.ToLookup(t => t.ShowId);
         var fnbByShow = fnbOrders.Where(o => o.ShowId.HasValue).ToLookup(o => o.ShowId!.Value);
         var donationsByShow = donations

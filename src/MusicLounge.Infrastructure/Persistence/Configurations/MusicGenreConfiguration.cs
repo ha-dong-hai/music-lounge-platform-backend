@@ -14,7 +14,7 @@ internal sealed class MusicGenreConfiguration : IEntityTypeConfiguration<MusicGe
         b.Property(g => g.NameEn).HasMaxLength(100);
         b.HasIndex(g => g.Name).IsUnique();
 
-        // MLACP-14: danh mục thể loại nhạc mặc định cho form tạo sự kiện.
+        // MLACP-14: danh mục thể loại nhạc mặc định cho form tạo buổi diễn.
         b.HasData(
             new MusicGenre { Id = 1, Name = "Jazz", NameEn = "Jazz" },
             new MusicGenre { Id = 2, Name = "Acoustic", NameEn = "Acoustic" },

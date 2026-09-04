@@ -19,7 +19,7 @@ internal sealed class UpdateEventCategoryCommandHandler : IRequestHandler<Update
 
         var nameTaken = await repo.AnyAsync(c => c.Id != request.Id && c.Name == request.Name, ct);
         if (nameTaken)
-            throw new ConflictException($"Loại sự kiện '{request.Name}' đã tồn tại.");
+            throw new ConflictException($"Loại buổi diễn '{request.Name}' đã tồn tại.");
 
         category.Name = request.Name;
         category.Description = request.Description;
