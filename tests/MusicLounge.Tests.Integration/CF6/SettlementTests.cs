@@ -171,6 +171,73 @@ public sealed class SettlementTests
         }
     }
 
+    /// <summary>
+    /// Regression test for a gap found in this session's entity/business-completeness audit:
+    /// WriteTicketLedgerHandler existed on local master but was never ported to origin, so every
+    /// VNPay ticket purchase confirmed silently without ever writing the "payment" journal (Gateway
+    /// debit / Platform+Tax credit) or populating Payment.PlatformFee/TaxWithheld/NetAmount — the
+    /// existing end-to-end test above never caught this because it only asserts the owner's
+    /// eventual settlement-release credit, which ScheduleSettlementHandler computes independently
+    /// and would still land correctly even with zero ledger entries for the original sale.
+    /// </summary>
+    [Fact]
+    public async Task TicketPaymentConfirmed_WritesBalancedPaymentJournal_AndPopulatesPaymentFeeBreakdown()
+    {
+        const decimal gross = 1_000_000m;
+        const decimal expectedPlatformFee = 50_000m; // 5% system_config default
+        const decimal expectedTax = 50_000m;         // 5% system_config default
+        const decimal expectedOwnerNet = 900_000m;
+
+        int paymentId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var payment = new Payment
+            {
+                OrderId = $"LEDGER-{Guid.NewGuid():N}"[..30],
+                GrossAmount = gross,
+                Status = PaymentStatus.Confirmed,
+                ReferenceType = "TicketHold", ReferenceId = "0",
+                PaidAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow
+            };
+            db.Payments.Add(payment);
+            await db.SaveChangesAsync();
+            paymentId = payment.Id;
+        }
+
+        // OwnerId: 0 — deliberately isolates WriteTicketLedgerHandler under test: it's the exact
+        // value ScheduleSettlementHandler itself treats as "nothing to schedule" and returns early
+        // on (see its own `if (payment is null || notification.OwnerId == 0) return;`), so this
+        // doesn't also require seeding a ticket/show/lounge/bank-account just to reach the
+        // assertions below. WriteTicketLedgerHandler only interpolates OwnerId into a ledger line's
+        // free-text Description, never validates it.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            await publisher.Publish(new TicketPaymentConfirmed(
+                PaymentId: paymentId, UserId: SeedHelper.AudienceId, OwnerId: 0,
+                TicketIds: [], LivestreamId: null, ShowId: SeedHelper.ShowId));
+        }
+
+        using var scope2 = _factory.Services.CreateScope();
+        var verifyDb = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var payment2 = await verifyDb.Payments.SingleAsync(p => p.Id == paymentId);
+        payment2.PlatformFee.Should().Be(expectedPlatformFee,
+            "H1 — fee breakdown must snapshot onto the Payment row at confirmation time");
+        payment2.TaxWithheld.Should().Be(expectedTax);
+        payment2.NetAmount.Should().Be(expectedOwnerNet);
+
+        var entries = await verifyDb.LedgerEntries.Where(e => e.PaymentId == paymentId).ToListAsync();
+        entries.Should().NotBeEmpty(
+            "confirming a ticket payment must write the Gateway/Platform/Tax journal — a payment " +
+            "with zero ledger entries is invisible to any accounting/audit trail");
+        entries.Where(e => e.IsDebit).Sum(e => e.Amount)
+            .Should().Be(entries.Where(e => !e.IsDebit).Sum(e => e.Amount),
+                "D8 double-entry invariant — every journal must balance");
+        entries.Where(e => e.IsDebit).Sum(e => e.Amount).Should().Be(gross);
+    }
+
     [Fact]
     public async Task SettlementReleaseJob_ReleasesDueSettlement_AndWritesBalancedLedgerJournal()
     {
