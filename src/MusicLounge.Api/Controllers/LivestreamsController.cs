@@ -7,6 +7,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Livestreams.Commands.CreateLivestream;
 using MusicLounge.Application.Livestreams.Commands.EndLivestream;
 using MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
+using MusicLounge.Application.Livestreams.Commands.SendLivestreamHeartbeat;
 using MusicLounge.Application.Livestreams.Commands.SetChatEnabled;
 using MusicLounge.Application.Livestreams.Commands.StartLivestream;
 using MusicLounge.Application.Livestreams.Commands.TerminateLivestream;
@@ -118,6 +119,21 @@ public sealed class LivestreamsController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<ChatMessageDto>>.Ok(result));
     }
 
+    /// <summary>Khán giả có vé PPV giữ phiên xem sống — gọi định kỳ (đề xuất 30s/lần) bằng
+    /// ViewingSessionId nhận từ GET {id} lần đầu. Phiên không heartbeat quá timeout tự động không
+    /// còn tính là "đang hoạt động" (không cần gọi endpoint nào để đóng phiên).</summary>
+    [HttpPost("{id:int}/heartbeat")]
+    [Authorize(Policy = Policies.RequireAuthenticated)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Heartbeat(
+        int id, [FromBody] LivestreamHeartbeatRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SendLivestreamHeartbeatCommand(id, body.SessionId), ct);
+        return NoContent();
+    }
+
     /// <summary>Owner/Staff bật/tắt chat cho livestream — có hiệu lực ngay: mọi tin nhắn gửi qua
     /// LivestreamHub sau lệnh này đều được kiểm tra lại giá trị mới nhất, không có độ trễ cache.</summary>
     [HttpPost("{id:int}/chat-enabled")]
@@ -173,3 +189,4 @@ public sealed class LivestreamsController : ControllerBase
 
 public sealed record TerminateLivestreamRequest(string Reason);
 public sealed record SetChatEnabledRequest(bool Enabled);
+public sealed record LivestreamHeartbeatRequest(string SessionId);

@@ -54,6 +54,7 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<Livestream> Livestreams => Set<Livestream>();
     public DbSet<LivestreamChatMessage> LivestreamChatMessages => Set<LivestreamChatMessage>();
+    public DbSet<LivestreamViewingSession> LivestreamViewingSessions => Set<LivestreamViewingSession>();
     public DbSet<EventModeration> EventModerations => Set<EventModeration>();
     public DbSet<ContentReport> ContentReports => Set<ContentReport>();
     public DbSet<AiPosterGeneration> AiPosterGenerations => Set<AiPosterGeneration>();

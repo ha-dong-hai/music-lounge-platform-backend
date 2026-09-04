@@ -173,4 +173,14 @@ public static class ConfigKeys
     // migration — GetIntAsync's fallback covers it until an Admin adds real rows.
     public const string ImageModerationBlockThresholdPercent = "image_moderation_block_threshold_percent";
     public const string ImageModerationReviewThresholdPercent = "image_moderation_review_threshold_percent";
+
+    // Nền tảng dùng Mux HLS công khai (không DRM/signed-URL xoay vòng) — app server không có khả
+    // năng thu hồi 1 phiên phát HLS đang chạy giữa chừng. Vì vậy cơ chế heartbeat này chỉ CHẶN
+    // PHIÊN MỚI vượt hạn mức, không ép ngắt phiên cũ đang mở. Mặc định 2 phiên/vé: đủ cho 1 người
+    // xem hợp lý trên 2 thiết bị (điện thoại + TV...), vẫn chặn được chia sẻ hàng loạt. Timeout
+    // 90s = gấp 3 chu kỳ heartbeat đề xuất phía client (30s), tránh false-positive khi 1 lần
+    // heartbeat bị trễ mạng. Không seed sẵn — GetIntAsync's fallback đảm nhiệm cho tới khi Admin
+    // thêm dòng thật.
+    public const string LivestreamMaxConcurrentSessionsPerTicket = "livestream_max_concurrent_sessions_per_ticket";
+    public const string LivestreamHeartbeatTimeoutSeconds = "livestream_heartbeat_timeout_seconds";
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Tests.Integration.Helpers;
 
@@ -375,6 +376,144 @@ public sealed class LivestreamTests
         var audienceClient = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
 
         var res = await audienceClient.GetAsync($"/api/v1/livestreams/{id}/chat");
+
+        res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // ─── Concurrent-session limit (LivestreamViewingSession + heartbeat) ─────────────────────────
+    // Mux HLS công khai, không DRM — hạn mức chỉ chặn PHIÊN MỚI vượt quá, không ép ngắt phiên cũ
+    // đang mở. Mặc định (không seed system_config, dùng fallback): 2 phiên/vé, timeout 90s.
+
+    [Fact]
+    public async Task GetDetail_AsAudienceWithTicket_ReturnsNonNullViewingSessionId()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.GetAsync($"/api/v1/livestreams/{id}");
+
+        var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        json.RootElement.GetProperty("data").GetProperty("viewingSessionId").GetString()
+            .Should().NotBeNullOrEmpty("a genuine ticket holder must get a session id to heartbeat with");
+    }
+
+    [Fact]
+    public async Task GetDetail_AsAdmin_ViewingSessionIdIsNull()
+    {
+        var id = await CreateAndApproveLivestreamAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/livestreams/{id}");
+
+        var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var value = json.RootElement.GetProperty("data").GetProperty("viewingSessionId");
+        (value.ValueKind == JsonValueKind.Null).Should().BeTrue(
+            "Admin monitoring a stream isn't subject to the per-ticket concurrent-session limit");
+    }
+
+    [Fact]
+    public async Task GetDetail_ThirdConcurrentSessionForSameTicket_Returns422()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res1 = await client.GetAsync($"/api/v1/livestreams/{id}");
+        var res2 = await client.GetAsync($"/api/v1/livestreams/{id}");
+        res1.StatusCode.Should().Be(HttpStatusCode.OK);
+        res2.StatusCode.Should().Be(HttpStatusCode.OK, "default max is 2 concurrent sessions per ticket");
+
+        var res3 = await client.GetAsync($"/api/v1/livestreams/{id}");
+
+        res3.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "a 3rd device opening HlsUrl while 2 sessions are still within the heartbeat timeout must be blocked");
+    }
+
+    [Fact]
+    public async Task GetDetail_AfterFirstSessionExpires_AllowsNewSessionEvenAtCap()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        await client.GetAsync($"/api/v1/livestreams/{id}");
+        await client.GetAsync($"/api/v1/livestreams/{id}");
+
+        // Simulate the 1st session's device having gone silent long enough to time out — no
+        // cleanup job needed, the cap check itself filters by LastHeartbeatAt (TicketHold.ExpiresAt
+        // pattern).
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var oldestSession = await db.Set<MusicLounge.Domain.Entities.LivestreamViewingSession>()
+                .Where(s => s.LivestreamId == id)
+                .OrderBy(s => s.Id).FirstAsync();
+            oldestSession.LastHeartbeatAt = DateTimeOffset.UtcNow.AddSeconds(-91);
+            await db.SaveChangesAsync();
+        }
+
+        var res3 = await client.GetAsync($"/api/v1/livestreams/{id}");
+
+        res3.StatusCode.Should().Be(HttpStatusCode.OK,
+            "an expired (no-heartbeat) session must free up a slot without any cleanup job");
+    }
+
+    [Fact]
+    public async Task Heartbeat_ValidSession_Returns204()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        var detailRes = await client.GetAsync($"/api/v1/livestreams/{id}");
+        var sessionId = JsonDocument.Parse(await detailRes.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data").GetProperty("viewingSessionId").GetString();
+
+        var res = await client.PostAsJsonAsync($"/api/v1/livestreams/{id}/heartbeat", new { SessionId = sessionId });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Heartbeat_KeepsSessionAlive_SoItStillCountsTowardTheCap()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        var detail1 = await client.GetAsync($"/api/v1/livestreams/{id}");
+        var session1Id = JsonDocument.Parse(await detail1.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data").GetProperty("viewingSessionId").GetString();
+        await client.GetAsync($"/api/v1/livestreams/{id}"); // 2nd session, now at cap
+
+        // Heartbeat the 1st session so it's still fresh — must NOT free up a slot the way the
+        // expiry test above does.
+        await client.PostAsJsonAsync($"/api/v1/livestreams/{id}/heartbeat", new { SessionId = session1Id });
+
+        var res3 = await client.GetAsync($"/api/v1/livestreams/{id}");
+
+        res3.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "a heartbeated session is still active and must keep counting toward the cap");
+    }
+
+    [Fact]
+    public async Task Heartbeat_UnknownSessionId_Returns404()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsJsonAsync(
+            $"/api/v1/livestreams/{id}/heartbeat", new { SessionId = Guid.NewGuid().ToString("N") });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Heartbeat_ByNonOwnerOfTheTicket_Returns403()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var ticketHolderClient = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        var detailRes = await ticketHolderClient.GetAsync($"/api/v1/livestreams/{id}");
+        var sessionId = JsonDocument.Parse(await detailRes.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data").GetProperty("viewingSessionId").GetString();
+
+        // OtherOwnerId did not open this session and holds no ticket for this show.
+        var strangerClient = _factory.CreateAuthenticatedClient(SeedHelper.OtherOwnerId, "Owner");
+        var res = await strangerClient.PostAsJsonAsync(
+            $"/api/v1/livestreams/{id}/heartbeat", new { SessionId = sessionId });
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
