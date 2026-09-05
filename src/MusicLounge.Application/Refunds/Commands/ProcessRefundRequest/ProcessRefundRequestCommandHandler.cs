@@ -15,6 +15,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     private readonly ILedgerService _ledger;
     private readonly IPaymentRepository _paymentRepo;
     private readonly IVnPayService _vnPay;
+    private readonly IAsyncKeyedLock _lock;
     private readonly ILogger<ProcessRefundRequestCommandHandler> _logger;
 
     public ProcessRefundRequestCommandHandler(
@@ -23,6 +24,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         ILedgerService ledger,
         IPaymentRepository paymentRepo,
         IVnPayService vnPay,
+        IAsyncKeyedLock @lock,
         ILogger<ProcessRefundRequestCommandHandler> logger)
     {
         _uow = uow;
@@ -30,11 +32,19 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         _ledger = ledger;
         _paymentRepo = paymentRepo;
         _vnPay = vnPay;
+        _lock = @lock;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(ProcessRefundRequestCommand request, CancellationToken ct)
     {
+        // 2 lần Admin duyệt gần như đồng thời (double-click, hoặc 2 tab) cho cùng 1
+        // RefundRequestId có thể cùng đọc Status==Pending trước khi 1 trong 2 kịp commit — đây là
+        // luồng DUY NHẤT trong domain Ticket/Refund thực sự gọi API hoàn tiền thật ra ngoài
+        // (VNPay), nên hậu quả của race này nghiêm trọng hơn các luồng khác đã có khóa tương tự
+        // (CancelTicket/CheckInTicket/InitiateTicketTransfer).
+        await using var _ = await _lock.AcquireAsync($"refund-request:{request.RefundRequestId}", ct);
+
         var refundRepo = _uow.Repository<RefundRequest, int>();
         var refund = await refundRepo.GetByIdAsync(request.RefundRequestId, ct)
             ?? throw new NotFoundException(nameof(RefundRequest), request.RefundRequestId);

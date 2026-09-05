@@ -141,6 +141,42 @@ public sealed class RefundProcessingTests
         res.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
+    /// <summary>
+    /// Regression test for MLACP-251 (audit-flagged C3 gap, 2026-09-04): this handler is the only
+    /// one in the whole Ticket/Refund domain that calls a real external payment API (VNPay refund)
+    /// but previously had no lock around its "Status == Pending" check-then-act — two genuinely
+    /// concurrent Approve calls for the same RefundRequestId could both read Pending before either
+    /// committed, both calling VNPay's real refund API. Fires both requests truly in parallel
+    /// (Task.WhenAll, not sequential awaits) to actually open the race window.
+    /// </summary>
+    [Fact]
+    public async Task ProcessRefundRequest_TwoConcurrentApprovals_OnlyOneSucceeds()
+    {
+        var (refundId, paymentId) = await SeedPendingRefundRequestAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var call1 = client.PostAsJsonAsync(
+            $"/api/v1/admin/refund-requests/{refundId}/process",
+            new { Decision = "Approved", ApprovedAmount = 100_000m });
+        var call2 = client.PostAsJsonAsync(
+            $"/api/v1/admin/refund-requests/{refundId}/process",
+            new { Decision = "Approved", ApprovedAmount = 100_000m });
+
+        var results = await Task.WhenAll(call1, call2);
+
+        results.Count(r => r.StatusCode == HttpStatusCode.NoContent).Should().Be(1,
+            "only one of two genuinely concurrent approvals for the same refund request may succeed");
+        results.Count(r => r.StatusCode == HttpStatusCode.Conflict).Should().Be(1,
+            "the loser of the race must see 409, not silently succeed or crash");
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var entries = db.LedgerEntries.Where(e => e.PaymentId == paymentId && e.ReferenceType == "refund").ToList();
+        entries.Where(e => e.IsDebit).Sum(e => e.Amount)
+            .Should().Be(100_000m, "the refund must be journaled exactly once, not twice");
+    }
+
     [Fact]
     public async Task ProcessRefundRequest_AsNonAdmin_Returns403()
     {
