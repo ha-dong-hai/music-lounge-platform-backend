@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
@@ -29,7 +30,7 @@ internal sealed class GetPosterGenerationHistoryQueryHandler
 
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem lịch sử tạo poster của show này.");
 
         var attempts = await _uow.Repository<AiPosterGeneration, int>().FindAsync(

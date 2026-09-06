@@ -665,5 +665,51 @@ public sealed class EventManagementTests
             "Admin must be able to manage any venue's ticket tiers, matching the controller's declared RequireOwner policy");
     }
 
+    // ─── B1 authorization gap round 2 (MLACP-256, audit-flagged 2026-09-06) ───
+    // Same class of bug as MLACP-252 above, found in 3 more handlers the earlier sweep's grep
+    // missed: no Admin fallback at all (not even the older string-literal "Admin" style).
+
+    [Fact]
+    public async Task SetLegalApprovalReference_ByAdmin_NotTheOwner_Returns204()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval", new
+        {
+            LegalApprovalReference = "SoVHTT-ADMIN-0001"
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to correct legal-approval data on any venue's show");
+    }
+
+    [Fact]
+    public async Task SetVcpmcRoyaltyReference_ByAdmin_NotTheOwner_Returns204()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/vcpmc-royalty", new
+        {
+            VcpmcRoyaltyReference = "VCPMC-ADMIN-0001"
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to correct VCPMC-royalty data on any venue's show");
+    }
+
+    [Fact]
+    public async Task GetPosterGenerationHistory_ByAdmin_NotTheOwner_Returns200()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/lounge-shows/{showId}/ai-poster/history");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK,
+            "Admin must be able to review any venue's AI-poster generation history for support/moderation");
+    }
+
     private sealed record DataResponse<T>(bool Success, T Data);
 }

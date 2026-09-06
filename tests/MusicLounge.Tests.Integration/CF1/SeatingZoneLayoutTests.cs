@@ -221,8 +221,13 @@ public sealed class SeatingZoneLayoutTests
         body!.Data.Zones.Should().ContainSingle(z => z.ZoneId == zoneWithTierId);
         body.Data.Zones.Should().NotContain(z => z.ZoneId == zoneWithoutTierId);
 
+        // MLACP-256: naive per-price sum would be (10-3)+(5-1)=11, but the zone's real Capacity is
+        // only 10 (4 already reserved) — the map must never claim more availability than the
+        // physical zone (shared across both prices) actually has left, or a buyer who sees "11
+        // available" gets rejected by HoldTicketCommandHandler's own zone-capacity check (§6.11)
+        // the moment they try to book seat #7.
         var entry = body.Data.Zones.Single(z => z.ZoneId == zoneWithTierId);
-        entry.AvailableCount.Should().Be((10 - 3) + (5 - 1)); // 11
+        entry.AvailableCount.Should().Be(10 - 4); // capped by zone.Capacity, not the naive sum of 11
         entry.MinPrice.Should().Be(100_000m);
         entry.MaxPrice.Should().Be(150_000m);
         entry.Color.Should().Be("#AA0000");

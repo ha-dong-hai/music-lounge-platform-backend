@@ -51,6 +51,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
             Status = LoungeShowStatus.Draft,
             ScheduledStart = request.ScheduledStart,
             ScheduledEnd = request.ScheduledEnd,
+            TicketSaleClosesAt = request.TicketSaleClosesAt,
             CategoryId = request.CategoryId,
             OfflineQuota = request.OfflineQuota,
             OnlineQuota = request.OnlineQuota

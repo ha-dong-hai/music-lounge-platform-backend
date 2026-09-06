@@ -67,6 +67,11 @@ internal sealed class SellWalkInTicketCommandHandler
         if (now < price.SaleStart || now > price.SaleEnd)
             throw new DomainException("Đợt bán vé này chưa mở hoặc đã kết thúc.");
 
+        // D13: cung 1 moc dong ban voi HoldTicketCommandHandler — ap dung ca cho ban tai quay,
+        // khong co ly do de kenh Offline duoc mien tru khoi gio dong ban Owner da dat cho show.
+        if (show.TicketSaleClosesAt.HasValue && now > show.TicketSaleClosesAt.Value)
+            throw new DomainException("Event đã đóng bán vé.");
+
         // Serialize quota-check-then-reserve per show — same race as HoldTicketCommandHandler:
         // a Staff walk-in sale and an online buyer's hold can target the same show concurrently.
         await using (await _bookingLock.AcquireAsync(show.Id, ct))

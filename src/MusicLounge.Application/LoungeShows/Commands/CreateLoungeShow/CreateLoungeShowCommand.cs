@@ -17,6 +17,7 @@ public sealed record CreateLoungeShowCommand(
     string Format,
     DateTimeOffset ScheduledStart,
     DateTimeOffset? ScheduledEnd,
+    DateTimeOffset? TicketSaleClosesAt,
     int? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota,

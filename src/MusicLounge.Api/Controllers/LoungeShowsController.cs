@@ -227,7 +227,7 @@ public sealed class LoungeShowsController : ControllerBase
     {
         await _sender.Send(new UpdateLoungeShowCommand(
             id, body.Name, body.Description, body.ScheduledStart, body.ScheduledEnd,
-            body.CategoryId, body.OfflineQuota, body.OnlineQuota), ct);
+            body.TicketSaleClosesAt, body.CategoryId, body.OfflineQuota, body.OnlineQuota), ct);
         return NoContent();
     }
 
@@ -497,6 +497,7 @@ public sealed record UpdateLoungeShowRequest(
     string Description,
     DateTimeOffset ScheduledStart,
     DateTimeOffset? ScheduledEnd,
+    DateTimeOffset? TicketSaleClosesAt,
     int? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota);

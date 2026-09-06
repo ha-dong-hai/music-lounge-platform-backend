@@ -16,6 +16,11 @@ public sealed class UpdateLoungeShowCommandValidator : AbstractValidator<UpdateL
             .GreaterThan(x => x.ScheduledStart)
             .When(x => x.ScheduledEnd.HasValue);
 
+        RuleFor(x => x.TicketSaleClosesAt)
+            .LessThanOrEqualTo(x => x.ScheduledStart)
+            .When(x => x.TicketSaleClosesAt.HasValue)
+            .WithMessage("Thời điểm đóng bán vé phải trước hoặc bằng thời gian bắt đầu show.");
+
         // Same drift as CreateLoungeShowCommandValidator was written to avoid: an invalid
         // CategoryId would otherwise only surface at SaveChangesAsync as an FK-violation
         // DbUpdateException, which GlobalExceptionHandler maps to a generic 409 with no field named.
