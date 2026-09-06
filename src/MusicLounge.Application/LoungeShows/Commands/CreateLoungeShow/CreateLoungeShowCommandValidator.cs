@@ -28,6 +28,15 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
             .When(x => x.ScheduledEnd.HasValue)
             .WithMessage("Thời gian kết thúc phải sau thời gian bắt đầu.");
 
+        // D13: truong nay ton tai tren entity tu lau nhung chua tung duoc handler nao ghi/doc —
+        // Owner khong co cach nao thuc su dat "gio dong ban ve", va HoldTicket/SellWalkInTicket
+        // cung chua tung enforce no. Rang buoc <= ScheduledStart: dong ban sau khi show da bat dau
+        // dien khong co y nghia.
+        RuleFor(x => x.TicketSaleClosesAt)
+            .LessThanOrEqualTo(x => x.ScheduledStart)
+            .When(x => x.TicketSaleClosesAt.HasValue)
+            .WithMessage("Thời điểm đóng bán vé phải trước hoặc bằng thời gian bắt đầu show.");
+
         RuleForEach(x => x.Performances).ChildRules(p =>
         {
             p.RuleFor(x => x.PerformerId).GreaterThan(0).When(x => x.PerformerId.HasValue);

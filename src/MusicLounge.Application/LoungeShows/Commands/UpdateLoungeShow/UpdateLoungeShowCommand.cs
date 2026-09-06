@@ -8,6 +8,7 @@ public sealed record UpdateLoungeShowCommand(
     string Description,
     DateTimeOffset ScheduledStart,
     DateTimeOffset? ScheduledEnd,
+    DateTimeOffset? TicketSaleClosesAt,
     int? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota

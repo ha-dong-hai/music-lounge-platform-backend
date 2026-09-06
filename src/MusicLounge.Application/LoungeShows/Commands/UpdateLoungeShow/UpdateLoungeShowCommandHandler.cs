@@ -38,6 +38,7 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
         show.Description = request.Description;
         show.ScheduledStart = request.ScheduledStart;
         show.ScheduledEnd = request.ScheduledEnd;
+        show.TicketSaleClosesAt = request.TicketSaleClosesAt;
         show.CategoryId = request.CategoryId;
         show.OfflineQuota = request.OfflineQuota;
         show.OnlineQuota = request.OnlineQuota;

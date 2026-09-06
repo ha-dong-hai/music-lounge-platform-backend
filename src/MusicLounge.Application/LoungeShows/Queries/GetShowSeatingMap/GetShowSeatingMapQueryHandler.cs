@@ -77,10 +77,19 @@ internal sealed class GetShowSeatingMapQueryHandler : IRequestHandler<GetShowSea
             if (prices.Count == 0)
                 continue;
 
+            // §6.11 (see HoldTicketCommandHandler.ValidateQuotaAsync): 2 tier khac nhau (vd VIP +
+            // Standard) co the cung tro 1 zone vat ly, va tong reserved cua CA zone (khong chi tung
+            // tier) bi chan boi zone.Capacity o thoi diem mua that. Truoc day o day chi cong don
+            // p.Quota - reserved theo tung price rieng le, khong tru theo zone.Capacity — ban do co
+            // the hien thi "con cho" nhieu hon so ghe vat ly that su con, dan den khach dat ve bi
+            // tu choi ngay sau khi thay ban do noi con trong (vi pham G1/G3: hien thi phai khop voi
+            // hanh dong thuc su lam duoc).
             var hasUnlimited = prices.Any(p => !p.Quota.HasValue);
             int? availableCount = hasUnlimited
                 ? null
-                : prices.Sum(p => Math.Max(0, p.Quota!.Value - reserved[p.Id]));
+                : Math.Max(0, Math.Min(
+                    prices.Sum(p => Math.Max(0, p.Quota!.Value - reserved[p.Id])),
+                    zone.Capacity - prices.Sum(p => reserved[p.Id])));
 
             entries.Add(new ZoneMapEntryDto(
                 zone.Id,

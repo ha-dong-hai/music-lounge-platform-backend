@@ -189,6 +189,99 @@ public sealed class TicketBookingTests
             "3+3=6 vượt sức chứa thật (5) của zone dùng chung, dù mỗi tier/price riêng lẻ vẫn còn quota");
     }
 
+    /// <summary>
+    /// D13 — LoungeShow.TicketSaleClosesAt existed on the entity since long ago but no handler ever
+    /// read or wrote it (dead field, MLACP-256 finding). An Owner setting it must actually stop both
+    /// sale channels once the deadline passes, not just silently be ignored.
+    /// </summary>
+    [Fact]
+    public async Task Hold_AfterTicketSaleClosesAt_Returns422()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var show = new MusicLounge.Domain.Entities.LoungeShow
+        {
+            LoungeId = SeedHelper.LoungeId,
+            Name = $"SaleClosedTestShow-{Guid.NewGuid():N}",
+            Description = "Integration test show",
+            Format = LoungeShowFormat.Offline,
+            Status = LoungeShowStatus.Published,
+            ScheduledStart = DateTimeOffset.UtcNow.AddDays(5),
+            TicketSaleClosesAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+        };
+        db.LoungeShows.Add(show);
+        await db.SaveChangesAsync();
+
+        var tier = new TicketTier
+        {
+            LoungeShowId = show.Id, Name = "Standard", AccessType = AccessType.Physical,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Add(tier);
+        await db.SaveChangesAsync();
+
+        var price = new TicketPrice
+        {
+            TierId = tier.Id, Name = "Standard", Price = 100_000m,
+            PurchaseChannel = PurchaseChannel.Both,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(4)
+        };
+        db.Add(price);
+        await db.SaveChangesAsync();
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = price.Id, Quantity = 1 });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "show đã qua TicketSaleClosesAt — dù đợt giá (SaleStart/SaleEnd) vẫn còn hiệu lực, show vẫn phải đóng bán");
+    }
+
+    [Fact]
+    public async Task SellWalkIn_AfterTicketSaleClosesAt_Returns422()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var show = new MusicLounge.Domain.Entities.LoungeShow
+        {
+            LoungeId = SeedHelper.LoungeId,
+            Name = $"SaleClosedTestShow-{Guid.NewGuid():N}",
+            Description = "Integration test show",
+            Format = LoungeShowFormat.Offline,
+            Status = LoungeShowStatus.Published,
+            ScheduledStart = DateTimeOffset.UtcNow.AddDays(5),
+            TicketSaleClosesAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+        };
+        db.LoungeShows.Add(show);
+        await db.SaveChangesAsync();
+
+        var tier = new TicketTier
+        {
+            LoungeShowId = show.Id, Name = "Standard", AccessType = AccessType.Physical,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Add(tier);
+        await db.SaveChangesAsync();
+
+        var price = new TicketPrice
+        {
+            TierId = tier.Id, Name = "Standard", Price = 100_000m,
+            PurchaseChannel = PurchaseChannel.Offline,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(4)
+        };
+        db.Add(price);
+        await db.SaveChangesAsync();
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
+
+        var res = await client.PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = price.Id, Quantity = 1 });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "kênh bán tại quầy cũng phải bị chặn bởi cùng mốc đóng bán của show, không có ngoại lệ");
+    }
+
     // ─── W26 Cancel ticket ────────────────────────────────────────────────────
 
     /// <summary>Creates a Confirmed ticket (with an attached Payment) for AudienceId on a fresh show.</summary>
