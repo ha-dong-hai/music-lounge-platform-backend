@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -46,7 +47,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         var ownership = await _donationRepo.GetOwnershipInfoAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
-        if (ownership.OwnerId != _currentUser.UserId)
+        if (ownership.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Chỉ Owner của venue này mới có thể xác nhận thanh toán cho nghệ sĩ.");
 
         // Snapshot which bank account this payout actually went to — Donation.BankAccountId was

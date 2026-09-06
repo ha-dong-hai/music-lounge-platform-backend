@@ -239,6 +239,25 @@ public sealed class DonationTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
+    /// <summary>
+    /// Regression test for MLACP-252 (audit-flagged B1 gap, 2026-09-04): the handler used to check
+    /// only "ownership.OwnerId == currentUser.UserId" with no Admin fallback, so an Admin — who
+    /// passes the controller's [Authorize(Policy = RequireOwner)] gate, which permits Admin by
+    /// definition — was incorrectly 403'd here despite the policy nominally allowing them through.
+    /// </summary>
+    [Fact]
+    public async Task AcknowledgeDonation_ByAdmin_NotTheVenueOwner_Returns204()
+    {
+        var (id, orderId) = await CreateDonationAsync();
+        await SimulateVnPayCallbackAsync(orderId, success: true);
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to act on any venue's donation, matching the controller's declared RequireOwner policy");
+    }
+
     [Fact]
     public async Task AcknowledgeDonation_WhenCancelledByVnPay_Returns422()
     {
