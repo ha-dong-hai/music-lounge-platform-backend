@@ -1,19 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Infrastructure.Persistence;
+using MusicLounge.Infrastructure.Settings;
 
 namespace MusicLounge.Infrastructure.Services;
 
 internal sealed class AuthAttemptTracker : IAuthAttemptTracker
 {
-    private const int MaxFailedAttempts = 5;
-    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
-
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly AuthLockoutSettings _settings;
 
-    public AuthAttemptTracker(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
+    public AuthAttemptTracker(IServiceScopeFactory scopeFactory, IOptions<AuthLockoutSettings> settings)
+    {
+        _scopeFactory = scopeFactory;
+        _settings = settings.Value;
+    }
 
     public async Task<TimeSpan?> GetLockoutRemainingAsync(int userId, CancellationToken ct = default)
     {
@@ -39,9 +43,9 @@ internal sealed class AuthAttemptTracker : IAuthAttemptTracker
         if (user is null) return;
 
         user.FailedLoginAttempts++;
-        if (user.FailedLoginAttempts >= MaxFailedAttempts)
+        if (user.FailedLoginAttempts >= _settings.MaxFailedAttempts)
         {
-            user.LockedUntil = DateTimeOffset.UtcNow.Add(LockoutDuration);
+            user.LockedUntil = DateTimeOffset.UtcNow.AddMinutes(_settings.LockoutDurationMinutes);
             user.FailedLoginAttempts = 0;
         }
 

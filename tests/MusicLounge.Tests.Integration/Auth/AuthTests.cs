@@ -97,6 +97,36 @@ public sealed class AuthTests
         res.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
+    /// <summary>Regression for MLACP-review-auth-phase1 (audit-flagged HIGH gap, 2026-09-06):
+    /// minimum password length raised from 8 to 10 characters.</summary>
+    [Fact]
+    public async Task Register_PasswordUnder10Chars_Returns400()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            Email = UniqueEmail(), Password = "Short123", FullName = "Test User",
+            Phone = (string?)null, AcceptTerms = true
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Register_Password10CharsExactly_Returns200()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            Email = UniqueEmail(), Password = "Exactly10c", FullName = "Test User",
+            Phone = (string?)null, AcceptTerms = true
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
     // ─── Email verification ─────────────────────────────────────────────────
 
     [Fact]
@@ -227,7 +257,41 @@ public sealed class AuthTests
     }
 
     [Fact]
-    public async Task ResendVerificationCode_ExistingUnverifiedEmail_Returns204AndRegeneratesCode()
+    public async Task ResendVerificationCode_AfterCooldownElapsed_Returns204AndRegeneratesCode()
+    {
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAsync(client, email, "P@ssword123");
+
+        string hashBefore;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Email == email);
+            hashBefore = user.EmailVerificationCodeHash!;
+            // Regression MLACP-review-auth-phase1: resend now has a 60s cooldown (audit-flagged
+            // MEDIUM gap — email-bombing risk). Simulate the original code having been issued long
+            // enough ago that the cooldown has elapsed, so this test still verifies its original
+            // intent (resend regenerates the code) rather than the cooldown itself.
+            user.EmailVerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-9);
+            await db.SaveChangesAsync();
+        }
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/resend-verification-code", new { Email = email });
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var hashAfter = (await db2.Users.SingleAsync(u => u.Email == email)).EmailVerificationCodeHash;
+        hashAfter.Should().NotBe(hashBefore);
+    }
+
+    /// <summary>Regression for MLACP-review-auth-phase1 (audit-flagged MEDIUM gap, 2026-09-06):
+    /// ResendVerificationCode had no cooldown beyond the global 100 req/min/IP rate limit, allowing
+    /// unlimited email-bombing of one address. Calling it twice back-to-back must not regenerate
+    /// the code the second time.</summary>
+    [Fact]
+    public async Task ResendVerificationCode_WithinCooldown_DoesNotRegenerateCode()
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
@@ -241,12 +305,12 @@ public sealed class AuthTests
         }
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/resend-verification-code", new { Email = email });
-        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent, "anti-enumeration: always 204 even when silently no-op'd");
 
         using var scope2 = _factory.Services.CreateScope();
         var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var hashAfter = (await db2.Users.SingleAsync(u => u.Email == email)).EmailVerificationCodeHash;
-        hashAfter.Should().NotBe(hashBefore);
+        hashAfter.Should().Be(hashBefore, "resending within the 60s cooldown must be a silent no-op, not spam a new email");
     }
 
     [Fact]
@@ -406,6 +470,33 @@ public sealed class AuthTests
         user.PasswordResetTokenHash.Should().NotBeNullOrEmpty();
         user.PasswordResetTokenExpiresAt.Should().NotBeNull();
         user.PasswordResetTokenExpiresAt!.Value.Should().BeAfter(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>Regression for MLACP-review-auth-phase1 (audit-flagged MEDIUM gap, 2026-09-06):
+    /// a deactivated account must not receive a reset token/email — it's blocked at Login anyway,
+    /// so issuing one is wasted and inconsistent with LoginCommandHandler's own IsActive check.</summary>
+    [Fact]
+    public async Task ForgotPassword_DeactivatedAccount_Returns204ButDoesNotIssueToken()
+    {
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAsync(client, email, "OldPassword123");
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Email == email);
+            user.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { Email = email });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent, "anti-enumeration: same response regardless of account state");
+
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var reloaded = await db2.Users.SingleAsync(u => u.Email == email);
+        reloaded.PasswordResetTokenHash.Should().BeNull("a deactivated account must not get a working reset token");
     }
 
     [Fact]

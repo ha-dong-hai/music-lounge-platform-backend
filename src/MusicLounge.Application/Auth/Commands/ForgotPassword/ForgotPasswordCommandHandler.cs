@@ -32,10 +32,12 @@ internal sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPassw
         var user = users.FirstOrDefault();
 
         // Luon tra ve thanh cong bat ke email co ton tai hay khong — tranh lo account enumeration
-        // qua noi dung response. Gui email that (neu co) qua background job (Hangfire) thay vi
-        // await inline, vua tranh timing side-channel do do tre goi SMTP that gay ra, vua khop
-        // dung pattern IBackgroundJobService da dung cho FCM notification.
-        if (user is not null)
+        // qua noi dung response. Gui email that (neu co, va tai khoan chua bi khoa) qua background
+        // job (Hangfire) thay vi await inline, vua tranh timing side-channel do do tre goi SMTP that
+        // gay ra, vua khop dung pattern IBackgroundJobService da dung cho FCM notification. Tai
+        // khoan bi Admin khoa (IsActive=false) van bi chan o Login sau do, nhung khong nen phat sinh
+        // token/email cho ho — nhat quan voi LoginCommandHandler.
+        if (user is not null && user.IsActive)
         {
             var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
                 .Replace('+', '-').Replace('/', '_').TrimEnd('=');
