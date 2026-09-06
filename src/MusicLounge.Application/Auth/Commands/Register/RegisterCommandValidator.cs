@@ -11,9 +11,13 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .EmailAddress().WithMessage("Email không hợp lệ.")
             .MaximumLength(255);
 
+        // 10 ký tự — NIST SP 800-63B ưu tiên độ dài hơn độ phức tạp bắt buộc, nhưng tài khoản trên
+        // nền tảng này (đặc biệt Owner, có quyền truy cập BankAccount/hủy show) đáng được đặt cao
+        // hơn mức sàn 8 ký tự. [CHƯA KIỂM CHỨNG: chưa tra cứu được con số khuyến nghị chính xác của
+        // bản NIST SP 800-63B mới nhất — cần xác minh lại nếu muốn trích dẫn con số cụ thể.]
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Mật khẩu không được để trống.")
-            .MinimumLength(8).WithMessage("Mật khẩu phải có ít nhất 8 ký tự.");
+            .MinimumLength(10).WithMessage("Mật khẩu phải có ít nhất 10 ký tự.");
 
         RuleFor(x => x.FullName)
             .NotEmpty().WithMessage("Họ tên không được để trống.")

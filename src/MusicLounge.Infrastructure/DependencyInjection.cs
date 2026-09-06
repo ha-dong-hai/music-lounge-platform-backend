@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.Configure<MuxSettings>(configuration.GetSection("Mux"));
         services.Configure<LivestreamSettings>(configuration.GetSection("Livestream"));
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<AuthLockoutSettings>(configuration.GetSection("AuthLockout"));
         services.Configure<FirebaseSettings>(configuration.GetSection("Firebase"));
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
         services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
