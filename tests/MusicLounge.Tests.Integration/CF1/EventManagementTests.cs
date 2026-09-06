@@ -606,5 +606,64 @@ public sealed class EventManagementTests
         res.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    // ─── B1 authorization gap (MLACP-252, audit-flagged 2026-09-04) ────────────
+    // Regression tests: several handlers used to check only "lounge.OwnerId == currentUser.UserId"
+    // with no Admin fallback, so an Admin — who passes the controller's
+    // [Authorize(Policy = RequireOwner)] gate, which permits Admin by definition — was incorrectly
+    // 403'd on a show/tier they don't own despite the policy nominally allowing them through.
+
+    [Fact]
+    public async Task UpdateLoungeShow_ByAdmin_NotTheOwner_Returns204()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}", new
+        {
+            Name = "Updated by Admin",
+            Description = "Updated",
+            ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
+            ScheduledEnd = (DateTimeOffset?)null,
+            CategoryId = (int?)null,
+            OfflineQuota = 100,
+            OnlineQuota = (int?)null
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to manage any venue's show, matching the controller's declared RequireOwner policy");
+    }
+
+    [Fact]
+    public async Task CreateTicketTier_ByAdmin_NotTheOwner_Returns201()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PostAsJsonAsync("/api/v1/ticket-tiers", new
+        {
+            ShowId = showId,
+            Name = "Admin-created tier",
+            Description = (string?)null,
+            AccessType = "Physical",
+            ZoneId = (int?)null,
+            TotalCapacity = 50,
+            Prices = new[]
+            {
+                new
+                {
+                    Name = "Standard",
+                    Price = 100_000m,
+                    Quota = (int?)50,
+                    PurchaseChannel = "Both",
+                    SaleStart = DateTimeOffset.UtcNow,
+                    SaleEnd = DateTimeOffset.UtcNow.AddDays(2)
+                }
+            }
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created,
+            "Admin must be able to manage any venue's ticket tiers, matching the controller's declared RequireOwner policy");
+    }
+
     private sealed record DataResponse<T>(bool Success, T Data);
 }

@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Utils;
@@ -52,7 +53,7 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền nộp duyệt event này.");
 
         // §6.8 — a suspended/locked venue cannot bring new events live; existing published shows

@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Livestreams.DTOs;
@@ -45,7 +46,7 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
         var ownership = await _donationRepo.GetOwnershipInfoAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
-        if (ownership.OwnerId != _currentUser.UserId)
+        if (ownership.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Chỉ Owner của venue này mới có thể xác nhận donation.");
 
         donation.Status = DonationStatus.OwnerReceived;
