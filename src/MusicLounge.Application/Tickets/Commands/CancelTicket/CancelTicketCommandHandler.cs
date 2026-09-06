@@ -69,6 +69,16 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         if (!show.CancellationAllowed)
             throw new DomainException("Event này không cho phép hủy vé.");
 
+        // MLACP-257: CancellationDeadlineHours la optional — neu Owner khong dat, khong co gi khac
+        // ngan mot ve Confirmed bi huy (va hoan tien) SAU KHI show da ket thuc hoan toan, mien la
+        // buyer chua check-in. Chan vo dieu kien khi Ended: dich vu da duoc cung cap xong, khong con
+        // co so de hoan tien. KHONG chan Ongoing — co test hien huu (CancelTransfer_BySender_...)
+        // xac nhan huy ve Confirmed cho show livestream dang Ongoing (chua FirstAccessedAt, tuc chua
+        // xem) la hanh vi da duoc chap nhan; TransferCommandHandler cung dung FirstAccessedAt/
+        // CheckedInAt (da THUC SU dung ve) lam dieu kien chan, khong dung Status==Ongoing don thuan.
+        if (show.Status == LoungeShowStatus.Ended)
+            throw new DomainException("Không thể hủy vé sau khi event đã kết thúc.");
+
         if (show.CancellationDeadlineHours.HasValue &&
             DateTimeOffset.UtcNow > show.ScheduledStart.AddHours(-show.CancellationDeadlineHours.Value))
             throw new DomainException(
