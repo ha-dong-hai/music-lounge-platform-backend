@@ -136,7 +136,6 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
         var refundRepo = _uow.Repository<RefundRequest, int>();
-        var now = DateTimeOffset.UtcNow;
 
         foreach (var ticket in confirmedTickets)
         {
@@ -152,8 +151,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 Reason = "Nội dung vi phạm bị gỡ bỏ theo khiếu nại — hoàn 100% tiền vé",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
-                Status = RefundRequestStatus.Pending,
-                CreatedAt = now
+                Status = RefundRequestStatus.Pending
             });
 
             if (ticket.BuyerId is int buyerId)

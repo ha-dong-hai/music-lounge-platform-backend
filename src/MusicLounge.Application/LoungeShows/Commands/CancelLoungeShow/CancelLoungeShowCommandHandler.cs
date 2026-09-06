@@ -73,7 +73,6 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
             var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
             var refundRepo = _uow.Repository<RefundRequest, int>();
-            var now = DateTimeOffset.UtcNow;
 
             foreach (var ticket in confirmedTickets)
             {
@@ -89,8 +88,7 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
                     Reason = "Event bị hủy — hoàn 100% tiền vé",
                     AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                     RefundPercentage = 100m,
-                    Status = RefundRequestStatus.Pending,
-                    CreatedAt = now
+                    Status = RefundRequestStatus.Pending
                 });
 
                 if (ticket.BuyerId is int buyerId)

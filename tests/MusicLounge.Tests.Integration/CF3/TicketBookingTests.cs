@@ -366,6 +366,26 @@ public sealed class TicketBookingTests
         body.Should().Contain("\"success\":true");
     }
 
+    /// <summary>MLACP-261: RefundRequest was BaseEntity-only (no CreatedBy/UpdatedAt/UpdatedBy) —
+    /// converted to AuditableEntity, same D1 pattern as BankAccount/SubscriptionPackage/Taxonomy.</summary>
+    [Fact]
+    public async Task CancelTicket_StampsRefundRequestCreatedByWithBuyer()
+    {
+        var ticketId = await CreateConfirmedTicketWithPaymentAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var refundId = (await res.Content.ReadFromJsonAsync<IdResponse>())!.Data;
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var refund = await db.Set<RefundRequest>().FindAsync(refundId);
+        refund!.CreatedBy.Should().Be(SeedHelper.AudienceId);
+    }
+
+    private sealed record IdResponse(bool Success, int Data);
+
     [Fact]
     public async Task CancelTicket_ByNonBuyer_Returns403()
     {

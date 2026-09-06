@@ -68,7 +68,6 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
             var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
             var refundRepo = _uow.Repository<RefundRequest, int>();
-            var now = DateTimeOffset.UtcNow;
 
             foreach (var ticket in physicalTickets)
             {
@@ -84,8 +83,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                     Reason = "Event chuyển từ Offline sang Online — hoàn 100% vé vật lý (D13)",
                     AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                     RefundPercentage = 100m,
-                    Status = RefundRequestStatus.Pending,
-                    CreatedAt = now
+                    Status = RefundRequestStatus.Pending
                 });
 
                 if (ticket.BuyerId is int buyerId)
