@@ -72,6 +72,25 @@ public sealed class SubscriptionTests
         res.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
+    /// <summary>
+    /// Regression test for MLACP-253 (audit-flagged D1 gap, 2026-09-04): SubscriptionPackage used
+    /// to inherit bare BaseEntity, so there was no record of which Admin created/changed a package
+    /// (Price/entitlement edits affect platform revenue). Now inherits AuditableEntity — confirms
+    /// the generic ApplicationDbContext.SaveChangesAsync stamp actually fires for this entity.
+    /// </summary>
+    [Fact]
+    public async Task CreatePackage_StampsCreatedByWithAdmin()
+    {
+        var packageId = await CreatePackageAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var package = await db.SubscriptionPackages.FindAsync(packageId);
+
+        package!.CreatedBy.Should().Be(SeedHelper.AdminId);
+        package.CreatedAt.Should().NotBe(default);
+    }
+
     [Fact]
     public async Task CreatePackage_AsNonAdmin_Returns403()
     {

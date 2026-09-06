@@ -108,7 +108,7 @@ public sealed class JobQueryTranslationTests
             {
                 Name = $"ExpireTestPkg-{Guid.NewGuid():N}"[..20], Price = 200_000m,
                 BillingCycle = SubscriptionBillingCycle.Monthly, MaxTicketsPerEvent = 50,
-                HasAiPoster = false, IsActive = true, CreatedAt = DateTimeOffset.UtcNow
+                HasAiPoster = false, IsActive = true
             };
             db.Add(package);
             await db.SaveChangesAsync();
@@ -153,7 +153,7 @@ public sealed class JobQueryTranslationTests
             {
                 Name = $"WarnTestPkg-{Guid.NewGuid():N}"[..20], Price = 200_000m,
                 BillingCycle = SubscriptionBillingCycle.Monthly, MaxTicketsPerEvent = 50,
-                HasAiPoster = false, IsActive = true, CreatedAt = DateTimeOffset.UtcNow
+                HasAiPoster = false, IsActive = true
             };
             db.Add(package);
             await db.SaveChangesAsync();

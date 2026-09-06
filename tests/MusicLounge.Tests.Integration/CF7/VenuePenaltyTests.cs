@@ -54,7 +54,7 @@ public sealed class VenuePenaltyTests
         {
             Name = $"PenaltyTestPkg-{Guid.NewGuid():N}"[..20], Price = subscriptionPrice,
             BillingCycle = SubscriptionBillingCycle.Monthly,
-            MaxTicketsPerEvent = 100, HasAiPoster = false, IsActive = true, CreatedAt = DateTimeOffset.UtcNow
+            MaxTicketsPerEvent = 100, HasAiPoster = false, IsActive = true
         };
         db.SubscriptionPackages.Add(package);
         await db.SaveChangesAsync();

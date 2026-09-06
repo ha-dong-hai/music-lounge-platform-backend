@@ -3,7 +3,10 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Domain.Entities;
 
 // D12: Immutable when owners are subscribed — create new version instead of editing
-public sealed class SubscriptionPackage : Common.BaseEntity<int>
+// D1: AuditableEntity (CreatedAt/UpdatedAt/CreatedBy/UpdatedBy, auto-stamped by
+// ApplicationDbContext.SaveChangesAsync) — a Price/entitlement edit here affects platform revenue,
+// so it's worth knowing which Admin changed it and when.
+public sealed class SubscriptionPackage : Common.AuditableEntity<int>
 {
     public string Name { get; set; } = string.Empty;       // Basic / Pro / Premium
     public string? Description { get; set; }
@@ -21,7 +24,6 @@ public sealed class SubscriptionPackage : Common.BaseEntity<int>
     // a later package edit can't shrink a tour an Owner already built mid-subscription).
     public int MaxTourScenes { get; set; } = 0;
     public bool IsActive { get; set; } = true;
-    public DateTimeOffset CreatedAt { get; set; }
 
     public ICollection<OwnerSubscription> Subscriptions { get; set; } = [];
 }
