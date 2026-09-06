@@ -24,8 +24,7 @@ internal sealed class CreateSubscriptionPackageCommandHandler
             HasAiPoster = request.HasAiPoster,
             MaxAiPostersPerMonth = request.MaxAiPostersPerMonth,
             MaxTourScenes = request.MaxTourScenes,
-            IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow
+            IsActive = true
         };
 
         _uow.Repository<SubscriptionPackage, int>().Add(package);
