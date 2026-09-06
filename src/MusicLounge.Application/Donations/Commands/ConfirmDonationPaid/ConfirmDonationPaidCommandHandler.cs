@@ -17,6 +17,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
     private readonly ICurrentUserService _currentUser;
     private readonly ILedgerService _ledger;
     private readonly ISystemConfigService _config;
+    private readonly IAsyncKeyedLock _lock;
     private readonly ILogger<ConfirmDonationPaidCommandHandler> _logger;
 
     public ConfirmDonationPaidCommandHandler(
@@ -25,6 +26,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         ICurrentUserService currentUser,
         ILedgerService ledger,
         ISystemConfigService config,
+        IAsyncKeyedLock @lock,
         ILogger<ConfirmDonationPaidCommandHandler> logger)
     {
         _uow = uow;
@@ -32,11 +34,21 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         _currentUser = currentUser;
         _ledger = ledger;
         _config = config;
+        _lock = @lock;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(ConfirmDonationPaidCommand request, CancellationToken ct)
     {
+        // MLACP-259: WriteJournalAsync has NO idempotency guard of its own (see LedgerService —
+        // it just balances debit==credit and inserts, trusting each caller not to call it twice for
+        // the same event; the journalId here is a fresh random Guid per call, so even a unique index
+        // on it wouldn't catch a double-click). Without this lock, 2 near-simultaneous "Confirm Paid"
+        // clicks both read Status==OwnerReceived before either commits, and both write a chặng-2
+        // ledger journal — the performer's ledger balance would show being paid twice for 1 donation.
+        // Same class of bug as ProcessRefundRequestCommandHandler before MLACP-251.
+        await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
+
         var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
