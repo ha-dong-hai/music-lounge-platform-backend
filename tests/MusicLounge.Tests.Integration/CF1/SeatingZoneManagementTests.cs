@@ -52,6 +52,12 @@ public sealed class SeatingZoneManagementTests
         zone.Name.Should().Be("VIP Balcony");
         zone.Capacity.Should().Be(30);
         zone.IsActive.Should().BeTrue();
+
+        // Regression for MLACP-254 (audit-flagged D1 gap, 2026-09-04): SeatingZone used to inherit
+        // bare BaseEntity, so there was no record of who created a zone — confirms the generic
+        // ApplicationDbContext.SaveChangesAsync stamp actually fires now that it's AuditableEntity.
+        zone.CreatedBy.Should().Be(SeedHelper.OwnerId);
+        zone.CreatedAt.Should().NotBe(default);
     }
 
     [Fact]
