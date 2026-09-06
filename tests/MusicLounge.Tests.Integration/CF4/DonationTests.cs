@@ -320,6 +320,48 @@ public sealed class DonationTests
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary>
+    /// MLACP-259: ConfirmDonationPaidCommandHandler had no IAsyncKeyedLock — WriteJournalAsync itself
+    /// has no idempotency guard (journalId is a fresh random Guid per call), so without the lock, 2
+    /// near-simultaneous "Confirm Paid" clicks could both read Status==OwnerReceived before either
+    /// commits, both writing a chặng-2 ledger journal for the same donation (performer shown paid
+    /// twice on the books). Fires 6 concurrent confirm-paid requests and asserts exactly 1 succeeds
+    /// AND exactly 1 chặng-2 journal (2 LedgerEntry rows: debit Owner, credit Performer) exists.
+    /// </summary>
+    [Fact]
+    public async Task ConfirmDonationPaid_ConcurrentRequests_OnlyOneWritesLedgerJournal()
+    {
+        var (id, orderId) = await CreateDonationAsync();
+        await SimulateVnPayCallbackAsync(orderId, success: true);
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 6).Select(_ =>
+            ownerClient.PostAsJsonAsync($"/api/v1/donations/{id}/confirm-paid", new
+            {
+                PaymentRef = "TXN-CONCURRENT",
+                PaymentEvidenceUrl = (string?)null
+            })));
+
+        responses.Count(r => r.StatusCode == HttpStatusCode.NoContent).Should().Be(1,
+            "chỉ đúng 1 trong 6 request đồng thời được xác nhận thành công");
+        responses.Count(r => r.StatusCode == HttpStatusCode.UnprocessableEntity).Should().Be(5,
+            "5 request còn lại phải thấy lỗi trạng thái đã đổi, không phải lỗi hạ tầng (500)");
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // Chặng 1 (ProcessDonationPaymentCommandHandler, đã chạy qua SimulateVnPayCallbackAsync ở
+        // trên) cũng ghi 4 dòng cùng ReferenceType/ReferenceId — lọc riêng theo AccountType.Performer
+        // vì CHỈ chặng 2 mới đụng tới account loại này, nên đây là cách đếm "chặng 2 đã chạy mấy lần"
+        // tách biệt khỏi 4 dòng chặng 1 luôn có sẵn.
+        var performerEntryCount = await db.LedgerEntries
+            .Where(e => e.ReferenceType == "donation" && e.ReferenceId == id.ToString())
+            .Join(db.Set<MusicLounge.Domain.Entities.Account>(), e => e.AccountId, a => a.Id, (e, a) => a)
+            .CountAsync(a => a.OwnerType == AccountType.Performer);
+        performerEntryCount.Should().Be(1,
+            "chỉ đúng 1 journal chặng 2 được ghi — không bị nhân đôi dù có 6 request đồng thời");
+    }
+
     // ─── Ledger integration (found missing entirely during this session's audit) ──
 
     /// <summary>

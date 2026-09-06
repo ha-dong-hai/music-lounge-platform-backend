@@ -16,23 +16,31 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamHubService _hubService;
     private readonly ILivestreamRepository _livestreamRepo;
+    private readonly IAsyncKeyedLock _lock;
 
     public AcknowledgeDonationCommandHandler(
         IUnitOfWork uow,
         IDonationRepository donationRepo,
         ICurrentUserService currentUser,
         ILivestreamHubService hubService,
-        ILivestreamRepository livestreamRepo)
+        ILivestreamRepository livestreamRepo,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _donationRepo = donationRepo;
         _currentUser = currentUser;
         _hubService = hubService;
         _livestreamRepo = livestreamRepo;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(AcknowledgeDonationCommand request, CancellationToken ct)
     {
+        // Same key namespace as ConfirmDonationPaidCommandHandler — a double-click here duplicates
+        // the live donation-alert broadcast (not money, but still a real duplicate side effect), and
+        // serializing against chặng-2 avoids any theoretical overlap between the two status writes.
+        await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
+
         var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
