@@ -101,8 +101,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
             Reason = "Audience yêu cầu hủy vé",
             AmountRequested = Math.Round(price.Price * refundPercentage / 100m, 2),
             RefundPercentage = refundPercentage,
-            Status = RefundRequestStatus.Pending,
-            CreatedAt = DateTimeOffset.UtcNow
+            Status = RefundRequestStatus.Pending
         };
 
         _uow.Repository<RefundRequest, int>().Add(refundRequest);

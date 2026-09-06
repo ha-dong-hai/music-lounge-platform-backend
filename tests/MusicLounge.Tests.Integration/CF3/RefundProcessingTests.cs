@@ -64,8 +64,7 @@ public sealed class RefundProcessingTests
             Reason = "Test cancellation",
             AmountRequested = gross,
             RefundPercentage = 100m,
-            Status = RefundRequestStatus.Pending,
-            CreatedAt = DateTimeOffset.UtcNow
+            Status = RefundRequestStatus.Pending
         };
         db.Add(refund);
         await db.SaveChangesAsync();

@@ -26,7 +26,8 @@ internal sealed class GetPendingRefundRequestsQueryHandler
         var items = pending
             .Select(r => new RefundRequestDto(
                 r.Id, r.PaymentId, r.RequestedBy, r.Reason, r.AmountRequested,
-                r.AmountApproved, r.RefundPercentage, r.Status, r.CreatedAt, r.ResolvedAt))
+                r.AmountApproved, r.RefundPercentage, r.Status,
+                new DateTimeOffset(r.CreatedAt, TimeSpan.Zero), r.ResolvedAt))
             .ToList();
 
         return new PaginatedResult<RefundRequestDto>(items, page, size, total);
