@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
@@ -25,7 +26,7 @@ internal sealed class CreateMenuItemCommandHandler : IRequestHandler<CreateMenuI
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(menu.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), menu.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền quản lý menu cho venue này.");
 
         var item = new FnbMenuItem
@@ -36,8 +37,7 @@ internal sealed class CreateMenuItemCommandHandler : IRequestHandler<CreateMenuI
             Description = request.Description,
             Price = request.Price,
             ImageUrl = request.ImageUrl,
-            DisplayOrder = request.DisplayOrder,
-            CreatedAt = DateTimeOffset.UtcNow
+            DisplayOrder = request.DisplayOrder
         };
 
         _uow.Repository<FnbMenuItem, int>().Add(item);

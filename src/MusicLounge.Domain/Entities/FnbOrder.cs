@@ -2,7 +2,7 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class FnbOrder : Common.BaseEntity<int>
+public sealed class FnbOrder : Common.AuditableEntity<int>
 {
     public int LoungeId { get; set; }
     public int? ShowId { get; set; }            // null = outside show hours
@@ -14,8 +14,6 @@ public sealed class FnbOrder : Common.BaseEntity<int>
     public PaymentMethod PaymentMethod { get; set; }
     public decimal TotalAmount { get; set; } = 0m;
     public string? Note { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
 
     public MusicLounge Lounge { get; set; } = null!;
     public LoungeShow? Show { get; set; }

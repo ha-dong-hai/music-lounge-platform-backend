@@ -90,9 +90,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
             TableNote = request.TableNote,
             Status = FnbOrderStatus.Pending,
             PaymentMethod = paymentMethod,
-            Note = request.Note,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
+            Note = request.Note
         };
 
         _uow.Repository<FnbOrder, int>().Add(order);

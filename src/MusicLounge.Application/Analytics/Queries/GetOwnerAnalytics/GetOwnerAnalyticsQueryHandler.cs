@@ -119,7 +119,7 @@ internal sealed class GetOwnerAnalyticsQueryHandler
                 }).ToList();
                 var monthFnb = fnbOrders.Where(o =>
                 {
-                    var d = o.CreatedAt.ToOffset(vnOffset);
+                    var d = new DateTimeOffset(o.CreatedAt, TimeSpan.Zero).ToOffset(vnOffset);
                     return d.Year == ym.Year && d.Month == ym.Month;
                 }).ToList();
                 return new RevenueMonthDto(
