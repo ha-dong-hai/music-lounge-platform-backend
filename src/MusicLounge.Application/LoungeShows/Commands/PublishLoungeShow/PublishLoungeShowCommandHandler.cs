@@ -123,7 +123,6 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
             {
                 TargetType = ModerationTargetType.Show,
                 TargetId = show.Id,
-                CreatedAt = now,
                 SlaDeadline = now.AddHours(slaHours)
             };
             _uow.Repository<EventModeration, int>().Add(moderation);
@@ -136,7 +135,11 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
             moderation.AdminId = null;
             moderation.ReviewNote = null;
             moderation.ReviewedAt = null;
-            moderation.CreatedAt = now;
+            // AuditableEntity.CreatedAt is hook-managed on Added, but NOT touched on Modified — safe
+            // to keep reusing it here as "review window start" for a resubmission (deliberate reuse,
+            // predates the AuditableEntity conversion). .UtcDateTime matches the hook's own DateTime/
+            // Kind=Utc shape for this column.
+            moderation.CreatedAt = now.UtcDateTime;
             moderation.SlaDeadline = now.AddHours(slaHours);
             // Stale from the previous submission's scoring — re-score the (possibly edited)
             // content fresh rather than leave the old verdict sitting on a reopened review.

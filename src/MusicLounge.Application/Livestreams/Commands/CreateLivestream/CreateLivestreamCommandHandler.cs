@@ -92,7 +92,6 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         {
             TargetType = ModerationTargetType.Livestream,
             TargetId = livestream.Id,
-            CreatedAt = moderationCreatedAt,
             SlaDeadline = moderationCreatedAt.AddHours(slaHours)
         };
         _uow.Repository<EventModeration, int>().Add(moderation);
