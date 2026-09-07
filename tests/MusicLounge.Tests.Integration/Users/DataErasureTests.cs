@@ -66,10 +66,10 @@ public sealed class DataErasureTests
     public async Task RequestDataErasure_LocalAccountCorrectPassword_ScrubsIdentityAndDeactivates()
     {
         var email = UniqueEmail();
-        var userId = await CreateLocalAccountAsync(email, "P@ssword123");
+        var userId = await CreateLocalAccountAsync(email, "P@ssword123-safe");
         var client = _factory.CreateAuthenticatedClient(userId, "Audience");
 
-        var res = await client.PostAsJsonAsync("/api/v1/me/data-erasure", new { CurrentPassword = "P@ssword123" });
+        var res = await client.PostAsJsonAsync("/api/v1/me/data-erasure", new { CurrentPassword = "P@ssword123-safe" });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -87,7 +87,7 @@ public sealed class DataErasureTests
     public async Task RequestDataErasure_LocalAccountWrongPassword_Returns401AndDoesNotScrub()
     {
         var email = UniqueEmail();
-        var userId = await CreateLocalAccountAsync(email, "P@ssword123");
+        var userId = await CreateLocalAccountAsync(email, "P@ssword123-safe");
         var client = _factory.CreateAuthenticatedClient(userId, "Audience");
 
         var res = await client.PostAsJsonAsync("/api/v1/me/data-erasure", new { CurrentPassword = "WrongPassword" });

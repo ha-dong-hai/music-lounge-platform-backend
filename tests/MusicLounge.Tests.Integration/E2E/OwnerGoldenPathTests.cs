@@ -48,7 +48,7 @@ public sealed class OwnerGoldenPathTests
         //       RegisterCommandValidator) ──────────────────────────────────────────────
         var registerRes = await anon.PostAsJsonAsync("/api/v1/auth/register", new
         {
-            Email = email, Password = "P@ssword123", FullName = "Golden Path Owner",
+            Email = email, Password = "P@ssword123-safe", FullName = "Golden Path Owner",
             Phone = (string?)null, Role = "Owner", AcceptTerms = true
         });
         registerRes.StatusCode.Should().Be(HttpStatusCode.OK, "register with Role=Owner must be accepted");
@@ -75,7 +75,7 @@ public sealed class OwnerGoldenPathTests
 
         // ── 3. Login confirms the same account, real password check included ──────────
         var loginRes = await anon.PostAsJsonAsync(
-            "/api/v1/auth/login", new { Email = email, Password = "P@ssword123" });
+            "/api/v1/auth/login", new { Email = email, Password = "P@ssword123-safe" });
         loginRes.StatusCode.Should().Be(HttpStatusCode.OK);
         var loginBody = await loginRes.Content.ReadFromJsonAsync<AuthResponse>();
         loginBody!.Data.UserId.Should().Be(ownerId);

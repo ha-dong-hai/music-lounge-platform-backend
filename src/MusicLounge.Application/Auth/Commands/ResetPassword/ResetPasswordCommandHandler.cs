@@ -32,6 +32,14 @@ internal sealed class ResetPasswordCommandHandler : IRequestHandler<ResetPasswor
         // Xoa token ngay sau khi dung — token 1 lan, khong the tai su dung du chua het han.
         user.PasswordResetTokenHash = null;
         user.PasswordResetTokenExpiresAt = null;
+        // Clear the lockout too. Forgetting the password is the single most common reason an account
+        // trips IAuthAttemptTracker's 5-failure lockout, so the user who just completed the intended
+        // recovery path would otherwise STILL be refused at login for up to LockoutDurationMinutes —
+        // with a message blaming failed logins they can no longer do anything about. Resetting here
+        // hands an attacker nothing: proving control of the reset token is already strictly stronger
+        // than surviving the lockout window.
+        user.FailedLoginAttempts = 0;
+        user.LockedUntil = null;
         // Rotate the security stamp so every JWT issued before this reset — e.g. one an attacker
         // who prompted the reset already stole — fails OnTokenValidated on its very next request,
         // instead of staying valid for up to AccessTokenExpiryMinutes more.
