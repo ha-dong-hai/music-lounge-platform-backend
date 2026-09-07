@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -19,15 +20,17 @@ public sealed class SettlementReleaseJob
     private readonly ILedgerService _ledger;
     private readonly ISystemConfigService _config;
     private readonly INotificationService _notifications;
+    private readonly ILogger<SettlementReleaseJob> _logger;
 
     public SettlementReleaseJob(
         ApplicationDbContext ctx, ILedgerService ledger, ISystemConfigService config,
-        INotificationService notifications)
+        INotificationService notifications, ILogger<SettlementReleaseJob> logger)
     {
         _ctx = ctx;
         _ledger = ledger;
         _config = config;
         _notifications = notifications;
+        _logger = logger;
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -49,8 +52,39 @@ public sealed class SettlementReleaseJob
         var threshold = await _config.GetDecimalAsync(
             ConfigKeys.SettlementCompletionThresholdPct, 0.70m, ct);
 
+        // A payment whose refund is still awaiting an Admin decision must not be paid out to the
+        // owner yet. ProcessRefundRequest is the ONLY thing that shrinks a scheduled settlement to
+        // match a refund, and it is a manual Admin action with no auto-processing job behind it —
+        // while CancelLoungeShow (and ResolveComplaint / ResolveContentReport, which also cancel a
+        // show) create the RefundRequest as Pending and leave the settlements untouched. So a show
+        // cancelled with tickets sold left both tranches Scheduled: at showEnd+48h and showEnd+14d
+        // this job paid the owner in full for tickets the buyers were about to be refunded 100% of,
+        // and the platform covered both sides. The ledger is append-only, so undoing that needs a
+        // manual reversing journal.
+        //
+        // Deferring rather than cancelling is what makes this safe in BOTH directions: if the
+        // refund is approved, ProcessRefundRequest shrinks the tranche and the next daily run pays
+        // the correct reduced amount; if it is rejected, nothing is pending any more and the next
+        // run pays in full. Neither outcome is pre-judged here, and no money is stranded.
+        var duePaymentIds = due.Select(s => s.PaymentId).Distinct().ToList();
+        var paymentsAwaitingRefundDecision = (await _ctx.RefundRequests
+                .Where(r => duePaymentIds.Contains(r.PaymentId) && r.Status == RefundRequestStatus.Pending)
+                .Select(r => r.PaymentId)
+                .Distinct()
+                .ToListAsync(ct))
+            .ToHashSet();
+
         foreach (var settlement in due)
         {
+            if (paymentsAwaitingRefundDecision.Contains(settlement.PaymentId))
+            {
+                _logger.LogWarning(
+                    "Settlement release deferred — PaymentId={PaymentId} SettlementId={SettlementId} " +
+                    "has a refund request still pending an Admin decision at {At}",
+                    settlement.PaymentId, settlement.Id, now);
+                continue;
+            }
+
             if (settlement.ReleaseType == SettlementReleaseType.Final30)
             {
                 var completionOk = await IsShowCompletionAcceptableAsync(settlement.PaymentId, threshold, ct);

@@ -4,6 +4,7 @@ using FluentAssertions;
 using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Tickets.Events;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -344,5 +345,98 @@ public sealed class SettlementTests
         var res = await client.GetAsync("/api/v1/admin/ledger/integrity-check");
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    /// <summary>
+    /// Regression for a double-payment defect found in the đợt-2 audit. CancelLoungeShow (and
+    /// ResolveComplaint / ResolveContentReport, which also cancel a show) create a RefundRequest in
+    /// Pending and leave the payment's settlement tranches Scheduled. ProcessRefundRequest is the
+    /// only thing that shrinks those tranches, and it is a manual Admin action with no
+    /// auto-processing job behind it — so a cancelled show whose refunds hadn't been actioned yet
+    /// had its owner paid in full at showEnd+48h while the buyers were still owed 100% back. The
+    /// platform covered both sides, and the ledger is append-only so unwinding it needs a manual
+    /// reversing journal.
+    /// </summary>
+    [Fact]
+    public async Task SettlementRelease_WhileRefundRequestPending_DefersInsteadOfPaying()
+    {
+        var (paymentId, settlementId) = await SeedDueSettlementAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.RefundRequests.Add(new RefundRequest
+            {
+                PaymentId = paymentId,
+                RequestedBy = SeedHelper.AudienceId,
+                Reason = "Event bị hủy — hoàn 100% tiền vé",
+                AmountRequested = 1_000_000m,
+                RefundPercentage = 100m,
+                Status = RefundRequestStatus.Pending
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
+            await job.ExecuteAsync(new JobCancellationToken(false));
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var settlement = await db.Settlements.SingleAsync(s => s.Id == settlementId);
+            settlement.Status.Should().Be(SettlementStatus.Scheduled,
+                "the tranche must stay Scheduled so a later run pays whatever the refund decision leaves owed");
+            settlement.ReleasedAt.Should().BeNull();
+
+            var payoutEntries = await db.LedgerEntries
+                .Where(e => e.ReferenceType == LedgerReferenceTypes.Settlement
+                            && e.ReferenceId == settlementId.ToString())
+                .ToListAsync();
+            payoutEntries.Should().BeEmpty(
+                "no payout journal may be written while the buyer's refund is still undecided");
+        }
+    }
+
+    /// <summary>
+    /// The deferral above must not strand money: once the Admin rejects the refund, nothing is
+    /// pending any more and the next run pays the tranche in full.
+    /// </summary>
+    [Fact]
+    public async Task SettlementRelease_AfterRefundRequestRejected_ReleasesNormally()
+    {
+        var (paymentId, settlementId) = await SeedDueSettlementAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.RefundRequests.Add(new RefundRequest
+            {
+                PaymentId = paymentId,
+                RequestedBy = SeedHelper.AudienceId,
+                Reason = "Khách đổi ý",
+                AmountRequested = 1_000_000m,
+                RefundPercentage = 100m,
+                Status = RefundRequestStatus.Rejected
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
+            await job.ExecuteAsync(new JobCancellationToken(false));
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var settlement = await db.Settlements.SingleAsync(s => s.Id == settlementId);
+            settlement.Status.Should().Be(SettlementStatus.Released,
+                "a rejected refund leaves nothing pending, so the owner must still get paid");
+        }
     }
 }

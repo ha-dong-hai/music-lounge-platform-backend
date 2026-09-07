@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -220,10 +221,20 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
         _uow.Repository<Livestream, int>().Update(livestream);
 
         var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
-        show.Status = LoungeShowStatus.Ended;
-        show.ActualEnd = now;
-        show.RatingOpenUntil = now.AddDays(ratingWindowDays);
-        _uow.Repository<LoungeShow, int>().Update(show);
+        // Never resurrect a show the Owner already cancelled (or that already ended by another
+        // path). Declining here is a no-op, not an error — throwing would make Mux retry this
+        // webhook indefinitely.
+        if (LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays))
+        {
+            _uow.Repository<LoungeShow, int>().Update(show);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Mux idle webhook left ShowId={ShowId} at {ShowStatus} — livestream {LivestreamId} " +
+                "ended but the show had already reached a terminal state at {At}",
+                show.Id, show.Status, livestream.Id, now);
+        }
 
         await _uow.SaveChangesAsync(ct);
 

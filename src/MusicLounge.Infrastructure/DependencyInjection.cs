@@ -8,7 +8,9 @@ using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.Livestreams.Jobs;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
+using MusicLounge.Application.Tickets.Commands.CheckInLivestreamViewer;
 using MusicLounge.Infrastructure.Hubs;
 using MusicLounge.Infrastructure.Jobs;
 using MusicLounge.Infrastructure.Persistence;
@@ -151,6 +153,18 @@ public static class DependencyInjection
         services.AddScoped<SendEmailVerificationCodeJob>();
         // Same registration discipline as the two jobs above — see comment there.
         services.AddScoped<SendPhoneVerificationCodeJob>();
+        // Fourth and fifth instances of that exact bug, found in the đợt-2 audit by cross-checking
+        // every *Job class in the codebase against this list. Both are enqueued for real by
+        // HangfireBackgroundJobService (Schedule<> / Enqueue<>) and neither was registered, so both
+        // threw "No service for type..." the first time Hangfire tried to activate them:
+        //   LivestreamReconnectTimeoutJob — MLACP-191's whole reconnect feature was dead. A stream
+        //     that lost its encoder stayed Reconnecting forever: never marked Failed, the show never
+        //     ended, viewers kept seeing "reconnecting", and the rating window never opened.
+        //   CheckInLivestreamViewerJob — livestream attendance was never recorded, and RateShow
+        //     requires a real check-in, so livestream ticket holders could never rate a show they
+        //     actually watched.
+        services.AddScoped<LivestreamReconnectTimeoutJob>();
+        services.AddScoped<CheckInLivestreamViewerJob>();
 
         // Livestream provider abstraction
         // Explicit timeout — HttpClient's default is 100s, long enough that one slow/hanging

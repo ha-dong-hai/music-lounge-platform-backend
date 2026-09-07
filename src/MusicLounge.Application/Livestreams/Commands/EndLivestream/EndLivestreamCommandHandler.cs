@@ -56,9 +56,9 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
         _uow.Repository<Livestream, int>().Update(livestream);
 
         var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
-        show.Status = LoungeShowStatus.Ended;
-        show.ActualEnd = now;
-        show.RatingOpenUntil = now.AddDays(ratingWindowDays);   // §6.13
+        // Ending the livestream always succeeds; only the show-level transition is conditional —
+        // a show cancelled while this livestream sat in Scheduled/Reconnecting must stay Cancelled.
+        LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays);   // §6.13
         _uow.Repository<LoungeShow, int>().Update(show);
 
         await _uow.SaveChangesAsync(ct);
