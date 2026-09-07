@@ -12,11 +12,14 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAsyncKeyedLock _lock;
 
-    public CreateTicketTierCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public CreateTicketTierCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _lock = @lock;
     }
 
     public async Task<int> Handle(CreateTicketTierCommand request, CancellationToken ct)
@@ -35,6 +38,13 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
 
         // D14: tong TotalCapacity cac tier cua show khong duoc vuot MaxTicketsPerEvent cua goi
         // subscription dang Active (snapshot tai luc dang ky, khong bi anh huong neu gia goi doi sau).
+        //
+        // MLACP-271: locked by ShowId (same key UpdateTicketTierCommandHandler uses) so this
+        // read-existing-tiers-then-compare-then-write can't race a concurrent Update (or another
+        // concurrent Create) on the same show — see that handler's comment for the full race
+        // scenario this closes.
+        await using var _ = await _lock.AcquireAsync($"ticket-tier-capacity:{request.ShowId}", ct);
+
         if (request.TotalCapacity.HasValue)
         {
             var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
