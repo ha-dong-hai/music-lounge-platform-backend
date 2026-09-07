@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
@@ -29,7 +30,7 @@ internal sealed class DeleteMenuItemCommandHandler : IRequestHandler<DeleteMenuI
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(menu.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), menu.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền quản lý menu cho venue này.");
 
         // OrderItemConfiguration restricts MenuItemId at the DB level (never cascades) so historical

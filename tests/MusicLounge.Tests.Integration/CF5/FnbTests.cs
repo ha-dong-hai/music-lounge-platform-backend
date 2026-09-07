@@ -48,8 +48,7 @@ public sealed class FnbTests
             Category = "Drink",
             Name = "Mojito",
             Price = price,
-            IsAvailable = true,
-            CreatedAt = DateTimeOffset.UtcNow
+            IsAvailable = true
         };
         db.Add(item);
         await db.SaveChangesAsync();
@@ -72,6 +71,52 @@ public sealed class FnbTests
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    /// <summary>MLACP-263: same B1 authorization-gap class as MLACP-252/256 — hand-rolled
+    /// OwnerId-only check with no Admin fallback despite RequireOwner policy allowing Admin.</summary>
+    [Fact]
+    public async Task CreateFnbMenu_ByAdmin_NotTheOwner_Returns201()
+    {
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PostAsJsonAsync("/api/v1/fnb-menus", new
+        {
+            LoungeId = SeedHelper.LoungeId,
+            Name = "Menu tạo bởi Admin",
+            Description = (string?)null,
+            DisplayOrder = 0
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created,
+            "Admin must be able to manage any venue's F&B menu, matching the controller's declared RequireOwner policy");
+    }
+
+    /// <summary>MLACP-263: FnbMenuItem/FnbOrder/OrderItem were BaseEntity-only — same D1 pattern
+    /// closed for BankAccount/SubscriptionPackage/Taxonomy/RefundRequest in earlier batches.</summary>
+    [Fact]
+    public async Task CreateMenuItem_StampsCreatedByWithCurrentUser()
+    {
+        var menuId = await CreateMenuAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+
+        var res = await client.PostAsJsonAsync("/api/v1/fnb-menu-items", new
+        {
+            MenuId = menuId,
+            Category = "Drink",
+            Name = "Trà đào",
+            Description = (string?)null,
+            Price = 45_000m,
+            ImageUrl = (string?)null,
+            DisplayOrder = 0
+        });
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+        var itemId = (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var item = await db.Set<FnbMenuItem>().FindAsync(itemId);
+        item!.CreatedBy.Should().Be(SeedHelper.OwnerId);
     }
 
     [Fact]
@@ -185,7 +230,7 @@ public sealed class FnbTests
             var item = new FnbMenuItem
             {
                 MenuId = menu.Id, Category = "Drink", Name = "Sold Out",
-                Price = 20_000m, IsAvailable = false, CreatedAt = DateTimeOffset.UtcNow
+                Price = 20_000m, IsAvailable = false
             };
             db.Add(item);
             await db.SaveChangesAsync();

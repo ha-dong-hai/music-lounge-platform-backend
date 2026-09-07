@@ -90,7 +90,6 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         _uow.Repository<Payment, int>().Update(payment);
 
         order.Status = FnbOrderStatus.Paid;
-        order.UpdatedAt = DateTimeOffset.UtcNow;
         _uow.Repository<FnbOrder, int>().Update(order);
 
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct);

@@ -47,7 +47,6 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                 throw new DomainException($"Không thể hủy order đang ở trạng thái '{order.Status}'.");
 
             order.Status = FnbOrderStatus.Cancelled;
-            order.UpdatedAt = DateTimeOffset.UtcNow;
             orderRepo.Update(order);
 
             var itemRepo = _uow.Repository<OrderItem, int>();
@@ -71,7 +70,6 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                 $"Không thể chuyển từ '{order.Status}' sang '{newStatus}'. Chỉ được chuyển tuần tự Pending → Preparing → Served → Paid.");
 
         order.Status = newStatus;
-        order.UpdatedAt = DateTimeOffset.UtcNow;
         orderRepo.Update(order);
 
         // Marking Paid used to be a bare status flip with no record anywhere else in the system —
@@ -83,9 +81,14 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         // an auditable record instead of a single mutable status field only Staff can see/edit.
         if (newStatus == FnbOrderStatus.Paid)
         {
+            // Khong the doc lai order.UpdatedAt o day de lam moc thoi gian — hook auto-stamp chi
+            // gan gia tri do BEN TRONG SaveChangesAsync (goi sau doan nay), nen tai thoi diem nay no
+            // van la gia tri CU (null/lan sua truoc). Dung 1 moc "now" rieng, nhat quan voi thoi
+            // diem chuyen trang thai Paid thuc su.
+            var now = DateTimeOffset.UtcNow;
             _uow.Repository<Payment, int>().Add(new Payment
             {
-                OrderId = $"FNB-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40],
+                OrderId = $"FNB-{now:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40],
                 PayerId = order.AudienceUserId,
                 GrossAmount = order.TotalAmount,
                 // Cash, no platform commission on F&B (same convention as walk-in ticket sales) —
@@ -95,8 +98,8 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                 Status = PaymentStatus.Confirmed,
                 ReferenceType = "FnbOrder",
                 ReferenceId = order.Id.ToString(),
-                PaidAt = order.UpdatedAt,
-                CreatedAt = order.UpdatedAt
+                PaidAt = now,
+                CreatedAt = now
             });
         }
 
