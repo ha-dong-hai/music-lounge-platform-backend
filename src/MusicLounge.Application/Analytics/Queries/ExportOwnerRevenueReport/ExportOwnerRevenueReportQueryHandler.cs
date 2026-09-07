@@ -3,6 +3,7 @@ using System.Text;
 using MediatR;
 using MusicLounge.Application.Analytics.Common;
 using MusicLounge.Application.Analytics.DTOs;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Domain.Exceptions;
@@ -30,7 +31,7 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xuất báo cáo doanh thu của venue này.");
 
         // Same builder GetOwnerRevenueReportQueryHandler uses for the on-screen version — the file

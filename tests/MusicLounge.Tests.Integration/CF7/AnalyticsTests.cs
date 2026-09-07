@@ -53,6 +53,52 @@ public sealed class AnalyticsTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
+    // ─── B1 authorization gap (MLACP-267, audit-flagged 2026-09-04/06) ─────────
+    // Same class of bug as MLACP-252/256/263/266: hand-rolled "OwnerId != currentUser" with no
+    // Admin fallback despite every one of these endpoints declaring RequireOwner (which allows
+    // Admin by definition — see Program.cs).
+
+    [Fact]
+    public async Task GetMyLounge_ByAdmin_NotTheOwner_Returns200()
+    {
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/analytics/my-lounge?loungeId={SeedHelper.LoungeId}");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK,
+            "Admin must be able to view any venue's analytics, matching the controller's declared RequireOwner policy");
+    }
+
+    [Fact]
+    public async Task GetRevenueReport_ByAdmin_NotTheOwner_Returns200()
+    {
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/analytics/revenue-report?loungeId={SeedHelper.LoungeId}");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetArtistDonationStats_ByAdmin_NotTheOwner_Returns200()
+    {
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/analytics/artist-donations?loungeId={SeedHelper.LoungeId}");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetLivestreamHistory_ByAdmin_NotTheOwner_Returns200()
+    {
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/analytics/livestream-history?loungeId={SeedHelper.LoungeId}");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
     [Fact]
     public async Task GetPlatform_AsAdmin_Returns200()
     {
