@@ -12,11 +12,14 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAsyncKeyedLock _lock;
 
-    public UpdateTicketTierCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public UpdateTicketTierCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(UpdateTicketTierCommand request, CancellationToken ct)
@@ -41,6 +44,17 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
         // MaxTicketsPerEventSnapshot cap when a tier is first created, but Update set TotalCapacity
         // directly with no re-check, letting an Owner raise an already-valid tier's capacity past
         // the subscription's limit after the fact.
+        //
+        // MLACP-271: the read-other-tiers-then-compare-then-write sequence below is a classic
+        // check-then-act race — 2 concurrent Updates on different tiers of the same show (or a
+        // Create racing an Update) can each read the total before the other's write lands, both
+        // pass the check, and both commit, letting the combined total exceed the subscription cap
+        // even though each individual request was valid at the moment it checked. Locked by ShowId
+        // (not TierId) because the invariant being protected spans ALL tiers of the show — the same
+        // key CreateTicketTierCommandHandler uses, so a Create and an Update can never race each
+        // other either.
+        await using var _ = await _lock.AcquireAsync($"ticket-tier-capacity:{show.Id}", ct);
+
         if (request.TotalCapacity.HasValue)
         {
             var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(

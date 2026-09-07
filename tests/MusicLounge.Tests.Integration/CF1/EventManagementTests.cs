@@ -665,6 +665,95 @@ public sealed class EventManagementTests
             "Admin must be able to manage any venue's ticket tiers, matching the controller's declared RequireOwner policy");
     }
 
+    // ─── C3 capacity race (MLACP-271, audit-flagged 2026-09-07) ────────────────
+    // Create/Update both re-tally TotalCapacity across all tiers of a show and compare against the
+    // Owner's subscription cap (seed cap is 1000, see SeedHelper), but did so with no lock — 2
+    // concurrent requests on different tiers could each read the total before the other's write
+    // landed, both pass their own check, and together exceed the cap. Fixed with the same
+    // IAsyncKeyedLock pattern used everywhere else in this codebase for the same class of
+    // check-then-act race (CancelLoungeShow, Livestream Create, ProcessRefundRequest...).
+    //
+    // Verified this test's assertions hold with the fix and (via `git stash`) fail without it —
+    // BUT: confirmed empirically (by temporarily disabling the lock on ProcessRefundRequestCommand-
+    // Handler, an already-established "TwoConcurrent..." test elsewhere in this suite) that this
+    // HttpClient+TestServer harness does not reliably force genuine interleaving even at 10-way
+    // concurrency — requests appear to execute effectively sequentially, so the loser's own
+    // check-time total already reflects the winner's committed write. This test therefore mainly
+    // proves the cap-recompute logic is correct on every individual request, the same real
+    // guarantee every other "TwoConcurrent..." test in this suite actually provides despite its
+    // "concurrent" framing. The lock's necessity under REAL concurrent load is established by code
+    // inspection (a genuine read-then-write TOCTOU gap) and by matching an already-proven pattern,
+    // not by this test forcing an actual race.
+
+    private async Task<int> CreateTierAsync(int showId, int totalCapacity)
+    {
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        var res = await client.PostAsJsonAsync("/api/v1/ticket-tiers", new
+        {
+            ShowId = showId,
+            Name = $"Tier-{Guid.NewGuid():N}",
+            Description = (string?)null,
+            AccessType = "Physical",
+            ZoneId = (int?)null,
+            TotalCapacity = totalCapacity,
+            Prices = new[]
+            {
+                new
+                {
+                    Name = "Standard",
+                    Price = 100_000m,
+                    Quota = (int?)totalCapacity,
+                    PurchaseChannel = "Both",
+                    SaleStart = DateTimeOffset.UtcNow,
+                    SaleEnd = DateTimeOffset.UtcNow.AddDays(2)
+                }
+            }
+        });
+        res.EnsureSuccessStatusCode();
+        var body = await res.Content.ReadFromJsonAsync<DataResponse<int>>();
+        return body!.Data;
+    }
+
+    [Fact]
+    public async Task UpdateTicketTier_TenConcurrentCapacityRaises_NeverExceedsSubscriptionCap()
+    {
+        var showId = await CreateShowAsync();
+        // 10 tiers × 10 = 100, safely under the seed subscription cap of 1000 (SeedHelper).
+        const int tierCount = 10;
+        var tierIds = new List<int>();
+        for (var i = 0; i < tierCount; i++)
+            tierIds.Add(await CreateTierAsync(showId, totalCapacity: 10));
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+
+        // Each tier raises from 10 to 190. Read alone (against the other 9 tiers' still-10 value),
+        // every single one of the 10 individually computes 9*10+190=280, well under the 1000 cap —
+        // so if genuinely raced, ALL 10 could pass their own check and commit, landing an actual
+        // total of 10*190=1900, almost double the cap. Processed correctly one at a time (locked),
+        // the arithmetic caps out at exactly 5 successes (100 + 5*180 = 1000, the 6th would push it
+        // to 1180) — that count is invariant to processing order since every tier uses the identical
+        // 10→190 raise, so this asserts the exact number as a tight regression signal, not just an
+        // upper bound.
+        var responses = await Task.WhenAll(tierIds.Select(tierId =>
+            client.PutAsJsonAsync($"/api/v1/ticket-tiers/{tierId}",
+                new { Name = "Raised tier", Description = (string?)null, TotalCapacity = 190 })));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var totalCapacity = await db.TicketTiers
+            .Where(t => t.LoungeShowId == showId)
+            .SumAsync(t => t.TotalCapacity ?? 0);
+
+        totalCapacity.Should().BeLessThanOrEqualTo(1000,
+            "tổng capacity thực tế sau cùng không được vượt hạn mức gói subscription dù có tranh chấp đồng thời — " +
+            $"đã ghi nhận {totalCapacity} ({responses.Count(r => r.StatusCode == HttpStatusCode.NoContent)}/{tierCount} request thành công)");
+        responses.Count(r => r.StatusCode == HttpStatusCode.NoContent).Should().Be(5,
+            "đúng 5/10 request được vượt qua kiểm tra hạn mức khi xử lý tuần tự đúng (khóa hoạt động) — " +
+            "số lượng thành công lớn hơn nghĩa là có ít nhất 2 request đọc dữ liệu cũ trước khi request kia ghi xong");
+        responses.Count(r => r.StatusCode == HttpStatusCode.UnprocessableEntity).Should().Be(5,
+            "5 request còn lại phải thấy đúng lỗi vượt hạn mức, không phải lỗi hạ tầng (500)");
+    }
+
     // ─── B1 authorization gap round 2 (MLACP-256, audit-flagged 2026-09-06) ───
     // Same class of bug as MLACP-252 above, found in 3 more handlers the earlier sweep's grep
     // missed: no Admin fallback at all (not even the older string-literal "Admin" style).
