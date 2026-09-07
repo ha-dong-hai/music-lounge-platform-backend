@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Domain.Entities;
@@ -33,7 +34,7 @@ internal sealed class GetOwnerLivestreamHistoryQueryHandler
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem lịch sử livestream của venue này.");
 
         var shows = await _uow.Repository<LoungeShow, int>()

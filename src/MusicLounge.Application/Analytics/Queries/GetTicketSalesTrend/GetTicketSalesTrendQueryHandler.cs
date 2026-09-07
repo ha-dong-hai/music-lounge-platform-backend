@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -32,7 +33,7 @@ internal sealed class GetTicketSalesTrendQueryHandler
             .GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.MusicLounge), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem thống kê bán vé của buổi diễn này.");
 
         // "Đã bán" — Confirmed hoặc đã Used (check-in rồi vẫn tính là đã bán); Pending/Cancelled/
