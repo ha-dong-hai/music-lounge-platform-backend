@@ -36,7 +36,8 @@ public sealed class TicketsController : ControllerBase
     public TicketsController(ISender sender) => _sender = sender;
 
     /// <summary>Giữ chỗ tạm thời (mặc định 15 phút, cấu hình qua system_config) khi khán giả bắt
-    /// đầu checkout — chặn overselling qua khóa phân tán theo ShowId (IShowBookingLock) và kiểm tra
+    /// đầu checkout — chặn overselling qua khóa trong tiến trình theo ShowId (IShowBookingLock, chỉ
+    /// an toàn khi chạy đúng 1 instance API — xem XML doc của chính class đó) và kiểm tra
     /// đồng thời 5 lớp quota (mức giá/tier/zone/access-type/subscription cap). Hold hết hạn không
     /// còn tính vào "đã giữ" ngay lập tức (lọc theo ExpiresAt ở mọi query availability), không cần
     /// job dọn dẹp để đúng hành vi "tự động giải phóng".</summary>
