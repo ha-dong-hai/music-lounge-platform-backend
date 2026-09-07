@@ -72,5 +72,7 @@ public sealed class ContentReportSlaBreachAlertJob
                     ct: ct);
             }
         }
+
+        await _ctx.SaveChangesAsync(ct);
     }
 }
