@@ -68,6 +68,49 @@ public sealed class PhoneVerificationTests
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    // ─── E1 resend cooldown (MLACP-272, audit-flagged 2026-09-07) ──────────────
+    // Regression test: unlike ResendVerificationCodeCommandHandler (email), this handler had no
+    // cooldown of its own — every call unconditionally sent a real SMS, budgeted only by the shared
+    // per-IP [EnableRateLimiting("auth")] policy (not a per-account guard).
+
+    [Fact]
+    public async Task RequestVerification_CalledTwiceWithinCooldown_SecondReturns422()
+    {
+        await SetPhoneAsync(SeedHelper.AudienceId, phone: "0901234567");
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var first = await client.PostAsync("/api/v1/me/phone/verification-code", null);
+        first.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var second = await client.PostAsync("/api/v1/me/phone/verification-code", null);
+
+        second.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "phải có cooldown giữa 2 lần yêu cầu gửi SMS liên tiếp, tránh SMS-bombing");
+    }
+
+    [Fact]
+    public async Task RequestVerification_AfterCooldownExpires_Returns204()
+    {
+        await SetPhoneAsync(SeedHelper.AudienceId, phone: "0901234567");
+        // Giả lập lần gửi trước đã cách đây 61s (cooldown 60s) — cooldown được suy ra từ
+        // PhoneVerificationCodeExpiresAt (= lần gửi trước + CodeLifetime 10 phút), nên đặt
+        // ExpiresAt = now - 10 phút + 61 giây để lastSentAt tương ứng = now - 61 giây.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FindAsync(SeedHelper.AudienceId);
+            user!.PhoneVerificationCodeHash = HashCode("111111");
+            user.PhoneVerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-10).AddSeconds(61);
+            await db.SaveChangesAsync();
+        }
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsync("/api/v1/me/phone/verification-code", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "sau khi hết cooldown, request gửi lại phải được chấp nhận bình thường");
+    }
+
     [Fact]
     public async Task VerifyPhone_CorrectCode_SetsPhoneVerifiedTrue()
     {
