@@ -58,8 +58,7 @@ public sealed class RecommendationDataPipelineTests
             // Explicit rating.
             db.Add(new LoungeShowRating
             {
-                UserId = userId, LoungeShowId = showId, Score = 4, IsRemoved = false,
-                CreatedAt = DateTimeOffset.UtcNow
+                UserId = userId, LoungeShowId = showId, Score = 4, IsRemoved = false
             });
 
             // Donation — via a fresh Performance row linked to this show.

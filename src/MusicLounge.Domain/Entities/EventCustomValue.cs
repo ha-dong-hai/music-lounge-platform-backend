@@ -1,6 +1,6 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class EventCustomValue : Common.BaseEntity<int>
+public sealed class EventCustomValue : Common.AuditableEntity<int>
 {
     public int ShowId { get; set; }
     public int CriteriaId { get; set; }

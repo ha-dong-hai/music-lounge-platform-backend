@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.CustomCriteria.DTOs;
 using MusicLounge.Domain.Exceptions;
@@ -25,7 +26,7 @@ internal sealed class GetLoungeCustomCriteriaQueryHandler
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem tiêu chí của venue này.");
 
         var criteria = await _uow.Repository<CustomCriteriaEntity, int>().FindAsync(
