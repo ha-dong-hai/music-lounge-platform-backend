@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
 using MusicLounge.Tests.Integration.Helpers;
 
@@ -225,6 +226,47 @@ public sealed class ProfileManagementTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var user = await db.Users.SingleAsync(u => u.Id == userId);
         user.IsActive.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// MLACP-268: DeactivateUserAccountCommandHandler (Admin deactivating someone ELSE) already
+    /// blocks deactivating the last active Admin, but this self-service route had no equivalent
+    /// guard — the sole remaining Admin could deactivate their OWN account via DELETE /me and lock
+    /// the whole platform out of Admin access with no in-app recovery path. Temporarily deactivates
+    /// the shared seed Admin (SeedHelper.AdminId) to simulate "only 1 active Admin left", then
+    /// restores it immediately after the assertion so later tests in this shared fixture are
+    /// unaffected.
+    /// </summary>
+    [Fact]
+    public async Task DeactivateMyAccount_AsLastActiveAdmin_Returns422()
+    {
+        var dedicatedAdminId = await CreateDedicatedUserAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var dedicatedAdmin = await db.Users.SingleAsync(u => u.Id == dedicatedAdminId);
+            dedicatedAdmin.Role = UserRole.Admin;
+            var seedAdmin = await db.Users.SingleAsync(u => u.Id == SeedHelper.AdminId);
+            seedAdmin.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            var client = _factory.CreateAuthenticatedClient(dedicatedAdminId, "Admin");
+            var res = await client.DeleteAsync("/api/v1/me");
+
+            res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+                "phai con it nhat 1 Admin dang hoat dong sau khi hanh dong nay hoan tat");
+        }
+        finally
+        {
+            using var scope = _factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var seedAdmin = await db.Users.SingleAsync(u => u.Id == SeedHelper.AdminId);
+            seedAdmin.IsActive = true;
+            await db.SaveChangesAsync();
+        }
     }
 
     private static string UniqueCardNumber()
