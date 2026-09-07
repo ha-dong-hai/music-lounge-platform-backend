@@ -55,8 +55,7 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
             UserId = _currentUser.UserId,
             LoungeShowId = request.ShowId,
             Score = request.Score,
-            Comment = request.Comment,
-            CreatedAt = DateTimeOffset.UtcNow
+            Comment = request.Comment
         });
 
         await _uow.SaveChangesAsync(ct);

@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
@@ -26,7 +27,7 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền gắn tiêu chí cho buổi diễn này.");
 
         if (request.Values.Count == 0) return Unit.Value;

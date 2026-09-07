@@ -274,4 +274,37 @@ public sealed class ShowLifecycleTests
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
+
+    /// <summary>MLACP-266: LoungeShowRating was BaseEntity-only — RemoveRatingCommandHandler never
+    /// recorded which Admin removed a rating. UpdatedBy is auto-stamped for free once the entity is
+    /// AuditableEntity, with zero handler changes (the hook reads the current request's user).</summary>
+    [Fact]
+    public async Task RemoveRating_ByAdmin_StampsUpdatedByWithAdmin()
+    {
+        int ratingId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var rating = new LoungeShowRating
+            {
+                UserId = SeedHelper.AudienceId,
+                LoungeShowId = SeedHelper.ShowId,
+                Score = 1,
+                Comment = "spam"
+            };
+            db.Add(rating);
+            await db.SaveChangesAsync();
+            ratingId = rating.Id;
+        }
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/admin/ratings/{ratingId}/remove", new { Reason = "Spam" });
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var removed = await verifyDb.Set<LoungeShowRating>().FindAsync(ratingId);
+        removed!.UpdatedBy.Should().Be(SeedHelper.AdminId);
+    }
 }
