@@ -70,6 +70,11 @@ public static class ConfigKeys
     // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
     public const string LivestreamReplayDays = "livestream_replay_days";
 
+    // Gioi han ve/buoi hoa nhac ap dung cho venue CHUA co goi subscription nao dang hoat dong.
+    // Truoc day khong co goi nghia la khong co gioi han — mot nhanh if quen viet chu khong phai mot
+    // chinh sach ai do chon. Khong seed san — dung mac dinh tai noi doc.
+    public const string FreeTierMaxTicketsPerEvent = "free_tier_max_tickets_per_event";
+
     // So gio Admin phai xu ly xong mot RefundRequest ke tu luc no duoc tao. Mac dinh 72h = 3 ngay
     // lam viec, khop voi Dieu 31 Luat Bao ve quyen loi nguoi tieu dung 2023 (thong bao tiep nhan
     // trong 03 ngay lam viec) va chat hon muc 5 ngay lam viec ma Eventbrite cam ket cho ban to
