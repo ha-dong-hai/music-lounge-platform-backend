@@ -1,4 +1,5 @@
-using MediatR;
+﻿using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -92,6 +93,17 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
             throw new DomainException(
                 $"Theo NĐ 144/2020 Điều 10, event bán vé phải nộp duyệt trước tối thiểu {minLeadDays} ngày làm việc " +
                 $"so với ngày diễn. Hiện chỉ còn {businessDaysUntilShow} ngày làm việc.");
+
+        // MLACP-288. Checked here as well as in the validators because time moves between writing
+        // a draft and submitting it: a deadline of "72 giờ trước giờ diễn" set three weeks out is
+        // perfectly reachable then and already expired by the time the owner presses submit, with
+        // nobody having edited anything. Publishing in that state would put a show on sale whose
+        // page advertises a refund window that every single buyer has already missed.
+        if (!TicketRefundPolicy.IsDeadlineStillReachable(show, DateTimeOffset.UtcNow))
+            throw new DomainException(
+                $"Hạn hủy vé ({show.CancellationDeadlineHours} giờ trước giờ diễn) đã trôi qua so " +
+                $"với lịch diễn hiện tại, nên không người mua nào có thể dùng quyền hủy vé được " +
+                $"công bố. Hãy rút ngắn hạn hủy, bỏ hạn hủy, hoặc dời lịch diễn trước khi nộp duyệt.");
 
         // A payout account is a precondition for SELLING, not just for getting paid. Every show on
         // this platform sells tickets (>=1 tier is required above), and ScheduleSettlementHandler

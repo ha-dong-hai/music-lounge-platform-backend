@@ -1,4 +1,5 @@
-using FluentValidation;
+﻿using FluentValidation;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 
@@ -32,5 +33,16 @@ public sealed class UpdateLoungeShowCommandValidator : AbstractValidator<UpdateL
 
         RuleFor(x => x.OfflineQuota).GreaterThanOrEqualTo(0).When(x => x.OfflineQuota.HasValue);
         RuleFor(x => x.OnlineQuota).GreaterThanOrEqualTo(0).When(x => x.OnlineQuota.HasValue);
+
+        // MLACP-288. The rule lives in TicketRefundPolicy, not here: it is the same class that
+        // resolves the policy for the show page and for CancelTicket, so a rule it does not know
+        // about is a rule the disclosure text can end up contradicting.
+        RuleFor(x => x)
+            .Must(x => TicketRefundPolicy.Validate(
+                x.CancellationAllowed ?? true, x.RefundPercentage, x.CancellationDeadlineHours,
+                x.ScheduledStart, DateTimeOffset.UtcNow) is null)
+            .WithMessage(x => TicketRefundPolicy.Validate(
+                x.CancellationAllowed ?? true, x.RefundPercentage, x.CancellationDeadlineHours,
+                x.ScheduledStart, DateTimeOffset.UtcNow)!);
     }
 }

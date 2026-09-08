@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -54,7 +54,12 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
             TicketSaleClosesAt = request.TicketSaleClosesAt,
             CategoryId = request.CategoryId,
             OfflineQuota = request.OfflineQuota,
-            OnlineQuota = request.OnlineQuota
+            OnlineQuota = request.OnlineQuota,
+            // Null means "leave the platform default in place", which is what every show created
+            // before MLACP-288 runs on: cancellable, 100%, no deadline.
+            CancellationAllowed = request.CancellationAllowed ?? true,
+            RefundPercentage = request.RefundPercentage,
+            CancellationDeadlineHours = request.CancellationDeadlineHours
         };
 
         _uow.Repository<LoungeShow, int>().Add(show);

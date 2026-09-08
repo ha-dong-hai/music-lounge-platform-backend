@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -42,6 +42,14 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
         show.CategoryId = request.CategoryId;
         show.OfflineQuota = request.OfflineQuota;
         show.OnlineQuota = request.OnlineQuota;
+        // Replace semantics, like every other field on this PUT: omitting a policy field resets it
+        // to the platform default rather than keeping whatever was there. Safe to introduce that
+        // way round because the Draft guard above means no ticket has ever been sold against the
+        // policy being overwritten — once the show is Published its policy is frozen, which is what
+        // makes the terms shown at purchase time the terms enforced at cancellation time.
+        show.CancellationAllowed = request.CancellationAllowed ?? true;
+        show.RefundPercentage = request.RefundPercentage;
+        show.CancellationDeadlineHours = request.CancellationDeadlineHours;
 
         showRepo.Update(show);
         await _uow.SaveChangesAsync(ct);

@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -128,7 +128,9 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Chỉ Owner của đúng phòng trà được chọn mới tạo được (403 nếu khác). Cần có gói
     /// subscription đang hoạt động tại thời điểm tạo (không phải lúc publish). Sự kiện mới luôn ở
-    /// trạng thái nháp (LoungeShowStatus.Draft).</summary>
+    /// trạng thái nháp (LoungeShowStatus.Draft). Chính sách hoàn vé đặt tại đây và được công bố cho
+    /// người mua ở GET /lounge-shows/{id} trước khi họ thanh toán; bỏ trống cả ba trường thì áp dụng
+    /// mặc định của nền tảng (cho hủy, hoàn 100%, không hạn chót).</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
@@ -214,7 +216,11 @@ public sealed class LoungeShowsController : ControllerBase
     }
 
     /// <summary>Chỉ sửa được khi buổi diễn còn ở trạng thái Draft (422 nếu đã gửi duyệt/đã đăng);
-    /// chỉ đúng Owner sở hữu venue mới sửa được (403 nếu khác).</summary>
+    /// chỉ đúng Owner sở hữu venue mới sửa được (403 nếu khác). Ba trường chính sách hoàn vé
+    /// (CancellationAllowed/RefundPercentage/CancellationDeadlineHours) theo ngữ nghĩa thay-thế như
+    /// mọi trường khác của PUT này: bỏ trống là trả về mặc định (cho hủy, hoàn 100%, không hạn chót),
+    /// không phải giữ nguyên giá trị cũ. Vì chỉ sửa được khi còn Draft nên chưa có vé nào bán theo
+    /// chính sách bị ghi đè.</summary>
     [HttpPut("{id:int}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -227,7 +233,8 @@ public sealed class LoungeShowsController : ControllerBase
     {
         await _sender.Send(new UpdateLoungeShowCommand(
             id, body.Name, body.Description, body.ScheduledStart, body.ScheduledEnd,
-            body.TicketSaleClosesAt, body.CategoryId, body.OfflineQuota, body.OnlineQuota), ct);
+            body.TicketSaleClosesAt, body.CategoryId, body.OfflineQuota, body.OnlineQuota,
+            body.CancellationAllowed, body.RefundPercentage, body.CancellationDeadlineHours), ct);
         return NoContent();
     }
 
@@ -500,7 +507,10 @@ public sealed record UpdateLoungeShowRequest(
     DateTimeOffset? TicketSaleClosesAt,
     int? CategoryId,
     int? OfflineQuota,
-    int? OnlineQuota);
+    int? OnlineQuota,
+    bool? CancellationAllowed = null,
+    decimal? RefundPercentage = null,
+    int? CancellationDeadlineHours = null);
 
 public sealed record AddPerformanceRequest(
     int? PerformerId,
