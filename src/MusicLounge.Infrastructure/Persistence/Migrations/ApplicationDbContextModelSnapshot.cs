@@ -4362,7 +4362,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.OwnsOne("MusicLounge.Domain.ValueObjects.VenueAddress", "Address", b1 =>
+                    b.OwnsOne("MusicLounge.Domain.Entities.MusicLounge.Address#MusicLounge.Domain.ValueObjects.VenueAddress", "Address", b1 =>
                         {
                             b1.Property<int>("MusicLoungeId")
                                 .HasColumnType("int");
@@ -4405,7 +4405,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                             b1.HasIndex("City", "District");
 
-                            b1.ToTable("music_lounges");
+                            b1.ToTable("music_lounges", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("MusicLoungeId");
