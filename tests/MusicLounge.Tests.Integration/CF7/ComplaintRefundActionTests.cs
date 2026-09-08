@@ -141,4 +141,31 @@ public sealed class ComplaintRefundActionTests
         complaint.Status.Should().Be(ComplaintStatus.Open,
             "the complaint must stay open so it can still be resolved a workable way");
     }
+
+    [Fact]
+    public async Task ResolveWithCompensate_IsNoLongerAValidAction()
+    {
+        // "Compensate" existed as an enum value that did nothing: it stored a label, told the
+        // complainant their case was handled, and moved no money — while closing the complaint for
+        // good. Removed in MLACP-286 rather than implemented, because there is no payout channel to
+        // an audience member at all and the one plausible form (wallet credit) is exactly what got
+        // StubHub fined. An Admin sending it must now get a clear rejection, not a silent 204.
+        var (complaintId, _, paymentId) = await SeedShowComplaintWithTicketAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/complaints/{complaintId}/resolve",
+            new { Status = "Resolved", ResolvedAction = "Compensate", Resolution = "Bồi thường cho khách" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "an action the system cannot carry out must be refused at the door");
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var complaint = await db.Set<Complaint>().SingleAsync(c => c.Id == complaintId);
+        complaint.Status.Should().Be(ComplaintStatus.Open,
+            "the complaint must stay open so it can be resolved a way that actually does something");
+        (await db.RefundRequests.AnyAsync(r => r.PaymentId == paymentId)).Should().BeFalse();
+    }
 }
