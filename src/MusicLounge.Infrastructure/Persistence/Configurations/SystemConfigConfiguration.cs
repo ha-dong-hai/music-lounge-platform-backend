@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -44,15 +44,20 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             // if NĐ 117/2025 mandated it. Corrected, because a legal citation nobody can produce on
             // request is worse than none.
             //
-            // Known gap, deliberately not papered over: NĐ 117/2025 requires withholding BOTH VAT
-            // and personal income tax (TNCN) for household/individual sellers, and this system
-            // withholds only the one rate below. It also draws no distinction between an Owner who
-            // is a hộ/cá nhân kinh doanh (withholding applies) and one who is a doanh nghiệp
-            // (self-declares) — there is no BusinessType or tax code on any entity to tell them
-            // apart. Both need a product decision before they can be built.
+            // MLACP-289 closed the gap this comment used to describe. NĐ 117/2025 has a
+            // payment-handling platform withhold BOTH VAT and personal income tax, and only for
+            // hộ/cá nhân kinh doanh — a doanh nghiệp declares its own. User.BusinessType now tells
+            // the two apart (and TaxWithholdingPolicy is what reads it), and personal income tax
+            // has its own rate below and its own ledger account.
+            //
+            // That rate is seeded at 0, not at the decree's 2%. Turning it on takes money out of
+            // every household seller's share, so it is a decision an Admin makes deliberately
+            // through PUT /admin/system-config — where the reason is recorded and the old value
+            // kept — rather than something that starts happening because a deployment shipped.
             new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — mức thương mại của cổng, không do văn bản pháp luật ấn định", UpdatedAt = seed },
             new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Hoa hồng nền tảng (5%) — quyết định thương mại của dự án, KHÔNG do nghị định nào quy định", UpdatedAt = seed },
-            new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Thuế GTGT khấu trừ tại nguồn (5% — tỷ lệ cho DỊCH VỤ theo NĐ 117/2025/NĐ-CP). Chưa khấu trừ TNCN.", UpdatedAt = seed },
+            new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Thuế GTGT khấu trừ tại nguồn (5% — tỷ lệ cho DỊCH VỤ theo NĐ 117/2025/NĐ-CP). Chỉ khấu trừ cho hộ/cá nhân kinh doanh; doanh nghiệp tự kê khai.", UpdatedAt = seed },
+            new { Id = 32, ConfigKey = "personal_income_tax_rate",            ConfigValue = "0",    DataType = ConfigDataType.Decimal,  Description = "Thuế TNCN khấu trừ tại nguồn. NĐ 117/2025/NĐ-CP quy định 2% cho DỊCH VỤ của cá nhân cư trú; seed bằng 0 để việc bật khấu trừ là một quyết định vận hành có ghi lý do, không phải hệ quả của một lần triển khai. Chỉ áp cho hộ/cá nhân kinh doanh.", UpdatedAt = seed },
             // Settlement schedule — timing researched against comparable ticketing-platform payout
             // practice (Eventbrite: payout processing begins ~3 days post-event, final settlement up
             // to 14 business days for larger events) and wired into ScheduleSettlementHandler

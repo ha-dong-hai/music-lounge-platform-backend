@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -59,7 +59,10 @@ internal sealed class UpdateSystemConfigCommandHandler : IRequestHandler<UpdateS
 
         // Fetch the sibling rates the validator may need for its cross-key rule, so the rule itself
         // stays a pure function and can be unit-tested without a database.
-        var rateKeys = new[] { ConfigKeys.PlatformCommissionRate, ConfigKeys.TaxRate };
+        var rateKeys = new[]
+        {
+            ConfigKeys.PlatformCommissionRate, ConfigKeys.TaxRate, ConfigKeys.PersonalIncomeTaxRate
+        };
         var siblings = await repo.FindAsync(c => rateKeys.Contains(c.ConfigKey), ct);
         var otherRates = siblings
             .Where(c => c.ConfigKey != request.ConfigKey)

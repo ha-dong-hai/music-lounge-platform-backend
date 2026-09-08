@@ -1,4 +1,4 @@
-namespace MusicLounge.Application.Common.Interfaces;
+﻿namespace MusicLounge.Application.Common.Interfaces;
 
 // D9: business parameters live in system_config (DB), not appsettings.
 // Values are cached briefly — a config change takes effect within the cache window.
@@ -22,6 +22,7 @@ public static class ConfigKeys
 {
     public const string PlatformCommissionRate = "platform_commission_rate";
     public const string TaxRate = "tax_rate";
+    public const string PersonalIncomeTaxRate = "personal_income_tax_rate";
 
     // D3 payout-speed tiers, keyed by venue ReputationScore + completed-show count — replaces the
     // old flat "settlement_partial_pct" key (removed from the seed table; a stale reference to it

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -135,7 +135,14 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         var ratio = amountApproved / payment.GrossAmount;
         var refundPlatformFee = Math.Round(payment.PlatformFee * ratio, 2);
         var refundTax = Math.Round(payment.TaxWithheld * ratio, 2);
-        var refundOwnerNet = amountApproved - refundPlatformFee - refundTax;
+        // Withheld personal income tax is given back on the same proportional basis as VAT. Both
+        // are reversed from the amounts SNAPSHOTTED ON THE PAYMENT, never recomputed from today's
+        // rates or today's classification of the seller — the money to give back is the money that
+        // was actually taken. NĐ 117/2025 provides for offsetting withheld tax against cancelled
+        // and returned transactions, so a refund that kept the tax would be wrong twice over: the
+        // buyer is short, and the platform holds a withholding for revenue that no longer exists.
+        var refundPersonalIncomeTax = Math.Round(payment.PersonalIncomeTaxWithheld * ratio, 2);
+        var refundOwnerNet = amountApproved - refundPlatformFee - refundTax - refundPersonalIncomeTax;
 
         // The owner's share was credited to Platform (held in trust) at purchase, then moved to the
         // owner's own User account by each SettlementReleaseJob tranche. Which account still holds
@@ -183,7 +190,14 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 new LedgerLine(AccountType.Platform, null, refundPlatformFee, IsDebit: true,
                     Description: $"Refund #{refund.Id} — hoàn phí nền tảng"),
                 new LedgerLine(AccountType.Tax, null, refundTax, IsDebit: true,
-                    Description: $"Refund #{refund.Id} — hoàn thuế"),
+                    Description: $"Refund #{refund.Id} — hoàn thuế GTGT"),
+                .. refundPersonalIncomeTax > 0m
+                    ? new LedgerLine[]
+                    {
+                        new(AccountType.PersonalIncomeTax, null, refundPersonalIncomeTax, IsDebit: true,
+                            Description: $"Refund #{refund.Id} — hoàn thuế TNCN")
+                    }
+                    : [],
                 .. ownerShareLines,
                 new LedgerLine(AccountType.Gateway, null, amountApproved, IsDebit: false,
                     Description: $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán")

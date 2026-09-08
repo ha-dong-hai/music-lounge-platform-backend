@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +9,13 @@ using MusicLounge.Application.Users.Commands.DeactivateMyAccount;
 using MusicLounge.Application.Users.Commands.RequestDataErasure;
 using MusicLounge.Application.Users.Commands.RequestPhoneVerification;
 using MusicLounge.Application.Users.Commands.SubmitCitizenCard;
+using MusicLounge.Application.Users.Commands.SubmitTaxProfile;
 using MusicLounge.Application.Users.Commands.UpdateAiPreferences;
 using MusicLounge.Application.Users.Commands.UpdateMyProfile;
 using MusicLounge.Application.Users.Commands.VerifyPhone;
 using MusicLounge.Application.Users.DTOs;
 using MusicLounge.Application.Users.Queries.GetMyCitizenCardImage;
+using MusicLounge.Application.Users.Queries.GetMyTaxProfile;
 using MusicLounge.Application.Users.Queries.GetMyDataExport;
 using MusicLounge.Application.Users.Queries.GetMyEarnings;
 using MusicLounge.Application.Users.Queries.GetMyProfile;
@@ -80,6 +82,33 @@ public sealed class MeController : ControllerBase
     {
         await _sender.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>NĐ 117/2025: khai báo loại hình kinh doanh (hộ/cá nhân kinh doanh hay doanh nghiệp)
+    /// và mã số thuế. Khai lại sẽ xoá trạng thái đã duyệt trước đó, và nền tảng vẫn khấu trừ thuế
+    /// cho tới khi hồ sơ doanh nghiệp được duyệt — dừng khấu trừ không thể chỉ dựa trên khai báo của
+    /// chính người bán.</summary>
+    [HttpPut("tax-profile")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SubmitTaxProfile(
+        [FromBody] SubmitTaxProfileCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>Hồ sơ thuế của chính mình, kèm câu trả lời cho câu hỏi thực sự cần biết: nền tảng có
+    /// đang khấu trừ thuế trên doanh thu của bạn không, và ở mức nào.</summary>
+    [HttpGet("tax-profile")]
+    [ProducesResponseType<ApiResponse<TaxProfileDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMyTaxProfile(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyTaxProfileQuery(), ct);
+        return Ok(ApiResponse<TaxProfileDto>.Ok(result));
     }
 
     /// <summary>Xem lại ảnh CCCD/CMND đã nộp — chỉ chính chủ. File nằm ngoài wwwroot, không đoán URL truy cập trực tiếp được.</summary>

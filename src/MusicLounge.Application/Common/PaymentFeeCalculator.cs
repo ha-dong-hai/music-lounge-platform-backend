@@ -1,4 +1,4 @@
-namespace MusicLounge.Application.Common;
+﻿namespace MusicLounge.Application.Common;
 
 /// <summary>
 /// Single source of truth for splitting a ticket payment's gross amount into platform fee, tax,
@@ -12,15 +12,27 @@ namespace MusicLounge.Application.Common;
 /// </summary>
 public static class PaymentFeeCalculator
 {
-    public static PaymentFeeBreakdown Split(decimal grossAmount, decimal platformCommissionRate, decimal taxRate)
+    /// <param name="taxRate">Thuế GTGT. 5% for services under NĐ 117/2025.</param>
+    /// <param name="personalIncomeTaxRate">
+    /// Thuế TNCN, 2% for a resident individual. Pass 0 for a seller the platform does not withhold
+    /// for — see <see cref="TaxWithholdingPolicy"/>, which is what decides that.
+    /// </param>
+    public static PaymentFeeBreakdown Split(
+        decimal grossAmount,
+        decimal platformCommissionRate,
+        decimal taxRate,
+        decimal personalIncomeTaxRate)
     {
         var platformFee = Math.Round(grossAmount * platformCommissionRate, 2);
         var tax = Math.Round(grossAmount * taxRate, 2);
+        // Each withheld amount is a percentage of gross in its own right, not of what is left after
+        // the previous deduction — the decree sets both rates against doanh thu của giao dịch.
+        var personalIncomeTax = Math.Round(grossAmount * personalIncomeTaxRate, 2);
         // Owner net is defined as the remainder, not independently rounded — guarantees
-        // platformFee + tax + ownerNet == grossAmount exactly, which the ledger's
-        // debit-must-equal-credit invariant depends on.
-        var ownerNet = grossAmount - platformFee - tax;
-        return new PaymentFeeBreakdown(platformFee, tax, ownerNet);
+        // platformFee + tax + personalIncomeTax + ownerNet == grossAmount exactly, which the
+        // ledger's debit-must-equal-credit invariant depends on.
+        var ownerNet = grossAmount - platformFee - tax - personalIncomeTax;
+        return new PaymentFeeBreakdown(platformFee, tax, personalIncomeTax, ownerNet);
     }
 
     /// <summary>
@@ -41,7 +53,8 @@ public static class PaymentFeeCalculator
     }
 }
 
-public sealed record PaymentFeeBreakdown(decimal PlatformFee, decimal Tax, decimal OwnerNet);
+public sealed record PaymentFeeBreakdown(
+    decimal PlatformFee, decimal Tax, decimal PersonalIncomeTax, decimal OwnerNet);
 
 /// <summary>
 /// <paramref name="OwnerRetained"/> negative means <c>performerShareRate</c> is misconfigured
