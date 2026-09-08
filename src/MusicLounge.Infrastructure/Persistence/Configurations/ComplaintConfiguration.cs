@@ -18,6 +18,11 @@ internal sealed class ComplaintConfiguration : IEntityTypeConfiguration<Complain
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
         b.Property(x => x.Resolution).HasMaxLength(2000);
         b.Property(x => x.ResolvedAction).HasConversion<string>().HasMaxLength(50);
+        b.Property(x => x.LookupReference).HasMaxLength(32);
+        // Loc theo NOT NULL: chi khieu nai cua khach vang lai moi co ma tra cuu, va SQL Server coi
+        // moi NULL la khac nhau nen mot unique index khong loc se van cho trung — nhung index loc
+        // moi bat duoc dung y do la "hai khieu nai khong duoc trung ma".
+        b.HasIndex(x => x.LookupReference).IsUnique().HasFilter("[LookupReference] IS NOT NULL");
 
         b.HasIndex(x => new { x.Status, x.CreatedAt });
 

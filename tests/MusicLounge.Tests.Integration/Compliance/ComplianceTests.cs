@@ -120,11 +120,11 @@ public sealed class ComplianceTests
             EvidenceUrls = (string?)null,
             ContactPhone = (string?)null
         });
-        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+        var body = await createRes.Content.ReadFromJsonAsync<ComplaintCreatedResponse>();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
-            $"/api/v1/complaints/{body!.Data}/resolve",
+            $"/api/v1/complaints/{body!.Data.Id}/resolve",
             new { Status = "Resolved", Resolution = "Checked", ResolvedAction = "Dismiss" });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -147,11 +147,11 @@ public sealed class ComplianceTests
             EvidenceUrls = (string?)null,
             ContactPhone = (string?)null
         });
-        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+        var body = await createRes.Content.ReadFromJsonAsync<ComplaintCreatedResponse>();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
-            $"/api/v1/complaints/{body!.Data}/resolve",
+            $"/api/v1/complaints/{body!.Data.Id}/resolve",
             new { Status = "Resolved", Resolution = "Confirmed violation", ResolvedAction = "TakeDownContent" });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -174,11 +174,11 @@ public sealed class ComplianceTests
             EvidenceUrls = (string?)null,
             ContactPhone = (string?)null
         });
-        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+        var body = await createRes.Content.ReadFromJsonAsync<ComplaintCreatedResponse>();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
-            $"/api/v1/complaints/{body!.Data}/resolve",
+            $"/api/v1/complaints/{body!.Data.Id}/resolve",
             new { Status = "Resolved", Resolution = "N/A", ResolvedAction = "TakeDownContent" });
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
@@ -374,4 +374,10 @@ public sealed class ComplianceTests
     }
 
     private sealed record IdResponse(bool Success, int Data);
+
+    // POST /complaints tra ve mot object thay vi mot so ke tu MLACP-287: khach vang lai can
+    // ma tra cuu de biet ket qua khieu nai cua minh, vi ho khong dang nhap duoc de xem
+    // /complaints/my va he thong khong co SMS bao ket qua.
+    private sealed record ComplaintCreatedResponse(bool Success, ComplaintCreatedData Data);
+    private sealed record ComplaintCreatedData(int Id, string? LookupReference);
 }

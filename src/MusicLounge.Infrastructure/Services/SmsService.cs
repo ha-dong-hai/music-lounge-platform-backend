@@ -17,8 +17,14 @@ internal sealed class SmsService : ISmsService
 
     public Task SendPhoneVerificationCodeAsync(string toPhone, string code, CancellationToken ct = default)
     {
-        _logger.LogWarning(
-            "SMS NOT SENT (no SMS gateway configured) — phone={Phone} verificationCode={Code}",
+        // Error, not Warning. A message the system believed it sent and did not is an incident, not
+        // a note: the user is sitting there waiting for a code that will never arrive. Logging it
+        // quietly is the same shape as the "promise without a mechanism" defects found repeatedly in
+        // this audit — the system behaving as though something happened when it did not.
+        _logger.LogError(
+            "SMS NOT SENT — no SMS gateway is configured, so this verification code never reached the " +
+            "user. Phone={Phone} Code={Code}. Wire a real provider behind ISmsService before relying " +
+            "on phone verification in production.",
             toPhone, code);
         return Task.CompletedTask;
     }
