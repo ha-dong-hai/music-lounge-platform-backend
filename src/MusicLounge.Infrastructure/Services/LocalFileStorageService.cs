@@ -88,6 +88,10 @@ internal sealed class LocalFileStorageService : IFileStorageService
         return Task.FromResult((stream, contentType));
     }
 
+    public bool IsOwnUploadUrl(string url)
+        => !string.IsNullOrWhiteSpace(url)
+           && url.StartsWith($"/{UploadContentRules.ImageFolder}/", StringComparison.Ordinal);
+
     public async Task<byte[]> ReadPublicImageAsync(string publicUrl, CancellationToken ct = default)
     {
         // Same "strip to bare filename" defense as RelocateToPrivateAsync — publicUrl always has

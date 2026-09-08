@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Exceptions;
@@ -21,14 +21,23 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
     {
         if (string.IsNullOrWhiteSpace(_settings.BaseUrl))
             throw new ExternalServiceException("PanoramaStitcher", "Chưa cấu hình PanoramaStitcher:BaseUrl.");
-        if (string.IsNullOrWhiteSpace(_settings.PublicBaseUrl))
-            throw new ExternalServiceException("PanoramaStitcher", "Chưa cấu hình PanoramaStitcher:PublicBaseUrl.");
+        // StitchVenueTourSceneCommandValidator đã xác nhận mọi URL tới đây đều do chính hệ thống
+        // này phát ra (IFileStorageService.IsOwnUploadUrl) — đó mới là thứ bịt lỗ SSRF, không phải
+        // việc ghép chuỗi bên dưới.
+        //
+        // Hai dạng hợp lệ cần đối xử khác nhau: đường dẫn tương đối của kho cục bộ phải được nối
+        // với PublicBaseUrl để dịch vụ Python tải được, còn URL kho đám mây thì đã tuyệt đối rồi và
+        // nối thêm gì vào cũng chỉ làm hỏng nó.
+        // PublicBaseUrl chỉ cần khi thật sự có đường dẫn tương đối phải nối — kho đám mây đã trả
+        // URL tuyệt đối nên đòi nó vô điều kiện sẽ chặn tính năng vì một thiết lập không dùng tới.
+        if (imageUrls.Any(u => u.StartsWith('/')) && string.IsNullOrWhiteSpace(_settings.PublicBaseUrl))
+            throw new ExternalServiceException(
+                "PanoramaStitcher",
+                "Chưa cấu hình PanoramaStitcher:PublicBaseUrl (cần khi ảnh lưu trên đĩa cục bộ).");
 
-        // The validator (StitchVenueTourSceneCommandValidator) already confirmed every URL
-        // starts with "/uploads/" - resolving to our own PublicBaseUrl here, rather than trusting
-        // any absolute URL from the caller, is what actually closes the SSRF hole (an allowlist
-        // by construction: this is the only URL shape that can reach this point).
-        var absoluteUrls = imageUrls.Select(u => $"{_settings.PublicBaseUrl.TrimEnd('/')}{u}").ToArray();
+        var absoluteUrls = imageUrls
+            .Select(u => u.StartsWith('/') ? $"{_settings.PublicBaseUrl.TrimEnd('/')}{u}" : u)
+            .ToArray();
 
         var http = _httpFactory.CreateClient("panorama-stitcher");
 

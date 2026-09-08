@@ -149,6 +149,33 @@ internal sealed class FirebaseFileStorageService : IFileStorageService
         return buffer.ToArray();
     }
 
+    public bool IsOwnUploadUrl(string url) => IsOwnUploadUrl(url, _bucket);
+
+    /// <summary>
+    /// Chấp nhận đúng hai dạng: đường dẫn cục bộ cũ (dữ liệu ghi trước khi chuyển sang Firebase),
+    /// và download URL của CHÍNH bucket này.
+    ///
+    /// Việc so bucket là phần quan trọng nhất. Chấp nhận mọi URL firebasestorage.googleapis.com sẽ
+    /// mở lại đúng cái lỗ mà hàng rào này sinh ra để bịt, chỉ hẹp lại còn "bất kỳ nội dung nào ai đó
+    /// đặt trong bất kỳ project Firebase nào" — vẫn là bắt server của mình đi tải hộ dữ liệu người
+    /// lạ đưa.
+    /// </summary>
+    internal static bool IsOwnUploadUrl(string url, string bucket)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        if (url.StartsWith($"/{UploadContentRules.ImageFolder}/", StringComparison.Ordinal))
+            return true;
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed))
+            return false;
+
+        return parsed.Scheme == Uri.UriSchemeHttps
+               && parsed.Host.Equals("firebasestorage.googleapis.com", StringComparison.OrdinalIgnoreCase)
+               && parsed.AbsolutePath.StartsWith($"/v0/b/{bucket}/o/", StringComparison.Ordinal);
+    }
+
     internal static string BuildDownloadUrl(string bucket, string objectName, string token)
         => $"https://firebasestorage.googleapis.com/v0/b/{bucket}/o/" +
            $"{Uri.EscapeDataString(objectName)}?alt=media&token={token}";
