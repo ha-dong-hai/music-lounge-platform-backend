@@ -1,4 +1,4 @@
-namespace MusicLounge.Application.Common.Interfaces;
+﻿namespace MusicLounge.Application.Common.Interfaces;
 
 public interface IFileStorageService
 {
@@ -20,6 +20,17 @@ public interface IFileStorageService
 
     /// <summary>Opens a file previously relocated via RelocateToPrivateAsync for streaming back to an authorized caller.</summary>
     Task<(Stream Content, string ContentType)> OpenPrivateFileAsync(string privateRef, CancellationToken ct = default);
+
+    /// <summary>
+    /// Whether this URL is one this platform's own upload endpoint issued.
+    ///
+    /// The question the SSRF gate on tour stitching actually needs answered. It used to ask
+    /// "does it start with /uploads/", which was the same question only while files lived on local
+    /// disk — the moment storage moved to Firebase the shape changed and the gate started refusing
+    /// every legitimate image. Asked here because only the storage implementation knows what a URL
+    /// it issued looks like, including which bucket is ours.
+    /// </summary>
+    bool IsOwnUploadUrl(string url);
 
     /// <summary>
     /// Reads back the bytes of a file previously saved via SaveImageAsync (still in the public
