@@ -110,7 +110,12 @@ public static class ConfigKeys
     public const string PenaltyAppealWindowDays = "penalty_appeal_window_days";
 
     // Anti-abuse ceilings on a single hold/walk-in-sale/donation — not statutory figures, but
-    // operational limits that should be Admin-tunable (D9) rather than baked into validator code.
+    // operational limits that BELONG in config (D9) rather than baked into validator code.
+    // NOTE: "tunable" is where this is heading, not where it is. There is no write path to
+    // system_config anywhere in this solution — ISystemConfigService exposes only Get*, no Admin
+    // endpoint updates it, and SystemConfigHistory (the table built to audit exactly these
+    // changes) is written by nothing. Changing any value below today means running SQL by hand,
+    // with no audit trail. See the same note on every "Admin-tunable" mention in this file.
     // Defaults preserve this system's existing behavior exactly; only the storage moved.
     public const string TicketHoldMaxQuantity = "ticket_hold_max_quantity";
     public const string WalkInTicketMaxQuantity = "walkin_ticket_max_quantity";
@@ -133,7 +138,8 @@ public static class ConfigKeys
     public const string AiPosterMaxAttemptsPerShow = "ai_poster_max_attempts_per_show";
 
     // NĐ 85/2021's complaint-channel requirement doesn't itself specify a numeric deadline — this is
-    // a reasonable operational default (Admin-tunable), not a literal statutory figure.
+    // a reasonable operational default (config-driven, though only editable via direct SQL today
+    // — see the note at the top of this file), not a literal statutory figure.
     public const string ComplaintSlaHours = "complaint_sla_hours";
 
     // Version label of the currently-published Terms of Service / Privacy Policy — bump this (via
@@ -154,7 +160,8 @@ public static class ConfigKeys
     // donation). Default 0.88 matches docs/04-design-decisions.md §6.5 — benchmarked 2026-08-09
     // against industry donation/tip intermediary practice (YouTube Super Chat keeps 30%, Twitch
     // Bits nets creators ~55-71%; venue-holds-tip-for-performer arrangements commonly run 0-20%+
-    // house cut) and found generous to the performer, not an outlier. Admin-tunable via
+    // house cut) and found generous to the performer, not an outlier. Config-driven, but only
+    // editable via direct SQL today (see the note at the top of this file) — via
     // system_config, not hardcoded (§6.7) — ConfirmDonationPaidCommandHandler re-reads this at
     // confirmation time, so a rate change applies to donations confirmed after the change without
     // a deploy.
