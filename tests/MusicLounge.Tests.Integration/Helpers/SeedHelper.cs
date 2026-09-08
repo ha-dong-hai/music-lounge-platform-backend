@@ -26,6 +26,26 @@ public static class SeedHelper
     public const int OtherOwnerId = 5;
     public const int OtherVenueStaffId = 6;   // real Staff assignment at OtherLoungeId — for "wrong venue" tests
 
+    // MLACP-308 (CF1). Mot phong tra khong chay duoc hai buoi dien chong gio nhau, va tu gio he
+    // thong cham dieu do that. Gan nhu moi test tao buoi dien qua API deu dung chung venue
+    // SeedHelper.LoungeId VA dung chung mot moc gio (UtcNow.AddDays(14)), nen khi mot buoi dien
+    // trong so do chuyen sang Pending/Published thi no giu cho, va moi buoi dien tao sau do trong
+    // cung lan chay deu bi tu choi.
+    //
+    // Do khong phai loi cua quy tac moi — do la du lieu test chua bao gio can den lich thuc te.
+    // Bo cap khung gio nay tra ve mot day gio tang dan, buoc 5 tieng (dai hon do dai mac dinh 4
+    // tieng cua mot buoi dien), nen hai khung gio bat ky lay tu day khong the giam len nhau.
+    private static int _showSlot = -1;
+
+    /// <summary>
+    /// Mot khung gio dien con trong, khac moi khung gio da cap truoc do trong cung lan chay.
+    /// Dung cho cac test chi can "mot buoi dien nao do o tuong lai"; test nao can dung mot moc gio
+    /// cu the (vi du dem so ngay lam viec truoc buoi dien) thi tu truyen moc gio cua no.
+    /// </summary>
+    public static DateTimeOffset NextShowStart()
+        => DateTimeOffset.UtcNow.AddDays(14)
+            .AddHours(System.Threading.Interlocked.Increment(ref _showSlot) * 5);
+
     public const int LoungeId = 1;
     public const int OtherLoungeId = 2;       // a different venue than LoungeId, staffed by OtherVenueStaffId
     public const int ShowId = 1;           // Livestream format, Ongoing

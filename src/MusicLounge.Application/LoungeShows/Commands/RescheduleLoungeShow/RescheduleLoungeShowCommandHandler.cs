@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
@@ -60,6 +60,14 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
 
         var oldStart = show.ScheduledStart;
         var delta = request.NewScheduledStart - oldStart;
+
+        // CF1: đổi lịch là dời chỗ đã giữ sang khung giờ khác, nên khung giờ mới cũng phải trống.
+        // Buổi diễn này đang Published — tức đang giữ chỗ — nên phải tự loại mình ra khỏi phép so.
+        await ShowScheduleConflict.EnsureVenueIsFreeAsync(
+            _uow, show.LoungeId, excludeShowId: show.Id,
+            request.NewScheduledStart,
+            show.ScheduledEnd.HasValue ? show.ScheduledEnd.Value + delta : null,
+            ct);
         show.ScheduledStart = request.NewScheduledStart;
         if (show.ScheduledEnd.HasValue)
             show.ScheduledEnd = show.ScheduledEnd.Value + delta;

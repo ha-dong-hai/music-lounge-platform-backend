@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Hangfire;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -177,7 +178,7 @@ public sealed class SettlementReleaseJob
         if (show is null || show.ActualStart is null || show.ActualEnd is null)
             return true;
 
-        var scheduledEnd = show.ScheduledEnd ?? show.ScheduledStart.AddHours(4);
+        var scheduledEnd = ShowSchedule.EffectiveEnd(show);
         var scheduledDuration = scheduledEnd - show.ScheduledStart;
         var actualDuration = show.ActualEnd.Value - show.ActualStart.Value;
 

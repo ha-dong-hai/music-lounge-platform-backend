@@ -28,7 +28,7 @@ public sealed class SetShowPosterTests
             Name = $"ManualPosterTestShow-{Guid.NewGuid():N}",
             Description = "test",
             Format = "Offline",
-            ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
+            ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
             CategoryId = (int?)null,
             OfflineQuota = 100,

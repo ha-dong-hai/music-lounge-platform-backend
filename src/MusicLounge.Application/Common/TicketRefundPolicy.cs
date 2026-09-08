@@ -1,4 +1,4 @@
-﻿using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common;
@@ -30,7 +30,7 @@ public static class TicketRefundPolicy
 
     public static TicketRefundTerms Resolve(LoungeShow show)
     {
-        var scheduledEnd = show.ScheduledEnd ?? show.ScheduledStart.AddHours(4);
+        var scheduledEnd = ShowSchedule.EffectiveEnd(show);
 
         // Mirrors CancelTicketCommandHandler's guards, in the same order, so the advertised terms
         // are the enforced ones:

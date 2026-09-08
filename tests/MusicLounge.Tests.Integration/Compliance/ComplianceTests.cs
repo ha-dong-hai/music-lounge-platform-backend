@@ -1,7 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
+using MusicLounge.Domain.ValueObjects;
+using MusicLounge.Infrastructure.Persistence;
 using MusicLounge.Tests.Integration.Helpers;
+using MusicLoungeVenue = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Tests.Integration.Compliance;
 
@@ -186,12 +193,62 @@ public sealed class ComplianceTests
 
     // ─── D18 Legal approval (NĐ 144/2020 Điều 10) ────────────────────────────
 
-    private async Task<int> CreateShowAsync(DateTimeOffset scheduledStart)
+    /// <summary>Mot phong tra rieng cho moi lan goi, cung chu voi SeedHelper.OwnerId (de con
+    /// giu nguyen quyen so huu va goi subscription dang chay cua tai khoan do).</summary>
+    private async Task<int> DedicatedVenueAsync()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var lounge = new MusicLoungeVenue
+        {
+            OwnerId = SeedHelper.OwnerId,
+            Name = $"ComplianceVenue-{Guid.NewGuid():N}",
+            Description = "Integration test venue",
+            Status = LoungeStatus.Approved,
+            Address = new VenueAddress { Street = "1 Compliance", Ward = "P1", District = "Q1", City = "HCM" }
+        };
+        db.Add(lounge);
+        await db.SaveChangesAsync();
+
+        // Nop duyet buoi dien doi venue phai co san tai khoan nhan tien mac dinh — neu khong,
+        // venue ban duoc ve ma khong co cho de nhan tien ve. Venue dung chung cua SeedHelper da
+        // co san mot cai; venue rieng nay phai tu dung lay.
+        db.Add(new BankAccount
+        {
+            OwnerType = BankAccountOwnerType.Lounge, OwnerId = lounge.Id,
+            BankName = "Test Bank",
+            AccountNumber = scope.ServiceProvider
+                .GetRequiredService<IPiiEncryptionService>().Encrypt("0000009999"),
+            AccountHolder = "Test Lounge Owner",
+            IsDefault = true, IsVerified = true
+        });
+        await db.SaveChangesAsync();
+
+        return lounge.Id;
+    }
+
+    /// <param name="exactTime">
+    /// Bat khi test dang do dung so ngay lam viec truoc buoi dien — luc do moc gio la doi tuong
+    /// kiem tra, khong duoc dich di. Cac test con lai chi can "mot buoi dien nao do o tuong lai",
+    /// va tu MLACP-308 thi chung phai co khung gio rieng nhau.
+    /// </param>
+    private async Task<int> CreateShowAsync(DateTimeOffset scheduledStart, bool exactTime = false)
+    {
+        // Khong dung exactTime thi khong quan tam gio nao, chi can mot gio con trong.
+        if (!exactTime) scheduledStart = SeedHelper.NextShowStart();
+
+        // Nhung test do dung "N ngay lam viec truoc buoi dien" thi moc gio la doi tuong kiem tra,
+        // khong dich di duoc — ma no lai roi dung vao vung ngay 7-11, la vung dong test khac dang
+        // gam san buoi dien o venue dung chung. Nen chung dung mot venue rieng: tu MLACP-308 hai
+        // buoi dien chong gio nhau chi xung dot khi o CUNG mot phong tra.
+        var loungeId = exactTime
+            ? await DedicatedVenueAsync()
+            : SeedHelper.LoungeId;
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId);
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
         {
-            LoungeId = SeedHelper.LoungeId,
+            LoungeId = loungeId,
             Name = $"ComplianceTestShow-{Guid.NewGuid():N}",
             Description = "test",
             Format = "Offline",
@@ -251,7 +308,7 @@ public sealed class ComplianceTests
     [Fact]
     public async Task Publish_WithReferenceButLessThan7BusinessDays_Returns422()
     {
-        var showId = await CreateShowAsync(DateTimeOffset.UtcNow.AddDays(2));
+        var showId = await CreateShowAsync(DateTimeOffset.UtcNow.AddDays(2), exactTime: true);
         await AddTierAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
@@ -302,7 +359,7 @@ public sealed class ComplianceTests
     [Fact]
     public async Task Publish_WithReferenceAndExactly6BusinessDays_Returns422()
     {
-        var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(6));
+        var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(6), exactTime: true);
         await AddTierAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
@@ -317,7 +374,7 @@ public sealed class ComplianceTests
     [Fact]
     public async Task Publish_WithReferenceAndExactly7BusinessDays_Returns204()
     {
-        var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(7));
+        var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(7), exactTime: true);
         await AddTierAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
