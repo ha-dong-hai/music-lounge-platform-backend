@@ -138,6 +138,23 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                         Description: $"Subscription payment #{payment.Id} (duplicate — owner already Active, needs refund)")
                 }, ct);
 
+            // The notification below promises the owner this will be refunded, and the journal above
+            // books it as a liability — but nothing used to turn either into work anybody could
+            // actually pick up. The money sat in the platform's account labelled "needs refund",
+            // absent from the Admin refund queue, with the owner told to chase support if they heard
+            // nothing. Raise the real request so it enters the same queue, SLA and overdue alerting
+            // as every other refund (RefundSlaBreachAlertJob), instead of depending on someone
+            // noticing a ledger description.
+            _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+            {
+                PaymentId = payment.Id,
+                RequestedBy = ownerId,
+                Reason = "Thanh toán trùng gói subscription — owner đã có gói đang hoạt động",
+                AmountRequested = payment.GrossAmount,
+                RefundPercentage = 100m,
+                Status = RefundRequestStatus.Pending
+            });
+
             await _uow.SaveChangesAsync(ct);
 
             await _notifications.NotifyAsync(
@@ -145,7 +162,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                 NotificationType.DuplicatePaymentDetected,
                 "Phát hiện thanh toán trùng",
                 $"Bạn vừa thanh toán {payment.GrossAmount:N0}đ cho gói subscription trong khi đã có gói đang hoạt động. " +
-                "Khoản này sẽ được xem xét hoàn lại — vui lòng liên hệ hỗ trợ nếu không thấy phản hồi trong vài ngày làm việc.",
+                "Khoản này sẽ được xem xét hoàn lại — yêu cầu hoàn tiền đã được tạo tự động và sẽ được xử lý theo đúng thời hạn cam kết.",
                 referenceType: "payment", referenceId: payment.Id.ToString(), ct: ct);
             await _uow.SaveChangesAsync(ct);
 
