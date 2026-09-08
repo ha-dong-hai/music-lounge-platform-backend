@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Tickets.DTOs;
@@ -203,16 +204,16 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
             s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-        var activeSub = activeSubs
-            .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
-            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
-        if (activeSub is not null)
-        {
-            var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
-            if (showReservedTotal + quantity > activeSub.MaxTicketsPerEventSnapshot)
-                throw new DomainException(
-                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại. " +
-                    "Owner của venue có thể nâng cấp gói để tăng giới hạn này (xem GET /subscriptions/packages).");
-        }
+        // Khong con nhanh "khong co goi thi bo qua": cap luon ton tai, chi khac nguon — snapshot cua
+        // goi dang hoat dong, hoac muc mien phi neu venue chua dang ky goi nao.
+        var freeTierCap = await _config.GetIntAsync(
+            ConfigKeys.FreeTierMaxTicketsPerEvent,
+            SubscriptionEntitlements.DefaultFreeTierMaxTicketsPerEvent, ct);
+        var cap = SubscriptionEntitlements.ResolveTicketCap(
+            SubscriptionEntitlements.ActivePlan(activeSubs, DateTimeOffset.UtcNow), freeTierCap);
+
+        var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
+        if (showReservedTotal + quantity > cap.MaxTicketsPerEvent)
+            throw new DomainException(cap.ExceededMessage("Số vé của buổi hòa nhạc này"));
     }
 }

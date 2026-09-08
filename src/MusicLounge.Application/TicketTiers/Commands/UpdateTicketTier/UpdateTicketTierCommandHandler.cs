@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -13,12 +14,15 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ISystemConfigService _config;
 
     public UpdateTicketTierCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
+        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock,
+        ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _config = config;
         _lock = @lock;
     }
 
@@ -59,22 +63,19 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
         {
             var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
                 s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-            var activeSub = activeStatusSubs
-                .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
-                .OrderByDescending(s => s.StartedAt).FirstOrDefault();
+            var freeTierCap = await _config.GetIntAsync(
+                ConfigKeys.FreeTierMaxTicketsPerEvent,
+                SubscriptionEntitlements.DefaultFreeTierMaxTicketsPerEvent, ct);
+            var cap = SubscriptionEntitlements.ResolveTicketCap(
+                SubscriptionEntitlements.ActivePlan(activeStatusSubs, DateTimeOffset.UtcNow), freeTierCap);
 
-            if (activeSub is not null)
-            {
-                var otherTiers = await _uow.Repository<TicketTier, int>()
-                    .FindAsync(t => t.LoungeShowId == show.Id && t.Id != tier.Id, ct);
-                var totalCapacity = otherTiers.Sum(t => t.TotalCapacity ?? 0) + request.TotalCapacity.Value;
+            var otherTiers = await _uow.Repository<TicketTier, int>()
+                .FindAsync(t => t.LoungeShowId == show.Id && t.Id != tier.Id, ct);
+            var totalCapacity = otherTiers.Sum(t => t.TotalCapacity ?? 0) + request.TotalCapacity.Value;
 
-                if (totalCapacity > activeSub.MaxTicketsPerEventSnapshot)
-                    throw new DomainException(
-                        $"Tổng số vé cho event này ({totalCapacity}) vượt quá giới hạn " +
-                        $"{activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại. " +
-                        "Owner của venue có thể nâng cấp gói để tăng giới hạn này (xem GET /subscriptions/packages).");
-            }
+            if (totalCapacity > cap.MaxTicketsPerEvent)
+                throw new DomainException(
+                    cap.ExceededMessage($"Tổng sức chứa các hạng vé của buổi hòa nhạc này ({totalCapacity})"));
         }
 
         tier.Name = request.Name;
