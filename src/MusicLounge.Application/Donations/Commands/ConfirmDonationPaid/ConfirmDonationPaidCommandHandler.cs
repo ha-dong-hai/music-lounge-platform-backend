@@ -83,7 +83,8 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         _uow.Repository<Donation, int>().Update(donation);
 
         // Chặng 2 (§6.5): owner forwards a configurable share of the ORIGINAL gross to the
-        // performer (default 88% — system_config, tunable by Admin without a deploy, §6.7), keeping
+        // performer (default 88% — system_config, §6.7; changing it needs direct SQL, there is no
+        // Admin write path — see ISystemConfigService), keeping
         // the rest of their chặng-1 net for holding/administering the donation. Uses donation.Net
         // (chặng 1's committed figure) rather than re-deriving it from today's commission/tax rates
         // — same snapshot-at-commitment-point reasoning as WriteTicketLedgerHandler.
