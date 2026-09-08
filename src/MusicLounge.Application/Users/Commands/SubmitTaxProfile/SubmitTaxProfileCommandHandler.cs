@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Auth;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -59,6 +59,9 @@ internal sealed class SubmitTaxProfileCommandHandler : IRequestHandler<SubmitTax
             user.TaxProfileVerifiedAt = null;
             user.TaxProfileVerifiedBy = null;
         }
+
+        user.TaxProfileReviewStatus = KycReviewStatus.Pending;
+        user.TaxProfileReviewNote = null;
 
         user.BusinessType = declared;
         user.TaxCode = _piiEncryption.Encrypt(taxCode);

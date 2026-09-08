@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +31,8 @@ using MusicLounge.Application.Refunds.Queries.GetPendingRefundRequests;
 using MusicLounge.Application.Users.Commands.DeactivateUserAccount;
 using MusicLounge.Application.Users.Commands.ReactivateUserAccount;
 using MusicLounge.Application.Users.DTOs;
+using MusicLounge.Application.Admin.Commands.ReviewKycDocument;
+using MusicLounge.Application.Admin.Queries.GetKycReviewQueue;
 using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetUserDetail;
 using MusicLounge.Application.Users.Queries.GetUsers;
@@ -312,6 +314,36 @@ public sealed class AdminController : ControllerBase
         return File(result.Content, result.ContentType);
     }
 
+    /// <summary>Hàng đợi hồ sơ định danh/thuế đang chờ duyệt. Trước MLACP-290 hồ sơ nộp vào rồi nằm
+    /// im: Admin xem được ảnh nhưng không có bước chấp nhận hay từ chối nào (phát hiện R7).</summary>
+    [HttpGet("kyc-reviews")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<KycReviewItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetKycReviewQueue(
+        [FromQuery] KycReviewStatus status = KycReviewStatus.Pending,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetKycReviewQueueQuery(status, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<KycReviewItemDto>>.Ok(result));
+    }
+
+    /// <summary>Duyệt hoặc từ chối một hồ sơ. Từ chối bắt buộc nêu lý do, và người nộp được thông
+    /// báo kết quả. Duyệt hồ sơ thuế của một doanh nghiệp là thứ dừng khấu trừ thuế cho họ — khai
+    /// báo suông không làm được điều đó (NĐ 117/2025, xem MLACP-289).</summary>
+    [HttpPost("kyc-reviews/{id:int}/{document}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReviewKycDocument(
+        int id, KycDocument document, [FromBody] ReviewKycDocumentBody body,
+        CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewKycDocumentCommand(id, document, body.Approve, body.Note), ct);
+        return NoContent();
+    }
+
     [HttpPost("users/{id:int}/deactivate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -375,3 +407,4 @@ public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
 public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
 public sealed record RemoveRatingRequest(string Reason);
 public sealed record UpdateSystemConfigRequest(string ConfigValue, string Note);
+public sealed record ReviewKycDocumentBody(bool Approve, string? Note);

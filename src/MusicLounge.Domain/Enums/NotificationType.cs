@@ -1,4 +1,4 @@
-namespace MusicLounge.Domain.Enums;
+﻿namespace MusicLounge.Domain.Enums;
 
 public enum NotificationType
 {
@@ -27,5 +27,8 @@ public enum NotificationType
     // Refund left pending past refund_sla_hours, or nearing VNPay's hard refund window after which
     // the gateway refuses the reversal entirely. Stored as a string (max 50 chars) like every other
     // value here, so appending is safe without a migration.
-    RefundSlaBreached
+    RefundSlaBreached,
+    // Outcome of an identity or tax-profile review. The submitter has no other way to learn it:
+    // they hand over a citizen card and a tax code and then, without this, hear nothing back.
+    KycReviewResult
 }
