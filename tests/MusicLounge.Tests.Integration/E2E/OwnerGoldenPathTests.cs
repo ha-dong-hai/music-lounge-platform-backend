@@ -48,7 +48,7 @@ public sealed class OwnerGoldenPathTests
         //       RegisterCommandValidator) ──────────────────────────────────────────────
         var registerRes = await anon.PostAsJsonAsync("/api/v1/auth/register", new
         {
-            Email = email, Password = "P@ssword123", FullName = "Golden Path Owner",
+            Email = email, Password = "P@ssword123-safe", FullName = "Golden Path Owner",
             Phone = (string?)null, Role = "Owner", AcceptTerms = true
         });
         registerRes.StatusCode.Should().Be(HttpStatusCode.OK, "register with Role=Owner must be accepted");
@@ -75,7 +75,7 @@ public sealed class OwnerGoldenPathTests
 
         // ── 3. Login confirms the same account, real password check included ──────────
         var loginRes = await anon.PostAsJsonAsync(
-            "/api/v1/auth/login", new { Email = email, Password = "P@ssword123" });
+            "/api/v1/auth/login", new { Email = email, Password = "P@ssword123-safe" });
         loginRes.StatusCode.Should().Be(HttpStatusCode.OK);
         var loginBody = await loginRes.Content.ReadFromJsonAsync<AuthResponse>();
         loginBody!.Data.UserId.Should().Be(ownerId);
@@ -125,7 +125,11 @@ public sealed class OwnerGoldenPathTests
             Format = "Offline", ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
             ScheduledEnd = (DateTimeOffset?)null, CategoryId = (int?)null,
             OfflineQuota = 100, OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(), Performances = Array.Empty<object>()
+            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
+            Performances = new[]
+            {
+                new { PerformerId = (int?)null, PerformerName = "Golden Path Performer", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+            }
         });
         showRes.StatusCode.Should().Be(HttpStatusCode.Created);
         var showId = (await showRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
@@ -153,8 +157,25 @@ public sealed class OwnerGoldenPathTests
             new { LegalApprovalReference = "SoVHTT-GOLDEN-0001" });
         legalRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
+        // ── 8b. Payout account (required before publish) ───────────────────────────────
+        // Selling a ticket schedules a settlement, and a settlement needs somewhere to pay into.
+        // Without this step the venue could sell tickets it could never be paid for — and worse,
+        // the buyer's VNPay confirmation used to roll back on that missing account, taking their
+        // money without giving them a ticket. Registering the account is now part of the golden
+        // path precisely because it is a real precondition of selling, not an afterthought.
+        var bankRes = await ownerClient.PostAsJsonAsync("/api/v1/bank-accounts", new
+        {
+            OwnerType = "Lounge",
+            OwnerId = loungeId,
+            BankName = "Vietcombank",
+            AccountNumber = "1234567890",
+            AccountHolder = "GOLDEN PATH OWNER",
+            IsDefault = true
+        });
+        bankRes.StatusCode.Should().Be(HttpStatusCode.Created);
+
         // ── 9. Publish = submit for moderation (Draft → Pending, NOT visible yet) ──────
-        var publishRes = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var publishRes = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
         publishRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var beforeApprovalListing = await anon.GetAsync("/api/v1/lounge-shows?pageSize=100");

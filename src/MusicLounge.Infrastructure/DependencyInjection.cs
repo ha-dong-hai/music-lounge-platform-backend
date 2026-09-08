@@ -1,14 +1,17 @@
-using Hangfire;
+﻿using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.Livestreams.Jobs;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
+using MusicLounge.Application.Tickets.Commands.CheckInLivestreamViewer;
 using MusicLounge.Infrastructure.Hubs;
 using MusicLounge.Infrastructure.Jobs;
 using MusicLounge.Infrastructure.Persistence;
@@ -34,6 +37,7 @@ public static class DependencyInjection
         services.Configure<MuxSettings>(configuration.GetSection("Mux"));
         services.Configure<LivestreamSettings>(configuration.GetSection("Livestream"));
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<AuthLockoutSettings>(configuration.GetSection("AuthLockout"));
         services.Configure<FirebaseSettings>(configuration.GetSection("Firebase"));
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
         services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
@@ -77,12 +81,22 @@ public static class DependencyInjection
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
+        services.AddScoped<IMuxWebhookVerifier, MuxWebhookVerifier>();
         services.AddScoped<IFcmService, FcmService>();
         services.AddScoped<ILivestreamHubService, LivestreamHubService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        // MLACP-293: Firebase Storage khi có credential và bucket, ngược lại về đĩa cục bộ.
+        // Chọn ở đây chứ không nhét nhánh if vào trong service: một service tự quyết mình có hoạt
+        // động hay không sẽ phải mang theo cả hai cách lưu, và nhánh không dùng tới thì không ai
+        // chạy. Cùng nếp "thiếu cấu hình thì suy biến, không ném lỗi" mà FcmService và SmsService
+        // đang theo — nếu ném thì môi trường dev và toàn bộ test sập vì thiếu bí mật.
+        services.AddScoped<IFileStorageService>(sp =>
+            FileStorageSelector.UseFirebase(
+                sp.GetRequiredService<IOptions<FirebaseSettings>>().Value)
+                ? ActivatorUtilities.CreateInstance<FirebaseFileStorageService>(sp)
+                : ActivatorUtilities.CreateInstance<LocalFileStorageService>(sp));
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<ISmsService, SmsService>();
         // Default key ring (%LOCALAPPDATA%\ASP.NET\DataProtection-Keys, protected via per-user
@@ -119,12 +133,15 @@ public static class DependencyInjection
         services.AddScoped<ExpireStuckDonationsJob>();
         services.AddScoped<CancelAbandonedPaymentsJob>();
         services.AddScoped<SettlementReleaseJob>();
+        services.AddScoped<AutoEndStaleShowsJob>();
+        services.AddScoped<RefundSlaBreachAlertJob>();
         services.AddScoped<TicketTransferExpiryJob>();
         services.AddScoped<SubscriptionExpiryWarningJob>();
         services.AddScoped<ExpireSubscriptionsJob>();
         services.AddScoped<ApplyDuePenaltiesJob>();
         services.AddScoped<AutoApproveOverdueAppealsJob>();
         services.AddScoped<ModerationSlaBreachAlertJob>();
+        services.AddScoped<ContentReportSlaBreachAlertJob>();
         services.AddScoped<ComplaintSlaBreachAlertJob>();
         services.AddScoped<ScoreModerationWithAiJob>();
         services.AddScoped<StitchVenueTourSceneJob>();
@@ -148,6 +165,18 @@ public static class DependencyInjection
         services.AddScoped<SendEmailVerificationCodeJob>();
         // Same registration discipline as the two jobs above — see comment there.
         services.AddScoped<SendPhoneVerificationCodeJob>();
+        // Fourth and fifth instances of that exact bug, found in the đợt-2 audit by cross-checking
+        // every *Job class in the codebase against this list. Both are enqueued for real by
+        // HangfireBackgroundJobService (Schedule<> / Enqueue<>) and neither was registered, so both
+        // threw "No service for type..." the first time Hangfire tried to activate them:
+        //   LivestreamReconnectTimeoutJob — MLACP-191's whole reconnect feature was dead. A stream
+        //     that lost its encoder stayed Reconnecting forever: never marked Failed, the show never
+        //     ended, viewers kept seeing "reconnecting", and the rating window never opened.
+        //   CheckInLivestreamViewerJob — livestream attendance was never recorded, and RateShow
+        //     requires a real check-in, so livestream ticket holders could never rate a show they
+        //     actually watched.
+        services.AddScoped<LivestreamReconnectTimeoutJob>();
+        services.AddScoped<CheckInLivestreamViewerJob>();
 
         // Livestream provider abstraction
         // Explicit timeout — HttpClient's default is 100s, long enough that one slow/hanging
@@ -158,6 +187,7 @@ public static class DependencyInjection
         services.AddHttpClient("mux").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient("vnpay").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         // Image generation can run noticeably longer than the other external calls this app makes —
         // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
         // (not hung) generation doesn't get cut off right as it would have succeeded.
@@ -188,9 +218,32 @@ public static class DependencyInjection
         return services;
     }
 
+    private static readonly List<string> RegisteredRecurringJobIds = [];
+
+    /// <summary>
+    /// Every recurring job id that <see cref="ConfigureRecurringJobs"/> actually registered.
+    ///
+    /// Recorded at the point of registration rather than kept as a hand-written list beside it.
+    /// MLACP-295 needed a whitelist of triggerable jobs, and the version of that list carried on the
+    /// other branch had already fallen ten jobs behind — including every SLA alert job. A list that
+    /// has to be remembered is a list that goes stale, and the failure mode here is silent: Hangfire
+    /// no-ops on an unknown id, so a job simply never runs when triggered.
+    /// </summary>
+    public static IReadOnlyList<string> RecurringJobIds => RegisteredRecurringJobIds;
+
+    private static void Recurring<TJob>(
+        string recurringJobId,
+        System.Linq.Expressions.Expression<Func<TJob, Task>> methodCall,
+        string cronExpression)
+    {
+        RecurringJob.AddOrUpdate(recurringJobId, methodCall, cronExpression);
+        if (!RegisteredRecurringJobIds.Contains(recurringJobId))
+            RegisteredRecurringJobIds.Add(recurringJobId);
+    }
+
     public static void ConfigureRecurringJobs()
     {
-        RecurringJob.AddOrUpdate<ReleaseExpiredHoldsJob>(
+        Recurring<ReleaseExpiredHoldsJob>(
             "release-expired-holds",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
@@ -200,89 +253,107 @@ public static class DependencyInjection
         // matches UserEventScore's own "aggregated periodically from behaviour logs" design intent,
         // not hourly like the recommendation refresh itself (aggregating every table this job reads
         // hourly would be wasted work for a signal that doesn't meaningfully shift that often).
-        RecurringJob.AddOrUpdate<RecomputeUserEventScoresJob>(
+        Recurring<RecomputeUserEventScoresJob>(
             "recompute-user-event-scores",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily(3)); // 03:00 UTC, ahead of every hourly refresh-recommendations run that day
 
-        RecurringJob.AddOrUpdate<RefreshRecommendationsJob>(
+        Recurring<RefreshRecommendationsJob>(
             "refresh-recommendations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<AutoConfirmDonationsJob>(
+        Recurring<AutoConfirmDonationsJob>(
             "auto-confirm-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ExpireStuckDonationsJob>(
+        Recurring<ExpireStuckDonationsJob>(
             "expire-stuck-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<CancelAbandonedPaymentsJob>(
+        Recurring<CancelAbandonedPaymentsJob>(
             "cancel-abandoned-payments",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
 
-        RecurringJob.AddOrUpdate<SettlementReleaseJob>(
+        Recurring<SettlementReleaseJob>(
             "release-due-settlements",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<EventReminderJob>(
+        // Hourly, not daily: this is what closes the cancellation window and opens the rating
+        // window, so a whole day of drift is a whole day of tickets still refundable for a show
+        // that already happened.
+        Recurring<AutoEndStaleShowsJob>(
+            "auto-end-stale-shows",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        Recurring<EventReminderJob>(
             "send-event-reminders",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<DonationOverdueCheckJob>(
+        Recurring<DonationOverdueCheckJob>(
             "check-overdue-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<TicketTransferExpiryJob>(
+        Recurring<TicketTransferExpiryJob>(
             "expire-ticket-transfers",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<SubscriptionExpiryWarningJob>(
+        Recurring<SubscriptionExpiryWarningJob>(
             "warn-expiring-subscriptions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<ExpireSubscriptionsJob>(
+        Recurring<ExpireSubscriptionsJob>(
             "expire-subscriptions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<ApplyDuePenaltiesJob>(
+        Recurring<ApplyDuePenaltiesJob>(
             "apply-due-venue-penalties",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<AutoApproveOverdueAppealsJob>(
+        Recurring<AutoApproveOverdueAppealsJob>(
             "auto-approve-overdue-appeals",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ModerationSlaBreachAlertJob>(
+        Recurring<ModerationSlaBreachAlertJob>(
             "alert-moderation-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ComplaintSlaBreachAlertJob>(
+        Recurring<ContentReportSlaBreachAlertJob>(
+            "alert-content-report-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        Recurring<ComplaintSlaBreachAlertJob>(
             "alert-complaint-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        Recurring<RefundSlaBreachAlertJob>(
+            "alert-refund-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         // Every 5 minutes against a 10-minute detection window, so a spike is never more than one
         // extra run away from being caught, while still cheap enough to poll this often.
-        RecurringJob.AddOrUpdate<LoginSpikeDetectionJob>(
+        Recurring<LoginSpikeDetectionJob>(
             "detect-login-spikes",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             "*/5 * * * *");
 
-        RecurringJob.AddOrUpdate<AdminRoleDriftDetectionJob>(
+        Recurring<AdminRoleDriftDetectionJob>(
             "detect-admin-role-drift",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());

@@ -4,6 +4,7 @@ using FluentAssertions;
 using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Tickets.Events;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -41,10 +42,19 @@ public sealed class SettlementTests
         db.Add(payment);
         await db.SaveChangesAsync();
 
+        // SettlementReleaseJob now defers any tranche with no payout destination — a settlement
+        // with BankAccountId null can no longer be released, by design (see the job's own comment).
+        // Point at the seeded venue account so these tests still exercise the release path itself.
+        var payoutAccountId = await db.Set<BankAccount>()
+            .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
+            .Select(a => a.Id)
+            .FirstAsync();
+
         var settlement = new Settlement
         {
             OwnerId = SeedHelper.OwnerId,
             PaymentId = payment.Id,
+            BankAccountId = payoutAccountId,
             ReleaseType = releaseType,
             GrossAmount = 1_000_000m,
             PreRateApplied = 0.70m,
@@ -75,6 +85,7 @@ public sealed class SettlementTests
     {
         int paymentId;
         Guid ticketId;
+        int showId;
         const decimal gross = 1_000_000m;
         const decimal expectedOwnerNet = 900_000m; // gross - 5% platform - 5% tax (system_config defaults)
 
@@ -94,6 +105,7 @@ public sealed class SettlementTests
             };
             db.LoungeShows.Add(show);
             await db.SaveChangesAsync();
+            showId = show.Id;
 
             var payment = new Payment
             {
@@ -131,7 +143,7 @@ public sealed class SettlementTests
             var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
             await publisher.Publish(new TicketPaymentConfirmed(
                 PaymentId: paymentId, UserId: SeedHelper.AudienceId, OwnerId: SeedHelper.OwnerId,
-                TicketIds: [ticketId], LivestreamId: null));
+                TicketIds: [ticketId], LivestreamId: null, ShowId: showId));
         }
 
         // Force both settlement tranches due, then run the real release job.
@@ -167,6 +179,73 @@ public sealed class SettlementTests
                 "chủ phòng trà chỉ được ghi có đúng 1 lần cho mỗi khoản, không phải 2 lần " +
                 "(1 lần lúc thanh toán + 1 lần lúc settlement release)");
         }
+    }
+
+    /// <summary>
+    /// Regression test for a gap found in this session's entity/business-completeness audit:
+    /// WriteTicketLedgerHandler existed on local master but was never ported to origin, so every
+    /// VNPay ticket purchase confirmed silently without ever writing the "payment" journal (Gateway
+    /// debit / Platform+Tax credit) or populating Payment.PlatformFee/TaxWithheld/NetAmount — the
+    /// existing end-to-end test above never caught this because it only asserts the owner's
+    /// eventual settlement-release credit, which ScheduleSettlementHandler computes independently
+    /// and would still land correctly even with zero ledger entries for the original sale.
+    /// </summary>
+    [Fact]
+    public async Task TicketPaymentConfirmed_WritesBalancedPaymentJournal_AndPopulatesPaymentFeeBreakdown()
+    {
+        const decimal gross = 1_000_000m;
+        const decimal expectedPlatformFee = 50_000m; // 5% system_config default
+        const decimal expectedTax = 50_000m;         // 5% system_config default
+        const decimal expectedOwnerNet = 900_000m;
+
+        int paymentId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var payment = new Payment
+            {
+                OrderId = $"LEDGER-{Guid.NewGuid():N}"[..30],
+                GrossAmount = gross,
+                Status = PaymentStatus.Confirmed,
+                ReferenceType = "TicketHold", ReferenceId = "0",
+                PaidAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.UtcNow
+            };
+            db.Payments.Add(payment);
+            await db.SaveChangesAsync();
+            paymentId = payment.Id;
+        }
+
+        // OwnerId: 0 — deliberately isolates WriteTicketLedgerHandler under test: it's the exact
+        // value ScheduleSettlementHandler itself treats as "nothing to schedule" and returns early
+        // on (see its own `if (payment is null || notification.OwnerId == 0) return;`), so this
+        // doesn't also require seeding a ticket/show/lounge/bank-account just to reach the
+        // assertions below. WriteTicketLedgerHandler only interpolates OwnerId into a ledger line's
+        // free-text Description, never validates it.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            await publisher.Publish(new TicketPaymentConfirmed(
+                PaymentId: paymentId, UserId: SeedHelper.AudienceId, OwnerId: 0,
+                TicketIds: [], LivestreamId: null, ShowId: SeedHelper.ShowId));
+        }
+
+        using var scope2 = _factory.Services.CreateScope();
+        var verifyDb = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var payment2 = await verifyDb.Payments.SingleAsync(p => p.Id == paymentId);
+        payment2.PlatformFee.Should().Be(expectedPlatformFee,
+            "H1 — fee breakdown must snapshot onto the Payment row at confirmation time");
+        payment2.TaxWithheld.Should().Be(expectedTax);
+        payment2.NetAmount.Should().Be(expectedOwnerNet);
+
+        var entries = await verifyDb.LedgerEntries.Where(e => e.PaymentId == paymentId).ToListAsync();
+        entries.Should().NotBeEmpty(
+            "confirming a ticket payment must write the Gateway/Platform/Tax journal — a payment " +
+            "with zero ledger entries is invisible to any accounting/audit trail");
+        entries.Where(e => e.IsDebit).Sum(e => e.Amount)
+            .Should().Be(entries.Where(e => !e.IsDebit).Sum(e => e.Amount),
+                "D8 double-entry invariant — every journal must balance");
+        entries.Where(e => e.IsDebit).Sum(e => e.Amount).Should().Be(gross);
     }
 
     [Fact]
@@ -275,5 +354,98 @@ public sealed class SettlementTests
         var res = await client.GetAsync("/api/v1/admin/ledger/integrity-check");
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    /// <summary>
+    /// Regression for a double-payment defect found in the đợt-2 audit. CancelLoungeShow (and
+    /// ResolveComplaint / ResolveContentReport, which also cancel a show) create a RefundRequest in
+    /// Pending and leave the payment's settlement tranches Scheduled. ProcessRefundRequest is the
+    /// only thing that shrinks those tranches, and it is a manual Admin action with no
+    /// auto-processing job behind it — so a cancelled show whose refunds hadn't been actioned yet
+    /// had its owner paid in full at showEnd+48h while the buyers were still owed 100% back. The
+    /// platform covered both sides, and the ledger is append-only so unwinding it needs a manual
+    /// reversing journal.
+    /// </summary>
+    [Fact]
+    public async Task SettlementRelease_WhileRefundRequestPending_DefersInsteadOfPaying()
+    {
+        var (paymentId, settlementId) = await SeedDueSettlementAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.RefundRequests.Add(new RefundRequest
+            {
+                PaymentId = paymentId,
+                RequestedBy = SeedHelper.AudienceId,
+                Reason = "Event bị hủy — hoàn 100% tiền vé",
+                AmountRequested = 1_000_000m,
+                RefundPercentage = 100m,
+                Status = RefundRequestStatus.Pending
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
+            await job.ExecuteAsync(new JobCancellationToken(false));
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var settlement = await db.Settlements.SingleAsync(s => s.Id == settlementId);
+            settlement.Status.Should().Be(SettlementStatus.Scheduled,
+                "the tranche must stay Scheduled so a later run pays whatever the refund decision leaves owed");
+            settlement.ReleasedAt.Should().BeNull();
+
+            var payoutEntries = await db.LedgerEntries
+                .Where(e => e.ReferenceType == LedgerReferenceTypes.Settlement
+                            && e.ReferenceId == settlementId.ToString())
+                .ToListAsync();
+            payoutEntries.Should().BeEmpty(
+                "no payout journal may be written while the buyer's refund is still undecided");
+        }
+    }
+
+    /// <summary>
+    /// The deferral above must not strand money: once the Admin rejects the refund, nothing is
+    /// pending any more and the next run pays the tranche in full.
+    /// </summary>
+    [Fact]
+    public async Task SettlementRelease_AfterRefundRequestRejected_ReleasesNormally()
+    {
+        var (paymentId, settlementId) = await SeedDueSettlementAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.RefundRequests.Add(new RefundRequest
+            {
+                PaymentId = paymentId,
+                RequestedBy = SeedHelper.AudienceId,
+                Reason = "Khách đổi ý",
+                AmountRequested = 1_000_000m,
+                RefundPercentage = 100m,
+                Status = RefundRequestStatus.Rejected
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
+            await job.ExecuteAsync(new JobCancellationToken(false));
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var settlement = await db.Settlements.SingleAsync(s => s.Id == settlementId);
+            settlement.Status.Should().Be(SettlementStatus.Released,
+                "a rejected refund leaves nothing pending, so the owner must still get paid");
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -69,6 +70,20 @@ public sealed class ModerationTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
         body.Should().Contain("\"success\":true");
+    }
+
+    /// <summary>MLACP-264: EventModeration was BaseEntity-only — CreatedBy is genuinely new
+    /// information (which Staff/Owner action created this queue entry), added as AuditableEntity.</summary>
+    [Fact]
+    public async Task CreateLivestream_StampsEventModerationCreatedByWithStaff()
+    {
+        var livestreamId = await CreateLivestreamAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var moderation = await db.Set<EventModeration>().SingleAsync(
+            m => m.TargetType == ModerationTargetType.Livestream && m.TargetId == livestreamId);
+        moderation.CreatedBy.Should().Be(SeedHelper.StaffId);
     }
 
     [Fact]

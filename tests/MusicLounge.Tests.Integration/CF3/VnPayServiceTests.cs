@@ -1,6 +1,8 @@
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using MusicLounge.Infrastructure.Services;
 using MusicLounge.Infrastructure.Settings;
@@ -28,13 +30,24 @@ public sealed class VnPayServiceTests
 {
     private const string HashSecret = "TEST-HASH-SECRET-NOT-REAL-1234567890";
 
-    private readonly VnPayService _sut = new(Options.Create(new VnPaySettings
+    // Only VerifyCallback (pure signature-checking, no HTTP) is exercised by this test class — the
+    // refund flow's real IHttpClientFactory usage lives in a separate, non-CI-exercised path (see
+    // the class doc above), so a stub that's never actually invoked here is enough.
+    private sealed class StubHttpClientFactory : IHttpClientFactory
     {
-        TmnCode = "TESTCODE",
-        HashSecret = HashSecret,
-        PaymentUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-        Version = "2.1.0"
-    }));
+        public HttpClient CreateClient(string name) => new();
+    }
+
+    private readonly VnPayService _sut = new(
+        Options.Create(new VnPaySettings
+        {
+            TmnCode = "TESTCODE",
+            HashSecret = HashSecret,
+            PaymentUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+            Version = "2.1.0"
+        }),
+        new StubHttpClientFactory(),
+        NullLogger<VnPayService>.Instance);
 
     private static Dictionary<string, string> SignedCallback(
         IDictionary<string, string> fields, string hashSecret)

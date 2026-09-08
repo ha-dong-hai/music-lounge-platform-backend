@@ -7,11 +7,9 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Tickets.Queries.GetTicketByQr;
 
-// Currently unwired to any controller/endpoint — audited 2026-08-09 and found to return full
-// ticket details (buyer, price, livestream AccessToken) for any QR code with no authorization
-// check at all. Fixed the check here rather than deleting the handler, in case it's meant to back
-// a not-yet-built "look up ticket by QR" feature for venue staff (same intent as CheckInTicket,
-// which already scopes this way) — so it fails safe whenever it does get wired to a route.
+// Chi buyer cua chinh ve nay hoac Owner/Staff/Admin cua dung venue (VenueOperatorAccess, giong
+// CheckInTicket) moi xem duoc — tra ve day du buyer/gia/AccessToken livestream, khong the mo cho
+// bat ky ai co chuoi QrCode.
 internal sealed class GetTicketByQrQueryHandler
     : IRequestHandler<GetTicketByQrQuery, TicketDetailDto>
 {

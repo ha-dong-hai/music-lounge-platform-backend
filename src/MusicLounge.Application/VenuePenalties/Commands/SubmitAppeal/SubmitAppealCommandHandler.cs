@@ -46,6 +46,15 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
             throw new DomainException("Phạt này đã được kháng cáo trước đó.");
 
         var now = DateTimeOffset.UtcNow;
+
+        // MLACP-199: Owner chi duoc khang cao trong mot khoang thoi gian nhat dinh sau khi phat
+        // duoc ban hanh — khong the de ngo mai mai, vi Status van la Active (van anh huong den
+        // venue) cho toi khi khang cao that su duoc gui.
+        var appealWindowDays = await _config.GetIntAsync(ConfigKeys.PenaltyAppealWindowDays, 7, ct);
+        if (now > penalty.IssuedAt.AddDays(appealWindowDays))
+            throw new DomainException(
+                $"Đã quá thời hạn kháng cáo ({appealWindowDays} ngày kể từ khi phạt được ban hành).");
+
         // §6.17 — SLA for Admin to resolve; auto-approved (Overturned) if missed, protecting the
         // Owner from being wrongly penalized by an unattended appeal.
         var slaHours = await _config.GetIntAsync(ConfigKeys.AppealSlaHours, 48, ct);

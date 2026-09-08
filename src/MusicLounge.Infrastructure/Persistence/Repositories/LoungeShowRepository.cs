@@ -26,8 +26,14 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .Include(s => s.TicketTiers).ThenInclude(t => t.Prices);
 
     public async Task<LoungeShow?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
+        // Moods/Atmospheres/Lounge.Atmosphere/Ratings.User chi can cho trang chi tiet 1 show —
+        // khong them vao WithDetails() dung chung, tranh cac danh sach (Search/GetPublished/...)
+        // phai ganh them join khong dung toi.
         => await WithDetails()
-            .Include(s => s.Ratings)
+            .Include(s => s.Moods).ThenInclude(m => m.Mood)
+            .Include(s => s.Atmospheres).ThenInclude(a => a.Atmosphere)
+            .Include(s => s.Lounge).ThenInclude(l => l.Atmosphere)
+            .Include(s => s.Ratings).ThenInclude(r => r.User)
             .Include(s => s.Livestream)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
@@ -60,17 +66,23 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetMineAsync(
-        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy, CancellationToken ct = default)
+        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
+        LoungeShowStatus? status = null, CancellationToken ct = default)
     {
         var query = WithDetails().Where(s => s.Lounge.OwnerId == ownerId);
+        if (status.HasValue)
+            query = query.Where(s => s.Status == status.Value);
         return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }
 
     public async Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams p, CancellationToken ct = default)
     {
+        // MLACP-58 DONE WHEN: "chi hien thi su kien da duoc duyet cong khai" — truoc day chi loai
+        // Draft, de lot Pending (dang cho Admin duyet, chua cong khai) vao ket qua tim kiem cong
+        // khai. Loai them Pending o day; Ended/Cancelled van do rieng IncludeEnded ben duoi quyet dinh.
         var query = WithDetails()
-            .Where(s => s.Status != LoungeShowStatus.Draft);
+            .Where(s => s.Status != LoungeShowStatus.Draft && s.Status != LoungeShowStatus.Pending);
 
         if (!string.IsNullOrWhiteSpace(p.Keyword))
             // Contains() (khong phai EF.Functions.Like voi chuoi noi truoc trong C#) — SQL Server
@@ -246,6 +258,27 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .Where(s => showIds.Contains(s.Id)
                 && (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing))
             .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<LoungeShow>> GetSimilarAsync(
+        int showId, int loungeId, IReadOnlyList<int> genreIds, int limit, CancellationToken ct = default)
+    {
+        var query = WithDetails()
+            .Where(s => s.Id != showId
+                && (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing)
+                && (s.LoungeId == loungeId || s.Genres.Any(g => genreIds.Contains(g.GenreId))));
+
+        // Materialize then sort/take client-side — same SQLite-translation caution used throughout
+        // this file (combining the boolean "matches both criteria" expression with ScheduledStart
+        // ordering in one query doesn't reliably translate under the test provider).
+        var candidates = await query.ToListAsync(ct);
+        if (candidates.Count == 0) return [];
+
+        return candidates
+            .OrderByDescending(s => s.LoungeId == loungeId && s.Genres.Any(g => genreIds.Contains(g.GenreId)))
+            .ThenBy(s => s.ScheduledStart)
+            .Take(limit)
+            .ToList();
+    }
 
     public async Task<IReadOnlyList<string>> GetDistinctCitiesAsync(CancellationToken ct = default)
         => await _ctx.Lounges

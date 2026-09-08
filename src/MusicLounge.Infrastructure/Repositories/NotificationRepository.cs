@@ -36,4 +36,7 @@ internal sealed class NotificationRepository : Repository<Notification, int>, IN
             .Where(n => n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
     }
+
+    public Task<int> GetUnreadCountAsync(int userId, CancellationToken ct = default)
+        => _ctx.Notifications.AsNoTracking().CountAsync(n => n.UserId == userId && !n.IsRead, ct);
 }

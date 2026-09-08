@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -64,9 +65,8 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         if (show is not null)
         {
             var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
-            show.Status = LoungeShowStatus.Ended;
-            show.ActualEnd = now;
-            show.RatingOpenUntil = now.AddDays(ratingWindowDays);   // §6.13 — show da dien (du bi cat ngang) van cho rate
+            // §6.13 — show da dien (du bi cat ngang) van cho rate, TRU khi show da bi huy/da ket thuc.
+            LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays);
             _uow.Repository<LoungeShow, int>().Update(show);
         }
 

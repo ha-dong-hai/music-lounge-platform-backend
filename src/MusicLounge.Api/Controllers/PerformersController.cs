@@ -14,11 +14,9 @@ using MusicLounge.Application.Performers.Queries.GetPerformers;
 
 namespace MusicLounge.Api.Controllers;
 
-// §6.12: Performers is a catalog shared across all Owners, not scoped to one venue —
-// READ/ASSIGN and CREATE are open to any Owner (or Admin); EDIT is restricted at the handler
-// level to created_by_user_id + Admin. Previously the only way a Performer row could ever be
-// created was implicitly, inline inside CreateLoungeShowCommandHandler, with no way to look one
-// up, edit its profile afterward, or search the catalog before deciding to create a duplicate.
+// Nghe si la danh muc dung chung cho moi Owner (khong gioi han theo 1 phong tra) - GetAll dung de
+// tim goi y truoc khi quyet dinh tao moi hay dung lai nghe si co san. EDIT (Update/social-links)
+// gioi han created_by_user_id + Admin (§6.12) o tang handler, khac voi CREATE/READ mo cho moi Owner.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/performers")]

@@ -5,6 +5,14 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Lounges.Commands.SetLoungeModel3D;
 
+/// <summary>
+/// Cột Model3DUrl có sẵn, IFileStorageService.SaveModel3DAsync viết xong và cài đặt đầy đủ,
+/// UploadModel3DValidator viết xong kèm giới hạn 30MB — và không thứ nào trong ba thứ đó được gọi
+/// từ đâu cả. Cả một đường ống dựng hoàn chỉnh, thiếu đúng cái vòi.
+///
+/// Khác với tour ảo 360° (nhiều ảnh panorama nối nhau qua hotspot), đây là một file .glb/.gltf duy
+/// nhất dựng tay cho không gian phòng trà.
+/// </summary>
 internal sealed class SetLoungeModel3DCommandHandler : IRequestHandler<SetLoungeModel3DCommand, Unit>
 {
     private readonly IUnitOfWork _uow;
@@ -25,7 +33,8 @@ internal sealed class SetLoungeModel3DCommandHandler : IRequestHandler<SetLounge
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        // null = xoa model that, quay lai dung scene mau dung code (khong loi, khong crash frontend).
+        // Mô hình 3D là nội dung trưng bày công khai, không phải giấy tờ — nên nó ở lại vùng file
+        // công khai, khác hẳn giấy phép kinh doanh ngay bên cạnh.
         lounge.Model3DUrl = request.ModelUrl;
         repo.Update(lounge);
         await _uow.SaveChangesAsync(ct);

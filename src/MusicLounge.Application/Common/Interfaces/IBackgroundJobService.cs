@@ -1,4 +1,4 @@
-using MusicLounge.Domain.Enums;
+﻿using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common.Interfaces;
 
@@ -6,7 +6,22 @@ public interface IBackgroundJobService
 {
     void EnqueueLogUserBehaviour(int userId, int showId, BehaviourAction action);
     void EnqueueRecommendationRefresh(int userId);
-    void EnqueueFcmNotification(int userId, string title, string body);
+
+    // MLACP-140: "check-in" cho ve Livestream — khong co quay/nhan vien quet QR nhu ve vat ly
+    // (CheckInTicketCommandHandler chi ap dung AccessType.Physical), nen viec thuc su nhan duoc
+    // HlsUrl phat (chi xay ra khi da xac minh la chu ve that qua HasViewerAccessAsync — xem
+    // GetLivestreamDetailQueryHandler) la bang chung "da tham du" tuong duong. Job chuyen cac ve
+    // Livestream Confirmed cua user+show nay sang Used, de RateShowCommandHandler dung chung 1
+    // dieu kien Status=Used cho ca 2 loai ve thay vi phai mien check-in rieng cho ve online.
+    void EnqueueLivestreamCheckIn(int userId, int showId);
+
+    // MLACP-191: len lich kiem tra sau `delay` (system_config: livestream_reconnect_timeout_minutes)
+    // xem livestream con dang Reconnecting voi dung DisconnectedAt da ghi nhan luc enqueue khong —
+    // neu con thi danh dau Failed. disconnectedAt lam guard chong job cu bi tre sau 1 chu ky ngat/
+    // ket noi lai khac da xay ra.
+    void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay);
+    void EnqueueFcmNotification(
+        int userId, string title, string body, string? referenceType = null, string? referenceId = null);
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink);
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code);
     void EnqueuePhoneVerificationCode(string toPhone, string code);
@@ -23,4 +38,11 @@ public interface IBackgroundJobService
 
     // Cho Admin ep chay ngay 1 recurring job da dang ky (vd de kiem tra/van hanh), khong doi lich Cron.
     void TriggerRecurringJobNow(string recurringJobId);
+
+    /// <summary>
+    /// The recurring job ids actually registered at startup. Read rather than remembered, because
+    /// Hangfire no-ops silently on an unknown id — a stale list would show a job as triggerable and
+    /// then quietly do nothing.
+    /// </summary>
+    IReadOnlyList<string> GetRecurringJobIds();
 }

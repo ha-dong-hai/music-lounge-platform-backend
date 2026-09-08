@@ -29,6 +29,12 @@ internal sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMe
         if (livestream.Status != LivestreamStatus.Live)
             throw new DomainException("Chat chỉ khả dụng khi livestream đang phát sóng.");
 
+        // MLACP-119: Owner co the tat chat bat ky luc nao (SetChatEnabledCommand) — kiem tra lai
+        // gia tri that trong DB moi lan gui, khong cache, nen "tat chat co hieu luc ngay" tu nhien
+        // dung: tin nhan gui ngay sau khi tat se bi chan tu lan goi ke tiep.
+        if (!livestream.ChatEnabled)
+            throw new DomainException("Chat đã bị tắt cho livestream này.");
+
         // §6.10 — 1 tin nhắn / 2 giây per user. Checked here (not in the SignalR hub) so it's
         // enforced regardless of transport and covered by the same test harness as everything else.
         if (!_rateLimiter.TryAcquire(request.UserId))

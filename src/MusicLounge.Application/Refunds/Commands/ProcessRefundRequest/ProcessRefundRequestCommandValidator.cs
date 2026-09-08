@@ -16,5 +16,7 @@ internal sealed class ProcessRefundRequestCommandValidator : AbstractValidator<P
             .GreaterThan(0)
             .When(x => x.ApprovedAmount is not null)
             .WithMessage("ApprovedAmount phải lớn hơn 0.");
+
+        RuleFor(x => x.ClientIpAddress).NotEmpty().WithMessage("Địa chỉ IP không được rỗng.");
     }
 }

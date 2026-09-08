@@ -1,4 +1,5 @@
-using FluentValidation;
+﻿using FluentValidation;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 
@@ -16,6 +17,11 @@ public sealed class UpdateLoungeShowCommandValidator : AbstractValidator<UpdateL
             .GreaterThan(x => x.ScheduledStart)
             .When(x => x.ScheduledEnd.HasValue);
 
+        RuleFor(x => x.TicketSaleClosesAt)
+            .LessThanOrEqualTo(x => x.ScheduledStart)
+            .When(x => x.TicketSaleClosesAt.HasValue)
+            .WithMessage("Thời điểm đóng bán vé phải trước hoặc bằng thời gian bắt đầu show.");
+
         // Same drift as CreateLoungeShowCommandValidator was written to avoid: an invalid
         // CategoryId would otherwise only surface at SaveChangesAsync as an FK-violation
         // DbUpdateException, which GlobalExceptionHandler maps to a generic 409 with no field named.
@@ -27,5 +33,16 @@ public sealed class UpdateLoungeShowCommandValidator : AbstractValidator<UpdateL
 
         RuleFor(x => x.OfflineQuota).GreaterThanOrEqualTo(0).When(x => x.OfflineQuota.HasValue);
         RuleFor(x => x.OnlineQuota).GreaterThanOrEqualTo(0).When(x => x.OnlineQuota.HasValue);
+
+        // MLACP-288. The rule lives in TicketRefundPolicy, not here: it is the same class that
+        // resolves the policy for the show page and for CancelTicket, so a rule it does not know
+        // about is a rule the disclosure text can end up contradicting.
+        RuleFor(x => x)
+            .Must(x => TicketRefundPolicy.Validate(
+                x.CancellationAllowed ?? true, x.RefundPercentage, x.CancellationDeadlineHours,
+                x.ScheduledStart, DateTimeOffset.UtcNow) is null)
+            .WithMessage(x => TicketRefundPolicy.Validate(
+                x.CancellationAllowed ?? true, x.RefundPercentage, x.CancellationDeadlineHours,
+                x.ScheduledStart, DateTimeOffset.UtcNow)!);
     }
 }

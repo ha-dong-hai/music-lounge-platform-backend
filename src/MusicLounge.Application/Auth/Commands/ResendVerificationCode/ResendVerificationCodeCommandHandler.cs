@@ -8,6 +8,10 @@ namespace MusicLounge.Application.Auth.Commands.ResendVerificationCode;
 internal sealed class ResendVerificationCodeCommandHandler : IRequestHandler<ResendVerificationCodeCommand, Unit>
 {
     private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(10);
+    // Chong spam email: khoang cach toi thieu giua 2 lan gui, suy ra tu chinh
+    // EmailVerificationCodeExpiresAt da co san (= lan gui truoc + CodeLifetime) thay vi them cot
+    // DB moi rieng cho muc dich nay.
+    private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);
 
     private readonly IUnitOfWork _uow;
     private readonly IBackgroundJobService _backgroundJobs;
@@ -24,9 +28,13 @@ internal sealed class ResendVerificationCodeCommandHandler : IRequestHandler<Res
         var users = await userRepo.FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault();
 
-        // Anti-enumeration: luon tra ve thanh cong du email khong ton tai hay da xac thuc roi —
-        // khong lam gi ca trong 2 truong hop do, giong het pattern cua ForgotPasswordCommandHandler.
-        if (user is not null && user.EmailVerifiedAt is null)
+        // Anti-enumeration: luon tra ve thanh cong du email khong ton tai, da xac thuc roi, tai
+        // khoan bi khoa, hay dang trong cooldown — khong lam gi ca trong cac truong hop do, giong
+        // het pattern cua ForgotPasswordCommandHandler.
+        var lastSentAt = user?.EmailVerificationCodeExpiresAt?.Subtract(CodeLifetime);
+        var inCooldown = lastSentAt is not null && DateTimeOffset.UtcNow - lastSentAt < ResendCooldown;
+
+        if (user is not null && user.IsActive && user.EmailVerifiedAt is null && !inCooldown)
         {
             var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 

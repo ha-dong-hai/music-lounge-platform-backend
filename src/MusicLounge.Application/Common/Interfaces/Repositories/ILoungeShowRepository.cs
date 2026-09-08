@@ -12,9 +12,11 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
         int page, int pageSize, LoungeShowSortBy sortBy,
         bool includeSoldOut, CancellationToken ct = default);
 
-    /// <summary>All shows (any status, including Draft) belonging to the given owner's lounges.</summary>
+    /// <summary>Shows belonging to the given owner's lounges. Any status (including Draft) when
+    /// <paramref name="status"/> is null; otherwise only that status.</summary>
     Task<PaginatedResult<LoungeShow>> GetMineAsync(
-        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy, CancellationToken ct = default);
+        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
+        LoungeShowStatus? status = null, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams searchParams, CancellationToken ct = default);
@@ -45,6 +47,12 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
 
     Task<IReadOnlyList<LoungeShow>> GetRecommendedByIdsAsync(
         IReadOnlyList<int> showIds, CancellationToken ct = default);
+
+    /// <summary>Shows "tương tự" trang chi tiết (MLACP-134): cùng phòng trà HOẶC chung ít nhất 1 thể
+    /// loại nhạc với <paramref name="showId"/>, loại trừ chính show đó, chỉ Published/Ongoing. Ưu
+    /// tiên show khớp CẢ hai tiêu chí trước, còn lại theo ngày diễn gần nhất.</summary>
+    Task<IReadOnlyList<LoungeShow>> GetSimilarAsync(
+        int showId, int loungeId, IReadOnlyList<int> genreIds, int limit, CancellationToken ct = default);
 
     /// <summary>
     /// Returns sold (Confirmed+Pending) ticket count plus active hold quantity per priceId.

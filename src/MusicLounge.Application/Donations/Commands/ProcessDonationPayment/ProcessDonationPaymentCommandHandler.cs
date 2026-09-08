@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -108,8 +108,10 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 // platform commission, and tax withheld were completely invisible to the ledger
                 // and to GetLedgerIntegrityQueryHandler — a real gap against BR-19/NĐ 117.
                 var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
-                var taxRate = await _config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
-                var fees = PaymentFeeCalculator.Split(donation.Gross, commissionRate, taxRate);
+                var taxes = await TaxWithholdingPolicy.ResolveForOwnerAsync(
+                    _uow, _config, info.OwnerId, ct);
+                var fees = PaymentFeeCalculator.Split(
+                    donation.Gross, commissionRate, taxes.VatRate, taxes.PersonalIncomeTaxRate);
 
                 // CreateDonationCommandHandler freezes an ESTIMATED Net using whatever rate was
                 // configured at donation time — if an admin changes PlatformCommissionRate/TaxRate
@@ -141,15 +143,22 @@ internal sealed class ProcessDonationPaymentCommandHandler
                     LedgerReferenceTypes.Donation,
                     donation.Id.ToString(),
                     paymentId: null,
-                    new LedgerLine[]
-                    {
+                    [
                         new(AccountType.Gateway, null, donation.Gross, IsDebit: true),
                         new(AccountType.Platform, null, fees.PlatformFee, IsDebit: false,
                             Description: "Hoa hồng nền tảng"),
-                        new(AccountType.Tax, null, fees.Tax, IsDebit: false),
+                        new(AccountType.Tax, null, fees.Tax, IsDebit: false,
+                            Description: "Thuế GTGT khấu trừ tại nguồn"),
+                        .. fees.PersonalIncomeTax > 0m
+                            ? new LedgerLine[]
+                            {
+                                new(AccountType.PersonalIncomeTax, null, fees.PersonalIncomeTax,
+                                    IsDebit: false, Description: "Thuế TNCN khấu trừ tại nguồn")
+                            }
+                            : [],
                         new(AccountType.User, info.OwnerId, fees.OwnerNet, IsDebit: false,
                             Description: $"Donate #{donation.Id} — chặng 1, nhận ngay")
-                    }, ct);
+                    ], ct);
 
                 await _notifications.NotifyAsync(
                     info.OwnerId,

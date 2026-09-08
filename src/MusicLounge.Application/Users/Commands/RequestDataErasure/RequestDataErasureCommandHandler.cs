@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -95,6 +95,21 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         user.CitizenCardFrontImageUrl = null;
         user.CitizenCardBackImageUrl = null;
         user.CitizenCardSubmittedAt = null;
+        // Same treatment as the citizen-card number above: a tax code identifies a natural person.
+        // What is NOT erased is the withholding itself — Payment.TaxWithheld, the ledger journals
+        // and the settlement rows are accounting records of money that actually moved, and those
+        // survive an erasure request the way every other financial record does.
+        user.TaxCode = null;
+        user.TaxCodeHash = null;
+        user.TaxProfileSubmittedAt = null;
+        user.TaxProfileVerifiedAt = null;
+        user.TaxProfileVerifiedBy = null;
+        user.CitizenCardReviewStatus = null;
+        user.CitizenCardReviewedAt = null;
+        user.CitizenCardReviewedBy = null;
+        user.CitizenCardReviewNote = null;
+        user.TaxProfileReviewStatus = null;
+        user.TaxProfileReviewNote = null;
         user.IsActive = false;
         // Revokes any JWT issued before this moment immediately (JwtBearerEvents.OnTokenValidated
         // re-checks this every request) — an erased identity must not stay usable for up to an

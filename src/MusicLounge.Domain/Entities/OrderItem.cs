@@ -1,6 +1,6 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class OrderItem : Common.BaseEntity<int>
+public sealed class OrderItem : Common.AuditableEntity<int>
 {
     public int FnbOrderId { get; set; }
     public int MenuItemId { get; set; }

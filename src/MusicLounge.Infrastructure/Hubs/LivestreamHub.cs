@@ -52,9 +52,13 @@ public sealed class LivestreamHub : Hub
         {
             var venue = await _ctx.Livestreams
                 .Where(l => l.Id == livestreamId.Value)
-                .Select(l => new { l.LoungeShow.LoungeId, OwnerId = l.LoungeShow.Lounge.OwnerId })
+                .Select(l => new { l.LoungeShow.LoungeId, OwnerId = l.LoungeShow.Lounge.OwnerId, l.IsFree })
                 .FirstOrDefaultAsync();
+            // MLACP-117: livestream mien phi khong yeu cau ve — phai dong bo voi
+            // GetLivestreamDetailQueryHandler, neu khong nguoi xem se thay duoc HlsUrl qua REST
+            // nhung bi Context.Abort() ngay khi hub co gang join group cua chinh stream do.
             hasAccess = (venue is not null && VenueOperatorAccess.CanOperate(_currentUser, venue.LoungeId, venue.OwnerId))
+                || (venue is not null && venue.IsFree)
                 || await _livestreamRepo.HasViewerAccessAsync(livestreamId.Value, _currentUser.UserId);
         }
         if (!hasAccess) { Context.Abort(); return; }

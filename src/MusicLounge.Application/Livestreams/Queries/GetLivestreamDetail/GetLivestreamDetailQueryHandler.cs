@@ -4,6 +4,7 @@ using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Livestreams.DTOs;
+using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
@@ -16,17 +17,20 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
     private readonly ILivestreamRepository _livestreamRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IBackgroundJobService _backgroundJobs;
+    private readonly ISystemConfigService _systemConfig;
 
     public GetLivestreamDetailQueryHandler(
         IUnitOfWork uow,
         ILivestreamRepository livestreamRepo,
         ICurrentUserService currentUser,
-        IBackgroundJobService backgroundJobs)
+        IBackgroundJobService backgroundJobs,
+        ISystemConfigService systemConfig)
     {
         _uow = uow;
         _livestreamRepo = livestreamRepo;
         _currentUser = currentUser;
         _backgroundJobs = backgroundJobs;
+        _systemConfig = systemConfig;
     }
 
     public async Task<LivestreamDetailDto> Handle(GetLivestreamDetailQuery request, CancellationToken ct)
@@ -45,17 +49,48 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
                 .GetByIdAsync(livestream.LoungeShow.LoungeId, ct);
             var isVenueOperator = lounge is not null
                 && VenueOperatorAccess.CanOperate(_currentUser, livestream.LoungeShow.LoungeId, lounge.OwnerId);
-            isGenuineTicketHolder = !isVenueOperator && _currentUser.IsAuthenticated
-                && await _livestreamRepo.HasViewerAccessAsync(request.LivestreamId, _currentUser.UserId, ct);
-            userHasAccess = isVenueOperator || isGenuineTicketHolder;
+
+            // MLACP-117: livestream mien phi (IsFree) khong yeu cau ve — bat ky khan gia da dang
+            // nhap nao cung xem duoc, khong can qua HasViewerAccessAsync (kiem tra do chi danh cho
+            // luong PPV co ban ve). Truoc khi co dieu kien nay, mot livestream mien phi van bi tu
+            // choi HlsUrl neu nguoi xem chua tung mua ve Livestream-tier cho show do — mau thuan
+            // truc tiep voi DONE WHEN "Stream mien phi: cho xem khong can token".
+            if (isVenueOperator || livestream.IsFree)
+            {
+                userHasAccess = true;
+            }
+            else
+            {
+                isGenuineTicketHolder = _currentUser.IsAuthenticated
+                    && await _livestreamRepo.HasViewerAccessAsync(request.LivestreamId, _currentUser.UserId, ct);
+                userHasAccess = isGenuineTicketHolder;
+            }
         }
+
+        var now = DateTimeOffset.UtcNow;
+        string? viewingSessionId = null;
 
         // Only a real ticket-holding viewer actually "watching" counts as a recommendation signal —
         // Admin/Staff/Owner hitting this endpoint to monitor their own stream isn't behavioural
         // interest and would otherwise pollute the collaborative-filtering matrix.
         if (isGenuineTicketHolder)
+        {
             _backgroundJobs.EnqueueLogUserBehaviour(
                 _currentUser.UserId, livestream.LoungeShowId, BehaviourAction.WatchLivestream);
+
+            // MLACP-140: day la thoi diem duy nhat chung minh chu ve that su nhan duoc HlsUrl phat —
+            // tuong duong "check-in" cho ve Livestream (khong co quay quet QR nao khac ton tai cho
+            // ho). Chuyen ve sang Used de RateShowCommandHandler cho phep danh gia.
+            _backgroundJobs.EnqueueLivestreamCheckIn(_currentUser.UserId, livestream.LoungeShowId);
+
+            viewingSessionId = await OpenViewingSessionAsync(request.LivestreamId, now, ct);
+        }
+
+        // MLACP-121: cung quyen xem nhu HlsUrl (PPV/mien phi/van hanh venue), CONG THEM het han xem
+        // lai bi chan — ReplayAvailableUntil null nghia la chua co ban ghi (asset.ready chua toi)
+        // hoac khong gioi han, con lai phai con hieu luc tai thoi diem goi.
+        var replayStillValid = livestream.ReplayAvailableUntil is null || now <= livestream.ReplayAvailableUntil;
+        var recordingUrl = userHasAccess && replayStillValid ? livestream.RecordingUrl : null;
 
         return new LivestreamDetailDto(
             livestream.Id,
@@ -67,6 +102,60 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             livestream.StartedAt,
             livestream.EndedAt,
             livestream.TerminatedReason,
-            userHasAccess);
+            userHasAccess,
+            recordingUrl,
+            viewingSessionId);
+    }
+
+    // Ngoại lệ CQRS có chủ đích: Query này ghi DB (mở 1 phiên xem mới + cập nhật
+    // LivestreamTicketDetail.FirstAccessedAt/LastAccessedAt) thay vì chỉ đọc. Đây là lần gọi ĐẦU
+    // TIÊN thành công cấp HlsUrl cho 1 khán giả có vé thật — đúng thời điểm tự nhiên khớp ý nghĩa
+    // FirstAccessedAt đã có sẵn trên entity nhưng chưa từng được ghi (guard chặn transfer-vé-đã-xem
+    // trong InitiateTicketTransferCommandHandler nhờ vậy lần đầu hoạt động thật). Không tách thành
+    // 1 Command riêng vì client cần ViewingSessionId ngay trong response đầu tiên để bắt đầu
+    // heartbeat — tách command cho lần mở đầu sẽ buộc client gọi 2 request tuần tự trước khi có thể
+    // phát. Các lần giữ phiên sống SAU đó dùng SendLivestreamHeartbeatCommand (Command thật sự).
+    private async Task<string> OpenViewingSessionAsync(int livestreamId, DateTimeOffset now, CancellationToken ct)
+    {
+        var ticket = await _livestreamRepo.GetViewerTicketAsync(livestreamId, _currentUser.UserId, ct);
+        if (ticket is null)
+            return string.Empty;
+
+        var maxSessions = await _systemConfig.GetIntAsync(
+            ConfigKeys.LivestreamMaxConcurrentSessionsPerTicket, 2, ct);
+        var timeoutSeconds = await _systemConfig.GetIntAsync(
+            ConfigKeys.LivestreamHeartbeatTimeoutSeconds, 90, ct);
+        var cutoff = now.AddSeconds(-timeoutSeconds);
+
+        var sessionRepo = _uow.Repository<LivestreamViewingSession, int>();
+        // So sanh DateTimeOffset khong dich duoc sang SQL tren SQLite test provider (confirmed
+        // thuc nghiem — cung nhom loi da ghi nhan o SumAsync/GetChatMessagesAsync trong file khac).
+        // Loc theo TicketId (dich duoc) qua FindAsync, roi so sanh LastHeartbeatAt >= cutoff o C#
+        // sau khi da vat chat hoa — giong pattern SubscribeToPackageCommandHandler dang dung cho
+        // ExpiresAt.
+        var sessionsForTicket = await sessionRepo.FindAsync(s => s.TicketId == ticket.Id, ct);
+        var activeSessionCount = sessionsForTicket.Count(s => s.LastHeartbeatAt >= cutoff);
+        if (activeSessionCount >= maxSessions)
+            throw new DomainException(
+                $"Vé này đang được xem trên {activeSessionCount} thiết bị — vui lòng đóng bớt trước khi mở thêm.");
+
+        var sessionId = Guid.NewGuid().ToString("N");
+        sessionRepo.Add(new LivestreamViewingSession
+        {
+            TicketId = ticket.Id,
+            LivestreamId = livestreamId,
+            SessionId = sessionId,
+            StartedAt = now,
+            LastHeartbeatAt = now
+        });
+
+        if (ticket.LivestreamDetail is not null)
+        {
+            ticket.LivestreamDetail.FirstAccessedAt ??= now;
+            ticket.LivestreamDetail.LastAccessedAt = now;
+        }
+
+        await _uow.SaveChangesAsync(ct);
+        return sessionId;
     }
 }

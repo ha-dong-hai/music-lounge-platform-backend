@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -30,10 +30,34 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
 
         var seed = new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
         b.HasData(
-            // Payment & Tax (NĐ 117/2025, NĐ 52/2024)
-            new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — NĐ 52/2024",                  UpdatedAt = seed },
-            new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Platform fee rate (5%) — NĐ 117/2025",                            UpdatedAt = seed },
-            new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "VAT withheld at source (5%) — NĐ 117/2025",                       UpdatedAt = seed },
+            // Payment & Tax.
+            //
+            // Careful with what is and is not a legal citation here. NĐ 117/2025/NĐ-CP (09/6/2025,
+            // hiệu lực 01/7/2025) governs tax management for households/individuals selling through
+            // e-commerce and digital platforms: a platform WITH a payment function must withhold and
+            // remit on their behalf, at the moment the transaction is confirmed and paid. Its
+            // percentage for SERVICES is 5% VAT — which is where tax_rate's 5% legitimately comes
+            // from, this platform selling event access being a service.
+            //
+            // platform_commission_rate is NOT that. No decree sets a platform's own commercial
+            // commission; the 5% is this project's business decision and was previously described as
+            // if NĐ 117/2025 mandated it. Corrected, because a legal citation nobody can produce on
+            // request is worse than none.
+            //
+            // MLACP-289 closed the gap this comment used to describe. NĐ 117/2025 has a
+            // payment-handling platform withhold BOTH VAT and personal income tax, and only for
+            // hộ/cá nhân kinh doanh — a doanh nghiệp declares its own. User.BusinessType now tells
+            // the two apart (and TaxWithholdingPolicy is what reads it), and personal income tax
+            // has its own rate below and its own ledger account.
+            //
+            // That rate is seeded at 0, not at the decree's 2%. Turning it on takes money out of
+            // every household seller's share, so it is a decision an Admin makes deliberately
+            // through PUT /admin/system-config — where the reason is recorded and the old value
+            // kept — rather than something that starts happening because a deployment shipped.
+            new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — mức thương mại của cổng, không do văn bản pháp luật ấn định", UpdatedAt = seed },
+            new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Hoa hồng nền tảng (5%) — quyết định thương mại của dự án, KHÔNG do nghị định nào quy định", UpdatedAt = seed },
+            new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Thuế GTGT khấu trừ tại nguồn (5% — tỷ lệ cho DỊCH VỤ theo NĐ 117/2025/NĐ-CP). Chỉ khấu trừ cho hộ/cá nhân kinh doanh; doanh nghiệp tự kê khai.", UpdatedAt = seed },
+            new { Id = 32, ConfigKey = "personal_income_tax_rate",            ConfigValue = "0",    DataType = ConfigDataType.Decimal,  Description = "Thuế TNCN khấu trừ tại nguồn. NĐ 117/2025/NĐ-CP quy định 2% cho DỊCH VỤ của cá nhân cư trú; seed bằng 0 để việc bật khấu trừ là một quyết định vận hành có ghi lý do, không phải hệ quả của một lần triển khai. Chỉ áp cho hộ/cá nhân kinh doanh.", UpdatedAt = seed },
             // Settlement schedule — timing researched against comparable ticketing-platform payout
             // practice (Eventbrite: payout processing begins ~3 days post-event, final settlement up
             // to 14 business days for larger events) and wired into ScheduleSettlementHandler

@@ -100,7 +100,14 @@ public static class SeedHelper
                 Id = ShowId, LoungeId = LoungeId, Name = "Live Night",
                 Description = "Test show", Format = LoungeShowFormat.Online,
                 Status = LoungeShowStatus.Ongoing,
-                ScheduledStart = DateTimeOffset.UtcNow.AddDays(-1)
+                // ScheduledEnd is in the FUTURE so this show is genuinely still running. It used to
+                // be left null, which made the effective end ScheduledStart + 4h — i.e. 20 hours in
+                // the past — so an "Ongoing" show that any realistic reading would call long over.
+                // AutoEndStaleShowsJob correctly closes such a show, which then broke every other
+                // test that needs this one Ongoing. Fixing the seed rather than the job: a show
+                // marked Ongoing should be one that is actually on right now.
+                ScheduledStart = DateTimeOffset.UtcNow.AddHours(-1),
+                ScheduledEnd = DateTimeOffset.UtcNow.AddHours(3)
             },
             new LoungeShow
             {
@@ -157,8 +164,7 @@ public static class SeedHelper
         {
             Id = 1, Name = "Test Package", Price = 500_000m,
             BillingCycle = SubscriptionBillingCycle.Monthly,
-            MaxTicketsPerEvent = 1000, HasAiPoster = true, MaxAiPostersPerMonth = 10, MaxTourScenes = 5, IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow
+            MaxTicketsPerEvent = 1000, HasAiPoster = true, MaxAiPostersPerMonth = 10, MaxTourScenes = 5, IsActive = true
         });
         db.OwnerSubscriptions.AddRange(
             new OwnerSubscription
@@ -191,28 +197,27 @@ public static class SeedHelper
         {
             OwnerType = BankAccountOwnerType.Lounge, OwnerId = LoungeId,
             BankName = "Test Bank", AccountNumber = piiEncryption.Encrypt("0000000001"), AccountHolder = "Test Lounge Owner",
-            IsDefault = true, IsVerified = true, CreatedAt = DateTimeOffset.UtcNow
+            IsDefault = true, IsVerified = true
         });
         db.Add(new BankAccount
         {
             OwnerType = BankAccountOwnerType.Lounge, OwnerId = OtherLoungeId,
             BankName = "Test Bank", AccountNumber = piiEncryption.Encrypt("0000000002"), AccountHolder = "Other Test Lounge Owner",
-            IsDefault = true, IsVerified = true, CreatedAt = DateTimeOffset.UtcNow
+            IsDefault = true, IsVerified = true
         });
         db.Add(new BankAccount
         {
             OwnerType = BankAccountOwnerType.Performer, OwnerId = PerformerId,
             BankName = "Test Bank", AccountNumber = piiEncryption.Encrypt("0000000003"), AccountHolder = "Test Artist",
-            IsDefault = true, IsVerified = true, CreatedAt = DateTimeOffset.UtcNow
+            IsDefault = true, IsVerified = true
         });
 
-        // Catalog data for CF2 preference tests
-        db.Genres.AddRange(
-            new MusicGenre { Id = GenreId1, Name = "Jazz" },
-            new MusicGenre { Id = GenreId2, Name = "Pop" }
-        );
-        db.Moods.Add(new Mood { Id = MoodId1, Name = "Relaxed" });
-        db.Atmospheres.Add(new VenueAtmosphere { Id = AtmosphereId1, Name = "Intimate" });
+        // Catalog data (Genre/Mood/Atmosphere) for CF2 preference tests is NOT inserted here — origin's
+        // MusicGenreConfiguration/MoodConfiguration/VenueAtmosphereConfiguration now seed a fixed
+        // default catalog via EF HasData (MLACP-14), applied automatically by EnsureCreatedAsync
+        // above. GenreId1/GenreId2/MoodId1/AtmosphereId1 below point at those already-seeded rows —
+        // inserting our own here would collide on the same Id (or the unique Name index for a
+        // different one).
 
         await db.SaveChangesAsync();
     }

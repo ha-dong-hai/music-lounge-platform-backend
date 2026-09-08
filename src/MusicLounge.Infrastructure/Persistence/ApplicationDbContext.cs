@@ -54,7 +54,9 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<Livestream> Livestreams => Set<Livestream>();
     public DbSet<LivestreamChatMessage> LivestreamChatMessages => Set<LivestreamChatMessage>();
+    public DbSet<LivestreamViewingSession> LivestreamViewingSessions => Set<LivestreamViewingSession>();
     public DbSet<EventModeration> EventModerations => Set<EventModeration>();
+    public DbSet<ContentReport> ContentReports => Set<ContentReport>();
     public DbSet<AiPosterGeneration> AiPosterGenerations => Set<AiPosterGeneration>();
     public DbSet<Donation> Donations => Set<Donation>();
 
@@ -86,6 +88,7 @@ public sealed class ApplicationDbContext : DbContext
 
     // --- N14: Notifications ---
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<LoginFailureLog> LoginFailureLogs => Set<LoginFailureLog>();
     public DbSet<LoginSpikeAlertState> LoginSpikeAlertStates => Set<LoginSpikeAlertState>();
     public DbSet<KnownAdminSnapshot> KnownAdminSnapshots => Set<KnownAdminSnapshot>();

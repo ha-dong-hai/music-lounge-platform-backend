@@ -53,8 +53,7 @@ public sealed class VenueTourStitchTests
         {
             Id = id, Name = $"StitchPkg-{id}", Price = 500_000m,
             BillingCycle = SubscriptionBillingCycle.Monthly,
-            MaxTicketsPerEvent = 1000, MaxTourScenes = maxTourScenes, IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow
+            MaxTicketsPerEvent = 1000, MaxTourScenes = maxTourScenes, IsActive = true
         });
         db.OwnerSubscriptions.Add(new OwnerSubscription
         {

@@ -1,4 +1,6 @@
-using MediatR;
+﻿using MediatR;
+using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Utils;
 using MusicLounge.Domain.Entities;
@@ -36,7 +38,7 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền đổi lịch event này.");
 
         // Ongoing bi loai khoi day: show da ActualStart (dang dien ra that) — doi ScheduledStart
@@ -65,6 +67,12 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
         // D13: "mo cua so hoan tien theo refund_percentage" - dam bao ticket holder thuc su dung
         // duoc CancelTicket sau khi doi lich (deadline se duoc tinh lai theo ScheduledStart moi).
         show.CancellationAllowed = true;
+        // MLACP-288 made CancellationDeadlineHours settable, which turned the line above into half a
+        // promise: re-opening cancellation is worthless if the show's own deadline already sits in
+        // the past for the new date. The venue moved the date, so the venue absorbs the cost of the
+        // buyer no longer being able to meet a deadline they agreed to for a different evening.
+        if (!TicketRefundPolicy.IsDeadlineStillReachable(show, DateTimeOffset.UtcNow))
+            show.CancellationDeadlineHours = null;
         showRepo.Update(show);
 
         var tickets = await _uow.Repository<Ticket, Guid>().FindAsync(

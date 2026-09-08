@@ -34,7 +34,7 @@ internal sealed class GetPublishedLoungeShowsQueryHandler
                 throw new UnauthorizedException("Vui lòng đăng nhập để xem event của bạn.");
 
             result = await _showRepo.GetMineAsync(
-                _currentUser.UserId, page, pageSize, request.SortBy, ct);
+                _currentUser.UserId, page, pageSize, request.SortBy, status: null, ct);
         }
         else
         {

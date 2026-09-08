@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -42,7 +43,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền đổi hình thức event này.");
 
         if (show.Status is not (LoungeShowStatus.Published or LoungeShowStatus.Ongoing))
@@ -67,7 +68,6 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
             var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
             var refundRepo = _uow.Repository<RefundRequest, int>();
-            var now = DateTimeOffset.UtcNow;
 
             foreach (var ticket in physicalTickets)
             {
@@ -83,8 +83,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                     Reason = "Event chuyển từ Offline sang Online — hoàn 100% vé vật lý (D13)",
                     AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                     RefundPercentage = 100m,
-                    Status = RefundRequestStatus.Pending,
-                    CreatedAt = now
+                    Status = RefundRequestStatus.Pending
                 });
 
                 if (ticket.BuyerId is int buyerId)

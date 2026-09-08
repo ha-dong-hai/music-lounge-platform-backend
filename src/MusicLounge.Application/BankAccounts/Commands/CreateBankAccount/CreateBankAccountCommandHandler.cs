@@ -54,8 +54,7 @@ internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBa
             AccountNumber = _piiEncryption.Encrypt(request.AccountNumber),
             AccountHolder = request.AccountHolder,
             IsDefault = request.IsDefault,
-            IsVerified = false,
-            CreatedAt = DateTimeOffset.UtcNow
+            IsVerified = false
         };
         repo.Add(account);
         await _uow.SaveChangesAsync(ct);

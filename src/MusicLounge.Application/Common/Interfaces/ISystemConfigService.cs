@@ -1,4 +1,4 @@
-namespace MusicLounge.Application.Common.Interfaces;
+﻿namespace MusicLounge.Application.Common.Interfaces;
 
 // D9: business parameters live in system_config (DB), not appsettings.
 // Values are cached briefly — a config change takes effect within the cache window.
@@ -8,6 +8,13 @@ public interface ISystemConfigService
     Task<int> GetIntAsync(string key, int fallback, CancellationToken ct = default);
     Task<bool> GetBoolAsync(string key, bool fallback, CancellationToken ct = default);
     Task<string> GetStringAsync(string key, string fallback, CancellationToken ct = default);
+
+    /// <summary>
+    /// Drops the cached value for one key. Reads are cached for a short window, so without this an
+    /// Admin who changes a rate sees no effect for up to a minute and cannot tell whether the change
+    /// took — the kind of ambiguity that leads to the same value being changed twice.
+    /// </summary>
+    void Invalidate(string key);
 }
 
 // Keys seeded by migration MM1_DBCompleteness100pct
@@ -15,6 +22,7 @@ public static class ConfigKeys
 {
     public const string PlatformCommissionRate = "platform_commission_rate";
     public const string TaxRate = "tax_rate";
+    public const string PersonalIncomeTaxRate = "personal_income_tax_rate";
 
     // D3 payout-speed tiers, keyed by venue ReputationScore + completed-show count — replaces the
     // old flat "settlement_partial_pct" key (removed from the seed table; a stale reference to it
@@ -46,11 +54,50 @@ public static class ConfigKeys
 
     public const string ModerationSlaHours = "moderation_sla_hours";
 
+    // MLACP-222: NĐ 147/2024/NĐ-CP quy định 2 mốc SLA khác nhau cho gỡ nội dung vi phạm — 48h khi
+    // yêu cầu đến từ NGƯỜI DÙNG mạng xã hội (đúng trường hợp report của khán giả ở đây), 24h chỉ
+    // khi yêu cầu đến từ CƠ QUAN QUẢN LÝ NHÀ NƯỚC có thẩm quyền. Tách riêng khỏi ModerationSlaHours
+    // (dùng cho cổng duyệt AI trước khi đăng — không phải yêu cầu từ người dùng) để không áp nhầm
+    // mốc 24h của trường hợp kia vào đây.
+    public const string ContentReportSlaHours = "content_report_sla_hours";
+
     // §6.13 — window after a show ends during which a buyer may submit a rating. Seeded since the
     // original migration but never actually read — TerminateLivestreamCommandHandler/
     // EndLivestreamCommandHandler/EndLoungeShowCommandHandler each hardcoded their own literal
     // `AddDays(7)` that happened to match this key's seeded value by coincidence, not by wiring.
     public const string RatingWindowDays = "rating_window_days";
+
+    // MLACP-121: so ngay khan gia co ve duoc xem lai ban ghi livestream sau khi asset san sang
+    // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
+    public const string LivestreamReplayDays = "livestream_replay_days";
+
+    // Gioi han ve/buoi hoa nhac ap dung cho venue CHUA co goi subscription nao dang hoat dong.
+    // Truoc day khong co goi nghia la khong co gioi han — mot nhanh if quen viet chu khong phai mot
+    // chinh sach ai do chon. Khong seed san — dung mac dinh tai noi doc.
+    public const string FreeTierMaxTicketsPerEvent = "free_tier_max_tickets_per_event";
+
+    // So gio Admin phai xu ly xong mot RefundRequest ke tu luc no duoc tao. Mac dinh 72h = 3 ngay
+    // lam viec, khop voi Dieu 31 Luat Bao ve quyen loi nguoi tieu dung 2023 (thong bao tiep nhan
+    // trong 03 ngay lam viec) va chat hon muc 5 ngay lam viec ma Eventbrite cam ket cho ban to
+    // chuc. KHONG luu thanh cot rieng tren RefundRequest — han duoc tinh tu CreatedAt cong so gio
+    // nay, nen doi cau hinh la ap dung ngay cho ca cac yeu cau dang cho, khong can migration.
+    public const string RefundSlaHours = "refund_sla_hours";
+
+    // So ngay ke tu luc thanh toan ma VNPay con chap nhan lenh hoan tien (Merchant API refund).
+    // Day KHONG phai muc tieu van hanh ma la han ky thuat cung: qua moc nay VNPay tu choi, va khoan
+    // hoan tro thanh bat kha thi chu khong phai cham. Dat thanh config de con noi long/siet lai neu
+    // VNPay doi chinh sach, mac dinh 90 ngay theo quy dinh hien hanh cua cong.
+    public const string VnPayRefundWindowDays = "vnpay_refund_window_days";
+
+    // So gio an han sau ScheduledEnd truoc khi AutoEndStaleShowsJob tu danh dau show la Ended.
+    // Chi de bao ve show that su chay dai hon du kien khoi bi dong som — khong phai de cho Owner
+    // "co thoi gian bam nut", vi phan lon truong hop la ho khong bao gio bam. Khong seed san —
+    // dung mac dinh tai noi doc.
+    public const string ShowAutoEndGraceHours = "show_auto_end_grace_hours";
+
+    // MLACP-191: so phut cho encoder tu ket noi lai sau khi Mux bao video.live_stream.disconnected
+    // truoc khi he thong tu danh dau livestream la Failed. Khong seed san — dung mac dinh tai noi doc.
+    public const string LivestreamReconnectTimeoutMinutes = "livestream_reconnect_timeout_minutes";
 
     // §6.17 — hours an Admin has to resolve a venue's penalty appeal before AutoApproveOverdueAppealsJob
     // auto-overturns it. Same dead-seed situation as RatingWindowDays: seeded since the original
@@ -70,8 +117,18 @@ public static class ConfigKeys
     public const string PenaltySuspensionNoticeHours = "penalty_suspension_notice_hours";
     public const string PenaltyBanNoticeDays = "penalty_ban_notice_days";
 
+    // MLACP-199: so ngay Owner duoc phep gui khang cao ke tu luc phat duoc ban hanh (IssuedAt) —
+    // khac voi AppealSlaHours (thoi han Admin phai xu ly SAU KHI da nhan khang cao). Khong seed
+    // san — dung mac dinh tai noi doc.
+    public const string PenaltyAppealWindowDays = "penalty_appeal_window_days";
+
     // Anti-abuse ceilings on a single hold/walk-in-sale/donation — not statutory figures, but
-    // operational limits that should be Admin-tunable (D9) rather than baked into validator code.
+    // operational limits that BELONG in config (D9) rather than baked into validator code.
+    // NOTE: "tunable" is where this is heading, not where it is. There is no write path to
+    // system_config anywhere in this solution — ISystemConfigService exposes only Get*, no Admin
+    // endpoint updates it, and SystemConfigHistory (the table built to audit exactly these
+    // changes) is written by nothing. Changing any value below today means running SQL by hand,
+    // with no audit trail. See the same note on every "Admin-tunable" mention in this file.
     // Defaults preserve this system's existing behavior exactly; only the storage moved.
     public const string TicketHoldMaxQuantity = "ticket_hold_max_quantity";
     public const string WalkInTicketMaxQuantity = "walkin_ticket_max_quantity";
@@ -94,7 +151,8 @@ public static class ConfigKeys
     public const string AiPosterMaxAttemptsPerShow = "ai_poster_max_attempts_per_show";
 
     // NĐ 85/2021's complaint-channel requirement doesn't itself specify a numeric deadline — this is
-    // a reasonable operational default (Admin-tunable), not a literal statutory figure.
+    // a reasonable operational default (config-driven, though only editable via direct SQL today
+    // — see the note at the top of this file), not a literal statutory figure.
     public const string ComplaintSlaHours = "complaint_sla_hours";
 
     // Version label of the currently-published Terms of Service / Privacy Policy — bump this (via
@@ -115,7 +173,8 @@ public static class ConfigKeys
     // donation). Default 0.88 matches docs/04-design-decisions.md §6.5 — benchmarked 2026-08-09
     // against industry donation/tip intermediary practice (YouTube Super Chat keeps 30%, Twitch
     // Bits nets creators ~55-71%; venue-holds-tip-for-performer arrangements commonly run 0-20%+
-    // house cut) and found generous to the performer, not an outlier. Admin-tunable via
+    // house cut) and found generous to the performer, not an outlier. Config-driven, but only
+    // editable via direct SQL today (see the note at the top of this file) — via
     // system_config, not hardcoded (§6.7) — ConfirmDonationPaidCommandHandler re-reads this at
     // confirmation time, so a rate change applies to donations confirmed after the change without
     // a deploy.
@@ -153,4 +212,14 @@ public static class ConfigKeys
     // migration — GetIntAsync's fallback covers it until an Admin adds real rows.
     public const string ImageModerationBlockThresholdPercent = "image_moderation_block_threshold_percent";
     public const string ImageModerationReviewThresholdPercent = "image_moderation_review_threshold_percent";
+
+    // Nền tảng dùng Mux HLS công khai (không DRM/signed-URL xoay vòng) — app server không có khả
+    // năng thu hồi 1 phiên phát HLS đang chạy giữa chừng. Vì vậy cơ chế heartbeat này chỉ CHẶN
+    // PHIÊN MỚI vượt hạn mức, không ép ngắt phiên cũ đang mở. Mặc định 2 phiên/vé: đủ cho 1 người
+    // xem hợp lý trên 2 thiết bị (điện thoại + TV...), vẫn chặn được chia sẻ hàng loạt. Timeout
+    // 90s = gấp 3 chu kỳ heartbeat đề xuất phía client (30s), tránh false-positive khi 1 lần
+    // heartbeat bị trễ mạng. Không seed sẵn — GetIntAsync's fallback đảm nhiệm cho tới khi Admin
+    // thêm dòng thật.
+    public const string LivestreamMaxConcurrentSessionsPerTicket = "livestream_max_concurrent_sessions_per_ticket";
+    public const string LivestreamHeartbeatTimeoutSeconds = "livestream_heartbeat_timeout_seconds";
 }

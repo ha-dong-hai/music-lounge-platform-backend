@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Domain.Entities;
@@ -64,36 +64,49 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
             .FirstOrDefaultAsync(t => t.QrCode == qrCode, ct);
 
     public async Task<PaginatedResult<Ticket>> GetByBuyerAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default)
+        int userId, int page, int pageSize, TicketStatus? status = null, CancellationToken ct = default)
     {
         var query = WithDetails()
-            .Where(t => t.BuyerId == userId)
-            .OrderByDescending(t => t.CreatedAt);
+            .Where(t => t.BuyerId == userId);
 
-        var total = await query.CountAsync(ct);
-        var items = await query
+        if (status.HasValue)
+            query = query.Where(t => t.Status == status.Value);
+
+    // Sắp xếp phía client sau khi lấy về: SQLite (provider dùng trong test) không ORDER BY được
+    // DateTimeOffset, còn Ticket.CreatedAt thì đúng kiểu đó. Trên SQL Server câu lệnh cũ chạy bình
+    // thường, nên lỗi này nằm im — cả hai hàm dưới đây chưa từng có test nào chạm tới, và một
+    // trong hai (GetByShowAsync) trước MLACP-294 còn không có endpoint nào gọi. Giữ nguyên ORDER BY
+    // ở tầng database đồng nghĩa với việc hai endpoint này mãi mãi không kiểm thử được.
+    //
+    // Đánh đổi là lấy về toàn bộ tập rồi mới phân trang. Chấp nhận được vì cả hai tập đều có trần
+    // tự nhiên: vé của MỘT người mua, và vé của MỘT buổi diễn (chặn trên là sức chứa của phòng
+    // trà). Đây cũng là cách codebase này vẫn xử lý khi vướng giới hạn đó.
+        var all = await query.ToListAsync(ct);
+        var items = all
+            .OrderByDescending(t => t.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(ct);
+            .ToList();
 
-        return new PaginatedResult<Ticket>(items, page, pageSize, total);
+        return new PaginatedResult<Ticket>(items, page, pageSize, all.Count);
     }
 
     public async Task<PaginatedResult<Ticket>> GetByShowAsync(
         int showId, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = WithDetails()
+        // Xem ghi chú ở GetByBuyerAsync về việc sắp xếp phía client.
+        var all = await WithDetails()
             .Include(t => t.Buyer)
             .Where(t => t.ShowId == showId)
-            .OrderByDescending(t => t.CreatedAt);
-
-        var total = await query.CountAsync(ct);
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync(ct);
 
-        return new PaginatedResult<Ticket>(items, page, pageSize, total);
+        var items = all
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return new PaginatedResult<Ticket>(items, page, pageSize, all.Count);
     }
 
     public Task<int> CountConfirmedByPriceAsync(int priceId, CancellationToken ct = default)

@@ -20,4 +20,7 @@ public sealed class FakeVnPayService : IVnPayService
         var success = code == "00";
         return new VnPayCallbackResult(true, success, txnRef ?? "", code ?? "99", amount / 100m);
     }
+
+    public Task<VnPayRefundResult> RefundAsync(VnPayRefundRequest request, CancellationToken ct = default)
+        => Task.FromResult(new VnPayRefundResult(true, "00", "Confirm Success", request.TransactionNo));
 }

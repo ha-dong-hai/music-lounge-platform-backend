@@ -2,7 +2,11 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class EventModeration : Common.BaseEntity<int>
+// AuditableEntity — CreatedBy is genuinely new information (which Owner action created this queue
+// entry, e.g. submitting a show/livestream/gallery-image/tour-scene for review), not covered by
+// any existing field. AdminId/ReviewedAt already cover "who/when reviewed" (the AuditableEntity
+// UpdatedBy/UpdatedAt equivalent), so those stay as the domain-specific fields they already are.
+public sealed class EventModeration : Common.AuditableEntity<int>
 {
     public ModerationTargetType TargetType { get; set; }
     public int TargetId { get; set; }
@@ -16,7 +20,6 @@ public sealed class EventModeration : Common.BaseEntity<int>
     public ModerationDecision? AdminDecision { get; set; }
     public string? ReviewNote { get; set; }
 
-    public DateTimeOffset CreatedAt { get; set; }
     // NĐ 147/2024: SLA 24h to review flagged content. Set at creation from system_config's
     // moderation_sla_hours (never hardcoded — §6.7) — was previously never populated anywhere.
     // Nullable so the migration adding this column doesn't fabricate a deadline for rows that

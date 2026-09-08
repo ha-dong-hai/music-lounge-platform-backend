@@ -102,7 +102,7 @@ public sealed class ComplianceTests
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
 
-        var res = await client.GetAsync("/api/v1/admin/complaints");
+        var res = await client.GetAsync("/api/v1/complaints/pending");
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
@@ -120,11 +120,11 @@ public sealed class ComplianceTests
             EvidenceUrls = (string?)null,
             ContactPhone = (string?)null
         });
-        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+        var body = await createRes.Content.ReadFromJsonAsync<ComplaintCreatedResponse>();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
-            $"/api/v1/admin/complaints/{body!.Data}/resolve",
+            $"/api/v1/complaints/{body!.Data.Id}/resolve",
             new { Status = "Resolved", Resolution = "Checked", ResolvedAction = "Dismiss" });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -147,11 +147,11 @@ public sealed class ComplianceTests
             EvidenceUrls = (string?)null,
             ContactPhone = (string?)null
         });
-        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+        var body = await createRes.Content.ReadFromJsonAsync<ComplaintCreatedResponse>();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
-            $"/api/v1/admin/complaints/{body!.Data}/resolve",
+            $"/api/v1/complaints/{body!.Data.Id}/resolve",
             new { Status = "Resolved", Resolution = "Confirmed violation", ResolvedAction = "TakeDownContent" });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -174,11 +174,11 @@ public sealed class ComplianceTests
             EvidenceUrls = (string?)null,
             ContactPhone = (string?)null
         });
-        var body = await createRes.Content.ReadFromJsonAsync<IdResponse>();
+        var body = await createRes.Content.ReadFromJsonAsync<ComplaintCreatedResponse>();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
-            $"/api/v1/admin/complaints/{body!.Data}/resolve",
+            $"/api/v1/complaints/{body!.Data.Id}/resolve",
             new { Status = "Resolved", Resolution = "N/A", ResolvedAction = "TakeDownContent" });
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
@@ -201,7 +201,12 @@ public sealed class ComplianceTests
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
             GenreIds = Array.Empty<int>(),
-            Performances = Array.Empty<object>()
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
+            Performances = new[]
+            {
+                new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+            }
         });
         res.EnsureSuccessStatusCode();
         var body = await res.Content.ReadFromJsonAsync<IdResponse>();
@@ -238,7 +243,7 @@ public sealed class ComplianceTests
         await AddTierAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -252,7 +257,7 @@ public sealed class ComplianceTests
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-TEST-001" });
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -266,7 +271,7 @@ public sealed class ComplianceTests
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-TEST-002" });
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
@@ -303,7 +308,7 @@ public sealed class ComplianceTests
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-BOUNDARY-6" });
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             "6 business days is one short of the >=7 requirement — must still be rejected at the boundary, not just when wildly early");
@@ -318,7 +323,7 @@ public sealed class ComplianceTests
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-BOUNDARY-7" });
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent,
             "exactly 7 business days is the minimum that must pass — the check is strict '<', not '<='");
@@ -333,7 +338,7 @@ public sealed class ComplianceTests
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         await ownerClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-TEST-003" });
-        (await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null)).EnsureSuccessStatusCode();
+        (await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null)).EnsureSuccessStatusCode();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         await adminClient.PostAsJsonAsync(
@@ -369,4 +374,10 @@ public sealed class ComplianceTests
     }
 
     private sealed record IdResponse(bool Success, int Data);
+
+    // POST /complaints tra ve mot object thay vi mot so ke tu MLACP-287: khach vang lai can
+    // ma tra cuu de biet ket qua khieu nai cua minh, vi ho khong dang nhap duoc de xem
+    // /complaints/my va he thong khong co SMS bao ket qua.
+    private sealed record ComplaintCreatedResponse(bool Success, ComplaintCreatedData Data);
+    private sealed record ComplaintCreatedData(int Id, string? LookupReference);
 }

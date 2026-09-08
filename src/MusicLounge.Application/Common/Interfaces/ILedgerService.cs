@@ -29,4 +29,5 @@ public static class LedgerReferenceTypes
     public const string Donation = "donation";
     public const string Refund = "refund";
     public const string Subscription = "subscription";
+    public const string FnbOrder = "fnb_order";
 }

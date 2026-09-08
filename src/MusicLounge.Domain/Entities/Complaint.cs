@@ -18,9 +18,19 @@ public sealed class Complaint : Common.BaseEntity<int>
     public ComplaintResolvedAction? ResolvedAction { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+
+    // Ma tra cuu cho nguoi khieu nai KHONG co tai khoan. Truoc day khach vang lai gui khieu nai xong
+    // chi nhan ve mot so id, va khong co cach nao tra ket qua: GET /complaints/my doi dang nhap,
+    // khong co endpoint lookup nao, va khong co SMS bao ket qua (ISmsService chi co dung mot phuong
+    // thuc, la gui ma xac minh SDT). Ho gui khieu nai vao khoang khong.
+    //
+    // Chuoi ngau nhien khong doan duoc, KHONG phai id tang dan — neu khong thi bat ky ai cung do
+    // duoc khieu nai cua nguoi khac bang cach dem tu 1.
+    public string? LookupReference { get; set; }
     // NĐ 85/2021: platform must be the focal point for receiving/resolving consumer complaints —
     // the decree doesn't specify a numeric deadline itself (unlike DSAR's day-based windows), so
-    // this is a reasonable operational target (system_config complaint_sla_hours, Admin-tunable),
+    // this is a reasonable operational target (system_config complaint_sla_hours; editable only
+    // via direct SQL today — there is no Admin write path),
     // not a literal statutory number. Set at creation. Mirrors EventModeration.SlaDeadline, which
     // this codebase already has a working breach-alert pattern for.
     public DateTimeOffset? SlaDeadline { get; set; }

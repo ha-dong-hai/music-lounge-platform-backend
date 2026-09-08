@@ -1,4 +1,5 @@
-using FluentValidation;
+﻿using FluentValidation;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -28,6 +29,15 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
             .When(x => x.ScheduledEnd.HasValue)
             .WithMessage("Thời gian kết thúc phải sau thời gian bắt đầu.");
 
+        // D13: truong nay ton tai tren entity tu lau nhung chua tung duoc handler nao ghi/doc —
+        // Owner khong co cach nao thuc su dat "gio dong ban ve", va HoldTicket/SellWalkInTicket
+        // cung chua tung enforce no. Rang buoc <= ScheduledStart: dong ban sau khi show da bat dau
+        // dien khong co y nghia.
+        RuleFor(x => x.TicketSaleClosesAt)
+            .LessThanOrEqualTo(x => x.ScheduledStart)
+            .When(x => x.TicketSaleClosesAt.HasValue)
+            .WithMessage("Thời điểm đóng bán vé phải trước hoặc bằng thời gian bắt đầu show.");
+
         RuleForEach(x => x.Performances).ChildRules(p =>
         {
             p.RuleFor(x => x.PerformerId).GreaterThan(0).When(x => x.PerformerId.HasValue);
@@ -54,10 +64,31 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
             .MustAsync(async (id, ct) => await uow.Repository<MusicGenre, int>().AnyAsync(g => g.Id == id, ct))
             .WithMessage("GenreId không tồn tại.");
 
+        // MLACP-43 DONE WHEN: phan loai AI phai du ca 3 (the loai nhac, dong nhac, khong gian) -
+        // ban local master chi co GenreIds, thieu Mood/Atmosphere.
+        RuleForEach(x => x.MoodIds)
+            .MustAsync(async (id, ct) => await uow.Repository<Mood, int>().AnyAsync(m => m.Id == id, ct))
+            .WithMessage("MoodId không tồn tại.");
+
+        RuleForEach(x => x.AtmosphereIds)
+            .MustAsync(async (id, ct) => await uow.Repository<VenueAtmosphere, int>().AnyAsync(a => a.Id == id, ct))
+            .WithMessage("AtmosphereId không tồn tại.");
+
         // A negative quota isn't rejected anywhere downstream — HoldTicket/SellWalkInTicket only
         // check `reserved + quantity > quota`, which a negative quota satisfies unconditionally,
         // silently blocking every sale on that channel instead of failing cleanly at creation time.
         RuleFor(x => x.OfflineQuota).GreaterThanOrEqualTo(0).When(x => x.OfflineQuota.HasValue);
         RuleFor(x => x.OnlineQuota).GreaterThanOrEqualTo(0).When(x => x.OnlineQuota.HasValue);
+
+        // MLACP-288. The rule lives in TicketRefundPolicy, not here: it is the same class that
+        // resolves the policy for the show page and for CancelTicket, so a rule it does not know
+        // about is a rule the disclosure text can end up contradicting.
+        RuleFor(x => x)
+            .Must(x => TicketRefundPolicy.Validate(
+                x.CancellationAllowed ?? true, x.RefundPercentage, x.CancellationDeadlineHours,
+                x.ScheduledStart, DateTimeOffset.UtcNow) is null)
+            .WithMessage(x => TicketRefundPolicy.Validate(
+                x.CancellationAllowed ?? true, x.RefundPercentage, x.CancellationDeadlineHours,
+                x.ScheduledStart, DateTimeOffset.UtcNow)!);
     }
 }

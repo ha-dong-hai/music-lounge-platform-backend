@@ -39,7 +39,10 @@ internal sealed class GetLoungeShowDetailQueryHandler
         // venue B's Draft show (unpublished price/lineup/description). Admin still bypasses fully;
         // Staff/Owner must actually operate THIS show's venue, matching the pattern already used
         // for livestream credentials/detail.
-        if (show.Status == LoungeShowStatus.Draft
+        // MLACP-60 DONE WHEN: Pending (da nop duyet, cho Admin, chua cong khai) cung phai 404 cho
+        // nguoi ngoai — truoc day chi chan Draft, Pending bi lot ra cong khai y het gap da fix o
+        // SearchAsync (MLACP-58).
+        if (show.Status is LoungeShowStatus.Draft or LoungeShowStatus.Pending
             && !VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId))
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
@@ -77,6 +80,15 @@ internal sealed class GetLoungeShowDetailQueryHandler
             .ToList();
         var soldAndHeld = await _showRepo.GetSoldAndHeldCountsByPriceAsync(priceIds, ct);
 
-        return show.ToDetailDto(wishlisted, userHasTicket, userHasRated, soldAndHeld);
+        // MusicLounge entity khong co nav collection toi LoungeGalleryImage — truy van rieng thay
+        // vi Include tu WithDetails().
+        var galleryImages = await _uow.Repository<LoungeGalleryImage, int>()
+            .FindAsync(g => g.LoungeId == show.LoungeId, ct);
+        var galleryDtos = galleryImages
+            .OrderBy(g => g.OrderIndex)
+            .Select(g => new LoungeGalleryImageDto(g.Id, g.ImageUrl, g.Caption))
+            .ToList();
+
+        return show.ToDetailDto(wishlisted, userHasTicket, userHasRated, soldAndHeld, galleryDtos);
     }
 }

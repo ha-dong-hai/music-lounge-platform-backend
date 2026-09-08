@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.FnbMenus.Commands.CreateFnbMenu;
+using MusicLounge.Application.FnbMenus.Commands.DeleteFnbMenu;
 using MusicLounge.Application.FnbMenus.Commands.UpdateFnbMenu;
 using MusicLounge.Application.FnbMenus.DTOs;
 using MusicLounge.Application.FnbMenus.Queries.GetFnbMenus;
@@ -54,6 +55,17 @@ public sealed class FnbMenusController : ControllerBase
     {
         await _sender.Send(new UpdateFnbMenuCommand(
             id, body.Name, body.Description, body.IsActive, body.DisplayOrder), ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new DeleteFnbMenuCommand(id), ct);
         return NoContent();
     }
 }

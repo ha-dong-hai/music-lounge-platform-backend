@@ -189,11 +189,105 @@ public sealed class TicketBookingTests
             "3+3=6 vượt sức chứa thật (5) của zone dùng chung, dù mỗi tier/price riêng lẻ vẫn còn quota");
     }
 
+    /// <summary>
+    /// D13 — LoungeShow.TicketSaleClosesAt existed on the entity since long ago but no handler ever
+    /// read or wrote it (dead field, MLACP-256 finding). An Owner setting it must actually stop both
+    /// sale channels once the deadline passes, not just silently be ignored.
+    /// </summary>
+    [Fact]
+    public async Task Hold_AfterTicketSaleClosesAt_Returns422()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var show = new MusicLounge.Domain.Entities.LoungeShow
+        {
+            LoungeId = SeedHelper.LoungeId,
+            Name = $"SaleClosedTestShow-{Guid.NewGuid():N}",
+            Description = "Integration test show",
+            Format = LoungeShowFormat.Offline,
+            Status = LoungeShowStatus.Published,
+            ScheduledStart = DateTimeOffset.UtcNow.AddDays(5),
+            TicketSaleClosesAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+        };
+        db.LoungeShows.Add(show);
+        await db.SaveChangesAsync();
+
+        var tier = new TicketTier
+        {
+            LoungeShowId = show.Id, Name = "Standard", AccessType = AccessType.Physical,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Add(tier);
+        await db.SaveChangesAsync();
+
+        var price = new TicketPrice
+        {
+            TierId = tier.Id, Name = "Standard", Price = 100_000m,
+            PurchaseChannel = PurchaseChannel.Both,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(4)
+        };
+        db.Add(price);
+        await db.SaveChangesAsync();
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = price.Id, Quantity = 1 });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "show đã qua TicketSaleClosesAt — dù đợt giá (SaleStart/SaleEnd) vẫn còn hiệu lực, show vẫn phải đóng bán");
+    }
+
+    [Fact]
+    public async Task SellWalkIn_AfterTicketSaleClosesAt_Returns422()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var show = new MusicLounge.Domain.Entities.LoungeShow
+        {
+            LoungeId = SeedHelper.LoungeId,
+            Name = $"SaleClosedTestShow-{Guid.NewGuid():N}",
+            Description = "Integration test show",
+            Format = LoungeShowFormat.Offline,
+            Status = LoungeShowStatus.Published,
+            ScheduledStart = DateTimeOffset.UtcNow.AddDays(5),
+            TicketSaleClosesAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+        };
+        db.LoungeShows.Add(show);
+        await db.SaveChangesAsync();
+
+        var tier = new TicketTier
+        {
+            LoungeShowId = show.Id, Name = "Standard", AccessType = AccessType.Physical,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Add(tier);
+        await db.SaveChangesAsync();
+
+        var price = new TicketPrice
+        {
+            TierId = tier.Id, Name = "Standard", Price = 100_000m,
+            PurchaseChannel = PurchaseChannel.Offline,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(4)
+        };
+        db.Add(price);
+        await db.SaveChangesAsync();
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
+
+        var res = await client.PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = price.Id, Quantity = 1 });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "kênh bán tại quầy cũng phải bị chặn bởi cùng mốc đóng bán của show, không có ngoại lệ");
+    }
+
     // ─── W26 Cancel ticket ────────────────────────────────────────────────────
 
     /// <summary>Creates a Confirmed ticket (with an attached Payment) for AudienceId on a fresh show.</summary>
     private async Task<Guid> CreateConfirmedTicketWithPaymentAsync(
-        bool cancellationAllowed = true, decimal? refundPercentage = null)
+        bool cancellationAllowed = true, decimal? refundPercentage = null,
+        LoungeShowStatus showStatus = LoungeShowStatus.Published)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -204,7 +298,7 @@ public sealed class TicketBookingTests
             Name = $"CancelTestShow-{Guid.NewGuid():N}",
             Description = "Integration test show",
             Format = LoungeShowFormat.Offline,
-            Status = LoungeShowStatus.Published,
+            Status = showStatus,
             ScheduledStart = DateTimeOffset.UtcNow.AddDays(5),
             CancellationAllowed = cancellationAllowed,
             RefundPercentage = refundPercentage
@@ -272,6 +366,26 @@ public sealed class TicketBookingTests
         body.Should().Contain("\"success\":true");
     }
 
+    /// <summary>MLACP-261: RefundRequest was BaseEntity-only (no CreatedBy/UpdatedAt/UpdatedBy) —
+    /// converted to AuditableEntity, same D1 pattern as BankAccount/SubscriptionPackage/Taxonomy.</summary>
+    [Fact]
+    public async Task CancelTicket_StampsRefundRequestCreatedByWithBuyer()
+    {
+        var ticketId = await CreateConfirmedTicketWithPaymentAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var refundId = (await res.Content.ReadFromJsonAsync<IdResponse>())!.Data;
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var refund = await db.Set<RefundRequest>().FindAsync(refundId);
+        refund!.CreatedBy.Should().Be(SeedHelper.AudienceId);
+    }
+
+    private sealed record IdResponse(bool Success, int Data);
+
     [Fact]
     public async Task CancelTicket_ByNonBuyer_Returns403()
     {
@@ -292,6 +406,43 @@ public sealed class TicketBookingTests
         var res = await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    /// <summary>
+    /// MLACP-257 finding: CancellationDeadlineHours is optional — when unset, nothing previously
+    /// stopped a Confirmed ticket from being "cancelled" (and refunded) for a show that had already
+    /// started or fully ended, as long as the buyer never checked in. Real refund-fraud vector: buy,
+    /// no-show, wait until after the event, then cancel for a refund.
+    /// </summary>
+    [Fact]
+    public async Task CancelTicket_ShowAlreadyEnded_Returns422()
+    {
+        var ticketId = await CreateConfirmedTicketWithPaymentAsync(showStatus: LoungeShowStatus.Ended);
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "dịch vụ đã được cung cấp — không còn cơ sở để hoàn tiền dù CancellationDeadlineHours chưa từng được Owner đặt");
+    }
+
+    /// <summary>
+    /// Deliberately NOT blocked, unlike Ended above: an Ongoing show (esp. livestream format) does
+    /// not by itself mean the buyer consumed the ticket — see
+    /// TicketTransferTests.CancelTransfer_BySender_ClearsPendingAndAllowsNormalCancelAgain, which
+    /// already asserts this same scenario (Confirmed ticket, show Ongoing) succeeds. Actual
+    /// consumption is tracked separately via LivestreamDetail.FirstAccessedAt / PhysicalDetail.
+    /// CheckedInAt, matching InitiateTicketTransferCommandHandler's own gating logic.
+    /// </summary>
+    [Fact]
+    public async Task CancelTicket_ShowOngoing_NotYetConsumed_Returns200()
+    {
+        var ticketId = await CreateConfirmedTicketWithPaymentAsync(showStatus: LoungeShowStatus.Ongoing);
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     private async Task<Guid> CreatePendingTicketWithPaymentAsync()

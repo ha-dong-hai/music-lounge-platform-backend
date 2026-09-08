@@ -5,6 +5,7 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Complaints.Commands.ResolveComplaint;
 
@@ -56,6 +57,19 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
 
             await TakeDownShowAsync(complaint.TargetId, ct);
         }
+
+        // MLACP-198: "phạt venue" phải thực sự tạo VenuePenalty — truoc day IssueWarning chi la 1
+        // nhan luu tren Complaint, khong co hau qua that nao (venue van hoat dong binh thuong).
+        if (newStatus == ComplaintStatus.Resolved && resolvedAction == ComplaintResolvedAction.IssueWarning)
+            await IssueVenuePenaltyAsync(complaint, ct);
+
+        // Cung dung lop loi ma MLACP-198 da sua cho IssueWarning, con sot lai o Refund: Admin chon
+        // "Refund", he thong luu nhan do len Complaint, gui thong bao "Khieu nai cua ban da duoc
+        // xu ly" — va KHONG CO DONG NAO CHUYEN. Nguoi khieu nai tin la sap duoc hoan tien, trong
+        // khi complaint da dong va khong mo lai duoc (guard o dau handler chan resolve lan hai).
+        // Te hon la khong lam gi, vi no tao ra ky vong sai.
+        if (newStatus == ComplaintStatus.Resolved && resolvedAction == ComplaintResolvedAction.Refund)
+            await RaiseRefundRequestAsync(complaint, ct);
 
         complaint.Status = newStatus;
         complaint.AdminId = _currentUser.UserId;
@@ -130,7 +144,6 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
         var refundRepo = _uow.Repository<RefundRequest, int>();
-        var now = DateTimeOffset.UtcNow;
 
         foreach (var ticket in confirmedTickets)
         {
@@ -146,8 +159,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 Reason = "Nội dung vi phạm bị gỡ bỏ theo khiếu nại — hoàn 100% tiền vé",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
-                Status = RefundRequestStatus.Pending,
-                CreatedAt = now
+                Status = RefundRequestStatus.Pending
             });
 
             if (ticket.BuyerId is int buyerId)
@@ -161,5 +173,150 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                     referenceId: show.Id.ToString(),
                     ct: ct);
         }
+    }
+
+    // Mirrors IssuePenaltyCommandHandler's Warning path (immediate effect, no notice delay) rather
+    // than composing it via ISender.Send — same nested-transaction restriction as TakeDownShowAsync.
+    private async Task IssueVenuePenaltyAsync(Complaint complaint, CancellationToken ct)
+    {
+        var loungeId = await ResolveLoungeIdAsync(complaint, ct)
+            ?? throw new DomainException(
+                "Không thể xác định venue để xử phạt từ khiếu nại này (TargetType không liên kết được tới 1 venue cụ thể).");
+
+        var loungeRepo = _uow.Repository<MusicLoungeEntity, int>();
+        var lounge = await loungeRepo.GetByIdAsync(loungeId, ct)
+            ?? throw new NotFoundException(nameof(MusicLoungeEntity), loungeId);
+
+        var now = DateTimeOffset.UtcNow;
+        var penalty = new VenuePenalty
+        {
+            LoungeId = loungeId,
+            PenaltyType = PenaltyType.Warning,
+            Reason = $"Xử lý theo khiếu nại #{complaint.Id}: {complaint.Description}",
+            IssuedBy = _currentUser.UserId,
+            IssuedAt = now,
+            EffectiveAt = now,
+            Status = PenaltyStatus.Active
+        };
+        _uow.Repository<VenuePenalty, int>().Add(penalty);
+
+        lounge.Status = LoungeStatus.Warned;
+        loungeRepo.Update(lounge);
+
+        await _notifications.NotifyAsync(
+            lounge.OwnerId,
+            NotificationType.PenaltyIssued,
+            "Phòng trà bị cảnh cáo",
+            $"\"{lounge.Name}\" nhận cảnh cáo theo khiếu nại #{complaint.Id}: {complaint.Description}",
+            referenceType: "venue_penalty",
+            referenceId: penalty.Id.ToString(),
+            ct: ct);
+    }
+
+    /// <summary>
+    /// Turns a "Refund" decision into an actual pending RefundRequest, which an Admin then pushes
+    /// through ProcessRefundRequest (the only path that calls VNPay for real and writes the
+    /// reversing ledger journal). Deliberately does NOT execute the refund inline: this handler is
+    /// already inside TransactionBehavior's transaction, and ProcessRefundRequest makes an outbound
+    /// HTTP call to VNPay — holding a DB transaction open across that is exactly the pattern this
+    /// codebase avoids elsewhere. Creating the request is also what every other refund-producing
+    /// path here does (CancelLoungeShow, TakeDownShow, CancelTicket), so the money leaves through
+    /// one audited chokepoint instead of several.
+    /// </summary>
+    private async Task RaiseRefundRequestAsync(Complaint complaint, CancellationToken ct)
+    {
+        // Refund and TakeDownContent are NOT two names for the same thing, and the difference is
+        // who gets their money back:
+        //   TakeDownContent — the show itself is the problem, so it is cancelled and EVERY confirmed
+        //     ticket holder is refunded 100%.
+        //   Refund          — this one complainant was wronged; they get their money back and the
+        //     show carries on for everyone else.
+        // That second reading is the only one TakeDownContent does not already cover, so it is what
+        // this implements.
+        //
+        // Not supported, deliberately:
+        //   "ticket"   — Ticket.Id is a Guid while Complaint.TargetId is an int, so a ticket
+        //                complaint can never name a real ticket (pre-existing schema mismatch, see
+        //                CreateComplaintCommandValidator.TargetExistsAsync). Changing TargetId's
+        //                type is a breaking FE contract change, out of scope here.
+        //   "donation" — donations never create a Payment row (CreateDonation stores only a
+        //                GatewayRef) and RefundRequest.PaymentId is required, so no RefundRequest
+        //                can exist for one. The D17 remedy for a donation the Owner never forwarded
+        //                is IssueWarning -> VenuePenalty: the owner-to-performer leg is a bank
+        //                transfer made outside the platform, so there is nothing here to reverse.
+        if (complaint.TargetType != "show")
+            throw new DomainException(
+                "Hành động \"Refund\" chỉ áp dụng cho khiếu nại về một show (TargetType = \"show\") — " +
+                "hoàn tiền vé của chính người khiếu nại, show vẫn diễn ra bình thường. " +
+                "Muốn hủy show và hoàn 100% cho mọi khán giả thì dùng \"TakeDownContent\". " +
+                "Với khiếu nại donate chưa trả nghệ sĩ, dùng \"IssueWarning\" để xử phạt venue.");
+
+        if (complaint.ComplainantUserId is not int complainantId)
+            throw new DomainException(
+                "Khiếu nại này do khách vãng lai gửi (không có tài khoản), nên không xác định được " +
+                "vé của ai để hoàn. Hãy liên hệ người khiếu nại theo số điện thoại đã cung cấp.");
+
+        var ticketRepo = _uow.Repository<Ticket, Guid>();
+        var tickets = await ticketRepo.FindAsync(
+            t => t.ShowId == complaint.TargetId
+                 && t.BuyerId == complainantId
+                 && t.Status == TicketStatus.Confirmed, ct);
+
+        var refundable = tickets.Where(t => t.PaymentId is not null).ToList();
+        if (refundable.Count == 0)
+            throw new DomainException(
+                "Người khiếu nại không có vé nào đã xác nhận (và có giao dịch thanh toán) cho show này, " +
+                "nên không có gì để hoàn.");
+
+        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var priceIds = refundable.Select(t => t.PriceId).Distinct().ToList();
+        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
+
+        foreach (var ticket in refundable)
+        {
+            // One payment can back several tickets, so skip a payment that already has a refund
+            // waiting rather than stacking a second request against it — ProcessRefundRequest's
+            // own over-refund guard would reject the extra one later anyway, but only after an
+            // Admin had spent a decision on it.
+            var alreadyPending = await refundRepo.AnyAsync(
+                r => r.PaymentId == ticket.PaymentId!.Value && r.Status == RefundRequestStatus.Pending, ct);
+            if (alreadyPending) continue;
+
+            ticket.Status = TicketStatus.Cancelled;
+            ticketRepo.Update(ticket);
+
+            refundRepo.Add(new RefundRequest
+            {
+                PaymentId = ticket.PaymentId!.Value,
+                RequestedBy = ticket.BuyerId,
+                Reason = $"Xử lý theo khiếu nại #{complaint.Id}: {complaint.Description}",
+                AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
+                RefundPercentage = 100m,
+                Status = RefundRequestStatus.Pending
+            });
+        }
+    }
+
+    private async Task<int?> ResolveLoungeIdAsync(Complaint complaint, CancellationToken ct) =>
+        complaint.TargetType switch
+        {
+            "venue" => complaint.TargetId,
+            "show" => (await _uow.Repository<LoungeShow, int>().GetByIdAsync(complaint.TargetId, ct))?.LoungeId,
+            "livestream" => (await _livestreamRepo.GetByIdAsync(complaint.TargetId, ct)) is { } livestream
+                ? (await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct))?.LoungeId
+                : null,
+            "donation" => await ResolveLoungeIdFromDonationAsync(complaint.TargetId, ct),
+            _ => null
+        };
+
+    private async Task<int?> ResolveLoungeIdFromDonationAsync(int donationId, CancellationToken ct)
+    {
+        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(donationId, ct);
+        if (donation is null) return null;
+        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(donation.PerformanceId, ct);
+        if (performance is null) return null;
+        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct);
+        return show?.LoungeId;
     }
 }

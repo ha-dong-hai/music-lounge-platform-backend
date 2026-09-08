@@ -81,6 +81,16 @@ public sealed class ApplyDuePenaltiesJob
                 }
             }
 
+            // MLACP-260: commit THIS penalty's own AppliedAt+ledger-reversal before moving to the
+            // next one, not once at the end of the whole batch — matches SettlementReleaseJob's
+            // established pattern for the same reason. With a single trailing SaveChangesAsync, one
+            // poison-pill penalty throwing mid-loop would roll back every EARLIER penalty in this run
+            // too (AppliedAt never persisted for them), even though they were already fully
+            // processed — not a double-write risk (AppliedAt==null re-query means they'd just be
+            // reprocessed from scratch next run), but needlessly fragile and inconsistent with the
+            // sibling job's own documented reasoning for doing this per-item.
+            await _ctx.SaveChangesAsync(ct);
+
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.PenaltyIssued,
@@ -89,9 +99,9 @@ public sealed class ApplyDuePenaltiesJob
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);
-        }
 
-        await _ctx.SaveChangesAsync(ct);
+            await _ctx.SaveChangesAsync(ct);
+        }
     }
 
     private async Task RefundRemainingSubscriptionAsync(

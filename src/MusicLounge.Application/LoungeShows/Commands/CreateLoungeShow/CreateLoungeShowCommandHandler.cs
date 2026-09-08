@@ -1,4 +1,5 @@
-using MediatR;
+﻿using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -23,7 +24,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền tạo event cho venue này.");
 
         // D14: can co goi subscription Active tai thoi diem tao event (khong phai luc publish);
@@ -50,9 +51,15 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
             Status = LoungeShowStatus.Draft,
             ScheduledStart = request.ScheduledStart,
             ScheduledEnd = request.ScheduledEnd,
+            TicketSaleClosesAt = request.TicketSaleClosesAt,
             CategoryId = request.CategoryId,
             OfflineQuota = request.OfflineQuota,
-            OnlineQuota = request.OnlineQuota
+            OnlineQuota = request.OnlineQuota,
+            // Null means "leave the platform default in place", which is what every show created
+            // before MLACP-288 runs on: cancellable, 100%, no deadline.
+            CancellationAllowed = request.CancellationAllowed ?? true,
+            RefundPercentage = request.RefundPercentage,
+            CancellationDeadlineHours = request.CancellationDeadlineHours
         };
 
         _uow.Repository<LoungeShow, int>().Add(show);
@@ -100,6 +107,24 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
             {
                 LoungeShowId = show.Id,
                 GenreId = genreId
+            });
+        }
+
+        foreach (var moodId in request.MoodIds.Distinct())
+        {
+            _uow.Repository<LoungeShowMood, int>().Add(new LoungeShowMood
+            {
+                LoungeShowId = show.Id,
+                MoodId = moodId
+            });
+        }
+
+        foreach (var atmosphereId in request.AtmosphereIds.Distinct())
+        {
+            _uow.Repository<LoungeShowAtmosphere, int>().Add(new LoungeShowAtmosphere
+            {
+                LoungeShowId = show.Id,
+                AtmosphereId = atmosphereId
             });
         }
 

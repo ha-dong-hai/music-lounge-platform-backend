@@ -1,4 +1,5 @@
 using MusicLounge.Application.Common.Abstractions;
+using MusicLounge.Application.Complaints.DTOs;
 
 namespace MusicLounge.Application.Complaints.Commands.CreateComplaint;
 
@@ -9,4 +10,4 @@ public sealed record CreateComplaintCommand(
     string Description,
     string? EvidenceUrls,
     string? ContactPhone
-) : ICommand<int>;
+) : ICommand<ComplaintCreatedDto>;

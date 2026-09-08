@@ -1,4 +1,4 @@
-using MediatR;
+using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.BankAccounts.Commands.UpdateBankAccount;
 
@@ -7,4 +7,4 @@ public sealed record UpdateBankAccountCommand(
     string BankName,
     string AccountNumber,
     string AccountHolder,
-    bool IsDefault) : IRequest<Unit>;
+    bool IsDefault) : ICommand;

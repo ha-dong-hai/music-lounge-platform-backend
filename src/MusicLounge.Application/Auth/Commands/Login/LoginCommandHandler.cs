@@ -15,6 +15,16 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
     // side-channel) cho phep do email da dang ky hay chua (OWASP ASVS V2.1 - account enumeration).
     private static string? _dummyHash;
 
+    // MOT thong bao duy nhat cho ca "sai mat khau", "email khong ton tai" va "dang bi khoa".
+    // Truoc day nhanh lockout tra ve mot cau rieng ("tai khoan tam thoi bi khoa..."), va do la mot
+    // account-enumeration oracle hoan chinh: gui 5 mat khau sai cho mot email: neu tai khoan CO
+    // that thi lan thu 6 doi thong bao, neu KHONG co that thi thong bao khong bao gio doi. No vo
+    // hieu hoa dung lop chong timing (_dummyHash) ma chinh file nay dung len. Khai bao thanh hang
+    // so dung chung de hai nhanh khong the troi khoi nhau khi ai do sua mot ben.
+    private const string InvalidCredentialsMessage =
+        "Email hoặc mật khẩu không đúng. Nếu bạn đã thử sai nhiều lần, tài khoản có thể đang tạm khoá — " +
+        "hãy dùng \"Quên mật khẩu\" để đặt lại và đăng nhập lại ngay.";
+
     private readonly IUnitOfWork _uow;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
@@ -46,10 +56,12 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
             var lockoutRemaining = await _authAttemptTracker.GetLockoutRemainingAsync(user.Id, ct);
             if (lockoutRemaining is not null)
             {
+                // Phut con lai van duoc ghi log cho operator, nhung KHONG duoc noi ra response —
+                // do chinh la manh vun cho phep phan biet tai khoan co that voi tai khoan khong.
                 _logger.LogWarning(
-                    "Login rejected — account locked: UserId={UserId} at {At}", user.Id, DateTimeOffset.UtcNow);
-                throw new UnauthorizedException(
-                    $"Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau {Math.Ceiling(lockoutRemaining.Value.TotalMinutes)} phút.");
+                    "Login rejected — account locked: UserId={UserId} RemainingMinutes={Remaining} at {At}",
+                    user.Id, Math.Ceiling(lockoutRemaining.Value.TotalMinutes), DateTimeOffset.UtcNow);
+                throw new UnauthorizedException(InvalidCredentialsMessage);
             }
         }
 
@@ -84,7 +96,7 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
             });
             await _uow.SaveChangesAsync(ct);
 
-            throw new UnauthorizedException("Email hoặc mật khẩu không đúng.");
+            throw new UnauthorizedException(InvalidCredentialsMessage);
         }
 
         await _authAttemptTracker.ResetAsync(user.Id, ct);

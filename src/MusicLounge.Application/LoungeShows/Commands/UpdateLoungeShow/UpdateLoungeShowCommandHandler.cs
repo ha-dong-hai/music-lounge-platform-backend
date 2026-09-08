@@ -1,4 +1,5 @@
-using MediatR;
+﻿using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -27,7 +28,7 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền sửa event này.");
 
         if (show.Status != LoungeShowStatus.Draft)
@@ -37,9 +38,18 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
         show.Description = request.Description;
         show.ScheduledStart = request.ScheduledStart;
         show.ScheduledEnd = request.ScheduledEnd;
+        show.TicketSaleClosesAt = request.TicketSaleClosesAt;
         show.CategoryId = request.CategoryId;
         show.OfflineQuota = request.OfflineQuota;
         show.OnlineQuota = request.OnlineQuota;
+        // Replace semantics, like every other field on this PUT: omitting a policy field resets it
+        // to the platform default rather than keeping whatever was there. Safe to introduce that
+        // way round because the Draft guard above means no ticket has ever been sold against the
+        // policy being overwritten — once the show is Published its policy is frozen, which is what
+        // makes the terms shown at purchase time the terms enforced at cancellation time.
+        show.CancellationAllowed = request.CancellationAllowed ?? true;
+        show.RefundPercentage = request.RefundPercentage;
+        show.CancellationDeadlineHours = request.CancellationDeadlineHours;
 
         showRepo.Update(show);
         await _uow.SaveChangesAsync(ct);

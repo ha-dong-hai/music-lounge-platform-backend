@@ -10,5 +10,6 @@ public enum BehaviourAction
     WatchLivestream,
     ShareEvent,
     ClickTicket,
-    ViewAfterWishlist
+    ViewAfterWishlist,
+    PurchaseTicket      // MLACP-133: ve da duoc xac nhan thanh toan thanh cong
 }

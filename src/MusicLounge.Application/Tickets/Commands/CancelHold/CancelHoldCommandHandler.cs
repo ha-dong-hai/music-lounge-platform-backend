@@ -5,13 +5,19 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Tickets.Commands.CancelHold;
 
+/// <summary>
+/// Bỏ giữ chỗ vé khi người mua đổi ý. Trước đây chỉ có đường tạo giữ chỗ, không có đường bỏ — nên
+/// ghế bị treo cho tới khi job dọn hết hạn chạy, dù người mua đã rời đi từ lâu và người khác đang
+/// muốn mua đúng ghế đó.
+/// </summary>
 internal sealed class CancelHoldCommandHandler : IRequestHandler<CancelHoldCommand, bool>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IAsyncKeyedLock _lock;
 
-    public CancelHoldCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
+    public CancelHoldCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
@@ -20,9 +26,9 @@ internal sealed class CancelHoldCommandHandler : IRequestHandler<CancelHoldComma
 
     public async Task<bool> Handle(CancelHoldCommand request, CancellationToken ct)
     {
-        // Same key PurchaseTicketCommandHandler locks on — without this, a cancel racing a
-        // concurrent purchase of the same hold could delete the TicketHold row out from under an
-        // in-flight purchase (or vice versa), instead of one of the two cleanly failing first.
+        // Cùng khoá mà PurchaseTicketCommandHandler dùng. Không có nó, một lượt huỷ chạy song song
+        // với một lượt mua trên cùng giữ chỗ có thể xoá bản ghi TicketHold ngay dưới chân lượt mua
+        // đang dở, thay vì một trong hai thất bại sạch sẽ trước.
         await using var _ = await _lock.AcquireAsync($"purchase-hold:{request.HoldId}", ct);
 
         var holdRepo = _uow.Repository<TicketHold, int>();
@@ -32,9 +38,9 @@ internal sealed class CancelHoldCommandHandler : IRequestHandler<CancelHoldComma
         if (hold.UserId != _currentUser.UserId)
             throw new ForbiddenException("Vé giữ chỗ này không thuộc về bạn.");
 
-        // A hold already spent by PurchaseTicketCommandHandler (Payment + Pending tickets already
-        // created) must not be silently deleted — it was never checked before, so a stale client
-        // retry after a successful purchase could remove the hold record backing a real payment.
+        // Giữ chỗ đã được PurchaseTicketCommandHandler tiêu (Payment và vé Pending đã tồn tại) thì
+        // không được xoá âm thầm: một lần bấm lại của client sau khi mua thành công sẽ xoá mất bản
+        // ghi giữ chỗ đứng sau một khoản thanh toán thật.
         if (hold.IsReleased)
             throw new ConflictException("Vé giữ chỗ này đã được dùng để mua vé, không thể huỷ.");
 

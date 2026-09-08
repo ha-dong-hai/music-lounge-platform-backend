@@ -41,8 +41,7 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
 
         // Two Admins reviewing the same pending show within the same instant is the failure this
         // guards against: without a lock, both can read AdminDecision == null before either
-        // commits, and both approve/reject — one decision silently overwrites the other's
-        // notifications/side-effects (followers notified of a status the show didn't end up in).
+        // commits, and both approve/reject — one decision silently overwrites the other's.
         await using var _ = await _lock.AcquireAsync($"moderation:show:{request.ShowId}", ct);
 
         var showRepo = _uow.Repository<LoungeShow, int>();
@@ -65,7 +64,8 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
         moderation.ReviewedAt = DateTimeOffset.UtcNow;
         _moderationRepo.Update(moderation);
 
-        // Approved → Published (visible/purchasable). Rejected → back to Draft so Owner can fix & resubmit.
+        // Approved → Published (visible/purchasable). Rejected → back to Draft so Owner can fix &
+        // resubmit, thay vi Cancelled (ngo cut, Owner phai tao event moi tu dau).
         show.Status = decision == ModerationDecision.Approved
             ? LoungeShowStatus.Published
             : LoungeShowStatus.Draft;
@@ -80,6 +80,7 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
 
         showRepo.Update(show);
 
+        // MLACP-79: Owner phai duoc bao ngay ket qua duyet, ca 2 chieu — khong chi khi Approved.
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
         if (lounge is not null)
         {
@@ -89,7 +90,7 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
                 decision == ModerationDecision.Approved ? "Chương trình đã được duyệt" : "Chương trình bị từ chối",
                 decision == ModerationDecision.Approved
                     ? $"\"{show.Name}\" đã được duyệt và xuất bản."
-                    : $"\"{show.Name}\" bị từ chối duyệt. Lý do: {request.ReviewNote ?? "không có ghi chú"}.",
+                    : $"\"{show.Name}\" bị từ chối duyệt. Lý do: {request.ReviewNote}.",
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

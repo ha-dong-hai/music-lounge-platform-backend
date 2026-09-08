@@ -1,4 +1,6 @@
-using MediatR;
+﻿using MediatR;
+using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -7,6 +9,10 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.LoungeShows.Commands.SetPlaybackMode;
 
+/// <summary>
+/// LoungeShow.PlaybackMode được trả ra trong DTO chi tiết buổi diễn để client biết dựng trình phát
+/// 2D hay 3D, nhưng không endpoint nào đặt được nó — mọi buổi diễn vì thế nằm im ở giá trị mặc định.
+/// </summary>
 internal sealed class SetPlaybackModeCommandHandler : IRequestHandler<SetPlaybackModeCommand, Unit>
 {
     private readonly IUnitOfWork _uow;
@@ -27,16 +33,21 @@ internal sealed class SetPlaybackModeCommandHandler : IRequestHandler<SetPlaybac
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
-            throw new ForbiddenException("Bạn không có quyền sửa event này.");
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
+            throw new ForbiddenException("Bạn không có quyền sửa buổi hòa nhạc này.");
 
-        if (show.Status is LoungeShowStatus.Ended or LoungeShowStatus.Cancelled)
-            throw new DomainException("Không thể đổi hình thức phát cho show đã kết thúc/hủy.");
+        // Cùng khái niệm trạng thái kết thúc mà LoungeShowLifecycle đang giữ cho toàn hệ thống:
+        // buổi diễn đã hủy hoặc đã kết thúc thì không còn gì để đổi cách phát nữa.
+        if (LoungeShowLifecycle.IsTerminal(show.Status))
+            throw new DomainException(
+                "Không thể đổi hình thức phát cho buổi hòa nhạc đã kết thúc hoặc đã hủy.");
 
-        var mode = Enum.Parse<LivestreamPlaybackMode>(request.PlaybackMode);
+        var mode = Enum.Parse<LivestreamPlaybackMode>(request.PlaybackMode, ignoreCase: true);
 
+        // Buổi diễn Offline không có luồng phát nào để dựng 3D lên trên.
         if (mode == LivestreamPlaybackMode.ThreeD && show.Format == LoungeShowFormat.Offline)
-            throw new DomainException("Chỉ show Online hoặc Hybrid mới có thể phát dạng 3D.");
+            throw new DomainException(
+                "Chỉ buổi hòa nhạc Online hoặc Hybrid mới phát được dạng 3D.");
 
         show.PlaybackMode = mode;
         showRepo.Update(show);

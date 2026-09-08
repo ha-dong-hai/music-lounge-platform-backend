@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Livestreams.DTOs;
@@ -15,23 +16,31 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
     private readonly ICurrentUserService _currentUser;
     private readonly ILivestreamHubService _hubService;
     private readonly ILivestreamRepository _livestreamRepo;
+    private readonly IAsyncKeyedLock _lock;
 
     public AcknowledgeDonationCommandHandler(
         IUnitOfWork uow,
         IDonationRepository donationRepo,
         ICurrentUserService currentUser,
         ILivestreamHubService hubService,
-        ILivestreamRepository livestreamRepo)
+        ILivestreamRepository livestreamRepo,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _donationRepo = donationRepo;
         _currentUser = currentUser;
         _hubService = hubService;
         _livestreamRepo = livestreamRepo;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(AcknowledgeDonationCommand request, CancellationToken ct)
     {
+        // Same key namespace as ConfirmDonationPaidCommandHandler — a double-click here duplicates
+        // the live donation-alert broadcast (not money, but still a real duplicate side effect), and
+        // serializing against chặng-2 avoids any theoretical overlap between the two status writes.
+        await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
+
         var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
@@ -45,7 +54,7 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
         var ownership = await _donationRepo.GetOwnershipInfoAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
-        if (ownership.OwnerId != _currentUser.UserId)
+        if (ownership.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Chỉ Owner của venue này mới có thể xác nhận donation.");
 
         donation.Status = DonationStatus.OwnerReceived;

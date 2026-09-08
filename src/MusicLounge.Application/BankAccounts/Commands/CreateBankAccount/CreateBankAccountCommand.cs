@@ -1,4 +1,4 @@
-using MediatR;
+using MusicLounge.Application.Common.Abstractions;
 using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.BankAccounts.Commands.CreateBankAccount;
@@ -9,4 +9,4 @@ public sealed record CreateBankAccountCommand(
     string BankName,
     string AccountNumber,
     string AccountHolder,
-    bool IsDefault) : IRequest<int>;
+    bool IsDefault) : ICommand<int>;

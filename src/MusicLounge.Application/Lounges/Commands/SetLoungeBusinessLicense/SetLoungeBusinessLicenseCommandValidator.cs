@@ -2,7 +2,8 @@ using FluentValidation;
 
 namespace MusicLounge.Application.Lounges.Commands.SetLoungeBusinessLicense;
 
-public sealed class SetLoungeBusinessLicenseCommandValidator : AbstractValidator<SetLoungeBusinessLicenseCommand>
+public sealed class SetLoungeBusinessLicenseCommandValidator
+    : AbstractValidator<SetLoungeBusinessLicenseCommand>
 {
     public SetLoungeBusinessLicenseCommandValidator()
     {

@@ -12,6 +12,7 @@ using MusicLounge.Application.Donations.Commands.CreateDonation;
 using MusicLounge.Application.Donations.Commands.ProcessDonationPayment;
 using MusicLounge.Application.Donations.DTOs;
 using MusicLounge.Application.Donations.Queries.GetMyDonations;
+using MusicLounge.Application.Donations.Queries.GetOwnerDonationHistory;
 using MusicLounge.Application.Donations.Queries.GetOwnerReceivedDonations;
 using MusicLounge.Application.Donations.Queries.GetPendingDonations;
 using MusicLounge.Application.Donations.Queries.GetPublicDonationHistory;
@@ -117,6 +118,25 @@ public sealed class DonationsController : ControllerBase
     {
         var result = await _sender.Send(new GetOwnerReceivedDonationsQuery(page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<PendingDonationDto>>.Ok(result));
+    }
+
+    /// <summary>Owner — lịch sử tất cả donate đã nhận (OwnerReceived + PerformerPaid) qua mọi sự
+    /// kiện của mọi venue mình sở hữu, phân loại: đã trả nghệ sĩ / còn trong hạn / quá hạn (theo
+    /// system_config donation_hold_days), lọc theo khoảng thời gian tuỳ chọn.</summary>
+    [HttpGet("owner-history")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<OwnerDonationHistorySummaryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetOwnerHistory(
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerDonationHistoryQuery(from, to, page, pageSize), ct);
+        return Ok(ApiResponse<OwnerDonationHistorySummaryDto>.Ok(result));
     }
 
     /// <summary>W21 Chặng 1 — Owner xác nhận đã nhận tiền từ VNPay.</summary>

@@ -11,6 +11,10 @@ internal sealed class RequestPhoneVerificationCommandHandler
     : IRequestHandler<RequestPhoneVerificationCommand, Unit>
 {
     private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(10);
+    // MLACP-272: chong SMS-bombing (moi lan goi ban 1 SMS that) — khoang cach toi thieu giua 2 lan
+    // gui, suy ra tu chinh PhoneVerificationCodeExpiresAt da co san (= lan gui truoc + CodeLifetime)
+    // thay vi them cot DB moi, cung 1 ky thuat da dung o ResendVerificationCodeCommandHandler (email).
+    private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);
 
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -35,6 +39,17 @@ internal sealed class RequestPhoneVerificationCommandHandler
 
         if (user.PhoneVerified)
             throw new ConflictException("Số điện thoại đã được xác thực.");
+
+        // Khac voi ResendVerificationCodeCommandHandler (anti-enumeration, luon tra thanh cong im
+        // lang), day la endpoint da xac thuc — nguoi dung tu yeu cau cho chinh minh, nen tra loi
+        // ro rang thay vi im lang khi dang trong cooldown.
+        var lastSentAt = user.PhoneVerificationCodeExpiresAt?.Subtract(CodeLifetime);
+        if (lastSentAt is not null && DateTimeOffset.UtcNow - lastSentAt.Value < ResendCooldown)
+        {
+            var remaining = ResendCooldown - (DateTimeOffset.UtcNow - lastSentAt.Value);
+            throw new DomainException(
+                $"Vui lòng đợi {Math.Ceiling(remaining.TotalSeconds)} giây trước khi yêu cầu gửi lại mã.");
+        }
 
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 

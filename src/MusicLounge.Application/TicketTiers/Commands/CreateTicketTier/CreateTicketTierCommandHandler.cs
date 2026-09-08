@@ -1,4 +1,6 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -11,11 +13,17 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAsyncKeyedLock _lock;
+    private readonly ISystemConfigService _config;
 
-    public CreateTicketTierCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public CreateTicketTierCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock,
+        ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _config = config;
+        _lock = @lock;
     }
 
     public async Task<int> Handle(CreateTicketTierCommand request, CancellationToken ct)
@@ -26,7 +34,7 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền thiết lập giá vé cho event này.");
 
         if (show.Status != LoungeShowStatus.Draft)
@@ -34,25 +42,32 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
 
         // D14: tong TotalCapacity cac tier cua show khong duoc vuot MaxTicketsPerEvent cua goi
         // subscription dang Active (snapshot tai luc dang ky, khong bi anh huong neu gia goi doi sau).
+        //
+        // MLACP-271: locked by ShowId (same key UpdateTicketTierCommandHandler uses) so this
+        // read-existing-tiers-then-compare-then-write can't race a concurrent Update (or another
+        // concurrent Create) on the same show — see that handler's comment for the full race
+        // scenario this closes.
+        await using var _ = await _lock.AcquireAsync($"ticket-tier-capacity:{request.ShowId}", ct);
+
         if (request.TotalCapacity.HasValue)
         {
             var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
                 s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-            var activeSub = activeStatusSubs
-                .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
-                .OrderByDescending(s => s.StartedAt).FirstOrDefault();
+            // Cap luon ton tai — goi dang hoat dong, hoac muc mien phi. Day la thoi diem venue TAO
+            // MOT CAM KET MOI, dung cho gioi han nen can.
+            var freeTierCap = await _config.GetIntAsync(
+                ConfigKeys.FreeTierMaxTicketsPerEvent,
+                SubscriptionEntitlements.DefaultFreeTierMaxTicketsPerEvent, ct);
+            var cap = SubscriptionEntitlements.ResolveTicketCap(
+                SubscriptionEntitlements.ActivePlan(activeStatusSubs, DateTimeOffset.UtcNow), freeTierCap);
 
-            if (activeSub is not null)
-            {
-                var existingTiers = await _uow.Repository<TicketTier, int>()
-                    .FindAsync(t => t.LoungeShowId == request.ShowId, ct);
-                var totalCapacity = existingTiers.Sum(t => t.TotalCapacity ?? 0) + request.TotalCapacity.Value;
+            var existingTiers = await _uow.Repository<TicketTier, int>()
+                .FindAsync(t => t.LoungeShowId == request.ShowId, ct);
+            var totalCapacity = existingTiers.Sum(t => t.TotalCapacity ?? 0) + request.TotalCapacity.Value;
 
-                if (totalCapacity > activeSub.MaxTicketsPerEventSnapshot)
-                    throw new DomainException(
-                        $"Tổng số vé cho event này ({totalCapacity}) vượt quá giới hạn " +
-                        $"{activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
-            }
+            if (totalCapacity > cap.MaxTicketsPerEvent)
+                throw new DomainException(
+                    cap.ExceededMessage($"Tổng sức chứa các hạng vé của buổi hòa nhạc này ({totalCapacity})"));
         }
 
         var accessType = Enum.Parse<AccessType>(request.AccessType, ignoreCase: true);

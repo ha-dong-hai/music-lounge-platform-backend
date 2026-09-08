@@ -59,7 +59,7 @@ public sealed class AuthTests
         var res = await client.PostAsJsonAsync("/api/v1/auth/register", new
         {
             Email = email,
-            Password = "P@ssword123",
+            Password = "P@ssword123-safe",
             FullName = "Test User",
             Phone = (string?)null,
             AcceptTerms = true
@@ -85,7 +85,7 @@ public sealed class AuthTests
         var payload = new
         {
             Email = email,
-            Password = "P@ssword123",
+            Password = "P@ssword123-safe",
             FullName = "Test User",
             Phone = (string?)null,
             AcceptTerms = true
@@ -97,6 +97,54 @@ public sealed class AuthTests
         res.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
+    /// <summary>Minimum password length: 8 → 10 (audit 2026-09-06) → 15 (audit đợt 1, 2026-09-07).
+    /// 15 is what NIST SP 800-63B rev 4 SHALL-requires when a password is the only authentication
+    /// factor; the widely-quoted 8-character floor applies only to passwords inside a multi-factor
+    /// flow, which MusicLounge does not have.</summary>
+    [Fact]
+    public async Task Register_PasswordUnder15Chars_Returns400()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            Email = UniqueEmail(), Password = "Fourteen chars", FullName = "Test User",
+            Phone = (string?)null, AcceptTerms = true
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Register_Password15CharsExactly_Returns200()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            Email = UniqueEmail(), Password = "Exactly15chars!", FullName = "Test User",
+            Phone = (string?)null, AcceptTerms = true
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    /// <summary>NIST SP 800-63B rev 4 SHOULD-recommends accepting at least 64 characters so long
+    /// passphrases aren't silently truncated or rejected; 65 is where this API draws the line.</summary>
+    [Fact]
+    public async Task Register_PasswordOver64Chars_Returns400()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            Email = UniqueEmail(), Password = new string('a', 65), FullName = "Test User",
+            Phone = (string?)null, AcceptTerms = true
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     // ─── Email verification ─────────────────────────────────────────────────
 
     [Fact]
@@ -104,7 +152,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "P@ssword123");
+        await RegisterAsync(client, email, "P@ssword123-safe");
 
         const string rawCode = "123456";
         using (var scope = _factory.Services.CreateScope())
@@ -135,7 +183,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "P@ssword123");
+        await RegisterAsync(client, email, "P@ssword123-safe");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
             new { Email = email, Code = "000000" });
@@ -152,7 +200,7 @@ public sealed class AuthTests
         // vs "Email hoặc mã xác thực không đúng." leaked which case was which regardless of timing).
         var client = _factory.CreateClient();
         var realEmail = UniqueEmail();
-        await RegisterAsync(client, realEmail, "P@ssword123");
+        await RegisterAsync(client, realEmail, "P@ssword123-safe");
 
         var nonExistentRes = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
             new { Email = UniqueEmail(), Code = "000000" });
@@ -172,7 +220,22 @@ public sealed class AuthTests
         // actually makes brute-forcing it impractical instead of just a few minutes of guessing.
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "P@ssword123");
+        await RegisterAsync(client, email, "P@ssword123-safe");
+
+        // Plant a code we know, so the final attempt below can submit the CORRECT one — that is
+        // what proves the lockout actually blocks, rather than the response merely saying so.
+        // (The old version asserted the message contained "khóa"; that assertion was removed with
+        // the enumeration fix, since announcing the lockout is exactly what leaked account
+        // existence. Checking the effect instead of the wording is the stronger test anyway.)
+        const string rawCode = "123456";
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Email == email);
+            user.EmailVerificationCodeHash = HashToken(rawCode);
+            user.EmailVerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10);
+            await db.SaveChangesAsync();
+        }
 
         HttpResponseMessage last = null!;
         for (var i = 0; i < 5; i++)
@@ -183,11 +246,17 @@ public sealed class AuthTests
         last.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         var lockedOutRes = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
-            new { Email = email, Code = "000000" });
+            new { Email = email, Code = rawCode });
 
-        lockedOutRes.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        var body = await lockedOutRes.Content.ReadAsStringAsync();
-        body.Should().Contain("khóa");
+        lockedOutRes.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "the correct code must still be refused while the lockout is active");
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var lockedUser = await verifyDb.Users.SingleAsync(u => u.Email == email);
+        lockedUser.LockedUntil.Should().NotBeNull();
+        lockedUser.EmailVerifiedAt.Should().BeNull(
+            "a locked-out attempt must not verify the account even with the right code");
     }
 
     [Fact]
@@ -195,7 +264,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "P@ssword123");
+        await RegisterAsync(client, email, "P@ssword123-safe");
 
         const string rawCode = "123456";
         using (var scope = _factory.Services.CreateScope())
@@ -218,7 +287,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/verify-email",
             new { Email = email, Code = "123456" });
@@ -227,17 +296,24 @@ public sealed class AuthTests
     }
 
     [Fact]
-    public async Task ResendVerificationCode_ExistingUnverifiedEmail_Returns204AndRegeneratesCode()
+    public async Task ResendVerificationCode_AfterCooldownElapsed_Returns204AndRegeneratesCode()
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "P@ssword123");
+        await RegisterAsync(client, email, "P@ssword123-safe");
 
         string hashBefore;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            hashBefore = (await db.Users.SingleAsync(u => u.Email == email)).EmailVerificationCodeHash!;
+            var user = await db.Users.SingleAsync(u => u.Email == email);
+            hashBefore = user.EmailVerificationCodeHash!;
+            // Regression MLACP-review-auth-phase1: resend now has a 60s cooldown (audit-flagged
+            // MEDIUM gap — email-bombing risk). Simulate the original code having been issued long
+            // enough ago that the cooldown has elapsed, so this test still verifies its original
+            // intent (resend regenerates the code) rather than the cooldown itself.
+            user.EmailVerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-9);
+            await db.SaveChangesAsync();
         }
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/resend-verification-code", new { Email = email });
@@ -247,6 +323,33 @@ public sealed class AuthTests
         var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var hashAfter = (await db2.Users.SingleAsync(u => u.Email == email)).EmailVerificationCodeHash;
         hashAfter.Should().NotBe(hashBefore);
+    }
+
+    /// <summary>Regression for MLACP-review-auth-phase1 (audit-flagged MEDIUM gap, 2026-09-06):
+    /// ResendVerificationCode had no cooldown beyond the global 100 req/min/IP rate limit, allowing
+    /// unlimited email-bombing of one address. Calling it twice back-to-back must not regenerate
+    /// the code the second time.</summary>
+    [Fact]
+    public async Task ResendVerificationCode_WithinCooldown_DoesNotRegenerateCode()
+    {
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAsync(client, email, "P@ssword123-safe");
+
+        string hashBefore;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            hashBefore = (await db.Users.SingleAsync(u => u.Email == email)).EmailVerificationCodeHash!;
+        }
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/resend-verification-code", new { Email = email });
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent, "anti-enumeration: always 204 even when silently no-op'd");
+
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var hashAfter = (await db2.Users.SingleAsync(u => u.Email == email)).EmailVerificationCodeHash;
+        hashAfter.Should().Be(hashBefore, "resending within the 60s cooldown must be a silent no-op, not spam a new email");
     }
 
     [Fact]
@@ -265,7 +368,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
         string hashBefore;
         using (var scope = _factory.Services.CreateScope())
@@ -290,10 +393,10 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "P@ssword123");
+        await RegisterAsync(client, email, "P@ssword123-safe");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { Email = email, Password = "P@ssword123" });
+            new { Email = email, Password = "P@ssword123-safe" });
 
         res.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -303,12 +406,12 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/login", new
         {
             Email = email,
-            Password = "P@ssword123"
+            Password = "P@ssword123-safe"
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -321,7 +424,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/login", new
         {
@@ -339,7 +442,7 @@ public sealed class AuthTests
         // even with the CORRECT password, must still be rejected while the lockout is active.
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
         HttpResponseMessage last = null!;
         for (var i = 0; i < 5; i++)
@@ -350,11 +453,27 @@ public sealed class AuthTests
         last.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         var lockedOutRes = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { Email = email, Password = "P@ssword123" });
+            new { Email = email, Password = "P@ssword123-safe" });
 
         lockedOutRes.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        var body = await lockedOutRes.Content.ReadAsStringAsync();
-        body.Should().Contain("khóa", "the lockout message must be distinguishable from a plain wrong-password message");
+
+        // This assertion is the REVERSE of what it used to be. It previously required the lockout
+        // message to be distinguishable from a wrong-password message, for the user's benefit —
+        // but that made it an account-enumeration oracle: five wrong passwords against an address
+        // flipped the message only when the account was real, so anyone could test whether an email
+        // was registered. That defeated the timing-side-channel defence (_dummyHash) built into the
+        // same handler for exactly this threat. Owner decision, audit đợt 1: close the oracle; the
+        // shared message tells locked-out users to reset their password, which now also lifts the
+        // lockout (ResetPassword_WhileAccountLockedOut_ClearsLockoutAndAllowsLogin).
+        var lockedBody = await lockedOutRes.Content.ReadAsStringAsync();
+        lockedBody.Should().NotContain("khóa do đăng nhập sai",
+            "the lockout must not announce itself — that is what leaks account existence");
+
+        var unknownEmailRes = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { Email = UniqueEmail(), Password = "WrongPassword!" });
+        var unknownBody = await unknownEmailRes.Content.ReadAsStringAsync();
+        lockedBody.Should().Be(unknownBody,
+            "a locked real account and an email that was never registered must be byte-identical");
     }
 
     [Fact]
@@ -362,7 +481,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
         for (var i = 0; i < 3; i++)
         {
@@ -371,7 +490,7 @@ public sealed class AuthTests
         }
 
         var successRes = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { Email = email, Password = "P@ssword123" });
+            new { Email = email, Password = "P@ssword123-safe" });
         successRes.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 2 more wrong attempts after the reset (would be attempts #4-5 of the original streak if
@@ -383,7 +502,7 @@ public sealed class AuthTests
         }
 
         var stillUnlockedRes = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { Email = email, Password = "P@ssword123" });
+            new { Email = email, Password = "P@ssword123-safe" });
         stillUnlockedRes.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -394,7 +513,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "OldPassword123");
+        await RegisterAsync(client, email, "OldPassword123-old");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { Email = email });
 
@@ -406,6 +525,33 @@ public sealed class AuthTests
         user.PasswordResetTokenHash.Should().NotBeNullOrEmpty();
         user.PasswordResetTokenExpiresAt.Should().NotBeNull();
         user.PasswordResetTokenExpiresAt!.Value.Should().BeAfter(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>Regression for MLACP-review-auth-phase1 (audit-flagged MEDIUM gap, 2026-09-06):
+    /// a deactivated account must not receive a reset token/email — it's blocked at Login anyway,
+    /// so issuing one is wasted and inconsistent with LoginCommandHandler's own IsActive check.</summary>
+    [Fact]
+    public async Task ForgotPassword_DeactivatedAccount_Returns204ButDoesNotIssueToken()
+    {
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAsync(client, email, "OldPassword123-old");
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Email == email);
+            user.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        var res = await client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { Email = email });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent, "anti-enumeration: same response regardless of account state");
+
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var reloaded = await db2.Users.SingleAsync(u => u.Email == email);
+        reloaded.PasswordResetTokenHash.Should().BeNull("a deactivated account must not get a working reset token");
     }
 
     [Fact]
@@ -424,7 +570,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "OldPassword123");
+        await RegisterAsync(client, email, "OldPassword123-old");
 
         // Token thô không bao giờ trả về qua API (đúng thiết kế) — mô phỏng "biết token thật" bằng
         // cách tự chọn 1 token rồi ghi thẳng hash tương ứng vào DB, giống hệt những gì handler thật
@@ -443,15 +589,15 @@ public sealed class AuthTests
         }
 
         var resetRes = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
-            new { Token = rawToken, NewPassword = "NewPassword456" });
+            new { Token = rawToken, NewPassword = "NewPassword456-new" });
         resetRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var loginOld = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { Email = email, Password = "OldPassword123" });
+            new { Email = email, Password = "OldPassword123-old" });
         loginOld.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         var loginNew = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { Email = email, Password = "NewPassword456" });
+            new { Email = email, Password = "NewPassword456-new" });
         loginNew.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Rotated so any JWT issued before the reset — e.g. one an attacker already stole — fails
@@ -468,7 +614,7 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAsync(client, email, "OldPassword123");
+        await RegisterAsync(client, email, "OldPassword123-old");
 
         var rawToken = "test-token-" + Guid.NewGuid().ToString("N");
         using (var scope = _factory.Services.CreateScope())
@@ -481,7 +627,7 @@ public sealed class AuthTests
         }
 
         var first = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
-            new { Token = rawToken, NewPassword = "NewPassword456" });
+            new { Token = rawToken, NewPassword = "NewPassword456-new" });
         first.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var second = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
@@ -495,7 +641,7 @@ public sealed class AuthTests
         var client = _factory.CreateClient();
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
-            new { Token = "totally-invalid-token", NewPassword = "NewPassword456" });
+            new { Token = "totally-invalid-token", NewPassword = "NewPassword456-new" });
 
         res.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -514,9 +660,9 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
 
-        var tokens = await LoginAsync(client, email, "P@ssword123");
+        var tokens = await LoginAsync(client, email, "P@ssword123-safe");
 
         tokens.RefreshToken.Should().NotBeNullOrEmpty();
         tokens.RefreshToken!.Split('.').Should().HaveCount(3);
@@ -532,8 +678,8 @@ public sealed class AuthTests
         // Login's own test checks at.
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
-        var tokens = await LoginAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
+        var tokens = await LoginAsync(client, email, "P@ssword123-safe");
 
         var refreshRes = await client.PostAsJsonAsync("/api/v1/auth/refresh",
             new { RefreshToken = tokens.RefreshToken });
@@ -557,8 +703,8 @@ public sealed class AuthTests
         // accepted at /refresh, which is not what it's for.
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
-        var tokens = await LoginAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
+        var tokens = await LoginAsync(client, email, "P@ssword123-safe");
 
         var res = await client.PostAsJsonAsync("/api/v1/auth/refresh", new { RefreshToken = tokens.Token });
 
@@ -616,8 +762,8 @@ public sealed class AuthTests
     {
         var client = _factory.CreateClient();
         var email = UniqueEmail();
-        await RegisterAndVerifyAsync(client, email, "P@ssword123");
-        var tokens = await LoginAsync(client, email, "P@ssword123");
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
+        var tokens = await LoginAsync(client, email, "P@ssword123-safe");
 
         var logoutClient = _factory.CreateAuthenticatedClient(tokens.UserId, tokens.Role);
         (await logoutClient.PostAsync("/api/v1/auth/logout", null)).StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -636,6 +782,78 @@ public sealed class AuthTests
         var res = await client.PostAsync("/api/v1/auth/logout", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task ResetPassword_WhileAccountLockedOut_ClearsLockoutAndAllowsLogin()
+    {
+        // Forgetting the password is the most common way an account trips the 5-failure lockout,
+        // so the user who then completes the intended recovery path must actually get back in.
+        // Before the fix, ResetPassword cleared the token but left FailedLoginAttempts/LockedUntil
+        // untouched, so login kept returning "tài khoản tạm thời bị khóa" for the full lockout
+        // window with nothing the user could do about it.
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAndVerifyAsync(client, email, "OldPassword123-old");
+
+        for (var i = 0; i < 5; i++)
+        {
+            await client.PostAsJsonAsync("/api/v1/auth/login",
+                new { Email = email, Password = "WrongPassword!" });
+        }
+
+        var rawToken = "test-token-" + Guid.NewGuid().ToString("N");
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Email == email);
+            user.LockedUntil.Should().NotBeNull("the 5 failed logins above must have locked the account");
+            user.PasswordResetTokenHash = HashToken(rawToken);
+            user.PasswordResetTokenExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30);
+            await db.SaveChangesAsync();
+        }
+
+        var resetRes = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
+            new { Token = rawToken, NewPassword = "NewPassword456-new" });
+        resetRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var loginNew = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { Email = email, Password = "NewPassword456-new" });
+        loginNew.StatusCode.Should().Be(HttpStatusCode.OK,
+            "completing the password reset must lift the lockout, not leave the user stranded");
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var verified = await verifyDb.Users.SingleAsync(u => u.Email == email);
+        verified.LockedUntil.Should().BeNull();
+        verified.FailedLoginAttempts.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RecordFailure_FiveWrongPasswordsIssuedTogether_StillLocksAtConfiguredThreshold()
+    {
+        // Regression guard for rewriting AuthAttemptTracker.RecordFailureAsync from a
+        // read-modify-write into a single atomic UPDATE with a CASE expression: it proves the new
+        // SQL still counts to MaxFailedAttempts and still sets LockedUntil on the same failure.
+        //
+        // What it does NOT prove: that the lost-update race is gone. This harness dispatches
+        // through TestServer, which serialises these requests rather than genuinely overlapping
+        // them, so the interleaving the fix targets never actually occurs here. Demonstrating that
+        // needs a real DB and real parallel connections — see finding R5.
+        var client = _factory.CreateClient();
+        var email = UniqueEmail();
+        await RegisterAndVerifyAsync(client, email, "P@ssword123-safe");
+
+        var attempts = Enumerable.Range(0, 5).Select(_ =>
+            client.PostAsJsonAsync("/api/v1/auth/login",
+                new { Email = email, Password = "WrongPassword!" }));
+        await Task.WhenAll(attempts);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Users.SingleAsync(u => u.Email == email);
+        user.LockedUntil.Should().NotBeNull(
+            "5 failures must lock the account no matter how they interleave");
     }
 
     private sealed record AuthResponse(bool Success, AuthResultData Data);

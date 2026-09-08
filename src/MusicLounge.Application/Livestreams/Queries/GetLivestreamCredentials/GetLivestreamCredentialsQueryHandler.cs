@@ -31,7 +31,7 @@ internal sealed class GetLivestreamCredentialsQueryHandler
             var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct)
                 ?? throw new NotFoundException(nameof(LoungeShow), livestream.LoungeShowId);
 
-            // D6: giong het scoping cua Create/Start livestream — Staff cua dung venue hoac chinh
+            // D6: giong het scoping cua Create livestream — Staff cua dung venue hoac chinh
             // Owner cua venue do moi xem duoc credential.
             var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
                 ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);

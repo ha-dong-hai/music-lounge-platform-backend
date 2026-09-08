@@ -165,7 +165,7 @@ internal sealed class GeneratePosterCommandHandler
             "Phong cách: chuyên nghiệp, hấp dẫn, phù hợp đăng mạng xã hội, bố cục rõ ràng có chỗ cho tiêu đề.";
 
         if (!string.IsNullOrWhiteSpace(styleHint))
-            prompt += $" Yêu cầu thêm từ chủ sự kiện: {styleHint}.";
+            prompt += $" Yêu cầu thêm từ chủ buổi diễn: {styleHint}.";
 
         return prompt;
     }

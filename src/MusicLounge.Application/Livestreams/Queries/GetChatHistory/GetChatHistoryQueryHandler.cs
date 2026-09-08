@@ -43,7 +43,10 @@ internal sealed class GetChatHistoryQueryHandler
             var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
                 ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
+            // MLACP-119: dong bo voi fix cua MLACP-117 — livestream mien phi (IsFree) khong yeu
+            // cau ve, ap dung cho ca lich su chat, khong chi HlsUrl/join hub.
             userHasAccess = VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId)
+                || livestream.IsFree
                 || await _livestreamRepo.HasViewerAccessAsync(request.LivestreamId, _currentUser.UserId, ct);
         }
 

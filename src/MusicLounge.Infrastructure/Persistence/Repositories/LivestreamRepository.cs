@@ -23,15 +23,45 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.LoungeShowId == showId, ct);
 
+    // MLACP-140: lan xem dau tien chuyen ve sang TicketStatus.Used (de RateShowCommandHandler cho
+    // phep danh gia sau show) — Used la trang thai KET THUC HOP LE cua 1 lan xem that, khong phai
+    // trang thai loai bo. Chi nhan Confirmed o day se khoa vinh vien HlsUrl/chat/hub ngay sau lan
+    // xem dau tien (kha nang chinh cua tinh nang gioi han phien dong thoi cung phu thuoc dieu nay —
+    // khong co no thiet bi thu 2 khong bao gio qua duoc check nay du van con han muc).
     public async Task<bool> HasViewerAccessAsync(int livestreamId, int userId, CancellationToken ct = default)
         => await _db.Livestreams
             .Where(l => l.Id == livestreamId)
             .SelectMany(l => l.LoungeShow.Tickets)
             .AnyAsync(t =>
                 t.BuyerId == userId &&
-                t.Status == TicketStatus.Confirmed &&
+                (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used) &&
                 t.Tier.AccessType == AccessType.Livestream,
                 ct);
+
+    public async Task<Ticket?> GetViewerTicketAsync(int livestreamId, int userId, CancellationToken ct = default)
+    {
+        var livestream = await _db.Livestreams.AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == livestreamId, ct);
+        if (livestream is null) return null;
+
+        // Tracked (khong AsNoTracking) — handler goi ham nay se sua LivestreamDetail va luu qua
+        // cung 1 SaveChangesAsync, khong can goi Update() rieng. Load LivestreamDetail RIENG qua
+        // Entry().Reference() thay vi .Include(t => t.LivestreamDetail) trong cung query —
+        // confirmed thuc nghiem: ket hop Include tren 1 nav voi Where loc qua nav khac
+        // (t.Tier.AccessType) khien FirstOrDefaultAsync tra ve null tren SQLite test provider
+        // (khong loi, chi sai ket qua) du du lieu khop day du dieu kien.
+        // Confirmed HOAC Used — cung ly do voi HasViewerAccessAsync o tren.
+        var ticket = await _db.Tickets
+            .FirstOrDefaultAsync(t =>
+                t.ShowId == livestream.LoungeShowId &&
+                t.BuyerId == userId &&
+                (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used) &&
+                t.Tier.AccessType == AccessType.Livestream,
+                ct);
+        if (ticket is not null)
+            await _db.Entry(ticket).Reference(t => t.LivestreamDetail).LoadAsync(ct);
+        return ticket;
+    }
 
     public async Task<(IReadOnlyList<LivestreamChatMessage> Items, int TotalCount)> GetChatMessagesAsync(
         int livestreamId, int page, int pageSize, CancellationToken ct = default)

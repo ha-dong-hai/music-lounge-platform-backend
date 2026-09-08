@@ -12,40 +12,35 @@ internal sealed class GetLoungeShowsByPerformerQueryHandler
     : IRequestHandler<GetLoungeShowsByPerformerQuery, PerformerDetailDto>
 {
     private readonly ILoungeShowRepository _showRepo;
-    private readonly IRepository<Performer, int> _performerRepo;
+    private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
 
     public GetLoungeShowsByPerformerQueryHandler(
-        ILoungeShowRepository showRepo,
-        IRepository<Performer, int> performerRepo,
-        ICurrentUserService currentUser)
+        ILoungeShowRepository showRepo, IUnitOfWork uow, ICurrentUserService currentUser)
     {
         _showRepo = showRepo;
-        _performerRepo = performerRepo;
+        _uow = uow;
         _currentUser = currentUser;
     }
 
     public async Task<PerformerDetailDto> Handle(
         GetLoungeShowsByPerformerQuery request, CancellationToken ct)
     {
-        var performer = await _performerRepo.GetByIdAsync(request.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
 
-        var showsResult = await _showRepo.GetByPerformerAsync(
-            request.PerformerId, request.IncludeEnded,
-            page, pageSize, ct);
+        var shows = await _showRepo.GetByPerformerAsync(
+            request.PerformerId, request.IncludeEnded, page, pageSize, ct);
 
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)
             : (IReadOnlySet<int>)new HashSet<int>();
 
-        var showItems = showsResult.Items.Select(s => s.ToListItemDto(wishlisted)).ToList();
-        var paginatedShows = new PaginatedResult<LoungeShowListItemDto>(
-            showItems, showsResult.Page, showsResult.PageSize, showsResult.TotalCount);
-
-        return performer.ToDetailDto(paginatedShows);
+        return performer.ToDetailDto(new PaginatedResult<LoungeShowListItemDto>(
+            shows.Items.Select(s => s.ToListItemDto(wishlisted)).ToList(),
+            shows.Page, shows.PageSize, shows.TotalCount));
     }
 }

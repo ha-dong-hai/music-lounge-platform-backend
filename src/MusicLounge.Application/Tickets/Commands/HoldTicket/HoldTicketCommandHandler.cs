@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Tickets.DTOs;
@@ -53,7 +54,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             throw new DomainException(
                 $"Không thể đặt vé — show hiện ở trạng thái '{show.Status}', chỉ mở bán khi show đã Published hoặc đang diễn ra.");
 
-        ValidateSaleWindow(price);
+        ValidateSaleWindow(price, show);
 
         int holdId;
         DateTimeOffset holdExpiresAt;
@@ -137,11 +138,16 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             await _uow.SaveChangesAsync(ct);
     }
 
-    private static void ValidateSaleWindow(TicketPrice price)
+    private static void ValidateSaleWindow(TicketPrice price, LoungeShow show)
     {
         var now = DateTimeOffset.UtcNow;
         if (now < price.SaleStart || now > price.SaleEnd)
             throw new DomainException("Đợt bán vé này chưa mở hoặc đã kết thúc.");
+
+        // D13: moc "dong ban ve" cua ca show, doc lap voi tung dot gia (SaleStart/SaleEnd) — Owner
+        // dat de dam bao khong ai mua ve sat gio dien, tranh vao muon/khong kip check-in.
+        if (show.TicketSaleClosesAt.HasValue && now > show.TicketSaleClosesAt.Value)
+            throw new DomainException("Event đã đóng bán vé.");
     }
 
     private async Task ValidateQuotaAsync(
@@ -198,15 +204,16 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
             s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-        var activeSub = activeSubs
-            .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
-            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
-        if (activeSub is not null)
-        {
-            var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
-            if (showReservedTotal + quantity > activeSub.MaxTicketsPerEventSnapshot)
-                throw new DomainException(
-                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
-        }
+        // Khong con nhanh "khong co goi thi bo qua": cap luon ton tai, chi khac nguon — snapshot cua
+        // goi dang hoat dong, hoac muc mien phi neu venue chua dang ky goi nao.
+        var freeTierCap = await _config.GetIntAsync(
+            ConfigKeys.FreeTierMaxTicketsPerEvent,
+            SubscriptionEntitlements.DefaultFreeTierMaxTicketsPerEvent, ct);
+        var cap = SubscriptionEntitlements.ResolveTicketCap(
+            SubscriptionEntitlements.ActivePlan(activeSubs, DateTimeOffset.UtcNow), freeTierCap);
+
+        var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
+        if (showReservedTotal + quantity > cap.MaxTicketsPerEvent)
+            throw new DomainException(cap.ExceededMessage("Số vé của buổi hòa nhạc này"));
     }
 }

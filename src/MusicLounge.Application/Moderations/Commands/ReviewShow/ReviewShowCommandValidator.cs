@@ -18,6 +18,7 @@ public sealed class ReviewShowCommandValidator : AbstractValidator<ReviewShowCom
         RuleFor(x => x.ReviewNote)
             .MaximumLength(1000).WithMessage("Ghi chú duyệt không được vượt quá 1000 ký tự.");
 
+        // MLACP-79 DONE WHEN: "Từ chối kèm lý do bắt buộc" — Approved thì ReviewNote vẫn tuỳ chọn.
         RuleFor(x => x.ReviewNote)
             .NotEmpty()
             .WithMessage("Phải ghi lý do khi từ chối.")

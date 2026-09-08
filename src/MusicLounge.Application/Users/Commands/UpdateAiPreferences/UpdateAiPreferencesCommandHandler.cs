@@ -9,11 +9,14 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IBackgroundJobService _backgroundJobs;
 
-    public UpdateAiPreferencesCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public UpdateAiPreferencesCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, IBackgroundJobService backgroundJobs)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _backgroundJobs = backgroundJobs;
     }
 
     public async Task<Unit> Handle(UpdateAiPreferencesCommand request, CancellationToken ct)
@@ -92,6 +95,16 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
         _uow.Repository<User, int>().Update(user);
 
         await _uow.SaveChangesAsync(ct);
+
+        // MLACP-130: khong lam gi thi cache goi y cu (RecommendedLoungeShow, TTL toi 6h -
+        // RefreshUserRecommendationJob) van con hieu luc, khien "cap nhat so thich" khong tao ra
+        // tac dung gi cho toi khi cache tu het han. TriggerRecommendationRefreshAsync doc lai
+        // favourite genres/moods/atmospheres MOI NHAT tu DB tai thoi diem chay job (sau dong
+        // SaveChangesAsync o tren), roi xoa het cache cu truoc khi ghi ket qua moi
+        // (PersistRecommendationsAsync) - nen enqueue sau khi luu la du, khong can xoa cache thu
+        // cong o day.
+        _backgroundJobs.EnqueueRecommendationRefresh(_currentUser.UserId);
+
         return Unit.Value;
     }
 }

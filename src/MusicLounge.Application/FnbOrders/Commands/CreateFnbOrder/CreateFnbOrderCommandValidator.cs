@@ -7,10 +7,10 @@ namespace MusicLounge.Application.FnbOrders.Commands.CreateFnbOrder;
 
 public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnbOrderCommand>
 {
-    // "Gateway" used to be accepted here too, but nothing in CreateFnbOrderCommandHandler or
-    // UpdateFnbOrderStatusCommandHandler ever calls VNPay for an FnbOrder — it was a purely
-    // decorative option that behaved identically to Cash while implying an online-payment flow
-    // that doesn't exist. Reject it explicitly instead of silently no-op'ing.
+    // Only "Cash" at order-creation time — online payment (MLACP-161) is a separate decision made
+    // later via POST /fnb-orders/{id}/pay, which flips PaymentMethod to Gateway itself once VNPay
+    // actually confirms. Accepting "Gateway" here would just be a premature/unconfirmed intent with
+    // nothing behind it yet, since no Payment row or VNPay redirect exists until that endpoint runs.
     private static readonly string[] ValidMethods = ["Cash"];
 
     public CreateFnbOrderCommandValidator(IUnitOfWork uow)
@@ -36,7 +36,7 @@ public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnb
 
         RuleFor(x => x.PaymentMethod)
             .Must(m => ValidMethods.Contains(m, StringComparer.OrdinalIgnoreCase))
-            .WithMessage("PaymentMethod phải là 'Cash' — F&B chưa hỗ trợ thanh toán qua cổng VNPay.");
+            .WithMessage("PaymentMethod phải là 'Cash' khi tạo đơn — chọn thanh toán online qua POST /fnb-orders/{id}/pay.");
 
         RuleFor(x => x.Items).NotEmpty().WithMessage("Đơn hàng phải có ít nhất 1 món.");
 

@@ -1,6 +1,7 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class MusicGenre : Common.BaseEntity<int>
+// AuditableEntity (CreatedAt/UpdatedAt/CreatedBy/UpdatedBy) — cùng lý do với EventCategory.
+public sealed class MusicGenre : Common.AuditableEntity<int>
 {
     public string Name { get; set; } = string.Empty;
     public string? NameEn { get; set; }

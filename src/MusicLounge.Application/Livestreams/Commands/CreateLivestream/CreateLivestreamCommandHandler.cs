@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -75,7 +76,9 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
             RtmpUrl = result.RtmpUrl,
             StreamKey = result.StreamKey,
             HlsUrl = result.HlsUrl,
-            Status = LivestreamStatus.Scheduled
+            Status = LivestreamStatus.Scheduled,
+            IsFree = request.IsFree,
+            ChatEnabled = request.ChatEnabled
         };
 
         _uow.Repository<Livestream, int>().Add(livestream);
@@ -89,7 +92,6 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         {
             TargetType = ModerationTargetType.Livestream,
             TargetId = livestream.Id,
-            CreatedAt = moderationCreatedAt,
             SlaDeadline = moderationCreatedAt.AddHours(slaHours)
         };
         _uow.Repository<EventModeration, int>().Add(moderation);

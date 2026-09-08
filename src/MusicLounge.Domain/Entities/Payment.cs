@@ -1,4 +1,4 @@
-using MusicLounge.Domain.Enums;
+﻿using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
@@ -9,8 +9,12 @@ public sealed class Payment : Common.BaseEntity<int>
     public decimal GrossAmount { get; set; }                 // buyer-facing amount
     public decimal GatewayFee { get; set; }                  // VNPay processing fee
     public decimal PlatformFee { get; set; }                 // platform commission
-    public decimal TaxWithheld { get; set; }                 // VAT/FCIT withheld
-    public decimal NetAmount { get; set; }                   // gross - gatewayFee - platformFee - tax
+    public decimal TaxWithheld { get; set; }                 // thuế GTGT withheld
+    // Thuế TNCN, snapshotted here alongside TaxWithheld rather than derived later: the rate can be
+    // changed by an Admin and the payer's classification can change, so the only figure that can
+    // still be reconciled against the ledger months later is the one recorded at confirmation time.
+    public decimal PersonalIncomeTaxWithheld { get; set; }
+    public decimal NetAmount { get; set; }                   // gross - platformFee - VAT - TNCN
     public PaymentMethod Method { get; set; } = PaymentMethod.Gateway;
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public PaymentSettlementStatus SettlementStatus { get; set; } = PaymentSettlementStatus.NotApplicable;

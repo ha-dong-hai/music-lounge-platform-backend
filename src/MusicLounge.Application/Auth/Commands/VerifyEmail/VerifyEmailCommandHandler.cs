@@ -9,6 +9,13 @@ namespace MusicLounge.Application.Auth.Commands.VerifyEmail;
 
 internal sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, AuthResultDto>
 {
+    // Mot thong bao duy nhat cho ca "ma sai", "email khong ton tai" va "dang bi khoa" — giong
+    // LoginCommandHandler.InvalidCredentialsMessage va vi dung mot ly do: mot cau rieng cho nhanh
+    // lockout bien 5 lan nhap ma sai thanh phep thu xem email do da dang ky hay chua.
+    private const string InvalidCodeMessage =
+        "Email hoặc mã xác thực không đúng. Nếu bạn đã nhập sai nhiều lần, vui lòng đợi ít phút rồi " +
+        "yêu cầu gửi lại mã mới.";
+
     private readonly IUnitOfWork _uow;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IAuthAttemptTracker _authAttemptTracker;
@@ -34,8 +41,9 @@ internal sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCom
 
             var lockoutRemaining = await _authAttemptTracker.GetLockoutRemainingAsync(user.Id, ct);
             if (lockoutRemaining is not null)
-                throw new UnauthorizedException(
-                    $"Tài khoản tạm thời bị khóa do nhập sai mã xác thực nhiều lần. Vui lòng thử lại sau {Math.Ceiling(lockoutRemaining.Value.TotalMinutes)} phút.");
+                // Cung mot thong bao voi nhanh "ma khong dung" ben duoi — xem chu thich cua
+                // InvalidCodeMessage: mot cau rieng cho nhanh lockout se lo email nao da dang ky.
+                throw new UnauthorizedException(InvalidCodeMessage);
         }
 
         // Luon hash request.Code du email co ton tai hay khong — tranh lo timing side-channel cho
@@ -48,7 +56,7 @@ internal sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCom
         {
             if (user is not null)
                 await _authAttemptTracker.RecordFailureAsync(user.Id, ct);
-            throw new UnauthorizedException("Email hoặc mã xác thực không đúng.");
+            throw new UnauthorizedException(InvalidCodeMessage);
         }
 
         if (user.EmailVerificationCodeExpiresAt is null || user.EmailVerificationCodeExpiresAt < DateTimeOffset.UtcNow)

@@ -51,6 +51,42 @@ internal sealed class EventModerationRepository
         return new PaginatedResult<EventModerationDto>(items, page, pageSize, total);
     }
 
+    public async Task<PaginatedResult<PendingLoungeShowDto>> GetPendingShowsAsync(
+        int page, int pageSize, CancellationToken ct = default)
+    {
+        var query =
+            from m in _ctx.EventModerations.AsNoTracking()
+            where m.TargetType == ModerationTargetType.Show && m.AdminDecision == null
+            join s in _ctx.LoungeShows.AsNoTracking()
+                on m.TargetId equals s.Id
+            // Phong thu truoc lech trang thai neu 1 trong 2 ban ghi bi cap nhat rieng le —
+            // AdminDecision == null thuong dong nghia Pending, nhung khong dua vao gia dinh do.
+            where s.Status == LoungeShowStatus.Pending
+            orderby m.AiScore descending, m.Id
+            select new { m, s, s.Lounge.Name };
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new PendingLoungeShowDto(
+                x.s.Id,
+                x.s.Name,
+                x.s.CoverImageUrl,
+                x.Name,
+                x.s.ScheduledStart,
+                x.s.Format.ToString(),
+                x.m.AiScore,
+                x.m.RiskLevel == null ? null : x.m.RiskLevel.ToString(),
+                x.m.FlagReason,
+                x.m.CreatedAt,
+                x.m.SlaDeadline))
+            .ToListAsync(ct);
+
+        return new PaginatedResult<PendingLoungeShowDto>(items, page, pageSize, total);
+    }
+
     public async Task<EventModeration?> GetByTargetAsync(
         ModerationTargetType targetType, int targetId, CancellationToken ct = default)
     {

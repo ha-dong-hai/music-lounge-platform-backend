@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using MusicLounge.Application.Analytics.Common;
 using MusicLounge.Application.Common.Behaviors;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Services;
@@ -28,6 +29,7 @@ public static class DependencyInjection
 
         services.AddScoped<ILedgerService, LedgerService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IOwnerRevenueReportBuilder, OwnerRevenueReportBuilder>();
 
         return services;
     }

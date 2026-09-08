@@ -55,6 +55,14 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
             OrderIndex = existingCount
         };
         imageRepo.Add(image);
+
+        // MLACP-33 DONE WHEN: anh dau tien tu dong la anh dai dien.
+        if (existingCount == 0)
+        {
+            lounge.PrimaryImageUrl = request.ImageUrl;
+            _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
+        }
+
         await _uow.SaveChangesAsync(ct);
 
         if (moderation is not null)
@@ -75,7 +83,6 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
             RiskLevel = Enum.TryParse<ModerationRiskLevel>(moderation.RiskLevel, true, out var risk) ? risk : null,
             FlagReason = moderation.FlagReason,
             AiRecommendation = Enum.TryParse<AiModerationRecommendation>(moderation.Recommendation, true, out var rec) ? rec : null,
-            CreatedAt = now,
             SlaDeadline = now.AddHours(slaHours)
         });
         await _uow.SaveChangesAsync(ct);

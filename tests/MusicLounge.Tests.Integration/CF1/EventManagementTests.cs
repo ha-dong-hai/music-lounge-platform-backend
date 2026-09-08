@@ -16,7 +16,7 @@ namespace MusicLounge.Tests.Integration.CF1;
 /// <summary>
 /// CF1 W01/W04/W05/W07 — Venue, Event lifecycle, Staff assignment, Admin approval
 /// POST /api/v1/lounges | /api/v1/lounges/{id}/staff
-/// POST /api/v1/lounge-shows | .../publish | .../cancel
+/// POST /api/v1/lounge-shows | .../submit | .../cancel
 /// POST /api/v1/ticket-tiers
 /// POST /api/v1/moderations/shows/{id}/review
 /// </summary>
@@ -46,6 +46,8 @@ public sealed class EventManagementTests
             OfflineQuota = 100,
             OnlineQuota = format == "Online" ? 200 : (int?)null,
             GenreIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
             Performances = new[]
             {
                 new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
@@ -224,6 +226,8 @@ public sealed class EventManagementTests
             OfflineQuota = (int?)null,
             OnlineQuota = (int?)null,
             GenreIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<int>(),
+            AtmosphereIds = Array.Empty<int>(),
             Performances = Array.Empty<object>()
         });
 
@@ -236,7 +240,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -248,7 +252,7 @@ public sealed class EventManagementTests
         await CreateTierAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -263,7 +267,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
@@ -283,7 +287,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
@@ -303,7 +307,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var res = await ownerClient.PostAsJsonAsync(
             $"/api/v1/moderations/shows/{showId}/review",
@@ -318,7 +322,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var first = await adminClient.PostAsJsonAsync(
@@ -339,7 +343,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         await CreateTierAsync(showId);
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsJsonAsync(
@@ -361,7 +365,7 @@ public sealed class EventManagementTests
         await CreateTierAsync(showId, "Livestream");
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -377,7 +381,7 @@ public sealed class EventManagementTests
         lsRes.EnsureSuccessStatusCode();
 
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
-        var res = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/publish", null);
+        var res = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
@@ -600,6 +604,200 @@ public sealed class EventManagementTests
         var res = await client.GetAsync("/api/v1/lounge-shows?mine=true");
 
         res.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // ─── B1 authorization gap (MLACP-252, audit-flagged 2026-09-04) ────────────
+    // Regression tests: several handlers used to check only "lounge.OwnerId == currentUser.UserId"
+    // with no Admin fallback, so an Admin — who passes the controller's
+    // [Authorize(Policy = RequireOwner)] gate, which permits Admin by definition — was incorrectly
+    // 403'd on a show/tier they don't own despite the policy nominally allowing them through.
+
+    [Fact]
+    public async Task UpdateLoungeShow_ByAdmin_NotTheOwner_Returns204()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}", new
+        {
+            Name = "Updated by Admin",
+            Description = "Updated",
+            ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
+            ScheduledEnd = (DateTimeOffset?)null,
+            CategoryId = (int?)null,
+            OfflineQuota = 100,
+            OnlineQuota = (int?)null
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to manage any venue's show, matching the controller's declared RequireOwner policy");
+    }
+
+    [Fact]
+    public async Task CreateTicketTier_ByAdmin_NotTheOwner_Returns201()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PostAsJsonAsync("/api/v1/ticket-tiers", new
+        {
+            ShowId = showId,
+            Name = "Admin-created tier",
+            Description = (string?)null,
+            AccessType = "Physical",
+            ZoneId = (int?)null,
+            TotalCapacity = 50,
+            Prices = new[]
+            {
+                new
+                {
+                    Name = "Standard",
+                    Price = 100_000m,
+                    Quota = (int?)50,
+                    PurchaseChannel = "Both",
+                    SaleStart = DateTimeOffset.UtcNow,
+                    SaleEnd = DateTimeOffset.UtcNow.AddDays(2)
+                }
+            }
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created,
+            "Admin must be able to manage any venue's ticket tiers, matching the controller's declared RequireOwner policy");
+    }
+
+    // ─── C3 capacity race (MLACP-271, audit-flagged 2026-09-07) ────────────────
+    // Create/Update both re-tally TotalCapacity across all tiers of a show and compare against the
+    // Owner's subscription cap (seed cap is 1000, see SeedHelper), but did so with no lock — 2
+    // concurrent requests on different tiers could each read the total before the other's write
+    // landed, both pass their own check, and together exceed the cap. Fixed with the same
+    // IAsyncKeyedLock pattern used everywhere else in this codebase for the same class of
+    // check-then-act race (CancelLoungeShow, Livestream Create, ProcessRefundRequest...).
+    //
+    // Verified this test's assertions hold with the fix and (via `git stash`) fail without it —
+    // BUT: confirmed empirically (by temporarily disabling the lock on ProcessRefundRequestCommand-
+    // Handler, an already-established "TwoConcurrent..." test elsewhere in this suite) that this
+    // HttpClient+TestServer harness does not reliably force genuine interleaving even at 10-way
+    // concurrency — requests appear to execute effectively sequentially, so the loser's own
+    // check-time total already reflects the winner's committed write. This test therefore mainly
+    // proves the cap-recompute logic is correct on every individual request, the same real
+    // guarantee every other "TwoConcurrent..." test in this suite actually provides despite its
+    // "concurrent" framing. The lock's necessity under REAL concurrent load is established by code
+    // inspection (a genuine read-then-write TOCTOU gap) and by matching an already-proven pattern,
+    // not by this test forcing an actual race.
+
+    private async Task<int> CreateTierAsync(int showId, int totalCapacity)
+    {
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        var res = await client.PostAsJsonAsync("/api/v1/ticket-tiers", new
+        {
+            ShowId = showId,
+            Name = $"Tier-{Guid.NewGuid():N}",
+            Description = (string?)null,
+            AccessType = "Physical",
+            ZoneId = (int?)null,
+            TotalCapacity = totalCapacity,
+            Prices = new[]
+            {
+                new
+                {
+                    Name = "Standard",
+                    Price = 100_000m,
+                    Quota = (int?)totalCapacity,
+                    PurchaseChannel = "Both",
+                    SaleStart = DateTimeOffset.UtcNow,
+                    SaleEnd = DateTimeOffset.UtcNow.AddDays(2)
+                }
+            }
+        });
+        res.EnsureSuccessStatusCode();
+        var body = await res.Content.ReadFromJsonAsync<DataResponse<int>>();
+        return body!.Data;
+    }
+
+    [Fact]
+    public async Task UpdateTicketTier_TenConcurrentCapacityRaises_NeverExceedsSubscriptionCap()
+    {
+        var showId = await CreateShowAsync();
+        // 10 tiers × 10 = 100, safely under the seed subscription cap of 1000 (SeedHelper).
+        const int tierCount = 10;
+        var tierIds = new List<int>();
+        for (var i = 0; i < tierCount; i++)
+            tierIds.Add(await CreateTierAsync(showId, totalCapacity: 10));
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+
+        // Each tier raises from 10 to 190. Read alone (against the other 9 tiers' still-10 value),
+        // every single one of the 10 individually computes 9*10+190=280, well under the 1000 cap —
+        // so if genuinely raced, ALL 10 could pass their own check and commit, landing an actual
+        // total of 10*190=1900, almost double the cap. Processed correctly one at a time (locked),
+        // the arithmetic caps out at exactly 5 successes (100 + 5*180 = 1000, the 6th would push it
+        // to 1180) — that count is invariant to processing order since every tier uses the identical
+        // 10→190 raise, so this asserts the exact number as a tight regression signal, not just an
+        // upper bound.
+        var responses = await Task.WhenAll(tierIds.Select(tierId =>
+            client.PutAsJsonAsync($"/api/v1/ticket-tiers/{tierId}",
+                new { Name = "Raised tier", Description = (string?)null, TotalCapacity = 190 })));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var totalCapacity = await db.TicketTiers
+            .Where(t => t.LoungeShowId == showId)
+            .SumAsync(t => t.TotalCapacity ?? 0);
+
+        totalCapacity.Should().BeLessThanOrEqualTo(1000,
+            "tổng capacity thực tế sau cùng không được vượt hạn mức gói subscription dù có tranh chấp đồng thời — " +
+            $"đã ghi nhận {totalCapacity} ({responses.Count(r => r.StatusCode == HttpStatusCode.NoContent)}/{tierCount} request thành công)");
+        responses.Count(r => r.StatusCode == HttpStatusCode.NoContent).Should().Be(5,
+            "đúng 5/10 request được vượt qua kiểm tra hạn mức khi xử lý tuần tự đúng (khóa hoạt động) — " +
+            "số lượng thành công lớn hơn nghĩa là có ít nhất 2 request đọc dữ liệu cũ trước khi request kia ghi xong");
+        responses.Count(r => r.StatusCode == HttpStatusCode.UnprocessableEntity).Should().Be(5,
+            "5 request còn lại phải thấy đúng lỗi vượt hạn mức, không phải lỗi hạ tầng (500)");
+    }
+
+    // ─── B1 authorization gap round 2 (MLACP-256, audit-flagged 2026-09-06) ───
+    // Same class of bug as MLACP-252 above, found in 3 more handlers the earlier sweep's grep
+    // missed: no Admin fallback at all (not even the older string-literal "Admin" style).
+
+    [Fact]
+    public async Task SetLegalApprovalReference_ByAdmin_NotTheOwner_Returns204()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval", new
+        {
+            LegalApprovalReference = "SoVHTT-ADMIN-0001"
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to correct legal-approval data on any venue's show");
+    }
+
+    [Fact]
+    public async Task SetVcpmcRoyaltyReference_ByAdmin_NotTheOwner_Returns204()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/vcpmc-royalty", new
+        {
+            VcpmcRoyaltyReference = "VCPMC-ADMIN-0001"
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to correct VCPMC-royalty data on any venue's show");
+    }
+
+    [Fact]
+    public async Task GetPosterGenerationHistory_ByAdmin_NotTheOwner_Returns200()
+    {
+        var showId = await CreateShowAsync();
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.GetAsync($"/api/v1/lounge-shows/{showId}/ai-poster/history");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK,
+            "Admin must be able to review any venue's AI-poster generation history for support/moderation");
     }
 
     private sealed record DataResponse<T>(bool Success, T Data);

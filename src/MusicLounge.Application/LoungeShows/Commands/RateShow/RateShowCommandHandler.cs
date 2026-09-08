@@ -31,13 +31,19 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
         if (show.RatingOpenUntil.HasValue && DateTimeOffset.UtcNow > show.RatingOpenUntil.Value)
             throw new DomainException("Đã hết hạn đánh giá show này (7 ngày sau khi kết thúc).");
 
-        var hasTicket = await _uow.Repository<Ticket, Guid>()
+        // MLACP-140 DONE WHEN: "Không check-in không đánh giá được" — bắt buộc Status=Used, không
+        // còn chấp nhận Confirmed đơn thuần (khác với local master, nơi Confirmed cũng qua được).
+        // Ve vat ly: Used chi duoc set boi CheckInTicketCommandHandler khi nhan vien quet QR that o
+        // cua. Ve Livestream: khong co quay nao de quet, nen duoc tu dong chuyen sang Used boi
+        // CheckInLivestreamViewerJob dung luc chu ve that su nhan duoc HlsUrl phat (xem
+        // GetLivestreamDetailQueryHandler) — 2 co che khac nhau nhung hoi tu ve cung 1 dieu kien.
+        var hasCheckedIn = await _uow.Repository<Ticket, Guid>()
             .AnyAsync(t => t.ShowId == request.ShowId
                 && t.BuyerId == _currentUser.UserId
-                && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
+                && t.Status == TicketStatus.Used, ct);
 
-        if (!hasTicket)
-            throw new ForbiddenException("Bạn cần có vé đã xác nhận để đánh giá show này.");
+        if (!hasCheckedIn)
+            throw new ForbiddenException("Bạn cần check-in (vào cửa hoặc xem livestream) để đánh giá show này.");
 
         var alreadyRated = await _uow.Repository<LoungeShowRating, int>()
             .AnyAsync(r => r.LoungeShowId == request.ShowId && r.UserId == _currentUser.UserId, ct);
@@ -49,8 +55,7 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
             UserId = _currentUser.UserId,
             LoungeShowId = request.ShowId,
             Score = request.Score,
-            Comment = request.Comment,
-            CreatedAt = DateTimeOffset.UtcNow
+            Comment = request.Comment
         });
 
         await _uow.SaveChangesAsync(ct);

@@ -1,10 +1,11 @@
-using FluentValidation;
+﻿using FluentValidation;
+using MusicLounge.Application.Common.Interfaces;
 
 namespace MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 
 public sealed class StitchVenueTourSceneCommandValidator : AbstractValidator<StitchVenueTourSceneCommand>
 {
-    public StitchVenueTourSceneCommandValidator()
+    public StitchVenueTourSceneCommandValidator(IFileStorageService fileStorage)
     {
         RuleFor(x => x.LoungeId).GreaterThan(0);
         RuleFor(x => x.Name).MaximumLength(100);
@@ -17,14 +18,19 @@ public sealed class StitchVenueTourSceneCommandValidator : AbstractValidator<Sti
         // SSRF gate: the panorama-stitcher service fetches whatever URL it's given
         // (requests.get) with no network restriction of its own — without this check, an Owner
         // could pass an internal address (cloud metadata endpoint, internal admin service) and
-        // have OUR server request it on their behalf. Requiring a relative "/uploads/..." path
-        // forces every source image through the existing authenticated upload endpoint first
-        // (POST /uploads/images), which is the only thing that can produce this shape of value -
-        // an allowlist by construction, not a blocklist trying to enumerate bad hosts.
+        // have OUR server request it on their behalf. Every source image must therefore be one our
+        // own authenticated upload endpoint produced: an allowlist by construction, not a blocklist
+        // trying to enumerate bad hosts.
+        //
+        // The storage layer answers this rather than a string check here, because what a URL we
+        // issued looks like depends on where files are being kept. This used to test for a leading
+        // "/uploads/", which was the same test only while files lived on local disk — once storage
+        // moved to Firebase that shape stopped appearing and the gate would have refused every
+        // legitimate image, taking tour stitching down with it.
         RuleForEach(x => x.SourceImageUrls)
             .NotEmpty()
             .MaximumLength(500)
-            .Must(url => url.StartsWith("/uploads/", StringComparison.Ordinal))
+            .Must(fileStorage.IsOwnUploadUrl)
             .WithMessage("Ảnh phải được tải lên qua endpoint upload (POST /uploads/images) trước — không chấp nhận URL bên ngoài.");
     }
 }

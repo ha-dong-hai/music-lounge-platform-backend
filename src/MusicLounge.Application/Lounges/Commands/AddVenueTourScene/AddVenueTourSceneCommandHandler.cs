@@ -89,7 +89,6 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
             RiskLevel = Enum.TryParse<ModerationRiskLevel>(moderation.RiskLevel, true, out var risk) ? risk : null,
             FlagReason = moderation.FlagReason,
             AiRecommendation = Enum.TryParse<AiModerationRecommendation>(moderation.Recommendation, true, out var rec) ? rec : null,
-            CreatedAt = now,
             SlaDeadline = now.AddHours(slaHours)
         });
         await _uow.SaveChangesAsync(ct);

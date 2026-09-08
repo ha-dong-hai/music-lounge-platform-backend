@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,14 +9,17 @@ using MusicLounge.Application.Users.Commands.DeactivateMyAccount;
 using MusicLounge.Application.Users.Commands.RequestDataErasure;
 using MusicLounge.Application.Users.Commands.RequestPhoneVerification;
 using MusicLounge.Application.Users.Commands.SubmitCitizenCard;
+using MusicLounge.Application.Users.Commands.SubmitTaxProfile;
 using MusicLounge.Application.Users.Commands.UpdateAiPreferences;
 using MusicLounge.Application.Users.Commands.UpdateMyProfile;
 using MusicLounge.Application.Users.Commands.VerifyPhone;
 using MusicLounge.Application.Users.DTOs;
 using MusicLounge.Application.Users.Queries.GetMyCitizenCardImage;
+using MusicLounge.Application.Users.Queries.GetMyTaxProfile;
 using MusicLounge.Application.Users.Queries.GetMyDataExport;
 using MusicLounge.Application.Users.Queries.GetMyEarnings;
 using MusicLounge.Application.Users.Queries.GetMyProfile;
+using MusicLounge.Application.Users.Queries.GetOwnerTransactionHistory;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -39,17 +42,10 @@ public sealed class MeController : ControllerBase
         return Ok(ApiResponse<UserProfileDto>.Ok(result));
     }
 
-    [HttpGet("earnings")]
-    [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<EarningsSummaryDto>>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetMyEarnings(CancellationToken ct = default)
-    {
-        var result = await _sender.Send(new GetMyEarningsQuery(), ct);
-        return Ok(ApiResponse<EarningsSummaryDto>.Ok(result));
-    }
-
+    /// <summary>Lưu sở thích âm nhạc (thể loại/tâm trạng/không gian) làm đầu vào cho AI gợi ý — dùng
+    /// cả cho onboarding lần đầu sau đăng ký lẫn cập nhật lại trong Cài đặt sau này (ghi đè toàn bộ
+    /// danh sách theo request, không phải thêm dần). Mọi field có thể để rỗng — không có bước nào
+    /// khác trong hệ thống bắt buộc phải hoàn thành onboarding này mới dùng được ứng dụng.</summary>
     [HttpPut("preferences")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -86,6 +82,33 @@ public sealed class MeController : ControllerBase
     {
         await _sender.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>NĐ 117/2025: khai báo loại hình kinh doanh (hộ/cá nhân kinh doanh hay doanh nghiệp)
+    /// và mã số thuế. Khai lại sẽ xoá trạng thái đã duyệt trước đó, và nền tảng vẫn khấu trừ thuế
+    /// cho tới khi hồ sơ doanh nghiệp được duyệt — dừng khấu trừ không thể chỉ dựa trên khai báo của
+    /// chính người bán.</summary>
+    [HttpPut("tax-profile")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SubmitTaxProfile(
+        [FromBody] SubmitTaxProfileCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>Hồ sơ thuế của chính mình, kèm câu trả lời cho câu hỏi thực sự cần biết: nền tảng có
+    /// đang khấu trừ thuế trên doanh thu của bạn không, và ở mức nào.</summary>
+    [HttpGet("tax-profile")]
+    [ProducesResponseType<ApiResponse<TaxProfileDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMyTaxProfile(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyTaxProfileQuery(), ct);
+        return Ok(ApiResponse<TaxProfileDto>.Ok(result));
     }
 
     /// <summary>Xem lại ảnh CCCD/CMND đã nộp — chỉ chính chủ. File nằm ngoài wwwroot, không đoán URL truy cập trực tiếp được.</summary>
@@ -162,6 +185,39 @@ public sealed class MeController : ControllerBase
     {
         await _sender.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>Lịch sử giao dịch hợp nhất của Owner (vé bán được, donate nhận, quyết toán đã nhận
+    /// — cùng một nguồn sổ cái D8) — lọc theo khoảng thời gian và loại giao dịch
+    /// (payment/donation/settlement).</summary>
+    [HttpGet("transactions")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<PaginatedResult<OwnerTransactionDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyTransactionHistory(
+        [FromQuery] string? type,
+        [FromQuery] DateTimeOffset? from,
+        [FromQuery] DateTimeOffset? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetOwnerTransactionHistoryQuery(type, from, to, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<OwnerTransactionDto>>.Ok(result));
+    }
+
+    /// <summary>Tổng quan thu nhập của Owner từ settlement — đã nhận (Released), đang chờ
+    /// (Scheduled/PendingReview), và 10 settlement gần nhất.</summary>
+    [HttpGet("earnings")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<EarningsSummaryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyEarnings(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyEarningsQuery(), ct);
+        return Ok(ApiResponse<EarningsSummaryDto>.Ok(result));
     }
 }
 

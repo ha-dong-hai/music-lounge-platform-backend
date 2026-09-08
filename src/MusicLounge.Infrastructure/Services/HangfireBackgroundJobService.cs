@@ -1,7 +1,9 @@
-using Hangfire;
+﻿using Hangfire;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Livestreams.Jobs;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
+using MusicLounge.Application.Tickets.Commands.CheckInLivestreamViewer;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Jobs;
 
@@ -22,9 +24,24 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
         => BackgroundJob.Enqueue<RefreshUserRecommendationJob>(
             j => j.ExecuteAsync(userId, JobCancellationToken.Null));
 
-    public void EnqueueFcmNotification(int userId, string title, string body)
-        => BackgroundJob.Enqueue<IFcmService>(
-            f => f.SendAsync(userId, title, body, CancellationToken.None));
+    public void EnqueueLivestreamCheckIn(int userId, int showId)
+        => BackgroundJob.Enqueue<CheckInLivestreamViewerJob>(
+            j => j.ExecuteAsync(userId, showId));
+
+    public void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay)
+        => BackgroundJob.Schedule<LivestreamReconnectTimeoutJob>(
+            j => j.ExecuteAsync(livestreamId, disconnectedAt), delay);
+
+    public void EnqueueFcmNotification(
+        int userId, string title, string body, string? referenceType = null, string? referenceId = null)
+    {
+        var data = new Dictionary<string, string>();
+        if (referenceType is not null) data["referenceType"] = referenceType;
+        if (referenceId is not null) data["referenceId"] = referenceId;
+
+        BackgroundJob.Enqueue<IFcmService>(
+            f => f.SendAsync(userId, title, body, data, CancellationToken.None));
+    }
 
     public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink)
     {
@@ -54,6 +71,8 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     public void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
         => BackgroundJob.Enqueue<StitchVenueTourSceneJob>(
             j => j.ExecuteAsync(attemptId, loungeId, sourceImageUrls, name, JobCancellationToken.Null));
+
+    public IReadOnlyList<string> GetRecurringJobIds() => DependencyInjection.RecurringJobIds;
 
     public void TriggerRecurringJobNow(string recurringJobId)
         => RecurringJob.TriggerJob(recurringJobId);

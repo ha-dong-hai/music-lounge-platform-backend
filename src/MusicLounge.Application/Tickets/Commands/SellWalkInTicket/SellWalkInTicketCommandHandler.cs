@@ -19,6 +19,7 @@ internal sealed class SellWalkInTicketCommandHandler
     private readonly ILoungeShowRepository _showRepo;
     private readonly IShowBookingLock _bookingLock;
     private readonly IPublisher _publisher;
+    private readonly ISystemConfigService _config;
 
     public SellWalkInTicketCommandHandler(
         IUnitOfWork uow,
@@ -26,7 +27,8 @@ internal sealed class SellWalkInTicketCommandHandler
         ITicketRepository ticketRepo,
         ILoungeShowRepository showRepo,
         IShowBookingLock bookingLock,
-        IPublisher publisher)
+        IPublisher publisher,
+        ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
@@ -34,6 +36,7 @@ internal sealed class SellWalkInTicketCommandHandler
         _showRepo = showRepo;
         _bookingLock = bookingLock;
         _publisher = publisher;
+        _config = config;
     }
 
     public async Task<WalkInSaleResultDto> Handle(SellWalkInTicketCommand request, CancellationToken ct)
@@ -66,6 +69,11 @@ internal sealed class SellWalkInTicketCommandHandler
         var now = DateTimeOffset.UtcNow;
         if (now < price.SaleStart || now > price.SaleEnd)
             throw new DomainException("Đợt bán vé này chưa mở hoặc đã kết thúc.");
+
+        // D13: cung 1 moc dong ban voi HoldTicketCommandHandler — ap dung ca cho ban tai quay,
+        // khong co ly do de kenh Offline duoc mien tru khoi gio dong ban Owner da dat cho show.
+        if (show.TicketSaleClosesAt.HasValue && now > show.TicketSaleClosesAt.Value)
+            throw new DomainException("Event đã đóng bán vé.");
 
         // Serialize quota-check-then-reserve per show — same race as HoldTicketCommandHandler:
         // a Staff walk-in sale and an online buyer's hold can target the same show concurrently.
@@ -121,7 +129,8 @@ internal sealed class SellWalkInTicketCommandHandler
                 UserId: 0,
                 OwnerId: loungeOwnerId,
                 TicketIds: tickets.Select(t => t.Id).ToArray(),
-                LivestreamId: null), ct);
+                LivestreamId: null,
+                ShowId: tier.LoungeShowId), ct);
 
             return new WalkInSaleResultDto(payment.Id, totalAmount, tickets.Select(t => t.Id).ToArray());
         }
@@ -169,15 +178,15 @@ internal sealed class SellWalkInTicketCommandHandler
         // thật nên phải chịu cùng giới hạn, không chỉ đường mua online mới bị chặn.
         var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
             s => s.OwnerId == loungeOwnerId && s.Status == SubscriptionStatus.Active, ct);
-        var activeSub = activeSubs
-            .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
-            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
-        if (activeSub is not null)
-        {
-            var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
-            if (showReservedTotal + quantity > activeSub.MaxTicketsPerEventSnapshot)
-                throw new DomainException(
-                    $"Show đã đạt giới hạn {activeSub.MaxTicketsPerEventSnapshot} vé/event của gói subscription hiện tại.");
-        }
+        // Cung mot cap voi duong mua online — ban tai quay khong duoc la loi thoat khoi gioi han.
+        var freeTierCap = await _config.GetIntAsync(
+            ConfigKeys.FreeTierMaxTicketsPerEvent,
+            SubscriptionEntitlements.DefaultFreeTierMaxTicketsPerEvent, ct);
+        var cap = SubscriptionEntitlements.ResolveTicketCap(
+            SubscriptionEntitlements.ActivePlan(activeSubs, DateTimeOffset.UtcNow), freeTierCap);
+
+        var showReservedTotal = await _ticketRepo.GetReservedQuantityByShowAsync(show.Id, ct);
+        if (showReservedTotal + quantity > cap.MaxTicketsPerEvent)
+            throw new DomainException(cap.ExceededMessage("Số vé của buổi hòa nhạc này"));
     }
 }

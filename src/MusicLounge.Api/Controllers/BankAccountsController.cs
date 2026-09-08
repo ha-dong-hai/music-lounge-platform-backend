@@ -14,8 +14,7 @@ namespace MusicLounge.Api.Controllers;
 
 // Owner registers/updates payout-destination bank accounts for their own venue (BankAccountOwnerType.Lounge)
 // or for a Performer they created (BankAccountOwnerType.Performer, §6.12 edit-rights) — this is the
-// registration half of Settlement.BankAccountId/Donation.BankAccountId, previously unreachable
-// through any API (governance gap #8 from the 2026-08-09 production-hardening audit).
+// registration half of Settlement.BankAccountId/Donation.BankAccountId.
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/bank-accounts")]

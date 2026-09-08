@@ -7,4 +7,5 @@ public record TicketPaymentConfirmed(
     int UserId,
     int OwnerId,
     Guid[] TicketIds,
-    int? LivestreamId) : INotification;
+    int? LivestreamId,
+    int ShowId) : INotification;

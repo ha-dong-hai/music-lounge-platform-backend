@@ -1,12 +1,15 @@
+using System.Security.Cryptography;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Complaints.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Complaints.Commands.CreateComplaint;
 
-internal sealed class CreateComplaintCommandHandler : IRequestHandler<CreateComplaintCommand, int>
+internal sealed class CreateComplaintCommandHandler
+    : IRequestHandler<CreateComplaintCommand, ComplaintCreatedDto>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -20,7 +23,7 @@ internal sealed class CreateComplaintCommandHandler : IRequestHandler<CreateComp
         _config = config;
     }
 
-    public async Task<int> Handle(CreateComplaintCommand request, CancellationToken ct)
+    public async Task<ComplaintCreatedDto> Handle(CreateComplaintCommand request, CancellationToken ct)
     {
         // D17: guest reporters (no account) must leave a contact phone so Admin can verify identity.
         if (!_currentUser.IsAuthenticated && string.IsNullOrWhiteSpace(request.ContactPhone))
@@ -29,9 +32,18 @@ internal sealed class CreateComplaintCommandHandler : IRequestHandler<CreateComp
         var now = DateTimeOffset.UtcNow;
         var slaHours = await _config.GetIntAsync(ConfigKeys.ComplaintSlaHours, 72, ct);
 
+        // Người có tài khoản xem lại được qua GET /complaints/my, nên chỉ khách vãng lai mới cần mã
+        // tra cứu. Chuỗi ngẫu nhiên bằng RandomNumberGenerator chứ không phải Guid tuần tự hay id
+        // tăng dần — endpoint tra cứu là công khai, nên mã đoán được nghĩa là đọc được khiếu nại của
+        // người khác.
+        var lookupReference = _currentUser.IsAuthenticated
+            ? null
+            : Convert.ToHexString(RandomNumberGenerator.GetBytes(12));
+
         var complaint = new Complaint
         {
             ComplainantUserId = _currentUser.IsAuthenticated ? _currentUser.UserId : null,
+            LookupReference = lookupReference,
             TargetType = request.TargetType,
             TargetId = request.TargetId,
             Category = Enum.Parse<ComplaintCategory>(request.Category, ignoreCase: true),
@@ -45,6 +57,6 @@ internal sealed class CreateComplaintCommandHandler : IRequestHandler<CreateComp
 
         _uow.Repository<Complaint, int>().Add(complaint);
         await _uow.SaveChangesAsync(ct);
-        return complaint.Id;
+        return new ComplaintCreatedDto(complaint.Id, lookupReference);
     }
 }

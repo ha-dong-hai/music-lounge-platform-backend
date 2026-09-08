@@ -11,4 +11,8 @@ public sealed record LoungeSummaryDto(
     double? Latitude,
     double? Longitude,
     string? PrimaryImageUrl,
-    string? Model3DUrl);
+    string? Model3DUrl,
+    string? AtmosphereName,
+    IReadOnlyList<LoungeGalleryImageDto> GalleryImages);
+
+public sealed record LoungeGalleryImageDto(int Id, string ImageUrl, string? Caption);
