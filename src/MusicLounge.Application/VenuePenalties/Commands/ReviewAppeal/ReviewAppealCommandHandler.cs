@@ -1,5 +1,6 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -68,7 +69,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
             var otherActivePenalties = await _uow.Repository<VenuePenalty, int>().FindAsync(
                 p => p.LoungeId == penalty.LoungeId
                     && p.Id != penalty.Id
-                    && p.Status == PenaltyStatus.Active
+                    && PenaltyLifecycle.InForce.Contains(p.Status)
                     && p.AppliedAt != null
                     && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
                 ct);
