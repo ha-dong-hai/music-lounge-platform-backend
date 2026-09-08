@@ -58,6 +58,14 @@ internal sealed class StartLivestreamCommandHandler : IRequestHandler<StartLives
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền phát livestream của venue này.");
 
+        // Cancel chi chan khi livestream dang Live, nen mot show co the bi huy trong khi livestream
+        // van o Scheduled. Khong co guard nay thi Start se lat show tu Cancelled ve Ongoing va phat
+        // song mot show da hoan 100% tien ve cho toan bo khan gia. Day la hanh dong chu dong cua
+        // Owner nen tu choi thang, khac voi cac duong webhook/job chi bo qua trong im lang.
+        if (LoungeShowLifecycle.IsTerminal(show.Status))
+            throw new DomainException(
+                $"Không thể phát livestream cho show ở trạng thái '{show.Status}'.");
+
         // D19: phai tra tac quyen VCPMC truoc khi show dien ra
         if (string.IsNullOrWhiteSpace(show.VcpmcRoyaltyReference))
             throw new DomainException(

@@ -54,10 +54,21 @@ public sealed class LivestreamReconnectTimeoutJob
         if (show is not null)
         {
             var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7);
-            show.Status = LoungeShowStatus.Ended;
-            show.ActualEnd = now;
-            show.RatingOpenUntil = now.AddDays(ratingWindowDays);
-            _uow.Repository<LoungeShow, int>().Update(show);
+            // This is the most likely of the four paths to hit a cancelled show: CancelLoungeShow
+            // blocks only on livestream Status==Live, so an Owner can cancel during the reconnect
+            // window and this job then fires minutes later against a show that is already
+            // Cancelled and fully refunded.
+            if (LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays))
+            {
+                _uow.Repository<LoungeShow, int>().Update(show);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Reconnect-timeout left ShowId={ShowId} at {ShowStatus} — LivestreamId={LivestreamId} " +
+                    "marked Failed but the show had already reached a terminal state at {At}",
+                    show.Id, show.Status, livestream.Id, now);
+            }
         }
 
         await _uow.SaveChangesAsync();
