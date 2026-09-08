@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -66,7 +67,7 @@ public sealed class AutoApproveOverdueAppealsJob
             var hasOtherActivePenalty = await _ctx.VenuePenalties.AnyAsync(
                 p => p.LoungeId == current.LoungeId
                     && p.Id != current.Id
-                    && p.Status == PenaltyStatus.Active
+                    && PenaltyLifecycle.InForce.Contains(p.Status)
                     && p.AppliedAt != null
                     && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
                 ct);

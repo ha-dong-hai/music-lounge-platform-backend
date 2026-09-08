@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -228,6 +228,85 @@ public sealed class SuspensionExpiryTests
         var (status, penalty, _) = await ReadAsync(loungeId, penaltyId);
         penalty.Should().Be(PenaltyStatus.Expired);
         status.Should().Be(LoungeStatus.Locked, "an Admin's own decision outranks the countdown");
+    }
+
+    [Fact]
+    public async Task ASuspensionWhoseAppealWasRejected_StillExpiresWhenItsTermIsServed()
+    {
+        // MLACP-304. Losing an appeal moves the penalty from Appealed to Upheld — it still stands,
+        // it has just been through review. The expiry job originally filtered on Active only, so
+        // this venue was skipped entirely: appeal, lose, stay locked forever. Exactly the hole
+        // MLACP-299 was written to close, reached by a different route.
+        var (loungeId, _) = await SeedSuspendedVenueAsync();
+        var penaltyId = await SeedAppliedSuspensionAsync(
+            loungeId, 7, DateTimeOffset.UtcNow.AddDays(-8), DateTimeOffset.UtcNow.AddDays(-1));
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var penalty = await db.Set<VenuePenalty>().SingleAsync(p => p.Id == penaltyId);
+            penalty.Status = PenaltyStatus.Upheld;
+            penalty.AppealResult = "Upheld";
+            await db.SaveChangesAsync();
+        }
+
+        await RunJobAsync();
+
+        var (status, penaltyStatus, _) = await ReadAsync(loungeId, penaltyId);
+        penaltyStatus.Should().Be(PenaltyStatus.Expired);
+        status.Should().Be(LoungeStatus.Approved,
+            "losing an appeal means serving the sentence, not serving it forever");
+    }
+
+    [Fact]
+    public async Task AnUpheldSuspensionElsewhere_StillKeepsTheVenueLocked()
+    {
+        // The same omission in the other direction: the "any other penalty still in force" count
+        // ignored Upheld too, so a venue serving an upheld sentence could be released early when a
+        // different penalty happened to expire.
+        var (loungeId, _) = await SeedSuspendedVenueAsync();
+        var servedId = await SeedAppliedSuspensionAsync(
+            loungeId, 7, DateTimeOffset.UtcNow.AddDays(-8), DateTimeOffset.UtcNow.AddDays(-1));
+        var upheldId = await SeedAppliedSuspensionAsync(
+            loungeId, 30, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(28));
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var other = await db.Set<VenuePenalty>().SingleAsync(p => p.Id == upheldId);
+            other.Status = PenaltyStatus.Upheld;
+            await db.SaveChangesAsync();
+        }
+
+        await RunJobAsync();
+
+        var (status, penaltyStatus, _) = await ReadAsync(loungeId, servedId);
+        penaltyStatus.Should().Be(PenaltyStatus.Expired);
+        status.Should().Be(LoungeStatus.Suspended,
+            "the other sentence was upheld, which means it still stands");
+    }
+
+    [Fact]
+    public async Task APendingAppeal_IsLeftToTheAppealProcess()
+    {
+        // Appealed is deliberately outside the set: an appeal under review is decided by the review,
+        // and AutoApproveOverdueAppealsJob already bounds how long that can drag on.
+        var (loungeId, _) = await SeedSuspendedVenueAsync();
+        var penaltyId = await SeedAppliedSuspensionAsync(
+            loungeId, 7, DateTimeOffset.UtcNow.AddDays(-8), DateTimeOffset.UtcNow.AddDays(-1));
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var penalty = await db.Set<VenuePenalty>().SingleAsync(p => p.Id == penaltyId);
+            penalty.Status = PenaltyStatus.Appealed;
+            penalty.AppealedAt = DateTimeOffset.UtcNow.AddDays(-1);
+            await db.SaveChangesAsync();
+        }
+
+        await RunJobAsync();
+
+        (await ReadAsync(loungeId, penaltyId)).Penalty.Should().Be(PenaltyStatus.Appealed);
     }
 
     [Fact]

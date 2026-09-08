@@ -1,6 +1,7 @@
-using Hangfire;
+﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -43,7 +44,9 @@ public sealed class ExpireServedSuspensionsJob
         // vấn không dịch được sang SQLite (provider dùng trong test), giới hạn đã ghi nhận khắp
         // codebase này.
         var applied = await _ctx.VenuePenalties
-            .Where(p => p.Status == PenaltyStatus.Active
+            // Upheld cung tinh la dang co hieu luc — xem PenaltyLifecycle. Loc moi Active o day
+            // nghia la venue khieu nai roi thua thi khong bao gio duoc go treo.
+            .Where(p => PenaltyLifecycle.InForce.Contains(p.Status)
                         && p.PenaltyType == PenaltyType.Suspension
                         && p.AppliedAt != null)
             .ToListAsync(ct);
@@ -81,7 +84,7 @@ public sealed class ExpireServedSuspensionsJob
             var otherActive = await _ctx.VenuePenalties.CountAsync(
                 p => p.LoungeId == lounge.Id
                      && p.Id != penalty.Id
-                     && p.Status == PenaltyStatus.Active
+                     && PenaltyLifecycle.InForce.Contains(p.Status)
                      && p.AppliedAt != null
                      && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
                 ct);
