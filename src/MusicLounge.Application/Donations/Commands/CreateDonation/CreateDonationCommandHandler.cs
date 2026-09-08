@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -64,7 +64,12 @@ internal sealed class CreateDonationCommandHandler
         // this estimate can't silently drift from the real formula if it's ever tweaked.
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
         var taxRate = await _config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
-        var net = PaymentFeeCalculator.Split(request.Amount, commissionRate, taxRate).OwnerNet;
+        // Personal income tax is deliberately left out of the ESTIMATE: resolving it needs the
+        // payee, which this handler does not have until the donation row exists, and the figure is
+        // overwritten with the authoritative split the moment VNPay confirms anyway.
+        var personalIncomeTaxRate = await _config.GetDecimalAsync(ConfigKeys.PersonalIncomeTaxRate, 0m, ct);
+        var net = PaymentFeeCalculator
+            .Split(request.Amount, commissionRate, taxRate, personalIncomeTaxRate).OwnerNet;
 
         var orderId = $"DON-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
 

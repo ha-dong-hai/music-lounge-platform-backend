@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -78,14 +78,16 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         }
 
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
-        var taxRate = await _config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
+        var taxes = await TaxWithholdingPolicy.ResolveForOwnerAsync(
+            _uow, _config, notification.OwnerId, ct);
 
         var gross = payment.GrossAmount;
         // Same split WriteTicketLedgerHandler uses for payment.NetAmount — otherwise the two
         // handlers can round to different owner-net figures for the same payment, and this
         // settlement's stage1+stage2 silently stops matching what the ledger/payment record says
         // the owner is owed.
-        var ownerNet = PaymentFeeCalculator.Split(gross, commissionRate, taxRate).OwnerNet;
+        var ownerNet = PaymentFeeCalculator
+            .Split(gross, commissionRate, taxes.VatRate, taxes.PersonalIncomeTaxRate).OwnerNet;
 
         // D3: payout-speed tier by venue standing — rewards a well-reviewed, established venue with
         // a larger up-front tranche instead of everyone getting the same flat rate. Computed live

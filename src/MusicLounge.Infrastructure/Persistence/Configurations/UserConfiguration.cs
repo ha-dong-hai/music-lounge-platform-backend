@@ -30,6 +30,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.CitizenCardNumberHash).HasMaxLength(64);
         b.Property(u => u.CitizenCardFrontImageUrl).HasMaxLength(500);
         b.Property(u => u.CitizenCardBackImageUrl).HasMaxLength(500);
+        b.Property(u => u.BusinessType).HasConversion<string>().HasMaxLength(32);
+        b.Property(u => u.TaxCode).HasMaxLength(500);
+        b.Property(u => u.TaxCodeHash).HasMaxLength(64);
         b.Property(u => u.SecurityStamp).IsRequired();
         b.Property(u => u.FailedLoginAttempts).HasDefaultValue(0);
         b.HasIndex(u => u.Email).IsUnique();
@@ -37,5 +40,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         // Encryption is non-deterministic, so uniqueness has to be enforced on the deterministic
         // hash column instead of CitizenCardNumber itself.
         b.HasIndex(u => u.CitizenCardNumberHash).IsUnique().HasFilter("[CitizenCardNumberHash] IS NOT NULL");
+        // Same reasoning, and the same filter: SQL Server treats every NULL as distinct, so without
+        // it a unique index would reject the second user who simply has not declared a tax code.
+        b.HasIndex(u => u.TaxCodeHash).IsUnique().HasFilter("[TaxCodeHash] IS NOT NULL");
     }
 }

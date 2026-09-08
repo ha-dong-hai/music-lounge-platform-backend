@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
 
@@ -26,6 +26,7 @@ public static class SystemConfigValidation
     [
         ConfigKeys.PlatformCommissionRate,
         ConfigKeys.TaxRate,
+        ConfigKeys.PersonalIncomeTaxRate,
         ConfigKeys.DonationPerformerShareRate,
         "gateway_fee_rate",
         ConfigKeys.SettlementTierNewPreRate,
@@ -101,21 +102,30 @@ public static class SystemConfigValidation
     private static string? ValidateRateCombination(
         string key, decimal proposed, IReadOnlyDictionary<string, decimal> otherRates)
     {
-        if (key != ConfigKeys.PlatformCommissionRate && key != ConfigKeys.TaxRate)
+        // All three come off the same gross, and the owner receives what is left after all three.
+        string[] deductedFromGross =
+        [
+            ConfigKeys.PlatformCommissionRate,
+            ConfigKeys.TaxRate,
+            ConfigKeys.PersonalIncomeTaxRate
+        ];
+
+        if (!deductedFromGross.Contains(key))
             return null;
 
-        var counterpartKey = key == ConfigKeys.PlatformCommissionRate
-            ? ConfigKeys.TaxRate
-            : ConfigKeys.PlatformCommissionRate;
+        var counterparts = deductedFromGross
+            .Where(k => k != key)
+            .Select(k => (Key: k, Value: otherRates.TryGetValue(k, out var v) ? v : 0m))
+            .ToArray();
 
-        if (!otherRates.TryGetValue(counterpartKey, out var counterpart))
-            return null;
-
-        var combined = proposed + counterpart;
+        var combined = proposed + counterparts.Sum(c => c.Value);
         if (combined >= 1m)
-            return $"Hoa hồng nền tảng cộng thuế sẽ là {combined:P0} — bằng hoặc vượt 100% doanh thu, " +
-                   $"nghĩa là chủ phòng trà nhận về 0 đồng hoặc âm. Sổ cái kép không biểu diễn được " +
-                   $"một khoản chuyển âm. Hiện \"{counterpartKey}\" đang là {counterpart:P0}.";
+        {
+            var others = string.Join(", ", counterparts.Select(c => $"\"{c.Key}\" = {c.Value:P0}"));
+            return $"Hoa hồng nền tảng cộng các khoản thuế khấu trừ sẽ là {combined:P0} — bằng hoặc " +
+                   $"vượt 100% doanh thu, nghĩa là chủ phòng trà nhận về 0 đồng hoặc âm. Sổ cái kép " +
+                   $"không biểu diễn được một khoản chuyển âm. Hiện {others}.";
+        }
 
         return null;
     }

@@ -1,4 +1,4 @@
-using MusicLounge.Domain.Enums;
+﻿using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
@@ -46,6 +46,26 @@ public sealed class User : Common.AuditableEntity<int>
     public string? CitizenCardFrontImageUrl { get; set; }
     public string? CitizenCardBackImageUrl { get; set; }
     public DateTimeOffset? CitizenCardSubmittedAt { get; set; }
+
+    // Hồ sơ thuế (NĐ 117/2025). The decree makes the platform responsible for collecting an
+    // identifying number — a tax code or a personal identification number — for sellers it
+    // withholds on behalf of, and for telling a hộ/cá nhân kinh doanh apart from a doanh nghiệp,
+    // because it only withholds for the former.
+    //
+    // Lives on User rather than on MusicLounge because the taxpayer is the person or business
+    // behind the account, not the room: an owner with two venues is still one taxpayer, and the
+    // citizen-card identity this pairs with is already here.
+    public PayeeBusinessType? BusinessType { get; set; }
+    // Encrypted at rest exactly like CitizenCardNumber, with the same deterministic hash beside it
+    // for the uniqueness check that the non-deterministic ciphertext cannot support.
+    public string? TaxCode { get; set; }
+    public string? TaxCodeHash { get; set; }
+    public DateTimeOffset? TaxProfileSubmittedAt { get; set; }
+    // Until this is set, a declaration of being a doanh nghiệp does not stop withholding — see
+    // TaxWithholdingPolicy. Self-service "please stop deducting tax from me" is not a claim a seller
+    // gets to make about themselves.
+    public DateTimeOffset? TaxProfileVerifiedAt { get; set; }
+    public int? TaxProfileVerifiedBy { get; set; }
 
     // Embedded in every issued JWT as "sec_stamp" and re-checked against this column on every
     // authenticated request (JwtBearerEvents.OnTokenValidated) — rotating it is how a password
