@@ -65,15 +65,22 @@ public static class SeedHelper
         );
 
         // Venues
+        // Status dat tay la Approved: mac dinh cua entity la Pending, va tu MLACP-307 thi Pending
+        // khong con la mot venue dang hoat dong — no khong hien cong khai va khong nop duyet buoi
+        // dien duoc. Hai venue nen tang nay dong vai "phong tra dang chay binh thuong" cho gan het
+        // bo test, nen chung phai la Approved. Truoc MLACP-307 ca bo test chay tren venue chua
+        // duyet ma khong ai nhan ra, vi Pending luc do khong chan gi ca.
         db.Lounges.AddRange(
             new MusicLoungeVenue
             {
                 Id = LoungeId, OwnerId = OwnerId, Name = "Test Lounge",
+                Status = LoungeStatus.Approved,
                 Address = new VenueAddress { Street = "123 Main", District = "1", City = "HCM" }
             },
             new MusicLoungeVenue
             {
                 Id = OtherLoungeId, OwnerId = OtherOwnerId, Name = "Other Test Lounge",
+                Status = LoungeStatus.Approved,
                 Address = new VenueAddress { Street = "456 Other", District = "2", City = "HCM" }
             });
 

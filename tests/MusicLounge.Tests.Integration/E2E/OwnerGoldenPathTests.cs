@@ -16,7 +16,8 @@ namespace MusicLounge.Tests.Integration.E2E;
 /// đầu đến cuối mà mọi CF1-CF7 test khác đều bỏ qua (mỗi CF chỉ test 1 lát cắt, tự bơm thẳng
 /// precondition vào DB). Test này gọi tuần tự đúng chuỗi API thật một Owner sẽ đi qua:
 ///
-/// Register(Role=Owner) → VerifyEmail → Login → CreateLounge → Subscribe(VNPay) →
+/// Register(Role=Owner) → VerifyEmail → Login → CreateLounge → Admin duyệt phòng trà →
+/// Subscribe(VNPay) →
 /// CreateLoungeShow → CreateTicketTier → SetLegalApproval → Publish (Draft→Pending) →
 /// Admin ReviewShow Approve (Pending→Published) → show xuất hiện trên GET /lounge-shows
 /// (homepage feed công khai) → AssignStaff → Staff bán vé walk-in → vé Confirmed.
@@ -93,9 +94,19 @@ public sealed class OwnerGoldenPathTests
         loungeRes.StatusCode.Should().Be(HttpStatusCode.Created);
         var loungeId = (await loungeRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
 
+        // ── 4b. Admin duyệt hồ sơ phòng trà (BR-01, MLACP-307) ────────────────────────
+        // Bước này mới, và nó phải nằm đúng ở đây: phòng trà vừa tạo ở trạng thái Pending, mà
+        // Pending thì không nộp duyệt buổi diễn được nữa. Trước MLACP-307 chuỗi này chạy suốt từ
+        // đăng ký tới bán vé thật mà không có ai nhìn qua địa điểm lấy một lần — đó chính là lỗ
+        // hổng, và test này là chỗ nó lộ ra rõ nhất.
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var venueReviewRes = await adminClient.PostAsJsonAsync(
+            $"/api/v1/admin/venues/{loungeId}/review",
+            new { Decision = "Approved", ReviewNote = "Hồ sơ hợp lệ" });
+        venueReviewRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
         // ── 5. Subscribe to an active package via real VNPay callback simulation
         //       (FakeVnPayService — same mechanism SubscriptionTests already proves works) ──
-        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var packageRes = await adminClient.PostAsJsonAsync("/api/v1/subscriptions/packages", new
         {
             Name = $"GoldenPkg-{Guid.NewGuid():N}", Description = "E2E package", Price = 250_000m,

@@ -18,6 +18,11 @@ public sealed record LoungeDetailDto(
     bool? IsFollowing,
     string? Description,
     string? AtmosphereName,
-    IReadOnlyList<LoungeGalleryImageDto> GalleryImages);
+    IReadOnlyList<LoungeGalleryImageDto> GalleryImages,
+    // MLACP-307. Them vao cuoi nen khong xe dich truong nao dang co. OwnerId de FE biet nguoi dang
+    // xem co phai chu phong tra khong; Status de chinh chu thay duoc ho so cua minh dang cho duyet
+    // hay da bi tu choi — truoc day khong co duong nao bao ho dieu do.
+    int OwnerId,
+    string Status);
 
 public sealed record LoungeGalleryImageDto(int Id, string ImageUrl, string? Caption, int OrderIndex);

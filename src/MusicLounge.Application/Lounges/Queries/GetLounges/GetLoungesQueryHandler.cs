@@ -33,6 +33,8 @@ internal sealed class GetLoungesQueryHandler
             ownerId = _currentUser.UserId;
         }
 
-        return await _repo.GetAllAsync(request.City, ownerId, page, size, ct);
+        // Owner xem phòng trà của chính mình thì thấy cả hồ sơ đang chờ duyệt lẫn hồ sơ bị từ
+        // chối; người ngoài chỉ thấy phòng trà đã được duyệt (BR-01, MLACP-307).
+        return await _repo.GetAllAsync(request.City, ownerId, request.Mine, page, size, ct);
     }
 }
