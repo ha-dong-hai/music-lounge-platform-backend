@@ -7,6 +7,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Complaints.Commands.CreateComplaint;
 using MusicLounge.Application.Complaints.Commands.ResolveComplaint;
 using MusicLounge.Application.Complaints.DTOs;
+using MusicLounge.Application.Complaints.Queries.LookupComplaint;
 using MusicLounge.Application.Complaints.Queries.GetMyComplaints;
 using MusicLounge.Application.Complaints.Queries.GetPendingComplaints;
 
@@ -32,9 +33,21 @@ public sealed class ComplaintsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreateComplaintCommand command, CancellationToken ct = default)
     {
-        var id = await _sender.Send(command, ct);
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
+        var created = await _sender.Send(command, ct);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<ComplaintCreatedDto>.Ok(created));
     }
+
+    /// <summary>Tra cứu khiếu nại bằng mã nhận được lúc gửi — dành cho người KHÔNG có tài khoản.
+    /// Trước đây họ gửi khiếu nại xong chỉ nhận về một số id và không có cách nào biết kết quả:
+    /// /complaints/my đòi đăng nhập, không có endpoint tra cứu, và không có SMS báo kết quả. Trả về
+    /// cùng một thông báo cho mã sai lẫn mã không tồn tại, vì đây là endpoint công khai và phân biệt
+    /// hai trường hợp sẽ biến nó thành công cụ dò mã.</summary>
+    [HttpGet("lookup/{reference}")]
+    [AllowAnonymous]
+    [ProducesResponseType<ComplaintLookupDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Lookup(string reference, CancellationToken ct = default)
+        => Ok(ApiResponse<ComplaintLookupDto>.Ok(await _sender.Send(new LookupComplaintQuery(reference), ct)));
 
     /// <summary>Khiếu nại của chính user đang đăng nhập.</summary>
     [HttpGet("my")]
