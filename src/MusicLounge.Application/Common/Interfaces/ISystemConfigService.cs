@@ -63,6 +63,12 @@ public static class ConfigKeys
     // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
     public const string LivestreamReplayDays = "livestream_replay_days";
 
+    // So gio an han sau ScheduledEnd truoc khi AutoEndStaleShowsJob tu danh dau show la Ended.
+    // Chi de bao ve show that su chay dai hon du kien khoi bi dong som — khong phai de cho Owner
+    // "co thoi gian bam nut", vi phan lon truong hop la ho khong bao gio bam. Khong seed san —
+    // dung mac dinh tai noi doc.
+    public const string ShowAutoEndGraceHours = "show_auto_end_grace_hours";
+
     // MLACP-191: so phut cho encoder tu ket noi lai sau khi Mux bao video.live_stream.disconnected
     // truoc khi he thong tu danh dau livestream la Failed. Khong seed san — dung mac dinh tai noi doc.
     public const string LivestreamReconnectTimeoutMinutes = "livestream_reconnect_timeout_minutes";

@@ -123,6 +123,7 @@ public static class DependencyInjection
         services.AddScoped<ExpireStuckDonationsJob>();
         services.AddScoped<CancelAbandonedPaymentsJob>();
         services.AddScoped<SettlementReleaseJob>();
+        services.AddScoped<AutoEndStaleShowsJob>();
         services.AddScoped<TicketTransferExpiryJob>();
         services.AddScoped<SubscriptionExpiryWarningJob>();
         services.AddScoped<ExpireSubscriptionsJob>();
@@ -247,6 +248,14 @@ public static class DependencyInjection
             "release-due-settlements",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
+
+        // Hourly, not daily: this is what closes the cancellation window and opens the rating
+        // window, so a whole day of drift is a whole day of tickets still refundable for a show
+        // that already happened.
+        RecurringJob.AddOrUpdate<AutoEndStaleShowsJob>(
+            "auto-end-stale-shows",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
 
         RecurringJob.AddOrUpdate<EventReminderJob>(
             "send-event-reminders",

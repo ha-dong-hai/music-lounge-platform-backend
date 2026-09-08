@@ -119,31 +119,57 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         var refundTax = Math.Round(payment.TaxWithheld * ratio, 2);
         var refundOwnerNet = amountApproved - refundPlatformFee - refundTax;
 
+        // The owner's share was credited to Platform (held in trust) at purchase, then moved to the
+        // owner's own User account by each SettlementReleaseJob tranche. Which account still holds
+        // it therefore depends on how much has already been released, and the reversal has to debit
+        // wherever the money actually IS — debiting Platform for a tranche already paid out takes it
+        // from an account that no longer holds it and leaves the owner keeping money for a refunded
+        // ticket, with only GetLedgerIntegrity noticing afterwards.
+        //
+        // This was previously assumed unreachable, on the grounds that a refund could only be raised
+        // before the show started while the first tranche fires at showEnd+48h. That assumption does
+        // not hold: CancellationDeadlineHours is optional (MLACP-257), and CancelTicket's only hard
+        // stop is show.Status == Ended — but nothing ever ends a show automatically. An offline show
+        // whose Owner never pressed "End" stays Published forever, so both tranches release (Final30
+        // included: its completion check returns true precisely because ActualStart/ActualEnd are
+        // null) and a ticket stays cancellable weeks afterwards.
+        var releasedToOwner = (await _uow.Repository<Settlement, int>().FindAsync(
+                s => s.PaymentId == payment.Id && s.Status == SettlementStatus.Released, ct))
+            .Sum(s => s.NetAmount);
+        var stillHeldByPlatform = Math.Max(0m, payment.NetAmount - releasedToOwner);
+
+        var reverseFromPlatform = Math.Min(refundOwnerNet, stillHeldByPlatform);
+        var reverseFromOwner = refundOwnerNet - reverseFromPlatform;
+
+        var ownerShareLines = new List<LedgerLine>();
+        if (reverseFromPlatform > 0m)
+            ownerShareLines.Add(new LedgerLine(AccountType.Platform, null, reverseFromPlatform, IsDebit: true,
+                Description: $"Refund #{refund.Id} — trừ lại phần giữ hộ chủ phòng trà"));
+        if (reverseFromOwner > 0m)
+        {
+            ownerShareLines.Add(new LedgerLine(AccountType.User, ownerId, reverseFromOwner, IsDebit: true,
+                Description: $"Refund #{refund.Id} — thu hồi phần đã giải ngân cho chủ phòng trà"));
+            _logger.LogWarning(
+                "Refund claws back already-released settlement money: RefundRequestId={RefundRequestId} " +
+                "PaymentId={PaymentId} OwnerId={OwnerId} FromOwner={FromOwner} FromPlatform={FromPlatform} at {At}",
+                refund.Id, payment.Id, ownerId, reverseFromOwner, reverseFromPlatform, DateTimeOffset.UtcNow);
+        }
+
         var journalId = Guid.NewGuid().ToString("N");
         await _ledger.WriteJournalAsync(
             journalId,
             LedgerReferenceTypes.Refund,
             refund.Id.ToString(),
             payment.Id,
-            new LedgerLine[]
-            {
-                new(AccountType.Platform, null, refundPlatformFee, IsDebit: true,
+            [
+                new LedgerLine(AccountType.Platform, null, refundPlatformFee, IsDebit: true,
                     Description: $"Refund #{refund.Id} — hoàn phí nền tảng"),
-                new(AccountType.Tax, null, refundTax, IsDebit: true,
+                new LedgerLine(AccountType.Tax, null, refundTax, IsDebit: true,
                     Description: $"Refund #{refund.Id} — hoàn thuế"),
-                // Owner's share was credited to Platform (held in trust), not to the owner's own
-                // User account — see WriteTicketLedgerHandler. Reverse it from the same place.
-                // Safe as long as this refund happens before any settlement tranche for this
-                // payment has released: CancelTicketCommandHandler only allows cancellation
-                // before show.ScheduledStart (CancellationDeadlineHours), while the earliest
-                // settlement tranche fires at showEnd+48h — strictly after. If either policy
-                // changes such that a refund could land after a tranche is released, the
-                // already-released portion needs clawing back from AccountType.User instead.
-                new(AccountType.Platform, null, refundOwnerNet, IsDebit: true,
-                    Description: $"Refund #{refund.Id} — trừ lại phần giữ hộ chủ phòng trà"),
-                new(AccountType.Gateway, null, amountApproved, IsDebit: false,
+                .. ownerShareLines,
+                new LedgerLine(AccountType.Gateway, null, amountApproved, IsDebit: false,
                     Description: $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán")
-            }, ct);
+            ], ct);
 
         refund.Status = RefundRequestStatus.Approved;
         refund.AmountApproved = amountApproved;

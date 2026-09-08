@@ -100,7 +100,14 @@ public static class SeedHelper
                 Id = ShowId, LoungeId = LoungeId, Name = "Live Night",
                 Description = "Test show", Format = LoungeShowFormat.Online,
                 Status = LoungeShowStatus.Ongoing,
-                ScheduledStart = DateTimeOffset.UtcNow.AddDays(-1)
+                // ScheduledEnd is in the FUTURE so this show is genuinely still running. It used to
+                // be left null, which made the effective end ScheduledStart + 4h — i.e. 20 hours in
+                // the past — so an "Ongoing" show that any realistic reading would call long over.
+                // AutoEndStaleShowsJob correctly closes such a show, which then broke every other
+                // test that needs this one Ongoing. Fixing the seed rather than the job: a show
+                // marked Ongoing should be one that is actually on right now.
+                ScheduledStart = DateTimeOffset.UtcNow.AddHours(-1),
+                ScheduledEnd = DateTimeOffset.UtcNow.AddHours(3)
             },
             new LoungeShow
             {
