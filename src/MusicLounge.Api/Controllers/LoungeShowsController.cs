@@ -25,7 +25,10 @@ using MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.UpdatePerformance;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.LoungeShows.Queries.GetFilterOptions;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowDetail;
+using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowsByLounge;
+using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowsByPerformer;
 using MusicLounge.Application.LoungeShows.Queries.GetLoungeShowSuggestions;
 using MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetPosterGenerationHistory;
@@ -36,6 +39,7 @@ using MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.GetTrendingLoungeShows;
 using MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 using MusicLounge.Application.Tickets.DTOs;
+using MusicLounge.Application.Tickets.Queries.GetShowOrders;
 using MusicLounge.Application.Tickets.Queries.GetShowTicketStats;
 using MusicLounge.Domain.Enums;
 
@@ -143,6 +147,49 @@ public sealed class LoungeShowsController : ControllerBase
     {
         var id = await _sender.Send(command, ct);
         return CreatedAtAction(nameof(GetDetail), new { id }, ApiResponse<int>.Ok(id));
+    }
+
+    /// <summary>Các buổi hòa nhạc của một phòng trà — công khai, cho trang giới thiệu venue mà
+    /// khán giả xem trước khi mua vé. Khác `GET mine` bên dưới, vốn là danh sách riêng của chủ venue
+    /// đang đăng nhập và gồm cả bản nháp.</summary>
+    [HttpGet("by-lounge/{loungeId:int}")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetByLounge(
+        int loungeId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetLoungeShowsByLoungeQuery(loungeId, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
+    }
+
+    /// <summary>Trang nghệ sĩ: thông tin nghệ sĩ kèm các buổi hòa nhạc họ tham gia. Mặc định chỉ
+    /// trả buổi sắp diễn — đặt `includeEnded=true` để xem cả buổi đã diễn.</summary>
+    [HttpGet("by-performer/{performerId:int}")]
+    [AllowAnonymous]
+    [SwaggerOptionalAuth]
+    [ProducesResponseType<ApiResponse<PerformerDetailDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetByPerformer(
+        int performerId, [FromQuery] bool includeEnded = false,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(
+            new GetLoungeShowsByPerformerQuery(performerId, includeEnded, page, pageSize), ct);
+        return Ok(ApiResponse<PerformerDetailDto>.Ok(result));
+    }
+
+    /// <summary>Mọi lựa chọn cho bộ lọc khám phá trong một lần gọi: thể loại nhạc, dòng nhạc, không
+    /// gian, và danh sách thành phố. Thành phố lấy từ chính các buổi diễn đang có, nên bộ lọc không
+    /// bày ra những nơi không có buổi nào.</summary>
+    [HttpGet("filter-options")]
+    [AllowAnonymous]
+    [ProducesResponseType<ApiResponse<FilterOptionsDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFilterOptions(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetFilterOptionsQuery(), ct);
+        return Ok(ApiResponse<FilterOptionsDto>.Ok(result));
     }
 
     /// <summary>Chỉ trả buổi diễn của đúng Owner đang đăng nhập (mọi trạng thái, kể cả Draft) — lọc
@@ -255,6 +302,21 @@ public sealed class LoungeShowsController : ControllerBase
     {
         await _sender.Send(new SetPlaybackModeCommand(id, body.PlaybackMode), ct);
         return NoContent();
+    }
+
+    /// <summary>Danh sách người đã mua vé buổi hòa nhạc này, để chủ phòng trà đối soát và đón
+    /// khách — chỉ chủ venue đó hoặc Admin (403 nếu khác), vì danh sách có tên và email người mua.
+    /// Khác `GET {id}/ticket-stats` vốn chỉ trả con số tổng.</summary>
+    [HttpGet("{id:int}/orders")]
+    [Authorize]
+    [ProducesResponseType<ApiResponse<PaginatedResult<ShowOrderDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetOrders(
+        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetShowOrdersQuery(id, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<ShowOrderDto>>.Ok(result));
     }
 
     /// <summary>D18 (NĐ 144/2020 Điều 10): Owner khai báo số văn bản/liên kết "văn bản chấp thuận
