@@ -62,7 +62,10 @@ public sealed class ComplaintsController : ControllerBase
     }
 
     /// <summary>Admin — xử lý khiếu nại (Investigating/Resolved/Rejected), kèm hành động xử lý nếu
-    /// Resolved (Refund/IssueWarning/Dismiss/Compensate/TakeDownContent).</summary>
+    /// Resolved (Refund/IssueWarning/Dismiss/TakeDownContent).
+    /// <para>Refund hoàn tiền vé của RIÊNG người khiếu nại, show vẫn diễn; TakeDownContent hủy hẳn
+    /// show và hoàn 100% cho MỌI người giữ vé; IssueWarning tạo án phạt cho venue; Dismiss là bác
+    /// khiếu nại. Mỗi hành động đều có hậu quả thật — không có hành động nào chỉ lưu nhãn.</para></summary>
     [HttpPost("{id:int}/resolve")]
     [Authorize(Policy = Policies.RequireAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
