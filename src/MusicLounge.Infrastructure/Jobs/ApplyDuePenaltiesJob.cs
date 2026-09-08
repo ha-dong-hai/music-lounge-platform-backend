@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -58,6 +58,14 @@ public sealed class ApplyDuePenaltiesJob
 
             lounge.Status = targetStatus;
             penalty.AppliedAt = now;
+
+            // MLACP-299: moc het han duoc chot tu day chu khong tinh lai o cho khac. Truoc day cot
+            // nay khong ai ghi, va cung khong co gi go lenh treo ra — mot phong tra duoc bao "tam
+            // khoa N ngay" thi bi khoa vinh vien. Tinh tu NOW chu khong tu EffectiveAt: N ngay bi
+            // khoa phai la N ngay thuc su bi khoa, ma lenh chi bat dau co hieu luc tu luc job nay
+            // chay. Ban vinh vien khong co moc het han.
+            if (penalty.PenaltyType == PenaltyType.Suspension && penalty.SuspensionDays is int suspensionDays)
+                penalty.SuspensionEnd = now.AddDays(suspensionDays);
 
             // Ordering by a DateTimeOffset column does not translate under the SQLite provider
             // used in tests (same limitation noted elsewhere in this codebase) — an owner should

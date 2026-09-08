@@ -139,6 +139,7 @@ public static class DependencyInjection
         services.AddScoped<SubscriptionExpiryWarningJob>();
         services.AddScoped<ExpireSubscriptionsJob>();
         services.AddScoped<ApplyDuePenaltiesJob>();
+        services.AddScoped<ExpireServedSuspensionsJob>();
         services.AddScoped<AutoApproveOverdueAppealsJob>();
         services.AddScoped<ModerationSlaBreachAlertJob>();
         services.AddScoped<ContentReportSlaBreachAlertJob>();
@@ -318,6 +319,13 @@ public static class DependencyInjection
 
         Recurring<ApplyDuePenaltiesJob>(
             "apply-due-venue-penalties",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        // Nua con lai cua job tren: no AP lenh tam khoa, cai nay GO ra khi da phuc vu du han.
+        // Thieu cai nay thi "tam khoa N ngay" tren thuc te la khoa vinh vien.
+        Recurring<ExpireServedSuspensionsJob>(
+            "expire-served-suspensions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
