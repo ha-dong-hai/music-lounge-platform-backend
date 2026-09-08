@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Moderations.DTOs;
@@ -73,7 +73,10 @@ internal sealed class EventModerationRepository
             .Select(x => new PendingLoungeShowDto(
                 x.s.Id,
                 x.s.Name,
-                x.s.CoverImageUrl,
+                // Xem LoungeShowMappingExtensions.DisplayImageUrl: CoverImageUrl khong ai ghi,
+                // anh that nam o PosterUrl. Rieng cho nay dang ngai hon ca — Admin duyet mot buoi
+                // dien ma khong nhin thay anh cua no.
+                x.s.CoverImageUrl ?? x.s.PosterUrl,
                 x.Name,
                 x.s.ScheduledStart,
                 x.s.Format.ToString(),
