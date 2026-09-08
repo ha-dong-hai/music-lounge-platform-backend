@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -42,7 +42,7 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
         // lands in the DB at all, not even transiently.
         var imageBytes = await _fileStorage.ReadPublicImageAsync(request.ImageUrl, ct);
         var moderation = await _moderationGate.CheckOrThrowAsync(
-            imageBytes, ImageMimeTypeHelper.FromUrl(request.ImageUrl), ct);
+            imageBytes, ImageMimeTypeHelper.ForModeration(imageBytes), ct);
 
         var imageRepo = _uow.Repository<LoungeGalleryImage, int>();
         var existingCount = (await imageRepo.FindAsync(g => g.LoungeId == request.LoungeId, ct)).Count;
