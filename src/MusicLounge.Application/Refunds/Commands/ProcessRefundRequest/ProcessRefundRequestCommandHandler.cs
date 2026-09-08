@@ -16,6 +16,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     private readonly IPaymentRepository _paymentRepo;
     private readonly IVnPayService _vnPay;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<ProcessRefundRequestCommandHandler> _logger;
 
     public ProcessRefundRequestCommandHandler(
@@ -25,6 +26,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         IPaymentRepository paymentRepo,
         IVnPayService vnPay,
         IAsyncKeyedLock @lock,
+        ISystemConfigService config,
         ILogger<ProcessRefundRequestCommandHandler> logger)
     {
         _uow = uow;
@@ -33,6 +35,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         _paymentRepo = paymentRepo;
         _vnPay = vnPay;
         _lock = @lock;
+        _config = config;
         _logger = logger;
     }
 
@@ -71,6 +74,21 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         var paymentRepo = _uow.Repository<Payment, int>();
         var payment = await paymentRepo.GetByIdAsync(refund.PaymentId, ct)
             ?? throw new NotFoundException(nameof(Payment), refund.PaymentId);
+
+        // Checked here, before the owner lookup and the over-refund arithmetic below: this is a
+        // precondition of the PAYMENT alone, and it should answer the same way whether or not the
+        // rest of the chain happens to resolve. VNPay's merchant terms cap a refund at 3 months from the transaction. Past that the
+        // gateway refuses the reversal outright, so calling it would fail with a bare response code
+        // and leave the Admin guessing. Say plainly what happened and what has to be done instead —
+        // the buyer is still owed the money, it just cannot travel back down the same rails.
+        var refundWindowDays = await _config.GetIntAsync(ConfigKeys.VnPayRefundWindowDays, 90, ct);
+        var transactionAt = payment.PaidAt ?? payment.CreatedAt;
+        if (transactionAt.AddDays(refundWindowDays) < DateTimeOffset.UtcNow)
+            throw new DomainException(
+                $"Giao dịch này đã quá {refundWindowDays} ngày kể từ lúc thanh toán " +
+                $"({transactionAt:dd/MM/yyyy}), vượt quá thời hạn VNPay còn nhận lệnh hoàn tiền. " +
+                "Không thể hoàn tự động — cần chuyển khoản thủ công cho người mua rồi ghi nhận lại, " +
+                "và yêu cầu này vẫn giữ nguyên trạng thái chờ xử lý.");
 
         var amountApproved = request.ApprovedAmount ?? refund.AmountRequested;
         if (amountApproved > payment.GrossAmount)

@@ -3,6 +3,7 @@ using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Refunds.DTOs;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Refunds.Queries.GetMyRefundRequests;
 
@@ -11,11 +12,14 @@ internal sealed class GetMyRefundRequestsQueryHandler
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
 
-    public GetMyRefundRequestsQueryHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public GetMyRefundRequestsQueryHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _config = config;
     }
 
     public async Task<PaginatedResult<RefundRequestDto>> Handle(
@@ -27,6 +31,10 @@ internal sealed class GetMyRefundRequestsQueryHandler
         var mine = await _uow.Repository<RefundRequest, int>()
             .FindAsync(r => r.RequestedBy == _currentUser.UserId, ct);
 
+        // Cung mot nguon voi RefundSlaBreachAlertJob — cai canh bao Admin va cai hua voi nguoi mua
+        // phai la cung mot con so, neu khong thi mot ben se im lang trong khi ben kia da tre han.
+        var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, 72, ct);
+
         var ordered = mine.OrderByDescending(r => r.CreatedAt).ToList();
         var items = ordered
             .Skip((page - 1) * size)
@@ -34,7 +42,10 @@ internal sealed class GetMyRefundRequestsQueryHandler
             .Select(r => new RefundRequestDto(
                 r.Id, r.PaymentId, r.RequestedBy, r.Reason, r.AmountRequested,
                 r.AmountApproved, r.RefundPercentage, r.Status,
-                new DateTimeOffset(r.CreatedAt, TimeSpan.Zero), r.ResolvedAt))
+                new DateTimeOffset(r.CreatedAt, TimeSpan.Zero), r.ResolvedAt,
+                r.Status == RefundRequestStatus.Pending
+                    ? new DateTimeOffset(r.CreatedAt, TimeSpan.Zero).AddHours(slaHours)
+                    : null))
             .ToList();
 
         return new PaginatedResult<RefundRequestDto>(items, page, size, ordered.Count);

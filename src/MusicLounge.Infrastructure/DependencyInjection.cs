@@ -124,6 +124,7 @@ public static class DependencyInjection
         services.AddScoped<CancelAbandonedPaymentsJob>();
         services.AddScoped<SettlementReleaseJob>();
         services.AddScoped<AutoEndStaleShowsJob>();
+        services.AddScoped<RefundSlaBreachAlertJob>();
         services.AddScoped<TicketTransferExpiryJob>();
         services.AddScoped<SubscriptionExpiryWarningJob>();
         services.AddScoped<ExpireSubscriptionsJob>();
@@ -304,6 +305,11 @@ public static class DependencyInjection
 
         RecurringJob.AddOrUpdate<ComplaintSlaBreachAlertJob>(
             "alert-complaint-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        RecurringJob.AddOrUpdate<RefundSlaBreachAlertJob>(
+            "alert-refund-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 

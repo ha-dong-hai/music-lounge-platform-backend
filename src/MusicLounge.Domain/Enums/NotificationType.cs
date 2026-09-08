@@ -23,5 +23,9 @@ public enum NotificationType
     ModerationSlaBreached,  // NĐ 147/2024: flagged content past its review deadline, still undecided
     ContentReportSlaBreached, // NĐ 147/2024: user-reported content past its 48h takedown deadline
     SecurityAlert,          // credential-stuffing spike, unexpected new Admin, other security drift
-    FnbOrderUpdate          // Staff moved an F&B order to Preparing/Served/Cancelled
+    FnbOrderUpdate,         // Staff moved an F&B order to Preparing/Served/Cancelled
+    // Refund left pending past refund_sla_hours, or nearing VNPay's hard refund window after which
+    // the gateway refuses the reversal entirely. Stored as a string (max 50 chars) like every other
+    // value here, so appending is safe without a migration.
+    RefundSlaBreached
 }

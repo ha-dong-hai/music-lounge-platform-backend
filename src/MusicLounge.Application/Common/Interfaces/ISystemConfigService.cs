@@ -63,6 +63,19 @@ public static class ConfigKeys
     // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
     public const string LivestreamReplayDays = "livestream_replay_days";
 
+    // So gio Admin phai xu ly xong mot RefundRequest ke tu luc no duoc tao. Mac dinh 72h = 3 ngay
+    // lam viec, khop voi Dieu 31 Luat Bao ve quyen loi nguoi tieu dung 2023 (thong bao tiep nhan
+    // trong 03 ngay lam viec) va chat hon muc 5 ngay lam viec ma Eventbrite cam ket cho ban to
+    // chuc. KHONG luu thanh cot rieng tren RefundRequest — han duoc tinh tu CreatedAt cong so gio
+    // nay, nen doi cau hinh la ap dung ngay cho ca cac yeu cau dang cho, khong can migration.
+    public const string RefundSlaHours = "refund_sla_hours";
+
+    // So ngay ke tu luc thanh toan ma VNPay con chap nhan lenh hoan tien (Merchant API refund).
+    // Day KHONG phai muc tieu van hanh ma la han ky thuat cung: qua moc nay VNPay tu choi, va khoan
+    // hoan tro thanh bat kha thi chu khong phai cham. Dat thanh config de con noi long/siet lai neu
+    // VNPay doi chinh sach, mac dinh 90 ngay theo quy dinh hien hanh cua cong.
+    public const string VnPayRefundWindowDays = "vnpay_refund_window_days";
+
     // So gio an han sau ScheduledEnd truoc khi AutoEndStaleShowsJob tu danh dau show la Ended.
     // Chi de bao ve show that su chay dai hon du kien khoi bi dong som — khong phai de cho Owner
     // "co thoi gian bam nut", vi phan lon truong hop la ho khong bao gio bam. Khong seed san —
