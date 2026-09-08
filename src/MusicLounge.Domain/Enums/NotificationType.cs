@@ -30,5 +30,8 @@ public enum NotificationType
     RefundSlaBreached,
     // Outcome of an identity or tax-profile review. The submitter has no other way to learn it:
     // they hand over a citizen card and a tax code and then, without this, hear nothing back.
-    KycReviewResult
+    KycReviewResult,
+    // Lenh tam khoa da phuc vu du han va duoc go. Khac PenaltyIssued (luc bi khoa) va
+    // AppealResolved (khi khieu nai duoc xu) — day la duong ket thuc khong can ai lam gi ca.
+    PenaltyExpired
 }
