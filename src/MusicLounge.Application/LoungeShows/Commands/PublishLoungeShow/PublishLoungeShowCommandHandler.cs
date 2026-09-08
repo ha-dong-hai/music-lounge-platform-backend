@@ -93,6 +93,22 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
                 $"Theo NĐ 144/2020 Điều 10, event bán vé phải nộp duyệt trước tối thiểu {minLeadDays} ngày làm việc " +
                 $"so với ngày diễn. Hiện chỉ còn {businessDaysUntilShow} ngày làm việc.");
 
+        // A payout account is a precondition for SELLING, not just for getting paid. Every show on
+        // this platform sells tickets (>=1 tier is required above), and ScheduleSettlementHandler
+        // fails closed when the venue has no default BankAccount. That handler runs as a MediatR
+        // notification inside ProcessVnPayCallback's transaction, so its throw rolled back the
+        // buyer's confirmation *after* VNPay had already taken their money: payment stuck Pending,
+        // VNPay's retries hitting the same exception, and CancelAbandonedPaymentsJob voiding the
+        // tickets 30 minutes later. Money taken, no ticket, no refund. Checking here is what keeps
+        // that path off the table in the first place; ScheduleSettlementHandler's own null-account
+        // branch is the backstop for a venue that removes its account after publishing.
+        var defaultPayoutAccounts = await _uow.Repository<BankAccount, int>().FindAsync(
+            a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == lounge.Id && a.IsDefault, ct);
+        if (defaultPayoutAccounts.Count == 0)
+            throw new DomainException(
+                "Venue cần đăng ký tài khoản ngân hàng mặc định trước khi nộp duyệt event bán vé — " +
+                "đây là tài khoản nhận tiền bán vé sau khi show diễn ra.");
+
         // D15: online event or any livestream-access tier requires a Livestream record before publish
         var needsLivestream = show.Format == LoungeShowFormat.Online
             || tiers.Any(t => t.AccessType == AccessType.Livestream);

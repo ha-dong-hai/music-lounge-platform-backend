@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Tickets.Events;
@@ -13,11 +14,14 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
 {
     private readonly IUnitOfWork _uow;
     private readonly ISystemConfigService _config;
+    private readonly ILogger<ScheduleSettlementHandler> _logger;
 
-    public ScheduleSettlementHandler(IUnitOfWork uow, ISystemConfigService config)
+    public ScheduleSettlementHandler(
+        IUnitOfWork uow, ISystemConfigService config, ILogger<ScheduleSettlementHandler> logger)
     {
         _uow = uow;
         _config = config;
+        _logger = logger;
     }
 
     public async Task Handle(TicketPaymentConfirmed notification, CancellationToken ct)
@@ -47,19 +51,30 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
             ? await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
             : null;
 
-        // Bank account is a hard prerequisite, not an optional nicety — a settlement with nowhere to
-        // pay into is the exact half-wired-feature bug this fixes (Settlement.BankAccountId used to
-        // be defined and snapshotted-in-comment but never actually assigned anywhere). Fail closed:
-        // an Owner who hasn't registered a default payout account yet must not silently accumulate
-        // scheduled settlements with no destination.
+        // A settlement needs somewhere to pay into, but this handler must NOT be the thing that
+        // decides whether the buyer gets their ticket. It runs as a MediatR notification inside
+        // ProcessVnPayCallback's transaction, so throwing here rolled the buyer's confirmation back
+        // *after* VNPay had already taken their money — payment stuck Pending, VNPay retrying into
+        // the same exception, and CancelAbandonedPaymentsJob voiding the tickets 30 minutes later.
+        // Money taken, no ticket, no refund, only a log line. PublishLoungeShow now requires a
+        // default payout account before a show can go live, so reaching this branch means the venue
+        // removed the account after publishing.
+        //
+        // Record the debt instead of destroying the sale: the settlement is still created and still
+        // Scheduled, just with no destination yet. SettlementReleaseJob defers any tranche whose
+        // BankAccountId is null — the same "defer, don't pre-judge" rule it already applies to a
+        // pending refund — so the money resolves itself the moment the Owner registers an account
+        // again, and the Owner meanwhile sees it in GetMyEarnings as pending.
         var bankAccountId = lounge is not null
             ? await ResolveDefaultBankAccountIdAsync(BankAccountOwnerType.Lounge, lounge.Id, ct)
             : null;
         if (bankAccountId is null)
         {
-            throw new DomainException(
-                "Không thể lên lịch thanh toán: venue chưa đăng ký tài khoản ngân hàng mặc định. " +
-                "Vui lòng thêm tài khoản ngân hàng trước khi tiếp tục bán vé.");
+            _logger.LogError(
+                "Settlement scheduled with no payout account — LoungeId={LoungeId} PaymentId={PaymentId} " +
+                "OwnerId={OwnerId}. The venue has no default BankAccount, so these tranches cannot be " +
+                "released until one is registered. Buyer's tickets are unaffected. At {At}",
+                lounge?.Id, payment.Id, notification.OwnerId, DateTimeOffset.UtcNow);
         }
 
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);

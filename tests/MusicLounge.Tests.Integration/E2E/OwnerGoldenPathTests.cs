@@ -157,6 +157,23 @@ public sealed class OwnerGoldenPathTests
             new { LegalApprovalReference = "SoVHTT-GOLDEN-0001" });
         legalRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
+        // ── 8b. Payout account (required before publish) ───────────────────────────────
+        // Selling a ticket schedules a settlement, and a settlement needs somewhere to pay into.
+        // Without this step the venue could sell tickets it could never be paid for — and worse,
+        // the buyer's VNPay confirmation used to roll back on that missing account, taking their
+        // money without giving them a ticket. Registering the account is now part of the golden
+        // path precisely because it is a real precondition of selling, not an afterthought.
+        var bankRes = await ownerClient.PostAsJsonAsync("/api/v1/bank-accounts", new
+        {
+            OwnerType = "Lounge",
+            OwnerId = loungeId,
+            BankName = "Vietcombank",
+            AccountNumber = "1234567890",
+            AccountHolder = "GOLDEN PATH OWNER",
+            IsDefault = true
+        });
+        bankRes.StatusCode.Should().Be(HttpStatusCode.Created);
+
         // ── 9. Publish = submit for moderation (Draft → Pending, NOT visible yet) ──────
         var publishRes = await ownerClient.PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
         publishRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
