@@ -43,7 +43,10 @@ public sealed class CreateTicketTierCommandValidator : AbstractValidator<CreateT
             p.RuleFor(x => x.PurchaseChannel)
                 .Must(c => ValidChannels.Contains(c, StringComparer.OrdinalIgnoreCase))
                 .WithMessage("PurchaseChannel phải là 'Online', 'Offline' hoặc 'Both'.");
-            p.RuleFor(x => x.SaleEnd).GreaterThan(x => x.SaleStart);
+            // BR-31: SaleEnd la tuy chon. Bo trong = ban toi khi buoi dien ket thuc.
+            p.RuleFor(x => x.SaleEnd)
+                .GreaterThan(x => x.SaleStart)
+                .When(x => x.SaleEnd.HasValue);
         });
     }
 }

@@ -2,7 +2,9 @@ using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.DTOs;
+using MusicLounge.Application.Common;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.TicketTiers.Queries.GetTicketTiers;
 
@@ -11,16 +13,30 @@ internal sealed class GetTicketTiersQueryHandler
 {
     private readonly IUnitOfWork _uow;
     private readonly ITicketRepository _ticketRepo;
+    private readonly ISystemConfigService _config;
 
-    public GetTicketTiersQueryHandler(IUnitOfWork uow, ITicketRepository ticketRepo)
+    public GetTicketTiersQueryHandler(
+        IUnitOfWork uow, ITicketRepository ticketRepo, ISystemConfigService config)
     {
         _uow = uow;
         _ticketRepo = ticketRepo;
+        _config = config;
     }
+
+    /// <summary>BR-31: mốc Owner đặt, nhưng không bao giờ muộn hơn giờ nhận khách cuối.</summary>
+    private static DateTimeOffset EffectiveEnd(TicketPrice price, DateTimeOffset lastEntry)
+        => price.SaleEnd is { } explicitEnd && explicitEnd < lastEntry ? explicitEnd : lastEntry;
 
     public async Task<IReadOnlyList<TicketTierSummaryDto>> Handle(
         GetTicketTiersQuery request, CancellationToken ct)
     {
+        // BR-31: can chinh buoi dien de biet moc dong ban mac dinh cua cac dot khong dat moc rieng.
+        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+            ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
+        var lastEntryMinutes = await _config.GetIntAsync(
+            ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
+        var lastEntry = TicketSaleWindow.LastEntry(show, lastEntryMinutes);
+
         var tiers = await _uow.Repository<TicketTier, int>()
             .FindAsync(t => t.LoungeShowId == request.ShowId, ct);
 
@@ -47,9 +63,10 @@ internal sealed class GetTicketTiersQueryHandler
                 p.Price,
                 p.Quota,
                 p.SaleStart,
-                p.SaleEnd,
+                EffectiveEnd(p, lastEntry),
                 p.PurchaseChannel,
-                p.Quota.HasValue ? Math.Max(0, p.Quota.Value - reserved[p.Id]) : null))
+                p.Quota.HasValue ? Math.Max(0, p.Quota.Value - reserved[p.Id]) : null,
+                p.SaleEnd != EffectiveEnd(p, lastEntry)))
             .ToList()))
         .ToList();
     }

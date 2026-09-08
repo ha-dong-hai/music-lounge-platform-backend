@@ -16,17 +16,20 @@ internal sealed class GetLoungeShowDetailQueryHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IBackgroundJobService _jobs;
     private readonly IUnitOfWork _uow;
+    private readonly ISystemConfigService _config;
 
     public GetLoungeShowDetailQueryHandler(
         ILoungeShowRepository showRepo,
         ICurrentUserService currentUser,
         IBackgroundJobService jobs,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        ISystemConfigService config)
     {
         _showRepo = showRepo;
         _currentUser = currentUser;
         _jobs = jobs;
         _uow = uow;
+        _config = config;
     }
 
     public async Task<LoungeShowDetailDto> Handle(
@@ -89,6 +92,10 @@ internal sealed class GetLoungeShowDetailQueryHandler
             .Select(g => new LoungeGalleryImageDto(g.Id, g.ImageUrl, g.Caption))
             .ToList();
 
-        return show.ToDetailDto(wishlisted, userHasTicket, userHasRated, soldAndHeld, galleryDtos);
+        var lastEntryMinutes = await _config.GetIntAsync(
+            ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
+
+        return show.ToDetailDto(
+            wishlisted, userHasTicket, userHasRated, soldAndHeld, galleryDtos, lastEntryMinutes);
     }
 }

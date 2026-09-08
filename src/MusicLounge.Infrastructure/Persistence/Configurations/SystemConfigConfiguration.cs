@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -108,7 +108,8 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             // Anti-abuse rate limit on AI poster generation attempts (success+failure) per show —
             // separate from the per-Owner monthly billing quota on SubscriptionPackage, which only
             // counts successful generations.
-            new { Id = 31, ConfigKey = "ai_poster_max_attempts_per_show",     ConfigValue = "5",        DataType = ConfigDataType.Integer, Description = "Max AI poster generation attempts (incl. failures) per show", UpdatedAt = seed }
+            new { Id = 31, ConfigKey = "ai_poster_max_attempts_per_show",     ConfigValue = "5",        DataType = ConfigDataType.Integer, Description = "Max AI poster generation attempts (incl. failures) per show", UpdatedAt = seed },
+            new { Id = 33, ConfigKey = "ticket_last_entry_minutes",            ConfigValue = "60",       DataType = ConfigDataType.Integer, Description = "Last-entry cutoff: minutes of the show that must still remain for a ticket to be sold — BR-31, matches Eventbrite's general-admission default", UpdatedAt = seed }
         );
     }
 }
