@@ -59,9 +59,14 @@ internal sealed class UpdateSystemConfigCommandHandler : IRequestHandler<UpdateS
 
         // Fetch the sibling rates the validator may need for its cross-key rule, so the rule itself
         // stays a pure function and can be unit-tested without a database.
+        // DonationPerformerShareRate nam trong danh sach nay du no khong phai mot khoan khau tru:
+        // voi donate no cat tren cung mot goc doanh thu voi ba khoan kia, nen luat cheo o
+        // SystemConfigValidation can doc duoc gia tri cua no. Thieu no o day thi luat do im lang
+        // bo qua — mot bo chan khong bao gio bao loi, khong phai mot bo chan.
         var rateKeys = new[]
         {
-            ConfigKeys.PlatformCommissionRate, ConfigKeys.TaxRate, ConfigKeys.PersonalIncomeTaxRate
+            ConfigKeys.PlatformCommissionRate, ConfigKeys.TaxRate, ConfigKeys.PersonalIncomeTaxRate,
+            ConfigKeys.DonationPerformerShareRate
         };
         var siblings = await repo.FindAsync(c => rateKeys.Contains(c.ConfigKey), ct);
         var otherRates = siblings
