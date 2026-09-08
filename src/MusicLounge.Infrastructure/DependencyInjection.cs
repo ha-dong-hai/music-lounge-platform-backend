@@ -1,9 +1,10 @@
-using Hangfire;
+﻿using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -86,7 +87,16 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        // MLACP-293: Firebase Storage khi có credential và bucket, ngược lại về đĩa cục bộ.
+        // Chọn ở đây chứ không nhét nhánh if vào trong service: một service tự quyết mình có hoạt
+        // động hay không sẽ phải mang theo cả hai cách lưu, và nhánh không dùng tới thì không ai
+        // chạy. Cùng nếp "thiếu cấu hình thì suy biến, không ném lỗi" mà FcmService và SmsService
+        // đang theo — nếu ném thì môi trường dev và toàn bộ test sập vì thiếu bí mật.
+        services.AddScoped<IFileStorageService>(sp =>
+            FileStorageSelector.UseFirebase(
+                sp.GetRequiredService<IOptions<FirebaseSettings>>().Value)
+                ? ActivatorUtilities.CreateInstance<FirebaseFileStorageService>(sp)
+                : ActivatorUtilities.CreateInstance<LocalFileStorageService>(sp));
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<ISmsService, SmsService>();
         // Default key ring (%LOCALAPPDATA%\ASP.NET\DataProtection-Keys, protected via per-user
