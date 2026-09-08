@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +17,9 @@ using MusicLounge.Application.Lounges.Commands.RemoveVenueTourHotspot;
 using MusicLounge.Application.Lounges.Commands.RemoveVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.ReorderLoungeGalleryImages;
 using MusicLounge.Application.Lounges.Commands.SetLoungeAreaLayoutImage;
+using MusicLounge.Application.Lounges.Commands.SetLoungeBusinessLicense;
+using MusicLounge.Application.Lounges.Commands.SetLoungeModel3D;
+using MusicLounge.Application.Lounges.Queries.GetLoungeBusinessLicense;
 using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
 using MusicLounge.Application.Lounges.Commands.SetVenueTourScenePosition;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
@@ -317,6 +320,52 @@ public sealed class LoungesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Giấy phép kinh doanh của venue. File được chuyển ngay sang vùng lưu riêng tư khi
+    /// nhận, nên URL trong danh sách venue KHÔNG tải trực tiếp được — muốn xem phải gọi GET bên
+    /// dưới. Đây là giấy tờ định danh doanh nghiệp, còn GET /lounges là endpoint công khai.</summary>
+    [HttpPut("{id:int}/business-license")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetBusinessLicense(
+        int id, [FromBody] SetBusinessLicenseRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetLoungeBusinessLicenseCommand(id, body.DocumentUrl), ct);
+        return NoContent();
+    }
+
+    /// <summary>Xem giấy phép kinh doanh — chỉ chủ venue đó hoặc Admin. File nằm ngoài wwwroot nên
+    /// không đoán URL mà tải được; Admin xem giấy tờ của người khác thì có ghi log.</summary>
+    [HttpGet("{id:int}/business-license")]
+    [Authorize]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetBusinessLicense(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetLoungeBusinessLicenseQuery(id), ct);
+        return File(result.Content, result.ContentType);
+    }
+
+    /// <summary>Mô hình 3D (.glb/.gltf) dựng tay cho không gian phòng trà — 1 file duy nhất, khác
+    /// hoàn toàn tour ảo 360° bên dưới (nhiều ảnh panorama nối qua hotspot). Gửi null để gỡ mô
+    /// hình, khi đó client quay về scene mẫu dựng bằng code.</summary>
+    [HttpPut("{id:int}/model-3d")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetModel3D(
+        int id, [FromBody] SetModel3DRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetLoungeModel3DCommand(id, body.ModelUrl), ct);
+        return NoContent();
+    }
+
     // ---- Tour ảo 360° ----
 
     /// <summary>Tour ảo 360° kiểu Louvre/bảo tàng — công khai, không cần đăng nhập (khán giả xem
@@ -459,6 +508,8 @@ public sealed record UpdateSeatingZoneRequest(string Name, string? Description, 
 public sealed record SetZoneLayout2DRequest(
     double X, double Y, double Width, double Height, double RotationDeg, string? Color);
 public sealed record SetZoneLayout3DRequest(double? X, double? Y, double? Z);
+public sealed record SetBusinessLicenseRequest(string DocumentUrl);
+public sealed record SetModel3DRequest(string? ModelUrl);
 public sealed record SetAreaLayoutImageRequest(string? ImageUrl);
 
 public sealed record SetLoungeImageRequest(string ImageUrl);

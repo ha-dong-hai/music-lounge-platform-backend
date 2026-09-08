@@ -17,6 +17,7 @@ using MusicLounge.Application.LoungeShows.Commands.PublishLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.RateShow;
 using MusicLounge.Application.LoungeShows.Commands.RescheduleLoungeShow;
 using MusicLounge.Application.LoungeShows.Commands.SetLegalApprovalReference;
+using MusicLounge.Application.LoungeShows.Commands.SetPlaybackMode;
 using MusicLounge.Application.LoungeShows.Commands.SetShowPoster;
 using MusicLounge.Application.LoungeShows.Commands.SetVcpmcRoyaltyReference;
 using MusicLounge.Application.LoungeShows.Commands.StartLoungeShow;
@@ -235,6 +236,24 @@ public sealed class LoungeShowsController : ControllerBase
             id, body.Name, body.Description, body.ScheduledStart, body.ScheduledEnd,
             body.TicketSaleClosesAt, body.CategoryId, body.OfflineQuota, body.OnlineQuota,
             body.CancellationAllowed, body.RefundPercentage, body.CancellationDeadlineHours), ct);
+        return NoContent();
+    }
+
+    /// <summary>Hình thức phát của buổi hòa nhạc: "TwoD" (trình phát thường) hay "ThreeD" (phát
+    /// trong không gian 3D). Giá trị này đã được trả ra trong chi tiết buổi diễn để client biết dựng
+    /// trình phát nào, nhưng trước đây không có đường nào đặt nên mọi buổi diễn nằm im ở mặc định.
+    /// Chỉ buổi diễn Online hoặc Hybrid mới đặt được ThreeD.</summary>
+    [HttpPut("{id:int}/playback-mode")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SetPlaybackMode(
+        int id, [FromBody] SetPlaybackModeRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetPlaybackModeCommand(id, body.PlaybackMode), ct);
         return NoContent();
     }
 
@@ -496,6 +515,7 @@ public sealed class LoungeShowsController : ControllerBase
     }
 }
 
+public sealed record SetPlaybackModeRequest(string PlaybackMode);
 public sealed record RescheduleLoungeShowRequest(DateTimeOffset NewScheduledStart);
 public sealed record ChangeLoungeShowFormatRequest(LoungeShowFormat NewFormat);
 

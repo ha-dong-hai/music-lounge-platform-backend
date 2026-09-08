@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
@@ -30,6 +30,26 @@ public sealed class UploadsController : ControllerBase
 
         await using var stream = file.OpenReadStream();
         var url = await _fileStorage.SaveImageAsync(stream, file.FileName, ct);
+
+        return Ok(ApiResponse<UploadImageResponse>.Ok(new UploadImageResponse(url)));
+    }
+
+    /// <summary>Lưu file mô hình 3D (.glb/.gltf) cho không gian phòng trà, rồi truyền URL trả về
+    /// sang PUT /lounges/{id}/model-3d. UploadModel3DValidator (giới hạn 30MB) và
+    /// IFileStorageService.SaveModel3DAsync đều đã được viết đầy đủ từ trước và chưa từng có ai
+    /// gọi — đây là cái vòi còn thiếu của đường ống đó.</summary>
+    [HttpPost("models")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [RequestSizeLimit(UploadModel3DValidator.MaxSizeBytes)]
+    [ProducesResponseType<ApiResponse<UploadImageResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UploadModel3D(IFormFile file, CancellationToken ct = default)
+    {
+        await new UploadModel3DValidator().ValidateAndThrowAppExceptionAsync(file, ct);
+
+        await using var stream = file.OpenReadStream();
+        var url = await _fileStorage.SaveModel3DAsync(stream, file.FileName, ct);
 
         return Ok(ApiResponse<UploadImageResponse>.Ok(new UploadImageResponse(url)));
     }
