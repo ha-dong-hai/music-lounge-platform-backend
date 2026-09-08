@@ -49,6 +49,8 @@ internal sealed class SystemConfigService : ISystemConfigService
         return raw ?? fallback;
     }
 
+    public void Invalidate(string key) => _cache.Remove($"syscfg:{key}");
+
     private async Task<string?> GetRawAsync(string key, CancellationToken ct)
         => await _cache.GetOrCreateAsync($"syscfg:{key}", async entry =>
         {
