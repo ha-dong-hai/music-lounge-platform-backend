@@ -1,4 +1,4 @@
-using MusicLounge.Application.Common.Abstractions;
+﻿using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Users.Queries.GetMyTaxProfile;
 
@@ -18,6 +18,9 @@ public sealed record TaxProfileDto(
     string? TaxCode,
     DateTimeOffset? SubmittedAt,
     DateTimeOffset? VerifiedAt,
+    string? ReviewStatus,
+    /// <summary>Why it was turned down. The only thing that makes a rejection actionable.</summary>
+    string? ReviewNote,
     bool WithholdingApplies,
     decimal VatRate,
     decimal PersonalIncomeTaxRate,

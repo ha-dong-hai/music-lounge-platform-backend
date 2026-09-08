@@ -46,6 +46,13 @@ public sealed class User : Common.AuditableEntity<int>
     public string? CitizenCardFrontImageUrl { get; set; }
     public string? CitizenCardBackImageUrl { get; set; }
     public DateTimeOffset? CitizenCardSubmittedAt { get; set; }
+    // Until MLACP-290 a citizen card could be submitted and viewed by an Admin, and that was the
+    // whole of it — there was no way to accept it, refuse it, or ask what had been decided. Two
+    // photographs nobody had signed off on.
+    public KycReviewStatus? CitizenCardReviewStatus { get; set; }
+    public DateTimeOffset? CitizenCardReviewedAt { get; set; }
+    public int? CitizenCardReviewedBy { get; set; }
+    public string? CitizenCardReviewNote { get; set; }
 
     // Hồ sơ thuế (NĐ 117/2025). The decree makes the platform responsible for collecting an
     // identifying number — a tax code or a personal identification number — for sellers it
@@ -66,6 +73,10 @@ public sealed class User : Common.AuditableEntity<int>
     // gets to make about themselves.
     public DateTimeOffset? TaxProfileVerifiedAt { get; set; }
     public int? TaxProfileVerifiedBy { get; set; }
+    // Separate from the timestamp above because "rejected" and "not looked at yet" are different
+    // answers to give the seller, and only one of them means they have something to fix.
+    public KycReviewStatus? TaxProfileReviewStatus { get; set; }
+    public string? TaxProfileReviewNote { get; set; }
 
     // Embedded in every issued JWT as "sec_stamp" and re-checked against this column on every
     // authenticated request (JwtBearerEvents.OnTokenValidated) — rotating it is how a password

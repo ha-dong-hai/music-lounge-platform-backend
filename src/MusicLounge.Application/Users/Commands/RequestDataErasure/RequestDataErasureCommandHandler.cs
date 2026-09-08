@@ -104,6 +104,12 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         user.TaxProfileSubmittedAt = null;
         user.TaxProfileVerifiedAt = null;
         user.TaxProfileVerifiedBy = null;
+        user.CitizenCardReviewStatus = null;
+        user.CitizenCardReviewedAt = null;
+        user.CitizenCardReviewedBy = null;
+        user.CitizenCardReviewNote = null;
+        user.TaxProfileReviewStatus = null;
+        user.TaxProfileReviewNote = null;
         user.IsActive = false;
         // Revokes any JWT issued before this moment immediately (JwtBearerEvents.OnTokenValidated
         // re-checks this every request) — an erased identity must not stay usable for up to an
