@@ -41,7 +41,10 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         column: x => x.ResolvedByAdminId,
                         principalTable: "users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        // Xem ContentReportConfiguration: SetNull o day khien SQL Server bao loi
+                        // 1785 va bang khong tao duoc. Sua thang vao migration nay duoc vi no chua
+                        // tung ap dung thanh cong o dau ca — no chua bao gio chay tren SQL Server.
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex(
