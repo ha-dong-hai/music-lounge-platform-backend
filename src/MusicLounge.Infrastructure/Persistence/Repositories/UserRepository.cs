@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Users.DTOs;
@@ -35,7 +35,8 @@ internal sealed class UserRepository : Repository<User, int>, IUserRepository
 
         var total = await query.CountAsync(ct);
         var items = await query
-            .OrderByDescending(u => u.CreatedAt)
+            // Xem ghi chu ve sap xep theo khoa chinh o FollowRepository.
+            .OrderByDescending(u => u.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(u => new UserAdminDto(

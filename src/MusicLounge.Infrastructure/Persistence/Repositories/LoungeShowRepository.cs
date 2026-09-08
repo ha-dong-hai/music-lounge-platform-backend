@@ -325,7 +325,11 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         var wishlistQuery = _ctx.Wishlists
             .AsNoTracking()
             .Where(w => w.UserId == userId)
-            .OrderByDescending(w => w.CreatedAt);
+            // Sap theo khoa chinh thay vi cot thoi gian: SQLite (provider dung trong test) tu
+            // choi ORDER BY tren DateTimeOffset, nen sap theo CreatedAt o tang database khien
+            // endpoint nay khong the co test nao. Khoa tu tang va CreatedAt deu duoc ghi luc chen
+            // nen thu tu trung nhau, va sap theo khoa con on dinh hon khi hai ban ghi trung mocs.
+            .OrderByDescending(w => w.Id);
 
         var total = await wishlistQuery.CountAsync(ct);
 
@@ -427,6 +431,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             LoungeShowSortBy.PriceDesc => query.OrderByDescending(
                 s => s.TicketTiers.SelectMany(t => t.Prices)
                      .Max(p => (decimal?)p.Price)),
-            _ => query.OrderByDescending(s => s.CreatedAt)
+            // Xem ghi chu ve sap xep theo khoa chinh o GetWishlistByUserAsync. Nhanh nay la sap
+            // xep MAC DINH cua tim kiem, nen truoc day duong tim kiem thong thuong nhat cua ca he
+            // thong lai la duong khong the viet test.
+            _ => query.OrderByDescending(s => s.Id)
         };
 }

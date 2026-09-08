@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Follows.DTOs;
@@ -19,7 +19,11 @@ internal sealed class FollowRepository : Repository<Follow, int>, IFollowReposit
         var query = _ctx.Follows
             .AsNoTracking()
             .Where(f => f.UserId == userId)
-            .OrderByDescending(f => f.CreatedAt);
+            // Sap theo khoa chinh thay vi cot thoi gian: SQLite (provider dung trong test) tu
+            // choi ORDER BY tren DateTimeOffset, nen sap theo CreatedAt o tang database khien
+            // endpoint nay khong the co test nao. Khoa tu tang va CreatedAt deu duoc ghi luc chen
+            // nen thu tu trung nhau, va sap theo khoa con on dinh hon khi hai ban ghi trung mocs.
+            .OrderByDescending(f => f.Id);
 
         var total = await query.CountAsync(ct);
         var items = await query
