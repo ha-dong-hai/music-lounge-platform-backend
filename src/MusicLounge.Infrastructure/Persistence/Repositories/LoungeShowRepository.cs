@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Domain.Entities;
@@ -298,7 +298,8 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
                      && s.Name.Contains(keyword))
             .OrderBy(s => s.Name)
             .Take(limit)
-            .Select(s => new LoungeShowSuggestionItem(s.Id, s.Name, s.CoverImageUrl))
+            // Xem LoungeShowMappingExtensions.DisplayImageUrl — CoverImageUrl khong ai ghi.
+            .Select(s => new LoungeShowSuggestionItem(s.Id, s.Name, s.CoverImageUrl ?? s.PosterUrl))
             .ToListAsync(ct);
     }
 

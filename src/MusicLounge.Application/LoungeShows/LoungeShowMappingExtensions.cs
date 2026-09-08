@@ -1,4 +1,4 @@
-using MusicLounge.Application.Common.Models;
+﻿using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
@@ -25,7 +25,7 @@ internal static class LoungeShowMappingExtensions
         return new LoungeShowListItemDto(
             show.Id,
             show.Name,
-            show.CoverImageUrl,
+            show.DisplayImageUrl(),
             show.Lounge.Name,
             show.Lounge.Address.District,
             show.Lounge.Address.City,
@@ -46,7 +46,7 @@ internal static class LoungeShowMappingExtensions
         bool? userHasTicket = null, bool? userHasRated = null,
         IReadOnlyDictionary<int, int>? soldAndHeld = null,
         IReadOnlyList<LoungeGalleryImageDto>? galleryImages = null)
-        => new(show.Id, show.Name, show.Description, show.CoverImageUrl,
+        => new(show.Id, show.Name, show.Description, show.DisplayImageUrl(),
                show.ScheduledStart, show.ScheduledEnd, show.Format, show.Status,
                show.Status == LoungeShowStatus.Ongoing,
                show.Livestream?.Id,
@@ -72,6 +72,21 @@ internal static class LoungeShowMappingExtensions
     /// actually gets — so what the show page promises and what the cancel endpoint does cannot
     /// drift apart.
     /// </summary>
+    /// <summary>
+    /// Ảnh đại diện của buổi hoà nhạc.
+    ///
+    /// LoungeShow có hai cột ảnh, và trước MLACP-300 mọi DTO đều đọc CoverImageUrl — cột mà KHÔNG
+    /// CHỖ NÀO GHI. Cả SetShowPoster lẫn phần sinh poster bằng AI đều ghi vào PosterUrl. Nghĩa là
+    /// chủ phòng trà tải poster lên rồi không màn hình nào hiển thị nó, và mọi buổi diễn ở mọi danh
+    /// sách đều trả về ảnh rỗng.
+    ///
+    /// Để dạng ưu tiên chứ không thay thẳng bằng PosterUrl: nếu sau này có người nối đường ghi cho
+    /// ảnh bìa riêng thì nó thắng, còn hôm nay thì poster được hiển thị. Tên trường trong response
+    /// giữ nguyên nên phía client không phải đổi gì.
+    /// </summary>
+    internal static string? DisplayImageUrl(this LoungeShow show)
+        => show.CoverImageUrl ?? show.PosterUrl;
+
     internal static TicketRefundPolicyDto ToRefundPolicyDto(this LoungeShow show)
     {
         var terms = TicketRefundPolicy.Resolve(show);
@@ -89,7 +104,7 @@ internal static class LoungeShowMappingExtensions
     {
         var prices = show.TicketTiers.SelectMany(t => t.Prices).ToList();
         return new RecommendedLoungeShowDto(
-            show.Id, show.Name, show.CoverImageUrl,
+            show.Id, show.Name, show.DisplayImageUrl(),
             show.Lounge.Name, show.Lounge.Address.District, show.Lounge.Address.City,
             show.ScheduledStart, show.Format, show.Status,
             prices.Count > 0 ? prices.Min(p => p.Price) : null,
