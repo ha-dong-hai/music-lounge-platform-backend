@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -94,6 +94,13 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
         _logger.LogWarning(
             "Venue penalty issued: PenaltyId={PenaltyId} LoungeId={LoungeId} Type={PenaltyType} EffectiveAt={EffectiveAt} by AdminUserId={AdminUserId} at {At}",
             penalty.Id, penalty.LoungeId, penaltyType, effectiveAt, _currentUser.UserId, now);
+
+
+        // Luu SAU khi gui thong bao. NotificationService chi Add() dong thong bao vao change
+        // tracker — hop dong ghi ro nguoi goi phai luu — va TransactionBehavior chi Begin/Commit,
+        // CommitTransactionAsync cung khong goi SaveChanges. Luu truoc roi moi Notify nghia la
+        // dong thong bao duoc them vao bo nho roi bien mat, khong bao loi gi ca.
+        await _uow.SaveChangesAsync(ct);
 
         return penalty.Id;
     }
