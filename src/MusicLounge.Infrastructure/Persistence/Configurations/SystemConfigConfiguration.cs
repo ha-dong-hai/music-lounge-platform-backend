@@ -30,10 +30,29 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
 
         var seed = new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
         b.HasData(
-            // Payment & Tax (NĐ 117/2025, NĐ 52/2024)
-            new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — NĐ 52/2024",                  UpdatedAt = seed },
-            new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Platform fee rate (5%) — NĐ 117/2025",                            UpdatedAt = seed },
-            new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "VAT withheld at source (5%) — NĐ 117/2025",                       UpdatedAt = seed },
+            // Payment & Tax.
+            //
+            // Careful with what is and is not a legal citation here. NĐ 117/2025/NĐ-CP (09/6/2025,
+            // hiệu lực 01/7/2025) governs tax management for households/individuals selling through
+            // e-commerce and digital platforms: a platform WITH a payment function must withhold and
+            // remit on their behalf, at the moment the transaction is confirmed and paid. Its
+            // percentage for SERVICES is 5% VAT — which is where tax_rate's 5% legitimately comes
+            // from, this platform selling event access being a service.
+            //
+            // platform_commission_rate is NOT that. No decree sets a platform's own commercial
+            // commission; the 5% is this project's business decision and was previously described as
+            // if NĐ 117/2025 mandated it. Corrected, because a legal citation nobody can produce on
+            // request is worse than none.
+            //
+            // Known gap, deliberately not papered over: NĐ 117/2025 requires withholding BOTH VAT
+            // and personal income tax (TNCN) for household/individual sellers, and this system
+            // withholds only the one rate below. It also draws no distinction between an Owner who
+            // is a hộ/cá nhân kinh doanh (withholding applies) and one who is a doanh nghiệp
+            // (self-declares) — there is no BusinessType or tax code on any entity to tell them
+            // apart. Both need a product decision before they can be built.
+            new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — mức thương mại của cổng, không do văn bản pháp luật ấn định", UpdatedAt = seed },
+            new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Hoa hồng nền tảng (5%) — quyết định thương mại của dự án, KHÔNG do nghị định nào quy định", UpdatedAt = seed },
+            new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Thuế GTGT khấu trừ tại nguồn (5% — tỷ lệ cho DỊCH VỤ theo NĐ 117/2025/NĐ-CP). Chưa khấu trừ TNCN.", UpdatedAt = seed },
             // Settlement schedule — timing researched against comparable ticketing-platform payout
             // practice (Eventbrite: payout processing begins ~3 days post-event, final settlement up
             // to 14 business days for larger events) and wired into ScheduleSettlementHandler
