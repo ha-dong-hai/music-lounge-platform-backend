@@ -1,4 +1,4 @@
-using MusicLounge.Domain.Enums;
+﻿using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common.Interfaces;
 
@@ -38,4 +38,11 @@ public interface IBackgroundJobService
 
     // Cho Admin ep chay ngay 1 recurring job da dang ky (vd de kiem tra/van hanh), khong doi lich Cron.
     void TriggerRecurringJobNow(string recurringJobId);
+
+    /// <summary>
+    /// The recurring job ids actually registered at startup. Read rather than remembered, because
+    /// Hangfire no-ops silently on an unknown id — a stale list would show a job as triggerable and
+    /// then quietly do nothing.
+    /// </summary>
+    IReadOnlyList<string> GetRecurringJobIds();
 }

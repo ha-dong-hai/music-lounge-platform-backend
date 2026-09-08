@@ -31,7 +31,9 @@ using MusicLounge.Application.Refunds.Queries.GetPendingRefundRequests;
 using MusicLounge.Application.Users.Commands.DeactivateUserAccount;
 using MusicLounge.Application.Users.Commands.ReactivateUserAccount;
 using MusicLounge.Application.Users.DTOs;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Admin.Commands.ReviewKycDocument;
+using MusicLounge.Application.Admin.Commands.TriggerRecurringJob;
 using MusicLounge.Application.Admin.Queries.GetKycReviewQueue;
 using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetUserDetail;
@@ -312,6 +314,25 @@ public sealed class AdminController : ControllerBase
     {
         var result = await _sender.Send(new GetCitizenCardImageQuery(id, side), ct);
         return File(result.Content, result.ContentType);
+    }
+
+    /// <summary>Các job định kỳ đang được đăng ký. Đọc từ chính chỗ đăng ký lúc khởi động, nên
+    /// danh sách này không thể lệch với thực tế.</summary>
+    [HttpGet("jobs")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<string>>>(StatusCodes.Status200OK)]
+    public IActionResult GetRecurringJobs([FromServices] IBackgroundJobService jobs)
+        => Ok(ApiResponse<IReadOnlyList<string>>.Ok(jobs.GetRecurringJobIds()));
+
+    /// <summary>Chạy ngay một job định kỳ thay vì chờ tới lịch — dùng khi job lỡ nhịp, hoặc vừa sửa
+    /// dữ liệu và muốn thấy kết quả ngay. Id sai bị chặn ở 400 thay vì im lặng không làm gì như
+    /// hành vi mặc định của Hangfire. Có ghi log, vì vài job trong số này động vào tiền.</summary>
+    [HttpPost("jobs/{jobId}/trigger")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> TriggerRecurringJob(string jobId, CancellationToken ct = default)
+    {
+        await _sender.Send(new TriggerRecurringJobCommand(jobId), ct);
+        return NoContent();
     }
 
     /// <summary>Hàng đợi hồ sơ định danh/thuế đang chờ duyệt. Trước MLACP-290 hồ sơ nộp vào rồi nằm
