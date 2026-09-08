@@ -85,6 +85,22 @@ public sealed class SettlementReleaseJob
                 continue;
             }
 
+            // Same defer-don't-pre-judge rule, for a tranche with nowhere to pay into.
+            // ScheduleSettlementHandler no longer refuses to create a settlement when the venue has
+            // no default BankAccount — refusing there destroyed the buyer's already-paid purchase —
+            // so it records the debt with a null destination instead. Writing the payout journal now
+            // would credit the owner's ledger account for money no bank transfer can follow, and the
+            // ledger is append-only. Hold it until an account exists; the next daily run pays it.
+            if (settlement.BankAccountId is null)
+            {
+                _logger.LogError(
+                    "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} has no " +
+                    "payout account. The venue must register a default BankAccount before this can be " +
+                    "released at {At}",
+                    settlement.Id, settlement.OwnerId, now);
+                continue;
+            }
+
             if (settlement.ReleaseType == SettlementReleaseType.Final30)
             {
                 var completionOk = await IsShowCompletionAcceptableAsync(settlement.PaymentId, threshold, ct);

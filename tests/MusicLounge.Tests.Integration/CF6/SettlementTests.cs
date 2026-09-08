@@ -42,10 +42,19 @@ public sealed class SettlementTests
         db.Add(payment);
         await db.SaveChangesAsync();
 
+        // SettlementReleaseJob now defers any tranche with no payout destination — a settlement
+        // with BankAccountId null can no longer be released, by design (see the job's own comment).
+        // Point at the seeded venue account so these tests still exercise the release path itself.
+        var payoutAccountId = await db.Set<BankAccount>()
+            .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
+            .Select(a => a.Id)
+            .FirstAsync();
+
         var settlement = new Settlement
         {
             OwnerId = SeedHelper.OwnerId,
             PaymentId = payment.Id,
+            BankAccountId = payoutAccountId,
             ReleaseType = releaseType,
             GrossAmount = 1_000_000m,
             PreRateApplied = 0.70m,
