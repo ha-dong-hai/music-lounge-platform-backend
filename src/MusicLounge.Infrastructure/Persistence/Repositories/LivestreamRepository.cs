@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -28,6 +28,42 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
     // trang thai loai bo. Chi nhan Confirmed o day se khoa vinh vien HlsUrl/chat/hub ngay sau lan
     // xem dau tien (kha nang chinh cua tinh nang gioi han phien dong thoi cung phu thuoc dieu nay —
     // khong co no thiet bi thu 2 khong bao gio qua duoc check nay du van con han muc).
+    public async Task<int> RecordViewerJoinedAsync(int livestreamId, CancellationToken ct = default)
+    {
+        // Cộng bằng lệnh cập nhật theo tập hợp chứ không đọc-sửa-ghi: nhiều người vào cùng lúc là
+        // chuyện bình thường của một buổi phát, và đọc-sửa-ghi sẽ nuốt mất lượt của nhau.
+        await _db.Livestreams
+            .Where(l => l.Id == livestreamId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(l => l.ViewerCount, l => l.ViewerCount + 1)
+                .SetProperty(l => l.TotalViews, l => l.TotalViews + 1), ct);
+
+        // Nâng đỉnh trong một lệnh riêng, có điều kiện — không đọc số hiện tại về rồi so ở phía
+        // ứng dụng, vì giữa hai bước đó người khác đã có thể vào thêm.
+        await _db.Livestreams
+            .Where(l => l.Id == livestreamId && l.ViewerCount > l.PeakViewerCount)
+            .ExecuteUpdateAsync(s => s.SetProperty(l => l.PeakViewerCount, l => l.ViewerCount), ct);
+
+        return await CurrentViewerCountAsync(livestreamId, ct);
+    }
+
+    public async Task<int> RecordViewerLeftAsync(int livestreamId, CancellationToken ct = default)
+    {
+        // Chặn sàn ở 0. Không hạ PeakViewerCount và không giảm TotalViews: cả hai là số liệu của cả
+        // buổi phát, người xem rời đi không làm chúng nhỏ lại.
+        await _db.Livestreams
+            .Where(l => l.Id == livestreamId && l.ViewerCount > 0)
+            .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewerCount, l => l.ViewerCount - 1), ct);
+
+        return await CurrentViewerCountAsync(livestreamId, ct);
+    }
+
+    private Task<int> CurrentViewerCountAsync(int livestreamId, CancellationToken ct)
+        => _db.Livestreams
+            .Where(l => l.Id == livestreamId)
+            .Select(l => l.ViewerCount)
+            .FirstOrDefaultAsync(ct);
+
     public async Task<bool> HasViewerAccessAsync(int livestreamId, int userId, CancellationToken ct = default)
         => await _db.Livestreams
             .Where(l => l.Id == livestreamId)

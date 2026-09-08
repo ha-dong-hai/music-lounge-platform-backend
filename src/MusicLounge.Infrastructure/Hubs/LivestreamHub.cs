@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -65,10 +65,11 @@ public sealed class LivestreamHub : Hub
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(livestreamId.Value));
 
-        // Atomic increment — avoids race condition from read-modify-write
-        await _ctx.Livestreams
-            .Where(l => l.Id == livestreamId.Value)
-            .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewerCount, l => l.ViewerCount + 1));
+        // Dem nguoi xem nam trong repository chu khong o day: PeakViewerCount va TotalViews truoc
+        // MLACP-303 khong ai ghi — trang thong ke cua chu phong tra luon hien 0 nguoi xem cho moi
+        // buoi da phat — va hub SignalR gan nhu khong kiem thu duoc, nen phan logic do phai o cho
+        // co the viet test.
+        var joinedCount = await _livestreamRepo.RecordViewerJoinedAsync(livestreamId.Value);
 
         // Marks that THIS connection actually incremented the count, so OnDisconnectedAsync only
         // decrements for connections that got past the access check above — a connection rejected
@@ -77,12 +78,7 @@ public sealed class LivestreamHub : Hub
         // wrong-venue Staff — would silently drag the displayed viewer count down).
         Context.Items[JoinedMarkerKey] = true;
 
-        var newCount = await _ctx.Livestreams
-            .Where(l => l.Id == livestreamId.Value)
-            .Select(l => l.ViewerCount)
-            .FirstOrDefaultAsync();
-
-        await _hubService.BroadcastViewerCountAsync(livestreamId.Value, newCount);
+        await _hubService.BroadcastViewerCountAsync(livestreamId.Value, joinedCount);
         await base.OnConnectedAsync();
     }
 
@@ -93,15 +89,7 @@ public sealed class LivestreamHub : Hub
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(livestreamId.Value));
 
-            // Atomic decrement — floor at 0 to prevent negative counts
-            await _ctx.Livestreams
-                .Where(l => l.Id == livestreamId.Value && l.ViewerCount > 0)
-                .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewerCount, l => l.ViewerCount - 1));
-
-            var newCount = await _ctx.Livestreams
-                .Where(l => l.Id == livestreamId.Value)
-                .Select(l => l.ViewerCount)
-                .FirstOrDefaultAsync();
+            var newCount = await _livestreamRepo.RecordViewerLeftAsync(livestreamId.Value);
 
             await _hubService.BroadcastViewerCountAsync(livestreamId.Value, newCount);
         }

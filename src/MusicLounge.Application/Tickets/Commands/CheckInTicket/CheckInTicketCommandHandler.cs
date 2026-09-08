@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -90,7 +90,12 @@ internal sealed class CheckInTicketCommandHandler : IRequestHandler<CheckInTicke
             ticket.QrCode,
             ticket.CreatedAt,
             ticket.PhysicalDetail is null ? null : new PhysicalDetailDto(
-                ticket.PhysicalDetail.SeatInfo,
+                // Cho ngoi: mo hinh ve nay theo KHU VUC, khong danh so ghe (TicketTier.ZoneId ->
+                // SeatingZone), va SeatInfo chua tung duoc ghi o dau — nen truoc MLACP-303 man
+                // check-in luon trong cho ngoi, nhan vien don khach khong co gi de huong dan.
+                // Suy ra tu khu cua hang ve chu khong ghi vao cot: khong so lech khi khu doi ten.
+                // Van uu tien gia tri da luu, phong khi sau nay co tinh nang gan ghe cu the.
+                ticket.PhysicalDetail.SeatInfo ?? ticket.Tier.Zone?.Name,
                 ticket.PhysicalDetail.CheckedInAt),
             ticket.LivestreamDetail is null ? null : new TicketLivestreamDetailDto(
                 ticket.LivestreamDetail.AccessToken));
