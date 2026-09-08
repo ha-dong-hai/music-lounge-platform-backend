@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -59,6 +59,8 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
             await _uow.SaveChangesAsync(ct);
             await NotifyAudienceAsync(order, ct);
+            // Luu lai SAU khi gui thong bao — xem ghi chu o nhanh duoi.
+            await _uow.SaveChangesAsync(ct);
             return Unit.Value;
         }
 
@@ -105,6 +107,12 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
         await _uow.SaveChangesAsync(ct);
         await NotifyAudienceAsync(order, ct);
+
+        // Luu SAU khi gui thong bao. NotificationService chi Add() dong thong bao vao change
+        // tracker — hop dong ghi ro nguoi goi phai luu — va TransactionBehavior chi Begin/Commit,
+        // CommitTransactionAsync cung khong goi SaveChanges. Luu truoc roi moi Notify nghia la
+        // dong thong bao duoc them vao bo nho roi bien mat, khong bao loi gi ca.
+        await _uow.SaveChangesAsync(ct);
         return Unit.Value;
     }
 

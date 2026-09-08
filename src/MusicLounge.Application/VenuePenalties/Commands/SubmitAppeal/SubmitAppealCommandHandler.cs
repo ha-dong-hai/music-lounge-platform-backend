@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -83,6 +83,13 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
                 referenceId: penalty.Id.ToString(),
                 ct: ct);
         }
+
+
+        // Luu SAU khi gui thong bao. NotificationService chi Add() dong thong bao vao change
+        // tracker — hop dong ghi ro nguoi goi phai luu — va TransactionBehavior chi Begin/Commit,
+        // CommitTransactionAsync cung khong goi SaveChanges. Luu truoc roi moi Notify nghia la
+        // dong thong bao duoc them vao bo nho roi bien mat, khong bao loi gi ca.
+        await _uow.SaveChangesAsync(ct);
 
         return Unit.Value;
     }
