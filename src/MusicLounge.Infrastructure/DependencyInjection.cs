@@ -218,9 +218,32 @@ public static class DependencyInjection
         return services;
     }
 
+    private static readonly List<string> RegisteredRecurringJobIds = [];
+
+    /// <summary>
+    /// Every recurring job id that <see cref="ConfigureRecurringJobs"/> actually registered.
+    ///
+    /// Recorded at the point of registration rather than kept as a hand-written list beside it.
+    /// MLACP-295 needed a whitelist of triggerable jobs, and the version of that list carried on the
+    /// other branch had already fallen ten jobs behind — including every SLA alert job. A list that
+    /// has to be remembered is a list that goes stale, and the failure mode here is silent: Hangfire
+    /// no-ops on an unknown id, so a job simply never runs when triggered.
+    /// </summary>
+    public static IReadOnlyList<string> RecurringJobIds => RegisteredRecurringJobIds;
+
+    private static void Recurring<TJob>(
+        string recurringJobId,
+        System.Linq.Expressions.Expression<Func<TJob, Task>> methodCall,
+        string cronExpression)
+    {
+        RecurringJob.AddOrUpdate(recurringJobId, methodCall, cronExpression);
+        if (!RegisteredRecurringJobIds.Contains(recurringJobId))
+            RegisteredRecurringJobIds.Add(recurringJobId);
+    }
+
     public static void ConfigureRecurringJobs()
     {
-        RecurringJob.AddOrUpdate<ReleaseExpiredHoldsJob>(
+        Recurring<ReleaseExpiredHoldsJob>(
             "release-expired-holds",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
@@ -230,32 +253,32 @@ public static class DependencyInjection
         // matches UserEventScore's own "aggregated periodically from behaviour logs" design intent,
         // not hourly like the recommendation refresh itself (aggregating every table this job reads
         // hourly would be wasted work for a signal that doesn't meaningfully shift that often).
-        RecurringJob.AddOrUpdate<RecomputeUserEventScoresJob>(
+        Recurring<RecomputeUserEventScoresJob>(
             "recompute-user-event-scores",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily(3)); // 03:00 UTC, ahead of every hourly refresh-recommendations run that day
 
-        RecurringJob.AddOrUpdate<RefreshRecommendationsJob>(
+        Recurring<RefreshRecommendationsJob>(
             "refresh-recommendations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<AutoConfirmDonationsJob>(
+        Recurring<AutoConfirmDonationsJob>(
             "auto-confirm-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ExpireStuckDonationsJob>(
+        Recurring<ExpireStuckDonationsJob>(
             "expire-stuck-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<CancelAbandonedPaymentsJob>(
+        Recurring<CancelAbandonedPaymentsJob>(
             "cancel-abandoned-payments",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
 
-        RecurringJob.AddOrUpdate<SettlementReleaseJob>(
+        Recurring<SettlementReleaseJob>(
             "release-due-settlements",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
@@ -263,74 +286,74 @@ public static class DependencyInjection
         // Hourly, not daily: this is what closes the cancellation window and opens the rating
         // window, so a whole day of drift is a whole day of tickets still refundable for a show
         // that already happened.
-        RecurringJob.AddOrUpdate<AutoEndStaleShowsJob>(
+        Recurring<AutoEndStaleShowsJob>(
             "auto-end-stale-shows",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<EventReminderJob>(
+        Recurring<EventReminderJob>(
             "send-event-reminders",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<DonationOverdueCheckJob>(
+        Recurring<DonationOverdueCheckJob>(
             "check-overdue-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<TicketTransferExpiryJob>(
+        Recurring<TicketTransferExpiryJob>(
             "expire-ticket-transfers",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<SubscriptionExpiryWarningJob>(
+        Recurring<SubscriptionExpiryWarningJob>(
             "warn-expiring-subscriptions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<ExpireSubscriptionsJob>(
+        Recurring<ExpireSubscriptionsJob>(
             "expire-subscriptions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
-        RecurringJob.AddOrUpdate<ApplyDuePenaltiesJob>(
+        Recurring<ApplyDuePenaltiesJob>(
             "apply-due-venue-penalties",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<AutoApproveOverdueAppealsJob>(
+        Recurring<AutoApproveOverdueAppealsJob>(
             "auto-approve-overdue-appeals",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ModerationSlaBreachAlertJob>(
+        Recurring<ModerationSlaBreachAlertJob>(
             "alert-moderation-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ContentReportSlaBreachAlertJob>(
+        Recurring<ContentReportSlaBreachAlertJob>(
             "alert-content-report-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<ComplaintSlaBreachAlertJob>(
+        Recurring<ComplaintSlaBreachAlertJob>(
             "alert-complaint-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
-        RecurringJob.AddOrUpdate<RefundSlaBreachAlertJob>(
+        Recurring<RefundSlaBreachAlertJob>(
             "alert-refund-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         // Every 5 minutes against a 10-minute detection window, so a spike is never more than one
         // extra run away from being caught, while still cheap enough to poll this often.
-        RecurringJob.AddOrUpdate<LoginSpikeDetectionJob>(
+        Recurring<LoginSpikeDetectionJob>(
             "detect-login-spikes",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             "*/5 * * * *");
 
-        RecurringJob.AddOrUpdate<AdminRoleDriftDetectionJob>(
+        Recurring<AdminRoleDriftDetectionJob>(
             "detect-admin-role-drift",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());

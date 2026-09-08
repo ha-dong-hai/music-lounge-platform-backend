@@ -1,4 +1,4 @@
-using Hangfire;
+﻿using Hangfire;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Livestreams.Jobs;
@@ -71,6 +71,8 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     public void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
         => BackgroundJob.Enqueue<StitchVenueTourSceneJob>(
             j => j.ExecuteAsync(attemptId, loungeId, sourceImageUrls, name, JobCancellationToken.Null));
+
+    public IReadOnlyList<string> GetRecurringJobIds() => DependencyInjection.RecurringJobIds;
 
     public void TriggerRecurringJobNow(string recurringJobId)
         => RecurringJob.TriggerJob(recurringJobId);

@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +7,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Refunds.DTOs;
 using MusicLounge.Application.Refunds.Queries.GetMyRefundRequests;
 using MusicLounge.Application.Tickets.Commands.AcceptTicketTransfer;
+using MusicLounge.Application.Tickets.Commands.CancelHold;
 using MusicLounge.Application.Tickets.Commands.CancelTicket;
 using MusicLounge.Application.Tickets.Commands.CancelTicketTransfer;
 using MusicLounge.Application.Tickets.Commands.CheckInTicket;
@@ -51,6 +52,23 @@ public sealed class TicketsController : ControllerBase
     {
         var result = await _sender.Send(command, ct);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<HoldTicketResultDto>.Ok(result));
+    }
+
+    /// <summary>Bỏ giữ chỗ khi đổi ý — chỉ chính chủ của hold đó (403 nếu khác). Trước đây chỉ có
+    /// đường tạo giữ chỗ chứ không có đường bỏ, nên ghế bị treo tới khi job dọn hết hạn chạy, dù
+    /// người mua đã rời đi và người khác đang muốn mua đúng ghế đó. Hold đã dùng để mua vé thì
+    /// không bỏ được (409) — bỏ nó đi là xoá bản ghi đứng sau một khoản thanh toán thật.</summary>
+    [HttpDelete("holds/{holdId:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelHold(int holdId, CancellationToken ct = default)
+    {
+        await _sender.Send(new CancelHoldCommand(holdId), ct);
+        return NoContent();
     }
 
     /// <summary>Tạo đơn hàng (Payment Pending + vé Pending) từ 1 hold còn hiệu lực, tính đúng tổng
