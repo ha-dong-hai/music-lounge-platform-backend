@@ -1,4 +1,5 @@
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -62,7 +63,26 @@ internal static class LoungeShowMappingExtensions
                userHasTicket,
                userHasRated,
                show.LegalApprovalConfirmedAt.HasValue,
-               show.PlaybackMode);
+               show.PlaybackMode,
+               show.ToRefundPolicyDto(),
+               show.TicketSaleClosesAt);
+
+    /// <summary>
+    /// Built from TicketRefundPolicy, the same resolver CancelTicket uses to decide what a buyer
+    /// actually gets — so what the show page promises and what the cancel endpoint does cannot
+    /// drift apart.
+    /// </summary>
+    internal static TicketRefundPolicyDto ToRefundPolicyDto(this LoungeShow show)
+    {
+        var terms = TicketRefundPolicy.Resolve(show);
+        return new TicketRefundPolicyDto(
+            terms.CancellationAllowed,
+            terms.RefundPercentage,
+            terms.CancelBefore,
+            terms.DeadlineHoursBeforeStart,
+            terms.AlwaysFullRefundIfVenueCancels,
+            TicketRefundPolicy.Describe(terms));
+    }
 
     internal static RecommendedLoungeShowDto ToRecommendedDto(
         this LoungeShow show, float score, string reason)

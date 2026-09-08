@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -109,7 +110,9 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         ticket.Status = TicketStatus.Cancelled;
         ticketRepo.Update(ticket);
 
-        var refundPercentage = show.RefundPercentage ?? 100m;
+        // Same resolver GetLoungeShowDetail uses to advertise the policy on the show page, so the
+        // percentage a buyer was shown before paying is by construction the percentage they get.
+        var refundPercentage = TicketRefundPolicy.Resolve(show).RefundPercentage;
         var refundRequest = new RefundRequest
         {
             PaymentId = ticket.PaymentId.Value,
