@@ -15,7 +15,10 @@ using MusicLounge.Application.Catalog.Commands.UpdateEventCategory;
 using MusicLounge.Application.Catalog.Commands.UpdateMood;
 using MusicLounge.Application.Catalog.Commands.UpdateMusicGenre;
 using MusicLounge.Application.Catalog.Commands.UpdateVenueAtmosphere;
+using MusicLounge.Application.Admin.Commands.UpdateSystemConfig;
 using MusicLounge.Application.Admin.DTOs;
+using MusicLounge.Application.Admin.Queries.GetSystemConfigHistory;
+using MusicLounge.Application.Admin.Queries.GetSystemConfigs;
 using MusicLounge.Application.Admin.Queries.GetLedgerIntegrity;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.LoungeShows.Commands.RemoveRating;
@@ -326,6 +329,42 @@ public sealed class AdminController : ControllerBase
         await _sender.Send(new ReactivateUserAccountCommand(id), ct);
         return NoContent();
     }
+
+    // ---- Tham số nghiệp vụ ----
+
+    /// <summary>Danh sách toàn bộ tham số nghiệp vụ đang áp dụng, kèm kiểu dữ liệu, mô tả, và ai
+    /// đổi lần cuối. Cờ <c>isMoneyRate</c> đánh dấu những khoá là TỈ LỆ TIỀN — giao diện nên hiển
+    /// thị chúng dưới dạng phần trăm và cảnh báo trước khi sửa, vì nhìn giá trị thô "0.05" thì
+    /// không cách nào biết đó là toàn bộ hoa hồng của nền tảng.</summary>
+    [HttpGet("system-config")]
+    [ProducesResponseType<IReadOnlyList<SystemConfigDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSystemConfigs(CancellationToken ct = default)
+        => Ok(new { success = true, data = await _sender.Send(new GetSystemConfigsQuery(), ct) });
+
+    /// <summary>Toàn bộ lịch sử thay đổi của một tham số, mới nhất trước: giá trị cũ, giá trị mới,
+    /// ai đổi, khi nào, và lý do. Bảng này là INSERT-only nên không sửa hay xoá được — đó chính là
+    /// điều làm nó có giá trị khi đối soát.</summary>
+    [HttpGet("system-config/{key}/history")]
+    [ProducesResponseType<IReadOnlyList<SystemConfigHistoryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSystemConfigHistory(string key, CancellationToken ct = default)
+        => Ok(new { success = true, data = await _sender.Send(new GetSystemConfigHistoryQuery(key), ct) });
+
+    /// <summary>Đổi giá trị một tham số nghiệp vụ. BẮT BUỘC ghi lý do — mỗi lần đổi sinh một dòng
+    /// lịch sử bất biến lưu cả giá trị cũ lẫn mới. Tỉ lệ tiền bị chặn ngoài khoảng 0..1, và riêng
+    /// hoa hồng + thuế bị chặn nếu tổng chạm 100% (chủ phòng trà sẽ nhận 0đ hoặc âm — sổ cái kép
+    /// không biểu diễn được khoản chuyển âm). Các khoản đã cam kết không bị ảnh hưởng: donate chốt
+    /// tỉ lệ chia lúc xác nhận, settlement chốt lúc tạo.</summary>
+    [HttpPut("system-config/{key}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdateSystemConfig(
+        string key, [FromBody] UpdateSystemConfigRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new UpdateSystemConfigCommand(key, body.ConfigValue, body.Note), ct);
+        return NoContent();
+    }
 }
 
 public sealed record UpdateMusicGenreRequest(string Name, string? NameEn);
@@ -335,3 +374,4 @@ public sealed record UpdateEventCategoryRequest(string Name, string? Description
 public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
 public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
 public sealed record RemoveRatingRequest(string Reason);
+public sealed record UpdateSystemConfigRequest(string ConfigValue, string Note);

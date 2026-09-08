@@ -8,6 +8,13 @@ public interface ISystemConfigService
     Task<int> GetIntAsync(string key, int fallback, CancellationToken ct = default);
     Task<bool> GetBoolAsync(string key, bool fallback, CancellationToken ct = default);
     Task<string> GetStringAsync(string key, string fallback, CancellationToken ct = default);
+
+    /// <summary>
+    /// Drops the cached value for one key. Reads are cached for a short window, so without this an
+    /// Admin who changes a rate sees no effect for up to a minute and cannot tell whether the change
+    /// took — the kind of ambiguity that leads to the same value being changed twice.
+    /// </summary>
+    void Invalidate(string key);
 }
 
 // Keys seeded by migration MM1_DBCompleteness100pct
