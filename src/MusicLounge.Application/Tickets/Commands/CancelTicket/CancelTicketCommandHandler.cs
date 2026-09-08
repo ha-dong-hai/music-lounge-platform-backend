@@ -76,7 +76,23 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         // xac nhan huy ve Confirmed cho show livestream dang Ongoing (chua FirstAccessedAt, tuc chua
         // xem) la hanh vi da duoc chap nhan; TransferCommandHandler cung dung FirstAccessedAt/
         // CheckedInAt (da THUC SU dung ve) lam dieu kien chan, khong dung Status==Ongoing don thuan.
-        if (show.Status == LoungeShowStatus.Ended)
+        // Chan theo CA trang thai LAN thoi gian. Truoc day chi chan theo Status == Ended, ma khong
+        // co gi trong he thong tu dua mot show ve Ended — show offline khong livestream ket o
+        // Published mai mai neu Owner khong bam nut. Ve van huy duoc hang tuan sau khi ca hai
+        // tranche settlement da tra tien cho venue, va but toan dao phai thu hoi tu tai khoan chu
+        // phong tra (xem ProcessRefundRequestCommandHandler). AutoEndStaleShowsJob nay da dong
+        // nhung show do lai, nhung dieu kien thoi gian o day khong phu thuoc job do chay dung —
+        // codebase nay da 5 lan co job chet lang le vi quen dang ky DI.
+        //
+        // Dieu kien thoi gian CHI ap dung cho show chua bao gio duoc bat dau. Show Ongoing la show
+        // da co nguoi bam Start, va MLACP-257 da chot rang huy mot ve livestream CHUA XEM trong luc
+        // show dang dien la hanh vi hop le — dieu kien chan that su o do la FirstAccessedAt/
+        // CheckedInAt (da thuc su dung ve), khong phai dong ho. Show Ongoing van se toi Ended qua
+        // duong cua chinh no hoac qua AutoEndStaleShowsJob.
+        var scheduledEnd = show.ScheduledEnd ?? show.ScheduledStart.AddHours(4);
+        var neverStartedButOverdue =
+            show.Status == LoungeShowStatus.Published && DateTimeOffset.UtcNow > scheduledEnd;
+        if (show.Status == LoungeShowStatus.Ended || neverStartedButOverdue)
             throw new DomainException("Không thể hủy vé sau khi event đã kết thúc.");
 
         if (show.CancellationDeadlineHours.HasValue &&
