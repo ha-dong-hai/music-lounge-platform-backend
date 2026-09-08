@@ -1,3 +1,4 @@
+﻿using MusicLounge.Application.Common;
 using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Infrastructure.Services;
@@ -73,8 +74,13 @@ internal static class UploadContentRules
         return extension.ToLowerInvariant();
     }
 
-    private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-
+    /// <summary>
+    /// Đối chiếu chữ ký file với định dạng người gọi khai báo.
+    ///
+    /// Bảng chữ ký nằm ở ImageMimeTypeHelper (tầng Application) chứ không viết lại ở đây: cùng một
+    /// câu hỏi "nội dung này thật sự là định dạng gì" cũng được hỏi lúc kiểm duyệt ảnh, và hai bảng
+    /// riêng thì sớm muộn cũng lệch nhau — thêm một định dạng ở một chỗ mà quên chỗ kia.
+    /// </summary>
     private static async Task<bool> HasValidMagicBytesAsync(
         Stream content, string extension, CancellationToken ct)
     {
@@ -85,16 +91,9 @@ internal static class UploadContentRules
         var bytesRead = await content.ReadAsync(header, ct);
         content.Seek(0, SeekOrigin.Begin);
 
-        return extension.ToLowerInvariant() switch
-        {
-            ".jpg" or ".jpeg" => bytesRead >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
-            ".png" => bytesRead >= 8 && header.AsSpan(0, 8).SequenceEqual(PngSignature),
-            ".gif" => bytesRead >= 6 &&
-                (header.AsSpan(0, 6).SequenceEqual("GIF87a"u8) || header.AsSpan(0, 6).SequenceEqual("GIF89a"u8)),
-            ".webp" => bytesRead >= 12 &&
-                header.AsSpan(0, 4).SequenceEqual("RIFF"u8) && header.AsSpan(8, 4).SequenceEqual("WEBP"u8),
-            ".glb" => bytesRead >= 4 && header.AsSpan(0, 4).SequenceEqual("glTF"u8),
-            _ => false
-        };
+        var actual = ImageMimeTypeHelper.FromContent(header.AsSpan(0, bytesRead));
+        return actual is not null
+               && ContentTypesByExtension.TryGetValue(extension, out var declared)
+               && actual == declared;
     }
 }
