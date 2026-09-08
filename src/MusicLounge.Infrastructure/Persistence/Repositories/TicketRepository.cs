@@ -16,7 +16,9 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
     private IQueryable<Ticket> WithDetails()
         => _ctx.Tickets
             .AsNoTracking()
-            .Include(t => t.Tier)
+            // Zone di kem Tier: man check-in va tra cuu QR hien "cho ngoi", ma mo hinh nay khong
+            // danh so ghe — thong tin cho duy nhat he thong co la ten khu vuc cua hang ve.
+            .Include(t => t.Tier).ThenInclude(t => t.Zone)
             .Include(t => t.Price)
             .Include(t => t.Show).ThenInclude(s => s.Lounge)
             .Include(t => t.PhysicalDetail)
@@ -56,7 +58,9 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
 
     public async Task<Ticket?> GetByQrCodeTrackedAsync(string qrCode, CancellationToken ct = default)
         => await _ctx.Tickets
-            .Include(t => t.Tier)
+            // Zone di kem Tier — xem ghi chu o WithDetails(). Man check-in doc duong nay, va thieu
+            // no thi cho ngoi hien ra trong dung o cho can no nhat.
+            .Include(t => t.Tier).ThenInclude(t => t.Zone)
             .Include(t => t.Price)
             .Include(t => t.Show).ThenInclude(s => s.Lounge)
             .Include(t => t.PhysicalDetail)
