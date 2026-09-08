@@ -11,13 +11,18 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .EmailAddress().WithMessage("Email không hợp lệ.")
             .MaximumLength(255);
 
-        // 10 ký tự — NIST SP 800-63B ưu tiên độ dài hơn độ phức tạp bắt buộc, nhưng tài khoản trên
-        // nền tảng này (đặc biệt Owner, có quyền truy cập BankAccount/hủy show) đáng được đặt cao
-        // hơn mức sàn 8 ký tự. [CHƯA KIỂM CHỨNG: chưa tra cứu được con số khuyến nghị chính xác của
-        // bản NIST SP 800-63B mới nhất — cần xác minh lại nếu muốn trích dẫn con số cụ thể.]
+        // 15 ký tự — NIST SP 800-63B rev 4 (pages.nist.gov/800-63-4/sp800-63b.html) quy định
+        // verifier SHALL yêu cầu tối thiểu 15 ký tự khi mật khẩu được dùng làm yếu tố xác thực DUY
+        // NHẤT; mốc 8 ký tự chỉ áp dụng cho mật khẩu nằm trong một quy trình đa yếu tố. MusicLounge
+        // hiện không có MFA, nên thuộc nhóm 15. Ngưỡng 10 trước đây được đặt dựa trên giả định
+        // "trên mức sàn 8" — giả định đó sai, vì mức sàn 8 không áp dụng cho hệ thống không MFA.
+        // Trần 64 ký tự theo khuyến nghị SHOULD ở cùng mục, để không chặn passphrase dài.
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Mật khẩu không được để trống.")
-            .MinimumLength(10).WithMessage("Mật khẩu phải có ít nhất 10 ký tự.");
+            .MinimumLength(15).WithMessage(
+                "Mật khẩu phải có ít nhất 15 ký tự. Mẹo: một cụm từ dễ nhớ thường vừa dài vừa an toàn hơn " +
+                "một chuỗi ký tự rối, ví dụ \"toi thich nghe nhac trinh\".")
+            .MaximumLength(64).WithMessage("Mật khẩu không được dài quá 64 ký tự.");
 
         RuleFor(x => x.FullName)
             .NotEmpty().WithMessage("Họ tên không được để trống.")
