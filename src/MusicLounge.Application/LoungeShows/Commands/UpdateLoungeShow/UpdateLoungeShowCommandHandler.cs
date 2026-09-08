@@ -13,11 +13,14 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
 
-    public UpdateLoungeShowCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public UpdateLoungeShowCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _config = config;
     }
 
     public async Task<Unit> Handle(UpdateLoungeShowCommand request, CancellationToken ct)
@@ -36,7 +39,7 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
             throw new DomainException("Chỉ có thể sửa event khi còn ở trạng thái Draft.");
 
         await ShowScheduleConflict.EnsureVenueIsFreeAsync(
-            _uow, show.LoungeId, excludeShowId: show.Id,
+            _uow, _config, show.LoungeId, excludeShowId: show.Id,
             request.ScheduledStart, request.ScheduledEnd, ct);
 
         show.Name = request.Name;

@@ -13,11 +13,14 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
 
-    public CreateLoungeShowCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public CreateLoungeShowCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _config = config;
     }
 
     public async Task<int> Handle(CreateLoungeShowCommand request, CancellationToken ct)
@@ -45,7 +48,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
         // bản nháp cùng giờ vẫn tạo được — nhưng nếu khung giờ đó đã có buổi diễn thật giữ chỗ thì
         // nói ngay, thay vì để Owner dựng xong hạng vé, danh sách nghệ sĩ rồi mới bị chặn.
         await ShowScheduleConflict.EnsureVenueIsFreeAsync(
-            _uow, request.LoungeId, excludeShowId: null,
+            _uow, _config, request.LoungeId, excludeShowId: null,
             request.ScheduledStart, request.ScheduledEnd, ct);
 
         var format = Enum.Parse<LoungeShowFormat>(request.Format, ignoreCase: true);

@@ -52,6 +52,12 @@ public static class ConfigKeys
     /// </summary>
     public const string TicketLastEntryMinutes = "ticket_last_entry_minutes";
 
+    /// <summary>
+    /// CF1: so phut toi thieu giua hai buoi dien lien tiep o cung mot phong tra — du de dua khan
+    /// gia suat truoc ra va don cho suat sau vao.
+    /// </summary>
+    public const string VenueChangeoverMinutes = "venue_changeover_minutes";
+
     // Research-grounded (Upwork: 14-day auto-release if unresponded; Fiverr: 3-day response window
     // + 14-day grace period) — an escrow-style "intermediary doesn't respond, so protect the payee"
     // window. 24h (this code's previous hardcoded value) is far more aggressive than any researched

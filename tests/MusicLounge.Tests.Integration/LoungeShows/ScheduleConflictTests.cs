@@ -156,15 +156,33 @@ public sealed class ScheduleConflictTests
     }
 
     [Fact]
-    public async Task TwoShowsBackToBack_AreAllowed()
+    public async Task TwoShowsWithNoGapAtAll_AreRefused()
     {
-        // Chạy hai suất một tối là cách xếp lịch bình thường của phòng trà. Suất sau bắt đầu đúng
-        // lúc suất trước kết thúc thì không phải là trùng.
+        // Bản đầu của quy tắc này cho phép: suất sau bắt đầu đúng giây suất trước kết thúc thì
+        // không tính là trùng. Rà lại theo thực tế thì đó là chỗ hở — không phòng diễn nào làm
+        // được vậy. Giữa hai suất còn phải đưa khán giả suất trước ra, dọn chỗ, chỉnh sân khấu.
         var loungeId = await VenueAsync();
         var start = Base();
         await OccupyAsync(loungeId, start, start.AddHours(3));
 
         var res = await CreateAsync(loungeId, start.AddHours(3), start.AddHours(6));
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("quá sát",
+            "nói rõ là sát giờ chứ không phải trùng giờ — người xếp lịch chỉ cần dịch ra, " +
+            "không phải đổi hẳn ngày");
+    }
+
+    [Fact]
+    public async Task TwoShowsWithAProperChangeover_AreAllowed()
+    {
+        // Chạy hai suất một tối vẫn là cách xếp lịch bình thường của phòng trà — chỉ là phải chừa
+        // đủ khoảng dọn dẹp giữa hai suất.
+        var loungeId = await VenueAsync();
+        var start = Base();
+        await OccupyAsync(loungeId, start, start.AddHours(3));
+
+        var res = await CreateAsync(loungeId, start.AddHours(3.5), start.AddHours(6));
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
     }
@@ -226,8 +244,9 @@ public sealed class ScheduleConflictTests
         var inside = await CreateAsync(loungeId, start.AddHours(3), start.AddHours(5));
         inside.StatusCode.Should().Be(HttpStatusCode.Conflict, "3 tiếng sau vẫn nằm trong 4 tiếng");
 
-        var after = await CreateAsync(loungeId, start.AddHours(4), start.AddHours(6));
-        after.StatusCode.Should().Be(HttpStatusCode.Created, "đúng 4 tiếng sau là đã hết giờ giữ chỗ");
+        var after = await CreateAsync(loungeId, start.AddHours(5), start.AddHours(7));
+        after.StatusCode.Should().Be(HttpStatusCode.Created,
+            "4 tiếng giữ chỗ cộng nửa tiếng dọn dẹp, nên 5 tiếng sau là đã trống");
     }
 
     // ---------- sửa bản nháp ----------
