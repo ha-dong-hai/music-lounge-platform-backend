@@ -1,4 +1,5 @@
 using FluentValidation;
+using MusicLounge.Application.Common;
 
 namespace MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
 
@@ -16,6 +17,12 @@ internal sealed class ProcessRefundRequestCommandValidator : AbstractValidator<P
             .GreaterThan(0)
             .When(x => x.ApprovedAmount is not null)
             .WithMessage("ApprovedAmount phải lớn hơn 0.");
+
+        // MLACP-332. Số tiền này đi thẳng vào VnPayService.RefundAsync. Khác đường donate, ở đây
+        // KHÔNG có chốt đối chiếu số tiền nào cả — nên số lẻ không bị chặn lại mà ghi vào sổ cái
+        // một con số khác với số VNPay thật sự hoàn. Rule riêng để không dính vào .When(...) ở
+        // trên, vì .When mặc định áp cho toàn bộ các validator đứng trước nó trong cùng RuleFor.
+        RuleFor(x => x.ApprovedAmount).MustBeWholeDong();
 
         RuleFor(x => x.ClientIpAddress).NotEmpty().WithMessage("Địa chỉ IP không được rỗng.");
     }

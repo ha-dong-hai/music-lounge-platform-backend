@@ -33,7 +33,7 @@ internal sealed class VnPayService : IVnPayService
             ["vnp_Version"]    = _settings.Version,
             ["vnp_Command"]    = "pay",
             ["vnp_TmnCode"]    = _settings.TmnCode,
-            ["vnp_Amount"]     = ((long)(request.Amount * 100)).ToString(),
+            ["vnp_Amount"]     = ToVnPayAmount(request.Amount),
             ["vnp_CreateDate"] = now.ToString("yyyyMMddHHmmss"),
             ["vnp_CurrCode"]   = "VND",
             ["vnp_IpAddr"]     = request.IpAddress,
@@ -54,6 +54,23 @@ internal sealed class VnPayService : IVnPayService
 
         return $"{_settings.PaymentUrl}?{query}&vnp_SecureHash={signature}";
     }
+
+    // MLACP-332. VNPay nhận số tiền là SỐ NGUYÊN bằng số tiền nhân 100, và spec của chính VNPay
+    // ghi cách làm là Math.round(amount * 100). Chỗ này trước đây dùng ép kiểu (long) — là phép
+    // CẮT CỤT, không phải làm tròn. Với số nguyên đồng thì hai cách cho kết quả giống hệt nhau nên
+    // không ai thấy gì; với số lẻ thì chúng tách ra, và tách ngược chiều với cách EF Core ghi
+    // xuống database (EF LÀM TRÒN: 10000.999 thành 10001.00, chỗ này CẮT CỤT nên thu 10000.99).
+    //
+    // Hậu quả đã xảy ra ở đường donate: khách trả theo số VNPay thu, callback quay về không khớp
+    // số đã lưu, chốt chống giả mạo từ chối, và donation nằm mãi ở PendingPayment — khách mất tiền
+    // mà hệ thống không ghi nhận gì. MLACP-332 chặn số lẻ ngay từ validator (xem MoneyAmount), nên
+    // về nguyên tắc chỗ này không còn nhận được số lẻ nữa; sửa ở đây là lớp phòng thủ thứ hai, để
+    // một cửa vào bị bỏ sót trong tương lai không lặp lại đúng lỗi mất tiền đó.
+    //
+    // AwayFromZero chứ không phải mặc định ToEven: để khớp đúng cách SQL Server làm tròn khi ép về
+    // decimal(x,2), thay vì tự tạo ra một cách tròn thứ ba.
+    private static string ToVnPayAmount(decimal amount)
+        => ((long)Math.Round(amount * 100, MidpointRounding.AwayFromZero)).ToString();
 
     public VnPayCallbackResult VerifyCallback(IDictionary<string, string> queryParams)
     {
@@ -101,7 +118,7 @@ internal sealed class VnPayService : IVnPayService
 
         var requestId = Guid.NewGuid().ToString("N");
         var transactionType = request.IsFullRefund ? "02" : "03";
-        var amountStr = ((long)(request.Amount * 100)).ToString();
+        var amountStr = ToVnPayAmount(request.Amount);
         var transactionNo = request.TransactionNo ?? string.Empty;
         var transactionDateStr = transactionDate.ToString("yyyyMMddHHmmss");
         var createDateStr = now.ToString("yyyyMMddHHmmss");

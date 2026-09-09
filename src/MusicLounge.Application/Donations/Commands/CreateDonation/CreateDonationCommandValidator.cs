@@ -1,4 +1,5 @@
 using FluentValidation;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 
@@ -24,6 +25,10 @@ public sealed class CreateDonationCommandValidator : AbstractValidator<CreateDon
                 return amount <= max;
             })
             .WithMessage("Số tiền donate phải từ 1đ đến {MaxAmount}đ.");
+
+        // MLACP-332. Tách thành rule riêng thay vì nối vào chuỗi trên: chuỗi đó dùng
+        // MessageFormatter để chèn {MaxAmount}, không nên dặm thêm mắt xích vào giữa.
+        RuleFor(x => x.Amount).MustBeWholeDong();
 
         RuleFor(x => x.Message)
             .MaximumLength(500)
