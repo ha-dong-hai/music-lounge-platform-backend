@@ -58,6 +58,16 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.AddHangfire(cfg => cfg.UseInMemoryStorage(new InMemoryStorageOptions()));
             // Do NOT add AddHangfireServer() — no background processing in tests
 
+            // ── 2b. Bat log de test khang dinh duoc tren no ───────────────────────
+            // Program.cs cau hinh Serilog bang ReadFrom.Services(services), nghia la no lay moi
+            // ILogEventSink dang ky trong DI. Them mot sink o day la du de test doc duoc ban ghi
+            // log — khong phai cau hinh lai logging cua ca test host.
+            //
+            // Can thiet vi MLACP-313 sua mot loi hoan toan nam o phia log: moi ngoai le nghiep vu
+            // deu duoc ghi o muc Error voi ma 500 trong khi nguoi goi nhan dung 404. Phia response
+            // da duoc hang tram test phu kin nen chung xanh het.
+            services.AddSingleton<Serilog.Core.ILogEventSink, CapturingLogSink>();
+
             // ── 3. Replace external services with fakes ───────────────────────────
             services.RemoveAll<IVnPayService>();
             services.AddSingleton<IVnPayService, FakeVnPayService>();
