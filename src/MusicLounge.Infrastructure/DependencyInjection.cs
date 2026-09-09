@@ -1,4 +1,4 @@
-﻿using Hangfire;
+using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +55,7 @@ public static class DependencyInjection
 
         // Specific Repositories
         services.AddScoped<ILoungeShowRepository, LoungeShowRepository>();
+        services.AddScoped<IInferredAiProfileRepository, InferredAiProfileRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ILivestreamRepository, LivestreamRepository>();
         services.AddScoped<IEventModerationRepository, EventModerationRepository>();
