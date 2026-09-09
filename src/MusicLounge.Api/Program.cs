@@ -302,10 +302,28 @@ try
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
 
-    // As close to the front as possible (right after ForwardedHeaders, which has to be earlier
-    // still — see its own comment) so it wraps every other middleware below, including Swagger/
-    // HSTS/the header-appending middleware. Registered later, an exception thrown inside any of
-    // those would bypass GlobalExceptionHandler entirely and return a raw non-JSON 500, breaking
+    // PHAI dung truoc UseExceptionHandler, tuc nam NGOAI no.
+    //
+    // Truoc MLACP-313 dong nay nam sau, tuc nam TRONG. Moi ngoai le nghiep vu — NotFoundException,
+    // ForbiddenException, ConflictException, DomainException — deu bay qua middleware nay truoc
+    // khi GlobalExceptionHandler o ngoai kip viet lai ma trang thai. Serilog thay mot ngoai le
+    // chua duoc xu ly nen ghi ban ghi request o muc Error voi ma 500, roi handler o ngoai tra ve
+    // 404 cho nguoi goi.
+    //
+    // Nguoi dung nhan dung ma; cai sai nam o log. Va no sai theo kieu nguy hiem nhat: nhat ky loi
+    // cua he thong day nhung con 500 khong co that, nen mot su co 500 THAT khong con phan biet
+    // duoc voi mot lan "khong tim thay ban ghi" binh thuong. Moi phep dem loi, moi nguong canh
+    // bao dat tren so 500 deu tro nen vo nghia.
+    //
+    // Dat ra ngoai thi Serilog quan sat duoc ma trang thai CUOI CUNG, sau khi handler da viet lai:
+    // 404 ghi la 404 o muc Information, va chi loi 5xx that su moi len muc Error. Khong mat thong
+    // tin gi: GlobalExceptionHandler van tu ghi LogError kem stack cho moi loi tu 500 tro len.
+    app.UseSerilogRequestLogging();
+
+    // As close to the front as possible (only UseForwardedHeaders and the request logger above it,
+    // each for its own documented reason) so it wraps every other middleware below, including
+    // Swagger/HSTS/the header-appending middleware. Registered later, an exception thrown inside any
+    // of those would bypass GlobalExceptionHandler entirely and return a raw non-JSON 500, breaking
     // the {success,message,errors} shape this API otherwise guarantees for every error.
     app.UseExceptionHandler();
 
@@ -339,7 +357,6 @@ try
         await next();
     });
 
-    app.UseSerilogRequestLogging();
     app.UseResponseCompression();
     app.UseHttpsRedirection();
     // .glb/.gltf khong nam trong FileExtensionContentTypeProvider mac dinh — khong khai bao thi
