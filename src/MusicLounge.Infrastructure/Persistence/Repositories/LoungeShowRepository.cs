@@ -218,6 +218,45 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     /// hành vi, mà "lưu lại" được ghi ở bảng riêng chứ không phải một hành động trong nhật ký. Đó là
     /// một trong những tín hiệu mạnh nhất — người ta chỉ lưu thứ mình định quay lại.
     /// </summary>
+    public async Task<IReadOnlyList<ShowTags>> GetShowTagsAsync(
+        IReadOnlyCollection<int> showIds, CancellationToken ct = default)
+    {
+        if (showIds.Count == 0) return [];
+
+        var genres = await _ctx.Set<LoungeShowGenre>()
+            .Where(g => showIds.Contains(g.LoungeShowId))
+            .Select(g => new { g.LoungeShowId, g.GenreId })
+            .ToListAsync(ct);
+
+        var moods = await _ctx.Set<LoungeShowMood>()
+            .Where(m => showIds.Contains(m.LoungeShowId))
+            .Select(m => new { m.LoungeShowId, m.MoodId })
+            .ToListAsync(ct);
+
+        var atmospheres = await _ctx.Set<LoungeShowAtmosphere>()
+            .Where(a => showIds.Contains(a.LoungeShowId))
+            .Select(a => new { a.LoungeShowId, a.AtmosphereId })
+            .ToListAsync(ct);
+
+        var loungeByShow = await _ctx.LoungeShows
+            .Where(s => showIds.Contains(s.Id))
+            .Select(s => new { s.Id, s.LoungeId })
+            .ToListAsync(ct);
+
+        var genreLookup = genres.ToLookup(g => g.LoungeShowId, g => g.GenreId);
+        var moodLookup = moods.ToLookup(m => m.LoungeShowId, m => m.MoodId);
+        var atmosphereLookup = atmospheres.ToLookup(a => a.LoungeShowId, a => a.AtmosphereId);
+
+        return loungeByShow
+            .Select(s => new ShowTags(
+                s.Id,
+                s.LoungeId,
+                genreLookup[s.Id].ToHashSet(),
+                moodLookup[s.Id].ToHashSet(),
+                atmosphereLookup[s.Id].ToHashSet()))
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<LoungeShow>> GetTrendingAsync(
         int limit, string? city, CancellationToken ct = default)
     {
