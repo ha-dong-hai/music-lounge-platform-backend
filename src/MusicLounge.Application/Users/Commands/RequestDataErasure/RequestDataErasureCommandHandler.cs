@@ -70,6 +70,10 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         await RemoveAllAsync<UserFavouriteMood, int>(x => x.UserId == userId, ct);
         await RemoveAllAsync<UserFavouriteAtmosphere, int>(x => x.UserId == userId, ct);
         await RemoveAllAsync<UserBehaviourLog, int>(x => x.UserId == userId, ct);
+        // MLACP-330: hai tin hieu tieu cuc cung la lua chon nguoi dung tu khai, nen chung di
+        // cung nhom voi so thich yeu thich — xoa tai khoan thi xoa het.
+        await RemoveAllAsync<LoungeMute, int>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<UserDislikedGenre, int>(x => x.UserId == userId, ct);
 
         // Toan bo ho so he thong da suy ra: diem so hanh vi theo tung buoi dien, goi y da tinh
         // san, trong so tieu chi rieng.

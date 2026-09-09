@@ -75,6 +75,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private readonly IRepository<ShowWishlist, int> _wishlistRepo;
     private readonly ISystemConfigService _config;
     private readonly IRepository<UserBehaviourLog, int> _logRepo;
+    private readonly IRepository<LoungeMute, int> _muteRepo;
+    private readonly IRepository<UserDislikedGenre, int> _dislikedRepo;
 
     public GetRecommendedLoungeShowsQueryHandler(
         IRepository<AiRecommendation, int> recRepo,
@@ -89,7 +91,9 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         IRepository<Ticket, Guid> ticketRepo,
         IRepository<ShowWishlist, int> wishlistRepo,
         ISystemConfigService config,
-        IRepository<UserBehaviourLog, int> logRepo)
+        IRepository<UserBehaviourLog, int> logRepo,
+        IRepository<LoungeMute, int> muteRepo,
+        IRepository<UserDislikedGenre, int> dislikedRepo)
     {
         _recRepo = recRepo;
         _userRepo = userRepo;
@@ -104,6 +108,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         _wishlistRepo = wishlistRepo;
         _config = config;
         _logRepo = logRepo;
+        _muteRepo = muteRepo;
+        _dislikedRepo = dislikedRepo;
     }
 
     public async Task<IReadOnlyList<RecommendedLoungeShowDto>> Handle(
@@ -423,6 +429,17 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> FinaliseAsync(
         IReadOnlyList<Scored> ranked, int limit, IReadOnlySet<int> alreadyHas, CancellationToken ct)
     {
+        // MLACP-330. Thứ người dùng nói thẳng là không quan tâm thì CẮT HẲN, không đẩy xuống cuối.
+        //
+        // Mọi phép đẩy xuống cuối khác ở đây đều dựa trên SUY ĐOÁN của hệ thống (bạn đã có rồi, cái
+        // này hết vé), nên nguyên tắc "thà hiện thừa còn hơn màn hình trống" là đúng. Chỗ này khác
+        // hẳn: người dùng đã tự tay nói không. Đẩy xuống cuối rồi vẫn hiện là phớt lờ điều họ vừa
+        // nói — và Mozilla đo được 62,3% người dùng thấy các nút điều khiển kiểu này chẳng thay đổi
+        // được gì, tức một nút không có tác dụng thật thì tệ hơn là không có nút.
+        var unwanted = await NotInterestedAsync(ranked.Select(x => x.Show).ToList(), ct);
+        if (unwanted.Count > 0)
+            ranked = ranked.Where(x => !unwanted.Contains(x.Show.Id)).ToList();
+
         var closed = await ClosedForSaleAsync(ranked.Select(x => x.Show).ToList(), ct);
 
         var ordered = PushBack(ranked, x => alreadyHas.Contains(x.Show.Id), limit);
@@ -432,6 +449,51 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             .Take(limit)
             .Select(x => x.Show.ToRecommendedDto(x.Score, x.Reason))
             .ToList();
+    }
+
+    /// <summary>
+    /// Những buổi diễn người dùng đã nói là không quan tâm — vì phòng trà đã bị tắt tiếng, hoặc vì
+    /// mọi thể loại của buổi đó đều nằm trong danh sách họ không thích.
+    ///
+    /// <b>Chỉ cắt khi TOÀN BỘ thể loại đều bị chê.</b> Một buổi gắn thẻ Bolero và Jazz, với người
+    /// không thích Jazz nhưng mê Bolero, vẫn là một buổi đáng giới thiệu. Cắt nó đi là suy diễn quá
+    /// tay từ một câu nói hẹp thành một lệnh cấm rộng.
+    ///
+    /// Khách vãng lai không có gì để đọc — họ không có hồ sơ, và không được tạo một cái sau lưng họ.
+    /// </summary>
+    private async Task<HashSet<int>> NotInterestedAsync(
+        IReadOnlyList<LoungeShow> shows, CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || shows.Count == 0) return [];
+
+        var userId = _currentUser.UserId;
+
+        var mutedLoungeIds = (await _muteRepo.FindAsync(m => m.UserId == userId, ct))
+            .Select(m => m.LoungeId)
+            .ToHashSet();
+
+        var dislikedGenreIds = (await _dislikedRepo.FindAsync(d => d.UserId == userId, ct))
+            .Select(d => d.GenreId)
+            .ToHashSet();
+
+        if (mutedLoungeIds.Count == 0 && dislikedGenreIds.Count == 0) return [];
+
+        var unwanted = shows
+            .Where(s => mutedLoungeIds.Contains(s.LoungeId))
+            .Select(s => s.Id)
+            .ToHashSet();
+
+        if (dislikedGenreIds.Count > 0)
+        {
+            var remaining = shows.Where(s => !unwanted.Contains(s.Id)).Select(s => s.Id).ToList();
+            foreach (var tags in await _showRepo.GetShowTagsAsync(remaining, ct))
+            {
+                if (tags.GenreIds.Count > 0 && tags.GenreIds.All(dislikedGenreIds.Contains))
+                    unwanted.Add(tags.ShowId);
+            }
+        }
+
+        return unwanted;
     }
 
     /// <summary>
