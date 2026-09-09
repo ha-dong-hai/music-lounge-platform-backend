@@ -1,4 +1,5 @@
 using FluentValidation;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 
@@ -38,7 +39,7 @@ public sealed class CreateTicketTierCommandValidator : AbstractValidator<CreateT
         RuleForEach(x => x.Prices).ChildRules(p =>
         {
             p.RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
-            p.RuleFor(x => x.Price).GreaterThan(0);
+            p.RuleFor(x => x.Price).GreaterThan(0).MustBeWholeDong();
             p.RuleFor(x => x.Quota).GreaterThan(0).When(x => x.Quota.HasValue);
             p.RuleFor(x => x.PurchaseChannel)
                 .Must(c => ValidChannels.Contains(c, StringComparer.OrdinalIgnoreCase))

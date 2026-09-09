@@ -1,4 +1,5 @@
 using FluentValidation;
+using MusicLounge.Application.Common;
 
 namespace MusicLounge.Application.FnbMenuItems.Commands.UpdateMenuItem;
 
@@ -13,6 +14,6 @@ public sealed class UpdateMenuItemCommandValidator : AbstractValidator<UpdateMen
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).MaximumLength(500);
         RuleFor(x => x.ImageUrl).MaximumLength(500);
-        RuleFor(x => x.Price).GreaterThan(0);
+        RuleFor(x => x.Price).GreaterThan(0).MustBeWholeDong();
     }
 }
