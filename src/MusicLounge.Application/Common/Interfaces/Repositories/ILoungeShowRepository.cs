@@ -1,3 +1,4 @@
+using MusicLounge.Application.Analytics.Common;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -27,6 +28,14 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
 
     Task<PaginatedResult<LoungeShow>> GetByLoungeAsync(
         int loungeId, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>
+    /// Thẻ phân loại (thể loại/tâm trạng/không gian) của một tập buổi diễn, đủ để so với gu người
+    /// nghe. Truy vấn riêng vì WithDetails() cố ý không nạp tâm trạng và không gian — các danh sách
+    /// thông thường không dùng tới chúng, và nạp kèm sẽ bắt mọi endpoint danh sách gánh thêm join.
+    /// </summary>
+    Task<IReadOnlyList<ShowTags>> GetShowTagsAsync(
+        IReadOnlyCollection<int> showIds, CancellationToken ct = default);
 
     Task<IReadOnlyList<LoungeShow>> GetTrendingAsync(
         int limit, string? city, CancellationToken ct = default);

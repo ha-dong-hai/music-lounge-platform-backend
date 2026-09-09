@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Trainers;
+using MusicLounge.Application.Analytics.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -26,7 +27,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     // matching; this system already has Follow (user follows a venue) sitting completely unused by
     // recommendations. Kept as a clearly separate post-hoc business-rule boost, not a change to the
     // core formula, since the formula's own comment states it follows a fixed spec exactly.
-    private const float FollowedVenueBoost = 0.15f;
+    private const float FollowedVenueBoost = TasteMatcher.FollowedVenueBoost;
 
     // Only the handful of recommendations actually prominent in the UI get an AI-written
     // explanation — generating one for all 20 computed per user, per 6h refresh cycle, across every
@@ -299,22 +300,15 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
             var showMoodIds = moodsByShow.GetValueOrDefault(show.Id, []);
             var showAtmosphereIds = atmospheresByShow.GetValueOrDefault(show.Id, []);
 
-            var genreScore = Jaccard(userGenreIds, showGenreIds);
-            var moodScore = Jaccard(userMoodIds, showMoodIds);
-            var atmosphereScore = Jaccard(userAtmosphereIds, showAtmosphereIds);
-
-            result[show.Id] = genreScore * 0.4f + moodScore * 0.4f + atmosphereScore * 0.2f;
+            // Cong thuc nam o TasteMatcher chu khong o day: duong tinh truc tiep trong request
+            // (khach chua dang nhap, va nguoi dung chua bat dong y AI) dung dung cong thuc nay, va
+            // hai ban cai dat rieng thi som muon cho ra hai ket qua khac nhau cho cung mot nguoi.
+            result[show.Id] = TasteMatcher.ContentScore(
+                new TasteProfile(userGenreIds, userMoodIds, userAtmosphereIds, new HashSet<int>()),
+                new ShowTags(show.Id, show.LoungeId, showGenreIds, showMoodIds, showAtmosphereIds));
         }
 
         return result;
-    }
-
-    private static float Jaccard(HashSet<int> a, HashSet<int> b)
-    {
-        if (a.Count == 0 || b.Count == 0) return 0f;
-        var intersection = a.Intersect(b).Count();
-        var union = a.Union(b).Count();
-        return union == 0 ? 0f : (float)intersection / union;
     }
 
     // custom_score = Sum(match(event_custom_values, user_custom_preferences) * weight).
