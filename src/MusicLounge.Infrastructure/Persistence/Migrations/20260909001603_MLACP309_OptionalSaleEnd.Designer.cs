@@ -12,8 +12,8 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260908171515_ZZ_Verify2")]
-    partial class ZZ_Verify2
+    [Migration("20260909001603_MLACP309_OptionalSaleEnd")]
+    partial class MLACP309_OptionalSaleEnd
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2993,6 +2993,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigValue = "60",
                             DataType = "Integer",
                             Description = "Last-entry cutoff: minutes of the show that must still remain for a ticket to be sold — BR-31, matches Eventbrite's general-admission default",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 34,
+                            ConfigKey = "venue_changeover_minutes",
+                            ConfigValue = "30",
+                            DataType = "Integer",
+                            Description = "Minimum gap between two consecutive shows at one venue — time to clear one audience and admit the next. 30 is the low end of the 30-60 min industry range for standard concert venues (CF1)",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });
