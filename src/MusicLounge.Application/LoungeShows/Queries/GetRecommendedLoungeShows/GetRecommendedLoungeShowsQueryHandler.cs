@@ -487,9 +487,16 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         var shows = await _showRepo.GetRecommendedByIdsAsync(
             cached.Select(r => r.LoungeShowId).ToList(), ct);
 
-        var fromCache = shows
+        // Dùng lại đúng biểu thức mà truy vấn xuống database dùng, qua AsQueryable, thay vì viết
+        // lại điều kiện bằng tay ở đây. Hai bản cài đặt của cùng một quy tắc là đúng cách ba lỗi
+        // của MLACP-322 lọt vào, nên chỗ này cố ý không có bản thứ hai.
+        var reachable = shows.AsQueryable().Where(ShowDiscoverability.VenueIsOperating);
+
+        if (!string.IsNullOrWhiteSpace(city))
+            reachable = reachable.Where(ShowDiscoverability.ReachableFrom(city));
+
+        var fromCache = reachable
             .Where(s => ShowSchedule.EffectiveEnd(s) >= now)
-            .Where(s => string.IsNullOrWhiteSpace(city) || s.Lounge.Address.City == city)
             .OrderByDescending(s => recByShowId[s.Id].FinalScore)
             .Select(s => new Scored(s, recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason))
             .ToList();
