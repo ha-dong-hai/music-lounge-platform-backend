@@ -15,6 +15,7 @@ using MusicLounge.Application.Analytics.Queries.GetOwnerLivestreamHistory;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetPlatformAnalytics;
 using MusicLounge.Application.Analytics.Queries.GetDemandForecast;
+using MusicLounge.Application.Analytics.Queries.GetRecommenderEvaluation;
 using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 using MusicLounge.Application.Analytics.Queries.GetTicketSalesTrend;
 using MusicLounge.Application.Common.Models;
@@ -161,6 +162,27 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetDemandForecastQuery(showId), ct);
         return Ok(ApiResponse<DemandForecastDto>.Ok(result));
+    }
+
+    /// <summary>Admin — đánh giá offline chất lượng hệ gợi ý, so với baseline "gợi ý buổi diễn
+    /// nhiều người chọn nhất".
+    ///
+    /// Trả lời câu "AI tốt tới mức nào" bằng số, ngay cả khi chưa có lưu lượng người dùng thật —
+    /// khác với ai-recommendation-performance vốn đo CTR/chuyển đổi và chỉ có nghĩa sau khi đã có
+    /// người bấm vào. Một con số HR@K đứng một mình không nói lên điều gì, nên endpoint này luôn
+    /// trả về cả baseline để so, cộng độ phủ kho và phần cảnh báo về giới hạn của phép đo.
+    ///
+    /// Chưa đủ người dùng có lịch sử thì trả status='NotEnoughHistory' và KHÔNG có con số nào.</summary>
+    [HttpGet("recommender-evaluation")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<RecommenderEvaluationDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetRecommenderEvaluation(
+        [FromQuery] int k = 10, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetRecommenderEvaluationQuery(k), ct);
+        return Ok(ApiResponse<RecommenderEvaluationDto>.Ok(result));
     }
 
     /// <summary>Owner — tổng donate theo từng nghệ sĩ, tổng hợp qua toàn bộ buổi diễn của venue,
