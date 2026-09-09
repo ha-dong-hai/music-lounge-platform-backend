@@ -74,6 +74,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private readonly IRepository<Ticket, Guid> _ticketRepo;
     private readonly IRepository<ShowWishlist, int> _wishlistRepo;
     private readonly ISystemConfigService _config;
+    private readonly IRepository<UserBehaviourLog, int> _logRepo;
 
     public GetRecommendedLoungeShowsQueryHandler(
         IRepository<AiRecommendation, int> recRepo,
@@ -87,7 +88,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         IBackgroundJobService jobs,
         IRepository<Ticket, Guid> ticketRepo,
         IRepository<ShowWishlist, int> wishlistRepo,
-        ISystemConfigService config)
+        ISystemConfigService config,
+        IRepository<UserBehaviourLog, int> logRepo)
     {
         _recRepo = recRepo;
         _userRepo = userRepo;
@@ -101,6 +103,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         _ticketRepo = ticketRepo;
         _wishlistRepo = wishlistRepo;
         _config = config;
+        _logRepo = logRepo;
     }
 
     public async Task<IReadOnlyList<RecommendedLoungeShowDto>> Handle(
@@ -149,10 +152,34 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             // Chưa có kết quả tính sẵn: đặt lịch tính nền cho lần sau, còn lần này vẫn phải trả về
             // thứ dùng được ngay. Trước đây chỗ này trả về bảng thịnh hành chung; giờ ít nhất cũng
             // xếp theo sở thích người dùng đã khai.
-            _jobs.EnqueueRecommendationRefresh(_currentUser.UserId);
+            //
+            // MLACP-328: nhưng chỉ đặt lịch khi công việc đó tính ra được gì. Nếu không, cache vẫn
+            // rỗng sau khi job chạy, nên request sau lại đặt lịch tiếp — một vòng không có điểm
+            // dừng, rơi đúng vào người vừa bật đồng ý mà chưa kịp khai sở thích.
+            if (await CanRefreshProduceAnythingAsync(ct))
+                _jobs.EnqueueRecommendationRefresh(_currentUser.UserId);
         }
 
         return await RankByTasteAsync(taste, request.City, limit, reason, alreadyHas, ct);
+    }
+
+    /// <summary>
+    /// Công việc tính lại gợi ý nền có tính ra được gì cho người này không. Điều kiện lấy từ
+    /// <see cref="RecommendationRefresh"/> — cùng một chỗ mà chính công việc đó dùng để quyết định
+    /// có thoát sớm hay không, nên hai bên không thể lệch nhau.
+    ///
+    /// Sở thích tự khai và phòng trà đang theo dõi đã có sẵn trong tay, nên chỉ khi cả hai đều rỗng
+    /// mới phải đếm nhật ký hành vi — tức truy vấn thêm chỉ xảy ra ở đúng trường hợp hiếm.
+    /// </summary>
+    private async Task<bool> CanRefreshProduceAnythingAsync(CancellationToken ct)
+    {
+        var declared = await DeclaredTasteAsync(_currentUser.UserId, ct);
+
+        if (!declared.KnowsNothing)
+            return true;
+
+        var logs = await _logRepo.CountAsync(l => l.UserId == _currentUser.UserId, ct);
+        return RecommendationRefresh.CanProduceAnything(logs, hasDeclaredTaste: false, followsAnyVenue: false);
     }
 
     /// <summary>Một buổi diễn đã được chấm điểm, kèm lý do sẽ hiện cho người dùng.</summary>
