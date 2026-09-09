@@ -264,10 +264,14 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
         var query = WithDetails()
             .Where(s => s.Status == LoungeShowStatus.Published
-                     || s.Status == LoungeShowStatus.Ongoing);
+                     || s.Status == LoungeShowStatus.Ongoing)
+            // MLACP-326: phong tra bi dinh chi/khoa/tu choi thi khong duoc dem di moi khach nua.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
+        // MLACP-326: buoi truc tuyen xem duoc tu bat cu dau, nen bo loc thanh pho chi ap cho buoi
+        // dien tai cho. Xem ShowDiscoverability.ReachableFrom.
         if (!string.IsNullOrWhiteSpace(city))
-            query = query.Where(s => s.Lounge.Address.City == city);
+            query = query.Where(ShowDiscoverability.ReachableFrom(city));
 
         // Sap theo khoa chinh giam dan thay vi theo CreatedAt: hai thu tu nay trung nhau vi Id la
         // identity tang dan, nhung provider SQLite dung trong test khong ORDER BY duoc cot
@@ -288,10 +292,14 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
         var query = WithDetails()
             .Where(s => s.Status == LoungeShowStatus.Published
-                     || s.Status == LoungeShowStatus.Ongoing);
+                     || s.Status == LoungeShowStatus.Ongoing)
+            // MLACP-326: phong tra bi dinh chi/khoa/tu choi thi khong duoc dem di moi khach nua.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
+        // MLACP-326: buoi truc tuyen xem duoc tu bat cu dau, nen bo loc thanh pho chi ap cho buoi
+        // dien tai cho. Xem ShowDiscoverability.ReachableFrom.
         if (!string.IsNullOrWhiteSpace(city))
-            query = query.Where(s => s.Lounge.Address.City == city);
+            query = query.Where(ShowDiscoverability.ReachableFrom(city));
 
         // Was OrderByDescending(s => s.BehaviourLogs.Count(b => b.CreatedAt >= since)) directly in
         // the query — combining a DateTimeOffset comparison with a correlated Count subquery inside
