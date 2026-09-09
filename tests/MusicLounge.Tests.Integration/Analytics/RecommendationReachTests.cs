@@ -24,11 +24,11 @@ namespace MusicLounge.Tests.Integration.Analytics;
 /// đang hoạt động và vẫn bán vé; cắt họ khỏi màn hình khám phá là tự ý nâng một lời cảnh cáo thành
 /// một hình phạt kinh tế.
 ///
-/// <b>Nửa còn lại cố ý chưa làm.</b> Bộ lọc thành phố cũng đang loại oan buổi diễn trực tuyến của
-/// phòng trà tỉnh khác. Nới nó ra là một quyết định về sản phẩm — nó đổi nghĩa của tham số
-/// <c>city</c> cho mọi màn hình, chứ không riêng gợi ý — nên để lại thành câu hỏi cho người dùng
-/// thay vì tự quyết. Xem chú thích ở <c>ShowDiscoverability.ReachableFrom</c>. Hai bài kiểm tra
-/// dưới đây chốt giữ hành vi HIỆN TẠI để lúc đổi thì đổi có ý thức.
+/// <b>Về bộ lọc thành phố.</b> Ban đầu tôi nghi nó loại oan buổi diễn trực tuyến của phòng trà tỉnh
+/// khác. Đã tra chuẩn schema.org và cách các nền tảng thật làm, kết luận ngược lại: buổi trực tuyến
+/// KHÔNG có thành phố (địa điểm của nó là <c>VirtualLocation</c>), nên lọc theo thành phố mà không
+/// trả về nó là đúng. Chi tiết ở chú thích <c>ShowDiscoverability.ReachableFrom</c>. Hai bài kiểm
+/// tra dưới đây chốt giữ đúng hành vi đó.
 /// </summary>
 [Collection("Integration")]
 public sealed class RecommendationReachTests
@@ -177,7 +177,7 @@ public sealed class RecommendationReachTests
             .Should().Contain(show, "cảnh cáo không phải đình chỉ");
     }
 
-    // ---------- ② chốt giữ nghĩa hiện tại của bộ lọc thành phố ----------
+    // ---------- ② bộ lọc thành phố: giữ đúng nghĩa "tới được" ----------
 
     [Fact]
     public async Task AnOfflineShowInAnotherCityIsStillExcluded()

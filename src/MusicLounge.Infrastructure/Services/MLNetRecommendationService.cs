@@ -132,14 +132,19 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
 
         IReadOnlyList<AiRecommendation> recommendations;
 
-        if (behaviourLogs.Count >= 5)
+        // MLACP-328: dieu kien thoat som lay tu RecommendationRefresh, la CHINH cho ma ben dat lich
+        // hoi truoc khi enqueue. Truoc day dieu kien nay chi nam o day nen ben goi khong hoi duoc,
+        // va voi nguoi chua co gi de tinh thi moi request lai enqueue them mot job vo ich.
+        if (!RecommendationRefresh.CanProduceAnything(
+                behaviourLogs.Count, hasContentPrefs, followedLoungeIds.Count > 0))
+            return; // Stage 1 (Trending) handled at query time — no cache needed
+
+        if (behaviourLogs.Count >= RecommendationRefresh.MinBehaviourLogs)
             recommendations = await ComputeHybridAsync(
                 userId, favouriteGenres, favouriteMoods, favouriteAtmospheres, followedLoungeIds, ct);
-        else if (hasContentPrefs || followedLoungeIds.Count > 0)
+        else
             recommendations = await ComputeContentBasedAsync(
                 userId, favouriteGenres, favouriteMoods, favouriteAtmospheres, followedLoungeIds, ct);
-        else
-            return; // Stage 1 (Trending) handled at query time — no cache needed
 
         await PersistRecommendationsAsync(userId, recommendations, ct);
     }
