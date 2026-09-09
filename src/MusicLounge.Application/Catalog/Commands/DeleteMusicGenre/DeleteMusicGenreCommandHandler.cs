@@ -22,7 +22,11 @@ internal sealed class DeleteMusicGenreCommandHandler : IRequestHandler<DeleteMus
 
         var inUse = await _uow.Repository<LoungeShowGenre, int>().AnyAsync(x => x.GenreId == request.Id, ct)
             || await _uow.Repository<PerformerGenre, int>().AnyAsync(x => x.GenreId == request.Id, ct)
-            || await _uow.Repository<UserFavouriteGenre, int>().AnyAsync(x => x.GenreId == request.Id, ct);
+            || await _uow.Repository<UserFavouriteGenre, int>().AnyAsync(x => x.GenreId == request.Id, ct)
+            // MLACP-331: bang nay them o MLACP-330 voi OnDelete Restrict. Thieu no o day thi mot the
+            // loai chi bi ai do danh dau "khong thich" se vuot qua chot nay roi no FK o tang
+            // database — Admin nhan 500 thay vi thong bao sach.
+            || await _uow.Repository<UserDislikedGenre, int>().AnyAsync(x => x.GenreId == request.Id, ct);
         if (inUse)
             throw new ConflictException($"Thể loại '{genre.Name}' đang được sử dụng, không thể xóa.");
 
