@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
 
@@ -7,16 +9,35 @@ namespace MusicLounge.Infrastructure.Jobs;
 
 public sealed class CancelAbandonedPaymentsJob
 {
+    /// <summary>
+    /// Mac dinh khi <c>system_config</c> chua co khoa — xem <see cref="ConfigKeys.PaymentAbandonMinutes"/>
+    /// de biet vi sao con so nay phai lon hon cua so retry IPN cua VNPay.
+    /// </summary>
+    public const int DefaultAbandonMinutes = 60;
+
     private readonly ApplicationDbContext _ctx;
+    private readonly ISystemConfigService _config;
 
-    public CancelAbandonedPaymentsJob(ApplicationDbContext ctx) => _ctx = ctx;
+    public CancelAbandonedPaymentsJob(ApplicationDbContext ctx, ISystemConfigService config)
+    {
+        _ctx = ctx;
+        _config = config;
+    }
 
-    // VNPay retries the callback for ~15 minutes. We wait 30 minutes before declaring a payment abandoned.
+    // MLACP-333. Cho nay truoc day cho 30 phut, dua tren mot comment ghi "VNPay retries the
+    // callback for ~15 minutes". Con so 15 phut do SAI: tai lieu chinh chu cua VNPay ghi ro IPN
+    // duoc goi lai toi da 10 lan, moi lan cach nhau 5 phut — lan cuoi co the roi vao khoang phut
+    // thu 50. Nen bien an toan ma comment cu tuong la +15 phut thuc ra la -20 phut: tu phut 30 den
+    // phut 50, VNPay VAN dang retry hop le trong khi ve da bi huy va thanh toan da bi danh Failed.
+    // Mot xac nhan thanh cong den trong khoang do se bi coi la callback trung lap va bo di —
+    // khach mat tien ma khong co ve, va khong ai tim ra duoc vi khong cho nao doc PaymentStatus.Failed.
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
     public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
         var ct = cancellationToken.ShutdownToken;
-        var cutoff = DateTimeOffset.UtcNow.AddMinutes(-30);
+        var abandonMinutes = await _config.GetIntAsync(
+            ConfigKeys.PaymentAbandonMinutes, DefaultAbandonMinutes, ct);
+        var cutoff = DateTimeOffset.UtcNow.AddMinutes(-abandonMinutes);
 
         // Combining the Status equality with the CreatedAt comparison in one Where doesn't
         // translate under the SQLite provider used in tests (same limitation documented

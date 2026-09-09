@@ -36,7 +36,7 @@ public sealed class JobQueryTranslationTests
             {
                 OrderId = $"STALE-{Guid.NewGuid():N}"[..30], GrossAmount = 100_000m,
                 Status = PaymentStatus.Pending, ReferenceType = "TicketHold", ReferenceId = "0",
-                CreatedAt = DateTimeOffset.UtcNow.AddHours(-1) // older than the 30-min abandon window
+                CreatedAt = DateTimeOffset.UtcNow.AddHours(-3) // MLACP-333: qua han cua so 60 phut
             };
             db.Add(payment);
             await db.SaveChangesAsync();

@@ -47,6 +47,21 @@ public static class ConfigKeys
     public const string TicketHoldMinutes = "ticket_hold_minutes";
 
     /// <summary>
+    /// MLACP-333: sau bao nhieu phut thi mot thanh toan chua duoc xac nhan bi coi la bo roi — huy ve
+    /// va danh <c>Failed</c>.
+    ///
+    /// <para>Nguong nay <b>phai lon hon cua so retry IPN cua VNPay</b>. Theo tai lieu chinh chu,
+    /// VNPay goi lai IPN toi da 10 lan, moi lan cach 5 phut — tuc lan cuoi co the roi vao khoang
+    /// phut thu 50. Neu nguong ngan hon, mot thanh toan VNPay xac nhan thanh cong o lan retry muon
+    /// se ve den noi luc ve da bi huy: khach mat tien ma khong co ve.</para>
+    ///
+    /// <para>Doi lai, nguong cang dai thi gio hang bo do cang giu cho lau, vi ve <c>Pending</c> van
+    /// duoc tinh la da dat cho. Hai tac hai khong can xung nen nghieng ve phia khach, nhung khong
+    /// nghieng qua tay: mac dinh 60 phut = cua so 50 phut cong bien an toan 10 phut.</para>
+    /// </summary>
+    public const string PaymentAbandonMinutes = "payment_abandon_minutes";
+
+    /// <summary>
     /// BR-31: buoi dien phai con lai it nhat bao nhieu phut thi mot ve moi con duoc ban. Tran cung,
     /// ap ca khi Owner tu dat moc dong ban.
     /// </summary>
