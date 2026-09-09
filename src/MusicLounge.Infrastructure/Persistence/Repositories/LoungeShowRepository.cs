@@ -257,6 +257,30 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .ToList();
     }
 
+    public async Task<IReadOnlyList<LoungeShow>> GetRecentlyPublishedAsync(
+        int limit, string? city, CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        var query = WithDetails()
+            .Where(s => s.Status == LoungeShowStatus.Published
+                     || s.Status == LoungeShowStatus.Ongoing);
+
+        if (!string.IsNullOrWhiteSpace(city))
+            query = query.Where(s => s.Lounge.Address.City == city);
+
+        // Sap theo khoa chinh giam dan thay vi theo CreatedAt: hai thu tu nay trung nhau vi Id la
+        // identity tang dan, nhung provider SQLite dung trong test khong ORDER BY duoc cot
+        // DateTimeOffset — cung lop van de da xu o MLACP-306.
+        var candidates = await query.OrderByDescending(s => s.Id).Take(limit * 3).ToListAsync(ct);
+
+        // Buoi da dien xong nhung chua kip doi trang thai thi khong con la thu de gioi thieu.
+        return candidates
+            .Where(s => ShowSchedule.EffectiveEnd(s) >= now)
+            .Take(limit)
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<LoungeShow>> GetTrendingAsync(
         int limit, string? city, CancellationToken ct = default)
     {

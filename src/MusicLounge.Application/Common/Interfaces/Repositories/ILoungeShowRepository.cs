@@ -37,6 +37,17 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
     Task<IReadOnlyList<ShowTags>> GetShowTagsAsync(
         IReadOnlyCollection<int> showIds, CancellationToken ct = default);
 
+    /// <summary>
+    /// Buổi diễn mới được đăng gần đây nhất, bất kể đã có ai quan tâm hay chưa.
+    ///
+    /// Cần riêng vì bảng "đang được quan tâm" xếp theo tương tác, mà buổi diễn vừa đăng thì chưa có
+    /// tương tác nào — và khi hoà điểm 0 thì thứ tự là "sắp diễn trước", trong khi buổi mới đăng
+    /// bắt buộc cách ngày diễn tối thiểu 7 ngày làm việc nên luôn nằm xa. Kết quả là buổi diễn mới
+    /// bị đẩy xuống cuối một cách hệ thống và có thể không bao giờ được ai nhìn thấy.
+    /// </summary>
+    Task<IReadOnlyList<LoungeShow>> GetRecentlyPublishedAsync(
+        int limit, string? city, CancellationToken ct = default);
+
     Task<IReadOnlyList<LoungeShow>> GetTrendingAsync(
         int limit, string? city, CancellationToken ct = default);
 
