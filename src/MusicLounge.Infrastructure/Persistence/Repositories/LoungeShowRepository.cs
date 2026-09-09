@@ -45,7 +45,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     {
         var query = WithDetails()
             .Where(s => s.Status == LoungeShowStatus.Published
-                     || s.Status == LoungeShowStatus.Ongoing);
+                     || s.Status == LoungeShowStatus.Ongoing)
+            // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
         if (!includeSoldOut)
         {
@@ -84,7 +86,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         // Draft, de lot Pending (dang cho Admin duyet, chua cong khai) vao ket qua tim kiem cong
         // khai. Loai them Pending o day; Ended/Cancelled van do rieng IncludeEnded ben duoi quyet dinh.
         var query = WithDetails()
-            .Where(s => s.Status != LoungeShowStatus.Draft && s.Status != LoungeShowStatus.Pending);
+            .Where(s => s.Status != LoungeShowStatus.Draft && s.Status != LoungeShowStatus.Pending)
+            // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
         if (!string.IsNullOrWhiteSpace(p.Keyword))
             // Contains() (khong phai EF.Functions.Like voi chuoi noi truoc trong C#) — SQL Server
@@ -171,7 +175,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     {
         var query = WithDetails()
             .Where(s => s.Performances.Any(p => p.PerformerId == performerId)
-                && s.Status != LoungeShowStatus.Draft);
+                && s.Status != LoungeShowStatus.Draft)
+            // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
         if (!includeEnded)
             query = query.Where(s => s.Status != LoungeShowStatus.Ended
@@ -196,7 +202,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         int loungeId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = WithDetails()
-            .Where(s => s.LoungeId == loungeId && s.Status != LoungeShowStatus.Draft);
+            .Where(s => s.LoungeId == loungeId && s.Status != LoungeShowStatus.Draft)
+            // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
         // Same ORDER BY-on-DateTimeOffset-with-Skip/Take limitation as GetByPerformerAsync above.
         var candidates = await query.ToListAsync(ct);
@@ -398,7 +406,10 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         var query = WithDetails()
             .Where(s => s.Id != showId
                 && (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing)
-                && (s.LoungeId == loungeId || s.Genres.Any(g => genreIds.Contains(g.GenreId))));
+                && (s.LoungeId == loungeId || s.Genres.Any(g => genreIds.Contains(g.GenreId))))
+            // MLACP-329: duong nay dan nguoi dang xem sang thang mot buoi khac, nen de lot phong tra
+            // bi dinh chi vao day la moi ho di dung cho vua bi cam.
+            .Where(ShowDiscoverability.VenueIsOperating);
 
         // Materialize then sort/take client-side — same SQLite-translation caution used throughout
         // this file (combining the boolean "matches both criteria" expression with ScheduledStart
@@ -416,6 +427,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     public async Task<IReadOnlyList<string>> GetDistinctCitiesAsync(CancellationToken ct = default)
         => await _ctx.Lounges
             .AsNoTracking()
+            // MLACP-329: mot thanh pho chi con phong tra bi dinh chi ma van nam trong bo loc thi
+            // nguoi dung chon vao se nhan man hinh trong — mot lua chon dan toi hu khong.
+            .Where(l => VenueLifecycle.Operating.Contains(l.Status))
             .Select(l => l.Address.City)
             .Where(c => c != string.Empty)
             .Distinct()
@@ -429,6 +443,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .AsNoTracking()
             .Where(s => (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing)
                      && s.Name.Contains(keyword))
+            // MLACP-329: goi y tu dong dien khong giong mot "danh sach" nen de quen, nhung no van
+            // dan thang nguoi dung toi trang ban ve.
+            .Where(ShowDiscoverability.VenueIsOperating)
             .OrderBy(s => s.Name)
             .Take(limit)
             // Xem LoungeShowMappingExtensions.DisplayImageUrl — CoverImageUrl khong ai ghi.
