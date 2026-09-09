@@ -1,4 +1,4 @@
-﻿namespace MusicLounge.Domain.Enums;
+namespace MusicLounge.Domain.Enums;
 
 public enum NotificationType
 {
@@ -33,5 +33,8 @@ public enum NotificationType
     KycReviewResult,
     // Lenh tam khoa da phuc vu du han va duoc go. Khac PenaltyIssued (luc bi khoa) va
     // AppealResolved (khi khieu nai duoc xu) — day la duong ket thuc khong can ai lam gi ca.
-    PenaltyExpired
+    PenaltyExpired,
+    // Ket qua duyet ho so phong tra. Owner khong co duong nao khac de biet: ho nop giay phep kinh
+    // doanh len roi cho, va truoc MLACP-307 thi cho mai mai vi khong ai duyet duoc.
+    VenueReviewResult
 }

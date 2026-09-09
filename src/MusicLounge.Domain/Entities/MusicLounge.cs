@@ -16,6 +16,12 @@ public sealed class MusicLounge : Common.AuditableEntity<int>
     public string? Model3DUrl { get; set; }
     public int? AtmosphereId { get; set; }
     public LoungeStatus Status { get; set; } = LoungeStatus.Pending;
+
+    // MLACP-307. Vet cua quyet dinh duyet/tu choi ho so phong tra. Rieng StatusReviewNote la bat
+    // buoc khi tu choi: Owner phai biet sua gi de nop lai, "bi tu choi" khong noi len dieu do.
+    public DateTimeOffset? StatusReviewedAt { get; set; }
+    public int? StatusReviewedBy { get; set; }
+    public string? StatusReviewNote { get; set; }
     public decimal ReputationScore { get; set; } = 0m;  // D3: star-rating scale 0–5, thresholds at 3.5 / 4.2
 
     // Owned Value Object — map thành cột phẳng trong bảng Lounges

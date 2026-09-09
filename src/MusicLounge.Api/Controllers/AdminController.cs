@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +20,10 @@ using MusicLounge.Application.Admin.DTOs;
 using MusicLounge.Application.Admin.Queries.GetSystemConfigHistory;
 using MusicLounge.Application.Admin.Queries.GetSystemConfigs;
 using MusicLounge.Application.Admin.Queries.GetLedgerIntegrity;
+using MusicLounge.Application.Admin.Commands.ReviewVenue;
+using MusicLounge.Application.Admin.Queries.GetVenueReviewQueue;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.LoungeShows.Commands.RemoveRating;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.DTOs;
@@ -231,6 +234,42 @@ public sealed class AdminController : ControllerBase
         return NoContent();
     }
 
+    // ---- Duyệt hồ sơ phòng trà ----
+
+    /// <summary>Hàng đợi hồ sơ phòng trà chờ duyệt, cũ nhất trước. Cờ hasBusinessLicense cho biết
+    /// hồ sơ đã có giấy phép kinh doanh để xét hay chưa — trường đó không bắt buộc lúc tạo, nên có
+    /// hồ sơ nộp lên mà không kèm căn cứ nào. Lọc status=Rejected để xem lại các hồ sơ đã từ
+    /// chối.</summary>
+    [HttpGet("venues/pending")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<VenueReviewItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetVenueReviewQueue(
+        [FromQuery] LoungeStatus status = LoungeStatus.Pending,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetVenueReviewQueueQuery(status, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<VenueReviewItemDto>>.Ok(result));
+    }
+
+    /// <summary>Duyệt hoặc từ chối hồ sơ một phòng trà (BR-01). Từ chối bắt buộc nêu lý do, và Owner
+    /// được thông báo kết quả. Chỉ xử lý hồ sơ đang ở Pending hoặc Rejected: Suspended/Locked/Warned
+    /// là trạng thái do án phạt quản, gỡ chúng ở đây sẽ thành đường vòng bỏ qua luồng khiếu nại.
+    /// Đây là bước quyết định một địa điểm có được bán vé hay không — trước MLACP-307 không có bước
+    /// này, nên phòng trà chưa ai xác minh vẫn thu tiền vé thật.</summary>
+    [HttpPost("venues/{id:int}/review")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReviewVenue(
+        int id, [FromBody] ReviewVenueRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewVenueCommand(id, body.Decision, body.ReviewNote), ct);
+        return NoContent();
+    }
+
     // ---- Hoàn tiền ----
 
     /// <summary>Danh sách các yêu cầu hoàn tiền đang chờ xử lý (Pending), mới nhất trước.</summary>
@@ -425,6 +464,8 @@ public sealed record UpdateMoodRequest(string Name);
 public sealed record UpdateVenueAtmosphereRequest(string Name);
 public sealed record UpdateEventCategoryRequest(string Name, string? Description, bool IsActive);
 public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
+
+public sealed record ReviewVenueRequest(string Decision, string? ReviewNote);
 public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
 public sealed record RemoveRatingRequest(string Reason);
 public sealed record UpdateSystemConfigRequest(string ConfigValue, string Note);

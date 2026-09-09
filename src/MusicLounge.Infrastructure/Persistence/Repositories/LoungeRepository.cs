@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Lounges.DTOs;
@@ -14,10 +15,18 @@ internal sealed class LoungeRepository : ILoungeRepository
     public LoungeRepository(ApplicationDbContext ctx) => _ctx = ctx;
 
     public async Task<PaginatedResult<LoungeListItemDto>> GetAllAsync(
-        string? city, int? ownerId, int page, int pageSize, CancellationToken ct = default)
+        string? city, int? ownerId, bool includeUnapproved, int page, int pageSize,
+        CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var query = _ctx.Lounges.AsNoTracking();
+
+        // BR-01 (MLACP-307). Trước đây chỗ này không lọc trạng thái, nên một phòng trà vừa tạo —
+        // chưa ai duyệt, giấy phép kinh doanh chưa ai đọc — nằm ngay trong danh sách công khai.
+        // includeUnapproved chỉ bật khi Owner đang xem chính phòng trà của mình: giấu hồ sơ đang
+        // chờ duyệt khỏi chính người nộp nó thì họ tưởng đã mất.
+        if (!includeUnapproved)
+            query = query.Where(l => VenueLifecycle.Operating.Contains(l.Status));
 
         if (!string.IsNullOrWhiteSpace(city))
             query = query.Where(l => l.Address.City == city);
@@ -63,7 +72,8 @@ internal sealed class LoungeRepository : ILoungeRepository
                 l.Address.Latitude, l.Address.Longitude,
                 FollowerCount = l.Follows.Count,
                 l.Description,
-                AtmosphereName = l.Atmosphere != null ? l.Atmosphere.Name : null
+                AtmosphereName = l.Atmosphere != null ? l.Atmosphere.Name : null,
+                l.OwnerId, l.Status
             })
             .FirstOrDefaultAsync(ct);
         if (lounge is null) return null;
@@ -98,7 +108,9 @@ internal sealed class LoungeRepository : ILoungeRepository
             null,
             lounge.Description,
             lounge.AtmosphereName,
-            galleryImages);
+            galleryImages,
+            lounge.OwnerId,
+            lounge.Status.ToString());
     }
 
     /// <summary>
@@ -127,6 +139,61 @@ internal sealed class LoungeRepository : ILoungeRepository
             .Where(s => s.ScheduledStart > now)
             .GroupBy(s => s.LoungeId)
             .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    /// <summary>
+    /// Hàng đợi duyệt hồ sơ phòng trà (BR-01, MLACP-307).
+    ///
+    /// Sắp xếp theo khoá chính tăng dần thay vì theo CreatedAt: hai thứ tự này trùng nhau vì Id là
+    /// identity tăng dần, nhưng provider SQLite dùng trong test không ORDER BY được cột
+    /// DateTimeOffset — cùng lớp vấn đề đã xử ở MLACP-306. Cũ nhất lên trước, vì hồ sơ chờ lâu nhất
+    /// là hồ sơ cần xử trước.
+    /// </summary>
+    public async Task<PaginatedResult<VenueReviewItemDto>> GetReviewQueueAsync(
+        LoungeStatus status, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = _ctx.Lounges.AsNoTracking().Where(l => l.Status == status);
+
+        var total = await query.CountAsync(ct);
+        var rows = await query
+            .OrderBy(l => l.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(l => new
+            {
+                l.Id, l.Name, l.Status, l.OwnerId,
+                OwnerName = l.Owner.FullName,
+                OwnerEmail = l.Owner.Email,
+                OwnerPhone = l.Owner.Phone,
+                l.Address.Street, l.Address.Ward, l.Address.District, l.Address.City,
+                l.PrimaryImageUrl,
+                l.BusinessLicenseUrl,
+                l.CreatedAt,
+                l.StatusReviewedAt,
+                l.StatusReviewNote
+            })
+            .ToListAsync(ct);
+
+        var items = rows.Select(l => new VenueReviewItemDto(
+                l.Id,
+                l.Name,
+                l.Status.ToString(),
+                l.OwnerId,
+                l.OwnerName,
+                l.OwnerEmail,
+                l.OwnerPhone,
+                l.Street
+                    + (string.IsNullOrEmpty(l.Ward) ? "" : ", " + l.Ward)
+                    + (string.IsNullOrEmpty(l.District) ? "" : ", " + l.District)
+                    + ", " + l.City,
+                l.PrimaryImageUrl,
+                !string.IsNullOrWhiteSpace(l.BusinessLicenseUrl),
+                l.CreatedAt,
+                l.StatusReviewedAt,
+                l.StatusReviewNote))
+            .ToList();
+
+        return new PaginatedResult<VenueReviewItemDto>(items, page, pageSize, total);
     }
 
     public async Task<bool> IsFollowingAsync(int loungeId, int userId, CancellationToken ct = default)

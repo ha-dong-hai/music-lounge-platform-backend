@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
@@ -59,9 +59,14 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
 
         // §6.8 — a suspended/locked venue cannot bring new events live; existing published shows
         // are untouched (khán giả đã mua vé không bị ảnh hưởng bởi vi phạm của venue).
-        if (lounge.Status is LoungeStatus.Suspended or LoungeStatus.Locked)
+        //
+        // BR-01 (MLACP-307): điều kiện này trước đây liệt kê trạng thái BỊ chặn, nên mọi trạng thái
+        // chưa nghĩ tới đều lọt — cụ thể là Pending, trạng thái mặc định của mọi phòng trà vừa tạo.
+        // Hệ quả là một địa điểm chưa ai xác minh vẫn mở được buổi diễn và thu tiền vé thật. Giờ
+        // hỏi ngược lại: chỉ trạng thái ĐƯỢC phép hoạt động mới đi qua.
+        if (!VenueLifecycle.CanOperate(lounge.Status))
             throw new DomainException(
-                $"Phòng trà hiện đang ở trạng thái '{lounge.Status}' do vi phạm — không thể nộp duyệt event mới.");
+                $"{VenueLifecycle.ExplainRestriction(lounge.Status)} Chưa thể nộp duyệt buổi diễn mới.");
 
         if (show.Status != LoungeShowStatus.Draft)
             throw new DomainException("Chỉ có thể nộp duyệt event đang ở trạng thái Draft.");
