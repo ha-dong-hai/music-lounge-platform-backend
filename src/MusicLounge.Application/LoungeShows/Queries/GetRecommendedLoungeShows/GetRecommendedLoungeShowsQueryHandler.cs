@@ -180,6 +180,51 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// ngay, không phải đợi hết 6 tiếng cache.
     /// </summary>
     /// <summary>
+    /// Không để một phòng trà chiếm trọn danh sách gợi ý.
+    ///
+    /// Danh sách được xếp thuần theo mức hợp gu, nên một phòng trà đăng mười buổi diễn cùng thể
+    /// loại sẽ lấp kín toàn bộ danh sách của người thích thể loại đó. Người dùng mở màn hình gợi ý
+    /// ra và tưởng nền tảng chỉ có mỗi chỗ đó — đúng vấn đề mà các sàn thương mại điện tử gọi là
+    /// một người bán chiếm hết kết quả, và họ xử bằng cách đặt trần tỉ lệ theo người bán.
+    ///
+    /// Ở đây có hai bên cùng được lợi: khán giả thấy được nhiều lựa chọn hơn, và các phòng trà nhỏ
+    /// không bị đẩy khỏi màn hình khám phá chỉ vì đăng ít buổi diễn hơn.
+    ///
+    /// Trần là <c>max(2, limit/3)</c> — không ai chiếm quá khoảng một phần ba danh sách, nhưng luôn
+    /// được ít nhất hai suất để danh sách ngắn không bị siết quá tay.
+    /// </summary>
+    private static List<T> CapPerVenue<T>(
+        IReadOnlyList<T> ordered, int limit, Func<T, int> venueId)
+    {
+        var cap = Math.Max(2, limit / 3);
+
+        var kept = new List<T>();
+        var overflow = new List<T>();
+        var takenByVenue = new Dictionary<int, int>();
+
+        foreach (var item in ordered)
+        {
+            var venue = venueId(item);
+            var taken = takenByVenue.GetValueOrDefault(venue);
+
+            if (taken < cap)
+            {
+                takenByVenue[venue] = taken + 1;
+                kept.Add(item);
+            }
+            else
+            {
+                overflow.Add(item);
+            }
+        }
+
+        // Cung nguyen tac nhu PreferUnseen: tran chi de sap xep lai, khong duoc lam danh sach ngan
+        // di. Khong du thi bu bang phan bi tran, giu nguyen thu tu cu.
+        if (kept.Count >= limit) return kept;
+        return [.. kept, .. overflow];
+    }
+
+    /// <summary>
     /// Đẩy những gì người dùng đã có xuống cuối thay vì cắt hẳn.
     ///
     /// Cắt hẳn là câu trả lời đúng khi kho đủ lớn. Nhưng nền tảng này hiện chỉ có vài buổi diễn
@@ -258,7 +303,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             .Select((s, index) => (s.Id, index))
             .ToDictionary(x => x.Id, x => x.index);
 
-        return candidates
+        var ranked = candidates
             .Select(show =>
             {
                 var score = tagsByShow.TryGetValue(show.Id, out var tags)
@@ -268,6 +313,9 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             })
             .OrderByDescending(x => x.Score)
             .ThenBy(x => trendingRank[x.Show.Id])
+            .ToList();
+
+        return CapPerVenue(ranked, limit, x => x.Show.LoungeId)
             .Take(limit)
             .Select(x => x.Show.ToRecommendedDto(
                 x.Score,
@@ -285,7 +333,9 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
 
         var ordered = shows.OrderByDescending(s => recByShowId[s.Id].FinalScore).ToList();
 
-        return PreferUnseen(ordered, alreadyHas, limit, s => s.Id)
+        var afterExclusion = PreferUnseen(ordered, alreadyHas, limit, s => s.Id);
+
+        return CapPerVenue(afterExclusion, limit, s => s.LoungeId)
             .Take(limit)
             .Select(s => s.ToRecommendedDto(recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason))
             .ToList();
