@@ -73,6 +73,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private readonly IBackgroundJobService _jobs;
     private readonly IRepository<Ticket, Guid> _ticketRepo;
     private readonly IRepository<ShowWishlist, int> _wishlistRepo;
+    private readonly ISystemConfigService _config;
 
     public GetRecommendedLoungeShowsQueryHandler(
         IRepository<AiRecommendation, int> recRepo,
@@ -85,7 +86,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         ICurrentUserService currentUser,
         IBackgroundJobService jobs,
         IRepository<Ticket, Guid> ticketRepo,
-        IRepository<ShowWishlist, int> wishlistRepo)
+        IRepository<ShowWishlist, int> wishlistRepo,
+        ISystemConfigService config)
     {
         _recRepo = recRepo;
         _userRepo = userRepo;
@@ -98,6 +100,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         _jobs = jobs;
         _ticketRepo = ticketRepo;
         _wishlistRepo = wishlistRepo;
+        _config = config;
     }
 
     public async Task<IReadOnlyList<RecommendedLoungeShowDto>> Handle(
@@ -305,23 +308,23 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     }
 
     /// <summary>
-    /// Đẩy những gì người dùng đã có xuống cuối thay vì cắt hẳn.
+    /// Đẩy một nhóm xuống cuối thay vì cắt hẳn.
     ///
     /// Cắt hẳn là câu trả lời đúng khi kho đủ lớn. Nhưng nền tảng này hiện chỉ có vài buổi diễn
     /// đang mở bán, nên cắt hẳn sẽ trả về danh sách rỗng — và một danh sách rỗng còn tệ hơn một
-    /// danh sách có thứ hơi thừa. Nên: ưu tiên thứ chưa thấy, chỉ bù bằng thứ đã có khi không còn
-    /// gì khác để hiện.
+    /// danh sách có thứ hơi thừa. Nên: ưu tiên thứ đáng hiện, chỉ bù bằng nhóm bị đẩy khi không
+    /// còn gì khác để hiện.
+    ///
+    /// Hai chỗ dùng nguyên tắc này — thứ người dùng đã có (MLACP-319) và thứ không mua được nữa
+    /// (MLACP-327) — nên nó viết một lần ở đây thay vì hai bản gần giống nhau.
     /// </summary>
-    private static List<T> PreferUnseen<T>(
-        IReadOnlyList<T> ordered, IReadOnlySet<int> alreadyHas, int limit, Func<T, int> showId)
+    private static List<T> PushBack<T>(
+        IReadOnlyList<T> ordered, Func<T, bool> demote, int limit)
     {
-        if (alreadyHas.Count == 0) return ordered.ToList();
+        var keep = ordered.Where(x => !demote(x)).ToList();
+        if (keep.Count == ordered.Count || keep.Count >= limit) return keep;
 
-        var unseen = ordered.Where(x => !alreadyHas.Contains(showId(x))).ToList();
-        if (unseen.Count >= limit) return unseen;
-
-        var seen = ordered.Where(x => alreadyHas.Contains(showId(x)));
-        return [.. unseen, .. seen];
+        return [.. keep, .. ordered.Where(demote)];
     }
 
     /// <summary>
@@ -377,21 +380,65 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> RankByTasteAsync(
         TasteProfile taste, string? city, int limit, string reasonWhenMatched,
         IReadOnlySet<int> alreadyHas, CancellationToken ct)
-        => Finalise(
+        => await FinaliseAsync(
             await ScoreCandidatesAsync(taste, city, limit, reasonWhenMatched, new HashSet<int>(), ct),
-            limit, alreadyHas);
+            limit, alreadyHas, ct);
 
     /// <summary>
-    /// Bốn bước cuối dùng chung cho mọi đường: đẩy thứ đã có xuống dưới, chặn một phòng trà chiếm
-    /// hết, cắt đúng số lượng, rồi mới dựng DTO. Gom về một chỗ để không đường nào lỡ bỏ sót một
-    /// bước — đó chính là cách ba lỗi của MLACP-322 lọt vào.
+    /// Năm bước cuối dùng chung cho mọi đường: đẩy thứ đã có xuống dưới, đẩy thứ không mua được nữa
+    /// xuống dưới, chặn một phòng trà chiếm hết, cắt đúng số lượng, rồi mới dựng DTO. Gom về một
+    /// chỗ để không đường nào lỡ bỏ sót một bước — đó chính là cách ba lỗi của MLACP-322 lọt vào.
+    ///
+    /// Thứ tự hai lần đẩy có ý nghĩa: "không mua được" đẩy SAU nên nó là lớp ngoài cùng. Một buổi
+    /// người dùng đã mua vé thì ít ra vẫn là một buổi đang sống; một buổi hết vé thì không còn
+    /// đường nào để họ làm gì với nó nữa.
     /// </summary>
-    private static IReadOnlyList<RecommendedLoungeShowDto> Finalise(
-        IReadOnlyList<Scored> ranked, int limit, IReadOnlySet<int> alreadyHas)
-        => CapPerVenue(PreferUnseen(ranked, alreadyHas, limit, x => x.Show.Id), limit, x => x.Show.LoungeId)
+    private async Task<IReadOnlyList<RecommendedLoungeShowDto>> FinaliseAsync(
+        IReadOnlyList<Scored> ranked, int limit, IReadOnlySet<int> alreadyHas, CancellationToken ct)
+    {
+        var closed = await ClosedForSaleAsync(ranked.Select(x => x.Show).ToList(), ct);
+
+        var ordered = PushBack(ranked, x => alreadyHas.Contains(x.Show.Id), limit);
+        ordered = PushBack(ordered, x => closed.Contains(x.Show.Id), limit);
+
+        return CapPerVenue(ordered, limit, x => x.Show.LoungeId)
             .Take(limit)
             .Select(x => x.Show.ToRecommendedDto(x.Score, x.Reason))
             .ToList();
+    }
+
+    /// <summary>
+    /// Những buổi diễn không còn mua vé được nữa — hết vé, hoặc đã quá hạn bán (kể cả trần giờ nhận
+    /// khách cuối của BR-31).
+    ///
+    /// Cố ý KHÔNG gộp "chưa mở bán" vào đây: đó là thứ người hâm mộ muốn biết trước để còn canh, và
+    /// buổi vừa đăng chưa kịp cấu hình hạng vé cũng không bị coi là đóng. Xem
+    /// <see cref="ShowAvailability"/> về lý do phân biệt.
+    /// </summary>
+    private async Task<HashSet<int>> ClosedForSaleAsync(
+        IReadOnlyList<LoungeShow> shows, CancellationToken ct)
+    {
+        var priceIds = shows
+            .SelectMany(s => s.TicketTiers.SelectMany(t => t.Prices))
+            .Select(p => p.Id)
+            .Distinct()
+            .ToList();
+
+        // Không buổi nào cấu hình hạng vé thì không có gì để kết luận — và cũng không phải chạy
+        // thêm truy vấn nào.
+        if (priceIds.Count == 0) return [];
+
+        var taken = await _showRepo.GetSoldAndHeldCountsByPriceAsync(priceIds, ct);
+        var lastEntryMinutes = await _config.GetIntAsync(
+            ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
+        var now = DateTimeOffset.UtcNow;
+
+        return shows
+            .Where(s => ShowAvailability.ShouldDemote(
+                ShowAvailability.StateOf(s, taken, now, lastEntryMinutes)))
+            .Select(s => s.Id)
+            .ToHashSet();
+    }
 
     /// <param name="exclude">
     /// Buổi diễn đã được lấy từ kết quả tính sẵn. Loại ra để phần bù không lặp lại chúng.
@@ -504,11 +551,11 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         // Chỉ đếm những buổi người dùng chưa có: nếu cache toàn thứ họ đã mua vé thì nó vẫn không
         // lấp được màn hình, dù số dòng nhìn qua có vẻ đủ.
         var usable = fromCache.Count(x => !alreadyHas.Contains(x.Show.Id));
-        if (usable >= limit) return Finalise(fromCache, limit, alreadyHas);
+        if (usable >= limit) return await FinaliseAsync(fromCache, limit, alreadyHas, ct);
 
         var exclude = fromCache.Select(x => x.Show.Id).ToHashSet();
         var topUp = await ScoreCandidatesAsync(taste, city, limit, reasonWhenMatched, exclude, ct);
 
-        return Finalise([.. fromCache, .. topUp], limit, alreadyHas);
+        return await FinaliseAsync([.. fromCache, .. topUp], limit, alreadyHas, ct);
     }
 }
