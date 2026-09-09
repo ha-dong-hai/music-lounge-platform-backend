@@ -64,7 +64,7 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
         // CF1: đổi lịch là dời chỗ đã giữ sang khung giờ khác, nên khung giờ mới cũng phải trống.
         // Buổi diễn này đang Published — tức đang giữ chỗ — nên phải tự loại mình ra khỏi phép so.
         await ShowScheduleConflict.EnsureVenueIsFreeAsync(
-            _uow, show.LoungeId, excludeShowId: show.Id,
+            _uow, _config, show.LoungeId, excludeShowId: show.Id,
             request.NewScheduledStart,
             show.ScheduledEnd.HasValue ? show.ScheduledEnd.Value + delta : null,
             ct);

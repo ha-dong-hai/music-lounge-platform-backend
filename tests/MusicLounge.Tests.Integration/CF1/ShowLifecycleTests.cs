@@ -103,9 +103,11 @@ public sealed class ShowLifecycleTests
         await SeedConfirmedPhysicalTicketAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
+        // Ngay cu the khong quan trong voi test nay, chi can du xa o tuong lai — nhung tu MLACP-308
+        // thi no con phai la mot khung gio con trong tai venue dung chung.
         var res = await client.PostAsJsonAsync(
             $"/api/v1/lounge-shows/{showId}/reschedule",
-            new { NewScheduledStart = DateTimeOffset.UtcNow.AddDays(25) });
+            new { NewScheduledStart = SeedHelper.NextShowStart() });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 

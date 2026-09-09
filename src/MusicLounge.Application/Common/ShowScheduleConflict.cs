@@ -22,6 +22,7 @@ public static class ShowScheduleConflict
     /// </param>
     public static async Task EnsureVenueIsFreeAsync(
         IUnitOfWork uow,
+        ISystemConfigService config,
         int loungeId,
         int? excludeShowId,
         DateTimeOffset start,
@@ -29,6 +30,12 @@ public static class ShowScheduleConflict
         CancellationToken ct)
     {
         var effectiveEnd = ShowSchedule.EffectiveEnd(start, end);
+
+        // CF1 (MLACP-310): hai suất không chỉ phải không giẫm lên nhau, mà còn phải cách nhau đủ
+        // để đưa khán giả suất trước ra và nhận khán giả suất sau vào. Nới khoảng bận của mỗi buổi
+        // diễn ra hai phía đúng bằng khoảng đó, rồi dùng lại phép so trùng cũ.
+        var changeover = TimeSpan.FromMinutes(await config.GetIntAsync(
+            ConfigKeys.VenueChangeoverMinutes, VenueChangeover.DefaultMinutes, ct));
 
         // Lọc bằng LoungeId + Status ở phía database (đã có sẵn index (LoungeId, Status)), rồi so
         // sánh thời gian trong bộ nhớ. So sánh DateTimeOffset trong cùng một truy vấn với phép so
@@ -40,14 +47,23 @@ public static class ShowScheduleConflict
 
         var clash = committed.FirstOrDefault(s =>
             (excludeShowId is null || s.Id != excludeShowId.Value)
-            && ShowSchedule.Overlaps(start, effectiveEnd, s.ScheduledStart, ShowSchedule.EffectiveEnd(s)));
+            && ShowSchedule.Overlaps(
+                start, effectiveEnd,
+                s.ScheduledStart - changeover, ShowSchedule.EffectiveEnd(s) + changeover));
 
         if (clash is null) return;
 
-        throw new ConflictException(
-            $"Phòng trà đã có buổi diễn \"{clash.Name}\" trong khung giờ này " +
-            $"({Vn(clash.ScheduledStart)} – {Vn(ShowSchedule.EffectiveEnd(clash))}). " +
-            "Vui lòng chọn khung giờ khác.");
+        var clashEnd = ShowSchedule.EffectiveEnd(clash);
+        var overlaps = ShowSchedule.Overlaps(start, effectiveEnd, clash.ScheduledStart, clashEnd);
+
+        // Nói đúng vướng cái gì. "Trùng giờ" và "sát giờ quá" là hai tình huống khác hẳn nhau đối
+        // với người đang xếp lịch: một cái phải đổi hẳn ngày, một cái chỉ cần dịch ra nửa tiếng.
+        throw new ConflictException(overlaps
+            ? $"Phòng trà đã có buổi diễn \"{clash.Name}\" trong khung giờ này " +
+              $"({Vn(clash.ScheduledStart)} – {Vn(clashEnd)}). Vui lòng chọn khung giờ khác."
+            : $"Buổi diễn này quá sát với \"{clash.Name}\" ({Vn(clash.ScheduledStart)} – " +
+              $"{Vn(clashEnd)}). Hai buổi diễn liên tiếp cần cách nhau ít nhất " +
+              $"{changeover.TotalMinutes:0} phút để đưa khán giả suất trước ra và đón suất sau vào.");
     }
 
     /// <summary>
