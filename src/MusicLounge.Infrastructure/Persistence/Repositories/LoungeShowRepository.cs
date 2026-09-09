@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using MusicLounge.Application.Analytics.Common;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Domain.Entities;
@@ -208,10 +210,19 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
     }
 
+    /// <summary>
+    /// Bảng "đang được quan tâm". Cách chấm điểm và lý do chọn nó nằm ở <see cref="TrendingScorer"/>;
+    /// ở đây chỉ là gom đúng tín hiệu để đưa vào chấm.
+    ///
+    /// Lấy cả lượt lưu vào danh sách quan tâm, thứ mà bảng cũ bỏ sót hoàn toàn: nó chỉ đọc nhật ký
+    /// hành vi, mà "lưu lại" được ghi ở bảng riêng chứ không phải một hành động trong nhật ký. Đó là
+    /// một trong những tín hiệu mạnh nhất — người ta chỉ lưu thứ mình định quay lại.
+    /// </summary>
     public async Task<IReadOnlyList<LoungeShow>> GetTrendingAsync(
         int limit, string? city, CancellationToken ct = default)
     {
-        var since = DateTimeOffset.UtcNow.AddDays(-7);
+        var now = DateTimeOffset.UtcNow;
+
         var query = WithDetails()
             .Where(s => s.Status == LoungeShowStatus.Published
                      || s.Status == LoungeShowStatus.Ongoing);
@@ -222,32 +233,83 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         // Was OrderByDescending(s => s.BehaviourLogs.Count(b => b.CreatedAt >= since)) directly in
         // the query — combining a DateTimeOffset comparison with a correlated Count subquery inside
         // an ORDER BY does not translate under the SQLite provider used in tests (same class of
-        // issue as LoungeRepository.GetAllAsync/GetByIdAsync, fixed earlier in this session). This
-        // is the AI-recommendation fallback path (GetRecommendedLoungeShowsQueryHandler falls back
-        // to trending for any user without ai_consent, which is every user by default), and
-        // RecommendationsController had zero test coverage before this session, so it went
-        // unnoticed. Trades an unbounded fetch of candidate shows for a translatable query — a
-        // reasonable trade at this project's scale (Published/Ongoing shows platform-wide, not an
-        // ever-growing historical table); revisit if that set ever grows large enough to matter.
+        // issue as LoungeRepository.GetAllAsync/GetByIdAsync). This is the AI-recommendation
+        // fallback path (GetRecommendedLoungeShowsQueryHandler falls back to trending for any user
+        // without ai_consent, which is every user by default), and RecommendationsController had
+        // zero test coverage before this session, so it went unnoticed. Trades an unbounded fetch
+        // of candidate shows for a translatable query — a reasonable trade at this project's scale
+        // (Published/Ongoing shows platform-wide, not an ever-growing historical table); revisit if
+        // that set ever grows large enough to matter.
         var candidates = await query.ToListAsync(ct);
         if (candidates.Count == 0) return [];
 
+        // Buổi diễn đã diễn xong nhưng chưa kịp được job chuyển trạng thái thì không còn là thứ
+        // "đang được quan tâm" — không ai mua vé vào một buổi tối đã qua. Dùng chung cách hiểu giờ
+        // kết thúc với toàn hệ thống.
+        candidates = candidates.Where(s => ShowSchedule.EffectiveEnd(s) >= now).ToList();
+        if (candidates.Count == 0) return [];
+
         var showIds = candidates.Select(s => s.Id).ToList();
+
         // Same SQLite-translation limitation noted throughout this codebase: combining a
         // Contains(showIds) predicate with a DateTimeOffset comparison in one query doesn't
         // translate — filter by Contains server-side, then the date client-side.
-        var logsForCandidates = await _ctx.BehaviourLogs
-            .Where(b => showIds.Contains(b.LoungeShowId))
-            .Select(b => new { b.LoungeShowId, b.CreatedAt })
+        // Ve da ban va luot luu quan tam la giao dich cua chinh nguoi dung, ton tai bat ke ho co
+        // bat AiConsent hay khong. Nhat ky hanh vi thi khong: LogUserBehaviourJob bo qua moi nguoi
+        // chua dong y, va mac dinh la chua. Bang cu chi doc nhat ky, nen tren thuc te no gan nhu
+        // luon rong — mot bang xep hang khong co gi de xep.
+        var purchases = await _ctx.Tickets
+            .Where(t => showIds.Contains(t.ShowId)
+                && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used))
+            .Select(t => new { t.ShowId, t.Id, t.CreatedAt })
             .ToListAsync(ct);
-        var countsByShowId = logsForCandidates
-            .Where(b => b.CreatedAt >= since)
-            .GroupBy(b => b.LoungeShowId)
-            .ToDictionary(g => g.Key, g => g.Count());
 
+        var saves = await _ctx.Wishlists
+            .Where(w => showIds.Contains(w.LoungeShowId))
+            .Select(w => new { w.LoungeShowId, w.UserId, w.CreatedAt })
+            .ToListAsync(ct);
+
+        var behaviour = await _ctx.BehaviourLogs
+            .Where(b => showIds.Contains(b.LoungeShowId))
+            .Select(b => new { b.LoungeShowId, b.UserId, b.Action, b.CreatedAt })
+            .ToListAsync(ct);
+
+        var eventsByShow = new Dictionary<int, List<TrendingEvent>>();
+
+        void Add(int showId, TrendingEvent e)
+        {
+            if (!eventsByShow.TryGetValue(showId, out var list))
+                eventsByShow[showId] = list = [];
+            list.Add(e);
+        }
+
+        // Moi chiec ve la mot tin hieu rieng: dat bon cho cho ca nhom la muc quan tam khac han mua
+        // mot ve di mot minh. Dung Id cua ve lam Actor nen buoc gop trung khong lam mat khac biet do.
+        foreach (var t in purchases)
+            Add(t.ShowId, new TrendingEvent($"ticket:{t.Id}", TrendingSignal.Purchase, t.CreatedAt));
+
+        foreach (var w in saves)
+            Add(w.LoungeShowId, new TrendingEvent($"user:{w.UserId}", TrendingSignal.Save, w.CreatedAt));
+
+        foreach (var b in behaviour)
+        {
+            // PurchaseTicket trong nhat ky bi bo qua o day: cung mot lan mua da duoc dem tu bang ve
+            // ben tren roi, dem lai lan nua la nhan doi trong so cho nhung nguoi co bat AiConsent.
+            if (b.Action == BehaviourAction.PurchaseTicket) continue;
+
+            if (TrendingScorer.FromBehaviour(b.Action) is TrendingSignal signal)
+                Add(b.LoungeShowId, new TrendingEvent($"user:{b.UserId}", signal, b.CreatedAt));
+        }
+
+        var scoreByShowId = eventsByShow.ToDictionary(
+            kv => kv.Key, kv => TrendingScorer.Score(kv.Value, now));
+
+        // Buổi diễn chưa có tín hiệu nào thì điểm bằng 0, và giữa những buổi cùng 0 điểm thì xếp
+        // theo buổi sắp diễn trước. Đó là thứ tự có ích thật cho người đang tìm chỗ đi tối nay —
+        // khác hẳn bảng cũ vốn xếp buổi diễn XA NHẤT lên đầu khi hoà điểm.
         return candidates
-            .OrderByDescending(s => countsByShowId.GetValueOrDefault(s.Id))
-            .ThenByDescending(s => s.ScheduledStart)
+            .OrderByDescending(s => scoreByShowId.GetValueOrDefault(s.Id))
+            .ThenBy(s => s.ScheduledStart)
             .Take(limit)
             .ToList();
     }
