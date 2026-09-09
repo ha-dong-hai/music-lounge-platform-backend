@@ -71,6 +71,12 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         if (show.Status != LoungeShowStatus.Draft)
             throw new DomainException("Chỉ có thể nộp duyệt event đang ở trạng thái Draft.");
 
+        // CF1: đây là lúc bản nháp thật sự đặt chỗ. Kiểm ở lúc tạo là để báo sớm; kiểm ở đây mới
+        // là chốt, vì giữa hai thời điểm đó một buổi diễn khác có thể đã chiếm mất khung giờ.
+        await ShowScheduleConflict.EnsureVenueIsFreeAsync(
+            _uow, show.LoungeId, excludeShowId: show.Id,
+            show.ScheduledStart, show.ScheduledEnd, ct);
+
         var tiers = await _uow.Repository<TicketTier, int>()
             .FindAsync(t => t.LoungeShowId == show.Id, ct);
         if (tiers.Count == 0)

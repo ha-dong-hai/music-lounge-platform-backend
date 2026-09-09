@@ -31,7 +31,7 @@ public sealed class ModerationAiScoringTests
             Name = $"AiScoringTestShow-{Guid.NewGuid():N}",
             Description = "Integration test show for AI moderation scoring",
             Format = "Offline",
-            ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
+            ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
             CategoryId = (int?)null,
             OfflineQuota = 100,

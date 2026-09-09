@@ -1,5 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -33,6 +34,10 @@ internal sealed class UpdateLoungeShowCommandHandler : IRequestHandler<UpdateLou
 
         if (show.Status != LoungeShowStatus.Draft)
             throw new DomainException("Chỉ có thể sửa event khi còn ở trạng thái Draft.");
+
+        await ShowScheduleConflict.EnsureVenueIsFreeAsync(
+            _uow, show.LoungeId, excludeShowId: show.Id,
+            request.ScheduledStart, request.ScheduledEnd, ct);
 
         show.Name = request.Name;
         show.Description = request.Description;

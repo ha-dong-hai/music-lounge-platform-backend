@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -100,7 +100,7 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
             : await _config.GetDecimalAsync(ConfigKeys.SettlementTierNewPreRate, 0.50m, ct);
 
         var showEnd = show is not null
-            ? (show.ScheduledEnd ?? show.ScheduledStart.AddHours(4))
+            ? ShowSchedule.EffectiveEnd(show)
             : DateTimeOffset.UtcNow.AddDays(3);
 
         var partialHoursAfterShow = await _config.GetIntAsync(ConfigKeys.SettlementPartialHoursAfterShow, 48, ct);

@@ -38,9 +38,11 @@ public sealed class EventManagementTests
             Name = $"Show-{Guid.NewGuid():N}",
             Description = "Integration test show",
             Format = format,
-            // D18 (NĐ 144/2020 Điều 10): Publish yêu cầu >=7 ngày làm việc — dùng 14 ngày lịch để
-            // luôn đủ dư, không phụ thuộc "hôm nay" là thứ mấy trong tuần.
-            ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
+            // D18 (NĐ 144/2020 Điều 10): Publish yêu cầu >=7 ngày làm việc — mốc gốc là 14 ngày
+            // lịch để luôn đủ dư, không phụ thuộc "hôm nay" là thứ mấy trong tuần. NextShowStart
+            // dời thêm một khoảng riêng cho mỗi buổi diễn, vì từ MLACP-308 hai buổi diễn cùng
+            // khung giờ ở cùng phòng trà bị từ chối.
+            ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
             CategoryId = (int?)null,
             OfflineQuota = 100,
@@ -622,7 +624,8 @@ public sealed class EventManagementTests
         {
             Name = "Updated by Admin",
             Description = "Updated",
-            ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
+            // Doi sang mot khung gio con trong: sua lich cung phai qua bo chong trung lich CF1.
+            ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
             CategoryId = (int?)null,
             OfflineQuota = 100,

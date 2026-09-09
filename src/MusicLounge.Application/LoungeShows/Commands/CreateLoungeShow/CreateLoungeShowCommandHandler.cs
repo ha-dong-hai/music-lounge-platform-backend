@@ -1,5 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -39,6 +40,13 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
         if (!hasActiveSubscription)
             throw new DomainException(
                 "Bạn cần có gói subscription đang hoạt động để tạo event mới. Vui lòng đăng ký gói.");
+
+        // CF1: chặn ngay từ lúc tạo, không đợi tới lúc nộp duyệt. Bản nháp không giữ chỗ nên hai
+        // bản nháp cùng giờ vẫn tạo được — nhưng nếu khung giờ đó đã có buổi diễn thật giữ chỗ thì
+        // nói ngay, thay vì để Owner dựng xong hạng vé, danh sách nghệ sĩ rồi mới bị chặn.
+        await ShowScheduleConflict.EnsureVenueIsFreeAsync(
+            _uow, request.LoungeId, excludeShowId: null,
+            request.ScheduledStart, request.ScheduledEnd, ct);
 
         var format = Enum.Parse<LoungeShowFormat>(request.Format, ignoreCase: true);
 

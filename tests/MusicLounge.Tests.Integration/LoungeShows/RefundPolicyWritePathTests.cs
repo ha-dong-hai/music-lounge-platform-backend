@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -36,14 +36,24 @@ public sealed class RefundPolicyWritePathTests
         bool? cancellationAllowed = null,
         decimal? refundPercentage = null,
         int? cancellationDeadlineHours = null,
-        int daysUntilShow = 30) => new
+        // daysUntilShow bo di: moi buoi dien nhan mot khung gio rieng tu SeedHelper.NextShowStart,
+        // vi tu MLACP-308 hai buoi dien chong gio nhau o cung phong tra bi tu choi — ma helper nay
+        // truoc day cap dung mot moc gio cho moi test trong lop.
+        DateTimeOffset? start = null) => Body(start ?? SeedHelper.NextShowStart(),
+            cancellationAllowed, refundPercentage, cancellationDeadlineHours);
+
+    private static object Body(
+        DateTimeOffset start,
+        bool? cancellationAllowed,
+        decimal? refundPercentage,
+        int? cancellationDeadlineHours) => new
         {
             LoungeId = SeedHelper.LoungeId,
             Name = $"PolicyWriteShow-{Guid.NewGuid():N}",
             Description = "Integration test show",
             Format = "Offline",
-            ScheduledStart = DateTimeOffset.UtcNow.AddDays(daysUntilShow),
-            ScheduledEnd = DateTimeOffset.UtcNow.AddDays(daysUntilShow).AddHours(3),
+            ScheduledStart = start,
+            ScheduledEnd = start.AddHours(3),
             TicketSaleClosesAt = (DateTimeOffset?)null,
             CategoryId = (int?)null,
             OfflineQuota = (int?)null,

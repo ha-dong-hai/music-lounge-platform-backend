@@ -90,7 +90,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         // show dang dien la hanh vi hop le — dieu kien chan that su o do la FirstAccessedAt/
         // CheckedInAt (da thuc su dung ve), khong phai dong ho. Show Ongoing van se toi Ended qua
         // duong cua chinh no hoac qua AutoEndStaleShowsJob.
-        var scheduledEnd = show.ScheduledEnd ?? show.ScheduledStart.AddHours(4);
+        var scheduledEnd = ShowSchedule.EffectiveEnd(show);
         var neverStartedButOverdue =
             show.Status == LoungeShowStatus.Published && DateTimeOffset.UtcNow > scheduledEnd;
         if (show.Status == LoungeShowStatus.Ended || neverStartedButOverdue)

@@ -182,7 +182,7 @@ public sealed class SubscriptionTests
             Name = "Has Sub Show",
             Description = "test",
             Format = "Offline",
-            ScheduledStart = DateTimeOffset.UtcNow.AddDays(20),
+            ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
             CategoryId = (int?)null,
             OfflineQuota = 50,

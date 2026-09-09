@@ -63,14 +63,14 @@ public sealed class AutoEndStaleShowsJob
             .ToListAsync(ct);
 
         var stale = candidates
-            .Where(s => (s.ScheduledEnd ?? s.ScheduledStart.AddHours(4)).AddHours(graceHours) < now)
+            .Where(s => (s.ScheduledEnd ?? s.ScheduledStart.AddHours(ShowSchedule.DefaultDurationHours)).AddHours(graceHours) < now)
             .ToList();
 
         if (stale.Count == 0) return;
 
         foreach (var show in stale)
         {
-            var scheduledEnd = show.ScheduledEnd ?? show.ScheduledStart.AddHours(4);
+            var scheduledEnd = ShowSchedule.EffectiveEnd(show);
             var previousStatus = show.Status;   // TryMarkEnded overwrites it below
             if (!LoungeShowLifecycle.TryMarkEnded(show, scheduledEnd, ratingWindowDays))
                 continue;
