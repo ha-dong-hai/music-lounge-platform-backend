@@ -63,13 +63,47 @@ public sealed class RecomputeUserEventScoresJob
         await AccumulateDonationsAsync(scores, ct);
         await AccumulateRatingsAsync(scores, ct);
 
-        if (scores.Count == 0) return;
+        // MLACP-318. Chi lap ho so cho nguoi da dong y.
+        //
+        // Sau nguon gop o tren, chi hai nguon dau (luot xem, bam mua) doc tu nhat ky hanh vi va vi
+        // the da bi chan boi consent. Bon nguon con lai — luu quan tam, di xem, donate, danh gia —
+        // doc thang tu giao dich, ton tai bat ke nguoi dung co dong y hay khong. Ket qua la job nay
+        // dung ho so hanh vi theo tung buoi dien cho CA nhung nguoi chua bao gio dong y, roi ho so
+        // do di thang vao tap huan luyen cua mo hinh loc cong tac.
+        //
+        // Dem tong hop tren giao dich thi khong can xin phep — do la dem, khong phai lap ho so.
+        // Nhung bang nay khoa theo (nguoi, buoi dien) va duoc dung de suy ra so thich, tuc dung la
+        // lap ho so. Ranh gioi nam o do.
+        var consentingUserIds = (await _ctx.Users
+                .Where(u => u.AiConsent)
+                .Select(u => u.Id)
+                .ToListAsync(ct))
+            .ToHashSet();
+
+        foreach (var key in scores.Keys.Where(k => !consentingUserIds.Contains(k.UserId)).ToList())
+            scores.Remove(key);
 
         // Whole table, not a per-key filtered query — a composite-key "IN this set of (user,show)
         // pairs" doesn't translate reliably across providers, and this table stays small enough
         // (one row per user×show that ever had ANY interaction) for a nightly job to load in full,
         // same "load fully, merge in memory" style MLNetRecommendationService itself already uses.
-        var existingByKey = (await _ctx.Set<UserEventScore>().ToListAsync(ct))
+        var existing = await _ctx.Set<UserEventScore>().ToListAsync(ct);
+
+        // Don cac dong cua nguoi khong con dong y. Truoc day job nay chi upsert, khong bao gio xoa,
+        // nen mot nguoi rut lai su dong y van de lai ho so cua minh nam do vinh vien — va no van
+        // duoc dung. Day cung la luoi do thu hai cho duong rut lai dong y: neu vi ly do gi do buoc
+        // xoa ngay luc bam khong chay, dem hom sau job nay van don sach.
+        var toRemove = existing.Where(r => !consentingUserIds.Contains(r.UserId)).ToList();
+        if (toRemove.Count > 0) _ctx.Set<UserEventScore>().RemoveRange(toRemove);
+
+        if (scores.Count == 0)
+        {
+            if (toRemove.Count > 0) await _ctx.SaveChangesAsync(ct);
+            return;
+        }
+
+        var existingByKey = existing
+            .Where(r => consentingUserIds.Contains(r.UserId))
             .ToDictionary(r => (r.UserId, r.ShowId));
 
         var now = DateTimeOffset.UtcNow;

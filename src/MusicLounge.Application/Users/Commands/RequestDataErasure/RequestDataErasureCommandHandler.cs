@@ -1,6 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
 
@@ -27,17 +28,20 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
     private readonly ICurrentUserService _currentUser;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<RequestDataErasureCommandHandler> _logger;
+    private readonly IInferredAiProfileRepository _inferredProfile;
 
     public RequestDataErasureCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         IPasswordHasher passwordHasher,
-        ILogger<RequestDataErasureCommandHandler> logger)
+        ILogger<RequestDataErasureCommandHandler> logger,
+        IInferredAiProfileRepository inferredProfile)
     {
         _uow = uow;
         _currentUser = currentUser;
         _passwordHasher = passwordHasher;
         _logger = logger;
+        _inferredProfile = inferredProfile;
     }
 
     public async Task<Unit> Handle(RequestDataErasureCommand request, CancellationToken ct)
@@ -65,13 +69,18 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         await RemoveAllAsync<UserFavouriteGenre, int>(x => x.UserId == userId, ct);
         await RemoveAllAsync<UserFavouriteMood, int>(x => x.UserId == userId, ct);
         await RemoveAllAsync<UserFavouriteAtmosphere, int>(x => x.UserId == userId, ct);
-        await RemoveAllAsync<UserCustomPreference, int>(x => x.UserId == userId, ct);
-        await RemoveAllAsync<AiRecommendation, int>(x => x.UserId == userId, ct);
         await RemoveAllAsync<UserBehaviourLog, int>(x => x.UserId == userId, ct);
-        // UserEventScore (composite key, not behind the generic repository) is intentionally not
-        // touched here — it's an opaque ML-ranking cache row (UserId + a numeric score, no
-        // identifying content) regenerated periodically; leaving it behind doesn't re-identify
-        // anyone and isn't worth the extra plumbing for this pass.
+
+        // Toan bo ho so he thong da suy ra: diem so hanh vi theo tung buoi dien, goi y da tinh
+        // san, trong so tieu chi rieng.
+        //
+        // Truoc day cho nay chi xoa hai nhom sau, con UserEventScore duoc co y bo lai voi ly do no
+        // la "ban ghi cache khong chua noi dung dinh danh". Ly do do sai: bang khoa theo (UserId,
+        // ShowId) va cot Breakdown luu JSON ghi ro nguoi nay da du buoi dien nao, cham may sao, co
+        // donate hay khong. Do la ho so hanh vi chi tiet cua mot nguoi co dinh danh — dung thu ma
+        // yeu cau xoa du lieu sinh ra de xoa. No cung khong tu bien mat: job tinh lai chi upsert,
+        // khong bao gio xoa, nen dong cu nam lai vinh vien sau khi nguon da bi xoa.
+        await _inferredProfile.ForgetAsync(userId, ct);
 
         var now = DateTimeOffset.UtcNow;
         user.Email = $"deleted-user-{userId}@musiclounge.local";

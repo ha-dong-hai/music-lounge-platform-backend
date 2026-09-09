@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
 
@@ -10,13 +11,18 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IBackgroundJobService _backgroundJobs;
+    private readonly IInferredAiProfileRepository _inferredProfile;
 
     public UpdateAiPreferencesCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, IBackgroundJobService backgroundJobs)
+        IUnitOfWork uow,
+        ICurrentUserService currentUser,
+        IBackgroundJobService backgroundJobs,
+        IInferredAiProfileRepository inferredProfile)
     {
         _uow = uow;
         _currentUser = currentUser;
         _backgroundJobs = backgroundJobs;
+        _inferredProfile = inferredProfile;
     }
 
     public async Task<Unit> Handle(UpdateAiPreferencesCommand request, CancellationToken ct)
@@ -91,8 +97,21 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
                 AtmosphereId = atmosphereId
             });
 
+        // Rut lai su dong y phai co hieu luc that, khong chi la doi mot co. Truoc day tat o nay
+        // chi lam he thong NGUNG GHI hanh vi moi; nhung gi da suy ra ve nguoi dung van nam nguyen
+        // va van tiep tuc duoc dung — diem so hanh vi cua ho van nam trong tap huan luyen cua mo
+        // hinh loc cong tac phuc vu NGUOI KHAC, va truy van huan luyen do khong loc consent.
+        //
+        // Chi xoa phan SUY RA. So thich ho tu chon o buoc onboarding la du lieu cua ho, giao cho
+        // he thong co chu dich, va khong lien quan gi toi viec ho co cho phan tich hanh vi hay
+        // khong — xoa luon la hieu sai y nguoi dung theo huong nguoc lai.
+        var withdrawingConsent = user.AiConsent && !request.EnableAiConsent;
+
         user.AiConsent = request.EnableAiConsent;
         _uow.Repository<User, int>().Update(user);
+
+        if (withdrawingConsent)
+            await _inferredProfile.ForgetAsync(_currentUser.UserId, ct);
 
         await _uow.SaveChangesAsync(ct);
 
