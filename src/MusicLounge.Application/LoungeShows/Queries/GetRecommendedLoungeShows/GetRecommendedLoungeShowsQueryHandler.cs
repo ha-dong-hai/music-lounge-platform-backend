@@ -54,6 +54,13 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// </summary>
     private const int MaxGuestContextShows = 20;
 
+    /// <summary>
+    /// Số buổi diễn mới đăng được thêm vào tập ứng viên, ngoài những buổi đang được quan tâm. Nhỏ
+    /// so với tập chính: đây là cho buổi mới một CƠ HỘI được chấm điểm hợp gu, không phải ưu ái nó
+    /// hơn buổi đã được người dùng thật sự quan tâm.
+    /// </summary>
+    private const int NewShowPoolSize = 20;
+
     private readonly IRepository<AiRecommendation, int> _recRepo;
     private readonly IRepository<User, int> _userRepo;
     private readonly IRepository<UserFavouriteGenre, int> _genreRepo;
@@ -123,12 +130,24 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             _jobs.EnqueueRecommendationRefresh(_currentUser.UserId);
         }
 
+        var alreadyHas = await AlreadyHasAsync(ct);
+
         var taste = await DeclaredTasteAsync(_currentUser.UserId, ct);
-        return await RankByTasteAsync(
-            taste, request.City, limit,
-            reasonWhenMatched: "Hợp với sở thích bạn đã chọn",
-            await AlreadyHasAsync(ct),
-            ct);
+        var reason = "Hợp với sở thích bạn đã chọn";
+
+        if (taste.KnowsNothing)
+        {
+            // COLD START. Người dùng chưa từng đi qua bước khai sở thích — trường hợp phổ biến
+            // nhất, vì không có bước nào bắt buộc phải hoàn thành onboarding mới dùng được ứng
+            // dụng. Trước đây họ chỉ nhận đúng bảng thịnh hành, mãi mãi.
+            //
+            // Nhưng nếu họ từng mua vé hay lưu buổi diễn nào thì hệ thống ĐÃ BIẾT họ thích gì —
+            // chỉ là chưa bao giờ dùng tới. Suy gu từ thẻ phân loại của chính những buổi đó.
+            taste = await TasteFromOwnHistoryAsync(alreadyHas, ct);
+            reason = "Giống những buổi diễn bạn từng quan tâm";
+        }
+
+        return await RankByTasteAsync(taste, request.City, limit, reason, alreadyHas, ct);
     }
 
     /// <summary>
@@ -167,6 +186,46 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
                 : "Hợp với thể loại bạn đang tìm",
             alreadyHas: new HashSet<int>(),
             ct);
+    }
+
+    /// <summary>
+    /// Gu suy ra từ chính giao dịch của người dùng: vé họ đã mua và buổi họ đã lưu quan tâm.
+    ///
+    /// <b>Vì sao việc này không cần tới sự đồng ý cho phân tích hành vi, trong khi
+    /// <c>UserEventScore</c> thì cần.</b> Ranh giới không nằm ở "dữ liệu đến từ đâu" mà ở "làm gì
+    /// với nó":
+    ///
+    /// <c>UserEventScore</c> là một hồ sơ được LƯU LẠI, tồn tại lâu dài, và được dùng để huấn luyện
+    /// mô hình phục vụ NGƯỜI KHÁC. Đó là lập hồ sơ người dùng, và MLACP-318 đã đặt nó sau sự đồng ý.
+    ///
+    /// Còn ở đây: đọc giao dịch của chính người đang hỏi, tính trong đúng một request, dùng để sắp
+    /// xếp đúng câu trả lời cho chính họ, không lưu lại gì, không nuôi mô hình nào. Đây là dữ liệu
+    /// của họ phục vụ trực tiếp cho họ — cùng cơ sở với việc mọi trang bán hàng hiện "dựa trên đơn
+    /// hàng gần đây của bạn". Và nó luôn được nói ra trong phần lý do gợi ý, nên không có gì diễn
+    /// ra sau lưng người dùng.
+    /// </summary>
+    private async Task<TasteProfile> TasteFromOwnHistoryAsync(
+        IReadOnlySet<int> ownShowIds, CancellationToken ct)
+    {
+        var follows = await _followRepo.FindAsync(f => f.UserId == _currentUser.UserId, ct);
+        var followedLoungeIds = follows.Select(f => f.LoungeId).ToHashSet();
+
+        if (ownShowIds.Count == 0)
+            return new TasteProfile(
+                new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), followedLoungeIds);
+
+        var genreIds = new HashSet<int>();
+        var moodIds = new HashSet<int>();
+        var atmosphereIds = new HashSet<int>();
+
+        foreach (var tags in await _showRepo.GetShowTagsAsync(ownShowIds.ToList(), ct))
+        {
+            genreIds.UnionWith(tags.GenreIds);
+            moodIds.UnionWith(tags.MoodIds);
+            atmosphereIds.UnionWith(tags.AtmosphereIds);
+        }
+
+        return new TasteProfile(genreIds, moodIds, atmosphereIds, followedLoungeIds);
     }
 
     /// <summary>
@@ -287,10 +346,29 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         var candidates = await _showRepo.GetTrendingAsync(
             taste.KnowsNothing ? limit : CandidatePoolSize, city, ct);
 
-        // Không biết gì về người hỏi thì trả về đúng bảng đang được quan tâm. Xếp theo một cái gu
-        // rỗng chỉ tạo ra thứ tự ngẫu nhiên đội lốt cá nhân hoá.
+        if (!taste.KnowsNothing)
+        {
+            // COLD START CỦA BUỔI DIỄN. Tập ứng viên lấy từ bảng đang được quan tâm, mà buổi diễn
+            // vừa đăng thì chưa có tương tác nào — và khi hoà điểm 0 thì thứ tự là "sắp diễn
+            // trước", trong khi buổi mới đăng bắt buộc cách ngày diễn tối thiểu 7 ngày làm việc nên
+            // luôn nằm xa. Kết quả là buổi diễn mới bị đẩy xuống cuối một cách hệ thống.
+            //
+            // Nếu không có bước này thì một buổi diễn hoàn toàn hợp gu người dùng có thể không bao
+            // giờ được chấm điểm, chỉ vì nó mới quá nên chưa ai kịp quan tâm — và nó cũng không bao
+            // giờ có cơ hội được quan tâm. Vòng luẩn quẩn đó chỉ phá được bằng cách cho nó một chỗ
+            // trong tập ứng viên.
+            var known = candidates.Select(s => s.Id).ToHashSet();
+            var fresh = (await _showRepo.GetRecentlyPublishedAsync(NewShowPoolSize, city, ct))
+                .Where(s => !known.Contains(s.Id))
+                .ToList();
+
+            if (fresh.Count > 0) candidates = [.. candidates, .. fresh];
+        }
+
         candidates = PreferUnseen(candidates, alreadyHas, limit, s => s.Id);
 
+        // Không biết gì về người hỏi thì trả về đúng bảng đang được quan tâm. Xếp theo một cái gu
+        // rỗng chỉ tạo ra thứ tự ngẫu nhiên đội lốt cá nhân hoá.
         if (taste.KnowsNothing || candidates.Count == 0)
             return candidates.Take(limit).Select(s => s.ToRecommendedDto(0f, "Đang thịnh hành")).ToList();
 
