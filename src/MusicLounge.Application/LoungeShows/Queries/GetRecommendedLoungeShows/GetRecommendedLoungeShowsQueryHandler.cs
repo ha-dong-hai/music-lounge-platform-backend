@@ -4,6 +4,7 @@ using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.LoungeShows.Queries.GetRecommendedLoungeShows;
 
@@ -62,6 +63,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private readonly ILoungeShowRepository _showRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IBackgroundJobService _jobs;
+    private readonly IRepository<Ticket, Guid> _ticketRepo;
+    private readonly IRepository<ShowWishlist, int> _wishlistRepo;
 
     public GetRecommendedLoungeShowsQueryHandler(
         IRepository<AiRecommendation, int> recRepo,
@@ -72,7 +75,9 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         IRepository<Follow, int> followRepo,
         ILoungeShowRepository showRepo,
         ICurrentUserService currentUser,
-        IBackgroundJobService jobs)
+        IBackgroundJobService jobs,
+        IRepository<Ticket, Guid> ticketRepo,
+        IRepository<ShowWishlist, int> wishlistRepo)
     {
         _recRepo = recRepo;
         _userRepo = userRepo;
@@ -83,6 +88,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         _showRepo = showRepo;
         _currentUser = currentUser;
         _jobs = jobs;
+        _ticketRepo = ticketRepo;
+        _wishlistRepo = wishlistRepo;
     }
 
     public async Task<IReadOnlyList<RecommendedLoungeShowDto>> Handle(
@@ -108,7 +115,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             var cached = allForUser.Where(r => r.ExpiresAt > now).ToList();
 
             if (cached.Count > 0)
-                return await FromCacheAsync(cached, limit, ct);
+                return await FromCacheAsync(cached, limit, await AlreadyHasAsync(ct), ct);
 
             // Chưa có kết quả tính sẵn: đặt lịch tính nền cho lần sau, còn lần này vẫn phải trả về
             // thứ dùng được ngay. Trước đây chỗ này trả về bảng thịnh hành chung; giờ ít nhất cũng
@@ -120,6 +127,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         return await RankByTasteAsync(
             taste, request.City, limit,
             reasonWhenMatched: "Hợp với sở thích bạn đã chọn",
+            await AlreadyHasAsync(ct),
             ct);
     }
 
@@ -150,12 +158,58 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
 
         var taste = new TasteProfile(genreIds, moodIds, atmosphereIds, new HashSet<int>());
 
+        // Khách vãng lai không có gì để loại trừ: hệ thống không biết họ là ai, nên cũng không
+        // biết họ đã mua vé buổi nào — và không được đi tìm hiểu.
         return await RankByTasteAsync(
             taste, request.City, limit,
             reasonWhenMatched: recent.Count > 0
                 ? "Giống những buổi diễn bạn vừa xem"
                 : "Hợp với thể loại bạn đang tìm",
+            alreadyHas: new HashSet<int>(),
             ct);
+    }
+
+    /// <summary>
+    /// Những buổi diễn người này đã có rồi: đã mua vé, hoặc đã lưu vào danh sách quan tâm.
+    ///
+    /// Gợi ý sinh ra để giúp KHÁM PHÁ. Giới thiệu lại buổi diễn người ta vừa mua vé là điều ngược
+    /// hẳn với mục đích đó, và tệ hơn là nó chiếm mất chỗ của thứ họ chưa tìm thấy. Buổi đã lưu
+    /// quan tâm cũng vậy — họ tự tìm ra rồi, và đã có màn hình riêng cho danh sách đó.
+    ///
+    /// Đọc ngay lúc trả kết quả chứ không lúc tính sẵn: mua vé xong là buổi đó biến khỏi gợi ý
+    /// ngay, không phải đợi hết 6 tiếng cache.
+    /// </summary>
+    /// <summary>
+    /// Đẩy những gì người dùng đã có xuống cuối thay vì cắt hẳn.
+    ///
+    /// Cắt hẳn là câu trả lời đúng khi kho đủ lớn. Nhưng nền tảng này hiện chỉ có vài buổi diễn
+    /// đang mở bán, nên cắt hẳn sẽ trả về danh sách rỗng — và một danh sách rỗng còn tệ hơn một
+    /// danh sách có thứ hơi thừa. Nên: ưu tiên thứ chưa thấy, chỉ bù bằng thứ đã có khi không còn
+    /// gì khác để hiện.
+    /// </summary>
+    private static List<T> PreferUnseen<T>(
+        IReadOnlyList<T> ordered, IReadOnlySet<int> alreadyHas, int limit, Func<T, int> showId)
+    {
+        if (alreadyHas.Count == 0) return ordered.ToList();
+
+        var unseen = ordered.Where(x => !alreadyHas.Contains(showId(x))).ToList();
+        if (unseen.Count >= limit) return unseen;
+
+        var seen = ordered.Where(x => alreadyHas.Contains(showId(x)));
+        return [.. unseen, .. seen];
+    }
+
+    private async Task<HashSet<int>> AlreadyHasAsync(CancellationToken ct)
+    {
+        var userId = _currentUser.UserId;
+
+        var tickets = await _ticketRepo.FindAsync(
+            t => t.BuyerId == userId
+                && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
+
+        var saved = await _wishlistRepo.FindAsync(w => w.UserId == userId, ct);
+
+        return tickets.Select(t => t.ShowId).Concat(saved.Select(w => w.LoungeShowId)).ToHashSet();
     }
 
     /// <summary>
@@ -182,13 +236,16 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// lại, không phải cắt bớt lựa chọn của người dùng.
     /// </summary>
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> RankByTasteAsync(
-        TasteProfile taste, string? city, int limit, string reasonWhenMatched, CancellationToken ct)
+        TasteProfile taste, string? city, int limit, string reasonWhenMatched,
+        IReadOnlySet<int> alreadyHas, CancellationToken ct)
     {
         var candidates = await _showRepo.GetTrendingAsync(
             taste.KnowsNothing ? limit : CandidatePoolSize, city, ct);
 
         // Không biết gì về người hỏi thì trả về đúng bảng đang được quan tâm. Xếp theo một cái gu
         // rỗng chỉ tạo ra thứ tự ngẫu nhiên đội lốt cá nhân hoá.
+        candidates = PreferUnseen(candidates, alreadyHas, limit, s => s.Id);
+
         if (taste.KnowsNothing || candidates.Count == 0)
             return candidates.Take(limit).Select(s => s.ToRecommendedDto(0f, "Đang thịnh hành")).ToList();
 
@@ -219,14 +276,16 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     }
 
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> FromCacheAsync(
-        IReadOnlyList<AiRecommendation> cached, int limit, CancellationToken ct)
+        IReadOnlyList<AiRecommendation> cached, int limit,
+        IReadOnlySet<int> alreadyHas, CancellationToken ct)
     {
         var showIds = cached.Select(r => r.LoungeShowId).ToList();
         var shows = await _showRepo.GetRecommendedByIdsAsync(showIds, ct);
         var recByShowId = cached.ToDictionary(r => r.LoungeShowId);
 
-        return shows
-            .OrderByDescending(s => recByShowId[s.Id].FinalScore)
+        var ordered = shows.OrderByDescending(s => recByShowId[s.Id].FinalScore).ToList();
+
+        return PreferUnseen(ordered, alreadyHas, limit, s => s.Id)
             .Take(limit)
             .Select(s => s.ToRecommendedDto(recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason))
             .ToList();
