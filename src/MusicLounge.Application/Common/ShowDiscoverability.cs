@@ -39,20 +39,31 @@ public static class ShowDiscoverability
     /// <summary>
     /// Buổi diễn nằm trong thành phố người dùng đang lọc.
     ///
-    /// <b>Một câu hỏi còn để ngỏ, cố ý chưa tự quyết.</b> Quy tắc hiện tại so thẳng địa chỉ phòng
-    /// trà, nên nó loại luôn cả buổi diễn TRỰC TUYẾN của phòng trà ở tỉnh khác — trong khi nền tảng
-    /// có hẳn loại vé <see cref="AccessType.Livestream"/> và người dùng xem được từ bất cứ đâu.
-    /// Người ở Đà Nẵng lọc theo Đà Nẵng đang bị giấu mất đúng những buổi họ hoàn toàn xem được.
+    /// <b>Đã tra thực tế, và kết luận ngược với nghi vấn ban đầu — giữ nguyên là ĐÚNG.</b>
     ///
-    /// Đã thử nới (<c>s.Format != Offline || khớp thành phố</c>) và đo được hệ quả thật: mọi buổi
-    /// trực tuyến trên toàn nền tảng lọt vào MỌI danh sách lọc theo thành phố, làm loãng hẳn kết
-    /// quả địa phương. Quan trọng hơn, đường duyệt và tìm kiếm vẫn giữ nghĩa cũ của "thành phố",
-    /// nên nới riêng ở đây sẽ khiến hai bên hiểu khác nhau về cùng một tham số — đúng lớp lỗi
-    /// MLACP-322 vừa sửa xong.
+    /// Nghi vấn ban đầu: quy tắc này so thẳng địa chỉ phòng trà nên loại luôn buổi diễn trực tuyến
+    /// của phòng trà tỉnh khác, trong khi người dùng xem được từ bất cứ đâu. Nghe như một lỗi.
     ///
-    /// Đây là quyết định về SẢN PHẨM (một bộ lọc địa điểm nghĩa là gì), phải chốt một lần cho mọi
-    /// màn hình chứ không phải lặng lẽ đổi ở một endpoint. Giữ nguyên nghĩa cũ cho tới khi có quyết
-    /// định; gom vào đây để lúc đổi chỉ phải sửa đúng một dòng.
+    /// Nhưng chuẩn schema.org mô hình hoá đúng chỗ này: địa điểm của một buổi diễn trực tuyến là
+    /// <c>VirtualLocation</c> — <i>"An online or virtual location for attending events"</i> — chứ
+    /// KHÔNG phải địa chỉ của đơn vị tổ chức. Buổi trực tuyến không có thành phố; địa chỉ phòng trà
+    /// chỉ là chi tiết vận hành. Buổi <see cref="LoungeShowFormat.Hybrid"/> thì mang cả hai (chuẩn
+    /// cho phép vừa <c>VirtualLocation</c> vừa <c>Place</c>), nên nó khớp thành phố của chính nó là
+    /// đúng.
+    ///
+    /// Các nền tảng thật cũng làm vậy: Meetup tách hẳn "online / in person" thành một chiều lọc
+    /// RIÊNG và nói rõ bộ lọc khoảng cách chỉ dành cho sự kiện gặp mặt; Eventbrite coi "Online" là
+    /// một GIÁ TRỊ của trường địa điểm chứ không phải một cờ vượt qua bộ lọc địa điểm. Không nền
+    /// tảng nào trộn thẳng sự kiện trực tuyến vào kết quả lọc theo thành phố.
+    ///
+    /// Nên đây không phải lỗi, mà là một NĂNG LỰC CÒN THIẾU: endpoint chưa có cách nào để nói
+    /// "cho tôi buổi ở thành phố này, kèm cả buổi trực tuyến". Bỏ tham số thành phố ra thì vẫn thấy
+    /// hết buổi trực tuyến, nên không có gì bị giấu vĩnh viễn — chỉ là chưa gộp chung được.
+    ///
+    /// Muốn làm thì làm đúng cách: thêm một chiều lọc riêng theo hình thức tham dự (đúng
+    /// <c>eventAttendanceMode</c> của chuẩn), mặc định giữ nguyên hành vi hiện tại, và áp đồng bộ
+    /// cho cả duyệt lẫn tìm kiếm — chứ không lặng lẽ đổi nghĩa tham số thành phố ở riêng một
+    /// endpoint. Đó là một tính năng có phần giao diện đi kèm, không phải một bản vá.
     /// </summary>
     public static Expression<Func<LoungeShow, bool>> ReachableFrom(string city)
         => s => s.Lounge.Address.City == city;
