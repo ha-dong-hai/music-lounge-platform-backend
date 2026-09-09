@@ -13,7 +13,7 @@
       },
       "Hangfire.InMemory": {
         "type": "Direct",
-        "requested": "[0.4.3, )",
+        "requested": "[0.5.0, )",
         "resolved": "0.5.0",
         "contentHash": "7f9c6EG9i+vOuy4pP+od7adxwXGkyK6Y9NKZGlwNbg2kjfyx+aTABiH9WUgHbmEzMKF3hLqgMFmogYQljDOIlA==",
         "dependencies": {

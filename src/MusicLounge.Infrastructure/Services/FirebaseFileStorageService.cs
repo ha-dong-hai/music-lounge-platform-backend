@@ -43,7 +43,13 @@ internal sealed class FirebaseFileStorageService : IFileStorageService
         // Only ever constructed when DependencyInjection has already established that both settings
         // are present — see the registration there for why an unconfigured environment gets the
         // local-disk implementation rather than an exception at startup.
-        var credential = GoogleCredential.FromFile(config.CredentialsPath)
+        //
+        // Nêu thẳng loại credential thay vì để thư viện tự dò từ nội dung file. Google đã đánh dấu
+        // GoogleCredential.FromFile là lỗi thời đúng vì lý do này: lời gọi tự dò sẽ nạp bất kỳ loại
+        // credential nào file khai, nên ai thay được file đó thì ép được ứng dụng đi lấy token từ
+        // một nguồn khác. Ở đây chỉ có duy nhất một loại hợp lệ, nên nói rõ ra là đúng.
+        // FcmService đã dùng đúng lời gọi này từ trước — chỗ này bị bỏ sót.
+        var credential = CredentialFactory.FromFile(config.CredentialsPath, "service_account")
             .CreateScoped(Google.Apis.Storage.v1.StorageService.Scope.DevstorageFullControl);
         _storage = StorageClient.Create(credential);
     }
