@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Analytics.Common;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.LoungeShows.DTOs;
@@ -111,25 +112,6 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         if (user is null)
             return await ForGuestAsync(request, limit, ct);
 
-        if (user.AiConsent)
-        {
-            // Same recurring SQLite-translation limitation documented throughout this codebase:
-            // combining an equality predicate with a DateTimeOffset comparison in one Where clause
-            // fails to translate under the test provider — filter server-side on the simple
-            // equality, then the expiry client-side.
-            var now = DateTimeOffset.UtcNow;
-            var allForUser = await _recRepo.FindAsync(r => r.UserId == _currentUser.UserId, ct);
-            var cached = allForUser.Where(r => r.ExpiresAt > now).ToList();
-
-            if (cached.Count > 0)
-                return await FromCacheAsync(cached, limit, await AlreadyHasAsync(ct), ct);
-
-            // Chưa có kết quả tính sẵn: đặt lịch tính nền cho lần sau, còn lần này vẫn phải trả về
-            // thứ dùng được ngay. Trước đây chỗ này trả về bảng thịnh hành chung; giờ ít nhất cũng
-            // xếp theo sở thích người dùng đã khai.
-            _jobs.EnqueueRecommendationRefresh(_currentUser.UserId);
-        }
-
         var alreadyHas = await AlreadyHasAsync(ct);
 
         var taste = await DeclaredTasteAsync(_currentUser.UserId, ct);
@@ -147,8 +129,30 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             reason = "Giống những buổi diễn bạn từng quan tâm";
         }
 
+        if (user.AiConsent)
+        {
+            // Same recurring SQLite-translation limitation documented throughout this codebase:
+            // combining an equality predicate with a DateTimeOffset comparison in one Where clause
+            // fails to translate under the test provider — filter server-side on the simple
+            // equality, then the expiry client-side.
+            var now = DateTimeOffset.UtcNow;
+            var allForUser = await _recRepo.FindAsync(r => r.UserId == _currentUser.UserId, ct);
+            var cached = allForUser.Where(r => r.ExpiresAt > now).ToList();
+
+            if (cached.Count > 0)
+                return await FromCacheAsync(cached, request.City, limit, taste, reason, alreadyHas, ct);
+
+            // Chưa có kết quả tính sẵn: đặt lịch tính nền cho lần sau, còn lần này vẫn phải trả về
+            // thứ dùng được ngay. Trước đây chỗ này trả về bảng thịnh hành chung; giờ ít nhất cũng
+            // xếp theo sở thích người dùng đã khai.
+            _jobs.EnqueueRecommendationRefresh(_currentUser.UserId);
+        }
+
         return await RankByTasteAsync(taste, request.City, limit, reason, alreadyHas, ct);
     }
+
+    /// <summary>Một buổi diễn đã được chấm điểm, kèm lý do sẽ hiện cho người dùng.</summary>
+    private sealed record Scored(LoungeShow Show, float Score, string Reason);
 
     /// <summary>
     /// Gu suy ra từ chính request khách vãng lai gửi lên. Không đọc và không ghi hồ sơ nào của họ,
@@ -342,9 +346,31 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> RankByTasteAsync(
         TasteProfile taste, string? city, int limit, string reasonWhenMatched,
         IReadOnlySet<int> alreadyHas, CancellationToken ct)
+        => Finalise(
+            await ScoreCandidatesAsync(taste, city, limit, reasonWhenMatched, new HashSet<int>(), ct),
+            limit, alreadyHas);
+
+    /// <summary>
+    /// Bốn bước cuối dùng chung cho mọi đường: đẩy thứ đã có xuống dưới, chặn một phòng trà chiếm
+    /// hết, cắt đúng số lượng, rồi mới dựng DTO. Gom về một chỗ để không đường nào lỡ bỏ sót một
+    /// bước — đó chính là cách ba lỗi của MLACP-322 lọt vào.
+    /// </summary>
+    private static IReadOnlyList<RecommendedLoungeShowDto> Finalise(
+        IReadOnlyList<Scored> ranked, int limit, IReadOnlySet<int> alreadyHas)
+        => CapPerVenue(PreferUnseen(ranked, alreadyHas, limit, x => x.Show.Id), limit, x => x.Show.LoungeId)
+            .Take(limit)
+            .Select(x => x.Show.ToRecommendedDto(x.Score, x.Reason))
+            .ToList();
+
+    /// <param name="exclude">
+    /// Buổi diễn đã được lấy từ kết quả tính sẵn. Loại ra để phần bù không lặp lại chúng.
+    /// </param>
+    private async Task<List<Scored>> ScoreCandidatesAsync(
+        TasteProfile taste, string? city, int limit, string reasonWhenMatched,
+        IReadOnlySet<int> exclude, CancellationToken ct)
     {
         var candidates = await _showRepo.GetTrendingAsync(
-            taste.KnowsNothing ? limit : CandidatePoolSize, city, ct);
+            taste.KnowsNothing ? limit + exclude.Count : CandidatePoolSize, city, ct);
 
         if (!taste.KnowsNothing)
         {
@@ -365,12 +391,13 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             if (fresh.Count > 0) candidates = [.. candidates, .. fresh];
         }
 
-        candidates = PreferUnseen(candidates, alreadyHas, limit, s => s.Id);
+        if (exclude.Count > 0)
+            candidates = candidates.Where(s => !exclude.Contains(s.Id)).ToList();
 
         // Không biết gì về người hỏi thì trả về đúng bảng đang được quan tâm. Xếp theo một cái gu
         // rỗng chỉ tạo ra thứ tự ngẫu nhiên đội lốt cá nhân hoá.
         if (taste.KnowsNothing || candidates.Count == 0)
-            return candidates.Take(limit).Select(s => s.ToRecommendedDto(0f, "Đang thịnh hành")).ToList();
+            return candidates.Select(s => new Scored(s, 0f, "Đang thịnh hành")).ToList();
 
         var tagsByShow = (await _showRepo.GetShowTagsAsync(candidates.Select(s => s.Id).ToList(), ct))
             .ToDictionary(t => t.ShowId);
@@ -381,7 +408,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             .Select((s, index) => (s.Id, index))
             .ToDictionary(x => x.Id, x => x.index);
 
-        var ranked = candidates
+        return candidates
             .Select(show =>
             {
                 var score = tagsByShow.TryGetValue(show.Id, out var tags)
@@ -391,31 +418,59 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             })
             .OrderByDescending(x => x.Score)
             .ThenBy(x => trendingRank[x.Show.Id])
-            .ToList();
-
-        return CapPerVenue(ranked, limit, x => x.Show.LoungeId)
-            .Take(limit)
-            .Select(x => x.Show.ToRecommendedDto(
-                x.Score,
-                x.Score > 0 ? reasonWhenMatched : "Đang thịnh hành"))
+            .Select(x => new Scored(
+                x.Show, x.Score, x.Score > 0 ? reasonWhenMatched : "Đang thịnh hành"))
             .ToList();
     }
 
+    /// <summary>
+    /// Đường của người đã bật đồng ý AI: đọc kết quả job nền đã tính sẵn.
+    ///
+    /// <b>MLACP-322 — kết quả tính sẵn là một cách tăng tốc, không phải một bộ luật riêng.</b> Ba
+    /// quy tắc trước đây chỉ tồn tại ở đường tính ngay, nên nhóm hợp tác nhất với hệ thống lại nhận
+    /// danh sách kém nhất:
+    ///
+    /// <list type="number">
+    /// <item><b>Thành phố.</b> Job nền tính với <c>city = null</c> vì nó không biết trước lần sau
+    /// người dùng sẽ lọc theo đâu. Trả thẳng ra là bỏ qua điều người dùng vừa nói rõ — họ ở Đà Nẵng
+    /// mà nhận buổi diễn Hà Nội.</item>
+    /// <item><b>Buổi đã diễn xong.</b> Trạng thái buổi diễn do job chuyển nên luôn có độ trễ; hai
+    /// đường kia đều lọc theo giờ kết thúc thực tế, đường này thì không.</item>
+    /// <item><b>Danh sách cụt.</b> Job chỉ ghi lại buổi có điểm dương, nên người có gu hẹp chỉ được
+    /// vài dòng — và sau khi lọc theo hai điều trên thì còn ít hơn nữa. Thiếu bao nhiêu thì bù bằng
+    /// cách tính ngay.</item>
+    /// </list>
+    ///
+    /// Phần bù luôn nằm SAU phần tính sẵn, không trộn lẫn theo điểm. Hai bên chấm trên hai thang
+    /// khác nhau — điểm hybrid là <c>content*0.5 + collab*0.3 + custom*0.2</c> nên một buổi khớp gu
+    /// hoàn toàn cũng chỉ được 0.5, trong khi thang tính ngay cho đúng buổi đó 1.0. Sắp chung theo
+    /// điểm sẽ lật ngược thứ tự và đẩy kết quả giàu thông tin hơn xuống dưới.
+    /// </summary>
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> FromCacheAsync(
-        IReadOnlyList<AiRecommendation> cached, int limit,
+        IReadOnlyList<AiRecommendation> cached, string? city, int limit,
+        TasteProfile taste, string reasonWhenMatched,
         IReadOnlySet<int> alreadyHas, CancellationToken ct)
     {
-        var showIds = cached.Select(r => r.LoungeShowId).ToList();
-        var shows = await _showRepo.GetRecommendedByIdsAsync(showIds, ct);
+        var now = DateTimeOffset.UtcNow;
         var recByShowId = cached.ToDictionary(r => r.LoungeShowId);
+        var shows = await _showRepo.GetRecommendedByIdsAsync(
+            cached.Select(r => r.LoungeShowId).ToList(), ct);
 
-        var ordered = shows.OrderByDescending(s => recByShowId[s.Id].FinalScore).ToList();
-
-        var afterExclusion = PreferUnseen(ordered, alreadyHas, limit, s => s.Id);
-
-        return CapPerVenue(afterExclusion, limit, s => s.LoungeId)
-            .Take(limit)
-            .Select(s => s.ToRecommendedDto(recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason))
+        var fromCache = shows
+            .Where(s => ShowSchedule.EffectiveEnd(s) >= now)
+            .Where(s => string.IsNullOrWhiteSpace(city) || s.Lounge.Address.City == city)
+            .OrderByDescending(s => recByShowId[s.Id].FinalScore)
+            .Select(s => new Scored(s, recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason))
             .ToList();
+
+        // Chỉ đếm những buổi người dùng chưa có: nếu cache toàn thứ họ đã mua vé thì nó vẫn không
+        // lấp được màn hình, dù số dòng nhìn qua có vẻ đủ.
+        var usable = fromCache.Count(x => !alreadyHas.Contains(x.Show.Id));
+        if (usable >= limit) return Finalise(fromCache, limit, alreadyHas);
+
+        var exclude = fromCache.Select(x => x.Show.Id).ToHashSet();
+        var topUp = await ScoreCandidatesAsync(taste, city, limit, reasonWhenMatched, exclude, ct);
+
+        return Finalise([.. fromCache, .. topUp], limit, alreadyHas);
     }
 }

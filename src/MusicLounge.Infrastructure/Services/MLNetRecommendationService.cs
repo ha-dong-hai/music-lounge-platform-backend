@@ -52,14 +52,48 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     private HashSet<int> _trainedUserIds = [];
     private HashSet<int> _trainedShowIds = [];
 
-    // Same "trained once per scope, reused across every user in RefreshRecommendationsJob's loop"
-    // idea as _collabEngine above — GetTrendingAsync returns the same top-50 shows regardless of
-    // which user is asking (city filter is always null here), so refetching it once per user in
-    // the job's loop was pure repeated work with an identical result every time.
-    private IReadOnlyList<Domain.Entities.LoungeShow>? _cachedTrendingShows;
+    /// <summary>
+    /// Số buổi diễn mới đăng được thêm vào tập ứng viên, ngoài nhóm đang được quan tâm nhất. Cùng
+    /// con số và cùng lý do với <c>NewShowPoolSize</c> ở đường tính ngay trong request.
+    /// </summary>
+    private const int NewShowPoolSize = 20;
 
-    private async Task<IReadOnlyList<Domain.Entities.LoungeShow>> GetCachedTrendingShowsAsync(CancellationToken ct)
-        => _cachedTrendingShows ??= await _showRepo.GetTrendingAsync(50, null, ct);
+    // Same "trained once per scope, reused across every user in RefreshRecommendationsJob's loop"
+    // idea as _collabEngine above — the candidate set is the same regardless of which user is
+    // asking (city filter is always null here), so refetching it once per user in the job's loop
+    // was pure repeated work with an identical result every time.
+    private IReadOnlyList<Domain.Entities.LoungeShow>? _cachedCandidateShows;
+
+    /// <summary>
+    /// Tập buổi diễn được đem ra chấm điểm cho một người dùng.
+    ///
+    /// <b>MLACP-322.</b> Trước đây tập này chỉ là 50 buổi đang được quan tâm nhất, và đó là một
+    /// vòng luẩn quẩn kín: buổi diễn vừa đăng chưa có tương tác nào nên không lọt vào nhóm đó, nên
+    /// không có dòng gợi ý nào được ghi cho nó, nên không ai được thấy nó, nên không bao giờ có
+    /// tương tác để lọt vào. Người đã bật đồng ý AI đọc kết quả tính sẵn, nên họ là nhóm DUY NHẤT
+    /// không bao giờ nhìn thấy buổi diễn mới — đúng ngược với thứ họ được hứa khi bấm đồng ý.
+    ///
+    /// MLACP-321 đã phá vòng đó ở đường tính ngay trong request nhưng không chạm tới đây. Thêm một
+    /// nhóm nhỏ buổi mới đăng vào tập ứng viên là phá nốt, và phá đúng ở gốc: từ đây buổi mới được
+    /// chấm điểm hợp gu như mọi buổi khác, không phải được ưu ái.
+    ///
+    /// Lưu ý một điểm thành thật về nhánh hybrid: buổi diễn mới chưa có dữ liệu lọc cộng tác nên
+    /// phần <c>collab</c> của nó bằng 0, tức nó bị thiệt so với buổi đã có lịch sử. Đó là hệ quả
+    /// đúng — nó thật sự có ít thông tin hơn — và vẫn tốt hơn hẳn việc không được chấm điểm.
+    /// </summary>
+    private async Task<IReadOnlyList<Domain.Entities.LoungeShow>> GetCandidateShowsAsync(CancellationToken ct)
+    {
+        if (_cachedCandidateShows is not null) return _cachedCandidateShows;
+
+        var trending = await _showRepo.GetTrendingAsync(50, null, ct);
+        var known = trending.Select(s => s.Id).ToHashSet();
+
+        var fresh = (await _showRepo.GetRecentlyPublishedAsync(NewShowPoolSize, null, ct))
+            .Where(s => !known.Contains(s.Id))
+            .ToList();
+
+        return _cachedCandidateShows = fresh.Count == 0 ? trending : [.. trending, .. fresh];
+    }
 
     public MLNetRecommendationService(
         ApplicationDbContext ctx,
@@ -118,7 +152,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         IReadOnlySet<int> followedLoungeIds,
         CancellationToken ct)
     {
-        var shows = await GetCachedTrendingShowsAsync(ct);
+        var shows = await GetCandidateShowsAsync(ct);
         var showById = shows.ToDictionary(s => s.Id);
         var contentScores = await ComputeContentScoresAsync(
             shows, favouriteGenres, favouriteMoods, favouriteAtmospheres, ct);
@@ -161,7 +195,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         IReadOnlySet<int> followedLoungeIds,
         CancellationToken ct)
     {
-        var shows = await GetCachedTrendingShowsAsync(ct);
+        var shows = await GetCandidateShowsAsync(ct);
         var showIds = shows.Select(s => s.Id).ToList();
         var showById = shows.ToDictionary(s => s.Id);
 
