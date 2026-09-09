@@ -42,6 +42,9 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<UserFavouriteAtmosphere> UserFavouriteAtmospheres => Set<UserFavouriteAtmosphere>();
     public DbSet<ShowWishlist> Wishlists => Set<ShowWishlist>();
     public DbSet<Follow> Follows => Set<Follow>();
+    // MLACP-330: hai tin hieu tieu cuc, doi xung voi Follows va UserFavouriteGenres.
+    public DbSet<LoungeMute> LoungeMutes => Set<LoungeMute>();
+    public DbSet<UserDislikedGenre> UserDislikedGenres => Set<UserDislikedGenre>();
     public DbSet<UserBehaviourLog> BehaviourLogs => Set<UserBehaviourLog>();
     public DbSet<AiRecommendation> AiRecommendations => Set<AiRecommendation>();
     public DbSet<LoungeShowRating> Ratings => Set<LoungeShowRating>();

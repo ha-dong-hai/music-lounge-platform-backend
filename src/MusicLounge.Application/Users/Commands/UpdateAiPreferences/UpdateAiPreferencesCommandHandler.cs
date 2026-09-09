@@ -49,6 +49,23 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
                 throw new NotFoundException(nameof(Mood), "một hoặc nhiều mood không tồn tại.");
         }
 
+        // MLACP-330: the loai khong thich. Loai ngay nhung id trung voi danh sach yeu thich —
+        // vua thich vua khong thich cung mot the loai la mot trang thai vo nghia, va he goi y se
+        // nhan hai chi thi trai nguoc cho cung mot thu. So thich tu khai la ban thang, nen no
+        // duoc uu tien; phan mau thuan bi bo di chu khong lam ca lenh that bai.
+        var dislikedGenreIds = (request.DislikedGenreIds ?? [])
+            .Distinct()
+            .Where(id => !genreIds.Contains(id))
+            .ToList();
+
+        if (dislikedGenreIds.Count > 0)
+        {
+            var foundDisliked = await _uow.Repository<MusicGenre, int>()
+                .CountAsync(g => dislikedGenreIds.Contains(g.Id), ct);
+            if (foundDisliked != dislikedGenreIds.Count)
+                throw new NotFoundException(nameof(MusicGenre), "một hoặc nhiều genre không tồn tại.");
+        }
+
         var atmosphereIds = request.AtmosphereIds.Distinct().ToList();
         if (atmosphereIds.Count > 0)
         {
@@ -70,12 +87,16 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
             .FindAsync(m => m.UserId == _currentUser.UserId, ct);
         var existingAtmospheres = await _uow.Repository<UserFavouriteAtmosphere, int>()
             .FindAsync(a => a.UserId == _currentUser.UserId, ct);
+        var existingDisliked = await _uow.Repository<UserDislikedGenre, int>()
+            .FindAsync(d => d.UserId == _currentUser.UserId, ct);
 
         foreach (var g in existingGenres) _uow.Repository<UserFavouriteGenre, int>().Remove(g);
         foreach (var m in existingMoods) _uow.Repository<UserFavouriteMood, int>().Remove(m);
         foreach (var a in existingAtmospheres) _uow.Repository<UserFavouriteAtmosphere, int>().Remove(a);
+        foreach (var d in existingDisliked) _uow.Repository<UserDislikedGenre, int>().Remove(d);
 
-        if (existingGenres.Count > 0 || existingMoods.Count > 0 || existingAtmospheres.Count > 0)
+        if (existingGenres.Count > 0 || existingMoods.Count > 0
+            || existingAtmospheres.Count > 0 || existingDisliked.Count > 0)
             await _uow.SaveChangesAsync(ct);
 
         foreach (var genreId in genreIds)
@@ -95,6 +116,12 @@ internal sealed class UpdateAiPreferencesCommandHandler : IRequestHandler<Update
             {
                 UserId = _currentUser.UserId,
                 AtmosphereId = atmosphereId
+            });
+        foreach (var dislikedGenreId in dislikedGenreIds)
+            _uow.Repository<UserDislikedGenre, int>().Add(new UserDislikedGenre
+            {
+                UserId = _currentUser.UserId,
+                GenreId = dislikedGenreId
             });
 
         // Rut lai su dong y phai co hieu luc that, khong chi la doi mot co. Truoc day tat o nay
