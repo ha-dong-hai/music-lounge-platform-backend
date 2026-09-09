@@ -14,6 +14,7 @@ using MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 using MusicLounge.Application.Analytics.Queries.GetOwnerLivestreamHistory;
 using MusicLounge.Application.Analytics.Queries.GetOwnerRevenueReport;
 using MusicLounge.Application.Analytics.Queries.GetPlatformAnalytics;
+using MusicLounge.Application.Analytics.Queries.GetDemandForecast;
 using MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 using MusicLounge.Application.Analytics.Queries.GetTicketSalesTrend;
 using MusicLounge.Application.Common.Models;
@@ -140,6 +141,26 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetTicketSalesTrendQuery(showId), ct);
         return Ok(ApiResponse<TicketSalesTrendDto>.Ok(result));
+    }
+
+    /// <summary>Owner — dự báo tổng vé sẽ bán được của một buổi diễn đang mở bán, suy từ nhịp bán
+    /// hiện tại so với các buổi diễn đã hoàn tất (phương pháp sales pacing, đúng cách các nền tảng
+    /// bán vé sự kiện đang làm).
+    ///
+    /// Trả về status='NotEnoughHistory' khi chưa đủ buổi diễn đã hoàn tất để dựng nhịp tham chiếu,
+    /// hoặc status='TooEarly' khi còn quá xa ngày diễn. Hai trường hợp đó KHÔNG có con số, và đó là
+    /// câu trả lời đúng — một dự báo dựng trên hai buổi diễn là đoán, và chủ phòng trà tin theo mà
+    /// xếp lịch thì thiệt hại là thật. Trường explanation nói rõ dự báo dựa trên cái gì.</summary>
+    [HttpGet("shows/{showId:int}/demand-forecast")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<DemandForecastDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDemandForecast(int showId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetDemandForecastQuery(showId), ct);
+        return Ok(ApiResponse<DemandForecastDto>.Ok(result));
     }
 
     /// <summary>Owner — tổng donate theo từng nghệ sĩ, tổng hợp qua toàn bộ buổi diễn của venue,
