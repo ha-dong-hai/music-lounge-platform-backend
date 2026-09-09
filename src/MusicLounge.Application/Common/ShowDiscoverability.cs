@@ -22,19 +22,20 @@ public static class ShowDiscoverability
     /// đình chỉ một phòng trà, hệ thống vẫn tiếp tục chủ động đem buổi diễn của họ đi mời người
     /// dùng mua vé. Đình chỉ mà vẫn quảng bá thì việc đình chỉ chẳng có nghĩa gì.
     ///
-    /// <b>Cảnh cáo thì không nằm trong nhóm bị chặn.</b> <see cref="LoungeStatus.Warned"/> là một
-    /// lời nhắc nhở, không phải một lệnh dừng: phòng trà đó vẫn đang hoạt động và vẫn bán vé. Cắt
-    /// họ khỏi màn hình khám phá là tự ý nâng một lời cảnh cáo thành một hình phạt kinh tế mà không
-    /// ai quyết định điều đó.
+    /// <b>Không tự định nghĩa lại "đang hoạt động".</b> Câu trả lời là
+    /// <see cref="VenueLifecycle.Operating"/>, đã có từ MLACP-307 chính vì trước đó cùng một câu hỏi
+    /// nhận ba đáp án khác nhau ở ba chỗ. MLACP-326 lỡ viết lại điều kiện ở đây thành bản thứ tư;
+    /// MLACP-329 trỏ nó về nguồn. Cảnh cáo (<see cref="LoungeStatus.Warned"/>) nằm trong nhóm được
+    /// đi qua — đó là một vết ghi lại, không phải lệnh dừng, và quyết định đó thuộc về
+    /// <c>VenueLifecycle</c> chứ không phải chỗ này.
     ///
-    /// <b>Còn thiếu ở nơi khác.</b> Cùng thiếu sót này vẫn còn ở đường duyệt và tìm kiếm
-    /// (<c>GetPublishedAsync</c>, <c>SearchAsync</c>) — chúng cũng không lọc trạng thái phòng trà.
-    /// Task này chỉ đụng đường của hệ gợi ý; hai chỗ kia cần task riêng vì nằm ngoài phạm vi AI.
-    /// Khi làm, chỉ cần thêm đúng biểu thức này vào là xong.
+    /// <b>Phạm vi áp dụng (MLACP-329).</b> Mọi đường khám phá công khai: duyệt, tìm kiếm, gợi ý tự
+    /// động điền, theo phòng trà, theo nghệ sĩ, buổi diễn tương tự, danh sách thành phố, và cả hai
+    /// truy vấn ứng viên của hệ gợi ý. Cố ý KHÔNG áp cho danh sách của chính Owner, hàng đợi duyệt
+    /// của Admin, và trang chi tiết buổi diễn — người đã mua vé vẫn phải tra cứu được buổi của mình.
     /// </summary>
     public static Expression<Func<LoungeShow, bool>> VenueIsOperating
-        => s => s.Lounge.Status == LoungeStatus.Approved
-             || s.Lounge.Status == LoungeStatus.Warned;
+        => s => VenueLifecycle.Operating.Contains(s.Lounge.Status);
 
     /// <summary>
     /// Buổi diễn nằm trong thành phố người dùng đang lọc.
