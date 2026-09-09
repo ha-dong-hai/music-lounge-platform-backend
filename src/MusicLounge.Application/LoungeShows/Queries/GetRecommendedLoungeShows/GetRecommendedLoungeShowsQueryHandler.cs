@@ -112,7 +112,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         if (user is null)
             return await ForGuestAsync(request, limit, ct);
 
-        var alreadyHas = await AlreadyHasAsync(ct);
+        var history = await OwnHistoryAsync(ct);
+        var alreadyHas = history.ToHashSet();
 
         var taste = await DeclaredTasteAsync(_currentUser.UserId, ct);
         var reason = "Hợp với sở thích bạn đã chọn";
@@ -125,7 +126,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             //
             // Nhưng nếu họ từng mua vé hay lưu buổi diễn nào thì hệ thống ĐÃ BIẾT họ thích gì —
             // chỉ là chưa bao giờ dùng tới. Suy gu từ thẻ phân loại của chính những buổi đó.
-            taste = await TasteFromOwnHistoryAsync(alreadyHas, ct);
+            taste = await TasteFromOwnHistoryAsync(history, ct);
             reason = "Giống những buổi diễn bạn từng quan tâm";
         }
 
@@ -171,12 +172,18 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             // "Vì bạn vừa xem" — suy gu từ thẻ phân loại của chính những buổi diễn đó. Đây là cách
             // cá nhân hoá cho khách vãng lai mà không cần biết họ là ai: thông tin đến trong
             // request, dùng xong thì hết.
-            foreach (var tags in await _showRepo.GetShowTagsAsync(recent, ct))
-            {
-                genreIds.UnionWith(tags.GenreIds);
-                moodIds.UnionWith(tags.MoodIds);
-                atmosphereIds.UnionWith(tags.AtmosphereIds);
-            }
+            //
+            // Dùng đúng quy tắc chọn thẻ như người đã đăng nhập, để một quy tắc chỉ có một cách
+            // hiểu. Thứ tự do phía giao diện gửi lên được coi là mới nhất trước; nếu không đúng thì
+            // hậu quả chỉ là cửa sổ gần đây bị chọn khác đi, không phải kết quả sai.
+            var inferred = TasteInference.FromShows(
+                await TagsInOrderAsync(recent, ct), new HashSet<int>());
+
+            // Thể loại khách tự bấm chọn là thứ họ NÓI RA, nên luôn được giữ nguyên — cùng nguyên
+            // tắc "tự khai thắng suy đoán" đã áp cho người đã đăng nhập ở MLACP-321.
+            genreIds.UnionWith(inferred.GenreIds);
+            moodIds.UnionWith(inferred.MoodIds);
+            atmosphereIds.UnionWith(inferred.AtmosphereIds);
         }
 
         var taste = new TasteProfile(genreIds, moodIds, atmosphereIds, new HashSet<int>());
@@ -208,28 +215,38 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// hàng gần đây của bạn". Và nó luôn được nói ra trong phần lý do gợi ý, nên không có gì diễn
     /// ra sau lưng người dùng.
     /// </summary>
+    /// <param name="ownShowIdsNewestFirst">
+    /// Buổi diễn người này đã chạm vào, mới nhất trước. Thứ tự quyết định cửa sổ được xét — xem
+    /// <see cref="TasteInference"/> về lý do không lấy hợp của toàn bộ lịch sử.
+    /// </param>
     private async Task<TasteProfile> TasteFromOwnHistoryAsync(
-        IReadOnlySet<int> ownShowIds, CancellationToken ct)
+        IReadOnlyList<int> ownShowIdsNewestFirst, CancellationToken ct)
     {
         var follows = await _followRepo.FindAsync(f => f.UserId == _currentUser.UserId, ct);
         var followedLoungeIds = follows.Select(f => f.LoungeId).ToHashSet();
 
-        if (ownShowIds.Count == 0)
+        if (ownShowIdsNewestFirst.Count == 0)
             return new TasteProfile(
                 new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), followedLoungeIds);
 
-        var genreIds = new HashSet<int>();
-        var moodIds = new HashSet<int>();
-        var atmosphereIds = new HashSet<int>();
+        return TasteInference.FromShows(
+            await TagsInOrderAsync(ownShowIdsNewestFirst, ct), followedLoungeIds);
+    }
 
-        foreach (var tags in await _showRepo.GetShowTagsAsync(ownShowIds.ToList(), ct))
-        {
-            genreIds.UnionWith(tags.GenreIds);
-            moodIds.UnionWith(tags.MoodIds);
-            atmosphereIds.UnionWith(tags.AtmosphereIds);
-        }
+    /// <summary>
+    /// Thẻ phân loại của một danh sách buổi diễn, <b>giữ nguyên thứ tự được truyền vào</b> — truy
+    /// vấn trả về không theo thứ tự, mà ở đây thứ tự chính là thông tin về độ gần đây.
+    /// </summary>
+    private async Task<List<ShowTags>> TagsInOrderAsync(
+        IReadOnlyList<int> showIdsInOrder, CancellationToken ct)
+    {
+        var window = showIdsInOrder.Take(TasteInference.RecencyWindow).ToList();
+        var tagsByShow = (await _showRepo.GetShowTagsAsync(window, ct)).ToDictionary(t => t.ShowId);
 
-        return new TasteProfile(genreIds, moodIds, atmosphereIds, followedLoungeIds);
+        return window
+            .Where(tagsByShow.ContainsKey)
+            .Select(id => tagsByShow[id])
+            .ToList();
     }
 
     /// <summary>
@@ -307,7 +324,15 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         return [.. unseen, .. seen];
     }
 
-    private async Task<HashSet<int>> AlreadyHasAsync(CancellationToken ct)
+    /// <summary>
+    /// Những buổi diễn người này đã chạm vào, <b>sắp mới nhất trước</b>. Thứ tự có ý nghĩa: gu người
+    /// nghe đổi theo thời gian nên phần suy gu chỉ xét cửa sổ gần đây nhất
+    /// (<see cref="TasteInference.RecencyWindow"/>).
+    ///
+    /// Sắp ở phía client vì cùng một giới hạn của provider SQLite dùng trong test đã ghi khắp
+    /// codebase này: không <c>ORDER BY</c> được cột <c>DateTimeOffset</c>.
+    /// </summary>
+    private async Task<List<int>> OwnHistoryAsync(CancellationToken ct)
     {
         var userId = _currentUser.UserId;
 
@@ -317,7 +342,13 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
 
         var saved = await _wishlistRepo.FindAsync(w => w.UserId == userId, ct);
 
-        return tickets.Select(t => t.ShowId).Concat(saved.Select(w => w.LoungeShowId)).ToHashSet();
+        return tickets.Select(t => (ShowId: t.ShowId, At: t.CreatedAt))
+            .Concat(saved.Select(w => (ShowId: w.LoungeShowId, At: w.CreatedAt)))
+            .GroupBy(x => x.ShowId)
+            .Select(g => (ShowId: g.Key, At: g.Max(x => x.At)))
+            .OrderByDescending(x => x.At)
+            .Select(x => x.ShowId)
+            .ToList();
     }
 
     /// <summary>
