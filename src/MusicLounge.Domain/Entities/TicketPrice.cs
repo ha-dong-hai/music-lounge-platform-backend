@@ -17,7 +17,10 @@ public sealed class TicketPrice : Common.BaseEntity<int>
     public int Sold { get; set; } = 0;
     public bool IsActive { get; set; } = true;
     public DateTimeOffset SaleStart { get; set; }
-    public DateTimeOffset SaleEnd { get; set; }
+    // BR-31: bo trong nghia la ban toi khi buoi dien ket thuc. Ve ban tai quay khong the chot
+    // truoc mot moc dong cung — khan gia den muon van mua ve vao duoc. Muon dung ban som hon thi
+    // dat LoungeShow.TicketSaleClosesAt, cho danh rieng cho viec do.
+    public DateTimeOffset? SaleEnd { get; set; }
     public PurchaseChannel PurchaseChannel { get; set; }
 
     public TicketTier Tier { get; set; } = null!;

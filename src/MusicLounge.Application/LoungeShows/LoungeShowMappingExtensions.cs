@@ -1,4 +1,4 @@
-﻿using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
@@ -41,11 +41,27 @@ internal static class LoungeShowMappingExtensions
             isWishlisted);
     }
 
+    /// <param name="lastEntryMinutes">
+    /// BR-31: buổi diễn phải còn lại ít nhất bấy nhiêu phút thì vé mới còn được bán. Truyền vào để
+    /// mốc đóng bán hiển thị cho khán giả đúng bằng mốc mà hệ thống thật sự chặn ở khâu thanh
+    /// toán — hai con số đó lệch nhau là cách nhanh nhất để mất lòng tin.
+    /// </param>
     internal static LoungeShowDetailDto ToDetailDto(
         this LoungeShow show, IReadOnlySet<int> wishlistedIds,
         bool? userHasTicket = null, bool? userHasRated = null,
         IReadOnlyDictionary<int, int>? soldAndHeld = null,
-        IReadOnlyList<LoungeGalleryImageDto>? galleryImages = null)
+        IReadOnlyList<LoungeGalleryImageDto>? galleryImages = null,
+        int lastEntryMinutes = TicketSaleWindow.DefaultLastEntryMinutes)
+        => ToDetailDtoCore(
+            show, wishlistedIds, userHasTicket, userHasRated, soldAndHeld, galleryImages,
+            TicketSaleWindow.LastEntry(show, lastEntryMinutes));
+
+    private static LoungeShowDetailDto ToDetailDtoCore(
+        LoungeShow show, IReadOnlySet<int> wishlistedIds,
+        bool? userHasTicket, bool? userHasRated,
+        IReadOnlyDictionary<int, int>? soldAndHeld,
+        IReadOnlyList<LoungeGalleryImageDto>? galleryImages,
+        DateTimeOffset lastEntry)
         => new(show.Id, show.Name, show.Description, show.DisplayImageUrl(),
                show.ScheduledStart, show.ScheduledEnd, show.Format, show.Status,
                show.Status == LoungeShowStatus.Ongoing,
@@ -53,7 +69,7 @@ internal static class LoungeShowMappingExtensions
                show.Lounge.ToSummaryDto(galleryImages ?? []),
                show.Performances.OrderBy(p => p.OrderIndex)
                    .Select(p => p.Performer.ToSummaryDto(p.Id, p.AcceptsDonation, p.Role, p.SetTime)).ToList(),
-               show.TicketTiers.Select(t => t.ToSummaryDto(soldAndHeld)).ToList(),
+               show.TicketTiers.Select(t => t.ToSummaryDto(soldAndHeld, lastEntry)).ToList(),
                show.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
                show.Moods.Select(m => new MoodDto(m.Mood.Id, m.Mood.Name)).ToList(),
                show.Atmospheres.Select(a => new AtmosphereDto(a.Atmosphere.Id, a.Atmosphere.Name)).ToList(),
@@ -141,19 +157,27 @@ internal static class LoungeShowMappingExtensions
                performanceId, acceptsDonation, role, setTime);
 
     private static TicketTierSummaryDto ToSummaryDto(
-        this TicketTier tier, IReadOnlyDictionary<int, int>? soldAndHeld)
+        this TicketTier tier, IReadOnlyDictionary<int, int>? soldAndHeld, DateTimeOffset lastEntry)
         => new(tier.Id, tier.Name, tier.Description, tier.AccessType, tier.TotalCapacity, tier.ZoneId,
-               tier.Prices.Select(p => p.ToSummaryDto(soldAndHeld)).ToList());
+               tier.Prices.Select(p => p.ToSummaryDto(soldAndHeld, lastEntry)).ToList());
 
+    /// <param name="lastEntry">
+    /// BR-31: giờ nhận khách cuối của buổi diễn. Không đợt bán nào đóng muộn hơn mốc này, và đợt
+    /// nào không đặt mốc riêng thì lấy thẳng mốc này. Truyền xuống tận đây để trường SaleEnd trả
+    /// về vẫn luôn là một mốc có thật — FE không phải đoán, và không phải đổi kiểu dữ liệu.
+    /// </param>
     private static TicketPriceSummaryDto ToSummaryDto(
-        this TicketPrice price, IReadOnlyDictionary<int, int>? soldAndHeld)
+        this TicketPrice price, IReadOnlyDictionary<int, int>? soldAndHeld, DateTimeOffset lastEntry)
     {
         int? availableSlots = price.Quota.HasValue
             ? Math.Max(0, price.Quota.Value - (soldAndHeld?.GetValueOrDefault(price.Id, 0) ?? 0))
             : null;
+        var effectiveEnd = price.SaleEnd is { } explicitEnd && explicitEnd < lastEntry
+            ? explicitEnd
+            : lastEntry;
         return new(price.Id, price.Name, price.Price, price.Quota,
-                   price.SaleStart, price.SaleEnd, price.PurchaseChannel,
-                   availableSlots);
+                   price.SaleStart, effectiveEnd, price.PurchaseChannel,
+                   availableSlots, price.SaleEnd != effectiveEnd);
     }
 
     private static RatingSummaryDto ToRatingSummaryDto(

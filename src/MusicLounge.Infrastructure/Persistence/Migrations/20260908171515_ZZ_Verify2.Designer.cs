@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MusicLounge.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260908171515_ZZ_Verify2")]
+    partial class ZZ_Verify2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4380,7 +4383,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.OwnsOne("MusicLounge.Domain.Entities.MusicLounge.Address#MusicLounge.Domain.ValueObjects.VenueAddress", "Address", b1 =>
+                    b.OwnsOne("MusicLounge.Domain.ValueObjects.VenueAddress", "Address", b1 =>
                         {
                             b1.Property<int>("MusicLoungeId")
                                 .HasColumnType("int");
@@ -4423,7 +4426,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                             b1.HasIndex("City", "District");
 
-                            b1.ToTable("music_lounges", (string)null);
+                            b1.ToTable("music_lounges");
 
                             b1.WithOwner()
                                 .HasForeignKey("MusicLoungeId");

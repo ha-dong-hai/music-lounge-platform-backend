@@ -54,7 +54,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             throw new DomainException(
                 $"Không thể đặt vé — show hiện ở trạng thái '{show.Status}', chỉ mở bán khi show đã Published hoặc đang diễn ra.");
 
-        ValidateSaleWindow(price, show);
+        await ValidateSaleWindowAsync(price, show, ct);
 
         int holdId;
         DateTimeOffset holdExpiresAt;
@@ -138,10 +138,15 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             await _uow.SaveChangesAsync(ct);
     }
 
-    private static void ValidateSaleWindow(TicketPrice price, LoungeShow show)
+    private async Task ValidateSaleWindowAsync(TicketPrice price, LoungeShow show, CancellationToken ct)
     {
         var now = DateTimeOffset.UtcNow;
-        if (now < price.SaleStart || now > price.SaleEnd)
+
+        // BR-31: mốc đóng của đợt bán, nhưng không bao giờ muộn hơn giờ nhận khách cuối — bán vé
+        // khi buổi diễn sắp tan là bán một thứ không còn gì để xem.
+        var lastEntryMinutes = await _config.GetIntAsync(
+            ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
+        if (!TicketSaleWindow.IsOpen(price, show, now, lastEntryMinutes))
             throw new DomainException("Đợt bán vé này chưa mở hoặc đã kết thúc.");
 
         // D13: moc "dong ban ve" cua ca show, doc lap voi tung dot gia (SaleStart/SaleEnd) — Owner

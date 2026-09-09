@@ -1,4 +1,4 @@
-﻿namespace MusicLounge.Application.Common.Interfaces;
+namespace MusicLounge.Application.Common.Interfaces;
 
 // D9: business parameters live in system_config (DB), not appsettings.
 // Values are cached briefly — a config change takes effect within the cache window.
@@ -45,6 +45,12 @@ public static class ConfigKeys
     public const string SettlementFinalDaysAfterShow = "settlement_final_days_after_show";
 
     public const string TicketHoldMinutes = "ticket_hold_minutes";
+
+    /// <summary>
+    /// BR-31: buoi dien phai con lai it nhat bao nhieu phut thi mot ve moi con duoc ban. Tran cung,
+    /// ap ca khi Owner tu dat moc dong ban.
+    /// </summary>
+    public const string TicketLastEntryMinutes = "ticket_last_entry_minutes";
 
     // Research-grounded (Upwork: 14-day auto-release if unresponded; Fiverr: 3-day response window
     // + 14-day grace period) — an escrow-style "intermediary doesn't respond, so protect the payee"

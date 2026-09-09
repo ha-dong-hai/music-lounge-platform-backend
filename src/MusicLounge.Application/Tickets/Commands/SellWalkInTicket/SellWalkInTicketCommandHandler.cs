@@ -67,8 +67,14 @@ internal sealed class SellWalkInTicketCommandHandler
             throw new DomainException("Không thể bán vé cho show này.");
 
         var now = DateTimeOffset.UtcNow;
-        if (now < price.SaleStart || now > price.SaleEnd)
-            throw new DomainException("Đợt bán vé này chưa mở hoặc đã kết thúc.");
+        // BR-31: quầy vé không còn bị chốt bởi một mốc Owner đặt từ nhiều tuần trước, nhưng cũng
+        // không bán tới lúc buổi diễn tan — khách trả nguyên giá thì phải còn chương trình để xem.
+        var lastEntryMinutes = await _config.GetIntAsync(
+            ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
+        if (!TicketSaleWindow.IsOpen(price, show, now, lastEntryMinutes))
+            throw new DomainException(
+                "Đợt bán vé này chưa mở, hoặc buổi diễn đã qua giờ nhận khách cuối " +
+                $"({lastEntryMinutes} phút trước khi kết thúc).");
 
         // D13: cung 1 moc dong ban voi HoldTicketCommandHandler — ap dung ca cho ban tai quay,
         // khong co ly do de kenh Offline duoc mien tru khoi gio dong ban Owner da dat cho show.

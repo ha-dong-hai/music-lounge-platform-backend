@@ -8,7 +8,8 @@ public sealed record TicketPriceInput(
     int? Quota,
     string PurchaseChannel,
     DateTimeOffset SaleStart,
-    DateTimeOffset SaleEnd);
+    /// <summary>Bỏ trống = bán tới khi buổi diễn kết thúc (BR-31).</summary>
+    DateTimeOffset? SaleEnd);
 
 public sealed record CreateTicketTierCommand(
     int ShowId,
