@@ -51,5 +51,18 @@ public enum NotificationType
     SettlementPendingReview,
 
     /// <summary>MLACP-335: Admin da quyet khong chi tra tranche nay.</summary>
-    SettlementWithheld
+    SettlementWithheld,
+
+    /// <summary>
+    /// MLACP-337: yeu cau hoan tien cua nguoi mua da duoc quyet (duyet hoac tu choi). Truoc do
+    /// ProcessRefundRequest khong bao cho ai ca — nguoi mua gui yeu cau roi phai tu di hoi.
+    /// Mot loai cho ca hai ket qua, theo dung tien le ComplaintUpdate.
+    /// </summary>
+    RefundUpdate,
+
+    /// <summary>
+    /// MLACP-337: ve ban tai quay thu tien mat, nen tang chua bao gio giu khoan do. Hoan tien cho
+    /// nhung ve nay la nghia vu cua chinh phong tra, tra truc tiep cho khach.
+    /// </summary>
+    RefundOwedByVenue
 }

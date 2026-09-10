@@ -345,7 +345,7 @@ public sealed class SettlementReviewTests
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var payment = await db.Payments.FindAsync(paymentId);
-            payment!.TransactionId = "TEST-TXN";
+            payment!.TransactionId = $"S{Guid.NewGuid():N}"[..16];
             payment.PaidAt = DateTimeOffset.UtcNow.AddDays(-1);
 
             // ProcessRefundRequest tra chu phong tra qua ve cua chinh giao dich do
