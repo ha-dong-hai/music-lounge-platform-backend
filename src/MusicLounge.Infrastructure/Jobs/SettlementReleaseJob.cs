@@ -105,44 +105,63 @@ public sealed class SettlementReleaseJob
                 continue;
             }
 
-            if (settlement.ReleaseType == SettlementReleaseType.Final30)
+            var evidence = await ShowCompletionForAsync(settlement.PaymentId, ct);
+
+            // MLACP-336. Hai chot, hai pham vi khac nhau — co y khong gop lam mot:
+            //
+            //   - "Chua tung bat dau" nghia la buoi dien KHONG dien ra. Khong co gi de tranh cai,
+            //     nen ap cho CA HAI tranche. Tra nhanh 70% cho mot thu khong ton tai khong phai la
+            //     "tra nhanh", no chi la tra sai som hon.
+            //   - "Ti le duoi nguong" nghia la co dien ra nhung ngan hon du kien. Day la mot phan
+            //     xet co the tranh cai (su co ky thuat, nghe si om, khan gia ve som), nen giu dung
+            //     thiet ke D3: tra nhanh 70%, giu 30% lai cho ky ra soat.
+            var undelivered = ShowCompletion.IsDefinitelyUndelivered(evidence);
+            var ratioFailed = settlement.ReleaseType == SettlementReleaseType.Final30
+                              && !ShowCompletion.IsAcceptable(evidence, threshold);
+
+            if (undelivered || ratioFailed)
             {
-                var completionOk = await IsShowCompletionAcceptableAsync(settlement.PaymentId, threshold, ct);
-                if (!completionOk)
+                settlement.Status = SettlementStatus.PendingReview;
+
+                var reason = undelivered
+                    ? "buoi dien chua tung duoc danh dau bat dau"
+                    : $"ti le thoi luong buoi dien khong dat nguong {threshold}";
+
+                // MLACP-335. Truoc day cho nay chi doi trang thai roi di tiep: khong log, khong
+                // bao ai. Ma PendingReview lai khong co duong ra — job chi lay Scheduled nen
+                // khong bao gio ngo lai. Tien cua phong tra nam do vinh vien trong khi
+                // GetMyEarnings van dem no vao muc sap nhan duoc.
+                _logger.LogWarning(
+                    "Settlement parked for review — SettlementId={SettlementId} OwnerId={OwnerId} " +
+                    "PaymentId={PaymentId} SoTien={Amount} LyDo={Reason} at {At}",
+                    settlement.Id, settlement.OwnerId, settlement.PaymentId,
+                    settlement.NetAmount, reason, now);
+
+                admins ??= await _ctx.Users
+                    .Where(u => u.Role == UserRole.Admin)
+                    .ToListAsync(ct);
+
+                var body = undelivered
+                    ? $"Khoan {settlement.NetAmount:N0}d cua phong tra bi giu lai vi buoi dien chua " +
+                      "tung duoc danh dau bat dau — co the no da khong dien ra. Can kiem chung: neu " +
+                      "buoi dien that su khong dien ra thi nguoi mua ve can duoc hoan tien."
+                    : $"Khoan {settlement.NetAmount:N0}d cua phong tra bi giu lai vi buoi dien " +
+                      "khong chay du thoi luong da ban. Can kiem chung roi quyet chi tra hay giu lai.";
+
+                foreach (var admin in admins)
                 {
-                    settlement.Status = SettlementStatus.PendingReview;
-
-                    // MLACP-335. Truoc day cho nay chi doi trang thai roi di tiep: khong log, khong
-                    // bao ai. Ma PendingReview lai khong co duong ra — job chi lay Scheduled nen
-                    // khong bao gio ngo lai. Tien cua phong tra nam do vinh vien trong khi
-                    // GetMyEarnings van dem no vao muc sap nhan duoc.
-                    _logger.LogWarning(
-                        "Settlement parked for review — SettlementId={SettlementId} OwnerId={OwnerId} " +
-                        "PaymentId={PaymentId} SoTien={Amount}: ti le thoi luong buoi dien khong dat " +
-                        "nguong {Threshold} at {At}",
-                        settlement.Id, settlement.OwnerId, settlement.PaymentId,
-                        settlement.NetAmount, threshold, now);
-
-                    admins ??= await _ctx.Users
-                        .Where(u => u.Role == UserRole.Admin)
-                        .ToListAsync(ct);
-
-                    foreach (var admin in admins)
-                    {
-                        await _notifications.NotifyAsync(
-                            admin.Id,
-                            NotificationType.SettlementPendingReview,
-                            "Khoan quyet toan can duyet",
-                            $"Khoan {settlement.NetAmount:N0}d cua phong tra bi giu lai vi buoi dien " +
-                            "khong chay du thoi luong da ban. Can kiem chung roi quyet chi tra hay giu lai.",
-                            referenceType: "settlement",
-                            referenceId: settlement.Id.ToString(),
-                            ct: ct);
-                    }
-
-                    await _ctx.SaveChangesAsync(ct);
-                    continue;
+                    await _notifications.NotifyAsync(
+                        admin.Id,
+                        NotificationType.SettlementPendingReview,
+                        "Khoan quyet toan can duyet",
+                        body,
+                        referenceType: "settlement",
+                        referenceId: settlement.Id.ToString(),
+                        ct: ct);
                 }
+
+                await _ctx.SaveChangesAsync(ct);
+                continue;
             }
 
             var journalId = Guid.NewGuid().ToString("N");
@@ -193,22 +212,26 @@ public sealed class SettlementReleaseJob
     }
 
     /// <summary>
-    /// D16: thoi luong that / thoi luong du kien >= nguong.
+    /// Bang chung ve viec buoi dien dung sau giao dich nay co that su dien ra hay khong.
     ///
     /// <para>Phep tinh nam o <see cref="ShowCompletion"/> chu khong phai o day: man hinh Admin phai
     /// hien dung con so da giu khoan nay lai, va mot quy tac co hai ban sao thi som muon cung lech
     /// (MLACP-335).</para>
+    ///
+    /// <para>Khong tim thay buoi dien thi tra <see cref="ShowCompletionVerdict.Unknown"/> — day la
+    /// thieu du lieu that su, khac han voi mot buoi dien da dong ma chua tung bat dau.</para>
     /// </summary>
-    private async Task<bool> IsShowCompletionAcceptableAsync(
-        int paymentId, decimal threshold, CancellationToken ct)
+    private async Task<ShowCompletionEvidence> ShowCompletionForAsync(
+        int paymentId, CancellationToken ct)
     {
         var showId = await _ctx.Tickets
             .Where(t => t.PaymentId == paymentId)
             .Select(t => (int?)t.ShowId)
             .FirstOrDefaultAsync(ct);
-        if (showId is null) return true;
+        if (showId is null)
+            return new ShowCompletionEvidence(ShowCompletionVerdict.Unknown, null, null, null);
 
         var show = await _ctx.LoungeShows.FirstOrDefaultAsync(s => s.Id == showId, ct);
-        return ShowCompletion.IsAcceptable(ShowCompletion.Evaluate(show), threshold);
+        return ShowCompletion.Evaluate(show);
     }
 }
