@@ -64,5 +64,12 @@ public enum NotificationType
     /// MLACP-337: ve ban tai quay thu tien mat, nen tang chua bao gio giu khoan do. Hoan tien cho
     /// nhung ve nay la nghia vu cua chinh phong tra, tra truc tiep cho khach.
     /// </summary>
-    RefundOwedByVenue
+    RefundOwedByVenue,
+
+    /// <summary>
+    /// MLACP-339: da toi gio dien ma buoi dien van chua duoc bam Bat dau. Khong bam thi nhan vien
+    /// khong quet duoc ve o cua, khan gia khong donate duoc, va sau do khong ai danh gia duoc —
+    /// ba thu deu doi show.Status == Ongoing.
+    /// </summary>
+    ShowNotStarted
 }

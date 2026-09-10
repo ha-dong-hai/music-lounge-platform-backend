@@ -44,6 +44,13 @@ public static class ConfigKeys
     public const string SettlementPartialHoursAfterShow = "settlement_partial_hours_after_show";
     public const string SettlementFinalDaysAfterShow = "settlement_final_days_after_show";
 
+    /// <summary>
+    /// MLACP-339: qua gio bat dau bao nhieu phut thi nhac chu phong tra bam Bat dau. De ngan de
+    /// con kip cuu dem dien, nhung khong ngan qua den muc bao dong voi mot buoi dien chi bat dau
+    /// tre vai phut.
+    /// </summary>
+    public const string ShowStartReminderMinutes = "show_start_reminder_minutes";
+
     public const string TicketHoldMinutes = "ticket_hold_minutes";
 
     /// <summary>
