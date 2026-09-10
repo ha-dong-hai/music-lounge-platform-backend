@@ -42,7 +42,7 @@ internal sealed class VnPayService : IVnPayService
             ["vnp_OrderType"]  = "other",
             ["vnp_ReturnUrl"]  = request.ReturnUrl,
             ["vnp_TxnRef"]     = request.OrderId,
-            ["vnp_ExpireDate"] = now.AddMinutes(15).ToString("yyyyMMddHHmmss"),
+            ["vnp_ExpireDate"] = now.AddMinutes(VnPayPaymentWindow.Minutes).ToString("yyyyMMddHHmmss"),
         };
 
         // Request-signing side: confirmed live that VNPay's own inbound signature check accepts

@@ -1,5 +1,16 @@
 namespace MusicLounge.Application.Common.Interfaces;
 
+/// <summary>
+/// MLACP-349: link thanh toan VNPay song bao lau (vnp_ExpireDate). Mot dinh nghia duy nhat — tang
+/// Application can dung dung con so nay de biet mot giao dich online con co the duoc tra hay khong
+/// (vd. chan thu tien mat trong luc khach dang tra online), nen khong duoc de no nam cung trong
+/// VnPayService.
+/// </summary>
+public static class VnPayPaymentWindow
+{
+    public const int Minutes = 15;
+}
+
 public interface IVnPayService
 {
     string CreatePaymentUrl(VnPayPaymentRequest request);

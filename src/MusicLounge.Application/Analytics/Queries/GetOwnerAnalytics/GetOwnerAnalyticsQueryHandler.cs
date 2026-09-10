@@ -1,3 +1,4 @@
+using MusicLounge.Application.FnbOrders;
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Common.Constants;
@@ -56,8 +57,15 @@ internal sealed class GetOwnerAnalyticsQueryHandler
             .FindAsync(r => showIds.Contains(r.LoungeShowId) && !r.IsRemoved, ct);
         var ratingsByShow = ratings.ToLookup(r => r.LoungeShowId);
 
-        var fnbOrders = await _uow.Repository<FnbOrder, int>()
-            .FindAsync(o => o.LoungeId == request.LoungeId && o.Status == FnbOrderStatus.Paid, ct);
+        // MLACP-349: dem theo "da tra tien" (FnbOrderPayments), khong theo buoc cuoi cua bep — don tra
+        // truoc qua VNPay la doanh thu that tu luc IPN xac nhan.
+        var loungeFnbOrders = await _uow.Repository<FnbOrder, int>()
+            .FindAsync(o => o.LoungeId == request.LoungeId && o.Status != FnbOrderStatus.Cancelled, ct);
+        var paidFnbOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(
+            _uow, loungeFnbOrders.Select(o => o.Id).ToList(), ct);
+        var fnbOrders = loungeFnbOrders
+            .Where(o => FnbOrderPayments.IsPaid(o, paidFnbOrderIds.Contains(o.Id)))
+            .ToList();
 
         var performances = await _uow.Repository<Performance, int>()
             .FindAsync(p => showIds.Contains(p.LoungeShowId), ct);
