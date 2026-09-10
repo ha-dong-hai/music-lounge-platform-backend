@@ -110,11 +110,25 @@ public sealed class AutoEndStaleShowsTests
         show.ActualEnd.Should().BeNull();
     }
 
+    /// <summary>
+    /// MLACP-338 đảo chiều bài này. Nó từng khẳng định huỷ vé phải bị TỪ CHỐI, với lý do ghi ngay
+    /// trong assertion: <i>"refunding now would claw money back from a venue that has already been
+    /// settled"</i>.
+    ///
+    /// <para>Lý do đó đúng vào lúc nó được viết, nhưng đã không còn: MLACP-336 và MLACP-338 khiến
+    /// <c>SettlementReleaseJob</c> giữ lại cả hai tranche của một buổi diễn chưa từng được bắt đầu —
+    /// kể cả khi nó còn kẹt ở <c>Published</c> vì job tự đóng chưa chạy. Tiền chưa rời escrow, nên
+    /// không có gì để truy thu.</para>
+    ///
+    /// <para>Còn cái giá của chốt cũ thì không chấp nhận được: nó chặn đúng người đã trả tiền mà
+    /// không nhận được gì, kèm câu <i>"không thể hủy vé sau khi event đã kết thúc"</i> — khẳng định
+    /// một buổi diễn có thể chưa bao giờ bắt đầu là đã diễn ra xong.</para>
+    /// </summary>
     [Fact]
-    public async Task CancelTicket_OnOverduePublishedShow_IsRefusedEvenIfTheJobNeverRan()
+    public async Task CancelTicket_OnOverduePublishedShow_NowRefundsInFullBecauseNothingWasDelivered()
     {
-        // Second layer: this must hold without AutoEndStaleShowsJob having run at all, so the
-        // ticket is still attached to a show sitting at Published well past its scheduled end.
+        // Vẫn giữ nguyên bối cảnh gốc: AutoEndStaleShowsJob chưa hề chạy, nên vé vẫn gắn với một
+        // buổi diễn nằm ở Published quá hạn từ lâu.
         var start = DateTimeOffset.UtcNow.AddDays(-10);
         var showId = await SeedShowAsync(LoungeShowStatus.Published, start, start.AddHours(3));
 
@@ -153,8 +167,8 @@ public sealed class AutoEndStaleShowsTests
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
 
-        res.StatusCode.Should().Be(System.Net.HttpStatusCode.UnprocessableEntity,
-            "the show factually finished 10 days ago — refunding now would claw money back from a " +
-            "venue that has already been settled");
+        res.StatusCode.Should().Be(System.Net.HttpStatusCode.OK,
+            "buổi diễn chưa từng được bắt đầu nên người mua không nhận được gì — và tiền vẫn đang " +
+            "bị giữ trong escrow, nên hoàn lại không phải truy thu của ai cả");
     }
 }

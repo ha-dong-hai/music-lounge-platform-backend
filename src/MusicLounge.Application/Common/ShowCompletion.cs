@@ -78,6 +78,20 @@ public static class ShowCompletion
     }
 
     /// <summary>
+    /// Buổi diễn đã qua giờ kết thúc dự kiến mà <b>chưa từng được đánh dấu bắt đầu</b>.
+    ///
+    /// <para>Khác <see cref="Evaluate"/> ở chỗ không đòi buổi diễn phải đã được đóng: một buổi diễn
+    /// còn nằm ở <c>Published</c> quá giờ cũng là chưa giao được, và người mua không nên phải chờ
+    /// job tự đóng chạy đúng thì mới đòi lại được tiền — codebase này đã năm lần có job chết lặng lẽ
+    /// vì quên đăng ký DI.</para>
+    ///
+    /// <para>Đòi <c>now</c> vượt giờ <b>kết thúc</b> chứ không phải giờ bắt đầu: một buổi diễn bắt
+    /// đầu muộn vẫn là một buổi diễn.</para>
+    /// </summary>
+    public static bool WasNeverDelivered(LoungeShow show, DateTimeOffset now)
+        => show.ActualStart is null && now > ShowSchedule.EffectiveEnd(show);
+
+    /// <summary>
     /// Buổi diễn có chắc chắn đã không giao được thứ đã bán hay không.
     ///
     /// <para>Tách riêng khỏi <see cref="IsAcceptable"/> vì hai chốt này áp ở hai phạm vi khác nhau —
