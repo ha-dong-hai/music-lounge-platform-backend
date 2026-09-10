@@ -1,8 +1,9 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
+using MusicLounge.Application.Refunds.Commands.ConfirmCashRefundHandedBack;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Refunds.DTOs;
 using MusicLounge.Application.Refunds.Queries.GetMyRefundRequests;
@@ -147,6 +148,22 @@ public sealed class TicketsController : ControllerBase
     {
         var refundRequestId = await _sender.Send(new CancelTicketCommand(id), ct);
         return Ok(ApiResponse<int>.Ok(refundRequestId));
+    }
+
+    /// <summary>MLACP-345: nhân viên/chủ của đúng phòng trà xác nhận đã trả tiền mặt cho khách của
+    /// một yêu cầu hoàn đã được duyệt — chỉ cho vé bán tại quầy, nơi nền tảng chưa bao giờ giữ khoản
+    /// tiền đó. Người mua được báo kèm lối khiếu nại nếu chưa nhận được. Chỉ xác nhận được 1 lần
+    /// (409 nếu đã xác nhận).</summary>
+    [HttpPost("refund-requests/{id:int}/cash-handed-back")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ConfirmCashRefundHandedBack(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new ConfirmCashRefundHandedBackCommand(id), ct);
+        return NoContent();
     }
 
     /// <summary>Bán vé vật lý tại quầy (Staff/Owner của đúng venue) — thanh toán Cash, xác nhận

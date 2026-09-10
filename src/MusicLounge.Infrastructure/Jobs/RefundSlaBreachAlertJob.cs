@@ -60,6 +60,10 @@ public sealed class RefundSlaBreachAlertJob
         var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, DefaultSlaHours, ct);
         var windowDays = await _config.GetIntAsync(ConfigKeys.VnPayRefundWindowDays, DefaultWindowDays, ct);
 
+        // MLACP-345: chay TRUOC phan Pending ben duoi, vi phan do return som khi khong co yeu cau nao
+        // dang cho — ma yeu cau tien mat can nhac lai chinh la nhung yeu cau DA duoc duyet.
+        await AlertCashNotHandedBackAsync(now, slaHours, ct);
+
         // Status server-side, dates client-side — the SQLite provider used in tests cannot translate
         // an enum equality combined with a DateTimeOffset comparison (documented across this folder).
         var pending = await _ctx.RefundRequests
@@ -144,5 +148,88 @@ public sealed class RefundSlaBreachAlertJob
         }
 
         await _ctx.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// MLACP-345. Yeu cau hoan cua ve ban tai quay da duoc duyet, nhung phong tra chua xac nhan da tra
+    /// tien mat, va da qua <c>refund_sla_hours</c> tinh tu luc duyet.
+    ///
+    /// <para>Dung lai dung moc SLA cua moi yeu cau hoan chu khong dat so moi — cung mot cam ket voi
+    /// khach (72h, 3 ngay lam viec cua Dieu 31), du tien di duong nao. Nhac ca chu phong tra (nguoi
+    /// dang no) lan Admin (nguoi co the can thiep). Chong trung bang chinh dong thong bao da gui: job
+    /// nay chay dinh ky va yeu cau do van nam nguyen cho cu cho toi khi co nguoi xac nhan.</para>
+    /// </summary>
+    private async Task AlertCashNotHandedBackAsync(DateTimeOffset now, int slaHours, CancellationToken ct)
+    {
+        // Loc trang thai phia server, so thoi gian phia client — cung gioi han provider SQLite.
+        var approved = await _ctx.RefundRequests
+            .Where(r => r.Status == RefundRequestStatus.Approved && r.CashHandedBackAt == null)
+            .Select(r => new { r.Id, r.PaymentId, r.ResolvedAt, r.AmountApproved, r.AmountRequested })
+            .ToListAsync(ct);
+
+        var overdue = approved
+            .Where(r => r.ResolvedAt.HasValue && r.ResolvedAt.Value.AddHours(slaHours) <= now)
+            .ToList();
+        if (overdue.Count == 0) return;
+
+        var paymentIds = overdue.Select(r => r.PaymentId).Distinct().ToList();
+        var cashPaymentIds = (await _ctx.Payments
+                .Where(p => paymentIds.Contains(p.Id) && p.Method == PaymentMethod.Cash)
+                .Select(p => p.Id)
+                .ToListAsync(ct))
+            .ToHashSet();
+
+        var owed = overdue.Where(r => cashPaymentIds.Contains(r.PaymentId)).ToList();
+        if (owed.Count == 0) return;
+
+        var admins = await _ctx.Users
+            .Where(u => u.Role == UserRole.Admin && u.IsActive)
+            .Select(u => u.Id)
+            .ToListAsync(ct);
+
+        var notified = false;
+
+        foreach (var refund in owed)
+        {
+            var ownerId = await _ctx.Tickets
+                .Where(t => t.PaymentId == refund.PaymentId)
+                .Select(t => (int?)t.Show.Lounge.OwnerId)
+                .FirstOrDefaultAsync(ct);
+
+            var amount = refund.AmountApproved ?? refund.AmountRequested;
+
+            if (ownerId is int owner)
+                notified |= await NotifyOnceAsync(
+                    owner, NotificationType.RefundOwedByVenue, refund.Id,
+                    "Chua xac nhan tra tien mat cho khach",
+                    $"Yeu cau hoan #{refund.Id} ({amount:N0}d) da duoc duyet qua {slaHours}h ma phong tra " +
+                    "chua xac nhan da tra tien mat cho khach. Khach van dang cho.",
+                    ct);
+
+            foreach (var adminId in admins)
+                notified |= await NotifyOnceAsync(
+                    adminId, NotificationType.RefundSlaBreached, refund.Id,
+                    "Phong tra chua tra tien mat hoan cho khach",
+                    $"Yeu cau hoan #{refund.Id} ({amount:N0}d, ve ban tai quay) da duoc duyet qua " +
+                    $"{slaHours}h ma phong tra chua xac nhan da tra. Nen tang khong giu khoan nay nen " +
+                    "khong tu hoan thay duoc — can lien he phong tra.",
+                    ct);
+        }
+
+        if (notified) await _ctx.SaveChangesAsync(ct);
+    }
+
+    private async Task<bool> NotifyOnceAsync(
+        int userId, NotificationType type, int refundId, string title, string body, CancellationToken ct)
+    {
+        var already = await _ctx.Notifications.AnyAsync(
+            n => n.UserId == userId && n.Type == type
+                 && n.ReferenceType == "cash_refund" && n.ReferenceId == refundId.ToString(), ct);
+        if (already) return false;
+
+        await _notifications.NotifyAsync(
+            userId, type, title, body,
+            referenceType: "cash_refund", referenceId: refundId.ToString(), ct: ct);
+        return true;
     }
 }

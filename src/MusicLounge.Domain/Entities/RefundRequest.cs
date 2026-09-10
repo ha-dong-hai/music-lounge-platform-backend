@@ -19,6 +19,11 @@ public sealed class RefundRequest : Common.AuditableEntity<int>
     // MUA neu ra khi gui yeu cau. Nullable vi truong nay tuy chon tren API — bat buoc se lam vo
     // hop dong dang duoc dung.
     public string? ResolutionNote { get; set; }
+    // MLACP-345: moc phong tra xac nhan DA tra tien mat cho khach. Chi co nghia voi ve ban tai
+    // quay (Payment.Method = Cash): nen tang chua bao gio giu khoan do nen khong hoan thay duoc, va
+    // truoc task nay sau loi nhac RefundOwedByVenue khong ai theo doi tiep.
+    public DateTimeOffset? CashHandedBackAt { get; set; }
+
     public int? ProcessedBy { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
 
