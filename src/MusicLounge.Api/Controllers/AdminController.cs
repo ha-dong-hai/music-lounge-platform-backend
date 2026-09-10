@@ -28,6 +28,9 @@ using MusicLounge.Application.LoungeShows.Commands.RemoveRating;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.DTOs;
 using MusicLounge.Application.Moderations.Queries.GetPendingLoungeShows;
+using MusicLounge.Application.Settlements.Commands.ReviewSettlement;
+using MusicLounge.Application.Settlements.DTOs;
+using MusicLounge.Application.Settlements.Queries.GetSettlementsPendingReview;
 using MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
 using MusicLounge.Application.Refunds.DTOs;
 using MusicLounge.Application.Refunds.Queries.GetPendingRefundRequests;
@@ -303,6 +306,42 @@ public sealed class AdminController : ControllerBase
         return NoContent();
     }
 
+    // ---- Quyết toán ----
+
+    /// <summary>Các khoản quyết toán đang bị chốt D16 giữ lại chờ quyết (PendingReview), kèm đúng
+    /// bằng chứng đã giữ chúng: thời lượng dự kiến, thời lượng thật, tỉ lệ, và ngưỡng đang áp.
+    /// Trước MLACP-335 trạng thái này không có đường ra — không endpoint, không command nào cho
+    /// Settlement tồn tại, nên tiền của phòng trà nằm đó vĩnh viễn.</summary>
+    [HttpGet("settlements/pending-review")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<SettlementReviewDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSettlementsPendingReview(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetSettlementsPendingReviewQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<SettlementReviewDto>>.Ok(result));
+    }
+
+    /// <summary>Quyết 1 khoản quyết toán đang chờ. "Release": đã kiểm chứng, ghi bút toán chi trả
+    /// và giải ngân — vẫn áp đúng hai chốt của job tự động (phải có tài khoản nhận tiền, và không
+    /// còn yêu cầu hoàn tiền nào đang chờ). "Withhold": không chi tranche này, đánh dấu Cancelled.
+    /// Bắt buộc ghi lý do; lý do đi thẳng vào thông báo gửi chủ phòng trà. Chỉ quyết được 1 lần
+    /// (409 nếu đã quyết).
+    ///
+    /// LƯU Ý: quyết định này KHÔNG tự tạo hoàn tiền cho người mua vé — việc đó đi qua luồng hoàn
+    /// tiền riêng.</summary>
+    [HttpPost("settlements/{id:int}/review")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReviewSettlement(
+        int id, [FromBody] ReviewSettlementBody body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewSettlementCommand(id, body.Decision, body.Note), ct);
+        return NoContent();
+    }
+
     // ---- Đánh giá ----
 
     /// <summary>Gỡ 1 đánh giá vi phạm nội quy — không xoá cứng, chỉ đánh dấu IsRemoved kèm lý do nên
@@ -467,6 +506,8 @@ public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
 
 public sealed record ReviewVenueRequest(string Decision, string? ReviewNote);
 public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
+
+public sealed record ReviewSettlementBody(string Decision, string Note);
 public sealed record RemoveRatingRequest(string Reason);
 public sealed record UpdateSystemConfigRequest(string ConfigValue, string Note);
 public sealed record ReviewKycDocumentBody(bool Approve, string? Note);

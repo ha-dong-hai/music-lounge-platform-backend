@@ -75,6 +75,9 @@ public sealed class SettlementReleaseJob
                 .ToListAsync(ct))
             .ToHashSet();
 
+        // Nap mot lan, va chi khi thuc su co khoan bi giu — phan lon lan chay khong park cai nao.
+        List<User>? admins = null;
+
         foreach (var settlement in due)
         {
             if (paymentsAwaitingRefundDecision.Contains(settlement.PaymentId))
@@ -108,6 +111,35 @@ public sealed class SettlementReleaseJob
                 if (!completionOk)
                 {
                     settlement.Status = SettlementStatus.PendingReview;
+
+                    // MLACP-335. Truoc day cho nay chi doi trang thai roi di tiep: khong log, khong
+                    // bao ai. Ma PendingReview lai khong co duong ra — job chi lay Scheduled nen
+                    // khong bao gio ngo lai. Tien cua phong tra nam do vinh vien trong khi
+                    // GetMyEarnings van dem no vao muc sap nhan duoc.
+                    _logger.LogWarning(
+                        "Settlement parked for review — SettlementId={SettlementId} OwnerId={OwnerId} " +
+                        "PaymentId={PaymentId} SoTien={Amount}: ti le thoi luong buoi dien khong dat " +
+                        "nguong {Threshold} at {At}",
+                        settlement.Id, settlement.OwnerId, settlement.PaymentId,
+                        settlement.NetAmount, threshold, now);
+
+                    admins ??= await _ctx.Users
+                        .Where(u => u.Role == UserRole.Admin)
+                        .ToListAsync(ct);
+
+                    foreach (var admin in admins)
+                    {
+                        await _notifications.NotifyAsync(
+                            admin.Id,
+                            NotificationType.SettlementPendingReview,
+                            "Khoan quyet toan can duyet",
+                            $"Khoan {settlement.NetAmount:N0}d cua phong tra bi giu lai vi buoi dien " +
+                            "khong chay du thoi luong da ban. Can kiem chung roi quyet chi tra hay giu lai.",
+                            referenceType: "settlement",
+                            referenceId: settlement.Id.ToString(),
+                            ct: ct);
+                    }
+
                     await _ctx.SaveChangesAsync(ct);
                     continue;
                 }
@@ -161,9 +193,11 @@ public sealed class SettlementReleaseJob
     }
 
     /// <summary>
-    /// D16: actual_duration / scheduled_duration >= threshold. If the show was never marked
-    /// started/ended (no tracking mechanism wired up yet), we can't judge completion — assume
-    /// normal completion rather than blocking every final payout forever.
+    /// D16: thoi luong that / thoi luong du kien >= nguong.
+    ///
+    /// <para>Phep tinh nam o <see cref="ShowCompletion"/> chu khong phai o day: man hinh Admin phai
+    /// hien dung con so da giu khoan nay lai, va mot quy tac co hai ban sao thi som muon cung lech
+    /// (MLACP-335).</para>
     /// </summary>
     private async Task<bool> IsShowCompletionAcceptableAsync(
         int paymentId, decimal threshold, CancellationToken ct)
@@ -175,16 +209,6 @@ public sealed class SettlementReleaseJob
         if (showId is null) return true;
 
         var show = await _ctx.LoungeShows.FirstOrDefaultAsync(s => s.Id == showId, ct);
-        if (show is null || show.ActualStart is null || show.ActualEnd is null)
-            return true;
-
-        var scheduledEnd = ShowSchedule.EffectiveEnd(show);
-        var scheduledDuration = scheduledEnd - show.ScheduledStart;
-        var actualDuration = show.ActualEnd.Value - show.ActualStart.Value;
-
-        if (scheduledDuration <= TimeSpan.Zero) return true;
-
-        var ratio = (decimal)(actualDuration / scheduledDuration);
-        return ratio >= threshold;
+        return ShowCompletion.IsAcceptable(ShowCompletion.Evaluate(show), threshold);
     }
 }
