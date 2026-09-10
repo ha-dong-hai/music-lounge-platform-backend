@@ -67,7 +67,7 @@ public sealed class RefundAfterSettlementTests
             NetAmount = OwnerNet,
             Method = PaymentMethod.Gateway,
             Status = PaymentStatus.Confirmed,
-            TransactionId = "14200000",
+            TransactionId = $"RAS{Guid.NewGuid():N}"[..16],
             ReferenceType = "TicketHold",
             ReferenceId = "0",
             PaidAt = DateTimeOffset.UtcNow.AddDays(-21),

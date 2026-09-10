@@ -30,6 +30,9 @@ public sealed class RefundProcessingTests
         var payment = new Payment
         {
             OrderId = $"RF-{Guid.NewGuid():N}"[..30],
+            // Thanh toan cong da xac nhan LUON co ma giao dich — ProcessVnPayCallback ghi no
+            // ngay khi xac nhan. Fixture khong co ma la fixture khong ton tai ngoai doi.
+            TransactionId = $"RF{Guid.NewGuid():N}"[..16],
             GrossAmount = gross,
             PlatformFee = platformFee,
             TaxWithheld = tax,
