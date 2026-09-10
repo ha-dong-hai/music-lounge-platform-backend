@@ -51,6 +51,20 @@ public static class ConfigKeys
     /// </summary>
     public const string ShowStartReminderMinutes = "show_start_reminder_minutes";
 
+    /// <summary>
+    /// MLACP-341: sau khi bao chu phong tra bao nhieu gio thi bao tiep cho nguoi mua ve offline cua
+    /// mot buoi dien chua tung duoc bat dau.
+    ///
+    /// <para>Cua so nay bao ve ca hai ben. Ngan qua thi mot lan quen bam nut bien thanh mot tin xau
+    /// gui cho ca khan phong cua mot dem da dien binh thuong. Dai qua thi nguoi da tra tien ma khong
+    /// nhan duoc gi phai cho trong im lang — va do la cho lam hong uy tin nen tang.</para>
+    ///
+    /// <para>Mac dinh 24 gio: ngan hon nhieu so voi 5 ngay lam viec ma Eventbrite cho ban to chuc
+    /// tra loi, va ngan duoc vi cua tu doi tien cua nguoi mua da mo san tu MLACP-338 — ho khong bi
+    /// ket trong luc cho.</para>
+    /// </summary>
+    public const string ShowDeliveryConfirmationHours = "show_delivery_confirmation_hours";
+
     public const string TicketHoldMinutes = "ticket_hold_minutes";
 
     /// <summary>
