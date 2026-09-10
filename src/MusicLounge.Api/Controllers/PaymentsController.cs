@@ -34,9 +34,7 @@ public sealed class PaymentsController : ControllerBase
         var outcome = await _sender.Send(
             new ProcessVnPayCallbackCommand(queryParams), ct);
 
-        return VnPayIpnProtocol.IsBuyerFacingSuccess(outcome)
-            ? Redirect(_settings.PaymentSuccessUrl)
-            : Redirect(_settings.PaymentFailedUrl);
+        return Redirect(VnPayIpnProtocol.BuyerLandingUrl(outcome, _settings));
     }
 
     // Register this URL (not vnpay/callback) as the order's IPN URL in the VNPay merchant portal.
