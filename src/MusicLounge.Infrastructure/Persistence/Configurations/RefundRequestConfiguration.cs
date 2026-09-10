@@ -11,6 +11,7 @@ internal sealed class RefundRequestConfiguration : IEntityTypeConfiguration<Refu
         b.ToTable("refund_requests");
         b.HasKey(x => x.Id);
         b.Property(x => x.Reason).HasMaxLength(1000).IsRequired();
+        b.Property(x => x.ResolutionNote).HasMaxLength(500);
         b.Property(x => x.AmountRequested).HasPrecision(18, 2);
         b.Property(x => x.AmountApproved).HasPrecision(18, 2);
         b.Property(x => x.RefundPercentage).HasPrecision(5, 2);

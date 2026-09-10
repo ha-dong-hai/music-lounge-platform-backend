@@ -302,7 +302,9 @@ public sealed class AdminController : ControllerBase
         int id, [FromBody] ProcessRefundRequestBody body, CancellationToken ct = default)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-        await _sender.Send(new ProcessRefundRequestCommand(id, body.Decision, body.ApprovedAmount, ip), ct);
+        await _sender.Send(
+            new ProcessRefundRequestCommand(
+                id, body.Decision, body.ApprovedAmount, ip, body.ResolutionNote), ct);
         return NoContent();
     }
 
@@ -505,7 +507,8 @@ public sealed record UpdateEventCategoryRequest(string Name, string? Description
 public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
 
 public sealed record ReviewVenueRequest(string Decision, string? ReviewNote);
-public sealed record ProcessRefundRequestBody(string Decision, decimal? ApprovedAmount);
+public sealed record ProcessRefundRequestBody(
+    string Decision, decimal? ApprovedAmount, string? ResolutionNote = null);
 
 public sealed record ReviewSettlementBody(string Decision, string Note);
 public sealed record RemoveRatingRequest(string Reason);

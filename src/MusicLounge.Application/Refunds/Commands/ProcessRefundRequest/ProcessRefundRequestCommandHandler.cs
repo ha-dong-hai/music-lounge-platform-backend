@@ -60,6 +60,9 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
 
         refund.ProcessedBy = _currentUser.UserId;
         refund.ResolvedAt = DateTimeOffset.UtcNow;
+        refund.ResolutionNote = string.IsNullOrWhiteSpace(request.ResolutionNote)
+            ? null
+            : request.ResolutionNote.Trim();
 
         if (request.Decision == "Rejected")
         {
@@ -69,11 +72,17 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             // MLACP-337. Truoc day handler nay khong bao cho ai ca — nguoi mua gui yeu cau roi
             // phai tu di hoi. Dieu 31 Luat BVQLNTD 2023 noi dung ve nghia vu thong bao cho nguoi
             // tieu dung ket qua xu ly khieu nai.
+            // MLACP-342. Truong ly do la TUY CHON tren API — bat buoc se lam vo hop dong dang
+            // duoc dung. Nen khi khong co ly do, thong bao van phai huu ich: chi cho nguoi mua
+            // duong khieu nai de duoc xem lai, thay vi bo ho lai voi mot chu "bi tu choi".
             await NotifyBuyerAsync(
                 refund,
                 "Yeu cau hoan tien khong duoc chap nhan",
-                "Yeu cau hoan tien cua ban da duoc xem xet va khong duoc chap nhan. Neu ban khong " +
-                "dong y, hay gui khieu nai de duoc xem xet lai.",
+                refund.ResolutionNote is { } why
+                    ? $"Yeu cau hoan tien cua ban khong duoc chap nhan. Ly do: {why}. Neu ban khong " +
+                      "dong y, hay gui khieu nai de duoc xem xet lai."
+                    : "Yeu cau hoan tien cua ban da duoc xem xet va khong duoc chap nhan. Neu ban " +
+                      "khong dong y, hay gui khieu nai de duoc xem xet lai.",
                 ct);
 
             await _uow.SaveChangesAsync(ct);

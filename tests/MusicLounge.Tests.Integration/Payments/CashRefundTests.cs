@@ -96,10 +96,11 @@ public sealed class CashRefundTests
         return (payment.Id, refund.Id);
     }
 
-    private Task<HttpResponseMessage> ProcessAsync(int refundId, string decision, decimal? amount)
+    private Task<HttpResponseMessage> ProcessAsync(
+        int refundId, string decision, decimal? amount, string? note = null)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
             .PostAsJsonAsync($"/api/v1/admin/refund-requests/{refundId}/process",
-                new { Decision = decision, ApprovedAmount = amount });
+                new { Decision = decision, ApprovedAmount = amount, ResolutionNote = note });
 
     private async Task<T> QueryAsync<T>(Func<ApplicationDbContext, Task<T>> read)
     {
@@ -201,6 +202,52 @@ public sealed class CashRefundTests
             && n.ReferenceId == refundId.ToString()));
 
         told.Should().BeTrue("gửi yêu cầu rồi phải tự đi hỏi kết quả là không chấp nhận được");
+    }
+
+    /// <summary>
+    /// MLACP-342. Truoc do thong bao tu choi chi noi duoc "khong duoc chap nhan" ma khong noi vi
+    /// sao — `RefundRequest.Reason` la ly do NGUOI MUA neu ra khi gui yeu cau, khong phai quyet dinh
+    /// cua Admin, va khong co truong nao luu quyet dinh do.
+    /// </summary>
+    [Fact]
+    public async Task LyDoTuChoiPhaiToiDuocNguoiMua()
+    {
+        var (_, refundId) = await PurchaseWithRefundRequestAsync(PaymentMethod.Cash);
+
+        await ProcessAsync(refundId, "Rejected", null, note: "Ve da duoc check-in tai cua");
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        (await db.RefundRequests.FindAsync(refundId))!.ResolutionNote
+            .Should().Be("Ve da duoc check-in tai cua", "ho so doi soat phai giu duoc quyet dinh");
+
+        var note = await db.Notifications.FirstAsync(n =>
+            n.UserId == SeedHelper.AudienceId
+            && n.Type == NotificationType.RefundUpdate
+            && n.ReferenceId == refundId.ToString());
+
+        note.Body.Should().Contain("Ve da duoc check-in tai cua");
+    }
+
+    [Fact]
+    public async Task KhongCoLyDoThiThongBaoVanPhaiChiDuongDiTiep()
+    {
+        // Truong ly do co y de TUY CHON — bat buoc se lam vo hop dong API dang duoc dung. Nen khi
+        // khong co ly do, thong bao van phai huu ich chu khong bo nguoi mua lai voi mot chu
+        // "bi tu choi".
+        var (_, refundId) = await PurchaseWithRefundRequestAsync(PaymentMethod.Cash);
+
+        await ProcessAsync(refundId, "Rejected", null);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var note = await db.Notifications.FirstAsync(n =>
+            n.UserId == SeedHelper.AudienceId
+            && n.Type == NotificationType.RefundUpdate
+            && n.ReferenceId == refundId.ToString());
+
+        note.Body.Should().Contain("khieu nai", "phai chi cho ho duong de duoc xem xet lai");
     }
 
     [Fact]

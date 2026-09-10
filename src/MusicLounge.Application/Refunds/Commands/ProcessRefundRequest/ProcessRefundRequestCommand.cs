@@ -6,5 +6,6 @@ public sealed record ProcessRefundRequestCommand(
     int RefundRequestId,
     string Decision,           // "Approved" | "Rejected"
     decimal? ApprovedAmount,   // null on Approved => defaults to AmountRequested
-    string ClientIpAddress     // VNPay refund API requires the initiating server's IP
+    string ClientIpAddress,    // VNPay refund API requires the initiating server's IP
+    string? ResolutionNote = null   // MLACP-342: ly do cua Admin, tuy chon
 ) : ICommand;
