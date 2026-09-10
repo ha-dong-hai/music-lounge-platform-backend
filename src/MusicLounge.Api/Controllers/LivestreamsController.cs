@@ -30,10 +30,11 @@ public sealed class LivestreamsController : ControllerBase
 
     /// <summary>Chi tiết livestream + kiểm soát quyền xem PPV: Admin và Owner/Staff của đúng venue
     /// luôn xem được (giám sát stream); stream miễn phí (IsFree) cho mọi khán giả đã đăng nhập xem
-    /// mà không cần vé; stream PPV chỉ trả `HlsUrl` cho người có vé Livestream-tier Confirmed cho
-    /// đúng show này (`UserHasAccess=false`, `HlsUrl=null` nếu không có vé — không lộ URL phát).
-    /// Access token của vé PPV lấy qua GET /tickets/{id} (LivestreamDetail.AccessToken), không lặp
-    /// lại ở đây.</summary>
+    /// mà không cần vé; stream PPV chỉ trả `HlsUrl` cho người có vé Livestream-tier Confirmed hoặc
+    /// Used (đã từng vào xem) cho đúng show này (`UserHasAccess=false`, `HlsUrl=null` nếu không có vé
+    /// — không lộ URL phát). Quyền xem dựa trên tài khoản đăng nhập và vé, KHÔNG dựa trên
+    /// `LivestreamDetail.AccessToken` (GET /tickets/{id}) — trường đó hiện chỉ được sinh ra và trả
+    /// về, chưa có chỗ nào dùng nó để kiểm quyền (MLACP-356).</summary>
     [HttpGet("{id:int}")]
     [Authorize(Policy = Policies.RequireAuthenticated)]
     [ProducesResponseType<ApiResponse<LivestreamDetailDto>>(StatusCodes.Status200OK)]

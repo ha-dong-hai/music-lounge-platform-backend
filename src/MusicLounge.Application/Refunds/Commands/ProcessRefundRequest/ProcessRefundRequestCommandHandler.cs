@@ -230,13 +230,19 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // from an account that no longer holds it and leaves the owner keeping money for a refunded
         // ticket, with only GetLedgerIntegrity noticing afterwards.
         //
-        // This was previously assumed unreachable, on the grounds that a refund could only be raised
-        // before the show started while the first tranche fires at showEnd+48h. That assumption does
-        // not hold: CancellationDeadlineHours is optional (MLACP-257), and CancelTicket's only hard
-        // stop is show.Status == Ended — but nothing ever ends a show automatically. An offline show
-        // whose Owner never pressed "End" stays Published forever, so both tranches release (Final30
-        // included: its completion check returns true precisely because ActualStart/ActualEnd are
-        // null) and a ticket stays cancellable weeks afterwards.
+        // This was once assumed unreachable, on the grounds that a refund could only be raised before
+        // the show started while the first tranche fires at showEnd+48h. It is reachable, because some
+        // refunds are RAISED after a tranche has already been released (a refund that is merely still
+        // Pending is safe: SettlementReleaseJob defers any payment with a pending refund):
+        //   - ResolveComplaint's Refund action, when the complaint is resolved after the show;
+        //   - MLACP-347: RefundUndeliveredLivestreamTicketsJob, which looks back 14 days and so can
+        //     refund a cut-short livestream after the first tranche went out (e.g. the job was down,
+        //     or the completion threshold was changed afterwards).
+        //
+        // MLACP-356: this comment used to describe a different route — "nothing ever ends a show
+        // automatically", so an offline show stayed Published forever and stayed cancellable weeks
+        // later. That route is closed: AutoEndStaleShowsJob ends stale shows, and CancelTicket blocks
+        // by time as well as by status (MLACP-338).
         var releasedToOwner = (await _uow.Repository<Settlement, int>().FindAsync(
                 s => s.PaymentId == payment.Id && s.Status == SettlementStatus.Released, ct))
             .Sum(s => s.NetAmount);
