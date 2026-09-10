@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -9,7 +9,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Donations.Commands.ProcessDonationPayment;
 
 internal sealed class ProcessDonationPaymentCommandHandler
-    : IRequestHandler<ProcessDonationPaymentCommand, bool>
+    : IRequestHandler<ProcessDonationPaymentCommand, VnPayIpnOutcome>
 {
     private readonly IUnitOfWork _uow;
     private readonly IVnPayService _vnPay;
@@ -35,7 +35,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
         _logger = logger;
     }
 
-    public async Task<bool> Handle(ProcessDonationPaymentCommand request, CancellationToken ct)
+    public async Task<VnPayIpnOutcome> Handle(ProcessDonationPaymentCommand request, CancellationToken ct)
     {
         var callbackResult = _vnPay.VerifyCallback(request.QueryParams);
 
@@ -45,7 +45,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
             request.QueryParams.TryGetValue("vnp_TxnRef", out var rejectedTxnRef);
             _logger.LogWarning(
                 "VNPay donation callback rejected: invalid signature. TxnRef={TxnRef}", rejectedTxnRef);
-            return false;
+            return VnPayIpnOutcome.InvalidSignature;
         }
 
         request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRef);
@@ -61,12 +61,24 @@ internal sealed class ProcessDonationPaymentCommandHandler
             .FindAsync(d => d.GatewayRef == txnRef, ct);
 
         var donation = donations.FirstOrDefault();
-        if (donation is null) return false;
+        if (donation is null) return VnPayIpnOutcome.OrderNotFound;
 
         // Idempotency: only process if still in initial state.
         // A duplicate callback arriving after Owner already acknowledged would wrongly cancel.
         if (donation.Status != DonationStatus.PendingPayment)
-            return donation.Status != DonationStatus.Cancelled;
+        {
+            // MLACP-334. Truoc day ca hai tinh huong duoi day gop chung mot ket qua, nen cai thu
+            // hai - tien that da thu - bien mat khong dau vet.
+            if (callbackResult.IsSuccess && donation.Status == DonationStatus.Cancelled)
+            {
+                await PaymentIncident.RecordConfirmedTooLateAsync(
+                    _uow, _notifications, _logger, "donate", txnRef, callbackResult.Amount,
+                    "donation", donation.Id.ToString(), ct);
+                return VnPayIpnOutcome.ConfirmedTooLate;
+            }
+
+            return VnPayIpnOutcome.AlreadyProcessed;
+        }
 
         // Signature only proves the callback came from VNPay, not that it's for the amount WE
         // expect — a same-day forged/replayed txnRef with a different vnp_Amount would otherwise
@@ -76,7 +88,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
             _logger.LogWarning(
                 "VNPay donation callback amount mismatch: DonationId={DonationId} Expected={Expected} Actual={Actual}",
                 donation.Id, donation.Gross, callbackResult.Amount);
-            return false;
+            return VnPayIpnOutcome.AmountMismatch;
         }
 
         if (callbackResult.IsSuccess)
@@ -177,6 +189,6 @@ internal sealed class ProcessDonationPaymentCommandHandler
 
         await _uow.SaveChangesAsync(ct);
 
-        return callbackResult.IsSuccess;
+        return callbackResult.IsSuccess ? VnPayIpnOutcome.Confirmed : VnPayIpnOutcome.RecordedAsFailed;
     }
 }

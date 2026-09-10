@@ -36,5 +36,11 @@ public enum NotificationType
     PenaltyExpired,
     // Ket qua duyet ho so phong tra. Owner khong co duong nao khac de biet: ho nop giay phep kinh
     // doanh len roi cho, va truoc MLACP-307 thi cho mai mai vi khong ai duyet duoc.
-    VenueReviewResult
+    VenueReviewResult,
+
+    /// <summary>
+    /// MLACP-334: VNPay bao thanh cong cho mot ban ghi da bi dong (Failed/Cancelled) — tien that da
+    /// thu ma he thong khong cap duoc gi. Can nguoi doi soat roi cap lai hoac hoan tien.
+    /// </summary>
+    PaymentConfirmedAfterExpiry
 }

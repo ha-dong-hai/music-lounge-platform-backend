@@ -1,6 +1,7 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Tickets.Commands.ProcessVnPayCallback;
 
 public sealed record ProcessVnPayCallbackCommand(
-    IDictionary<string, string> QueryParams) : ICommand<bool>;
+    IDictionary<string, string> QueryParams) : ICommand<VnPayIpnOutcome>;

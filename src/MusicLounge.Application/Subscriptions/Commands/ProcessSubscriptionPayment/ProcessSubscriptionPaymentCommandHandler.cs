@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -7,7 +8,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Subscriptions.Commands.ProcessSubscriptionPayment;
 
 internal sealed class ProcessSubscriptionPaymentCommandHandler
-    : IRequestHandler<ProcessSubscriptionPaymentCommand, bool>
+    : IRequestHandler<ProcessSubscriptionPaymentCommand, VnPayIpnOutcome>
 {
     private readonly IUnitOfWork _uow;
     private readonly IVnPayService _vnPay;
@@ -28,7 +29,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         _logger = logger;
     }
 
-    public async Task<bool> Handle(ProcessSubscriptionPaymentCommand request, CancellationToken ct)
+    public async Task<VnPayIpnOutcome> Handle(ProcessSubscriptionPaymentCommand request, CancellationToken ct)
     {
         var result = _vnPay.VerifyCallback(request.QueryParams);
         request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRef);
@@ -38,7 +39,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             _logger.LogWarning(
                 "VNPay subscription callback rejected — invalid signature: TxnRef={TxnRef} at {At}",
                 txnRef, DateTimeOffset.UtcNow);
-            return false;
+            return VnPayIpnOutcome.InvalidSignature;
         }
 
         var paymentRepo = _uow.Repository<Payment, int>();
@@ -50,7 +51,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             _logger.LogWarning(
                 "VNPay subscription callback rejected — no Payment found for TxnRef={TxnRef} at {At}",
                 txnRef, DateTimeOffset.UtcNow);
-            return false;
+            return VnPayIpnOutcome.OrderNotFound;
         }
 
         // Lock by OWNER, not by txnRef. A txnRef-keyed lock only serializes two callbacks for the
@@ -66,15 +67,24 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         // Re-fetch inside the lock — paymentLookup may already be stale by the time the lock was
         // granted (e.g. a prior holder for this owner just confirmed a different payment).
         var payment = await paymentRepo.GetByIdAsync(paymentLookup.Id, ct);
-        if (payment is null) return false;
+        if (payment is null) return VnPayIpnOutcome.OrderNotFound;
 
         // Idempotency: VNPay co the goi callback nhieu lan.
         if (payment.Status != PaymentStatus.Pending)
         {
+            // MLACP-334. Xem chu thich cung ten o duong ve.
+            if (result.IsSuccess && payment.Status != PaymentStatus.Confirmed)
+            {
+                await PaymentIncident.RecordConfirmedTooLateAsync(
+                    _uow, _notifications, _logger, "goi dang ky", txnRef, result.Amount,
+                    "payment", payment.Id.ToString(), ct);
+                return VnPayIpnOutcome.ConfirmedTooLate;
+            }
+
             _logger.LogInformation(
                 "VNPay subscription callback replay — PaymentId={PaymentId} TxnRef={TxnRef} already {Status} at {At}",
                 payment.Id, txnRef, payment.Status, DateTimeOffset.UtcNow);
-            return payment.Status == PaymentStatus.Confirmed;
+            return VnPayIpnOutcome.AlreadyProcessed;
         }
 
         // Signature only proves VNPay sent this callback, not that it's for the amount we asked
@@ -84,7 +94,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             _logger.LogWarning(
                 "VNPay subscription callback rejected — amount mismatch: PaymentId={PaymentId} TxnRef={TxnRef} Expected={Expected} Received={Received} at {At}",
                 payment.Id, txnRef, payment.GrossAmount, result.Amount, DateTimeOffset.UtcNow);
-            return false;
+            return VnPayIpnOutcome.AmountMismatch;
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -96,12 +106,12 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             payment.UpdatedAt = now;
             paymentRepo.Update(payment);
             await _uow.SaveChangesAsync(ct);
-            return false;
+            return VnPayIpnOutcome.RecordedAsFailed;
         }
 
         var package = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(
             int.Parse(payment.ReferenceId), ct);
-        if (package is null || payment.PayerId is null) return false;
+        if (package is null || payment.PayerId is null) return VnPayIpnOutcome.InternalError;
 
         var ownerId = payment.PayerId.Value;
 
@@ -166,7 +176,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                 referenceType: "payment", referenceId: payment.Id.ToString(), ct: ct);
             await _uow.SaveChangesAsync(ct);
 
-            return true;
+            return VnPayIpnOutcome.Confirmed;
         }
 
         var expiresAt = package.BillingCycle switch
@@ -217,6 +227,6 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             }, ct);
 
         await _uow.SaveChangesAsync(ct);
-        return true;
+        return VnPayIpnOutcome.Confirmed;
     }
 }
