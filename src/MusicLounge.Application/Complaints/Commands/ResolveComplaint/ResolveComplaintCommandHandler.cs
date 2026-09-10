@@ -257,15 +257,18 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 "vé của ai để hoàn. Hãy liên hệ người khiếu nại theo số điện thoại đã cung cấp.");
 
         var ticketRepo = _uow.Repository<Ticket, Guid>();
+        // MLACP-347: ca ve Used. Nguoi bi thiet dien hinh la nguoi DA vao xem roi moi thay buoi dien
+        // khong nhu da ban — chi nhan Confirmed thi Admin quyet hoan cho ho va he thong tra loi
+        // "khong co ve nao", mot loi thoat khong dan toi dau.
         var tickets = await ticketRepo.FindAsync(
             t => t.ShowId == complaint.TargetId
                  && t.BuyerId == complainantId
-                 && t.Status == TicketStatus.Confirmed, ct);
+                 && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
 
         var refundable = tickets.Where(t => t.PaymentId is not null).ToList();
         if (refundable.Count == 0)
             throw new DomainException(
-                "Người khiếu nại không có vé nào đã xác nhận (và có giao dịch thanh toán) cho show này, " +
+                "Người khiếu nại không có vé nào còn hiệu lực (và có giao dịch thanh toán) cho show này, " +
                 "nên không có gì để hoàn.");
 
         var refundRepo = _uow.Repository<RefundRequest, int>();
@@ -283,7 +286,11 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 r => r.PaymentId == ticket.PaymentId!.Value && r.Status == RefundRequestStatus.Pending, ct);
             if (alreadyPending) continue;
 
-            ticket.Status = TicketStatus.Cancelled;
+            // Ve da dung thi sang Refunded chu khong phai Cancelled: nguoi da xem van giu quyen danh
+            // gia (xem TicketStatus.Refunded).
+            ticket.Status = ticket.Status == TicketStatus.Used
+                ? TicketStatus.Refunded
+                : TicketStatus.Cancelled;
             ticketRepo.Update(ticket);
 
             refundRepo.Add(new RefundRequest

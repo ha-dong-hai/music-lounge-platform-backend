@@ -78,5 +78,8 @@ public enum NotificationType
     /// KHONG ket luan duoc la co dien ra hay khong. Gui cho chu phong tra truoc, roi cho nguoi mua
     /// sau mot cua so — de mot lan quen bam nut khong bien thanh mot tin xau gui cho ca khan phong.
     /// </summary>
-    ShowDeliveryUnconfirmed
+    ShowDeliveryUnconfirmed,
+    // MLACP-347: livestream da len song roi bi cat ngang (mat ket noi qua han, bi go, hoac ket
+    // thuc som) - bao nguoi mua ve livestream va chu phong tra.
+    LivestreamCutShort
 }

@@ -31,7 +31,8 @@ public sealed class ComplaintRefundActionTests
     public ComplaintRefundActionTests(ApiFactory factory) => _factory = factory;
 
     private async Task<(int ComplaintId, int ShowId, int PaymentId)> SeedShowComplaintWithTicketAsync(
-        int? complainantId = SeedHelper.AudienceId)
+        int? complainantId = SeedHelper.AudienceId,
+        TicketStatus ticketStatus = TicketStatus.Confirmed)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -69,7 +70,7 @@ public sealed class ComplaintRefundActionTests
             TierId = SeedHelper.TicketTierId,
             ShowId = show.Id,
             PaymentId = payment.Id,
-            Status = TicketStatus.Confirmed,
+            Status = ticketStatus,
             PurchaseChannel = PurchaseChannel.Online,
             CreatedAt = DateTimeOffset.UtcNow.AddDays(-1)
         });
@@ -117,6 +118,32 @@ public sealed class ComplaintRefundActionTests
         show.Status.Should().Be(LoungeShowStatus.Published,
             "Refund compensates one complainant — cancelling the show for everyone is what " +
             "TakeDownContent is for");
+    }
+
+    /// <summary>
+    /// MLACP-347. Người bị thiệt điển hình là người ĐÃ vào xem rồi mới thấy buổi diễn không như đã
+    /// bán. Chỉ nhận vé Confirmed thì Admin quyết hoàn cho họ và hệ thống trả lời "không có vé nào".
+    /// </summary>
+    [Fact]
+    public async Task ResolveWithRefund_ForComplainantWhoAttended_RefundsAndKeepsTheirRightToRate()
+    {
+        var (complaintId, _, paymentId) =
+            await SeedShowComplaintWithTicketAsync(ticketStatus: TicketStatus.Used);
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/complaints/{complaintId}/resolve",
+            new { Status = "Resolved", ResolvedAction = "Refund", Resolution = "Chấp nhận khiếu nại" });
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        (await db.RefundRequests.CountAsync(r => r.PaymentId == paymentId)).Should().Be(1);
+
+        var ticket = await db.Tickets.SingleAsync(t => t.PaymentId == paymentId);
+        ticket.Status.Should().Be(TicketStatus.Refunded,
+            "vé đã dùng rồi mới được hoàn — Cancelled sẽ tước quyền đánh giá của người đã chứng kiến");
     }
 
     [Fact]
