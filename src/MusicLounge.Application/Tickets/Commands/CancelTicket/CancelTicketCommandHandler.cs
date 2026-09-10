@@ -67,7 +67,18 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(ticket.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), ticket.ShowId);
 
-        if (!show.CancellationAllowed)
+        // MLACP-338. Day khong phai "huy ve" — day la "khong giao duoc hang", va hai chuyen do khac
+        // nhau ve ban chat. Dieu 36 Luat BVQLNTD 2023 xep viec cung cap dich vu khong dung noi dung
+        // da cong bo vao nhom phai khac phuc, trong do co cham dut va hoan tien. Eventbrite cung
+        // tach ro: su kien khong dien ra thi phai hoan BAT KE chinh sach cua ban to chuc.
+        //
+        // Chinh codebase nay da theo dung nguyen tac do o cho khac: moi duong hoan tien do nen tang
+        // ep (huy show, doi dinh dang, giai quyet khieu nai, go noi dung) deu hardcode 100% va khong
+        // doc RefundPercentage cua venue. Nen chinh sach huy ve cua phong tra khong duoc ap khi
+        // chinh phong tra khong giao duoc thu da ban — ca ba chot duoi day deu phai nhuong.
+        var neverDelivered = ShowCompletion.WasNeverDelivered(show, DateTimeOffset.UtcNow);
+
+        if (!neverDelivered && !show.CancellationAllowed)
             throw new DomainException("Event này không cho phép hủy vé.");
 
         // MLACP-257: CancellationDeadlineHours la optional — neu Owner khong dat, khong co gi khac
@@ -93,10 +104,13 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         var scheduledEnd = ShowSchedule.EffectiveEnd(show);
         var neverStartedButOverdue =
             show.Status == LoungeShowStatus.Published && DateTimeOffset.UtcNow > scheduledEnd;
-        if (show.Status == LoungeShowStatus.Ended || neverStartedButOverdue)
+        // MLACP-338: chi chan khi buoi dien THAT SU da duoc cung cap. Chu thich o tren noi "dich vu
+        // da duoc cung cap xong, khong con co so de hoan tien" — dung voi mot buoi dien da chay,
+        // sai voi mot buoi dien toi Ended qua AutoEndStaleShowsJob ma chua tung bat dau.
+        if (!neverDelivered && (show.Status == LoungeShowStatus.Ended || neverStartedButOverdue))
             throw new DomainException("Không thể hủy vé sau khi event đã kết thúc.");
 
-        if (show.CancellationDeadlineHours.HasValue &&
+        if (!neverDelivered && show.CancellationDeadlineHours.HasValue &&
             DateTimeOffset.UtcNow > show.ScheduledStart.AddHours(-show.CancellationDeadlineHours.Value))
             throw new DomainException(
                 $"Đã quá hạn hủy vé — event yêu cầu hủy trước {show.CancellationDeadlineHours.Value} giờ so với giờ diễn. Vui lòng liên hệ phòng trà nếu cần hỗ trợ thêm.");
@@ -112,12 +126,19 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
 
         // Same resolver GetLoungeShowDetail uses to advertise the policy on the show page, so the
         // percentage a buyer was shown before paying is by construction the percentage they get.
-        var refundPercentage = TicketRefundPolicy.Resolve(show).RefundPercentage;
+        //
+        // MLACP-338: tru khi buoi dien chua tung duoc cung cap — luc do khong con la chuyen chinh
+        // sach nua, va 100% o day khop dung voi moi duong hoan tien do nen tang ep khac.
+        var refundPercentage = neverDelivered
+            ? 100m
+            : TicketRefundPolicy.Resolve(show).RefundPercentage;
         var refundRequest = new RefundRequest
         {
             PaymentId = ticket.PaymentId.Value,
             RequestedBy = _currentUser.UserId,
-            Reason = "Audience yêu cầu hủy vé",
+            Reason = neverDelivered
+                ? "Buổi diễn không được tổ chức — hoàn 100%"
+                : "Audience yêu cầu hủy vé",
             AmountRequested = Math.Round(price.Price * refundPercentage / 100m, 2),
             RefundPercentage = refundPercentage,
             Status = RefundRequestStatus.Pending

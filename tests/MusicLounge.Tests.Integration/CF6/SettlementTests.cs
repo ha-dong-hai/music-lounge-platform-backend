@@ -101,7 +101,15 @@ public sealed class SettlementTests
                 Format = LoungeShowFormat.Offline,
                 Status = LoungeShowStatus.Ended,
                 ScheduledStart = DateTimeOffset.UtcNow.AddDays(-5),
-                ScheduledEnd = DateTimeOffset.UtcNow.AddDays(-5).AddHours(3)
+                ScheduledEnd = DateTimeOffset.UtcNow.AddDays(-5).AddHours(3),
+                // MLACP-338: mot buoi dien da chay that LUON co hai moc nay — EndLoungeShow doi
+                // trang thai Ongoing (chi den tu StartLoungeShow, noi ghi ActualStart), con
+                // TryMarkEnded luon ghi ActualEnd. Ended ma ca hai moc deu null la trang thai
+                // production khong tao ra duoc, va tu MLACP-338 no bi doc dung nhu no la: buoi dien
+                // chua tung duoc bat dau. Bai nay kiem viec ghi co dung mot lan, khong phai kiem
+                // chot hoan thanh — nen fixture phai ta dung mot buoi dien binh thuong.
+                ActualStart = DateTimeOffset.UtcNow.AddDays(-5),
+                ActualEnd = DateTimeOffset.UtcNow.AddDays(-5).AddHours(3)
             };
             db.LoungeShows.Add(show);
             await db.SaveChangesAsync();

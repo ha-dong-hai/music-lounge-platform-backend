@@ -45,7 +45,8 @@ public sealed class ShowNeverStartedPayoutTests
     private async Task<int> DueSettlementAsync(
         SettlementReleaseType releaseType,
         DateTimeOffset? actualStart,
-        DateTimeOffset? actualEnd)
+        DateTimeOffset? actualEnd,
+        LoungeShowStatus status = LoungeShowStatus.Ended)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -56,7 +57,7 @@ public sealed class ShowNeverStartedPayoutTests
         {
             LoungeId = SeedHelper.LoungeId,
             Name = $"Show {Guid.NewGuid():N}"[..18],
-            Status = LoungeShowStatus.Ended,
+            Status = status,
             ScheduledStart = scheduledStart,
             ScheduledEnd = scheduledStart.AddHours(2),
             ActualStart = actualStart,
@@ -183,6 +184,30 @@ public sealed class ShowNeverStartedPayoutTests
             "phân biệt được, vì một cái kéo theo hoàn tiền cho khách còn cái kia thì không");
     }
 
+    [Fact]
+    public async Task BuoiDienKetOPublishedQuaGioCungPhaiBiGiuLai()
+    {
+        // MLACP-338. Chốt cũ dùng ShowCompletion.Evaluate, vốn đòi buổi diễn đã được ĐÓNG lại
+        // (ActualEnd có giá trị). Một buổi diễn kẹt ở Published vì AutoEndStaleShowsJob chưa chạy
+        // sẽ rơi vào "không kết luận được" và giải ngân bình thường — phòng trà được trả tiền cho
+        // một buổi diễn chưa từng bắt đầu.
+        //
+        // Đây cũng chính là thứ khiến cửa hoàn tiền của người mua không thể mở an toàn: nếu tiền đã
+        // ra khỏi escrow thì hoàn tiền phải truy thu từ tài khoản chủ phòng trà. Hai chốt phải phủ
+        // đúng cùng một tập hợp.
+        var settlementId = await DueSettlementAsync(
+            SettlementReleaseType.Final30,
+            actualStart: null,
+            actualEnd: null,
+            status: LoungeShowStatus.Published);
+
+        await RunJobAsync();
+
+        (await StatusAsync(settlementId)).Should().Be(SettlementStatus.PendingReview,
+            "job tự đóng chưa chạy không có nghĩa là buổi diễn đã diễn ra — codebase này đã năm lần " +
+            "có job chết lặng lẽ vì quên đăng ký DI");
+    }
+
     // ── Buổi diễn chạy bình thường vẫn phải được trả tiền ───────────────────
 
     [Fact]
@@ -202,12 +227,59 @@ public sealed class ShowNeverStartedPayoutTests
     }
 
     [Fact]
-    public async Task ChuaDongThiVANLaKhongKetLuanDuocVaVanDuocGiaiNgan()
+    public async Task KhongXacDinhDuocBuoiDienThiVanPhaiGiaiNgan()
     {
-        // Cặp (null, null) là thiếu bằng chứng thật sự — hành vi cũ giữ nguyên. Chặn mọi khoản chi
-        // chỉ vì thiếu dữ liệu sẽ giam tiền của tất cả mọi người.
-        var settlementId = await DueSettlementAsync(
-            SettlementReleaseType.Final30, actualStart: null, actualEnd: null);
+        // MLACP-338 làm quy tắc sắc hơn bài này lúc đầu: cặp (null, null) từng được coi là "thiếu
+        // bằng chứng" và vẫn giải ngân. Nhưng một tranche chỉ ĐẾN HẠN ở giờ-kết-thúc cộng 48 tiếng,
+        // nên nếu nó đến hạn mà buổi diễn chưa từng được bắt đầu thì đó là bằng chứng, không phải
+        // thiếu bằng chứng — dù buổi diễn có được đóng lại hay không.
+        //
+        // Phần còn đúng của nguyên tắc cũ nằm ở đây: khi thật sự không xác định được buổi diễn nào
+        // đứng sau giao dịch, vẫn phải giải ngân. Chặn mọi khoản chi chỉ vì thiếu dữ liệu sẽ giam
+        // tiền của tất cả những phòng trà làm ăn tử tế.
+        int settlementId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            // Thanh toán không gắn với vé nào — không lần ra được buổi diễn.
+            var payment = new Payment
+            {
+                OrderId = $"MLACP338N-{Guid.NewGuid():N}"[..30],
+                PayerId = SeedHelper.AudienceId,
+                GrossAmount = 1_000_000m,
+                NetAmount = 880_000m,
+                Status = PaymentStatus.Confirmed,
+                ReferenceType = "TicketHold",
+                ReferenceId = "0",
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            db.Add(payment);
+            await db.SaveChangesAsync();
+
+            var payoutAccountId = await db.Set<BankAccount>()
+                .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
+                .Select(a => (int?)a.Id)
+                .FirstAsync();
+
+            var settlement = new Settlement
+            {
+                OwnerId = SeedHelper.OwnerId,
+                PaymentId = payment.Id,
+                BankAccountId = payoutAccountId,
+                ReleaseType = SettlementReleaseType.Final30,
+                GrossAmount = 1_000_000m,
+                PreRateApplied = 0.70m,
+                PostRateApplied = 0.30m,
+                NetAmount = 264_000m,
+                Status = SettlementStatus.Scheduled,
+                ScheduledAt = DateTimeOffset.UtcNow.AddDays(-1),
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            db.Add(settlement);
+            await db.SaveChangesAsync();
+            settlementId = settlement.Id;
+        }
 
         await RunJobAsync();
 

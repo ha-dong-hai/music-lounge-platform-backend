@@ -105,7 +105,8 @@ public sealed class SettlementReleaseJob
                 continue;
             }
 
-            var evidence = await ShowCompletionForAsync(settlement.PaymentId, ct);
+            var show = await ShowForPaymentAsync(settlement.PaymentId, ct);
+            var evidence = ShowCompletion.Evaluate(show);
 
             // MLACP-336. Hai chot, hai pham vi khac nhau — co y khong gop lam mot:
             //
@@ -115,7 +116,15 @@ public sealed class SettlementReleaseJob
             //   - "Ti le duoi nguong" nghia la co dien ra nhung ngan hon du kien. Day la mot phan
             //     xet co the tranh cai (su co ky thuat, nghe si om, khan gia ve som), nen giu dung
             //     thiet ke D3: tra nhanh 70%, giu 30% lai cho ky ra soat.
-            var undelivered = ShowCompletion.IsDefinitelyUndelivered(evidence);
+            // MLACP-338: dung WasNeverDelivered chu khong phai IsDefinitelyUndelivered. Cai sau doi
+            // buoi dien da duoc DONG lai (ActualEnd co gia tri), nen mot buoi dien ket o Published
+            // vi job tu dong chua chay se roi vao "khong ket luan duoc" va van giai ngan binh thuong
+            // — phong tra duoc tra tien cho mot buoi dien chua tung bat dau.
+            //
+            // Dieu do cung la thu khien cua hoan tien cua nguoi mua khong the mo an toan: neu tien
+            // da ra khoi escrow thi hoan tien phai truy thu tu tai khoan chu phong tra. Hai chot
+            // phai phu dung cung mot tap hop, neu khong thi mo mot ben lai lam hong ben kia.
+            var undelivered = show is not null && ShowCompletion.WasNeverDelivered(show, now);
             var ratioFailed = settlement.ReleaseType == SettlementReleaseType.Final30
                               && !ShowCompletion.IsAcceptable(evidence, threshold);
 
@@ -212,26 +221,23 @@ public sealed class SettlementReleaseJob
     }
 
     /// <summary>
-    /// Bang chung ve viec buoi dien dung sau giao dich nay co that su dien ra hay khong.
+    /// Buoi dien dung sau giao dich nay. Khong tim thay thi tra null — day la thieu du lieu that
     ///
     /// <para>Phep tinh nam o <see cref="ShowCompletion"/> chu khong phai o day: man hinh Admin phai
     /// hien dung con so da giu khoan nay lai, va mot quy tac co hai ban sao thi som muon cung lech
     /// (MLACP-335).</para>
     ///
-    /// <para>Khong tim thay buoi dien thi tra <see cref="ShowCompletionVerdict.Unknown"/> — day la
-    /// thieu du lieu that su, khac han voi mot buoi dien da dong ma chua tung bat dau.</para>
+    /// <para>su, khac han voi mot buoi dien da qua gio ma chua tung bat dau.</para>
     /// </summary>
-    private async Task<ShowCompletionEvidence> ShowCompletionForAsync(
-        int paymentId, CancellationToken ct)
+    private async Task<LoungeShow?> ShowForPaymentAsync(int paymentId, CancellationToken ct)
     {
         var showId = await _ctx.Tickets
             .Where(t => t.PaymentId == paymentId)
             .Select(t => (int?)t.ShowId)
             .FirstOrDefaultAsync(ct);
-        if (showId is null)
-            return new ShowCompletionEvidence(ShowCompletionVerdict.Unknown, null, null, null);
 
-        var show = await _ctx.LoungeShows.FirstOrDefaultAsync(s => s.Id == showId, ct);
-        return ShowCompletion.Evaluate(show);
+        return showId is null
+            ? null
+            : await _ctx.LoungeShows.FirstOrDefaultAsync(s => s.Id == showId, ct);
     }
 }
