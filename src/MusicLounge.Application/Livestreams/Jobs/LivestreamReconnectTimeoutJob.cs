@@ -16,17 +16,20 @@ public sealed class LivestreamReconnectTimeoutJob
     private readonly IUnitOfWork _uow;
     private readonly ISystemConfigService _config;
     private readonly ILivestreamHubService _hubService;
+    private readonly INotificationService _notifications;
     private readonly ILogger<LivestreamReconnectTimeoutJob> _logger;
 
     public LivestreamReconnectTimeoutJob(
         IUnitOfWork uow,
         ISystemConfigService config,
         ILivestreamHubService hubService,
+        INotificationService notifications,
         ILogger<LivestreamReconnectTimeoutJob> logger)
     {
         _uow = uow;
         _config = config;
         _hubService = hubService;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -53,22 +56,24 @@ public sealed class LivestreamReconnectTimeoutJob
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId);
         if (show is not null)
         {
-            var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7);
             // This is the most likely of the four paths to hit a cancelled show: CancelLoungeShow
             // blocks only on livestream Status==Live, so an Owner can cancel during the reconnect
             // window and this job then fires minutes later against a show that is already
             // Cancelled and fully refunded.
-            if (LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays))
-            {
-                _uow.Repository<LoungeShow, int>().Update(show);
-            }
-            else
-            {
+            //
+            // MLACP-353: voi show Hybrid, mat stream khong con dong ca buoi — phong that van dien.
+            var outcome = await StreamLoss.ApplyToShowAsync(
+                _uow, _config, _notifications, show, "mất kết nối quá thời gian chờ", now, CancellationToken.None);
+
+            if (outcome == StreamLossOutcome.AlreadyTerminal)
                 _logger.LogWarning(
                     "Reconnect-timeout left ShowId={ShowId} at {ShowStatus} — LivestreamId={LivestreamId} " +
                     "marked Failed but the show had already reached a terminal state at {At}",
                     show.Id, show.Status, livestream.Id, now);
-            }
+            else if (outcome == StreamLossOutcome.ShowKeptOpenForRoom)
+                _logger.LogInformation(
+                    "Reconnect-timeout on Hybrid ShowId={ShowId} — livestream Failed, show kept Ongoing for " +
+                    "the room at {At}", show.Id, now);
         }
 
         await _uow.SaveChangesAsync();

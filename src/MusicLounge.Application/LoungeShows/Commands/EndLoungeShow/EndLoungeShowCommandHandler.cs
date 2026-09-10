@@ -42,8 +42,11 @@ internal sealed class EndLoungeShowCommandHandler : IRequestHandler<EndLoungeSho
         if (show.Status != LoungeShowStatus.Ongoing)
             throw new DomainException("Chỉ có thể kết thúc show đang diễn ra (Ongoing).");
 
+        // MLACP-353: truoc day tu choi MOI show co livestream. Nhung khi stream cua show Hybrid dung
+        // ngoai y muon (mat ket noi qua han, bi go), buoi dien tai phong van mo (StreamLoss) — va day la
+        // nut duy nhat de dong no. Stream con dang chay thi van phai ket thuc bang nut ket thuc stream.
         var livestream = await _livestreamRepo.GetByShowIdAsync(show.Id, ct);
-        if (livestream is not null)
+        if (livestream is not null && !ShowCompletion.IsFinished(livestream.Status))
             throw new DomainException(
                 "Show này có livestream — dùng chức năng kết thúc livestream thay vì lệnh này.");
 
