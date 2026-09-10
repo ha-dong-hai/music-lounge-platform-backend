@@ -7,5 +7,8 @@ public sealed record ProcessRefundRequestCommand(
     string Decision,           // "Approved" | "Rejected"
     decimal? ApprovedAmount,   // null on Approved => defaults to AmountRequested
     string ClientIpAddress,    // VNPay refund API requires the initiating server's IP
-    string? ResolutionNote = null   // MLACP-342: ly do cua Admin, tuy chon
+    string? ResolutionNote = null,  // MLACP-342: ly do cua Admin, tuy chon
+    // MLACP-348: chi AutoApproveOverdueRefundsJob dat co nay. Khong co tren body cua API — controller
+    // tu dung command tu cac truong rieng cua no, nen khong ai goi HTTP dat duoc gia tri nay.
+    bool AutoApproved = false
 ) : ICommand;

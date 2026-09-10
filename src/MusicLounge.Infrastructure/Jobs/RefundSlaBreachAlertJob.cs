@@ -36,6 +36,14 @@ public sealed class RefundSlaBreachAlertJob
     /// <summary>Warn this long before the gateway window shuts, while it can still be acted on.</summary>
     private const int WindowWarningDays = 14;
 
+    /// <summary>
+    /// MLACP-348: canh bao qua han chi gui MOT lan cho moi Admin, nhan dien bang tieu de nay. Khong
+    /// chong trung theo (Type, ReferenceType) nhu nhanh tien mat: canh bao qua han, canh bao han VNPay
+    /// va thong bao da tu duyet dung chung RefundSlaBreached + "refund_request" (de frontend mo dung
+    /// trang yeu cau hoan), nen khoa do se de loai nay nuot mat loai kia.
+    /// </summary>
+    private const string OverdueTitle = "Quá hạn xử lý hoàn tiền";
+
     private readonly ApplicationDbContext _ctx;
     private readonly ISystemConfigService _config;
     private readonly INotificationService _notifications;
@@ -59,6 +67,8 @@ public sealed class RefundSlaBreachAlertJob
 
         var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, DefaultSlaHours, ct);
         var windowDays = await _config.GetIntAsync(ConfigKeys.VnPayRefundWindowDays, DefaultWindowDays, ct);
+        var graceHours = await _config.GetIntAsync(
+            ConfigKeys.RefundAutoApproveGraceHours, AutoApproveOverdueRefundsJob.DefaultGraceHours, ct);
 
         // MLACP-345: chay TRUOC phan Pending ben duoi, vi phan do return som khi khong co yeu cau nao
         // dang cho — ma yeu cau tien mat can nhac lai chinh la nhung yeu cau DA duoc duyet.
@@ -102,17 +112,36 @@ public sealed class RefundSlaBreachAlertJob
             return;
         }
 
+        // MLACP-348: truoc day vong nay gui lai CUNG mot canh bao cho moi Admin sau MOI lan chay (moi
+        // gio), cho toi khi yeu cau duoc xu ly. Nay canh bao noi ro moc tu duyet, nen gui mot lan la
+        // du — nhac lai moi gio chi la tieng on lam chim canh bao that.
+        var overdueIds = overdue.Select(r => r.Id.ToString()).ToList();
+        var alreadyAlerted = (await _ctx.Notifications
+                .Where(n => n.Type == NotificationType.RefundSlaBreached
+                            && n.ReferenceType == "refund_request"
+                            && n.Title == OverdueTitle
+                            && n.ReferenceId != null
+                            && overdueIds.Contains(n.ReferenceId))
+                .Select(n => new { n.UserId, n.ReferenceId })
+                .ToListAsync(ct))
+            .Select(n => (n.UserId, n.ReferenceId))
+            .ToHashSet();
+
         foreach (var refund in overdue)
         {
             var hoursOverdue = (int)(now - new DateTimeOffset(refund.CreatedAt, TimeSpan.Zero).AddHours(slaHours)).TotalHours;
             foreach (var adminId in admins)
             {
+                if (alreadyAlerted.Contains((adminId, refund.Id.ToString()))) continue;
+
                 await _notifications.NotifyAsync(
                     adminId,
                     NotificationType.RefundSlaBreached,
-                    "Quá hạn xử lý hoàn tiền",
+                    OverdueTitle,
                     $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ) đã quá hạn " +
-                    $"{hoursOverdue}h so với cam kết {slaHours}h. Người mua đang chờ tiền về.",
+                    $"{hoursOverdue}h so với cam kết {slaHours}h. Người mua đang chờ tiền về. Nếu vẫn " +
+                    $"chưa được xử lý khi đã quá hạn thêm {graceHours}h, hệ thống sẽ tự duyệt theo đúng " +
+                    "số tiền đã yêu cầu — muốn từ chối thì phải xử lý trước mốc đó.",
                     referenceType: "refund_request",
                     referenceId: refund.Id.ToString(),
                     ct: ct);
