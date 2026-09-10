@@ -71,5 +71,12 @@ public enum NotificationType
     /// khong quet duoc ve o cua, khan gia khong donate duoc, va sau do khong ai danh gia duoc —
     /// ba thu deu doi show.Status == Ongoing.
     /// </summary>
-    ShowNotStarted
+    ShowNotStarted,
+
+    /// <summary>
+    /// MLACP-341: buoi dien da qua gio ma chua tung duoc bat dau, va no co ve offline nen he thong
+    /// KHONG ket luan duoc la co dien ra hay khong. Gui cho chu phong tra truoc, roi cho nguoi mua
+    /// sau mot cua so — de mot lan quen bam nut khong bien thanh mot tin xau gui cho ca khan phong.
+    /// </summary>
+    ShowDeliveryUnconfirmed
 }
