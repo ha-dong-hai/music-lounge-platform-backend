@@ -54,6 +54,13 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             throw new DomainException(
                 $"Không thể đặt vé — show hiện ở trạng thái '{show.Status}', chỉ mở bán khi show đã Published hoặc đang diễn ra.");
 
+        // MLACP-354: VenueLifecycle.CanOperate quyet "ban ve, nhan donation" — nhung truoc day khong
+        // lenh thu tien nao hoi no. Phong tra dang bi tam dinh chi / khoa vinh vien bi an khoi danh
+        // sach, nhung ai co duong dan van tra tien that duoc.
+        if (await VenueLifecycle.StatusOfAsync(_uow, show.LoungeId, ct) is not { } venueStatus
+            || !VenueLifecycle.CanOperate(venueStatus))
+            throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
+
         await ValidateSaleWindowAsync(price, show, ct);
 
         int holdId;
