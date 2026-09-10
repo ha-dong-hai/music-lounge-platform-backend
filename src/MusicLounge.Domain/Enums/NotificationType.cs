@@ -81,5 +81,9 @@ public enum NotificationType
     ShowDeliveryUnconfirmed,
     // MLACP-347: livestream da len song roi bi cat ngang (mat ket noi qua han, bi go, hoac ket
     // thuc som) - bao nguoi mua ve livestream va chu phong tra.
-    LivestreamCutShort
+    LivestreamCutShort,
+    // MLACP-352: phong tra doi dia chi — bao nguoi giu ve vao cua cua buoi dien sap toi.
+    EventVenueChanged,
+    // MLACP-352: phong tra doi ten/dia chi sau khi da duoc duyet — bao Admin kem truoc/sau.
+    VenueIdentityChanged
 }
