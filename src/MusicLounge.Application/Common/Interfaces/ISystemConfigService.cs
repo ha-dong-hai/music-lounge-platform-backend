@@ -137,6 +137,11 @@ public static class ConfigKeys
     // VNPay doi chinh sach, mac dinh 90 ngay theo quy dinh hien hanh cua cong.
     public const string VnPayRefundWindowDays = "vnpay_refund_window_days";
 
+    // MLACP-348: so gio SAU khi qua refund_sla_hours ma yeu cau hoan van Pending thi
+    // AutoApproveOverdueRefundsJob tu duyet. Canh bao SLA gui Admin luc qua han noi ro moc nay — day
+    // la khoang Admin con de tu choi mot yeu cau dang ngo. Khong seed san — dung mac dinh tai noi doc.
+    public const string RefundAutoApproveGraceHours = "refund_auto_approve_grace_hours";
+
     // So gio an han sau ScheduledEnd truoc khi AutoEndStaleShowsJob tu danh dau show la Ended.
     // Chi de bao ve show that su chay dai hon du kien khoi bi dong som — khong phai de cho Owner
     // "co thoi gian bam nut", vi phan lon truong hop la ho khong bao gio bam. Khong seed san —

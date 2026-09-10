@@ -58,7 +58,13 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         if (refund.Status != RefundRequestStatus.Pending)
             throw new ConflictException("Yêu cầu hoàn tiền này đã được xử lý trước đó.");
 
-        refund.ProcessedBy = _currentUser.UserId;
+        // MLACP-348: AutoApproveOverdueRefundsJob gui lenh nay tu mot job nen, khong co ai dang nhap.
+        // CurrentUserService.UserId nem loi khi khong co HttpContext — co y, de mot hanh dong khong
+        // ro ai lam thi hong han chu khong ghi cho mot "User 0" khong ton tai. Chi co AutoApproved
+        // moi duoc bo qua buoc doc do; duong Admin duyet van doc UserId, van fail-closed nhu cu.
+        // ProcessedBy = null nghia la he thong tu duyet.
+        int? actorId = request.AutoApproved ? null : _currentUser.UserId;
+        refund.ProcessedBy = actorId;
         refund.ResolvedAt = DateTimeOffset.UtcNow;
         refund.ResolutionNote = string.IsNullOrWhiteSpace(request.ResolutionNote)
             ? null
@@ -89,7 +95,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
 
             _logger.LogWarning(
                 "Refund request rejected: RefundRequestId={RefundRequestId} PaymentId={PaymentId} by AdminUserId={AdminUserId} at {At}",
-                refund.Id, refund.PaymentId, _currentUser.UserId, DateTimeOffset.UtcNow);
+                refund.Id, refund.PaymentId, actorId, DateTimeOffset.UtcNow);
 
             return Unit.Value;
         }
@@ -152,7 +158,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 IsFullRefund: amountApproved >= payment.GrossAmount,
                 TransactionNo: payment.TransactionId,
                 TransactionDate: payment.PaidAt ?? payment.CreatedAt,
-                CreatedBy: _currentUser.UserId.ToString(),
+                CreatedBy: actorId?.ToString() ?? "system",
                 IpAddress: request.ClientIpAddress), ct);
 
             if (!vnPayResult.IsSuccess)
@@ -333,7 +339,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
 
         _logger.LogWarning(
             "Refund request approved: RefundRequestId={RefundRequestId} PaymentId={PaymentId} AmountApproved={AmountApproved} by AdminUserId={AdminUserId} at {At}",
-            refund.Id, refund.PaymentId, amountApproved, _currentUser.UserId, DateTimeOffset.UtcNow);
+            refund.Id, refund.PaymentId, amountApproved, actorId, DateTimeOffset.UtcNow);
 
         return Unit.Value;
     }

@@ -139,6 +139,7 @@ public static class DependencyInjection
         services.AddScoped<SettlementReleaseJob>();
         services.AddScoped<AutoEndStaleShowsJob>();
         services.AddScoped<RefundSlaBreachAlertJob>();
+        services.AddScoped<AutoApproveOverdueRefundsJob>();
         services.AddScoped<TicketTransferExpiryJob>();
         services.AddScoped<SubscriptionExpiryWarningJob>();
         services.AddScoped<ExpireSubscriptionsJob>();
@@ -375,6 +376,12 @@ public static class DependencyInjection
 
         Recurring<RefundSlaBreachAlertJob>(
             "alert-refund-sla-breaches",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
+
+        // Moi gio, cung nhip voi canh bao SLA: moc tu duyet tinh bang gio ke tu luc tao yeu cau.
+        Recurring<AutoApproveOverdueRefundsJob>(
+            "auto-approve-overdue-refunds",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
