@@ -233,6 +233,103 @@ internal sealed class VnPayService : IVnPayService
         return Convert.ToHexString(hmac.ComputeHash(dataBytes)).ToLower();
     }
 
+    // MLACP-343. Truy van ket qua giao dich (vnp_Command=querydr) — cung merchant API va cung so do
+    // chu ky nhu RefundAsync (gia tri tho noi bang dau |, khong url-encode, thu tu co dinh theo
+    // spec chu khong sap xep theo khoa), nhung THU TU TRUONG KHAC HAN. Theo tai lieu chinh chu
+    // VNPay muc "Truy van & Hoan tien":
+    //
+    //   vnp_RequestId | vnp_Version | vnp_Command | vnp_TmnCode | vnp_TxnRef |
+    //   vnp_TransactionDate | vnp_CreateDate | vnp_IpAddr | vnp_OrderInfo
+    //
+    // Khong live-verify duoc voi sandbox that (VNPay khoa merchant API tren tai khoan sandbox theo
+    // mac dinh) — cung tinh trang da ghi cho RefundAsync.
+    public async Task<VnPayTransactionQueryResult> QueryTransactionAsync(
+        VnPayTransactionQuery query, CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
+        var transactionDate = query.TransactionDate.ToOffset(TimeSpan.FromHours(7));
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var transactionDateStr = transactionDate.ToString("yyyyMMddHHmmss");
+        var createDateStr = now.ToString("yyyyMMddHHmmss");
+
+        var signData = string.Join('|',
+            requestId, _settings.Version, "querydr", _settings.TmnCode, query.TxnRef,
+            transactionDateStr, createDateStr, query.IpAddress, query.OrderInfo);
+        var signature = ComputeHmacSha512(_settings.HashSecret, signData);
+
+        var body = new VnPayQueryApiRequest(
+            vnp_RequestId: requestId,
+            vnp_Version: _settings.Version,
+            vnp_Command: "querydr",
+            vnp_TmnCode: _settings.TmnCode,
+            vnp_TxnRef: query.TxnRef,
+            vnp_OrderInfo: query.OrderInfo,
+            vnp_TransactionNo: query.TransactionNo ?? string.Empty,
+            vnp_TransactionDate: transactionDateStr,
+            vnp_CreateDate: createDateStr,
+            vnp_IpAddr: query.IpAddress,
+            vnp_SecureHash: signature);
+
+        try
+        {
+            var http = _httpFactory.CreateClient("vnpay");
+            using var response = await http.PostAsJsonAsync(_settings.RefundApiUrl, body, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning(
+                    "VNPay querydr khong tra loi duoc: TxnRef={TxnRef} Status={Status} Body={Body}",
+                    query.TxnRef, response.StatusCode, errorBody);
+                return Unanswered(response.StatusCode.ToString(), "VNPay HTTP error");
+            }
+
+            var payload = await response.Content.ReadFromJsonAsync<VnPayRefundApiResponse>(cancellationToken: ct);
+            if (payload is null)
+            {
+                _logger.LogWarning(
+                    "VNPay querydr: TxnRef={TxnRef} — than phan hoi rong hoac khong doc duoc.", query.TxnRef);
+                return Unanswered("", "Empty response from VNPay");
+            }
+
+            // Hai truong khac nhau, va lan lon chung la doc nguoc ket qua:
+            //   vnp_ResponseCode    = "00" -> LENH TRUY VAN chay duoc
+            //   vnp_TransactionStatus = "00" -> GIAO DICH da thanh toan thanh cong
+            // Mot truy van chay duoc cho mot giao dich that bai van co ResponseCode = "00".
+            var answered = payload.vnp_ResponseCode == "00";
+            var paid = answered && payload.vnp_TransactionStatus == "00";
+
+            if (!answered)
+                _logger.LogWarning(
+                    "VNPay querydr bi tu choi: TxnRef={TxnRef} ResponseCode={ResponseCode} Message={Message}",
+                    query.TxnRef, payload.vnp_ResponseCode, payload.vnp_Message);
+
+            // vnp_Amount tra ve la so nguyen bang so tien nhan 100 — cung quy uoc voi luc gui di.
+            decimal? amount = decimal.TryParse(payload.vnp_Amount, out var raw) ? raw / 100m : null;
+
+            return new VnPayTransactionQueryResult(
+                IsQueryAnswered: answered,
+                IsPaid: paid,
+                ResponseCode: payload.vnp_ResponseCode ?? "",
+                TransactionStatus: payload.vnp_TransactionStatus ?? "",
+                Message: payload.vnp_Message ?? "",
+                TransactionNo: payload.vnp_TransactionNo,
+                Amount: amount);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            if (ex is TaskCanceledException && ct.IsCancellationRequested) throw;
+            _logger.LogWarning(ex, "VNPay querydr nem ngoai le: TxnRef={TxnRef}", query.TxnRef);
+            return Unanswered("", "VNPay call threw an exception");
+        }
+
+        // Khong tra loi duoc nghia la KHONG BIET — co y khong bao gio dat IsPaid = true o day, va
+        // cung khong duoc doc thanh "giao dich that bai".
+        static VnPayTransactionQueryResult Unanswered(string code, string message)
+            => new(IsQueryAnswered: false, IsPaid: false, code, "", message, null, null);
+    }
+
     private sealed record VnPayRefundApiRequest(
         [property: JsonPropertyName("vnp_RequestId")] string vnp_RequestId,
         [property: JsonPropertyName("vnp_Version")] string vnp_Version,
@@ -245,6 +342,19 @@ internal sealed class VnPayService : IVnPayService
         [property: JsonPropertyName("vnp_TransactionNo")] string vnp_TransactionNo,
         [property: JsonPropertyName("vnp_TransactionDate")] string vnp_TransactionDate,
         [property: JsonPropertyName("vnp_CreateBy")] string vnp_CreateBy,
+        [property: JsonPropertyName("vnp_CreateDate")] string vnp_CreateDate,
+        [property: JsonPropertyName("vnp_IpAddr")] string vnp_IpAddr,
+        [property: JsonPropertyName("vnp_SecureHash")] string vnp_SecureHash);
+
+    private sealed record VnPayQueryApiRequest(
+        [property: JsonPropertyName("vnp_RequestId")] string vnp_RequestId,
+        [property: JsonPropertyName("vnp_Version")] string vnp_Version,
+        [property: JsonPropertyName("vnp_Command")] string vnp_Command,
+        [property: JsonPropertyName("vnp_TmnCode")] string vnp_TmnCode,
+        [property: JsonPropertyName("vnp_TxnRef")] string vnp_TxnRef,
+        [property: JsonPropertyName("vnp_OrderInfo")] string vnp_OrderInfo,
+        [property: JsonPropertyName("vnp_TransactionNo")] string vnp_TransactionNo,
+        [property: JsonPropertyName("vnp_TransactionDate")] string vnp_TransactionDate,
         [property: JsonPropertyName("vnp_CreateDate")] string vnp_CreateDate,
         [property: JsonPropertyName("vnp_IpAddr")] string vnp_IpAddr,
         [property: JsonPropertyName("vnp_SecureHash")] string vnp_SecureHash);
