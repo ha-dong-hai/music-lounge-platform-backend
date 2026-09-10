@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.Livestreams;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -197,11 +198,11 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
         if (show is not null)
         {
-            var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
-            show.Status = LoungeShowStatus.Ended;
-            show.ActualEnd = now;
-            show.RatingOpenUntil = now.AddDays(ratingWindowDays);
-            _uow.Repository<LoungeShow, int>().Update(show);
+            // MLACP-353: truoc day dat Ended thang — la duong duy nhat trong bon duong ket thuc stream
+            // khong qua TryMarkEnded. Nay di chung mot quy tac voi Admin go va mat ket noi qua han; voi
+            // show Hybrid, go STREAM vi pham khong dong phong that.
+            await StreamLoss.ApplyToShowAsync(
+                _uow, _config, _notifications, show, "bị gỡ theo báo cáo vi phạm", now, ct);
         }
 
         await _livestreamHub.BroadcastLivestreamTerminatedAsync(livestreamId, reason, ct);

@@ -16,6 +16,7 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
     private readonly ILivestreamServiceFactory _factory;
     private readonly ILivestreamHubService _hubService;
     private readonly ISystemConfigService _config;
+    private readonly INotificationService _notifications;
     private readonly ILogger<TerminateLivestreamCommandHandler> _logger;
 
     public TerminateLivestreamCommandHandler(
@@ -24,6 +25,7 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         ILivestreamServiceFactory factory,
         ILivestreamHubService hubService,
         ISystemConfigService config,
+        INotificationService notifications,
         ILogger<TerminateLivestreamCommandHandler> logger)
     {
         _uow = uow;
@@ -31,6 +33,7 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         _factory = factory;
         _hubService = hubService;
         _config = config;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -64,10 +67,11 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
         if (show is not null)
         {
-            var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
             // §6.13 — show da dien (du bi cat ngang) van cho rate, TRU khi show da bi huy/da ket thuc.
-            LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays);
-            _uow.Repository<LoungeShow, int>().Update(show);
+            // MLACP-353: voi show Hybrid, Admin dung STREAM chu khong dung duoc phong that — buoi dien
+            // giu Ongoing de khan gia toi muon van check-in duoc.
+            await StreamLoss.ApplyToShowAsync(
+                _uow, _config, _notifications, show, "bị Admin dừng phát sóng", now, ct);
         }
 
         await _uow.SaveChangesAsync(ct);
