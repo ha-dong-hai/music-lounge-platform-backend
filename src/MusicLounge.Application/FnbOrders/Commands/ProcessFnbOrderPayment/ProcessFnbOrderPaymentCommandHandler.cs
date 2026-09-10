@@ -16,17 +16,19 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
     private readonly ILedgerService _ledger;
     private readonly INotificationService _notifications;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ISystemConfigService _config;
     private readonly ILogger<ProcessFnbOrderPaymentCommandHandler> _logger;
 
     public ProcessFnbOrderPaymentCommandHandler(
         IUnitOfWork uow, IVnPayService vnPay, ILedgerService ledger, INotificationService notifications,
-        IAsyncKeyedLock @lock, ILogger<ProcessFnbOrderPaymentCommandHandler> logger)
+        IAsyncKeyedLock @lock, ISystemConfigService config, ILogger<ProcessFnbOrderPaymentCommandHandler> logger)
     {
         _uow = uow;
         _vnPay = vnPay;
         _ledger = ledger;
         _notifications = notifications;
         _lock = @lock;
+        _config = config;
         _logger = logger;
     }
 
@@ -137,6 +139,10 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct);
         if (lounge is not null)
         {
+            // MLACP-350: truoc day dong Co ghi thang vao tai khoan User cua chu phong tra — khong co
+            // Settlement nao di theo nen khong co chi dan chi tra, va khoan nay khong hien o man thu
+            // nhap. Nay giu o Platform, dung khuon WriteTicketLedgerHandler; FnbSettlements len lich
+            // chi tra khi don dong.
             await _ledger.WriteJournalAsync(
                 Guid.NewGuid().ToString("N"),
                 LedgerReferenceTypes.FnbOrder,
@@ -145,12 +151,16 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                 new LedgerLine[]
                 {
                     new(AccountType.Gateway, null, payment.GrossAmount, IsDebit: true),
-                    new(AccountType.User, lounge.OwnerId, payment.GrossAmount, IsDebit: false,
-                        Description: $"Don F&B #{order.Id} - thanh toan qua VNPay")
+                    new(AccountType.Platform, null, payment.GrossAmount, IsDebit: false,
+                        Description: $"Giu ho chu phong tra #{lounge.OwnerId} — don F&B #{order.Id}, cho quyet toan")
                 }, ct);
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        // Sau khi but toan da luu — chot "tien dang giu o Platform" trong FnbSettlements doc tu CSDL.
+        if (closesOrder)
+            await FnbSettlements.ScheduleOnCloseAsync(_uow, _config, order, now, ct);
 
         if (order.AudienceUserId is { } audienceUserId)
         {

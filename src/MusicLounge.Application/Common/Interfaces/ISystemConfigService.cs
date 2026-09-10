@@ -196,6 +196,11 @@ public static class ConfigKeys
     // follow the rest of the codebase's ConfigKeys convention.
     public const string SettlementCompletionThresholdPct = "settlement_completion_threshold_pct";
 
+    // MLACP-350: so gio giu tien F&B online sau khi don duoc DONG (da phuc vu va da tra) truoc khi giai
+    // ngan cho phong tra — de con hoan duoc neu mon co van de. Mac dinh 48h, bang dung khoang giu cua
+    // tranche dau cua ve (settlement_partial_hours_after_show). Khong seed san — dung mac dinh tai noi doc.
+    public const string FnbSettlementHoldHours = "fnb_settlement_hold_hours";
+
     // Global anti-abuse ceiling on AI poster generation ATTEMPTS (success + failure both count) per
     // show — distinct from SubscriptionPackage.MaxAiPostersPerMonth, which is the per-Owner monthly
     // billing quota (only successful generations count against it). This cap exists purely to stop

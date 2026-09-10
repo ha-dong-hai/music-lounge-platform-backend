@@ -125,13 +125,26 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
             .Select(t => t.PaymentId!.Value)
             .ToHashSet();
 
+        // MLACP-350: tien F&B online nay cung di qua Settlement — thieu no o day thi "da nhan quyet
+        // toan" cua bao cao nho hon so tien phong tra that su nhan duoc.
+        var fnbReferenceIds = loungeFnbOrders.Select(o => o.Id.ToString()).ToList();
+        var fnbPaymentIds = fnbReferenceIds.Count == 0
+            ? []
+            : (await _uow.Repository<Payment, int>().FindAsync(
+                    p => p.ReferenceType == FnbOrderPayments.ReferenceType
+                         && p.Method == PaymentMethod.Gateway
+                         && fnbReferenceIds.Contains(p.ReferenceId), ct))
+                .Select(p => p.Id)
+                .ToHashSet();
+        var settledPaymentIds = ticketPaymentIds.Concat(fnbPaymentIds).ToHashSet();
+
         var totalSettlementReceived = 0m;
         var totalPlatformFeePaid = 0m;
-        if (lounge is not null && ticketPaymentIds.Count > 0)
+        if (lounge is not null && settledPaymentIds.Count > 0)
         {
             var allSettlements = await _uow.Repository<Settlement, int>().FindAsync(
                 s => s.OwnerId == lounge.OwnerId
-                    && ticketPaymentIds.Contains(s.PaymentId)
+                    && settledPaymentIds.Contains(s.PaymentId)
                     && s.Status == SettlementStatus.Released, ct);
             var releasedSettlements = allSettlements
                 .Where(s => s.ReleasedAt.HasValue && InRange(s.ReleasedAt.Value))
