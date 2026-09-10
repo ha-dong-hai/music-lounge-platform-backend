@@ -15,6 +15,10 @@ public sealed class RefundRequest : Common.AuditableEntity<int>
     public decimal? AmountApproved { get; set; }
     public decimal? RefundPercentage { get; set; }
     public RefundRequestStatus Status { get; set; } = RefundRequestStatus.Pending;
+    // MLACP-342: ly do cua ADMIN khi quyet, tach hoan toan khoi Reason o tren von la ly do NGUOI
+    // MUA neu ra khi gui yeu cau. Nullable vi truong nay tuy chon tren API — bat buoc se lam vo
+    // hop dong dang duoc dung.
+    public string? ResolutionNote { get; set; }
     public int? ProcessedBy { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
 

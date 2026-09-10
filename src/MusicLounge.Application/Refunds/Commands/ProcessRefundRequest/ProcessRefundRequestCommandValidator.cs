@@ -24,6 +24,10 @@ internal sealed class ProcessRefundRequestCommandValidator : AbstractValidator<P
         // trên, vì .When mặc định áp cho toàn bộ các validator đứng trước nó trong cùng RuleFor.
         RuleFor(x => x.ApprovedAmount).MustBeWholeDong();
 
+        RuleFor(x => x.ResolutionNote)
+            .MaximumLength(500)
+            .When(x => x.ResolutionNote is not null);
+
         RuleFor(x => x.ClientIpAddress).NotEmpty().WithMessage("Địa chỉ IP không được rỗng.");
     }
 }
