@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MediatR;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
@@ -66,6 +67,15 @@ internal sealed class PurchaseTicketCommandHandler
         if (show.Status is not LoungeShowStatus.Published and not LoungeShowStatus.Ongoing)
             throw new DomainException(
                 $"Show này không còn mở bán vé (trạng thái hiện tại: '{show.Status}'). Vui lòng quay lại trang show để kiểm tra tình trạng bán vé mới nhất.");
+
+        // Hoi lai o day chu khong chi o HoldTicket: cho giu duoc tao truoc khi phong tra bi dinh chi,
+        // con tien thi thu SAU.
+        // MLACP-354: VenueLifecycle.CanOperate quyet "ban ve, nhan donation" — nhung truoc day khong
+        // lenh thu tien nao hoi no. Phong tra dang bi tam dinh chi / khoa vinh vien bi an khoi danh
+        // sach, nhung ai co duong dan van tra tien that duoc.
+        if (await VenueLifecycle.StatusOfAsync(_uow, show.LoungeId, ct) is not { } venueStatus
+            || !VenueLifecycle.CanOperate(venueStatus))
+            throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
 
         var totalAmount = price.Price * hold.Quantity;
         var orderId = $"ML-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];

@@ -47,6 +47,13 @@ internal sealed class CreateDonationCommandHandler
         if (!performance.AcceptsDonation)
             throw new DomainException("Nghệ sĩ này không nhận donate.");
 
+        // MLACP-354: VenueLifecycle.CanOperate quyet "ban ve, nhan donation" — nhung truoc day khong
+        // lenh thu tien nao hoi no. Phong tra dang bi tam dinh chi / khoa vinh vien bi an khoi danh
+        // sach, nhung ai co duong dan van tra tien that duoc.
+        if (await VenueLifecycle.StatusOfAsync(_uow, show.LoungeId, ct) is not { } venueStatus
+            || !VenueLifecycle.CanOperate(venueStatus))
+            throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
+
 
         // Load donor display name from profile (only if not anonymous)
         string? displayName = null;

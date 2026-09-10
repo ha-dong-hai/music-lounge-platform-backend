@@ -66,6 +66,14 @@ internal sealed class SellWalkInTicketCommandHandler
         if (show.Status is not LoungeShowStatus.Published and not LoungeShowStatus.Ongoing)
             throw new DomainException("Không thể bán vé cho show này.");
 
+        // MLACP-354: cung quy tac voi ban vé online. Nguoi doc cau nay la nhan vien/chu phong tra, nen
+        // noi dung ly do (ExplainRestriction) — khac voi cau cho nguoi mua.
+        var venueStatus = await VenueLifecycle.StatusOfAsync(_uow, show.LoungeId, ct);
+        if (venueStatus is not { } status || !VenueLifecycle.CanOperate(status))
+            throw new DomainException(
+                (venueStatus is { } known ? VenueLifecycle.ExplainRestriction(known) + " " : "") +
+                "Không thể bán vé qua hệ thống lúc này.");
+
         var now = DateTimeOffset.UtcNow;
         // BR-31: quầy vé không còn bị chốt bởi một mốc Owner đặt từ nhiều tuần trước, nhưng cũng
         // không bán tới lúc buổi diễn tan — khách trả nguyên giá thì phải còn chương trình để xem.

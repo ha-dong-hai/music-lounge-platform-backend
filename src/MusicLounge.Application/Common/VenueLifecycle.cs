@@ -1,4 +1,6 @@
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Common;
 
@@ -34,6 +36,28 @@ public static class VenueLifecycle
 
     /// <summary>Phòng trà có được mở buổi diễn mới, bán vé, nhận donation hay không.</summary>
     public static bool CanOperate(LoungeStatus status) => Operating.Contains(status);
+
+    /// <summary>
+    /// MLACP-354. Câu từ chối cho <b>người mua</b> khi phòng trà không được phép giao dịch.
+    ///
+    /// <para>Không dùng <see cref="ExplainRestriction"/> cho người mua: câu đó viết cho chủ phòng trà
+    /// ("vui lòng chỉnh sửa hồ sơ và liên hệ Admin"), và lý do phòng trà bị đình chỉ là chuyện giữa
+    /// phòng trà với nền tảng — người mua chỉ cần biết là chưa mua được.</para>
+    /// </summary>
+    public const string TradingPausedForBuyers =
+        "Phòng trà của buổi diễn này hiện tạm ngừng giao dịch trên nền tảng — chưa thể mua vé hay donate lúc này.";
+
+    /// <summary>
+    /// MLACP-354. Trạng thái hiện tại của phòng trà, đọc thẳng từ cơ sở dữ liệu. Null khi không tìm
+    /// thấy — nơi gọi coi đó là không được phép giao dịch.
+    ///
+    /// <para><see cref="CanOperate"/> đã ghi rõ nó quyết "bán vé, nhận donation", nhưng trước task này
+    /// chỉ cổng nộp duyệt buổi diễn và các danh sách công khai dùng tới nó. Một phòng trà đang bị tạm
+    /// đình chỉ hay khoá vĩnh viễn thì bị ẩn khỏi danh sách — nhưng ai có đường dẫn tới buổi diễn vẫn
+    /// giữ chỗ, trả tiền và donate được.</para>
+    /// </summary>
+    public static async Task<LoungeStatus?> StatusOfAsync(IUnitOfWork uow, int loungeId, CancellationToken ct)
+        => (await uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(loungeId, ct))?.Status;
 
     /// <summary>
     /// Phòng trà có được hiện ra cho người ngoài hay không. Trùng với <see cref="CanOperate"/> hôm
