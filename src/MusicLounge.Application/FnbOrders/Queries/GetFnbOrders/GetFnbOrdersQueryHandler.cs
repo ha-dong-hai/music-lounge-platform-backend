@@ -47,28 +47,9 @@ internal sealed class GetFnbOrdersQueryHandler
             o => o.LoungeId == request.LoungeId && (!statusFilter.HasValue || o.Status == statusFilter.Value),
             o => o.Id, page, pageSize, ct);
 
-        var orderIds = pageItems.Select(o => o.Id).ToList();
-        var items = await _uow.Repository<OrderItem, int>().FindAsync(i => orderIds.Contains(i.FnbOrderId), ct);
-        var menuItemIds = items.Select(i => i.MenuItemId).Distinct().ToList();
-        var menuItems = await _uow.Repository<FnbMenuItem, int>().FindAsync(m => menuItemIds.Contains(m.Id), ct);
-        var menuItemsById = menuItems.ToDictionary(m => m.Id);
-        var itemsByOrder = items.ToLookup(i => i.FnbOrderId);
-
-        var paidOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(_uow, orderIds, ct);
-        var liveUntil = await FnbOrderPayments.LiveOnlinePaymentDeadlinesAsync(
-            _uow, orderIds, DateTimeOffset.UtcNow, ct);
-
-        var dtos = pageItems.Select(o => new FnbOrderDto(
-            o.Id, o.LoungeId, o.ShowId, o.AudienceUserId, o.StaffId, o.TableNote,
-            o.Status.ToString(), o.PaymentMethod.ToString(), o.TotalAmount, o.Note, o.CreatedAt,
-            itemsByOrder[o.Id].Select(i => new OrderItemDto(
-                i.Id, i.MenuItemId,
-                menuItemsById.TryGetValue(i.MenuItemId, out var mi) ? mi.Name : "(deleted)",
-                i.Quantity, i.UnitPrice, i.Cancelled, i.Note))
-            .ToList(),
-            FnbOrderPayments.IsPaid(o, paidOrderIds.Contains(o.Id)),
-            liveUntil.TryGetValue(o.Id, out var until) ? until : null)
-        ).ToList();
+        // MLACP-357: dung chung voi GET /fnb-orders/my — hai man phai tra loi cung mot cau hoi
+        // (dac biet IsPaid) theo cung mot cach. Xem FnbOrderDtoBuilder.
+        var dtos = await FnbOrderDtoBuilder.BuildAsync(_uow, pageItems, ct);
 
         return new PaginatedResult<FnbOrderDto>(dtos, page, pageSize, total);
     }

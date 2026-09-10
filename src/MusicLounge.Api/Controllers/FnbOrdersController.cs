@@ -13,6 +13,7 @@ using MusicLounge.Application.FnbOrders.Commands.ProcessFnbOrderPayment;
 using MusicLounge.Application.FnbOrders.Commands.UpdateFnbOrderStatus;
 using MusicLounge.Application.FnbOrders.DTOs;
 using MusicLounge.Application.FnbOrders.Queries.GetFnbOrders;
+using MusicLounge.Application.FnbOrders.Queries.GetMyFnbOrders;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -42,6 +43,20 @@ public sealed class FnbOrdersController : ControllerBase
         var id = await _sender.Send(command, ct);
         return CreatedAtAction(nameof(GetByLounge), new { loungeId = command.LoungeId, version = "1.0" },
             ApiResponse<int>.Ok(id));
+    }
+
+    /// <summary>Khán giả — đơn F&amp;B của chính mình, mới nhất trước (MLACP-357). Mỗi đơn có
+    /// `Status` (bếp đã làm tới đâu) tách khỏi `IsPaid` (đã trả tiền chưa), và `OnlinePaymentLiveUntil`
+    /// nếu đang có một link VNPay còn trả được. Đơn nhân viên tạo hộ khách vãng lai không có trong
+    /// danh sách của ai.</summary>
+    [HttpGet("my")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<FnbOrderDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMine(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyFnbOrdersQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<FnbOrderDto>>.Ok(result));
     }
 
     /// <summary>Staff/Owner — hàng đợi đơn F&B của venue, lọc theo trạng thái.</summary>
