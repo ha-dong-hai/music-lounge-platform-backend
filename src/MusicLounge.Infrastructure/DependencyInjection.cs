@@ -134,6 +134,7 @@ public static class DependencyInjection
         services.AddScoped<ExpireStuckDonationsJob>();
         services.AddScoped<CancelAbandonedPaymentsJob>();
         services.AddScoped<RemindOwnerToStartShowJob>();
+        services.AddScoped<RefundUndeliveredLivestreamTicketsJob>();
         services.AddScoped<SettlementReleaseJob>();
         services.AddScoped<AutoEndStaleShowsJob>();
         services.AddScoped<RefundSlaBreachAlertJob>();
@@ -287,6 +288,12 @@ public static class DependencyInjection
             "remind-owner-to-start-show",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
+
+        // Moi gio la du: bien an toan da la 6 tieng, nen som hon cung khong hoan duoc som hon.
+        Recurring<RefundUndeliveredLivestreamTicketsJob>(
+            "refund-undelivered-livestream-tickets",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Hourly());
 
         Recurring<SettlementReleaseJob>(
             "release-due-settlements",
