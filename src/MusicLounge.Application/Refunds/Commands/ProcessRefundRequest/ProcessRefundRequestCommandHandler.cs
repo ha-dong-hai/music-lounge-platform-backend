@@ -5,6 +5,8 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using MusicLounge.Application.FnbOrders;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
 
@@ -135,7 +137,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             throw new DomainException(
                 "Tổng số tiền đã hoàn cho giao dịch này sẽ vượt quá số tiền đã thanh toán.");
 
-        var ownerId = await _paymentRepo.GetTicketShowOwnerIdAsync(payment.Id, ct)
+        var ownerId = await ResolveOwnerIdAsync(payment, ct)
             ?? throw new DomainException("Không xác định được chủ phòng trà cho giao dịch này.");
 
         // MLACP-337. Cho nay truoc day goi VNPay vo dieu kien. Ve ban tai quay
@@ -190,8 +192,16 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // nhan), nen ve nhanh o day va giu nguyen y hanh vi cu cho no. Phep do that su chi can cho
         // nhanh tien mat: no CO the co but toan neu WalkInCommissionEnabled duoc bat, va co do co
         // the doi giua luc ban ve va luc hoan tien — nen doc but toan that thay vi soi lai co.
-        var shouldReverseJournal = isGatewayPayment
-            || await _uow.Repository<LedgerEntry, int>().AnyAsync(e => e.PaymentId == payment.Id, ct);
+        //
+        // MLACP-351: tru mot truong hop — thanh toan he thong da ghi nhan la Failed. Journal mua chi duoc
+        // ghi khi xac nhan, nen mot thanh toan Failed CHUA TUNG duoc ghi so. Duong duy nhat co yeu cau
+        // hoan cho mot thanh toan nhu vay la khoan "VNPay da thu nhung khong ap vao don" cua F&B (tra
+        // trung, hoac tien ve cho don da huy — ProcessFnbOrderPayment.RecordNotAppliedAsync). Dao but toan
+        // cho no la tru Platform mot khoan Platform chua tung giu.
+        var neverBooked = payment.Status == PaymentStatus.Failed;
+        var shouldReverseJournal = !neverBooked
+            && (isGatewayPayment
+                || await _uow.Repository<LedgerEntry, int>().AnyAsync(e => e.PaymentId == payment.Id, ct));
 
         // Ti le nay dung cho ca hai viec: dao but toan (chi khi co but toan de dao) va co gian cac
         // tranche quyet toan chua giai ngan (luon chay). Nen no nam ngoai khoi duoi.
@@ -231,6 +241,15 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 s => s.PaymentId == payment.Id && s.Status == SettlementStatus.Released, ct))
             .Sum(s => s.NetAmount);
         var stillHeldByPlatform = Math.Max(0m, payment.NetAmount - releasedToOwner);
+
+        // MLACP-351: thanh toan F&B ghi so truoc MLACP-350 da ghi Co THANG cho chu phong tra — Platform
+        // chua tung giu khoan do, nen phan cua chu phong tra phai thu tu chinh tai khoan cua ho.
+        if (payment.ReferenceType == FnbOrderPayments.ReferenceType
+            && !await _uow.Repository<LedgerEntry, int>().AnyAsync(
+                e => e.PaymentId == payment.Id
+                     && e.Account.OwnerType == AccountType.Platform
+                     && !e.IsDebit, ct))
+            stillHeldByPlatform = 0m;
 
         var reverseFromPlatform = Math.Min(refundOwnerNet, stillHeldByPlatform);
         var reverseFromOwner = refundOwnerNet - reverseFromPlatform;
@@ -361,5 +380,24 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             referenceType: "refund",
             referenceId: refund.Id.ToString(),
             ct: ct);
+    }
+
+    /// <summary>
+    /// MLACP-351. Vé đi qua buổi diễn tới phòng trà; F&amp;B đi qua đơn tới phòng trà. Trước đây chỉ có
+    /// đường của vé (<c>GetTicketShowOwnerIdAsync</c> trả null khi thanh toán không có vé), nên mọi yêu
+    /// cầu hoàn cho thanh toán F&amp;B đều dừng ở "không xác định được chủ phòng trà".
+    /// </summary>
+    private async Task<int?> ResolveOwnerIdAsync(Payment payment, CancellationToken ct)
+    {
+        if (payment.ReferenceType == FnbOrderPayments.ReferenceType
+            && int.TryParse(payment.ReferenceId, out var orderId))
+        {
+            var order = await _uow.Repository<FnbOrder, int>().GetByIdAsync(orderId, ct);
+            if (order is null) return null;
+            var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct);
+            return lounge?.OwnerId;
+        }
+
+        return await _paymentRepo.GetTicketShowOwnerIdAsync(payment.Id, ct);
     }
 }

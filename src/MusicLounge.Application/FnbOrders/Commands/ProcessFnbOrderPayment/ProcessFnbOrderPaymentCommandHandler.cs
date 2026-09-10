@@ -213,19 +213,36 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
             ? "đơn F&B đã được thanh toán trước đó (khoản trả trùng)"
             : "đơn F&B đã bị huỷ";
 
+        // MLACP-351: khoan nay la tien cua khach — tra trung, hoac tra cho mot don da huy. Khong co gi de
+        // tranh cai ve so tien, nen tao ngay yeu cau hoan 100% va de no di qua dung luong duyet hoan tien
+        // san co (Admin duyet, hoac tu duyet khi qua han — MLACP-348). Chot "callback lap lai" o dau
+        // Handle bao dam ham nay chi chay mot lan cho moi giao dich.
+        _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+        {
+            PaymentId = payment.Id,
+            RequestedBy = payment.PayerId,
+            Reason = paidElsewhere
+                ? $"Khoản trả trùng cho đơn F&B #{order.Id} — hoàn 100%"
+                : $"Tiền về cho đơn F&B #{order.Id} đã bị huỷ — hoàn 100%",
+            AmountRequested = payment.GrossAmount,
+            RefundPercentage = 100m,
+            Status = RefundRequestStatus.Pending
+        });
+
         if (payment.PayerId is { } payerId)
         {
             await _notifications.NotifyAsync(
                 payerId, NotificationType.FnbOrderUpdate,
                 "Giao dịch không được ghi vào đơn",
-                paidElsewhere
+                (paidElsewhere
                     ? $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
                       $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã được thanh toán trước đó nên đây là " +
-                      "khoản trả trùng và không được ghi vào đơn. Admin đã được báo để đối soát khoản này. " +
-                      "Bạn không cần thanh toán thêm — hãy giữ mã giao dịch để đối chiếu."
+                      "khoản trả trùng và không được ghi vào đơn. "
                     : $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
                       $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã bị huỷ trước đó nên không được ghi " +
-                      "nhận. Admin đã được báo để đối soát khoản này — hãy giữ mã giao dịch để đối chiếu.",
+                      "nhận. ") +
+                "Chúng tôi đã tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — " +
+                "bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
                 referenceType: "fnbOrder", referenceId: order.Id.ToString(), ct: ct);
         }
 
