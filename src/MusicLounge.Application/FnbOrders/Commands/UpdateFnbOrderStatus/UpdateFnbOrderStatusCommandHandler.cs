@@ -17,15 +17,17 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ISystemConfigService _config;
 
     public UpdateFnbOrderStatusCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
-        IAsyncKeyedLock @lock)
+        IAsyncKeyedLock @lock, ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
         _lock = @lock;
+        _config = config;
     }
 
     public async Task<Unit> Handle(UpdateFnbOrderStatusCommand request, CancellationToken ct)
@@ -151,6 +153,12 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         orderRepo.Update(order);
 
         await _uow.SaveChangesAsync(ct);
+
+        // MLACP-350: don vua dong — neu khach da tra online thi day la luc len lich tra tien cho phong
+        // tra. Don tra tien mat thi FnbSettlements khong lam gi: phong tra da cam tien.
+        if (order.Status == FnbOrderStatus.Paid)
+            await FnbSettlements.ScheduleOnCloseAsync(_uow, _config, order, now, ct);
+
         await NotifyAudienceAsync(order, newStatus, ct);
 
         // Luu SAU khi gui thong bao. NotificationService chi Add() dong thong bao vao change
