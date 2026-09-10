@@ -322,15 +322,8 @@ public sealed class FnbOnlinePaymentTests
             "huỷ lúc này thì khách vẫn trả được tiền cho một đơn đã huỷ");
     }
 
-    [Fact]
-    public async Task KhongHuyNgangDonKhachDaTraOnline()
-    {
-        var orderId = await CreateOrderAsync();
-        await IpnAsync(await InitiateAsync(orderId), NewTransactionNo());
-
-        (await StaffSetAsync(orderId, "Cancelled")).StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
-            "chưa có đường hoàn tiền F&B — huỷ lúc này là giữ tiền khách mà không giao món");
-    }
+    // MLACP-351: bài "không huỷ ngang đơn khách đã trả online" (422) đã được thay — chốt đó chỉ đứng tạm
+    // vì lúc ấy chưa có đường hoàn tiền F&B. Nay huỷ được, kèm yêu cầu hoàn 100%: xem FnbRefundTests.
 
     // ── Minh bạch: màn hình nhân viên và báo cáo doanh thu ──────────────────
 

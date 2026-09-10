@@ -60,13 +60,23 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
             if (order.Status is FnbOrderStatus.Paid or FnbOrderStatus.Cancelled)
                 throw new DomainException($"Không thể hủy order đang ở trạng thái '{order.Status}'.");
 
-            // Don tra truoc qua VNPay nay khong con o Paid, nen chot o tren khong con bat duoc no. Huy
-            // mot don khach da tra ma khong co duong hoan nao nghia la giu tien cua khach ma khong giao
-            // mon.
+            // MLACP-351: don khach da tra truoc ma phong tra khong phuc vu duoc (het mon, bep qua tai...).
+            // MLACP-349 tam chan viec nay (422) vi luc do chua co duong hoan — huy ma khong hoan la giu tien
+            // cua khach ma khong giao mon. Nay huy duoc, kem yeu cau hoan 100%: mon chua giao thi tien phai
+            // ve lai khach. Don da phuc vu xong thi da dong o Paid va bi chan o tren.
+            Payment? toRefund = null;
             if (isPaid)
-                throw new DomainException(
-                    "Đơn này khách đã thanh toán online nên không thể huỷ ngang ở đây — huỷ lúc này sẽ " +
-                    "giữ tiền của khách mà không giao món.");
+            {
+                var referenceId = order.Id.ToString();
+                toRefund = (await _uow.Repository<Payment, int>().FindAsync(
+                        p => p.ReferenceType == FnbOrderPayments.ReferenceType
+                             && p.ReferenceId == referenceId
+                             && p.Status == PaymentStatus.Confirmed
+                             && p.Method == PaymentMethod.Gateway, ct))
+                    .FirstOrDefault()
+                    ?? throw new DomainException(
+                        "Không tìm thấy khoản thanh toán online của đơn này để hoàn — không thể huỷ.");
+            }
 
             var live = await FnbOrderPayments.LiveOnlinePaymentAsync(_uow, order.Id, now, ct);
             if (live is not null)
@@ -86,8 +96,21 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                 itemRepo.Update(item);
             }
 
+            if (toRefund is not null)
+            {
+                _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+                {
+                    PaymentId = toRefund.Id,
+                    RequestedBy = order.AudienceUserId ?? toRefund.PayerId,
+                    Reason = $"Phòng trà huỷ đơn F&B #{order.Id} trước khi phục vụ — hoàn 100%",
+                    AmountRequested = toRefund.GrossAmount,
+                    RefundPercentage = 100m,
+                    Status = RefundRequestStatus.Pending
+                });
+            }
+
             await _uow.SaveChangesAsync(ct);
-            await NotifyAudienceAsync(order, FnbOrderStatus.Cancelled, ct);
+            await NotifyAudienceAsync(order, FnbOrderStatus.Cancelled, ct, refundAmount: toRefund?.GrossAmount);
             // Luu lai SAU khi gui thong bao — xem ghi chu o nhanh duoi.
             await _uow.SaveChangesAsync(ct);
             return Unit.Value;
@@ -171,7 +194,10 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
     /// <param name="step">Buoc nhan vien vua lam — khong phai order.Status, vi don tra truoc duoc dong
     /// ngay khi phuc vu va khach van can biet "mon da duoc phuc vu".</param>
-    private Task NotifyAudienceAsync(FnbOrder order, FnbOrderStatus step, CancellationToken ct)
+    /// <param name="refundAmount">MLACP-351: don bi huy sau khi khach da tra online — noi ro da tao yeu cau
+    /// hoan bao nhieu, thay vi chi bao "da bi huy" roi de khach tu hoi tien cua minh dau.</param>
+    private Task NotifyAudienceAsync(
+        FnbOrder order, FnbOrderStatus step, CancellationToken ct, decimal? refundAmount = null)
     {
         // Staff-placed orders on behalf of a walk-in guest have no app account to notify.
         if (order.AudienceUserId is not { } audienceUserId) return Task.CompletedTask;
@@ -183,6 +209,12 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
             FnbOrderStatus.Cancelled => ("Đơn F&B đã bị hủy", $"Đơn #{order.Id} của bạn đã bị hủy."),
             _ => (null, null)
         };
+        if (step == FnbOrderStatus.Cancelled && refundAmount is { } amount)
+            (title, body) = (
+                "Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
+                $"Đơn #{order.Id} của bạn đã bị phòng trà huỷ trước khi phục vụ. Chúng tôi đã tự động tạo " +
+                $"yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần làm gì " +
+                "thêm và sẽ được báo khi yêu cầu được xử lý.");
         if (title is null) return Task.CompletedTask;
 
         return _notifications.NotifyAsync(
