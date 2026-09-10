@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Tickets.Commands.ProcessVnPayCallback;
 
@@ -30,10 +31,10 @@ public sealed class PaymentsController : ControllerBase
         var queryParams = Request.Query
             .ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
-        var success = await _sender.Send(
+        var outcome = await _sender.Send(
             new ProcessVnPayCallbackCommand(queryParams), ct);
 
-        return success
+        return VnPayIpnProtocol.IsBuyerFacingSuccess(outcome)
             ? Redirect(_settings.PaymentSuccessUrl)
             : Redirect(_settings.PaymentFailedUrl);
     }
@@ -54,12 +55,14 @@ public sealed class PaymentsController : ControllerBase
         var queryParams = Request.Query
             .ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
-        var success = await _sender.Send(
+        var outcome = await _sender.Send(
             new ProcessVnPayCallbackCommand(queryParams), ct);
 
-        return Ok(success
-            ? new VnPayIpnResponse("00", "Confirm Success")
-            : new VnPayIpnResponse("99", "Unknown error"));
+        // MLACP-334. Truoc day moi thu khong phai thanh cong deu tra 99 "Unknown error", ma
+        // theo tai lieu VNPay la ma RETRY DUOC — nen mot callback trung lap binh thuong hay mot
+        // chu ky gia mao cung khien VNPay goi lai du 10 lan trong ~50 phut. Bang map o VnPayIpnProtocol.
+        var (rspCode, message) = VnPayIpnProtocol.ResponseFor(outcome);
+        return Ok(new VnPayIpnResponse(rspCode, message));
     }
 }
 

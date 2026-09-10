@@ -1,5 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -8,7 +9,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 namespace MusicLounge.Application.FnbOrders.Commands.ProcessFnbOrderPayment;
 
 internal sealed class ProcessFnbOrderPaymentCommandHandler
-    : IRequestHandler<ProcessFnbOrderPaymentCommand, bool>
+    : IRequestHandler<ProcessFnbOrderPaymentCommand, VnPayIpnOutcome>
 {
     private readonly IUnitOfWork _uow;
     private readonly IVnPayService _vnPay;
@@ -29,7 +30,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         _logger = logger;
     }
 
-    public async Task<bool> Handle(ProcessFnbOrderPaymentCommand request, CancellationToken ct)
+    public async Task<VnPayIpnOutcome> Handle(ProcessFnbOrderPaymentCommand request, CancellationToken ct)
     {
         var callbackResult = _vnPay.VerifyCallback(request.QueryParams);
 
@@ -38,7 +39,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
             request.QueryParams.TryGetValue("vnp_TxnRef", out var rejectedTxnRef);
             _logger.LogWarning(
                 "VNPay F&B callback rejected: invalid signature. TxnRef={TxnRef}", rejectedTxnRef);
-            return false;
+            return VnPayIpnOutcome.InvalidSignature;
         }
 
         request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRef);
@@ -51,18 +52,30 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
 
         var payments = await _uow.Repository<Payment, int>().FindAsync(p => p.OrderId == txnRef, ct);
         var payment = payments.FirstOrDefault();
-        if (payment is null) return false;
+        if (payment is null) return VnPayIpnOutcome.OrderNotFound;
 
         // Idempotency: only process if still in initial state.
         if (payment.Status != PaymentStatus.Pending)
-            return payment.Status == PaymentStatus.Confirmed;
+        {
+            // MLACP-334. Duong nay truoc day khong ghi ca log - mot xac nhan den muon bien mat
+            // hoan toan im lang.
+            if (callbackResult.IsSuccess && payment.Status != PaymentStatus.Confirmed)
+            {
+                await PaymentIncident.RecordConfirmedTooLateAsync(
+                    _uow, _notifications, _logger, "goi mon F&B", txnRef, callbackResult.Amount,
+                    "payment", payment.Id.ToString(), ct);
+                return VnPayIpnOutcome.ConfirmedTooLate;
+            }
+
+            return VnPayIpnOutcome.AlreadyProcessed;
+        }
 
         if (callbackResult.IsSuccess && callbackResult.Amount != payment.GrossAmount)
         {
             _logger.LogWarning(
                 "VNPay F&B callback amount mismatch: PaymentId={PaymentId} Expected={Expected} Actual={Actual}",
                 payment.Id, payment.GrossAmount, callbackResult.Amount);
-            return false;
+            return VnPayIpnOutcome.AmountMismatch;
         }
 
         if (!callbackResult.IsSuccess)
@@ -73,12 +86,12 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
             _logger.LogWarning(
                 "VNPay F&B payment failed: PaymentId={PaymentId} ResponseCode={ResponseCode}",
                 payment.Id, callbackResult.ResponseCode);
-            return false;
+            return VnPayIpnOutcome.RecordedAsFailed;
         }
 
         var order = await _uow.Repository<FnbOrder, int>()
             .GetByIdAsync(int.Parse(payment.ReferenceId), ct);
-        if (order is null) return false;
+        if (order is null) return VnPayIpnOutcome.InternalError;
 
         // F&B is commission-free (same premise as UpdateFnbOrderStatusCommandHandler's cash Paid
         // path) — net equals gross, no platform/tax split.
@@ -130,6 +143,6 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         // dong thong bao duoc them vao bo nho roi bien mat, khong bao loi gi ca.
         await _uow.SaveChangesAsync(ct);
 
-        return true;
+        return VnPayIpnOutcome.Confirmed;
     }
 }

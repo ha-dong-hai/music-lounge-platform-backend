@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Tickets.Events;
@@ -9,7 +10,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Tickets.Commands.ProcessVnPayCallback;
 
 internal sealed class ProcessVnPayCallbackCommandHandler
-    : IRequestHandler<ProcessVnPayCallbackCommand, bool>
+    : IRequestHandler<ProcessVnPayCallbackCommand, VnPayIpnOutcome>
 {
     private readonly IUnitOfWork _uow;
     private readonly IVnPayService _vnPay;
@@ -18,6 +19,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
     private readonly ITicketRepository _ticketRepo;
     private readonly IPublisher _publisher;
     private readonly IAsyncKeyedLock _lock;
+    private readonly INotificationService _notifications;
     private readonly ILogger<ProcessVnPayCallbackCommandHandler> _logger;
 
     public ProcessVnPayCallbackCommandHandler(
@@ -28,6 +30,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         ITicketRepository ticketRepo,
         IPublisher publisher,
         IAsyncKeyedLock @lock,
+        INotificationService notifications,
         ILogger<ProcessVnPayCallbackCommandHandler> logger)
     {
         _uow = uow;
@@ -37,10 +40,11 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         _ticketRepo = ticketRepo;
         _publisher = publisher;
         _lock = @lock;
+        _notifications = notifications;
         _logger = logger;
     }
 
-    public async Task<bool> Handle(ProcessVnPayCallbackCommand request, CancellationToken ct)
+    public async Task<VnPayIpnOutcome> Handle(ProcessVnPayCallbackCommand request, CancellationToken ct)
     {
         var result = _vnPay.VerifyCallback(request.QueryParams);
         request.QueryParams.TryGetValue("vnp_TxnRef", out var txnRefForLogging);
@@ -51,7 +55,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             _logger.LogWarning(
                 "VNPay ticket callback rejected — invalid signature: TxnRef={TxnRef} at {At}",
                 txnRefForLogging, DateTimeOffset.UtcNow);
-            return false;
+            return VnPayIpnOutcome.InvalidSignature;
         }
 
         var txnRef = txnRefForLogging;
@@ -70,17 +74,27 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             _logger.LogWarning(
                 "VNPay ticket callback rejected — no Payment found for TxnRef={TxnRef} at {At}",
                 txnRef, DateTimeOffset.UtcNow);
-            return false;
+            return VnPayIpnOutcome.OrderNotFound;
         }
 
         // Idempotency: VNPay có thể gọi lại nhiều lần (browser redirect + IPN cùng trỏ vào lệnh
         // này). Nếu đã xử lý rồi thì bỏ qua để tránh chuyển trạng thái 2 lần.
         if (payment.Status != PaymentStatus.Pending)
         {
+            // MLACP-334. Truoc day ca hai tinh huong duoi day deu tra ve cung mot ket qua, nen cai
+            // thu hai — tien that da thu — bien mat sau mot dong log muc Information.
+            if (result.IsSuccess && payment.Status != PaymentStatus.Confirmed)
+            {
+                await PaymentIncident.RecordConfirmedTooLateAsync(
+                    _uow, _notifications, _logger, "mua ve", txnRef, result.Amount,
+                    "payment", payment.Id.ToString(), ct);
+                return VnPayIpnOutcome.ConfirmedTooLate;
+            }
+
             _logger.LogInformation(
                 "VNPay ticket callback replay — PaymentId={PaymentId} TxnRef={TxnRef} already {Status} at {At}",
                 payment.Id, txnRef, payment.Status, DateTimeOffset.UtcNow);
-            return payment.Status == PaymentStatus.Confirmed;
+            return VnPayIpnOutcome.AlreadyProcessed;
         }
 
         // Signature only proves VNPay sent this callback, not that it's for the amount we asked
@@ -90,7 +104,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             _logger.LogWarning(
                 "VNPay ticket callback rejected — amount mismatch: PaymentId={PaymentId} TxnRef={TxnRef} Expected={Expected} Received={Received} at {At}",
                 payment.Id, txnRef, payment.GrossAmount, result.Amount, DateTimeOffset.UtcNow);
-            return false;
+            return VnPayIpnOutcome.AmountMismatch;
         }
 
         var ticketRepo = _uow.Repository<Ticket, Guid>();
@@ -183,6 +197,6 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 payment.Id, txnRef, result.ResponseCode, DateTimeOffset.UtcNow);
         }
 
-        return result.IsSuccess;
+        return result.IsSuccess ? VnPayIpnOutcome.Confirmed : VnPayIpnOutcome.RecordedAsFailed;
     }
 }

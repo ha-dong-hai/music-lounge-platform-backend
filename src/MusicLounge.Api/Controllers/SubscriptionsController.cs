@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MusicLounge.Api.Authorization;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Subscriptions.Commands.CancelSubscription;
@@ -126,8 +127,8 @@ public sealed class SubscriptionsController : ControllerBase
     {
         var queryParams = HttpContext.Request.Query
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-        var success = await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct);
-        return success
+        var outcome = await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct);
+        return VnPayIpnProtocol.IsBuyerFacingSuccess(outcome)
             ? Redirect(_settings.PaymentSuccessUrl)
             : Redirect(_settings.PaymentFailedUrl);
     }
@@ -142,10 +143,12 @@ public sealed class SubscriptionsController : ControllerBase
     {
         var queryParams = HttpContext.Request.Query
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-        var success = await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct);
-        return Ok(success
-            ? new VnPayIpnResponse("00", "Confirm Success")
-            : new VnPayIpnResponse("99", "Unknown error"));
+        var outcome = await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct);
+        // MLACP-334. Truoc day moi thu khong phai thanh cong deu tra 99 "Unknown error", ma
+        // theo tai lieu VNPay la ma RETRY DUOC — nen mot callback trung lap binh thuong hay mot
+        // chu ky gia mao cung khien VNPay goi lai du 10 lan trong ~50 phut. Bang map o VnPayIpnProtocol.
+        var (rspCode, message) = VnPayIpnProtocol.ResponseFor(outcome);
+        return Ok(new VnPayIpnResponse(rspCode, message));
     }
 
     [HttpGet("my")]
