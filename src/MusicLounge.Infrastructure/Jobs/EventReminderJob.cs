@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
@@ -62,7 +63,7 @@ public sealed class EventReminderJob
                     buyerId,
                     NotificationType.EventReminder,
                     "Sắp đến giờ diễn!",
-                    $"\"{show.Name}\" sẽ bắt đầu lúc {show.ScheduledStart:HH:mm dd/MM/yyyy}.",
+                    $"\"{show.Name}\" sẽ bắt đầu lúc {VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}.",
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);

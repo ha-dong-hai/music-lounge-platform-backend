@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -60,7 +61,7 @@ public sealed class SubscriptionExpiryWarningJob
                     NotificationType.SubscriptionExpiring,
                     "Gói subscription sắp hết hạn",
                     $"Gói subscription của bạn sẽ hết hạn trong {milestone} ngày nữa " +
-                    $"({sub.ExpiresAt:dd/MM/yyyy}). Gia hạn để tiếp tục tạo event mới.",
+                    $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). Gia hạn để tiếp tục tạo event mới.",
                     referenceType: "subscription",
                     referenceId: referenceId,
                     ct: ct);

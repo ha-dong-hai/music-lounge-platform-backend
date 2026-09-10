@@ -129,7 +129,7 @@ public static class TicketRefundPolicy
 
             if (scheduledStart.AddHours(-hours) <= now)
                 return $"Hạn hủy {hours} giờ trước giờ diễn đã trôi qua rồi so với lịch diễn hiện " +
-                       $"tại ({scheduledStart:dd/MM/yyyy HH:mm} UTC). Hãy rút ngắn hạn hủy hoặc dời " +
+                       $"tại ({VietnamTime.Format(scheduledStart)}). Hãy rút ngắn hạn hủy hoặc dời " +
                        $"lịch diễn ra xa hơn.";
         }
 

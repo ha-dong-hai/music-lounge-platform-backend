@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -82,8 +83,8 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
             {
                 PenaltyType.Warning => $"\"{lounge.Name}\" nhận cảnh cáo: {request.Reason}",
                 PenaltyType.Suspension => $"\"{lounge.Name}\" sẽ bị tạm khoá {request.SuspensionDays} ngày " +
-                    $"kể từ {effectiveAt:dd/MM/yyyy HH:mm}. Lý do: {request.Reason}. Bạn có thể kháng cáo.",
-                PenaltyType.Ban => $"\"{lounge.Name}\" sẽ bị khoá vĩnh viễn kể từ {effectiveAt:dd/MM/yyyy HH:mm}. " +
+                    $"kể từ {VietnamTime.Format(effectiveAt)}. Lý do: {request.Reason}. Bạn có thể kháng cáo.",
+                PenaltyType.Ban => $"\"{lounge.Name}\" sẽ bị khoá vĩnh viễn kể từ {VietnamTime.Format(effectiveAt)}. " +
                     $"Lý do: {request.Reason}. Bạn có thể kháng cáo.",
                 _ => request.Reason
             },
