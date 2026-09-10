@@ -62,8 +62,18 @@ public static class ShowCompletion
         if (show.ActualStart is null)
             return new ShowCompletionEvidence(ShowCompletionVerdict.NeverStarted, null, null, null);
 
-        var scheduledDuration = ShowSchedule.EffectiveEnd(show) - show.ScheduledStart;
         var actualDuration = show.ActualEnd.Value - show.ActualStart.Value;
+
+        // MLACP-355: khong co gio ket thuc khai bao thi khong co "thoi luong da ban" nao de so. Truoc
+        // day ShowSchedule.EffectiveEnd lap vao mac dinh 4 gio, nen mot buoi dien 2 gio dien tron ven
+        // bi tinh la giao 50% — duoi nguong D16 — va tranche cuoi cua phong tra bi giu cho Admin du
+        // khong co gi sai. Dung nguyen tac IsAcceptable da ghi: khong ket luan duoc thi coi la dat.
+        // Chot NeverStarted o tren van dung truoc: chua tung bat dau la bang chung that, co gio ket
+        // thuc hay khong. MLACP-347 da ap dung dung quy tac nay cho EvaluateLivestream.
+        if (show.ScheduledEnd is not { } declaredEnd)
+            return new ShowCompletionEvidence(ShowCompletionVerdict.Unknown, null, actualDuration, null);
+
+        var scheduledDuration = declaredEnd - show.ScheduledStart;
 
         // Lịch dài 0 hoặc âm là dữ liệu hỏng, không phải bằng chứng buổi diễn kém — chia cho nó chỉ
         // ra một con số vô nghĩa.
