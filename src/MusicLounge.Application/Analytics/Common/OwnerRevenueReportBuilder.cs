@@ -1,3 +1,4 @@
+using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -40,8 +41,16 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         decimal TicketAmount(Ticket t) => priceById.TryGetValue(t.PriceId, out var p) ? p.Price : 0m;
 
         // ---- F&B (chỉ đơn đã thanh toán) ----
-        var allFnbOrders = await _uow.Repository<FnbOrder, int>()
-            .FindAsync(o => o.LoungeId == loungeId && o.Status == FnbOrderStatus.Paid, ct);
+        // MLACP-349: "da thanh toan" khong con dong nghia voi buoc cuoi cua bep. Don tra truoc qua
+        // VNPay la tien that tu luc IPN xac nhan, du bep chua phuc vu xong — dem theo Status == Paid
+        // se bo sot no. Xem FnbOrderPayments.
+        var loungeFnbOrders = await _uow.Repository<FnbOrder, int>()
+            .FindAsync(o => o.LoungeId == loungeId && o.Status != FnbOrderStatus.Cancelled, ct);
+        var paidFnbOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(
+            _uow, loungeFnbOrders.Select(o => o.Id).ToList(), ct);
+        var allFnbOrders = loungeFnbOrders
+            .Where(o => FnbOrderPayments.IsPaid(o, paidFnbOrderIds.Contains(o.Id)))
+            .ToList();
         var fnbOrders = allFnbOrders.Where(o => InRange(o.CreatedAt)).ToList();
 
         // ---- Donate (đã thu tiền qua VNPay, bất kể đã chuyển cho nghệ sĩ hay chưa) ----

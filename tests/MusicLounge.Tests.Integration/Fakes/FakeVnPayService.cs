@@ -18,7 +18,15 @@ public sealed class FakeVnPayService : IVnPayService
         decimal.TryParse(amountStr, out var amount);
 
         var success = code == "00";
-        return new VnPayCallbackResult(true, success, txnRef ?? "", code ?? "99", amount / 100m);
+
+        // MLACP-349: truoc day tham so thu ba (TransactionId) duoc dien bang txnRef — ma don cua
+        // CHINH he thong — trong khi VnPayService that doc vnp_TransactionNo. Nay doc dung truong do.
+        // Van roi ve txnRef khi callback trong test khong gui vnp_TransactionNo: cac test cu goi IPN
+        // ma khong co truong nay, va cot TransactionId la UNIQUE nen de rong se lam chung va nhau.
+        queryParams.TryGetValue("vnp_TransactionNo", out var transactionNo);
+        var transactionId = string.IsNullOrEmpty(transactionNo) ? txnRef ?? "" : transactionNo;
+
+        return new VnPayCallbackResult(true, success, transactionId, code ?? "99", amount / 100m);
     }
 
     /// <summary>

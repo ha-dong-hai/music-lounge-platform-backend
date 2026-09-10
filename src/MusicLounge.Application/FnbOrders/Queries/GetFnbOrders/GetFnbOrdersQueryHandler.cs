@@ -54,6 +54,10 @@ internal sealed class GetFnbOrdersQueryHandler
         var menuItemsById = menuItems.ToDictionary(m => m.Id);
         var itemsByOrder = items.ToLookup(i => i.FnbOrderId);
 
+        var paidOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(_uow, orderIds, ct);
+        var liveUntil = await FnbOrderPayments.LiveOnlinePaymentDeadlinesAsync(
+            _uow, orderIds, DateTimeOffset.UtcNow, ct);
+
         var dtos = pageItems.Select(o => new FnbOrderDto(
             o.Id, o.LoungeId, o.ShowId, o.AudienceUserId, o.StaffId, o.TableNote,
             o.Status.ToString(), o.PaymentMethod.ToString(), o.TotalAmount, o.Note, o.CreatedAt,
@@ -61,7 +65,9 @@ internal sealed class GetFnbOrdersQueryHandler
                 i.Id, i.MenuItemId,
                 menuItemsById.TryGetValue(i.MenuItemId, out var mi) ? mi.Name : "(deleted)",
                 i.Quantity, i.UnitPrice, i.Cancelled, i.Note))
-            .ToList())
+            .ToList(),
+            FnbOrderPayments.IsPaid(o, paidOrderIds.Contains(o.Id)),
+            liveUntil.TryGetValue(o.Id, out var until) ? until : null)
         ).ToList();
 
         return new PaginatedResult<FnbOrderDto>(dtos, page, pageSize, total);
