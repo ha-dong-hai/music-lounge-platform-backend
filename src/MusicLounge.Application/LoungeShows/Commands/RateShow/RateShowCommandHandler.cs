@@ -37,10 +37,14 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
         // cua. Ve Livestream: khong co quay nao de quet, nen duoc tu dong chuyen sang Used boi
         // CheckInLivestreamViewerJob dung luc chu ve that su nhan duoc HlsUrl phat (xem
         // GetLivestreamDetailQueryHandler) — 2 co che khac nhau nhung hoi tu ve cung 1 dieu kien.
+        //
+        // MLACP-347: Refunded cung qua duoc — do la ve DA xem roi moi duoc hoan vi buoi phat song bi
+        // cat ngang. Chinh nhung nguoi nay la nhan chung cua buoi dien hong; chan ho thi buoi dien
+        // te nhat cua phong tra lai la buoi khong co danh gia nao.
         var hasCheckedIn = await _uow.Repository<Ticket, Guid>()
             .AnyAsync(t => t.ShowId == request.ShowId
                 && t.BuyerId == _currentUser.UserId
-                && t.Status == TicketStatus.Used, ct);
+                && (t.Status == TicketStatus.Used || t.Status == TicketStatus.Refunded), ct);
 
         if (!hasCheckedIn)
             throw new ForbiddenException("Bạn cần check-in (vào cửa hoặc xem livestream) để đánh giá show này.");

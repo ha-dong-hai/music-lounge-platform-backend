@@ -1,4 +1,5 @@
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common;
 
@@ -112,4 +113,56 @@ public static class ShowCompletion
             ShowCompletionVerdict.NeverStarted => false,
             _ => evidence.Ratio!.Value >= threshold
         };
+
+    /// <summary>
+    /// MLACP-347. Livestream đã giao được bao nhiêu phần thời lượng đã bán — đo từ chính bản ghi
+    /// <see cref="Livestream"/>, không phải từ buổi diễn.
+    ///
+    /// <para><b>Vì sao không dùng <see cref="Evaluate"/>.</b> Với vé livestream, nền tảng chính là
+    /// kênh giao hàng, nên mốc của stream là bằng chứng trực tiếp về thứ người mua nhận được. Và với
+    /// stream mất kết nối rồi quá hạn chờ, <c>EndedAt</c> là lúc <b>nền tảng thôi chờ</b>, không phải
+    /// lúc người xem mất hình — trong khoảng chờ (mặc định 5 phút) không có gì được phát. Hình mất từ
+    /// <c>DisconnectedAt</c>.</para>
+    ///
+    /// <para><b>Không có giờ kết thúc khai báo thì không kết luận.</b> <c>ScheduledEnd</c> không bắt
+    /// buộc, và khi trống thì <see cref="ShowSchedule.EffectiveEnd(LoungeShow)"/> lấy mặc định
+    /// <see cref="ShowSchedule.DefaultDurationHours"/> giờ — một buổi 90 phút diễn trọn vẹn sẽ bị tính
+    /// là giao chưa tới 40%. Đem con số mặc định đó đi hoàn tiền là phạt phòng trà vì một ô không
+    /// điền, không phải vì không giao hàng.</para>
+    /// </summary>
+    public static ShowCompletionEvidence EvaluateLivestream(LoungeShow show, Livestream livestream)
+    {
+        var unknown = new ShowCompletionEvidence(ShowCompletionVerdict.Unknown, null, null, null);
+
+        // Chưa từng lên sóng là việc của RefundUndeliveredLivestreamTicketsJob (MLACP-340), và
+        // stream chưa kết thúc thì chưa có gì để đo.
+        if (livestream.StartedAt is not { } startedAt || !IsFinished(livestream.Status))
+            return unknown;
+
+        var deliveredUntil =
+            livestream.Status == LivestreamStatus.Failed && livestream.DisconnectedAt is { } lostAt
+                ? lostAt
+                : livestream.EndedAt;
+
+        if (deliveredUntil is null || show.ScheduledEnd is not { } scheduledEnd)
+            return unknown;
+
+        var scheduledDuration = scheduledEnd - show.ScheduledStart;
+        if (scheduledDuration <= TimeSpan.Zero)
+            return unknown;
+
+        var actualDuration = deliveredUntil.Value - startedAt;
+        if (actualDuration < TimeSpan.Zero)
+            actualDuration = TimeSpan.Zero;
+
+        return new ShowCompletionEvidence(
+            ShowCompletionVerdict.Measured,
+            scheduledDuration,
+            actualDuration,
+            (decimal)(actualDuration / scheduledDuration));
+    }
+
+    /// <summary>Stream đã dừng hẳn — không còn gì để phát thêm.</summary>
+    public static bool IsFinished(LivestreamStatus status)
+        => status is LivestreamStatus.Ended or LivestreamStatus.Terminated or LivestreamStatus.Failed;
 }
