@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Common.Interfaces;
@@ -15,8 +16,13 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
     private static readonly TimeSpan VnOffset = TimeSpan.FromHours(7);
 
     private readonly IUnitOfWork _uow;
+    private readonly ISystemConfigService _config;
 
-    public OwnerRevenueReportBuilder(IUnitOfWork uow) => _uow = uow;
+    public OwnerRevenueReportBuilder(IUnitOfWork uow, ISystemConfigService config)
+    {
+        _uow = uow;
+        _config = config;
+    }
 
     public async Task<OwnerRevenueReportDto> BuildAsync(
         int loungeId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken ct = default)
@@ -54,6 +60,17 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         var fnbOrders = allFnbOrders.Where(o => InRange(o.CreatedAt)).ToList();
 
         // ---- Donate (đã thu tiền qua VNPay, bất kể đã chuyển cho nghệ sĩ hay chưa) ----
+        // MLACP-359: trước đây cả Gross được cộng vào doanh thu của phòng trà. Phần nghệ sĩ được
+        // nhận là tiền phòng trà thu hộ và phải chuyển đi — theo VAS 14, khoản thu hộ bên thứ ba
+        // không phải doanh thu. Chỉ phần còn lại (Gross − phần nghệ sĩ) là doanh thu của phòng trà.
+        // Phần nghệ sĩ tính đúng như ConfirmDonationPaid tính khi ghi sổ chặng 2: cùng hàm, cùng tỉ
+        // lệ chốt lúc VNPay xác nhận, cùng tỉ lệ dự phòng cho donate có từ trước khi có cột chốt.
+        var fallbackPerformerShareRate = await _config.GetDecimalAsync(
+            ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+        decimal ForPerformer(Donation d) => PaymentFeeCalculator.SplitDonationPayout(
+            d.Gross, d.Net, d.PerformerShareRateSnapshot ?? fallbackPerformerShareRate).PerformerAmount;
+        decimal OwnerShare(Donation d) => d.Gross - ForPerformer(d);
+
         var performances = await _uow.Repository<Performance, int>()
             .FindAsync(p => showIds.Contains(p.LoungeShowId), ct);
         var performanceIds = performances.Select(p => p.Id).ToHashSet();
@@ -75,13 +92,17 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
             {
                 var ticketRevenue = ticketsByShow[id].Sum(TicketAmount);
                 var fnbRevenue = fnbByShow[id].Sum(o => o.TotalAmount);
-                var donationRevenue = donationsByShow[id].Sum(d => d.Gross);
+                var donationRevenue = donationsByShow[id].Sum(OwnerShare);
+                var forPerformers = donationsByShow[id].Sum(ForPerformer);
                 var total = ticketRevenue + fnbRevenue + donationRevenue;
                 var show = showById[id];
                 return new RevenueByEventDto(
-                    id, show.Name, show.ScheduledStart, ticketRevenue, fnbRevenue, donationRevenue, total);
+                    id, show.Name, show.ScheduledStart, ticketRevenue, fnbRevenue, donationRevenue, total,
+                    forPerformers);
             })
-            .Where(e => e.TotalRevenue > 0)
+            // Buổi diễn chỉ có donate vẫn phải hiện dù phần phòng trà giữ lại bằng 0 — khoản thu hộ
+            // cũng là tiền đi qua tay phòng trà, cần đối soát.
+            .Where(e => e.TotalRevenue > 0 || e.DonationCollectedForPerformers > 0)
             .OrderByDescending(e => e.ScheduledStart)
             .ToList();
 
@@ -105,16 +126,19 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
             {
                 var ticketRevenue = tickets.Where(t => MonthOf(t.CreatedAt) == ym).Sum(TicketAmount);
                 var fnbRevenue = fnbOrders.Where(o => MonthOf(o.CreatedAt) == ym).Sum(o => o.TotalAmount);
-                var donationRevenue = donations.Where(d => MonthOf(d.PaymentConfirmedAt!.Value) == ym).Sum(d => d.Gross);
+                var monthDonations = donations.Where(d => MonthOf(d.PaymentConfirmedAt!.Value) == ym).ToList();
+                var donationRevenue = monthDonations.Sum(OwnerShare);
                 return new RevenueByMonthDto(
                     ym.Year, ym.Month, ticketRevenue, fnbRevenue, donationRevenue,
-                    ticketRevenue + fnbRevenue + donationRevenue);
+                    ticketRevenue + fnbRevenue + donationRevenue,
+                    monthDonations.Sum(ForPerformer));
             })
             .ToList();
 
         var totalTicket = tickets.Sum(TicketAmount);
         var totalFnb = fnbOrders.Sum(o => o.TotalAmount);
-        var totalDonation = donations.Sum(d => d.Gross);
+        var totalDonation = donations.Sum(OwnerShare);
+        var totalForPerformers = donations.Sum(ForPerformer);
 
         // ---- Quyet toan da nhan + phi nen tang da tra (MLACP-207) ----
         // Settlement.OwnerId la User.Id (co the co nhieu venue) — thu hep dung venue nay qua
@@ -157,6 +181,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
             TotalTicketRevenue: totalTicket,
             TotalFnbRevenue: totalFnb,
             TotalDonationRevenue: totalDonation,
+            TotalDonationCollectedForPerformers: totalForPerformers,
             GrandTotal: totalTicket + totalFnb + totalDonation,
             TotalSettlementReceived: totalSettlementReceived,
             TotalPlatformFeePaid: totalPlatformFeePaid,
