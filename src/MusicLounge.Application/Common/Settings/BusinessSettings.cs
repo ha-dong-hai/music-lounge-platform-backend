@@ -19,5 +19,11 @@ public sealed class BusinessSettings
     // Program.cs fails fast at startup if any of these seven are still unconfigured.
     public string PaymentSuccessUrl { get; init; } = string.Empty;
     public string PaymentFailedUrl { get; init; } = string.Empty;
+
+    // MLACP-344: trang cho khach DA tra tien nhung he thong chua cap duoc gi (VNPay xac nhan cho mot
+    // ban ghi da dong). Trang thanh cong la noi doi — khach khong co gi; trang that bai cung sai —
+    // tien da roi khoi tai khoan, va khach thay "that bai" co the mua lai roi bi tru hai lan. De
+    // trong thi quay ve PaymentFailedUrl nhu cu, de khong lam vo moi truong chua cau hinh.
+    public string PaymentProcessingUrl { get; init; } = string.Empty;
     public string PasswordResetUrl { get; init; } = string.Empty;
 }

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Settings;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
@@ -86,6 +87,28 @@ public static class VnPayIpnProtocol
     /// </summary>
     public static bool IsBuyerFacingSuccess(VnPayIpnOutcome outcome)
         => outcome is VnPayIpnOutcome.Confirmed or VnPayIpnOutcome.AlreadyProcessed;
+
+    /// <summary>
+    /// MLACP-344: trang trinh duyet cua khach duoc dua toi, cho ca bon luong thanh toan.
+    ///
+    /// <para>Ba ket cuc chu khong phai hai. <see cref="VnPayIpnOutcome.ConfirmedTooLate"/> nghia la
+    /// khach DA tra tien ma chua duoc cap gi — trang thanh cong la noi doi, trang that bai cung sai
+    /// vi tien da roi khoi tai khoan, va khach thay "that bai" co the mua lai roi bi tru hai lan.</para>
+    ///
+    /// <para>Chua cau hinh <c>PaymentProcessingUrl</c> thi quay ve trang that bai nhu cu, de khong
+    /// lam vo moi truong dang chay.</para>
+    /// </summary>
+    public static string BuyerLandingUrl(VnPayIpnOutcome outcome, BusinessSettings settings)
+    {
+        if (IsBuyerFacingSuccess(outcome))
+            return settings.PaymentSuccessUrl;
+
+        if (outcome == VnPayIpnOutcome.ConfirmedTooLate
+            && !string.IsNullOrWhiteSpace(settings.PaymentProcessingUrl))
+            return settings.PaymentProcessingUrl;
+
+        return settings.PaymentFailedUrl;
+    }
 }
 
 /// <summary>

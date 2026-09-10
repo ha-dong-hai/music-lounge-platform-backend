@@ -128,9 +128,7 @@ public sealed class SubscriptionsController : ControllerBase
         var queryParams = HttpContext.Request.Query
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
         var outcome = await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct);
-        return VnPayIpnProtocol.IsBuyerFacingSuccess(outcome)
-            ? Redirect(_settings.PaymentSuccessUrl)
-            : Redirect(_settings.PaymentFailedUrl);
+        return Redirect(VnPayIpnProtocol.BuyerLandingUrl(outcome, _settings));
     }
 
     // Register this URL (not vnpay-return) as the order's IPN URL in the VNPay merchant portal —
