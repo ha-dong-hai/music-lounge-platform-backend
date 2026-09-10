@@ -96,9 +96,9 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
                 buyerId,
                 NotificationType.EventRescheduled,
                 "Lịch diễn đã thay đổi",
-                $"\"{show.Name}\" đã đổi lịch từ {oldStart:HH:mm dd/MM/yyyy} sang " +
-                $"{show.ScheduledStart:HH:mm dd/MM/yyyy}. Bạn có thể hủy vé để được hoàn tiền nếu không " +
-                "thể tham dự vào thời gian mới.",
+                $"\"{show.Name}\" đã đổi lịch từ {VietnamTime.Format(oldStart, "HH:mm dd/MM/yyyy")} sang " +
+                $"{VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}. " +
+                "Bạn có thể hủy vé để được hoàn tiền nếu không thể tham dự vào thời gian mới.",
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

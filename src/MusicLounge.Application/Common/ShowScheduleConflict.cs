@@ -15,8 +15,6 @@ namespace MusicLounge.Application.Common;
 /// </summary>
 public static class ShowScheduleConflict
 {
-    private static readonly TimeSpan VnOffset = TimeSpan.FromHours(7);
-
     /// <param name="excludeShowId">
     /// Buổi diễn đang được sửa/nộp duyệt. Không loại nó ra thì nó tự đụng chính mình.
     /// </param>
@@ -71,5 +69,5 @@ public static class ShowScheduleConflict
     /// gian theo UTC, nên đưa nguyên UTC ra sẽ lệch 7 tiếng so với cái lịch họ đang nhìn.
     /// </summary>
     private static string Vn(DateTimeOffset value)
-        => value.ToOffset(VnOffset).ToString("dd/MM/yyyy HH:mm");
+        => VietnamTime.Format(value);
 }

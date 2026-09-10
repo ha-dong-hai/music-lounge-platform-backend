@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
@@ -160,7 +161,7 @@ internal sealed class GeneratePosterCommandHandler
         var prompt =
             $"Thiết kế poster quảng cáo cho một buổi diễn nhạc sống tại Việt Nam. " +
             $"Tên chương trình: \"{show.Name}\". Địa điểm: \"{lounge.Name}\". " +
-            $"Ngày diễn: {show.ScheduledStart:dd/MM/yyyy HH:mm}. " +
+            $"Ngày diễn: {VietnamTime.Format(show.ScheduledStart)}. " +
             $"Thể loại/không khí: {tagLine}. " +
             "Phong cách: chuyên nghiệp, hấp dẫn, phù hợp đăng mạng xã hội, bố cục rõ ràng có chỗ cho tiêu đề.";
 

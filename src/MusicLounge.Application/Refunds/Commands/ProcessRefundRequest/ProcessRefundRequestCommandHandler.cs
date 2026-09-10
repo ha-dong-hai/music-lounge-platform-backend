@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -117,7 +118,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         if (transactionAt.AddDays(refundWindowDays) < DateTimeOffset.UtcNow)
             throw new DomainException(
                 $"Giao dịch này đã quá {refundWindowDays} ngày kể từ lúc thanh toán " +
-                $"({transactionAt:dd/MM/yyyy}), vượt quá thời hạn VNPay còn nhận lệnh hoàn tiền. " +
+                $"({VietnamTime.Format(transactionAt, "dd/MM/yyyy")}), vượt quá thời hạn VNPay còn nhận lệnh hoàn tiền. " +
                 "Không thể hoàn tự động — cần chuyển khoản thủ công cho người mua rồi ghi nhận lại, " +
                 "và yêu cầu này vẫn giữ nguyên trạng thái chờ xử lý.");
 

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -78,7 +79,7 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
                 NotificationType.PenaltyIssued,
                 "Có kháng cáo mới cần xử lý",
                 $"\"{lounge.Name}\" đã kháng cáo phạt #{penalty.Id} ({penalty.PenaltyType}). " +
-                $"Hạn xử lý: {penalty.AppealDeadline:dd/MM/yyyy HH:mm}.",
+                $"Hạn xử lý: {VietnamTime.Format(penalty.AppealDeadline!.Value)}.",
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);

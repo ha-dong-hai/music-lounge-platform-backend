@@ -151,7 +151,10 @@ public sealed class ScheduleConflictTests
         var res = await CreateAsync(loungeId, start.AddHours(1), start.AddHours(4));
 
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().Contain(start.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm"),
+        // MLACP-358: culture cố định — không có nó, "/" bị .NET thay bằng dấu ngăn cách ngày của máy
+        // chạy test, và bài này chỉ khớp với code vì hai bên cùng lệch theo một máy.
+        body.Should().Contain(start.ToOffset(TimeSpan.FromHours(7))
+                .ToString("dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture),
             "giờ Việt Nam, vì người đọc đang đứng ở phòng trà đó chứ không ở múi giờ UTC");
     }
 
