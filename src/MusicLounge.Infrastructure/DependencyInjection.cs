@@ -133,6 +133,7 @@ public static class DependencyInjection
         services.AddScoped<AutoConfirmDonationsJob>();
         services.AddScoped<ExpireStuckDonationsJob>();
         services.AddScoped<CancelAbandonedPaymentsJob>();
+        services.AddScoped<RemindOwnerToStartShowJob>();
         services.AddScoped<SettlementReleaseJob>();
         services.AddScoped<AutoEndStaleShowsJob>();
         services.AddScoped<RefundSlaBreachAlertJob>();
@@ -277,6 +278,13 @@ public static class DependencyInjection
 
         Recurring<CancelAbandonedPaymentsJob>(
             "cancel-abandoned-payments",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            Cron.Minutely());
+
+        // Moi phut: nhac cang som cang cuu duoc dem dien. Truy van chi cham cac show Published va
+        // co chot chong trung nen khong gay tai va khong gui lap.
+        Recurring<RemindOwnerToStartShowJob>(
+            "remind-owner-to-start-show",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
 
