@@ -7,7 +7,10 @@ public sealed record RevenueByEventDto(
     decimal TicketRevenue,
     decimal FnbRevenue,
     decimal DonationRevenue,
-    decimal TotalRevenue);
+    decimal TotalRevenue,
+    // MLACP-359: phần donate phòng trà thu hộ và phải chuyển cho nghệ sĩ — không nằm trong
+    // DonationRevenue/TotalRevenue. DonationRevenue + DonationCollectedForPerformers = tổng Gross.
+    decimal DonationCollectedForPerformers);
 
 public sealed record RevenueByMonthDto(
     int Year,
@@ -15,12 +18,17 @@ public sealed record RevenueByMonthDto(
     decimal TicketRevenue,
     decimal FnbRevenue,
     decimal DonationRevenue,
-    decimal TotalRevenue);
+    decimal TotalRevenue,
+    decimal DonationCollectedForPerformers);
 
 public sealed record OwnerRevenueReportDto(
     decimal TotalTicketRevenue,
     decimal TotalFnbRevenue,
+    // MLACP-359: phần donate thuộc về phòng trà (Gross − phần nghệ sĩ), không phải toàn bộ Gross.
     decimal TotalDonationRevenue,
+    // Tiền donate phòng trà thu hộ nghệ sĩ — phải chuyển đi, nên không phải doanh thu (VAS 14:
+    // khoản thu hộ bên thứ ba không làm tăng vốn chủ sở hữu). Không cộng vào GrandTotal.
+    decimal TotalDonationCollectedForPerformers,
     decimal GrandTotal,
     // MLACP-207: "quyết toán đã nhận" — tổng NetAmount các tranche Settlement đã Released (đã về
     // tài khoản ngân hàng Owner) trong kỳ, theo ReleasedAt. Khác GrandTotal (doanh thu gộp phát

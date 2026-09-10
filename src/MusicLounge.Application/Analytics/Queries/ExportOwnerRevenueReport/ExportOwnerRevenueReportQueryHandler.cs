@@ -68,15 +68,20 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
         sb.AppendLine(Csv("Loại doanh thu", "Số tiền (VNĐ)"));
         sb.AppendLine(Csv("Vé", report.TotalTicketRevenue.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine(Csv("F&B", report.TotalFnbRevenue.ToString(CultureInfo.InvariantCulture)));
-        sb.AppendLine(Csv("Donate", report.TotalDonationRevenue.ToString(CultureInfo.InvariantCulture)));
+        sb.AppendLine(Csv("Donate (phần phòng trà)", report.TotalDonationRevenue.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine(Csv("Tổng cộng", report.GrandTotal.ToString(CultureInfo.InvariantCulture)));
+        // MLACP-359: tiền đi qua tay phòng trà nhưng không phải của phòng trà — tách riêng, không
+        // cộng vào "Tổng cộng", để kế toán không ghi nhầm thành doanh thu.
+        sb.AppendLine(Csv("Donate thu hộ nghệ sĩ (không phải doanh thu)",
+            report.TotalDonationCollectedForPerformers.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine(Csv("Quyết toán đã nhận", report.TotalSettlementReceived.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine(Csv("Phí nền tảng đã trả", report.TotalPlatformFeePaid.ToString(CultureInfo.InvariantCulture)));
         sb.AppendLine();
 
         sb.AppendLine(Csv("Theo buổi diễn"));
         sb.AppendLine(Csv(
-            "Mã buổi diễn", "Tên buổi diễn", "Ngày diễn", "Doanh thu vé", "Doanh thu F&B", "Doanh thu donate", "Tổng"));
+            "Mã buổi diễn", "Tên buổi diễn", "Ngày diễn", "Doanh thu vé", "Doanh thu F&B", "Doanh thu donate", "Tổng",
+            "Donate thu hộ nghệ sĩ"));
         foreach (var e in report.ByEvent)
         {
             sb.AppendLine(Csv(
@@ -86,13 +91,14 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
                 e.TicketRevenue.ToString(CultureInfo.InvariantCulture),
                 e.FnbRevenue.ToString(CultureInfo.InvariantCulture),
                 e.DonationRevenue.ToString(CultureInfo.InvariantCulture),
-                e.TotalRevenue.ToString(CultureInfo.InvariantCulture)));
+                e.TotalRevenue.ToString(CultureInfo.InvariantCulture),
+                e.DonationCollectedForPerformers.ToString(CultureInfo.InvariantCulture)));
         }
         sb.AppendLine();
 
         sb.AppendLine(Csv("Theo tháng"));
         sb.AppendLine(Csv(
-            "Năm", "Tháng", "Doanh thu vé", "Doanh thu F&B", "Doanh thu donate", "Tổng"));
+            "Năm", "Tháng", "Doanh thu vé", "Doanh thu F&B", "Doanh thu donate", "Tổng", "Donate thu hộ nghệ sĩ"));
         foreach (var m in report.ByMonth)
         {
             sb.AppendLine(Csv(
@@ -101,7 +107,8 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
                 m.TicketRevenue.ToString(CultureInfo.InvariantCulture),
                 m.FnbRevenue.ToString(CultureInfo.InvariantCulture),
                 m.DonationRevenue.ToString(CultureInfo.InvariantCulture),
-                m.TotalRevenue.ToString(CultureInfo.InvariantCulture)));
+                m.TotalRevenue.ToString(CultureInfo.InvariantCulture),
+                m.DonationCollectedForPerformers.ToString(CultureInfo.InvariantCulture)));
         }
 
         return sb.ToString();
