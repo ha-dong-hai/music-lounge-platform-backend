@@ -80,6 +80,7 @@ internal sealed class GetSettlementsPendingReviewQueryHandler
                 ScheduledEnd: show is null ? null : ShowSchedule.EffectiveEnd(show),
                 ActualStart: show?.ActualStart,
                 ActualEnd: show?.ActualEnd,
+                Verdict: evidence.Verdict.ToString(),
                 Ratio: evidence.Ratio,
                 Threshold: threshold,
                 HasPendingRefund: paymentsWithPendingRefund.Contains(s.PaymentId));

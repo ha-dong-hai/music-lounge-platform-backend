@@ -7,10 +7,12 @@ namespace MusicLounge.Application.Settlements.DTOs;
 /// vé không. Nên DTO mang cả thời lượng dự kiến, thời lượng thật, tỉ lệ, và ngưỡng đang áp — thay
 /// vì bắt Admin đi tra thủ công rồi tự tính lại một con số có thể lệch.</para>
 /// </summary>
-/// <param name="Ratio">
-/// <c>null</c> nghĩa là không kết luận được từ dữ liệu (buổi diễn chưa từng được đánh dấu bắt đầu
-/// hoặc kết thúc), khác hẳn với tỉ lệ thấp.
+/// <param name="Verdict">
+/// Vì sao khoản này bị giữ lại. <c>NeverStarted</c> nghĩa là buổi diễn đã đóng mà chưa từng được
+/// đánh dấu bắt đầu — có thể nó đã không diễn ra, và khi đó người mua vé cần được hoàn tiền.
+/// <c>Measured</c> nghĩa là có diễn ra nhưng ngắn hơn dự kiến, xem <c>Ratio</c>.
 /// </param>
+/// <param name="Ratio">Chỉ có giá trị khi <c>Verdict</c> là <c>Measured</c>.</param>
 public sealed record SettlementReviewDto(
     int SettlementId,
     int OwnerId,
@@ -25,6 +27,7 @@ public sealed record SettlementReviewDto(
     DateTimeOffset? ScheduledEnd,
     DateTimeOffset? ActualStart,
     DateTimeOffset? ActualEnd,
+    string Verdict,
     decimal? Ratio,
     decimal Threshold,
     bool HasPendingRefund);
