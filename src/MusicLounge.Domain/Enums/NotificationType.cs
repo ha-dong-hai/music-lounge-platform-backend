@@ -42,5 +42,14 @@ public enum NotificationType
     /// MLACP-334: VNPay bao thanh cong cho mot ban ghi da bi dong (Failed/Cancelled) — tien that da
     /// thu ma he thong khong cap duoc gi. Can nguoi doi soat roi cap lai hoac hoan tien.
     /// </summary>
-    PaymentConfirmedAfterExpiry
+    PaymentConfirmedAfterExpiry,
+
+    /// <summary>
+    /// MLACP-335: chot D16 vua giu lai mot khoan quyet toan. Truoc day job chi doi trang thai roi
+    /// di tiep — khong ai biet co khoan dang cho quyet, va khong co duong nao de quyet.
+    /// </summary>
+    SettlementPendingReview,
+
+    /// <summary>MLACP-335: Admin da quyet khong chi tra tranche nay.</summary>
+    SettlementWithheld
 }

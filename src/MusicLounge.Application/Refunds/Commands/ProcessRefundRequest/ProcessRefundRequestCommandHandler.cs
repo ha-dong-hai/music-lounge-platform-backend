@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -211,8 +211,13 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // shrink whichever ones haven't released yet by the same proportion, or
         // SettlementReleaseJob will still pay the owner for a ticket that was refunded.
         var settlementRepo = _uow.Repository<Settlement, int>();
+        //
+        // MLACP-335: phai gom ca PendingReview, khong chi Scheduled. Mot tranche bi chot D16 giu
+        // lai VAN CHUA chi tra dong nao — no chi dang doi Admin quyet. Bo sot no o day nghia la neu
+        // Admin sau do bam chi tra, phong tra nhan du tien cho ca phan da hoan cho khach.
         var pendingSettlements = await settlementRepo.FindAsync(
-            s => s.PaymentId == payment.Id && s.Status == SettlementStatus.Scheduled, ct);
+            s => s.PaymentId == payment.Id
+                 && (s.Status == SettlementStatus.Scheduled || s.Status == SettlementStatus.PendingReview), ct);
         foreach (var settlement in pendingSettlements)
         {
             settlement.NetAmount -= Math.Round(settlement.NetAmount * ratio, 2);
