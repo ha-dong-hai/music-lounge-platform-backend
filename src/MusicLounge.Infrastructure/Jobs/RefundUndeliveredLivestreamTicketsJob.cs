@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -134,6 +135,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
         var priceById = await PriceByIdAsync(affected, ct);
 
         var created = 0;
+        var payers = await PayersAsync(affected, ct);
 
         foreach (var ticket in affected)
         {
@@ -141,10 +143,13 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
 
             if (ticket.PaymentId is null) continue;
 
+            await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                NotificationType.EventCancelled, show.Name, show.Id, "buổi diễn không được phát sóng", ct);
+
             _ctx.RefundRequests.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId.Value,
-                RequestedBy = ticket.BuyerId,
+                RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                 Reason = "Buổi diễn không được phát sóng — hoàn 100%",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
@@ -160,7 +165,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
                     "Buổi diễn không được phát sóng",
                     $"\"{show.Name}\" chưa bao giờ lên sóng nên bạn không xem được gì. Vé của bạn đã " +
                     "được huỷ và chúng tôi đã tự động tạo yêu cầu hoàn 100% tiền vé — bạn không cần " +
-                    "làm gì thêm.",
+                    "làm gì thêm." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -172,6 +177,13 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             show.Id, affected.Count, created, now);
 
         await _ctx.SaveChangesAsync(ct);
+    }
+
+    /// <summary>MLACP-370: người đã trả tiền của từng thanh toán — tiền hoàn về họ, không về người giữ vé.</summary>
+    private async Task<IReadOnlyDictionary<int, int?>> PayersAsync(IEnumerable<Ticket> tickets, CancellationToken ct)
+    {
+        var ids = tickets.Where(t => t.PaymentId is not null).Select(t => t.PaymentId!.Value).Distinct().ToList();
+        return await _ctx.Payments.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id, p => p.PayerId, ct);
     }
 
     // ── Lên sóng rồi bị cắt ngang (MLACP-347) ───────────────────────────────
@@ -238,6 +250,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
         var priceById = await PriceByIdAsync(affected, ct);
         var deliveredPct = WholePercent(ratio);
         var thresholdPct = WholePercent(threshold);
+        var payers = await PayersAsync(affected, ct);
 
         foreach (var ticket in affected)
         {
@@ -246,10 +259,13 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
                 ? TicketStatus.Refunded
                 : TicketStatus.Cancelled;
 
+            await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                NotificationType.LivestreamCutShort, show.Name, show.Id, "buổi phát sóng bị cắt ngang", ct);
+
             _ctx.RefundRequests.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId!.Value,
-                RequestedBy = ticket.BuyerId,
+                RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                 Reason = $"Buổi phát sóng chỉ chạy {deliveredPct}% thời lượng đã bán " +
                          $"(ngưỡng {thresholdPct}%) — hoàn 100%",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
@@ -271,8 +287,10 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
                 NotificationType.LivestreamCutShort,
                 "Buổi phát sóng bị cắt ngang",
                 $"\"{show.Name}\" chỉ phát được {deliveredPct}% thời lượng đã bán. Chúng tôi đã tự " +
-                "động tạo yêu cầu hoàn 100% tiền vé livestream cho bạn — bạn không cần làm gì thêm. " +
-                "Nếu bạn đã vào xem, bạn vẫn đánh giá được buổi diễn này.",
+                "động tạo yêu cầu hoàn 100% tiền vé livestream — bạn không cần làm gì thêm. " +
+                "Nếu bạn đã vào xem, bạn vẫn đánh giá được buổi diễn này." +
+                (affected.Any(t => t.BuyerId == buyerId && TicketRefundRecipients.WasTransferred(t, payers))
+                    ? TicketRefundRecipients.TransferredHolderNote : ""),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

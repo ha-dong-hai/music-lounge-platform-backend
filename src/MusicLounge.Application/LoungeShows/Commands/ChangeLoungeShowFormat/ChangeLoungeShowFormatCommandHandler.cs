@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -68,6 +69,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
             var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
             var refundRepo = _uow.Repository<RefundRequest, int>();
+            var payers = await TicketRefundRecipients.PayersAsync(_uow, physicalTickets, ct);
 
             foreach (var ticket in physicalTickets)
             {
@@ -76,10 +78,13 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
 
                 if (ticket.PaymentId is null) continue;
 
+                await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                    NotificationType.EventFormatChanged, show.Name, show.Id, "buổi diễn chuyển sang online", ct);
+
                 refundRepo.Add(new RefundRequest
                 {
                     PaymentId = ticket.PaymentId.Value,
-                    RequestedBy = ticket.BuyerId,
+                    RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                     Reason = "Event chuyển từ Offline sang Online — hoàn 100% vé vật lý (D13)",
                     AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                     RefundPercentage = 100m,
@@ -92,7 +97,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                         NotificationType.EventFormatChanged,
                         "Event đã chuyển sang hình thức Online",
                         $"\"{show.Name}\" đã chuyển từ trực tiếp sang online. Vé vật lý của bạn đã được " +
-                        "hủy và tự động tạo yêu cầu hoàn 100% tiền vé.",
+                        "hủy và tự động tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
                         referenceType: "show",
                         referenceId: show.Id.ToString(),
                         ct: ct);
