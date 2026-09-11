@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -200,8 +201,12 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         };
         _uow.Repository<VenuePenalty, int>().Add(penalty);
 
-        lounge.Status = LoungeStatus.Warned;
-        loungeRepo.Update(lounge);
+        // MLACP-367: cung quy tac voi IssuePenalty — canh cao khong duoc mo khoa mot phong tra dang bi khoa.
+        if (PenaltyLifecycle.StatusAfterImposing(lounge.Status, PenaltyType.Warning) is { } warnedStatus)
+        {
+            lounge.Status = warnedStatus;
+            loungeRepo.Update(lounge);
+        }
 
         await _notifications.NotifyAsync(
             lounge.OwnerId,

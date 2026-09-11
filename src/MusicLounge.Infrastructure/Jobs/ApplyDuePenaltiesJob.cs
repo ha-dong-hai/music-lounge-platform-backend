@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -52,11 +53,10 @@ public sealed class ApplyDuePenaltiesJob
             var lounge = await _ctx.Lounges.FirstOrDefaultAsync(l => l.Id == penalty.LoungeId, ct);
             if (lounge is null) continue;
 
-            var targetStatus = penalty.PenaltyType == PenaltyType.Suspension
-                ? LoungeStatus.Suspended
-                : LoungeStatus.Locked;
-
-            lounge.Status = targetStatus;
+            // MLACP-367: khong bao gio nhe di — mot lenh tam khoa co hieu luc sau lenh khoa vinh vien truoc
+            // day ha Locked xuong Suspended, roi ExpireServedSuspensionsJob mo khoa luon khi het han.
+            if (PenaltyLifecycle.StatusAfterImposing(lounge.Status, penalty.PenaltyType) is { } imposedStatus)
+                lounge.Status = imposedStatus;
             penalty.AppliedAt = now;
 
             // MLACP-299: moc het han duoc chot tu day chu khong tinh lai o cho khac. Truoc day cot
@@ -103,7 +103,7 @@ public sealed class ApplyDuePenaltiesJob
                 lounge.OwnerId,
                 NotificationType.PenaltyIssued,
                 penalty.PenaltyType == PenaltyType.Suspension ? "Phòng trà đã bị tạm khoá" : "Phòng trà đã bị khoá vĩnh viễn",
-                $"\"{lounge.Name}\" hiện đã ở trạng thái {targetStatus} theo phạt #{penalty.Id}.",
+                $"\"{lounge.Name}\" hiện đã ở trạng thái {lounge.Status} theo phạt #{penalty.Id}.",
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);

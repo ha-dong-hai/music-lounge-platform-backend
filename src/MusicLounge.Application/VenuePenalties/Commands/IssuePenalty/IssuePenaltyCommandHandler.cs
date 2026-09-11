@@ -67,9 +67,13 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
 
         // Warning has no delay and no venue-status/subscription effect (§6.8: "venue vẫn hoạt
         // động, subscription không đổi") — apply it here rather than waiting for the job.
-        if (penaltyType == PenaltyType.Warning)
+        //
+        // MLACP-367: truoc day dat thang Warned — ke ca khi phong tra dang bi tam khoa/khoa vinh vien (Warned
+        // van duoc hoat dong, nen canh cao vo tinh mo khoa) hoac chua duoc duyet ho so.
+        if (penaltyType == PenaltyType.Warning
+            && PenaltyLifecycle.StatusAfterImposing(lounge.Status, penaltyType) is { } warnedStatus)
         {
-            lounge.Status = LoungeStatus.Warned;
+            lounge.Status = warnedStatus;
             loungeRepo.Update(lounge);
         }
 
