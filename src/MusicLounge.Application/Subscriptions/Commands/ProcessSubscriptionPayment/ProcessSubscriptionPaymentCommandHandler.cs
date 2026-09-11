@@ -44,7 +44,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
 
         var paymentRepo = _uow.Repository<Payment, int>();
         var initialMatches = await paymentRepo.FindAsync(
-            p => p.OrderId == txnRef && p.ReferenceType == "Subscription", ct);
+            p => p.OrderId == txnRef && p.ReferenceType == SubscriptionPayments.ReferenceType, ct);
         var paymentLookup = initialMatches.FirstOrDefault();
         if (paymentLookup?.PayerId is null)
         {

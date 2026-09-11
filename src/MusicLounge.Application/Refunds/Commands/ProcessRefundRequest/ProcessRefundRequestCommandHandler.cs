@@ -7,6 +7,7 @@ using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
 using MusicLounge.Application.FnbOrders;
+using MusicLounge.Application.Subscriptions;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
@@ -138,8 +139,16 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             throw new DomainException(
                 "Tổng số tiền đã hoàn cho giao dịch này sẽ vượt quá số tiền đã thanh toán.");
 
-        var ownerId = await ResolveOwnerIdAsync(payment, ct)
-            ?? throw new DomainException("Không xác định được chủ phòng trà cho giao dịch này.");
+        // MLACP-366: goi dich vu la doanh thu cua chinh nen tang — khong co phong tra nao dung giua, nen
+        // khong co chu phong tra nao de tim. Truoc day buoc nay chi biet tim qua don F&B hoac ve, nen
+        // moi yeu cau hoan cho thanh toan goi (thanh toan trung) deu dung o day voi 422: Admin duyet
+        // khong duoc, AutoApproveOverdueRefundsJob thu lai mai, trong khi chu phong tra da duoc bao
+        // "se duoc xu ly theo dung thoi han cam ket".
+        var isPlatformRevenue = payment.ReferenceType == SubscriptionPayments.ReferenceType;
+        int? ownerId = isPlatformRevenue
+            ? null
+            : await ResolveOwnerIdAsync(payment, ct)
+              ?? throw new DomainException("Không xác định được chủ phòng trà cho giao dịch này.");
 
         // MLACP-337. Cho nay truoc day goi VNPay vo dieu kien. Ve ban tai quay
         // (SellWalkInTicket) co Method = Cash, TransactionId null, va OrderId chua bao gio duoc
@@ -208,7 +217,25 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // tranche quyet toan chua giai ngan (luon chay). Nen no nam ngoai khoi duoi.
         var ratio = amountApproved / payment.GrossAmount;
 
-        if (shouldReverseJournal)
+        if (shouldReverseJournal && isPlatformRevenue)
+        {
+            // MLACP-366: guong cua but toan goc (ProcessSubscriptionPayment: Gateway no / Platform co).
+            // Khong co phi, thue hay phan cua chu phong tra nao de tach — va NetAmount cua thanh toan goi
+            // khong duoc ghi (bang 0), nen di theo nhanh duoi se tinh ra "Platform khong con giu gi" roi
+            // tru toan bo vao tai khoan cua chu phong tra, trong khi tien nam o Platform.
+            await _ledger.WriteJournalAsync(
+                Guid.NewGuid().ToString("N"),
+                LedgerReferenceTypes.Refund,
+                refund.Id.ToString(),
+                payment.Id,
+                [
+                    new LedgerLine(AccountType.Platform, null, amountApproved, IsDebit: true,
+                        Description: $"Refund #{refund.Id} — hoàn tiền gói dịch vụ"),
+                    new LedgerLine(AccountType.Gateway, null, amountApproved, IsDebit: false,
+                        Description: $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán")
+                ], ct);
+        }
+        else if (shouldReverseJournal)
         {
         // Proportional reversal of the original purchase journal (D8 — reverse via offsetting
         // lines, never mutate the original). Owner's share is the remainder rather than its own
@@ -351,7 +378,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 ct);
 
             await _notifications.NotifyAsync(
-                ownerId,
+                ownerId!.Value, // tien mat luon ban tai quay cua mot phong tra
                 NotificationType.RefundOwedByVenue,
                 "Can hoan tien mat cho khach",
                 $"Ve #{refund.PaymentId} duoc mua tai quay bang tien mat nen nen tang khong giu khoan " +
