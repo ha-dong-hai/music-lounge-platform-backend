@@ -58,6 +58,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         // Exact now (was inferred from EffectiveAt <= now, which could be wrong in the window
         // after EffectiveAt passes but before ApplyDuePenaltiesJob has actually ticked).
         var wasAlreadyApplied = penalty.AppliedAt is not null;
+        OwnerSubscription? restoredPlan = null;
 
         if (decision == PenaltyStatus.Overturned)
         {
@@ -77,13 +78,17 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
                 _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
             }
 
-            if (wasAlreadyApplied)
+            // MLACP-369: khoa vinh vien da ap roi bi huy thi tra lai goi cho chu — dung phan thoi gian con lai
+            // luc bi khoa. Truoc day chi nhan Admin "xu ly thu cong" (va but toan "hoan tien" luc khoa khong he
+            // co tien that). Tam khoa da ap thi khong co gi phai hoan tac: so ngay da bu vao goi la de bu cho
+            // thoi gian bi khoa — bi khoa oan thi cang dang duoc giu.
+            if (wasAlreadyApplied && penalty.PenaltyType == PenaltyType.Ban)
             {
-                // The suspension-day extension or ban pro-rata refund (ApplyDuePenaltiesJob) has
-                // already gone through by the time this appeal was resolved — reversing a
-                // subscription extension or a ledger-recorded refund automatically risks getting
-                // the money side wrong. Surface it for a human instead of guessing.
-                await NotifyAdminsManualReversalNeededAsync(penalty, lounge, ct);
+                var ownerSubscriptions = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+                    s => s.OwnerId == lounge.OwnerId, ct);
+                restoredPlan = PenaltySubscriptions.RestoreAfterBanLifted(ownerSubscriptions, penalty, now);
+                if (restoredPlan is not null)
+                    _uow.Repository<OwnerSubscription, int>().Update(restoredPlan);
             }
         }
 
@@ -98,7 +103,8 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
             NotificationType.AppealResolved,
             decision == PenaltyStatus.Overturned ? "Kháng cáo được chấp thuận" : "Kháng cáo bị từ chối",
             decision == PenaltyStatus.Overturned
-                ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
+                ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
+                  (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")
                 : $"Kháng cáo của bạn cho phạt #{penalty.Id} bị từ chối. {request.ReviewNote ?? ""}".Trim(),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
@@ -112,24 +118,5 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         await _uow.SaveChangesAsync(ct);
 
         return Unit.Value;
-    }
-
-    private async Task NotifyAdminsManualReversalNeededAsync(
-        VenuePenalty penalty, MusicLoungeEntity lounge, CancellationToken ct)
-    {
-        var adminIds = await _uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin, ct);
-        foreach (var admin in adminIds)
-        {
-            await _notifications.NotifyAsync(
-                admin.Id,
-                NotificationType.AppealResolved,
-                "Cần xử lý thủ công: hoàn tác bù trừ subscription",
-                $"Phạt #{penalty.Id} ({penalty.PenaltyType}) trên \"{lounge.Name}\" đã được overturn " +
-                "sau khi bù trừ subscription (gia hạn/hoàn tiền) đã áp dụng. Vui lòng kiểm tra và " +
-                "điều chỉnh owner_subscriptions/ledger thủ công cho đúng.",
-                referenceType: "venue_penalty",
-                referenceId: penalty.Id.ToString(),
-                ct: ct);
-        }
     }
 }

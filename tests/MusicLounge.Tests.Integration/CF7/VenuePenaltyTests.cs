@@ -208,8 +208,13 @@ public sealed class VenuePenaltyTests
     }
 
     [Fact]
-    public async Task ApplyDuePenaltiesJob_Ban_LocksVenueAndRefundsProRataViaLedger()
+    public async Task ApplyDuePenaltiesJob_Ban_LocksVenueAndStopsThePlan_WithoutBookingARefund()
     {
+        // MLACP-369: this test used to require a pro-rata "refund" journal. That journal moved no money —
+        // no VNPay call, no refund request, no notice to the owner — so the ledger said money had left
+        // that never did. A plan is not refunded when the venue is banned for a violation (Shopify /
+        // Squarespace terms; BLĐS 2015 Điều 428); if the ban is later lifted, the plan's remaining time
+        // is given back instead (see BanSubscriptionTests).
         var (ownerId, loungeId, subId) = await CreateFreshOwnerLoungeSubscriptionAsync(subscriptionPrice: 300_000m);
         await SeedPenaltyAsync(loungeId, PenaltyType.Ban, DateTimeOffset.UtcNow.AddMinutes(-1));
 
@@ -228,17 +233,8 @@ public sealed class VenuePenaltyTests
         var subscription = await db.OwnerSubscriptions.SingleAsync(s => s.Id == subId);
         subscription.Status.Should().Be(SubscriptionStatus.Cancelled);
 
-        // Seeded with exactly half the 30-day cycle remaining (15/30) — refund should be ~half of 300,000.
-        var platformAccount = await db.LedgerAccounts.SingleAsync(a => a.OwnerType == AccountType.Platform && a.OwnerId == null);
-        var entries = await db.LedgerEntries
-            .Where(e => e.ReferenceType == "subscription" && e.ReferenceId == subId.ToString())
-            .ToListAsync();
-        entries.Should().NotBeEmpty("ban must reverse subscription revenue through the ledger, not silently");
-        entries.Where(e => e.IsDebit).Sum(e => e.Amount).Should().Be(entries.Where(e => !e.IsDebit).Sum(e => e.Amount));
-
-        var platformDebit = entries.Single(e => e.AccountId == platformAccount.Id);
-        platformDebit.IsDebit.Should().BeTrue();
-        platformDebit.Amount.Should().BeApproximately(150_000m, 5_000m, "≈ half of 300,000đ for ≈half the cycle remaining");
+        (await db.LedgerEntries.AnyAsync(e => e.ReferenceType == "subscription" && e.ReferenceId == subId.ToString()))
+            .Should().BeFalse("no money moves on a ban, so the ledger must not say any did");
     }
 
     [Fact]
