@@ -66,7 +66,7 @@ internal sealed class RenewSubscriptionCommandHandler
             PayerId = _currentUser.UserId,
             GrossAmount = package.Price,
             Status = PaymentStatus.Pending,
-            ReferenceType = "Subscription",
+            ReferenceType = SubscriptionPayments.ReferenceType,
             ReferenceId = package.Id.ToString(),
             SubscriptionMaxTicketsPerEventSnapshot = package.MaxTicketsPerEvent,
             SubscriptionHasAiPosterSnapshot = package.HasAiPoster,

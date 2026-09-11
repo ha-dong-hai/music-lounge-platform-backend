@@ -53,7 +53,7 @@ internal sealed class SubscribeToPackageCommandHandler
             PayerId = _currentUser.UserId,
             GrossAmount = package.Price,
             Status = PaymentStatus.Pending,
-            ReferenceType = "Subscription",
+            ReferenceType = SubscriptionPayments.ReferenceType,
             ReferenceId = package.Id.ToString(),
             // Snapshot now, not just GrossAmount — UpdateSubscriptionPackageCommandHandler only
             // locks these fields once a real Active OwnerSubscription exists, which doesn't happen
