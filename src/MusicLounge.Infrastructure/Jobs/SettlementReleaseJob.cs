@@ -22,13 +22,15 @@ public sealed class SettlementReleaseJob
     private readonly ILedgerService _ledger;
     private readonly ISystemConfigService _config;
     private readonly INotificationService _notifications;
+    private readonly IUnitOfWork _uow;
     private readonly ILogger<SettlementReleaseJob> _logger;
 
     public SettlementReleaseJob(
         ApplicationDbContext ctx, ILedgerService ledger, ISystemConfigService config,
-        INotificationService notifications, ILogger<SettlementReleaseJob> logger)
+        INotificationService notifications, IUnitOfWork uow, ILogger<SettlementReleaseJob> logger)
     {
         _ctx = ctx;
+        _uow = uow;
         _ledger = ledger;
         _config = config;
         _notifications = notifications;
@@ -193,6 +195,14 @@ public sealed class SettlementReleaseJob
             settlement.ReleasedAt = now;
             settlement.LedgerJournalId = journalId;
 
+            // MLACP-363: khoan chuyen chang 1 cua donate vao nhat ky bang chung — cung lan luu voi chinh
+            // viec giai ngan, nen khong the co cai nay ma thieu cai kia.
+            if (await DonationIdOfAsync(settlement.PaymentId, ct) is int releasedDonationId)
+                await DonationEvidence.AppendAsync(_uow, releasedDonationId, DonationEventType.PayoutReleased,
+                    actorUserId: null, amount: settlement.NetAmount, reference: $"settlement:{settlement.Id}",
+                    detail: $"Nền tảng chuyển phần của phòng trà vào tài khoản ngân hàng #{settlement.BankAccountId}.",
+                    ct: ct);
+
             // Commit THIS settlement's own release before enqueuing its notification, not once at
             // the end of the whole batch — NotifyAsync's FCM push enqueues directly and durably to
             // Hangfire's own storage (IBackgroundJobService), independent of this DbContext's
@@ -227,6 +237,15 @@ public sealed class SettlementReleaseJob
     /// si. Thong bao phai noi dieu do va noi so tien — "khoan thanh toan da duoc giai ngan" chung chung
     /// thi chu phong tra khong biet minh con mot viec phai lam.
     /// </summary>
+    private async Task<int?> DonationIdOfAsync(int paymentId, CancellationToken ct)
+    {
+        var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == paymentId, ct);
+        return payment?.ReferenceType == DonationPayouts.PaymentReferenceType
+               && int.TryParse(payment.ReferenceId, out var donationId)
+            ? donationId
+            : null;
+    }
+
     private async Task<(string Title, string Body)> ReleaseNoticeAsync(Settlement settlement, CancellationToken ct)
     {
         var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == settlement.PaymentId, ct);

@@ -45,6 +45,8 @@ using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetUserDetail;
 using MusicLounge.Application.Users.Queries.GetUsers;
 using MusicLounge.Domain.Enums;
+using MusicLounge.Application.Donations.DTOs;
+using MusicLounge.Application.Donations.Queries.GetDonationEvidence;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -72,6 +74,21 @@ public sealed class AdminController : ControllerBase
     {
         var result = await _sender.Send(new GetLedgerIntegrityQuery(), ct);
         return Ok(ApiResponse<IReadOnlyList<LedgerIntegrityIssueDto>>.Ok(result));
+    }
+
+    // ---- Donate ----
+
+    /// <summary>MLACP-363 — nhật ký bằng chứng của một khoản donate: mọi bước theo đúng thứ tự (VNPay
+    /// xác nhận, nền tảng chuyển cho phòng trà, phòng trà xác nhận, báo đã chuyển cho nghệ sĩ…), ai làm,
+    /// lúc nào, mã giao dịch, bản băm file chứng từ, và kết quả kiểm chuỗi băm tính lại ngay lúc xuất.
+    /// Dùng khi có tranh chấp.</summary>
+    [HttpGet("donations/{id:int}/evidence")]
+    [ProducesResponseType<ApiResponse<DonationEvidenceDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DonationEvidence(int id, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetDonationEvidenceQuery(id), ct);
+        return Ok(ApiResponse<DonationEvidenceDto>.Ok(result));
     }
 
     // ---- Thể loại nhạc ----

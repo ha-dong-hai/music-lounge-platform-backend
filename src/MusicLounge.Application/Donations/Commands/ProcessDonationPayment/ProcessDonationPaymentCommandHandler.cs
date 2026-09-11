@@ -214,6 +214,14 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(info.LoungeShowId, ct);
                 await DonationPayouts.ScheduleAsync(_uow, payment, info.OwnerId, show?.LoungeId ?? 0, now, ct);
 
+                // MLACP-363: buoc dau cua nhat ky bang chung. Ma giao dich VNPay la bang chung doi soat
+                // voi cong thanh toan; nguoi thuc hien la cong (null), khong phai ai trong he thong.
+                await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.PaymentConfirmed, actorUserId: null,
+                    amount: donation.Gross, reference: payment.TransactionId,
+                    detail: $"VNPay xác nhận thanh toán. Phí nền tảng {fees.PlatformFee:0}đ, thuế " +
+                            $"{fees.Tax + fees.PersonalIncomeTax:0}đ, phần phòng trà {fees.OwnerNet:0}đ.",
+                    ct: ct);
+
                 var forPerformer = PaymentFeeCalculator.SplitDonationPayout(
                     donation.Gross, fees.OwnerNet, performerShareRate).PerformerAmount;
 
