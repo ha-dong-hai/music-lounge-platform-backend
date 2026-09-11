@@ -1,5 +1,4 @@
 using MediatR;
-using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -60,54 +59,9 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
             throw new DomainException(
                 "Show đang phát trực tiếp — hãy dừng (terminate) livestream trước khi hủy event.");
 
-        show.Status = LoungeShowStatus.Cancelled;
-        showRepo.Update(show);
-
-        var ticketRepo = _uow.Repository<Ticket, Guid>();
-        var confirmedTickets = await ticketRepo.FindAsync(
-            t => t.ShowId == show.Id && t.Status == TicketStatus.Confirmed, ct);
-
-        if (confirmedTickets.Count > 0)
-        {
-            var priceIds = confirmedTickets.Select(t => t.PriceId).Distinct().ToList();
-            var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
-            var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
-
-            var refundRepo = _uow.Repository<RefundRequest, int>();
-            var payers = await TicketRefundRecipients.PayersAsync(_uow, confirmedTickets, ct);
-
-            foreach (var ticket in confirmedTickets)
-            {
-                ticket.Status = TicketStatus.Cancelled;
-                ticketRepo.Update(ticket);
-
-                if (ticket.PaymentId is null) continue;
-
-                await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                    NotificationType.EventCancelled, show.Name, show.Id, "buổi diễn bị huỷ", ct);
-
-                refundRepo.Add(new RefundRequest
-                {
-                    PaymentId = ticket.PaymentId.Value,
-                    RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
-                    Reason = "Event bị hủy — hoàn 100% tiền vé",
-                    AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
-                    RefundPercentage = 100m,
-                    Status = RefundRequestStatus.Pending
-                });
-
-                if (ticket.BuyerId is int buyerId)
-                    await _notifications.NotifyAsync(
-                        buyerId,
-                        NotificationType.EventCancelled,
-                        "Event đã bị hủy",
-                        $"\"{show.Name}\" đã bị hủy. Vé của bạn đã được hủy và tự động tạo yêu cầu " +
-                        "hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
-                        referenceType: "show",
-                        referenceId: show.Id.ToString(),
-                        ct: ct);
-            }
-        }
+        // MLACP-373: phan huy — hoan 100% moi ve, bao nguoi giu ve — nam o ShowCancellation, dung chung voi job ap an
+        // phat khi phong tra bi khoa / tam khoa.
+        await ShowCancellation.CancelAsync(_uow, _notifications, show, why: null, ct);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;

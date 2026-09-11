@@ -2,6 +2,7 @@
 using Hangfire;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.LoungeShows;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -22,11 +23,16 @@ public sealed class ApplyDuePenaltiesJob
 {
     private readonly ApplicationDbContext _ctx;
     private readonly INotificationService _notifications;
+    private readonly IUnitOfWork _uow;
+    private readonly IAsyncKeyedLock _lock;
 
-    public ApplyDuePenaltiesJob(ApplicationDbContext ctx, INotificationService notifications)
+    public ApplyDuePenaltiesJob(
+        ApplicationDbContext ctx, INotificationService notifications, IUnitOfWork uow, IAsyncKeyedLock @lock)
     {
         _ctx = ctx;
         _notifications = notifications;
+        _uow = uow;
+        _lock = @lock;
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -53,6 +59,11 @@ public sealed class ApplyDuePenaltiesJob
         {
             var lounge = await _ctx.Lounges.FirstOrDefaultAsync(l => l.Id == penalty.LoungeId, ct);
             if (lounge is null) continue;
+
+            // MLACP-373: truoc day job chi doi trang thai phong tra — ve da ban cho cac buoi sap toi van nguyen, nguoi
+            // mua toi mot buoi dien khong con ai to chuc, khong ai duoc hoan. Huy TRUOC khi danh dau AppliedAt: job chet
+            // giua chung thi lan chay sau lam tiep (buoi da huy khong con Published nen khong bi huy lai).
+            var cancelled = await CancelShowsInsideAsync(penalty, now, ct);
 
             // MLACP-367: khong bao gio nhe di — mot lenh tam khoa co hieu luc sau lenh khoa vinh vien truoc
             // day ha Locked xuong Suspended, roi ExpireServedSuspensionsJob mo khoa luon khi het han.
@@ -109,7 +120,8 @@ public sealed class ApplyDuePenaltiesJob
                 (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
                     ? " Gói dịch vụ đã dừng; phí gói không được hoàn khi phòng trà bị khoá vĩnh viễn do vi phạm. " +
                       "Nếu lệnh khoá được huỷ, gói được kích hoạt lại với đúng số ngày còn lại."
-                    : ""),
+                    : "") +
+                DescribeCancelled(penalty.PenaltyType, cancelled),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);
@@ -118,4 +130,62 @@ public sealed class ApplyDuePenaltiesJob
         }
     }
 
+    /// <summary>
+    /// MLACP-373 — các buổi diễn phòng trà không còn được tổ chức: khoá vĩnh viễn thì mọi buổi chưa diễn; tạm khoá thì
+    /// các buổi bắt đầu trước khi hết hạn khoá (tính từ now — cùng mốc SuspensionEnd được chốt ở trên). Đi qua đúng
+    /// đường huỷ của chủ phòng trà (<see cref="ShowCancellation"/>): hoàn 100% mọi vé, báo người giữ vé và người mua
+    /// ban đầu.
+    ///
+    /// <para>Chỉ buổi Published chưa tới giờ bắt đầu: buổi đã qua giờ mà chưa bắt đầu thuộc đường "buổi diễn không
+    /// được tổ chức" (MLACP-338); buổi đang diễn thì khán giả đã ở đó.</para>
+    /// </summary>
+    private async Task<ShowCancellation.Outcome> CancelShowsInsideAsync(
+        VenuePenalty penalty, DateTimeOffset now, CancellationToken ct)
+    {
+        DateTimeOffset? until = penalty.PenaltyType switch
+        {
+            PenaltyType.Ban => DateTimeOffset.MaxValue,
+            PenaltyType.Suspension when penalty.SuspensionDays is int days => now.AddDays(days),
+            _ => null
+        };
+        var total = ShowCancellation.Outcome.None;
+        if (until is not DateTimeOffset end) return total;
+
+        // Loc trang thai phia server, so thoi gian phia client — cung ly do voi truy van an phat o tren.
+        var showIds = (await _ctx.LoungeShows.AsNoTracking()
+                .Where(s => s.LoungeId == penalty.LoungeId && s.Status == LoungeShowStatus.Published)
+                .Select(s => new { s.Id, s.ScheduledStart })
+                .ToListAsync(ct))
+            .Where(s => s.ScheduledStart > now && s.ScheduledStart < end)
+            .Select(s => s.Id)
+            .ToList();
+
+        foreach (var showId in showIds)
+        {
+            // Cung khoa voi CancelLoungeShow / ChangeLoungeShowFormat: chu phong tra huy cung luc thi khong thanh hai
+            // lan hoan cho cung mot ve.
+            await using var _ = await _lock.AcquireAsync($"show-status-change:{showId}", ct);
+            var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(showId, ct);
+            if (show is null || show.Status != LoungeShowStatus.Published) continue;
+
+            total += await ShowCancellation.CancelAsync(
+                _uow, _notifications, show, ShowCancellation.VenueStoppedTrading, ct);
+            await _uow.SaveChangesAsync(ct);
+        }
+
+        return total;
+    }
+
+    /// <summary>Câu báo chủ phòng trà — vé bán tại quầy không có tài khoản, chỉ phòng trà liên hệ được người mua.</summary>
+    private static string DescribeCancelled(PenaltyType type, ShowCancellation.Outcome cancelled)
+    {
+        if (cancelled.Shows == 0) return "";
+        var text = $" Đã huỷ {cancelled.Shows} buổi diễn " +
+                   (type == PenaltyType.Ban ? "sắp tới" : "rơi vào thời gian tạm khoá") +
+                   " và tự động tạo yêu cầu hoàn 100% cho người mua.";
+        if (cancelled.WalkInTickets > 0)
+            text += $" {cancelled.WalkInTickets} vé bán tại quầy không có tài khoản để nền tảng báo — phòng trà phải " +
+                    "hoàn tiền mặt khi khách liên hệ và xác nhận đã trả trên hệ thống.";
+        return text;
+    }
 }
