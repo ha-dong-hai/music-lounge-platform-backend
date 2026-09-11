@@ -1,4 +1,5 @@
 using MusicLounge.Application.Common;
+using MusicLounge.Application.Donations;
 using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Common.Interfaces;
@@ -160,7 +161,17 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
                          && fnbReferenceIds.Contains(p.ReferenceId), ct))
                 .Select(p => p.Id)
                 .ToHashSet();
-        var settledPaymentIds = ticketPaymentIds.Concat(fnbPaymentIds).ToHashSet();
+        // MLACP-361: tien donate chang 1 nay cung di qua Settlement — tinh vao "da nhan", va phi nen
+        // tang cung thue khau tru tren donate hien o "phi nen tang da tra" (Gross - Net cua tranche).
+        var donationReferenceIds = allDonations.Select(d => d.Id.ToString()).ToList();
+        var donationPaymentIds = donationReferenceIds.Count == 0
+            ? []
+            : (await _uow.Repository<Payment, int>().FindAsync(
+                    p => p.ReferenceType == DonationPayouts.PaymentReferenceType
+                         && donationReferenceIds.Contains(p.ReferenceId), ct))
+                .Select(p => p.Id)
+                .ToHashSet();
+        var settledPaymentIds = ticketPaymentIds.Concat(fnbPaymentIds).Concat(donationPaymentIds).ToHashSet();
 
         var totalSettlementReceived = 0m;
         var totalPlatformFeePaid = 0m;

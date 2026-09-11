@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Application.Common.Interfaces;
@@ -8,6 +9,7 @@ using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.ValueObjects;
+using MusicLounge.Infrastructure.Jobs;
 using MusicLounge.Infrastructure.Persistence;
 using MusicLounge.Tests.Integration.Fakes;
 using MusicLounge.Tests.Integration.Helpers;
@@ -71,6 +73,14 @@ public sealed class DonationLiveAlertTests
         {
             LoungeId = lounge.Id, UserId = staff.Id, AssignedBy = owner.Id,
             IsActive = true, AssignedAt = DateTimeOffset.UtcNow
+        });
+        // MLACP-361: tài khoản nhận tiền quyết toán donate chặng 1.
+        var pii = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
+        db.Add(new BankAccount
+        {
+            OwnerType = BankAccountOwnerType.Lounge, OwnerId = lounge.Id, BankName = "Test Bank",
+            AccountNumber = pii.Encrypt("0000000360"), AccountHolder = "Live Alert Owner",
+            IsDefault = true, IsVerified = true
         });
         await db.SaveChangesAsync();
 
@@ -170,6 +180,11 @@ public sealed class DonationLiveAlertTests
     {
         var venue = await SeedVenueAsync();
         var donationId = await DonateAndConfirmAsync(venue.PerformanceId);
+
+        // MLACP-361: chủ chỉ xác nhận được sau khi nền tảng đã chuyển tiền cho phòng trà.
+        using (var scope = _factory.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>()
+                .ExecuteAsync(new JobCancellationToken(false));
 
         var owner = _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId);
         (await owner.PostAsync($"/api/v1/donations/{donationId}/acknowledge", null))

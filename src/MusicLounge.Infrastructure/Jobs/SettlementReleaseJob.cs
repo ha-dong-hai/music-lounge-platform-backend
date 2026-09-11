@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Donations;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -203,11 +204,12 @@ public sealed class SettlementReleaseJob
             // and the loop safely resumable.
             await _ctx.SaveChangesAsync(ct);
 
+            var (noticeTitle, noticeBody) = await ReleaseNoticeAsync(settlement, ct);
             await _notifications.NotifyAsync(
                 settlement.OwnerId,
                 NotificationType.SettlementReleased,
-                "Đã nhận thanh toán",
-                $"Khoản thanh toán {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) đã được giải ngân.",
+                noticeTitle,
+                noticeBody,
                 referenceType: "settlement",
                 referenceId: settlement.Id.ToString(),
                 ct: ct);
@@ -218,6 +220,30 @@ public sealed class SettlementReleaseJob
             // settlement's unit of work fully self-contained).
             await _ctx.SaveChangesAsync(ct);
         }
+    }
+
+    /// <summary>
+    /// MLACP-361. Tien donate vua ve khong phai cua rieng phong tra: mot phan phai chuyen tiep cho nghe
+    /// si. Thong bao phai noi dieu do va noi so tien — "khoan thanh toan da duoc giai ngan" chung chung
+    /// thi chu phong tra khong biet minh con mot viec phai lam.
+    /// </summary>
+    private async Task<(string Title, string Body)> ReleaseNoticeAsync(Settlement settlement, CancellationToken ct)
+    {
+        var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == settlement.PaymentId, ct);
+        if (payment?.ReferenceType == DonationPayouts.PaymentReferenceType
+            && int.TryParse(payment.ReferenceId, out var donationId)
+            && await _ctx.Donations.AsNoTracking().FirstOrDefaultAsync(d => d.Id == donationId, ct) is { } donation)
+        {
+            var rate = donation.PerformerShareRateSnapshot
+                ?? await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+            var forPerformer = PaymentFeeCalculator.SplitDonationPayout(donation.Gross, donation.Net, rate).PerformerAmount;
+            return ("Đã nhận tiền donate",
+                $"Nền tảng đã chuyển {settlement.NetAmount:N0}đ tiền donate #{donation.Id} vào tài khoản của phòng trà. " +
+                $"Hãy xác nhận đã nhận, rồi chuyển {forPerformer:N0}đ cho nghệ sĩ.");
+        }
+
+        return ("Đã nhận thanh toán",
+            $"Khoản thanh toán {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) đã được giải ngân.");
     }
 
     /// <summary>

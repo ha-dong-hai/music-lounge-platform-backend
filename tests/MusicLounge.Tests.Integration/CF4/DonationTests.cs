@@ -2,9 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Web;
 using FluentAssertions;
+using Hangfire;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Domain.Enums;
+using MusicLounge.Infrastructure.Jobs;
 using MusicLounge.Tests.Integration.Helpers;
 
 namespace MusicLounge.Tests.Integration.CF4;
@@ -55,6 +57,17 @@ public sealed class DonationTests
                  $"&vnp_ResponseCode={responseCode}" +
                  $"&vnp_Amount=10000000";
         return await client.GetAsync($"/api/v1/donations/vnpay-return{qs}");
+    }
+
+    /// <summary>
+    /// MLACP-361: chủ phòng trà chỉ xác nhận "đã nhận" được sau khi nền tảng đã giải ngân chặng 1
+    /// cho phòng trà. Chạy đúng job giải ngân thật — phòng trà seed có sẵn tài khoản ngân hàng mặc định.
+    /// </summary>
+    private async Task ReleaseVenuePayoutsAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var job = scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>();
+        await job.ExecuteAsync(new JobCancellationToken(false));
     }
 
     // ─── Create donation tests ─────────────────────────────────────────────────
@@ -207,6 +220,7 @@ public sealed class DonationTests
     {
         var (id, orderId) = await CreateDonationAsync();
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
 
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
         var res = await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
@@ -250,6 +264,7 @@ public sealed class DonationTests
     {
         var (id, orderId) = await CreateDonationAsync();
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
@@ -275,6 +290,7 @@ public sealed class DonationTests
     {
         var (id, orderId) = await CreateDonationAsync();
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
 
         await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
@@ -291,6 +307,7 @@ public sealed class DonationTests
     {
         var (id, orderId) = await CreateDonationAsync();
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
         await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
 
@@ -333,6 +350,7 @@ public sealed class DonationTests
     {
         var (id, orderId) = await CreateDonationAsync();
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
         await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
 
@@ -381,8 +399,12 @@ public sealed class DonationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var ownerAccount = await db.LedgerAccounts.SingleAsync(
-                a => a.OwnerType == AccountType.User && a.OwnerId == SeedHelper.OwnerId);
+            // Tai khoan so cai cua chu co the chua ton tai: tu MLACP-361 chang 1 khong con ghi Co cho chu,
+            // nen chi bai nao da giai ngan truoc do moi tao ra no. Khong duoc dua vao thu tu chay bai.
+            var ownerAccountId = await db.LedgerAccounts
+                .Where(a => a.OwnerType == AccountType.User && a.OwnerId == SeedHelper.OwnerId)
+                .Select(a => (int?)a.Id)
+                .FirstOrDefaultAsync();
 
             var stage1Entries = await db.LedgerEntries
                 .Where(e => e.ReferenceType == "donation" && e.ReferenceId == id.ToString())
@@ -391,9 +413,29 @@ public sealed class DonationTests
             stage1Entries.Where(e => e.IsDebit).Sum(e => e.Amount)
                 .Should().Be(stage1Entries.Where(e => !e.IsDebit).Sum(e => e.Amount), "journal must balance");
 
-            var ownerCredit = stage1Entries.Single(e => e.AccountId == ownerAccount.Id);
-            ownerCredit.IsDebit.Should().BeFalse();
-            ownerCredit.Amount.Should().Be(90_000m, "gross - 5% platform - 5% tax (system_config defaults)");
+            // MLACP-361: chặng 1 giữ phần của phòng trà ở Platform chờ quyết toán — không còn ghi Có
+            // thẳng cho chủ phòng trà trước khi tiền thật sự được chuyển.
+            stage1Entries.Should().NotContain(e => e.AccountId == ownerAccountId,
+                "chưa giải ngân thì chưa có đồng nào thuộc về tài khoản chủ phòng trà");
+            var platformAccount = await db.LedgerAccounts.SingleAsync(
+                a => a.OwnerType == AccountType.Platform && a.OwnerId == null);
+            stage1Entries.Where(e => e.AccountId == platformAccount.Id && !e.IsDebit).Sum(e => e.Amount)
+                .Should().Be(95_000m, "5% hoa hồng + 90% giữ hộ chủ phòng trà chờ quyết toán (gross - 5% - 5% thuế)");
+        }
+
+        await ReleaseVenuePayoutsAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var ownerAccount = await db.LedgerAccounts.SingleAsync(
+                a => a.OwnerType == AccountType.User && a.OwnerId == SeedHelper.OwnerId);
+            var payment = await db.Payments.SingleAsync(p => p.ReferenceType == "Donation" && p.ReferenceId == id.ToString());
+            var settlement = await db.Settlements.SingleAsync(s => s.PaymentId == payment.Id);
+            var payout = await db.LedgerEntries.SingleAsync(e =>
+                e.ReferenceType == "settlement" && e.ReferenceId == settlement.Id.ToString() && e.AccountId == ownerAccount.Id);
+            payout.IsDebit.Should().BeFalse();
+            payout.Amount.Should().Be(90_000m, "giải ngân chặng 1 mới là lúc phần 90% vào tài khoản chủ phòng trà");
         }
 
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
@@ -413,7 +455,7 @@ public sealed class DonationTests
             var allEntries = await db.LedgerEntries
                 .Where(e => e.ReferenceType == "donation" && e.ReferenceId == id.ToString())
                 .ToListAsync();
-            allEntries.Should().HaveCount(6, "4 dòng chặng 1 (Gateway/Platform/Tax/Owner) + 2 dòng chặng 2 (Owner/Performer)");
+            allEntries.Should().HaveCount(6, "4 dòng chặng 1 (Gateway/Platform hoa hồng/Tax/Platform giữ hộ) + 2 dòng chặng 2 (Owner/Performer)");
             allEntries.Where(e => e.IsDebit).Sum(e => e.Amount)
                 .Should().Be(allEntries.Where(e => !e.IsDebit).Sum(e => e.Amount));
 
@@ -438,6 +480,7 @@ public sealed class DonationTests
         const decimal gross = 100_000m;
         var (id, orderId) = await CreateDonationAsync(amount: gross);
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
 
         using (var scope = _factory.Services.CreateScope())
         {
@@ -530,6 +573,7 @@ public sealed class DonationTests
     {
         var (id, orderId) = await CreateDonationAsync();
         await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
         await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null); // → OwnerReceived
 
