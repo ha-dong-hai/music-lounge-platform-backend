@@ -65,7 +65,7 @@ public sealed class PerformersController : ControllerBase
         int id, [FromBody] UpdatePerformerRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdatePerformerCommand(
-            id, body.Name, body.AvatarUrl, body.Bio, body.Type, body.GenreIds), ct);
+            id, body.Name, body.AvatarUrl, body.Bio, body.Type, body.GenreIds, body.ContactEmail), ct);
         return NoContent();
     }
 
@@ -95,6 +95,7 @@ public sealed class PerformersController : ControllerBase
 }
 
 public sealed record UpdatePerformerRequest(
-    string Name, string? AvatarUrl, string? Bio, string Type, IReadOnlyList<int> GenreIds);
+    string Name, string? AvatarUrl, string? Bio, string Type, IReadOnlyList<int> GenreIds,
+    string? ContactEmail = null);
 
 public sealed record AddPerformerSocialLinkRequest(string Platform, string Url, string? DisplayName);

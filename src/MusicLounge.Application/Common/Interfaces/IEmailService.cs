@@ -7,4 +7,9 @@ public interface IEmailService
 
     Task SendEmailVerificationCodeAsync(
         string toEmail, string toName, string code, CancellationToken ct = default);
+
+    // MLACP-364: lien ket mot lan de nghe si tu xac nhan tai khoan nhan tien / da nhan donate.
+    Task SendPerformerConfirmationAsync(
+        string toEmail, string toName, string subject, string message, string link,
+        DateTimeOffset expiresAt, CancellationToken ct = default);
 }

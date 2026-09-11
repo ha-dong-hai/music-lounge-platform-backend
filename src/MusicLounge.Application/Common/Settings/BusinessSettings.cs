@@ -26,4 +26,9 @@ public sealed class BusinessSettings
     // trong thi quay ve PaymentFailedUrl nhu cu, de khong lam vo moi truong chua cau hinh.
     public string PaymentProcessingUrl { get; init; } = string.Empty;
     public string PasswordResetUrl { get; init; } = string.Empty;
+
+    // MLACP-364: trang frontend nghe si mo tu lien ket trong email (?token=...). Khong nam trong danh sach
+    // bat buoc cua Program.cs — de trong thi he thong van chay, chi khong gui duoc lien ket (ghi log loi),
+    // de khong lam vo cac moi truong dang chay chua cau hinh.
+    public string PerformerConfirmationUrl { get; init; } = string.Empty;
 }

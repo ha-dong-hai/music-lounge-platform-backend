@@ -7,6 +7,9 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.Performers;
 
 namespace MusicLounge.Application.Donations.Commands.ConfirmDonationPaid;
 
@@ -19,6 +22,8 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
     private readonly IFileStorageService _fileStorage;
+    private readonly IEmailService _email;
+    private readonly BusinessSettings _settings;
     private readonly ILogger<ConfirmDonationPaidCommandHandler> _logger;
 
     public ConfirmDonationPaidCommandHandler(
@@ -29,6 +34,8 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         ISystemConfigService config,
         IAsyncKeyedLock @lock,
         IFileStorageService fileStorage,
+        IEmailService email,
+        IOptions<BusinessSettings> settings,
         ILogger<ConfirmDonationPaidCommandHandler> logger)
     {
         _uow = uow;
@@ -38,6 +45,8 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         _config = config;
         _lock = @lock;
         _fileStorage = fileStorage;
+        _email = email;
+        _settings = settings.Value;
         _logger = logger;
     }
 
@@ -135,6 +144,12 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
                         ? " Bằng chứng là liên kết bên ngoài hệ thống — không lưu được bản băm nội dung."
                         : ""),
             ct: ct);
+
+        // MLACP-364: moi nghe si tu xac nhan da nhan — hoac bao chua nhan. Chu phong tra khong the xac
+        // nhan thay nghe si; truoc day "da tra nghe si" chi co loi khai cua mot phia.
+        if (await _uow.Repository<Performer, int>().GetByIdAsync(ownership.PerformerId, ct) is { } performer)
+            await PerformerConfirmations.InviteAsync(_uow, _email, _settings, _logger, performer,
+                PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef), ct);
 
         await _uow.SaveChangesAsync(ct);
 

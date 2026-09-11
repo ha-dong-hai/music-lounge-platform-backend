@@ -8,5 +8,8 @@ public sealed record UpdatePerformerCommand(
     string? AvatarUrl,
     string? Bio,
     string Type,
-    IReadOnlyList<int> GenreIds
+    IReadOnlyList<int> GenreIds,
+    // MLACP-364: null = giu nguyen, chuoi rong = xoa. Khac cac truong con lai (thay toan bo) co y: client
+    // chua biet truong nay khong duoc vo tinh xoa mat email cua nghe si moi lan sua ho so.
+    string? ContactEmail = null
 ) : ICommand;

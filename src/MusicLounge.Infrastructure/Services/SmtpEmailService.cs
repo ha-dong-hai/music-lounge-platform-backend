@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Infrastructure.Settings;
+using MusicLounge.Application.Common;
 
 namespace MusicLounge.Infrastructure.Services;
 
@@ -109,5 +110,48 @@ internal sealed class SmtpEmailService : IEmailService
         };
 
         await client.SendMailAsync(message, ct);
+    }
+
+    public async Task SendPerformerConfirmationAsync(
+        string toEmail, string toName, string subject, string message, string link,
+        DateTimeOffset expiresAt, CancellationToken ct = default)
+    {
+        var body = $"""
+            Xin chào {toName},
+
+            {message}
+
+            {link}
+
+            Liên kết chỉ dùng được một lần và hết hạn lúc {VietnamTime.Format(expiresAt, "HH:mm dd/MM/yyyy")} (giờ Việt Nam).
+            Bạn không cần tạo tài khoản MusicLounge để trả lời.
+            """;
+
+        if (string.IsNullOrWhiteSpace(_settings.Host))
+        {
+            _logger.LogWarning(
+                "EmailSettings:Host chưa cấu hình — không gửi email thật. Liên kết xác nhận cho {Email}: {ConfirmationLink}",
+                toEmail, link);
+            return;
+        }
+
+        using var mail = new MailMessage
+        {
+            From = new MailAddress(_settings.FromAddress, _settings.FromName),
+            Subject = subject,
+            SubjectEncoding = Encoding.UTF8,
+            Body = body,
+            BodyEncoding = Encoding.UTF8,
+            IsBodyHtml = false
+        };
+        mail.To.Add(new MailAddress(toEmail, toName));
+
+        using var client = new SmtpClient(_settings.Host, _settings.Port)
+        {
+            EnableSsl = _settings.EnableSsl,
+            Credentials = new NetworkCredential(_settings.Username, _settings.Password)
+        };
+
+        await client.SendMailAsync(mail, ct);
     }
 }

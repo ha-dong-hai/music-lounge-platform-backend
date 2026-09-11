@@ -12,6 +12,8 @@ internal sealed class CreatePerformerCommandValidator : AbstractValidator<Create
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.AvatarUrl).MaximumLength(500);
         RuleFor(x => x.Bio).MaximumLength(2000);
+        RuleFor(x => x.ContactEmail!).EmailAddress().MaximumLength(255)
+            .When(x => !string.IsNullOrWhiteSpace(x.ContactEmail));
 
         RuleFor(x => x.Type)
             .Must(t => Enum.TryParse<PerformerType>(t, ignoreCase: true, out _))
