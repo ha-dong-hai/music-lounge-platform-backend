@@ -27,6 +27,15 @@ public sealed class VenuePenalty : Common.BaseEntity<int>
     public DateTimeOffset? ReviewedAt { get; set; }
     public string? CompensationNote { get; set; }
 
+    // MLACP-375: an nay co cap "ngay bu mien phi" cho mot goi subscription hay khong — cong them ExpiresAt
+    // ma KHONG cong gi vao AmountPaid (tam khoa duoc bu ngay, hoac khoa vinh vien duoc go gop ngay con lai
+    // vao mot goi dang Active khac). Ghi lai DUNG khoang thoi gian duoc cap — khong doan vi tri — de tinh gia
+    // tri con lai khi doi goi (SubscriptionTerms.RemainingValue) khong tinh nham ngay mien phi la ngay da tra
+    // tien, du chu co gia han sau do lam ngay mien phi khong con nam cuoi cung.
+    public int? CompensatedSubscriptionId { get; set; }
+    public DateTimeOffset? SubscriptionCompensationFrom { get; set; }
+    public decimal? SubscriptionCompensationDays { get; set; }
+
     public MusicLounge Lounge { get; set; } = null!;
     public User IssuedByUser { get; set; } = null!;
     public User? ReviewedByUser { get; set; }
