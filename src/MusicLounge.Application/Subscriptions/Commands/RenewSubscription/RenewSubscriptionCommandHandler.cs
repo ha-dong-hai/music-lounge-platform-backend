@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Subscriptions.DTOs;
@@ -41,6 +42,9 @@ internal sealed class RenewSubscriptionCommandHandler
         var lastSub = ownSubs.OrderByDescending(s => s.StartedAt).FirstOrDefault()
             ?? throw new DomainException(
                 "Bạn chưa từng đăng ký gói subscription nào — vui lòng chọn một gói để đăng ký lần đầu.");
+
+        // MLACP-376: cung chot voi SubscribeToPackage.
+        await SubscriptionVenueGate.EnsureNotPenalizedAsync(_uow, _currentUser.UserId, ct);
 
         var now = DateTimeOffset.UtcNow;
         // MLACP-371: gia han duoc ca khi goi con han — thoi gian moi cong noi vao han hien tai (Google Play goi tra
