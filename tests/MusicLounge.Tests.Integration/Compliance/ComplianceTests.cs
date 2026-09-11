@@ -340,10 +340,15 @@ public sealed class ComplianceTests
     /// not at the boundary itself. This walks the calendar forward counting only Mon-Sat (matching
     /// BusinessDayCalculator's own Sat/Sun exclusion) so the test is deterministic regardless of
     /// which weekday CI happens to run on.
+    ///
+    /// <para>MLACP-368: walks the VIETNAMESE calendar, like the calculator now does. It used to walk the UTC
+    /// calendar — the same assumption as the bug — and would have failed between 00:00 and 07:00 Vietnam
+    /// time, when the UTC date is still yesterday.</para>
     /// </summary>
     private static DateTimeOffset DateExactlyNBusinessDaysOut(int n)
     {
-        var cursor = DateTimeOffset.UtcNow.Date;
+        var vn = TimeSpan.FromHours(7);
+        var cursor = DateTimeOffset.UtcNow.ToOffset(vn).Date;
         var count = 0;
         while (count < n)
         {
@@ -351,9 +356,9 @@ public sealed class ComplianceTests
             if (cursor.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday)
                 count++;
         }
-        // Mid-afternoon so ScheduledStart is unambiguously "on" that business day regardless of the
-        // exact UTC time the test happens to run at.
-        return new DateTimeOffset(cursor, TimeSpan.Zero).AddHours(14);
+        // Mid-afternoon Vietnam time so ScheduledStart is unambiguously "on" that business day regardless
+        // of the exact time the test happens to run at.
+        return new DateTimeOffset(cursor, vn).AddHours(14);
     }
 
     [Fact]

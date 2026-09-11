@@ -9,9 +9,13 @@ public static class BusinessDayCalculator
     {
         if (to <= from) return 0;
 
+        // MLACP-368: "ngày" là ngày theo lịch Việt Nam. Trước đây lấy .Date của chính offset mỗi giá trị
+        // mang theo — nơi gọi truyền DateTimeOffset.UtcNow, nên từ 0h–7h sáng giờ Việt Nam "hôm nay" vẫn là
+        // hôm qua và phòng trà được tính dư một ngày làm việc; giờ diễn gửi dạng UTC rơi vào 0h–7h thì bị
+        // tính thiếu một ngày. Ngày đầu không tính, bắt đầu từ ngày tiếp theo — BLĐS 2015 Điều 147.
         var count = 0;
-        var cursor = from.Date.AddDays(1);
-        var end = to.Date;
+        var cursor = from.ToOffset(VietnamTime.Offset).Date.AddDays(1);
+        var end = to.ToOffset(VietnamTime.Offset).Date;
 
         while (cursor <= end)
         {
