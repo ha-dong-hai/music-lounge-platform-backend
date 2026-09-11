@@ -26,6 +26,11 @@ public sealed class LivestreamHubService : ILivestreamHubService
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("DonationAlert", donation, ct);
 
+    public Task BroadcastDonationMessageHiddenAsync(int livestreamId, int donationId, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("DonationMessageHidden", new { donationId }, ct);
+
     public Task BroadcastViewerCountAsync(int livestreamId, int count, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))

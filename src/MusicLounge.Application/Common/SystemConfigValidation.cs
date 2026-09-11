@@ -86,9 +86,15 @@ public static class SystemConfigValidation
 
             case ConfigDataType.String:
             case ConfigDataType.Json:
-                return proposedValue.Length > 500
-                    ? "Giá trị không được dài quá 500 ký tự."
-                    : null;
+                if (proposedValue.Length > 500)
+                    return "Giá trị không được dài quá 500 ký tự.";
+                // MLACP-360: danh sách từ cấm phải đọc được ngay lúc ghi. Để lỗi tới lúc phát sóng thì
+                // mọi lời nhắn đều bị giữ lại mà không ai biết vì sao.
+                if (key == ConfigKeys.DonationMessageBlockedWords
+                    && !Donations.DonationMessageFilter.TryParseList(proposedValue, out _))
+                    return "Danh sách từ cấm phải là một mảng JSON các chuỗi, ví dụ [\"từ một\", \"cụm từ hai\"]. " +
+                           "Muốn bỏ hết thì dùng [].";
+                return null;
 
             default:
                 return $"Kiểu dữ liệu \"{dataType}\" chưa được hỗ trợ.";

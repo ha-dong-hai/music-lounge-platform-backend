@@ -10,6 +10,7 @@ using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Donations.Commands.AcknowledgeDonation;
 using MusicLounge.Application.Donations.Commands.ConfirmDonationPaid;
 using MusicLounge.Application.Donations.Commands.CreateDonation;
+using MusicLounge.Application.Donations.Commands.HideDonationMessage;
 using MusicLounge.Application.Donations.Commands.ProcessDonationPayment;
 using MusicLounge.Application.Donations.DTOs;
 using MusicLounge.Application.Donations.Queries.GetMyDonations;
@@ -166,6 +167,21 @@ public sealed class DonationsController : ControllerBase
         CancellationToken ct = default)
     {
         await _sender.Send(new ConfirmDonationPaidCommand(id, body.PaymentRef, body.PaymentEvidenceUrl), ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-360 — chủ phòng trà, nhân viên đúng phòng trà hoặc Admin gỡ lời nhắn của một
+    /// donate khỏi livestream (client đang xem nhận sự kiện <c>DonationMessageHidden</c>). Không hoàn
+    /// tiền; lời nhắn gốc vẫn được lưu để đối chiếu.</summary>
+    [HttpPost("{id:int}/hide-message")]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> HideMessage(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new HideDonationMessageCommand(id), ct);
         return NoContent();
     }
 }

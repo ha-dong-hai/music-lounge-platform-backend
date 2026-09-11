@@ -2,7 +2,6 @@ using MediatR;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
-using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -14,31 +13,24 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
     private readonly IUnitOfWork _uow;
     private readonly IDonationRepository _donationRepo;
     private readonly ICurrentUserService _currentUser;
-    private readonly ILivestreamHubService _hubService;
-    private readonly ILivestreamRepository _livestreamRepo;
     private readonly IAsyncKeyedLock _lock;
 
     public AcknowledgeDonationCommandHandler(
         IUnitOfWork uow,
         IDonationRepository donationRepo,
         ICurrentUserService currentUser,
-        ILivestreamHubService hubService,
-        ILivestreamRepository livestreamRepo,
         IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _donationRepo = donationRepo;
         _currentUser = currentUser;
-        _hubService = hubService;
-        _livestreamRepo = livestreamRepo;
         _lock = @lock;
     }
 
     public async Task<Unit> Handle(AcknowledgeDonationCommand request, CancellationToken ct)
     {
-        // Same key namespace as ConfirmDonationPaidCommandHandler — a double-click here duplicates
-        // the live donation-alert broadcast (not money, but still a real duplicate side effect), and
-        // serializing against chặng-2 avoids any theoretical overlap between the two status writes.
+        // Same key namespace as ConfirmDonationPaidCommandHandler — serializing against chặng-2
+        // avoids any overlap between the two status writes.
         await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
 
         var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
@@ -62,16 +54,8 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
         _uow.Repository<Donation, int>().Update(donation);
         await _uow.SaveChangesAsync(ct);
 
-        // Broadcast donation alert to livestream if show is currently live
-        var livestream = await _livestreamRepo.GetByShowIdAsync(ownership.LoungeShowId, ct);
-        if (livestream?.Status == LivestreamStatus.Live)
-        {
-            var donorName = donation.IsAnonymous ? "Ẩn danh" : (donation.DisplayName ?? "Khán giả");
-            await _hubService.BroadcastDonationAlertAsync(
-                livestream.Id,
-                new DonationAlertDto(donorName, donation.Gross, donation.IsMessagePublic ? donation.Message : null),
-                ct);
-        }
+        // MLACP-360: canh bao livestream khong con phat o day nua — no phat ngay luc VNPay xac nhan
+        // (ProcessDonationPayment). Phat them o day la xuong mot donate hai lan tren song.
 
         return Unit.Value;
     }

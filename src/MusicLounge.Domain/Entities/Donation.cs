@@ -24,6 +24,11 @@ public sealed class Donation : Common.BaseEntity<int>
     public string? Message { get; set; }
     public bool IsMessagePublic { get; set; } = true;
 
+    // MLACP-360: phòng trà gỡ lời nhắn khỏi livestream (không hoàn tiền). Ghi ai gỡ, lúc nào — lời
+    // nhắn gốc vẫn giữ nguyên, để còn đối chiếu khi người donate khiếu nại.
+    public DateTimeOffset? MessageHiddenAt { get; set; }
+    public int? MessageHiddenByUserId { get; set; }
+
     public string? GatewayRef { get; set; }
     public int? BankAccountId { get; set; }                 // D12: FK snapshot — performer bank account paid to (W31)
 

@@ -90,6 +90,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<IGoogleTokenVerifier>();
             services.AddSingleton<IGoogleTokenVerifier, FakeGoogleTokenVerifier>();
 
+            // MLACP-360: ghi lại sự kiện gửi xuống livestream để test khẳng định được. Singleton để
+            // test lấy đúng một bản mà các request đã ghi vào.
+            services.RemoveAll<ILivestreamHubService>();
+            services.AddSingleton<ILivestreamHubService, RecordingLivestreamHubService>();
+
             // ── 4. Replace JWT auth with test header-based auth ───────────────────
             services.AddAuthentication(opts =>
             {
