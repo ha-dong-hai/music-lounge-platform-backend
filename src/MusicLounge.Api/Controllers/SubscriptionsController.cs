@@ -8,6 +8,7 @@ using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Subscriptions.Commands.CancelSubscription;
+using MusicLounge.Application.Subscriptions.Commands.ChangeSubscriptionPackage;
 using MusicLounge.Application.Subscriptions.Commands.CreateSubscriptionPackage;
 using MusicLounge.Application.Subscriptions.Commands.ProcessSubscriptionPayment;
 using MusicLounge.Application.Subscriptions.Commands.RenewSubscription;
@@ -105,7 +106,25 @@ public sealed class SubscriptionsController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, ApiResponse<SubscriptionPaymentInitiationDto>.Ok(result));
     }
 
-    // Hủy có hiệu lực NGAY LẬP TỨC, không hoàn tiền phần thời gian chưa dùng — xem comment trong
+    // MLACP-371: đổi sang gói khác, có hiệu lực ngay — phần còn lại của gói hiện tại được quy thành thời gian ở
+    // gói mới (không hoàn tiền mặt). Vẫn là một lần thanh toán VNPay đủ giá gói mới.
+    [HttpPost("change-package")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType<ApiResponse<SubscriptionChangeInitiationDto>>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ChangePackage(
+        [FromBody] ChangeSubscriptionPackageRequest body, CancellationToken ct = default)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _sender.Send(new ChangeSubscriptionPackageCommand(body.PackageId, ip), ct);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<SubscriptionChangeInitiationDto>.Ok(result));
+    }
+
+    // MLACP-371: huỷ = không gia hạn nữa, gói vẫn dùng tới hết kỳ đã trả, không hoàn tiền — xem
     // CancelSubscriptionCommand. Route gốc "cancel", không phải "{id}/cancel", vì subscription
     // luôn ngầm định "của user đang gọi" (khớp convention "subscribe"/"renew" phía trên).
     [HttpPost("cancel")]
@@ -165,3 +184,5 @@ public sealed record UpdateSubscriptionPackageRequest(
     int MaxAiPostersPerMonth, int MaxTourScenes, bool IsActive);
 
 public sealed record SubscribeToPackageRequest(int PackageId);
+
+public sealed record ChangeSubscriptionPackageRequest(int PackageId);

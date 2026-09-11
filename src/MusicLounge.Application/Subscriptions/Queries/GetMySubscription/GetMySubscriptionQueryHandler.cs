@@ -31,6 +31,6 @@ internal sealed class GetMySubscriptionQueryHandler
             latest.Id, latest.PackageId, package?.Name ?? string.Empty,
             latest.StartedAt, latest.ExpiresAt, latest.Status.ToString(),
             latest.MaxTicketsPerEventSnapshot, latest.HasAiPosterSnapshot, latest.MaxAiPostersPerMonthSnapshot,
-            latest.MaxTourScenesSnapshot);
+            latest.MaxTourScenesSnapshot, latest.CancelledAt);
     }
 }

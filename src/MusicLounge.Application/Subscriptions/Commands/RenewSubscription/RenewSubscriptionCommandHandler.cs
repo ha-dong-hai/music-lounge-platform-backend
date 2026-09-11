@@ -43,10 +43,10 @@ internal sealed class RenewSubscriptionCommandHandler
                 "Bạn chưa từng đăng ký gói subscription nào — vui lòng chọn một gói để đăng ký lần đầu.");
 
         var now = DateTimeOffset.UtcNow;
-        var hasActiveSubscription = lastSub.Status == SubscriptionStatus.Active && lastSub.ExpiresAt > now;
-        if (hasActiveSubscription)
-            throw new ConflictException(
-                "Bạn đã có gói đang hoạt động — đợi gói hiện tại hết hạn hoặc hủy trước khi gia hạn.");
+        // MLACP-371: gia han duoc ca khi goi con han — thoi gian moi cong noi vao han hien tai (Google Play goi tra
+        // truoc: "entitlement is extended by the duration specified in the top-up"). Truoc day phai doi het han hoac
+        // huy truoc — ma huy la mat trang phan con lai. Moi luc chi mot lenh gia han/doi goi cho thanh toan.
+        await SubscriptionTerms.EnsureNoPendingChangeAsync(_uow, _currentUser.UserId, ct);
 
         var package = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(lastSub.PackageId, ct)
             ?? throw new NotFoundException(nameof(SubscriptionPackage), lastSub.PackageId);
@@ -58,7 +58,7 @@ internal sealed class RenewSubscriptionCommandHandler
             throw new DomainException(
                 $"Gói \"{package.Name}\" hiện không còn mở đăng ký — vui lòng chọn gói khác để gia hạn.");
 
-        var orderId = $"SUB-{now:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
+        var orderId = SubscriptionTerms.NewOrderId(SubscriptionPurchase.Renew, now);
 
         var payment = new Payment
         {

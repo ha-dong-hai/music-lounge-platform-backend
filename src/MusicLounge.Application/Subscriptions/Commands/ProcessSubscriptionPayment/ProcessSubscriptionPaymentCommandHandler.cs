@@ -122,6 +122,53 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         payment.UpdatedAt = now;
         paymentRepo.Update(payment);
 
+        // MLACP-371: gia han som va doi goi. Mot thanh toan goi den trong luc chu dang co goi Active khong phai luc nao
+        // cung la thanh toan trung: thanh toan tao tu lenh Gia han hoac Doi goi la dung thu chu muon mua. Chi thanh toan
+        // tu lenh Dang ky moi di duong "thanh toan trung" ben duoi.
+        var purchase = SubscriptionTerms.PurchaseOf(payment.OrderId);
+        var currentPlan = (await _uow.Repository<OwnerSubscription, int>().FindAsync(
+                s => s.OwnerId == ownerId && s.Status == SubscriptionStatus.Active, ct))
+            .FirstOrDefault();
+        if (currentPlan is not null && purchase != SubscriptionPurchase.Subscribe)
+        {
+            string summary;
+            if (purchase == SubscriptionPurchase.Renew && currentPlan.PackageId == package.Id)
+            {
+                summary = ExtendPlan(currentPlan, package, payment, now);
+                // FindAsync doc AsNoTracking — khong Update thi han moi khong duoc luu du VNPay da thu tien.
+                _uow.Repository<OwnerSubscription, int>().Update(currentPlan);
+            }
+            else
+            {
+                summary = await ChangePlanAsync(currentPlan, package, payment, ownerId, now, ct);
+            }
+
+            await _ledger.WriteJournalAsync(
+                Guid.NewGuid().ToString("N"),
+                LedgerReferenceTypes.Subscription,
+                payment.ReferenceId,
+                payment.Id,
+                new LedgerLine[]
+                {
+                    new(AccountType.Gateway, null, payment.GrossAmount, IsDebit: true,
+                        Description: $"Subscription payment #{payment.Id} ({purchase})"),
+                    new(AccountType.Platform, null, payment.GrossAmount, IsDebit: false,
+                        Description: $"Subscription payment #{payment.Id} ({purchase})")
+                }, ct);
+
+            await _notifications.NotifyAsync(
+                ownerId,
+                NotificationType.SubscriptionUpdated,
+                purchase == SubscriptionPurchase.Renew ? "Gói dịch vụ đã được gia hạn" : "Đã đổi gói dịch vụ",
+                summary,
+                referenceType: "payment",
+                referenceId: payment.Id.ToString(),
+                ct: ct);
+
+            await _uow.SaveChangesAsync(ct);
+            return VnPayIpnOutcome.Confirmed;
+        }
+
         // Closes the actual double-charge race (see the owner-keyed lock comment above): if this
         // owner already has an Active subscription — most likely the OTHER half of a double-submit,
         // now confirmed first because it acquired the lock first — this payment is real money VNPay
@@ -179,13 +226,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             return VnPayIpnOutcome.Confirmed;
         }
 
-        var expiresAt = package.BillingCycle switch
-        {
-            SubscriptionBillingCycle.Monthly => now.AddMonths(1),
-            SubscriptionBillingCycle.Quarterly => now.AddMonths(3),
-            SubscriptionBillingCycle.Yearly => now.AddYears(1),
-            _ => now.AddMonths(1)
-        };
+        var expiresAt = SubscriptionTerms.CycleEnd(package.BillingCycle, now);
 
         var subscription = new OwnerSubscription
         {
@@ -194,6 +235,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             StartedAt = now,
             ExpiresAt = expiresAt,
             Status = SubscriptionStatus.Active,
+            AmountPaid = payment.GrossAmount,
             // From the Payment snapshot taken at checkout, NOT the freshly-refetched package above
             // (only used for BillingCycle/Price-verification) — package.MaxTicketsPerEvent/HasAiPoster
             // could have been edited by an admin in the window between checkout and this callback.
@@ -228,5 +270,54 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
 
         await _uow.SaveChangesAsync(ct);
         return VnPayIpnOutcome.Confirmed;
+    }
+
+    /// <summary>MLACP-371: gia hạn — cộng một kỳ nối vào hạn hiện tại (không mất ngày nào còn lại), bỏ trạng thái đã huỷ.</summary>
+    private static string ExtendPlan(OwnerSubscription plan, SubscriptionPackage package, Payment payment, DateTimeOffset now)
+    {
+        plan.ExpiresAt = SubscriptionTerms.CycleEnd(package.BillingCycle, plan.ExpiresAt > now ? plan.ExpiresAt : now);
+        plan.AmountPaid = (plan.AmountPaid ?? package.Price) + payment.GrossAmount;
+        plan.CancelledAt = null;
+        return $"Gói \"{package.Name}\" đã được gia hạn, dùng tới {VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy")}.";
+    }
+
+    /// <summary>
+    /// MLACP-371: đổi gói — gói mới có hiệu lực ngay; phần giá trị còn lại của gói cũ được quy thành thời gian ở gói
+    /// mới theo giá gói mới (không hoàn tiền mặt).
+    /// </summary>
+    private async Task<string> ChangePlanAsync(
+        OwnerSubscription current, SubscriptionPackage newPackage, Payment payment, int ownerId,
+        DateTimeOffset now, CancellationToken ct)
+    {
+        var oldPackage = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(current.PackageId, ct);
+        var credit = SubscriptionTerms.RemainingValue(current, oldPackage?.Price ?? 0m, now);
+        var cycleEnd = SubscriptionTerms.CycleEnd(newPackage.BillingCycle, now);
+        var extra = SubscriptionTerms.TimeWorth(credit, payment.GrossAmount, cycleEnd - now);
+
+        // Goi cu phai roi trang thai Active TRUOC khi goi moi duoc them: chi muc duy nhat (moi chu mot goi Active)
+        // khong quan tam thu tu cac lenh EF gui xuong trong cung mot lan luu.
+        current.Status = SubscriptionStatus.Cancelled;
+        current.CancelledAt = now;
+        _uow.Repository<OwnerSubscription, int>().Update(current);
+        await _uow.SaveChangesAsync(ct);
+
+        var plan = new OwnerSubscription
+        {
+            OwnerId = ownerId,
+            PackageId = newPackage.Id,
+            StartedAt = now,
+            ExpiresAt = cycleEnd + extra,
+            Status = SubscriptionStatus.Active,
+            AmountPaid = payment.GrossAmount + credit,
+            MaxTicketsPerEventSnapshot = payment.SubscriptionMaxTicketsPerEventSnapshot ?? newPackage.MaxTicketsPerEvent,
+            HasAiPosterSnapshot = payment.SubscriptionHasAiPosterSnapshot ?? newPackage.HasAiPoster,
+            MaxAiPostersPerMonthSnapshot = payment.SubscriptionMaxAiPostersPerMonthSnapshot ?? newPackage.MaxAiPostersPerMonth,
+            MaxTourScenesSnapshot = payment.SubscriptionMaxTourScenesSnapshot ?? newPackage.MaxTourScenes
+        };
+        _uow.Repository<OwnerSubscription, int>().Add(plan);
+
+        return $"Đã chuyển sang gói \"{newPackage.Name}\". Phần còn lại của gói cũ " +
+               $"({SubscriptionTerms.DescribeCredit(credit, extra)}) đã được cộng vào — gói mới dùng tới " +
+               $"{VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy")}.";
     }
 }

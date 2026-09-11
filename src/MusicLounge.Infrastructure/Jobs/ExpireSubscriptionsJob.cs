@@ -29,7 +29,8 @@ public sealed class ExpireSubscriptionsJob
         if (due.Count == 0) return;
 
         foreach (var sub in due)
-            sub.Status = SubscriptionStatus.Expired;
+            // MLACP-371: goi chu da huy ket thuc voi trang thai Cancelled — phan biet voi goi het han tu nhien.
+            sub.Status = sub.CancelledAt is null ? SubscriptionStatus.Expired : SubscriptionStatus.Cancelled;
 
         await _ctx.SaveChangesAsync(ct);
     }
