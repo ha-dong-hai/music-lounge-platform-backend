@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -45,9 +46,13 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeVenue
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"SusVenue-{Guid.NewGuid():N}",
             Description = "Integration test venue",
             Status = LoungeStatus.Approved,
@@ -270,7 +275,13 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
 
         await SetStatusAsync(venue, LoungeStatus.Suspended);
 
-        var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", venue)
+        // MLACP-377: VenueAsync() gio tao mot chu MOI cho moi phong tra — tra dung chu tu DB.
+        int ownerId;
+        using (var scope = _factory.Services.CreateScope())
+            ownerId = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Lounges.AsNoTracking().Single(l => l.Id == venue).OwnerId;
+
+        var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner", venue)
             .GetAsync("/api/v1/lounge-shows/mine?page=1&pageSize=200");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 

@@ -20,10 +20,11 @@ internal sealed class MusicLoungeConfiguration : IEntityTypeConfiguration<MusicL
         b.Property(l => l.Status).HasConversion<string>().HasMaxLength(20).HasDefaultValue(LoungeStatus.Pending);
         b.Property(l => l.ReputationScore).HasPrecision(3, 2).HasDefaultValue(0m);
         b.HasIndex(l => l.Status);
-        // MLACP-374: mo hinh nghiep vu la 1 chu = 1 phong tra — chan o CreateLoungeCommandHandler (duong
-        // tao That duy nhat). KHONG dat unique index DB o day: 27 file test hien dung SeedHelper.OwnerId
-        // lam OwnerId dat cho hang chuc venue khong lien quan (OwnerId chi la FK khac null, khong phai
-        // nghiep vu dang test) — dat rang buoc DB se doi hang tram bai test ngoai pham vi task nay.
+        // MLACP-374 chan o CreateLoungeCommandHandler (duong tao That duy nhat). MLACP-377: them rang buoc
+        // that o tang database — phong tuyen cuoi cho rang buoc nghiep vu quan trong nay, du DeleteLounge
+        // (hard-delete, chi cho khi chua co show) va Rejected (sua lai DUNG ho so, khong tao hang moi) da
+        // khien khong can filter theo trang thai.
+        b.HasIndex(l => l.OwnerId).IsUnique();
 
         b.HasOne(l => l.Atmosphere)
             .WithMany()

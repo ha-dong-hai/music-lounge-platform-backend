@@ -32,7 +32,7 @@ public sealed class VenueOperatingGateTests
 
     private sealed record DataResponse<T>(bool Success, T Data);
     private sealed record HoldResult(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record Venue(int LoungeId, int ShowId, int OnlinePriceId, int CounterPriceId, int PerformanceId);
+    private sealed record Venue(int LoungeId, int ShowId, int OnlinePriceId, int CounterPriceId, int PerformanceId, int OwnerId);
 
     /// <summary>
     /// Phòng trà riêng của chủ phòng trà trong seed (gói 1000 vé/buổi — hạn mức không cản), để đổi trạng
@@ -43,9 +43,13 @@ public sealed class VenueOperatingGateTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeEntity
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"Gate {Guid.NewGuid():N}"[..14],
             Status = LoungeStatus.Approved,
             Address = new VenueAddress { Street = "1 Lê Lợi", District = "1", City = "HCM" }
@@ -93,7 +97,7 @@ public sealed class VenueOperatingGateTests
         db.Add(performance);
         await db.SaveChangesAsync();
 
-        return new Venue(lounge.Id, show.Id, online.Id, counter.Id, performance.Id);
+        return new Venue(lounge.Id, show.Id, online.Id, counter.Id, performance.Id, freshOwner.Id);
     }
 
     private async Task SetVenueStatusAsync(int loungeId, LoungeStatus status)
@@ -183,7 +187,7 @@ public sealed class VenueOperatingGateTests
         var venue = await CreateVenueAsync();
         await SetVenueStatusAsync(venue.LoungeId, LoungeStatus.Suspended);
 
-        var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")
+        var res = await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner")
             .PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = venue.CounterPriceId, Quantity = 1 });
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);

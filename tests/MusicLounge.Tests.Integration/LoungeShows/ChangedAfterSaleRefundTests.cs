@@ -37,7 +37,7 @@ public sealed class ChangedAfterSaleRefundTests
 
     public ChangedAfterSaleRefundTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int LoungeId, string Name);
+    private sealed record Venue(int LoungeId, string Name, int OwnerId);
 
     private static DateTimeOffset Earlier => DateTimeOffset.UtcNow.AddDays(-1);
 
@@ -45,9 +45,13 @@ public sealed class ChangedAfterSaleRefundTests
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeEntity
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"Phòng trà {Guid.NewGuid():N}"[..20],
             Status = LoungeStatus.Approved,
             Address = new VenueAddress
@@ -58,7 +62,7 @@ public sealed class ChangedAfterSaleRefundTests
         };
         db.Add(lounge);
         await db.SaveChangesAsync();
-        return new Venue(lounge.Id, lounge.Name);
+        return new Venue(lounge.Id, lounge.Name, freshOwner.Id);
     }
 
     private async Task<int> UserAsync()
@@ -154,12 +158,12 @@ public sealed class ChangedAfterSaleRefundTests
         return (ticket.Id, payment.Id);
     }
 
-    private Task<HttpResponseMessage> RescheduleAsync(int showId, DateTimeOffset newStart)
-        => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")
+    private Task<HttpResponseMessage> RescheduleAsync(Venue venue, int showId, DateTimeOffset newStart)
+        => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner")
             .PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/reschedule", new { NewScheduledStart = newStart });
 
     private Task<HttpResponseMessage> MoveVenueAsync(Venue venue)
-        => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")
+        => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner")
             .PutAsJsonAsync($"/api/v1/lounges/{venue.LoungeId}", new
             {
                 Name = venue.Name,
@@ -217,7 +221,7 @@ public sealed class ChangedAfterSaleRefundTests
             refundPercentage: 70m);
         var (ticketId, paymentId) = await TicketAsync(showId, SeedHelper.AudienceId, Earlier);
 
-        (await RescheduleAsync(showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await CancelAsync(ticketId, SeedHelper.AudienceId)).IsSuccessStatusCode.Should().BeTrue();
         (await RefundAsync(paymentId)).RefundPercentage.Should().Be(100m,
@@ -231,7 +235,7 @@ public sealed class ChangedAfterSaleRefundTests
         var showId = await ShowAsync(venue, DateTimeOffset.UtcNow.AddDays(30), cancellationAllowed: false);
         var (ticketId, paymentId) = await TicketAsync(showId, SeedHelper.AudienceId, Earlier);
 
-        (await RescheduleAsync(showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await CancelAsync(ticketId, SeedHelper.AudienceId)).IsSuccessStatusCode.Should().BeTrue(
             "'no self-cancellation' was agreed for the old date, not for one the venue picked afterwards");
@@ -247,7 +251,7 @@ public sealed class ChangedAfterSaleRefundTests
         var (ticketId, paymentId) = await TicketAsync(showId, SeedHelper.AudienceId, Earlier);
 
         // 12 ngày tới: đủ 7 ngày làm việc để được đổi lịch, nhưng hạn huỷ 14 ngày trước giờ diễn đã qua ngay lúc đổi.
-        (await RescheduleAsync(showId, DateTimeOffset.UtcNow.AddDays(12))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, DateTimeOffset.UtcNow.AddDays(12))).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await CancelAsync(ticketId, SeedHelper.AudienceId)).IsSuccessStatusCode.Should().BeTrue(
             "a window that is shut the moment it opens is no window");
@@ -275,7 +279,7 @@ public sealed class ChangedAfterSaleRefundTests
     {
         var venue = await VenueAsync();
         var showId = await ShowAsync(venue, DateTimeOffset.UtcNow.AddDays(30), cancellationAllowed: false);
-        (await RescheduleAsync(showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var (ticketId, _) = await TicketAsync(showId, SeedHelper.AudienceId, DateTimeOffset.UtcNow);
 
         (await CancelAsync(ticketId, SeedHelper.AudienceId)).StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
@@ -293,7 +297,7 @@ public sealed class ChangedAfterSaleRefundTests
         var venue = await VenueAsync();
         var showId = await ShowAsync(venue, DateTimeOffset.UtcNow.AddDays(30), cancellationAllowed: true,
             refundPercentage: 70m);
-        (await RescheduleAsync(showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, DateTimeOffset.UtcNow.AddDays(20))).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var (ticketId, paymentId) = await TicketAsync(showId, SeedHelper.AudienceId, DateTimeOffset.UtcNow);
 
         (await CancelAsync(ticketId, SeedHelper.AudienceId)).IsSuccessStatusCode.Should().BeTrue();
@@ -332,7 +336,7 @@ public sealed class ChangedAfterSaleRefundTests
         await TicketAsync(showId, SeedHelper.AudienceId, Earlier, payerId: originalBuyer);
         var newStart = DateTimeOffset.UtcNow.AddDays(20);
 
-        (await RescheduleAsync(showId, newStart)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, newStart)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var body = await NoticeAsync(SeedHelper.AudienceId, NotificationType.EventRescheduled, showId);
         body.Should().Contain($"hoàn 100% tiền vé tới {Vn(newStart)}",
@@ -366,7 +370,7 @@ public sealed class ChangedAfterSaleRefundTests
         var showId = await ShowAsync(venue, DateTimeOffset.UtcNow.AddDays(30), cancellationAllowed: false);
         var (earlier, _) = await TicketAsync(showId, SeedHelper.AudienceId, Earlier);
         var newStart = DateTimeOffset.UtcNow.AddDays(20);
-        (await RescheduleAsync(showId, newStart)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await RescheduleAsync(venue, showId, newStart)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var (later, _) = await TicketAsync(showId, SeedHelper.AudienceId, DateTimeOffset.UtcNow);
 
         var earlierUntil = await FullRefundUntilAsync(earlier);

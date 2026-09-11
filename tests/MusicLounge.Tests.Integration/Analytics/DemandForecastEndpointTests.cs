@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -43,9 +44,13 @@ public sealed class DemandForecastEndpointTests
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeVenue
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"ForecastVenue-{Guid.NewGuid():N}",
             Description = "Integration test venue",
             Status = LoungeStatus.Approved,
@@ -121,7 +126,13 @@ public sealed class DemandForecastEndpointTests
 
     private async Task<Forecast> ForecastAsync(int showId, int loungeId)
     {
-        var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId)
+        // MLACP-377: VenueAsync() gio tao mot chu MOI cho moi phong tra — tra dung chu tu DB.
+        int ownerId;
+        using (var scope = _factory.Services.CreateScope())
+            ownerId = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Lounges.AsNoTracking().Single(l => l.Id == loungeId).OwnerId;
+
+        var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId)
             .GetAsync($"/api/v1/analytics/shows/{showId}/demand-forecast");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         return (await res.Content.ReadFromJsonAsync<Envelope<Forecast>>())!.Data;

@@ -34,15 +34,19 @@ public sealed class VenueIdentityChangeTests
 
     public VenueIdentityChangeTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int LoungeId, string Name);
+    private sealed record Venue(int LoungeId, string Name, int OwnerId);
 
     private async Task<Venue> CreateVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeEntity
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"Phòng trà {Guid.NewGuid():N}"[..20],
             Status = LoungeStatus.Approved,
             Address = new VenueAddress
@@ -53,7 +57,7 @@ public sealed class VenueIdentityChangeTests
         };
         db.Add(lounge);
         await db.SaveChangesAsync();
-        return new Venue(lounge.Id, lounge.Name);
+        return new Venue(lounge.Id, lounge.Name, freshOwner.Id);
     }
 
     private async Task<int> CreateShowAsync(
@@ -144,7 +148,7 @@ public sealed class VenueIdentityChangeTests
     private Task<HttpResponseMessage> UpdateAsync(
         Venue venue, string? name = null, string street = OldStreet,
         double latitude = 10.7769, double longitude = 106.7009)
-        => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")
+        => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner")
             .PutAsJsonAsync($"/api/v1/lounges/{venue.LoungeId}", new
             {
                 Name = name ?? venue.Name,

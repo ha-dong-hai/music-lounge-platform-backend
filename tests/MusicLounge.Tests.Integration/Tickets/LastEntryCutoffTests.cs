@@ -42,15 +42,19 @@ public sealed class LastEntryCutoffTests
     /// Dựng một buổi diễn đang diễn ra, bắt đầu cách đây <paramref name="startedHoursAgo"/> tiếng
     /// và kéo dài 4 tiếng, kèm một đợt bán vé tại quầy.
     /// </summary>
-    private async Task<(int PriceId, int LoungeId)> SeedOngoingShowAsync(
+    private async Task<(int PriceId, int LoungeId, int OwnerId)> SeedOngoingShowAsync(
         double startedHoursAgo, DateTimeOffset? saleEnd)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeVenue
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"LastEntryVenue-{Guid.NewGuid():N}",
             Description = "Integration test venue",
             Status = LoungeStatus.Approved,
@@ -91,11 +95,11 @@ public sealed class LastEntryCutoffTests
         db.Add(price);
         await db.SaveChangesAsync();
 
-        return (price.Id, lounge.Id);
+        return (price.Id, lounge.Id, freshOwner.Id);
     }
 
-    private Task<HttpResponseMessage> SellAtTheDoorAsync(int priceId, int loungeId)
-        => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId)
+    private Task<HttpResponseMessage> SellAtTheDoorAsync(int priceId, int loungeId, int ownerId)
+        => _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId)
             .PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = priceId, Quantity = 1 });
 
     // ---------- điều BR-31 thật sự muốn ----------
@@ -106,9 +110,9 @@ public sealed class LastEntryCutoffTests
         // Đây là cái BR-31 nhắm tới: trước đây mốc đóng là bắt buộc, nên Owner phải chốt một giờ
         // từ nhiều tuần trước, và nhân viên ở quầy chỉ thấy hệ thống từ chối mà không hiểu vì sao.
         // Buổi diễn đã đi được nửa chặng, còn 2 tiếng — thừa sức đáng tiền vé.
-        var (priceId, loungeId) = await SeedOngoingShowAsync(startedHoursAgo: 2, saleEnd: null);
+        var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 2, saleEnd: null);
 
-        var res = await SellAtTheDoorAsync(priceId, loungeId);
+        var res = await SellAtTheDoorAsync(priceId, loungeId, ownerId);
 
         res.StatusCode.Should().Be(HttpStatusCode.Created,
             "khách mua vé khi chương trình đã diễn một phần là chuyện bình thường của phòng trà");
@@ -121,9 +125,9 @@ public sealed class LastEntryCutoffTests
     {
         // Buổi diễn còn 30 phút. Nếu để "bỏ trống mốc đóng = bán tới hết buổi diễn" thì lời gọi
         // này thành công, và khách trả nguyên giá 300.000đ cho nửa tiếng cuối.
-        var (priceId, loungeId) = await SeedOngoingShowAsync(startedHoursAgo: 3.5, saleEnd: null);
+        var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 3.5, saleEnd: null);
 
-        var res = await SellAtTheDoorAsync(priceId, loungeId);
+        var res = await SellAtTheDoorAsync(priceId, loungeId, ownerId);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         (await res.Content.ReadAsStringAsync()).Should().Contain("giờ nhận khách cuối",
@@ -137,10 +141,10 @@ public sealed class LastEntryCutoffTests
         // được bán tới phút cuối. Nếu giờ nhận khách cuối chỉ là giá trị mặc định thì mốc này
         // thắng, và điều khoản bảo vệ khách hàng trở thành thứ tắt được bằng một ô nhập liệu.
         var start = DateTimeOffset.UtcNow.AddHours(-3.5);
-        var (priceId, loungeId) = await SeedOngoingShowAsync(
+        var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(
             startedHoursAgo: 3.5, saleEnd: start.AddHours(ShowHours));
 
-        var res = await SellAtTheDoorAsync(priceId, loungeId);
+        var res = await SellAtTheDoorAsync(priceId, loungeId, ownerId);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             "trần cứng, không phải mặc định");
@@ -151,10 +155,10 @@ public sealed class LastEntryCutoffTests
     {
         // Trần chỉ chặn theo một chiều. Đóng sớm hơn là quyền của Owner — hết chỗ, hết đồ ăn,
         // hay đơn giản là không muốn nhận thêm khách.
-        var (priceId, loungeId) = await SeedOngoingShowAsync(
+        var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(
             startedHoursAgo: 2, saleEnd: DateTimeOffset.UtcNow.AddMinutes(-10));
 
-        var res = await SellAtTheDoorAsync(priceId, loungeId);
+        var res = await SellAtTheDoorAsync(priceId, loungeId, ownerId);
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
@@ -169,8 +173,8 @@ public sealed class LastEntryCutoffTests
         {
             await SetConfigAsync(ConfigKeys.TicketLastEntryMinutes, "15");
 
-            var (priceId, loungeId) = await SeedOngoingShowAsync(startedHoursAgo: 3.5, saleEnd: null);
-            var res = await SellAtTheDoorAsync(priceId, loungeId);
+            var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 3.5, saleEnd: null);
+            var res = await SellAtTheDoorAsync(priceId, loungeId, ownerId);
 
             res.StatusCode.Should().Be(HttpStatusCode.Created);
         }
@@ -196,7 +200,7 @@ public sealed class LastEntryCutoffTests
         // Trang bán vé ghi một giờ mà khâu thanh toán chặn ở một giờ khác là cách nhanh nhất để
         // mất lòng tin. Đợt bán này không đặt mốc, nên mốc hiển thị phải đúng bằng giờ nhận khách
         // cuối — kết thúc trừ 60 phút.
-        var (priceId, loungeId) = await SeedOngoingShowAsync(startedHoursAgo: 1, saleEnd: null);
+        var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 1, saleEnd: null);
 
         int showId;
         DateTimeOffset showEnd;
@@ -210,7 +214,7 @@ public sealed class LastEntryCutoffTests
                 .ScheduledEnd!.Value;
         }
 
-        var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId)
+        var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId)
             .GetAsync($"/api/v1/ticket-tiers?showId={showId}");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -226,7 +230,7 @@ public sealed class LastEntryCutoffTests
     public async Task AnOwnerSetCutoffThatIsEarlier_IsShownAsTheOwnersOwn()
     {
         var ownEnd = DateTimeOffset.UtcNow.AddMinutes(30);
-        var (priceId, loungeId) = await SeedOngoingShowAsync(startedHoursAgo: 1, saleEnd: ownEnd);
+        var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 1, saleEnd: ownEnd);
 
         int showId;
         using (var scope = _factory.Services.CreateScope())
@@ -236,7 +240,7 @@ public sealed class LastEntryCutoffTests
                 .Include(p => p.Tier).SingleAsync(p => p.Id == priceId)).Tier.LoungeShowId;
         }
 
-        var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId)
+        var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId)
             .GetAsync($"/api/v1/ticket-tiers?showId={showId}");
 
         var body = await res.Content.ReadFromJsonAsync<Envelope<IReadOnlyList<Tier>>>();

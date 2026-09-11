@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -193,15 +194,28 @@ public sealed class ComplianceTests
 
     // ─── D18 Legal approval (NĐ 144/2020 Điều 10) ────────────────────────────
 
-    /// <summary>Mot phong tra rieng cho moi lan goi, cung chu voi SeedHelper.OwnerId (de con
-    /// giu nguyen quyen so huu va goi subscription dang chay cua tai khoan do).</summary>
+    /// <summary>Một phòng trà riêng cho mỗi lần gọi, một chủ MỚI (MLACP-377: 1 chủ 1 phòng trà), kèm gói
+    /// subscription đang chạy của chính chủ đó.</summary>
     private async Task<int> DedicatedVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
+        db.OwnerSubscriptions.Add(new OwnerSubscription
+        {
+            OwnerId = freshOwner.Id, PackageId = 1, StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(29), Status = SubscriptionStatus.Active,
+            MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10,
+            MaxTourScenesSnapshot = 5
+        });
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeVenue
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"ComplianceVenue-{Guid.NewGuid():N}",
             Description = "Integration test venue",
             Status = LoungeStatus.Approved,
@@ -245,7 +259,14 @@ public sealed class ComplianceTests
             ? await DedicatedVenueAsync()
             : SeedHelper.LoungeId;
 
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId);
+        // MLACP-377: loungeId co the la venue rieng (DedicatedVenueAsync, chu MOI) hoac SeedHelper.LoungeId
+        // (chu SeedHelper.OwnerId) — tra dung chu tu DB thay vi gia dinh mot chu co dinh.
+        int ownerId;
+        using (var ownerScope = _factory.Services.CreateScope())
+            ownerId = ownerScope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Lounges.AsNoTracking().Single(l => l.Id == loungeId).OwnerId;
+
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId);
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
         {
             LoungeId = loungeId,
@@ -270,9 +291,23 @@ public sealed class ComplianceTests
         return body!.Data;
     }
 
+    // MLACP-377: showId co the thuoc venue rieng (DedicatedVenueAsync, chu MOI) hoac SeedHelper.LoungeId —
+    // tra dung chu/lounge tu show that thay vi gia dinh SeedHelper.LoungeId co dinh.
+    private async Task<HttpClient> ClientForShowAsync(int showId)
+    {
+        int loungeId, ownerId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            loungeId = (await db.LoungeShows.AsNoTracking().SingleAsync(s => s.Id == showId)).LoungeId;
+            ownerId = (await db.Lounges.AsNoTracking().SingleAsync(l => l.Id == loungeId)).OwnerId;
+        }
+        return _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId);
+    }
+
     private async Task AddTierAsync(int showId)
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        var client = await ClientForShowAsync(showId);
         var res = await client.PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId,
@@ -310,7 +345,7 @@ public sealed class ComplianceTests
     {
         var showId = await CreateShowAsync(DateTimeOffset.UtcNow.AddDays(2), exactTime: true);
         await AddTierAsync(showId);
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        var client = await ClientForShowAsync(showId);
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-TEST-001" });
 
@@ -366,7 +401,7 @@ public sealed class ComplianceTests
     {
         var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(6), exactTime: true);
         await AddTierAsync(showId);
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        var client = await ClientForShowAsync(showId);
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-BOUNDARY-6" });
 
@@ -381,7 +416,7 @@ public sealed class ComplianceTests
     {
         var showId = await CreateShowAsync(DateExactlyNBusinessDaysOut(7), exactTime: true);
         await AddTierAsync(showId);
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+        var client = await ClientForShowAsync(showId);
         await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-BOUNDARY-7" });
 

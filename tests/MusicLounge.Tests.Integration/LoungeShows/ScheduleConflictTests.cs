@@ -34,21 +34,41 @@ public sealed class ScheduleConflictTests
 
     public ScheduleConflictTests(ApiFactory factory) => _factory = factory;
 
+    // MLACP-377: 1 chu 1 phong tra gio la rang buoc that o DB — moi VenueAsync() tao mot chu MOI rieng, nen tra
+    // dung chu cua DUNG phong tra dang xet thay vi mot SeedHelper.OwnerId co dinh.
     private HttpClient Owner(int loungeId)
-        => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", loungeId);
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ownerId = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Lounges.AsNoTracking().Single(l => l.Id == loungeId).OwnerId;
+        return _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId);
+    }
 
     /// <summary>
-    /// Phòng trà riêng, chủ là SeedHelper.OwnerId để thừa hưởng gói subscription đang chạy của tài
-    /// khoản đó (tạo buổi diễn đòi có gói), kèm tài khoản nhận tiền mặc định (nộp duyệt đòi có).
+    /// Phòng trà riêng, một chủ mới cho mỗi lần gọi (MLACP-377: 1 chủ 1 phòng trà), kèm gói subscription
+    /// đang chạy (tạo buổi diễn đòi có gói) và tài khoản nhận tiền mặc định (nộp duyệt đòi có).
     /// </summary>
     private async Task<int> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
+        db.OwnerSubscriptions.Add(new OwnerSubscription
+        {
+            OwnerId = freshOwner.Id, PackageId = 1, StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(29), Status = SubscriptionStatus.Active,
+            MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10,
+            MaxTourScenesSnapshot = 5
+        });
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeVenue
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"SchedVenue-{Guid.NewGuid():N}",
             Description = "Integration test venue",
             Status = LoungeStatus.Approved,
