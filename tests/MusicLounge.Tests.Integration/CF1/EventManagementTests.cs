@@ -29,6 +29,18 @@ public sealed class EventManagementTests
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
+    // MLACP-374: SeedHelper.OwnerId da so huu SeedHelper.LoungeId — cac bai test tao phong tra MOI
+    // can mot chu con trong (chua co phong tra nao), khong the dung lai SeedHelper.OwnerId nua.
+    private async Task<int> FreshOwnerIdAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var owner = new User { Email = $"lounge374-{Guid.NewGuid():N}@test.com", FullName = "Fresh Owner" };
+        db.Users.Add(owner);
+        await db.SaveChangesAsync();
+        return owner.Id;
+    }
+
     private async Task<int> CreateShowAsync(string format = "Offline")
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
@@ -100,7 +112,7 @@ public sealed class EventManagementTests
     [Fact]
     public async Task CreateLounge_AsOwner_Returns201()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var client = _factory.CreateAuthenticatedClient(await FreshOwnerIdAsync(), "Owner");
 
         var res = await client.PostAsJsonAsync("/api/v1/lounges", new
         {
@@ -116,6 +128,40 @@ public sealed class EventManagementTests
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    // MLACP-374: xac nhan tu nguoi dung — mo hinh nghiep vu la 1 chu = 1 phong tra, khong ho tro
+    // nhieu phong tra chung 1 chu ("kho quan ly"). Truoc day khong co gi chan viec nay: mot chu bi
+    // khoa 1 trong N phong tra se lam dung goi dich vu cua CA cac phong tra khac khong vi pham gi.
+    [Fact]
+    public async Task CreateLounge_WhenOwnerAlreadyHasOne_Returns409()
+    {
+        // Bo test dung chung 1 database (Integration collection) — cac bai khac cung goi
+        // OwnerId = SeedHelper.OwnerId cho venue rieng cua ho (chi de co mot FK khac null, khong
+        // phai nghiep vu dang test), nen dem TRUOC/SAU thay vi gia dinh "chi co dung 1 hang".
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var before = await db.Lounges.CountAsync(l => l.OwnerId == SeedHelper.OwnerId);
+
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var res = await client.PostAsJsonAsync("/api/v1/lounges", new
+        {
+            Name = "Second Lounge For Same Owner",
+            Description = (string?)null,
+            AtmosphereId = (int?)null,
+            Street = "1 Test St",
+            Ward = "Ward 1",
+            District = "District 1",
+            City = "HCM",
+            Latitude = (double?)null,
+            Longitude = (double?)null
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var body = await res.Content.ReadAsStringAsync();
+        body.Should().Contain("một phòng trà", "the owner needs to know why, not see a generic DB-conflict message");
+        (await db.Lounges.CountAsync(l => l.OwnerId == SeedHelper.OwnerId)).Should().Be(before,
+            "the rejected attempt must not have created anything");
     }
 
     [Fact]
@@ -144,7 +190,7 @@ public sealed class EventManagementTests
     [Fact]
     public async Task GetLounges_MineTrue_AsOwner_IncludesOwnLounge()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var client = _factory.CreateAuthenticatedClient(await FreshOwnerIdAsync(), "Owner");
         var createRes = await client.PostAsJsonAsync("/api/v1/lounges", new
         {
             Name = $"MineTrueLounge-{Guid.NewGuid():N}",
@@ -169,7 +215,7 @@ public sealed class EventManagementTests
     [Fact]
     public async Task GetLounges_MineTrue_AsDifferentOwner_ExcludesOthersLounge()
     {
-        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var ownerClient = _factory.CreateAuthenticatedClient(await FreshOwnerIdAsync(), "Owner");
         var createRes = await ownerClient.PostAsJsonAsync("/api/v1/lounges", new
         {
             Name = $"MineTrueLounge-{Guid.NewGuid():N}",
