@@ -1,5 +1,6 @@
 using FluentValidation;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Donations;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
@@ -73,9 +74,13 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
     {
         var donation = await uow.Repository<Donation, int>().GetByIdAsync(donationId, ct);
         if (donation is null || donation.Status == DonationStatus.PerformerPaid) return false;
-        if (donation.PaymentConfirmedAt is null) return false;
 
-        var holdDays = await config.GetIntAsync(ConfigKeys.DonationHoldDays, 14, ct);
-        return DateTimeOffset.UtcNow > donation.PaymentConfirmedAt.Value.AddDays(holdDays);
+        // MLACP-362: cung mot hạn voi nhac nho/canh cao/lich su cua chu, tinh tu luc phong tra that su
+        // nhan tien. Truoc day tinh tu luc VNPay xac nhan voi mac dinh 14 ngay (noi khac 7). Nen tang
+        // chua chuyen tien cho phong tra thi chua co hạn nao de phong tra tre.
+        var holdDays = await DonationPayoutDeadline.HoldDaysAsync(config, ct);
+        var releaseTimes = await DonationPayoutDeadline.PayoutReleaseTimesAsync(uow, [donationId], ct);
+        var dueAt = DonationPayoutDeadline.DueAt(DonationPayoutDeadline.ReceivedAt(donation, releaseTimes), holdDays);
+        return dueAt is { } due && DateTimeOffset.UtcNow > due;
     }
 }

@@ -2,6 +2,7 @@ using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Donations;
 using MusicLounge.Application.Donations.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -61,20 +62,24 @@ internal sealed class GetOwnerDonationHistoryQueryHandler
 
         var donations = allDonations.Where(d => InRange(d.PaymentConfirmedAt)).ToList();
 
-        var holdDays = await _config.GetIntAsync(ConfigKeys.DonationHoldDays, 7, ct);
+        // MLACP-362: cung mot moc voi nhac nho, canh cao, tu xac nhan va dieu kien khieu nai — luc
+        // phong tra that su nhan tien. Truoc day tinh tu luc VNPay xac nhan, nen mot khoan nen tang
+        // chuyen muon van hien "qua han" du phong tra moi nhan tien hom qua.
+        var holdDays = await DonationPayoutDeadline.HoldDaysAsync(_config, ct);
+        var releaseTimes = await DonationPayoutDeadline.PayoutReleaseTimesAsync(
+            _uow, donations.Select(d => d.Id).ToList(), ct);
         var now = DateTimeOffset.UtcNow;
-
-        string PayoutStatusOf(Donation d)
-        {
-            if (d.Status == DonationStatus.PerformerPaid) return "Paid";
-            var dueAt = (d.PaymentConfirmedAt ?? d.CreatedAt).AddDays(holdDays);
-            return now > dueAt ? "Overdue" : "WithinHoldPeriod";
-        }
 
         DateTimeOffset? PayoutDueAtOf(Donation d) =>
             d.Status == DonationStatus.PerformerPaid
                 ? null
-                : (d.PaymentConfirmedAt ?? d.CreatedAt).AddDays(holdDays);
+                : DonationPayoutDeadline.DueAt(DonationPayoutDeadline.ReceivedAt(d, releaseTimes), holdDays);
+
+        string PayoutStatusOf(Donation d)
+        {
+            if (d.Status == DonationStatus.PerformerPaid) return "Paid";
+            return PayoutDueAtOf(d) is { } dueAt && now > dueAt ? "Overdue" : "WithinHoldPeriod";
+        }
 
         var ordered = donations.OrderByDescending(d => d.PaymentConfirmedAt ?? d.CreatedAt).ToList();
         var page = Math.Max(1, request.Page);
