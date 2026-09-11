@@ -25,6 +25,7 @@ internal sealed class CreatePerformerCommandHandler : IRequestHandler<CreatePerf
             Name = request.Name,
             AvatarUrl = request.AvatarUrl,
             Bio = request.Bio,
+            ContactEmail = string.IsNullOrWhiteSpace(request.ContactEmail) ? null : request.ContactEmail.Trim(),
             Type = Enum.Parse<PerformerType>(request.Type, ignoreCase: true),
             CreatedByUserId = _currentUser.UserId,
             CreatedAt = DateTime.UtcNow

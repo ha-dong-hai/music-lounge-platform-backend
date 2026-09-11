@@ -13,6 +13,7 @@ internal sealed class PerformerConfiguration : IEntityTypeConfiguration<Performe
         b.Property(p => p.Name).HasMaxLength(200).IsRequired();
         b.Property(p => p.AvatarUrl).HasMaxLength(500);
         b.Property(p => p.Bio).HasMaxLength(2000);
+        b.Property(p => p.ContactEmail).HasMaxLength(255);
         b.Property(p => p.Type).HasConversion<string>().HasMaxLength(20);
 
         b.HasOne(p => p.CreatedByUser)

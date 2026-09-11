@@ -32,6 +32,8 @@ internal sealed class UpdatePerformerCommandHandler : IRequestHandler<UpdatePerf
         performer.Name = request.Name;
         performer.AvatarUrl = request.AvatarUrl;
         performer.Bio = request.Bio;
+        if (request.ContactEmail is not null)
+            performer.ContactEmail = string.IsNullOrWhiteSpace(request.ContactEmail) ? null : request.ContactEmail.Trim();
         performer.Type = Enum.Parse<PerformerType>(request.Type, ignoreCase: true);
         repo.Update(performer);
         await _uow.SaveChangesAsync(ct);
