@@ -104,6 +104,18 @@ public sealed class CompensationAwareCreditTests
         using var jobScope = _factory.Services.CreateScope();
         await jobScope.ServiceProvider.GetRequiredService<ApplyDuePenaltiesJob>()
             .ExecuteAsync(new JobCancellationToken(false));
+
+        // MLACP-376: doi gói bị chặn khi phòng trà đang Suspended/Locked (trả tiền cho dịch vụ không dùng
+        // được). Bài này đo CÔNG THỨC quy đổi có tính đúng phần được bù hay không, không phải đo hành vi lúc
+        // đang bị khoá — mô phỏng "hạn tạm khoá đã qua, venue hoạt động lại" trong khi phần bù vẫn còn nguyên
+        // trên VenuePenalty (ExpiresAt đã cộng, SubscriptionCompensationDays đã ghi ở bước job trên).
+        using (var restoreScope = _factory.Services.CreateScope())
+        {
+            var db = restoreScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var lounge = await db.Lounges.SingleAsync(l => l.Id == loungeId);
+            lounge.Status = LoungeStatus.Approved;
+            await db.SaveChangesAsync();
+        }
     }
 
     // Bai nay chi so sanh SO TIEN QUY DOI truoc/sau — khong tra tien lan nao, nen lenh doi goi truoc do (neu

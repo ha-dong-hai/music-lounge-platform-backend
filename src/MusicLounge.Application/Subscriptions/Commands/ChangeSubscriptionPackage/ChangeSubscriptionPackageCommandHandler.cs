@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Subscriptions.DTOs;
@@ -34,6 +35,9 @@ internal sealed class ChangeSubscriptionPackageCommandHandler
             ?? throw new NotFoundException(nameof(SubscriptionPackage), request.PackageId);
         if (!package.IsActive)
             throw new DomainException("Gói này hiện không mở đăng ký.");
+
+        // MLACP-376: cung chot voi SubscribeToPackage.
+        await SubscriptionVenueGate.EnsureNotPenalizedAsync(_uow, _currentUser.UserId, ct);
 
         var now = DateTimeOffset.UtcNow;
         var current = (await _uow.Repository<OwnerSubscription, int>().FindAsync(

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Subscriptions.DTOs;
@@ -35,6 +36,10 @@ internal sealed class SubscribeToPackageCommandHandler
 
         if (!package.IsActive)
             throw new DomainException("Gói này hiện không mở đăng ký.");
+
+        // MLACP-376: phong tra dang bi phat (Suspended/Locked) khong dung goi duoc ngay — mua luc nay la
+        // tra tien cho mot dich vu khong dung duoc.
+        await SubscriptionVenueGate.EnsureNotPenalizedAsync(_uow, _currentUser.UserId, ct);
 
         var now = DateTimeOffset.UtcNow;
         var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
