@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.Livestreams.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
@@ -18,11 +19,14 @@ internal sealed class ProcessDonationPaymentCommandHandler
     private readonly ILedgerService _ledger;
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ILivestreamRepository _livestreamRepo;
+    private readonly ILivestreamHubService _hub;
     private readonly ILogger<ProcessDonationPaymentCommandHandler> _logger;
 
     public ProcessDonationPaymentCommandHandler(
         IUnitOfWork uow, IVnPayService vnPay, IDonationRepository donationRepo, INotificationService notifications,
         ILedgerService ledger, ISystemConfigService config, IAsyncKeyedLock @lock,
+        ILivestreamRepository livestreamRepo, ILivestreamHubService hub,
         ILogger<ProcessDonationPaymentCommandHandler> logger)
     {
         _uow = uow;
@@ -32,6 +36,8 @@ internal sealed class ProcessDonationPaymentCommandHandler
         _ledger = ledger;
         _config = config;
         _lock = @lock;
+        _livestreamRepo = livestreamRepo;
+        _hub = hub;
         _logger = logger;
     }
 
@@ -108,11 +114,14 @@ internal sealed class ProcessDonationPaymentCommandHandler
 
         _uow.Repository<Donation, int>().Update(donation);
 
+        int? announceOnShowId = null;
         if (callbackResult.IsSuccess)
         {
             var ownership = await _donationRepo.GetOwnershipInfoAsync(donation.Id, ct);
             if (ownership is { } info)
             {
+                announceOnShowId = info.LoungeShowId;
+
                 // Chặng 1 (§6.5) — "tức thì": the platform/tax cut and the owner's share are
                 // recorded the instant VNPay confirms payment, not deferred like ticket
                 // settlement. Previously this whole flow (create → VNPay confirm → owner ack →
@@ -189,6 +198,38 @@ internal sealed class ProcessDonationPaymentCommandHandler
 
         await _uow.SaveChangesAsync(ct);
 
+        if (announceOnShowId is int showId)
+            await AnnounceOnLivestreamAsync(donation, showId, ct);
+
         return callbackResult.IsSuccess ? VnPayIpnOutcome.Confirmed : VnPayIpnOutcome.RecordedAsFailed;
+    }
+
+    /// <summary>
+    /// MLACP-360. Truoc day canh bao donate chi phat khi chu phong tra bam "da nhan" — bam sau khi
+    /// livestream ket thuc thi nguoi donate khong bao gio thay loi nhan cua minh tren song. VNPay xac
+    /// nhan da la bang chung tien la that; cu bam cua chu khong them thong tin gi ve viec thanh toan.
+    /// YouTube ghim Super Chat len live chat ngay luc mua, cung vi ly do do.
+    ///
+    /// <para>Goi sau SaveChanges nhung van trong transaction cua lenh (TransactionBehavior commit sau
+    /// khi handler tra ve). Loi phat song chi duoc ghi log: mot canh bao khong hien len thi dang
+    /// tiec, con de no lam hong giao dich thi nguoi donate mat tien ma khong co ban ghi.</para>
+    /// </summary>
+    private async Task AnnounceOnLivestreamAsync(Donation donation, int loungeShowId, CancellationToken ct)
+    {
+        try
+        {
+            var livestream = await _livestreamRepo.GetByShowIdAsync(loungeShowId, ct);
+            if (livestream?.Status != LivestreamStatus.Live) return;
+
+            var donorName = donation.IsAnonymous ? "Ẩn danh" : (donation.DisplayName ?? "Khán giả");
+            var message = await DonationMessageFilter.MessageForBroadcastAsync(donation, _config, ct);
+            await _hub.BroadcastDonationAlertAsync(
+                livestream.Id, new DonationAlertDto(donorName, donation.Gross, message, donation.Id), ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex,
+                "Donation live alert failed (payment unaffected): DonationId={DonationId}", donation.Id);
+        }
     }
 }

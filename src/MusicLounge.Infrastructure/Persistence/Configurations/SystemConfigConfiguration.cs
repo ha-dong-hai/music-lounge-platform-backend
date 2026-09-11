@@ -110,7 +110,8 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             // counts successful generations.
             new { Id = 31, ConfigKey = "ai_poster_max_attempts_per_show",     ConfigValue = "5",        DataType = ConfigDataType.Integer, Description = "Max AI poster generation attempts (incl. failures) per show", UpdatedAt = seed },
             new { Id = 33, ConfigKey = "ticket_last_entry_minutes",            ConfigValue = "60",       DataType = ConfigDataType.Integer, Description = "Last-entry cutoff: minutes of the show that must still remain for a ticket to be sold — BR-31, matches Eventbrite's general-admission default", UpdatedAt = seed },
-            new { Id = 34, ConfigKey = "venue_changeover_minutes",             ConfigValue = "30",       DataType = ConfigDataType.Integer, Description = "Minimum gap between two consecutive shows at one venue — time to clear one audience and admit the next. 30 is the low end of the 30-60 min industry range for standard concert venues (CF1)", UpdatedAt = seed }
+            new { Id = 34, ConfigKey = "venue_changeover_minutes",             ConfigValue = "30",       DataType = ConfigDataType.Integer, Description = "Minimum gap between two consecutive shows at one venue — time to clear one audience and admit the next. 30 is the low end of the 30-60 min industry range for standard concert venues (CF1)", UpdatedAt = seed },
+            new { Id = 35, ConfigKey = "donation_message_blocked_words",       ConfigValue = "[]",       DataType = ConfigDataType.Json,    Description = "JSON array of words/phrases that keep a donation message off the livestream alert (whole-word, case- and diacritic-insensitive). The donation itself is still announced (MLACP-360)", UpdatedAt = seed }
         );
     }
 }

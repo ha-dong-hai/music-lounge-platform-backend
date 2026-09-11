@@ -238,6 +238,11 @@ public static class ConfigKeys
     // a deploy.
     public const string DonationPerformerShareRate = "donation_performer_share_rate";
 
+    // MLACP-360: lời nhắn donate lên livestream ngay khi VNPay xác nhận, không còn chờ chủ phòng trà
+    // bấm — nên cần một lớp lọc tự động. Mảng JSON các từ/cụm từ, so khớp theo từ, không phân biệt
+    // hoa thường và dấu. Mặc định [] (không chặn gì); Admin sửa qua PUT /admin/system-config.
+    public const string DonationMessageBlockedWords = "donation_message_blocked_words";
+
     // Not seeded by the original migration — GetIntAsync's fallback covers it until an Admin
     // adds a real row (D9: business parameters belong in system_config, not hardcoded).
     public const string EventReminderHours = "event_reminder_hours";

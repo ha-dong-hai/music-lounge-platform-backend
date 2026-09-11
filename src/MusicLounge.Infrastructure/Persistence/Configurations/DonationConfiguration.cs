@@ -29,6 +29,14 @@ internal sealed class DonationConfiguration : IEntityTypeConfiguration<Donation>
             .HasForeignKey(d => d.DonorUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // NoAction, không phải SetNull: bảng này đã có một khoá SetNull tới users (DonorUserId), và SQL
+        // Server từ chối hai đường cascade từ cùng một bảng cha. User cũng không bao giờ bị xoá cứng
+        // (xoá dữ liệu cá nhân là ẩn danh hoá tại chỗ), nên khoá này không bao giờ phải chặn gì.
+        b.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(d => d.MessageHiddenByUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         b.HasOne(d => d.Performance)
             .WithMany()
             .HasForeignKey(d => d.PerformanceId)
