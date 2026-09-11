@@ -39,8 +39,6 @@ public sealed class AutoApproveOverdueAppealsJob
         var overdue = appealed.Where(p => p.AppealDeadline <= now).ToList();
         if (overdue.Count == 0) return;
 
-        List<User>? admins = null;
-
         foreach (var penalty in overdue)
         {
             // Same lock key ReviewAppealCommandHandler uses — an Admin manually deciding right at
@@ -72,35 +70,23 @@ public sealed class AutoApproveOverdueAppealsJob
             if (PenaltyLifecycle.StatusAfterReleasing(lounge.Status, current.PenaltyType, remaining) is { } releasedStatus)
                 lounge.Status = releasedStatus;
 
+            // MLACP-369: cung cach voi ReviewAppeal — khoa vinh vien da ap roi bi huy thi tra lai goi.
+            OwnerSubscription? restoredPlan = null;
+            if (wasAlreadyApplied && current.PenaltyType == PenaltyType.Ban)
+                restoredPlan = PenaltySubscriptions.RestoreAfterBanLifted(
+                    await _ctx.OwnerSubscriptions.Where(s => s.OwnerId == lounge.OwnerId).ToListAsync(ct),
+                    current, now);
+
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.AppealResolved,
                 "Kháng cáo tự động được chấp thuận",
                 $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong thời hạn SLA — kháng cáo được " +
-                $"tự động chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
+                $"tự động chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
+                (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}."),
                 referenceType: "venue_penalty",
                 referenceId: current.Id.ToString(),
                 ct: ct);
-
-            if (wasAlreadyApplied)
-            {
-                // Same reasoning as ReviewAppealCommandHandler: subscription compensation already
-                // applied by ApplyDuePenaltiesJob needs a human to reverse correctly.
-                admins ??= await _ctx.Users.Where(u => u.Role == UserRole.Admin).ToListAsync(ct);
-                foreach (var admin in admins)
-                {
-                    await _notifications.NotifyAsync(
-                        admin.Id,
-                        NotificationType.AppealResolved,
-                        "Cần xử lý thủ công: hoàn tác bù trừ subscription",
-                        $"Phạt #{current.Id} ({current.PenaltyType}) trên \"{lounge.Name}\" đã tự động " +
-                        "overturn (quá hạn SLA) sau khi bù trừ subscription đã áp dụng. Vui lòng kiểm " +
-                        "tra và điều chỉnh owner_subscriptions/ledger thủ công cho đúng.",
-                        referenceType: "venue_penalty",
-                        referenceId: current.Id.ToString(),
-                        ct: ct);
-                }
-            }
 
             await _ctx.SaveChangesAsync(ct);
         }

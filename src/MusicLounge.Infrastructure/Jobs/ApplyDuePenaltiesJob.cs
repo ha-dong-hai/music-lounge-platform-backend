@@ -21,14 +21,11 @@ namespace MusicLounge.Infrastructure.Jobs;
 public sealed class ApplyDuePenaltiesJob
 {
     private readonly ApplicationDbContext _ctx;
-    private readonly ILedgerService _ledger;
     private readonly INotificationService _notifications;
 
-    public ApplyDuePenaltiesJob(
-        ApplicationDbContext ctx, ILedgerService ledger, INotificationService notifications)
+    public ApplyDuePenaltiesJob(ApplicationDbContext ctx, INotificationService notifications)
     {
         _ctx = ctx;
-        _ledger = ledger;
         _notifications = notifications;
     }
 
@@ -41,8 +38,12 @@ public sealed class ApplyDuePenaltiesJob
         // Filter by Status server-side, then filter EffectiveAt client-side — same pattern as
         // SettlementReleaseJob/ReleaseExpiredHoldsJob: combining an enum-equality predicate with a
         // DateTimeOffset comparison in one query does not translate under the SQLite test provider.
+        //
+        // MLACP-369: moi an CON hieu luc, khong chi Active. Chu phong tra khang cao trong thoi gian bao truoc
+        // (khang cao duoc trong 7 ngay tu luc ban hanh, tam khoa co hieu luc sau 24 gio) — Admin bac khang cao
+        // thi an thanh Upheld, tuc van dung; truoc day job nay chi ap Active nen an do khong bao gio co hieu luc.
         var active = await _ctx.VenuePenalties
-            .Where(p => p.Status == PenaltyStatus.Active && p.AppliedAt == null
+            .Where(p => PenaltyLifecycle.InForce.Contains(p.Status) && p.AppliedAt == null
                 && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban))
             .ToListAsync(ct);
         var due = active.Where(p => p.EffectiveAt <= now).ToList();
@@ -85,7 +86,8 @@ public sealed class ApplyDuePenaltiesJob
                 }
                 else if (penalty.PenaltyType == PenaltyType.Ban)
                 {
-                    await RefundRemainingSubscriptionAsync(subscription, penalty, ct);
+                    // MLACP-369: dung goi, khong hoan phi — xem PenaltySubscriptions.
+                    PenaltySubscriptions.StopOnBan(subscription, now);
                 }
             }
 
@@ -103,7 +105,11 @@ public sealed class ApplyDuePenaltiesJob
                 lounge.OwnerId,
                 NotificationType.PenaltyIssued,
                 penalty.PenaltyType == PenaltyType.Suspension ? "Phòng trà đã bị tạm khoá" : "Phòng trà đã bị khoá vĩnh viễn",
-                $"\"{lounge.Name}\" hiện đã ở trạng thái {lounge.Status} theo phạt #{penalty.Id}.",
+                $"\"{lounge.Name}\" hiện đã ở trạng thái {lounge.Status} theo phạt #{penalty.Id}." +
+                (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
+                    ? " Gói dịch vụ đã dừng; phí gói không được hoàn khi phòng trà bị khoá vĩnh viễn do vi phạm. " +
+                      "Nếu lệnh khoá được huỷ, gói được kích hoạt lại với đúng số ngày còn lại."
+                    : ""),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);
@@ -112,39 +118,4 @@ public sealed class ApplyDuePenaltiesJob
         }
     }
 
-    private async Task RefundRemainingSubscriptionAsync(
-        OwnerSubscription subscription, VenuePenalty penalty, CancellationToken ct)
-    {
-        var package = await _ctx.SubscriptionPackages.FirstOrDefaultAsync(p => p.Id == subscription.PackageId, ct);
-        if (package is null) return;
-
-        var totalSpan = subscription.ExpiresAt - subscription.StartedAt;
-        if (totalSpan <= TimeSpan.Zero) return;
-
-        var remaining = subscription.ExpiresAt - DateTimeOffset.UtcNow;
-        if (remaining <= TimeSpan.Zero) return; // already expired — nothing left to refund
-
-        var ratio = Math.Clamp((decimal)(remaining / totalSpan), 0m, 1m);
-        var refundAmount = Math.Round(package.Price * ratio, 2);
-        if (refundAmount <= 0m) return;
-
-        subscription.Status = SubscriptionStatus.Cancelled;
-        subscription.CancelledAt = DateTimeOffset.UtcNow;
-
-        // Mirrors ProcessSubscriptionPaymentCommandHandler's original journal (Gateway debit /
-        // Platform credit) in reverse — subscription revenue is 100% platform's, no owner/tax
-        // split, so the reversal only ever touches these two accounts.
-        await _ledger.WriteJournalAsync(
-            Guid.NewGuid().ToString("N"),
-            LedgerReferenceTypes.Subscription,
-            subscription.Id.ToString(),
-            paymentId: null,
-            new LedgerLine[]
-            {
-                new(AccountType.Platform, null, refundAmount, IsDebit: true,
-                    Description: $"Hoàn tiền pro-rata subscription — phạt Ban #{penalty.Id}"),
-                new(AccountType.Gateway, null, refundAmount, IsDebit: false,
-                    Description: $"Hoàn tiền pro-rata subscription — phạt Ban #{penalty.Id}")
-            }, ct);
-    }
 }
