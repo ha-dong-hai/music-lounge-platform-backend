@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -145,6 +146,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
         var refundRepo = _uow.Repository<RefundRequest, int>();
+        var payers = await TicketRefundRecipients.PayersAsync(_uow, confirmedTickets, ct);
 
         foreach (var ticket in confirmedTickets)
         {
@@ -153,10 +155,13 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
 
             if (ticket.PaymentId is null) continue;
 
+            await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                NotificationType.EventCancelled, show.Name, show.Id, "nội dung vi phạm bị gỡ", ct);
+
             refundRepo.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId.Value,
-                RequestedBy = ticket.BuyerId,
+                RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                 Reason = "Nội dung vi phạm bị gỡ bỏ theo khiếu nại — hoàn 100% tiền vé",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
@@ -169,7 +174,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                     NotificationType.EventCancelled,
                     "Event đã bị gỡ bỏ",
                     $"\"{show.Name}\" đã bị gỡ bỏ do vi phạm nội dung. Vé của bạn đã được hủy và tự động " +
-                    "tạo yêu cầu hoàn 100% tiền vé.",
+                    "tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -277,6 +282,8 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 "nên không có gì để hoàn.");
 
         var refundRepo = _uow.Repository<RefundRequest, int>();
+        var payers = await TicketRefundRecipients.PayersAsync(_uow, refundable, ct);
+        var showName = (await _uow.Repository<LoungeShow, int>().GetByIdAsync(complaint.TargetId, ct))?.Name ?? "";
         var priceIds = refundable.Select(t => t.PriceId).Distinct().ToList();
         var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
@@ -298,16 +305,30 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 : TicketStatus.Cancelled;
             ticketRepo.Update(ticket);
 
+            await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                NotificationType.RefundUpdate, showName, complaint.TargetId, $"xử lý khiếu nại #{complaint.Id}", ct);
+
             refundRepo.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId!.Value,
-                RequestedBy = ticket.BuyerId,
+                RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                 Reason = $"Xử lý theo khiếu nại #{complaint.Id}: {complaint.Description}",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
                 Status = RefundRequestStatus.Pending
             });
         }
+
+        // MLACP-370: nguoi khieu nai dang giu ve duoc chuyen nhuong — tien khong ve ho, phai noi ro.
+        if (refundable.Any(t => TicketRefundRecipients.WasTransferred(t, payers)))
+            await _notifications.NotifyAsync(
+                complainantId,
+                NotificationType.ComplaintUpdate,
+                "Tiền hoàn về người mua vé ban đầu",
+                $"Khiếu nại #{complaint.Id} được xử lý bằng hoàn tiền.{TicketRefundRecipients.TransferredHolderNote}",
+                referenceType: "complaint",
+                referenceId: complaint.Id.ToString(),
+                ct: ct);
     }
 
     private async Task<int?> ResolveLoungeIdAsync(Complaint complaint, CancellationToken ct) =>

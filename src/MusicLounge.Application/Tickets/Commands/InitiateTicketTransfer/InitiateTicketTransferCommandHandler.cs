@@ -73,7 +73,8 @@ internal sealed class InitiateTicketTransferCommandHandler
             recipient.Id,
             NotificationType.EventReminder,
             "Bạn nhận được lời mời chuyển nhượng vé",
-            $"Ai đó muốn chuyển vé \"{ticket.Show.Name}\" cho bạn. Vào mục Vé của tôi để chấp nhận hoặc từ chối.",
+            $"Ai đó muốn chuyển vé \"{ticket.Show.Name}\" cho bạn. Vào mục Vé của tôi để chấp nhận hoặc từ chối. " +
+            "Lưu ý: nếu vé được hoàn tiền (ví dụ buổi diễn bị huỷ), tiền luôn hoàn về người đã mua vé ban đầu.",
             referenceType: "ticket",
             referenceId: ticket.Id.ToString(),
             ct: ct);

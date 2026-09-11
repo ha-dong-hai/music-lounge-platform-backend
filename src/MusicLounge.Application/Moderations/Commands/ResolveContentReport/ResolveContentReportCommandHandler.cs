@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Livestreams;
@@ -133,6 +134,7 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
         var refundRepo = _uow.Repository<RefundRequest, int>();
+        var payers = await TicketRefundRecipients.PayersAsync(_uow, confirmedTickets, ct);
 
         foreach (var ticket in confirmedTickets)
         {
@@ -141,10 +143,13 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
 
             if (ticket.PaymentId is null) continue;
 
+            await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                NotificationType.EventCancelled, show.Name, show.Id, "nội dung vi phạm bị gỡ", ct);
+
             refundRepo.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId.Value,
-                RequestedBy = ticket.BuyerId,
+                RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                 Reason = "Nội dung vi phạm bị gỡ bỏ theo báo cáo từ người dùng — hoàn 100% tiền vé",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
@@ -157,7 +162,7 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
                     NotificationType.EventCancelled,
                     "Event đã bị gỡ bỏ",
                     $"\"{show.Name}\" đã bị gỡ bỏ do vi phạm nội dung. Vé của bạn đã được hủy và tự động " +
-                    "tạo yêu cầu hoàn 100% tiền vé.",
+                    "tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);

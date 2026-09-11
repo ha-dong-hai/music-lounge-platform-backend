@@ -64,6 +64,16 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         if (ticket.PendingTransferToUserId is not null)
             throw new DomainException("Vé đang trong quá trình chuyển nhượng, không thể hủy lúc này.");
 
+        // MLACP-370: tien hoan luon ve dung giao dich goc — tuc ve nguoi da mua. Nguoi nhan chuyen nhuong tu
+        // huy thi tien ve the cua nguoi khac. Ticketmaster: nguoi nhan phai "transfer them back to the
+        // original purchaser" de nguoi mua goc yeu cau hoan.
+        if (ticket.PaymentId is int paidWith
+            && (await _uow.Repository<Payment, int>().GetByIdAsync(paidWith, ct))?.PayerId is int payer
+            && payer != _currentUser.UserId)
+            throw new DomainException(
+                "Vé này được chuyển nhượng cho bạn — chỉ người đã mua vé mới được hoàn tiền, và tiền luôn hoàn về " +
+                "đúng phương thức họ đã thanh toán. Hãy chuyển vé lại cho người mua ban đầu để họ yêu cầu hoàn.");
+
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(ticket.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), ticket.ShowId);
 

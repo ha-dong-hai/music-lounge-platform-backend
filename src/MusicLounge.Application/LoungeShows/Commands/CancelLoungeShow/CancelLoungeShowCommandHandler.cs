@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -73,6 +74,7 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
             var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
             var refundRepo = _uow.Repository<RefundRequest, int>();
+            var payers = await TicketRefundRecipients.PayersAsync(_uow, confirmedTickets, ct);
 
             foreach (var ticket in confirmedTickets)
             {
@@ -81,10 +83,13 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
 
                 if (ticket.PaymentId is null) continue;
 
+                await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
+                    NotificationType.EventCancelled, show.Name, show.Id, "buổi diễn bị huỷ", ct);
+
                 refundRepo.Add(new RefundRequest
                 {
                     PaymentId = ticket.PaymentId.Value,
-                    RequestedBy = ticket.BuyerId,
+                    RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
                     Reason = "Event bị hủy — hoàn 100% tiền vé",
                     AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                     RefundPercentage = 100m,
@@ -97,7 +102,7 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
                         NotificationType.EventCancelled,
                         "Event đã bị hủy",
                         $"\"{show.Name}\" đã bị hủy. Vé của bạn đã được hủy và tự động tạo yêu cầu " +
-                        "hoàn 100% tiền vé.",
+                        "hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
                         referenceType: "show",
                         referenceId: show.Id.ToString(),
                         ct: ct);
