@@ -154,16 +154,44 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 // could be days/weeks after this, per DonationHoldDays — so an Admin rate change in
                 // between can't retroactively change what a performer receives for a donation that
                 // already happened.
-                donation.PerformerShareRateSnapshot =
+                var performerShareRate =
                     await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
+                donation.PerformerShareRateSnapshot = performerShareRate;
 
                 _uow.Repository<Donation, int>().Update(donation);
+
+                // MLACP-361: mot Payment cho donate, dung khuon ve va F&B. Truoc day donate khong co
+                // ban ghi thanh toan nao — nen khong co gi de khoan quyet toan tro vao, va ma giao dich
+                // VNPay (bang chung doi soat duy nhat voi cong thanh toan) khong duoc luu o dau.
+                var now = DateTimeOffset.UtcNow;
+                var payment = new Payment
+                {
+                    OrderId = donation.GatewayRef ?? txnRef ?? $"DON-{donation.Id}",
+                    PayerId = donation.DonorUserId,
+                    GrossAmount = donation.Gross,
+                    PlatformFee = fees.PlatformFee,
+                    TaxWithheld = fees.Tax,
+                    PersonalIncomeTaxWithheld = fees.PersonalIncomeTax,
+                    NetAmount = fees.OwnerNet,
+                    Method = PaymentMethod.Gateway,
+                    Status = PaymentStatus.Confirmed,
+                    TransactionId = string.IsNullOrWhiteSpace(callbackResult.TransactionId)
+                        ? null : callbackResult.TransactionId,
+                    VnPayResponseCode = callbackResult.ResponseCode,
+                    ReferenceType = DonationPayouts.PaymentReferenceType,
+                    ReferenceId = donation.Id.ToString(),
+                    PaidAt = now,
+                    CreatedAt = now
+                };
+                _uow.Repository<Payment, int>().Add(payment);
+                // Can Id that de but toan va khoan quyet toan tro vao — van trong transaction cua lenh.
+                await _uow.SaveChangesAsync(ct);
 
                 await _ledger.WriteJournalAsync(
                     Guid.NewGuid().ToString("N"),
                     LedgerReferenceTypes.Donation,
                     donation.Id.ToString(),
-                    paymentId: null,
+                    paymentId: payment.Id,
                     [
                         new(AccountType.Gateway, null, donation.Gross, IsDebit: true),
                         new(AccountType.Platform, null, fees.PlatformFee, IsDebit: false,
@@ -177,15 +205,27 @@ internal sealed class ProcessDonationPaymentCommandHandler
                                     IsDebit: false, Description: "Thuế TNCN khấu trừ tại nguồn")
                             }
                             : [],
-                        new(AccountType.User, info.OwnerId, fees.OwnerNet, IsDebit: false,
-                            Description: $"Donate #{donation.Id} — chặng 1, nhận ngay")
+                        // MLACP-361: giu o Platform cho toi khi thuc su chuyen cho phong tra, khong ghi
+                        // Co thang cho chu nua — dung quy tac cua ve (WriteTicketLedgerHandler) va F&B.
+                        new(AccountType.Platform, null, fees.OwnerNet, IsDebit: false,
+                            Description: $"Giữ hộ chủ phòng trà #{info.OwnerId} — donate #{donation.Id}, chờ quyết toán")
                     ], ct);
+
+                var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(info.LoungeShowId, ct);
+                await DonationPayouts.ScheduleAsync(_uow, payment, info.OwnerId, show?.LoungeId ?? 0, now, ct);
+
+                var forPerformer = PaymentFeeCalculator.SplitDonationPayout(
+                    donation.Gross, fees.OwnerNet, performerShareRate).PerformerAmount;
 
                 await _notifications.NotifyAsync(
                     info.OwnerId,
                     NotificationType.DonationReceived,
                     "Bạn vừa nhận donate!",
-                    $"Có donate {donation.Gross:N0}đ đang chờ bạn xác nhận đã nhận tiền.",
+                    // MLACP-361: noi dung phai dung voi dong tien that — truoc day bao chu "xac nhan da
+                    // nhan tien" trong khi nen tang chua chuyen dong nao.
+                    $"Có donate {donation.Gross:N0}đ cho nghệ sĩ. Sau phí nền tảng và thuế, " +
+                    $"{fees.OwnerNet:N0}đ sẽ được chuyển vào tài khoản ngân hàng của phòng trà ở lần giải " +
+                    $"ngân tới. Khi nhận được, hãy xác nhận và chuyển {forPerformer:N0}đ cho nghệ sĩ.",
                     referenceType: "donation",
                     referenceId: donation.Id.ToString(),
                     ct: ct);

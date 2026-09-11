@@ -49,6 +49,17 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
         if (ownership.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Chỉ Owner của venue này mới có thể xác nhận donation.");
 
+        // MLACP-361: "da nhan" phai nghia la tien da ve tai khoan phong tra. Kiem SAU quyen han, de nguoi
+        // ngoai van nhan 403 chu khong biet duoc tinh trang chi tra cua mot donate khong phai cua ho.
+        // Donate co tu truoc MLACP-361 khong co khoan quyet toan — giu nguyen hanh vi cu.
+        var payout = await DonationPayouts.StateAsync(_uow, donation.Id, ct);
+        if (payout.HasPayout && payout.ReleasedAt is null)
+            throw new DomainException(payout.HasBankAccount
+                ? "Nền tảng chưa chuyển khoản donate này cho phòng trà — sẽ chuyển ở lần giải ngân tới. " +
+                  "Chỉ xác nhận đã nhận sau khi tiền đã về tài khoản."
+                : "Phòng trà chưa đăng ký tài khoản ngân hàng mặc định nên nền tảng chưa chuyển được khoản " +
+                  "donate này. Hãy thêm tài khoản; khoản này sẽ được chuyển ở lần giải ngân tới.");
+
         donation.Status = DonationStatus.OwnerReceived;
         donation.OwnerAckAt = DateTimeOffset.UtcNow;
         _uow.Repository<Donation, int>().Update(donation);
