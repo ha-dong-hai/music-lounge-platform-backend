@@ -40,9 +40,13 @@ public sealed class SettlementPreconditionTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeEntity
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"NoBankVenue-{Guid.NewGuid():N}",
             Description = "Venue that never registered a payout account",
             Status = LoungeStatus.Approved

@@ -510,10 +510,10 @@ public sealed class EventManagementTests
         // cho test nay (khong dung SeedHelper.AudienceId/LoungeId dung chung) de khong de lai active
         // assignment lam anh huong cac test khac dang dung chung 1 database instance.
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
-        var otherOwnerClient = _factory.CreateAuthenticatedClient(SeedHelper.OtherOwnerId, "Owner");
 
         int candidateUserId;
         int secondLoungeId;
+        int secondOwnerId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -526,9 +526,13 @@ public sealed class EventManagementTests
             };
             db.Users.Add(candidate);
 
+            var secondOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Second Venue Owner" };
+            db.Users.Add(secondOwner);
+            await db.SaveChangesAsync();
+
             var secondLounge = new MusicLoungeVenue
             {
-                OwnerId = SeedHelper.OtherOwnerId,
+                OwnerId = secondOwner.Id,
                 Name = "Second Venue",
                 Address = new VenueAddress { Street = "456 Side St", District = "3", City = "HCM" }
             };
@@ -537,7 +541,11 @@ public sealed class EventManagementTests
             await db.SaveChangesAsync();
             candidateUserId = candidate.Id;
             secondLoungeId = secondLounge.Id;
+            secondOwnerId = secondOwner.Id;
         }
+        // MLACP-377: 1 chu 1 phong tra — secondLounge gio thuoc secondOwner MOI, khong con la
+        // SeedHelper.OtherOwnerId (da so huu SeedHelper.OtherLoungeId) nua.
+        var otherOwnerClient = _factory.CreateAuthenticatedClient(secondOwnerId, "Owner");
 
         var firstAssign = await ownerClient.PostAsJsonAsync(
             $"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = candidateUserId });

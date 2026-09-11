@@ -36,9 +36,13 @@ public sealed class TrendingRankingTests
         var city = $"City-{Guid.NewGuid():N}"[..20];
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        db.Users.Add(freshOwner);
+        await db.SaveChangesAsync();
+
         var lounge = new MusicLoungeVenue
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = freshOwner.Id,
             Name = $"TrendVenue-{Guid.NewGuid():N}",
             Description = "Integration test venue",
             Status = LoungeStatus.Approved,
