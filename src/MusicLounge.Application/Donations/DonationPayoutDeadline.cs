@@ -70,5 +70,8 @@ public static class DonationPayoutDeadline
     public static DateTimeOffset? DueAt(DateTimeOffset? receivedAt, int holdDays) => receivedAt?.AddDays(holdDays);
 
     /// <summary>Quá mốc này mà vẫn chưa chuyển thì phòng trà bị cảnh cáo.</summary>
-    public static DateTimeOffset? WarningAt(DateTimeOffset? receivedAt, int holdDays) => receivedAt?.AddDays(2 * holdDays);
+    public static DateTimeOffset? WarningAt(DateTimeOffset? receivedAt, int holdDays) => receivedAt?.AddDays(WarningDays(holdDays));
+
+    /// <summary>Số ngày kể từ lúc nhận tiền tới mốc cảnh cáo — công bố ở trang sao kê công khai (MLACP-365).</summary>
+    public static int WarningDays(int holdDays) => 2 * holdDays;
 }

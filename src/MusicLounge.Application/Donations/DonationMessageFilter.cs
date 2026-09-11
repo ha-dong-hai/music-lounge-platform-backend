@@ -55,20 +55,32 @@ public static class DonationMessageFilter
     /// <summary>Lời nhắn được phép lên sóng, hoặc null.</summary>
     public static async Task<string?> MessageForBroadcastAsync(
         Donation donation, ISystemConfigService config, CancellationToken ct)
-    {
-        if (!donation.IsMessagePublic
-            || donation.MessageHiddenAt is not null
-            || string.IsNullOrWhiteSpace(donation.Message))
-            return null;
+        => AllowedMessage(donation.Message, donation.IsMessagePublic, donation.MessageHiddenAt,
+            await LoadBlockedWordsAsync(config, ct));
 
+    /// <summary>Danh sách từ cấm đã chuẩn hoá; null khi danh sách trong cấu hình bị hỏng.</summary>
+    public static async Task<IReadOnlyList<string>?> LoadBlockedWordsAsync(ISystemConfigService config, CancellationToken ct)
+    {
         var raw = await config.GetStringAsync(ConfigKeys.DonationMessageBlockedWords, "[]", ct);
+        return TryParseList(raw, out var words) ? words : null;
+    }
+
+    /// <summary>
+    /// Lời nhắn được phép hiện công khai, hoặc null. MLACP-365: livestream và trang sao kê công khai
+    /// dùng chung quy tắc này — lời nhắn đã bị gỡ khỏi sóng không được hiện lại ở trang công khai.
+    /// </summary>
+    public static string? AllowedMessage(
+        string? message, bool isMessagePublic, DateTimeOffset? hiddenAt, IReadOnlyList<string>? blockedWords)
+    {
+        if (!isMessagePublic || hiddenAt is not null || string.IsNullOrWhiteSpace(message))
+            return null;
 
         // Đường Admin đã kiểm định dạng lúc ghi, nên danh sách hỏng ở đây chỉ có thể do sửa tay trong
         // database. Khi đó giữ lời nhắn lại: chặn nhầm thì người donate vẫn thấy lời nhắn trong lịch
         // sử của mình, còn phát nhầm một câu xúc phạm lên sóng thì không rút lại được.
-        if (!TryParseList(raw, out var words)) return null;
+        if (blockedWords is null) return null;
 
-        return ContainsBlocked(donation.Message, words) ? null : donation.Message;
+        return ContainsBlocked(message, blockedWords) ? null : message;
     }
 
     internal static string Normalize(string value)
