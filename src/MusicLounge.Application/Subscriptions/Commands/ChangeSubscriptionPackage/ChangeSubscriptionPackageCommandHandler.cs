@@ -47,7 +47,10 @@ internal sealed class ChangeSubscriptionPackageCommandHandler
         await SubscriptionTerms.EnsureNoPendingChangeAsync(_uow, _currentUser.UserId, ct);
 
         var oldPackage = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(current.PackageId, ct);
-        var credit = SubscriptionTerms.RemainingValue(current, oldPackage?.Price ?? 0m, now);
+        // MLACP-375: loai ngay duoc bu mien phi (tam khoa oan / khoa duoc go) khoi gia tri quy doi.
+        var compensations = await _uow.Repository<VenuePenalty, int>().FindAsync(
+            p => p.CompensatedSubscriptionId == current.Id, ct);
+        var credit = SubscriptionTerms.RemainingValue(current, oldPackage?.Price ?? 0m, now, compensations);
         var cycleEnd = SubscriptionTerms.CycleEnd(package.BillingCycle, now);
         var extra = SubscriptionTerms.TimeWorth(credit, package.Price, cycleEnd - now);
 

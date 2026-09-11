@@ -93,6 +93,10 @@ public sealed class ApplyDuePenaltiesJob
                 {
                     // §6.8 — compensate the Owner for the outage by pushing their subscription
                     // expiry back, so a suspension doesn't also cost them paid-for platform time.
+                    // MLACP-375: ghi lai DUNG khoang duoc cap (truoc khi cong) — xem chu thich tren VenuePenalty.
+                    penalty.CompensatedSubscriptionId = subscription.Id;
+                    penalty.SubscriptionCompensationFrom = subscription.ExpiresAt;
+                    penalty.SubscriptionCompensationDays = days;
                     subscription.ExpiresAt = subscription.ExpiresAt.AddDays(days);
                 }
                 else if (penalty.PenaltyType == PenaltyType.Ban)

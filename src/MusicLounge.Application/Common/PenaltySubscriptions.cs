@@ -53,7 +53,14 @@ public static class PenaltySubscriptions
             .FirstOrDefault();
         if (active is not null)
         {
-            active.ExpiresAt = (active.ExpiresAt > now ? active.ExpiresAt : now) + left;
+            // MLACP-375: goi vua nhan lai la thoi gian DA TRA TIEN cho goi CU (stopped), khong phai tien da tra
+            // cho "active" — ghep vao ExpiresAt cua active ma khong ghep gi vao AmountPaid cua no thi cung pha
+            // loang gia tri moi ngay cua active y het mot lan bu tam khoa. Ghi lai dung nhu vay.
+            var from = active.ExpiresAt > now ? active.ExpiresAt : now;
+            ban.CompensatedSubscriptionId = active.Id;
+            ban.SubscriptionCompensationFrom = from;
+            ban.SubscriptionCompensationDays = (decimal)left.TotalDays;
+            active.ExpiresAt = from + left;
             return active;
         }
 

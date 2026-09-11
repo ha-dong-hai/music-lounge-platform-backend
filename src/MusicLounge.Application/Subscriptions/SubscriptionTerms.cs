@@ -57,14 +57,49 @@ public static class SubscriptionTerms
     /// <summary>
     /// Giá trị còn lại của gói, theo số đã trả và phần thời gian còn lại. Gói có từ trước khi lưu số đã trả thì
     /// dùng giá niêm yết của gói.
+    ///
+    /// <para>MLACP-375: ngày được <b>bù miễn phí</b> (tạm khoá oan — <see cref="PenaltyType.Suspension"/> trong
+    /// <c>ApplyDuePenaltiesJob</c>; hoặc gộp từ gói bị khoá được phục hồi — <c>PenaltySubscriptions.
+    /// RestoreAfterBanLifted</c>) không phải ngày đã trả tiền, dù nó đã đẩy <c>ExpiresAt</c> xa hơn — không
+    /// tính vào giá trị quy đổi. Không thể trừ thẳng "tổng số ngày được bù" khỏi phần còn lại: nếu chủ
+    /// <b>gia hạn sau khi được bù</b>, ngày miễn phí không còn nằm cuối cùng của khoảng thời gian nữa. Nên dùng
+    /// đúng khoảng thời gian đã ghi trên từng <c>VenuePenalty</c> (không đoán vị trí) và lấy phần chồng lấn
+    /// thật với khoảng đang xét — đúng bất kể chủ có gia hạn xen giữa hay không.</para>
     /// </summary>
-    public static decimal RemainingValue(OwnerSubscription plan, decimal listPrice, DateTimeOffset now)
+    public static decimal RemainingValue(
+        OwnerSubscription plan, decimal listPrice, DateTimeOffset now,
+        IEnumerable<VenuePenalty>? compensations = null)
     {
         var total = plan.ExpiresAt - plan.StartedAt;
         var left = plan.ExpiresAt - now;
         if (total <= TimeSpan.Zero || left <= TimeSpan.Zero) return 0m;
+
+        var freeTotal = TimeSpan.Zero;
+        var freeLeft = TimeSpan.Zero;
+        foreach (var grant in (compensations ?? [])
+                     .Where(p => p.CompensatedSubscriptionId == plan.Id
+                                 && p.SubscriptionCompensationFrom is not null
+                                 && p.SubscriptionCompensationDays is decimal))
+        {
+            var from = grant.SubscriptionCompensationFrom!.Value;
+            var to = from.AddDays((double)grant.SubscriptionCompensationDays!.Value);
+            freeTotal += Overlap(from, to, plan.StartedAt, plan.ExpiresAt);
+            freeLeft += Overlap(from, to, now, plan.ExpiresAt);
+        }
+
+        var paidTotal = total - freeTotal;
+        var paidLeft = left - freeLeft;
+        if (paidTotal <= TimeSpan.Zero || paidLeft <= TimeSpan.Zero) return 0m;
+
         var paid = plan.AmountPaid ?? listPrice;
-        return Math.Round(paid * left.Ticks / total.Ticks, 2);
+        return Math.Round(paid * paidLeft.Ticks / paidTotal.Ticks, 2);
+    }
+
+    private static TimeSpan Overlap(DateTimeOffset from, DateTimeOffset to, DateTimeOffset lo, DateTimeOffset hi)
+    {
+        var start = from > lo ? from : lo;
+        var end = to < hi ? to : hi;
+        return end > start ? end - start : TimeSpan.Zero;
     }
 
     /// <summary>Một khoản giá trị đổi được bao nhiêu thời gian ở gói mới, theo giá của gói mới.</summary>
