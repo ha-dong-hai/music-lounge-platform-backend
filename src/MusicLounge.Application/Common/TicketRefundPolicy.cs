@@ -148,6 +148,44 @@ public static class TicketRefundPolicy
            || show.CancellationDeadlineHours is not int hours
            || show.ScheduledStart.AddHours(-hours) > now;
 
+    /// <summary>
+    /// MLACP-372 — phòng trà đổi lịch hoặc đổi địa chỉ sau khi người này đã mua: tới mốc trả về, họ được huỷ và hoàn
+    /// <b>100%</b> bất kể chính sách D13 của buổi diễn. Null khi vé này không chịu thay đổi nào.
+    ///
+    /// <para>Trước đây đổi lịch bật <c>CancellationAllowed</c> vĩnh viễn — cả người mua <i>sau</i>, đã thấy ngày mới
+    /// trước khi trả tiền, cũng huỷ được — trong khi người mua <i>trước</i> vẫn bị hoàn theo tỉ lệ của phòng trà, tức
+    /// bị trừ tiền vì chính phòng trà đổi ngày. Người mua sau theo chính sách của phòng trà như thường.</para>
+    ///
+    /// <para>Đổi địa chỉ chỉ tính cho vé vào cửa: người xem livestream không phải tới phòng trà.</para>
+    /// </summary>
+    public static DateTimeOffset? FullRefundUntil(LoungeShow show, Ticket ticket, AccessType accessType)
+    {
+        DateTimeOffset? changedAt = null;
+        if (show.RescheduledAt is DateTimeOffset rescheduledAt && ticket.CreatedAt < rescheduledAt)
+            changedAt = rescheduledAt;
+        if (accessType == AccessType.Physical
+            && show.VenueMovedAt is DateTimeOffset movedAt && ticket.CreatedAt < movedAt
+            && (changedAt is null || movedAt > changedAt))
+            changedAt = movedAt;
+
+        return changedAt is DateTimeOffset at ? FullRefundWindowEnd(show, at) : null;
+    }
+
+    /// <summary>
+    /// Cửa sổ hoàn 100% sau một thay đổi: tới hạn huỷ của chính buổi diễn, tính theo lịch mới; không có hạn, hoặc hạn
+    /// đó đã qua ngay lúc đổi, thì tới giờ bắt đầu — phòng trà đổi thì phòng trà chịu việc người mua không còn kịp một
+    /// hạn họ đã chấp nhận cho một buổi tối khác.
+    /// </summary>
+    public static DateTimeOffset FullRefundWindowEnd(LoungeShow show, DateTimeOffset changedAt)
+        => show.CancellationDeadlineHours is int hours && show.ScheduledStart.AddHours(-hours) > changedAt
+            ? show.ScheduledStart.AddHours(-hours)
+            : show.ScheduledStart;
+
+    /// <summary>Câu báo cho người mua trước thay đổi — đúng mốc mà <c>CancelTicket</c> áp.</summary>
+    public static string DescribeFullRefundWindow(DateTimeOffset until)
+        => "Vì thay đổi này xảy ra sau khi bạn mua vé, bạn có thể huỷ vé và được hoàn 100% tiền vé tới " +
+           $"{VietnamTime.Format(until, "HH:mm dd/MM/yyyy")}.";
+
     /// <summary>Human-readable Vietnamese summary for display next to the ticket tiers.</summary>
     public static string Describe(TicketRefundTerms terms)
     {

@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -94,8 +95,9 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
     /// <summary>
     /// Người giữ vé vào cửa của buổi diễn chưa diễn phải biết địa chỉ mới — không thì họ tới sai chỗ.
     ///
-    /// <para>Đi đúng khuôn <c>RescheduleLoungeShow</c> đã dùng cho đổi lịch: vé vẫn có hiệu lực, mở lại
-    /// quyền huỷ theo chính sách của buổi diễn (D13), và bỏ hạn huỷ nếu hạn đó đã không còn đạt được.
+    /// <para>Đi đúng khuôn <c>RescheduleLoungeShow</c> đã dùng cho đổi lịch: vé vẫn có hiệu lực; người mua trước
+    /// thay đổi được huỷ và hoàn 100% tới hạn huỷ theo lịch hiện tại, hoặc tới giờ diễn (MLACP-372). Chính sách của
+    /// buổi diễn cho người mua sau không bị sửa.
     /// Ticketmaster cũng vậy: <i>"If an event is rescheduled or moved, your tickets ... are still
     /// valid"</i>, và ban tổ chức quyết có cho hoàn hay không.</para>
     ///
@@ -129,23 +131,26 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
                      && t.Tier.AccessType == AccessType.Physical, ct);
             if (tickets.Count == 0) continue;
 
-            show.CancellationAllowed = true;
-            // Mở lại quyền huỷ mà giữ một hạn đã qua thì khách vẫn không huỷ được — nửa lời hứa.
-            if (!TicketRefundPolicy.IsDeadlineStillReachable(show, now))
-                show.CancellationDeadlineHours = null;
+            // MLACP-372: trước đây bật CancellationAllowed vĩnh viễn và hoàn theo tỉ lệ của phòng trà — như đổi lịch.
+            // Nay chỉ ghi thời điểm đổi; quyền hoàn 100% của người mua trước nằm ở TicketRefundPolicy.FullRefundUntil.
+            show.VenueMovedAt = now;
             showRepo.Update(show);
 
-            // Đúng câu mà trang buổi diễn đang công bố — khách được báo đúng điều kiện đang áp cho họ.
-            var terms = TicketRefundPolicy.Describe(TicketRefundPolicy.Resolve(show));
+            // Đúng mốc mà CancelTicket áp cho người mua trước thay đổi.
+            var terms = TicketRefundPolicy.DescribeFullRefundWindow(TicketRefundPolicy.FullRefundWindowEnd(show, now));
+            var payers = await TicketRefundRecipients.PayersAsync(_uow, tickets, ct);
 
-            foreach (var buyerId in tickets.Select(t => t.BuyerId!.Value).Distinct())
+            foreach (var holding in tickets.GroupBy(t => t.BuyerId!.Value))
             {
+                var transferredNote = holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers))
+                    ? TicketRefundRecipients.TransferredHolderCancelNote
+                    : "";
                 await _notifications.NotifyAsync(
-                    buyerId,
+                    holding.Key,
                     NotificationType.EventVenueChanged,
                     "Phòng trà đã đổi địa chỉ",
                     $"\"{show.Name}\" sẽ diễn ở địa chỉ mới: {lounge.Address.FullAddress}. " +
-                    $"Địa chỉ cũ: {oldFullAddress}. Vé của bạn vẫn có hiệu lực. {terms}",
+                    $"Địa chỉ cũ: {oldFullAddress}. Vé của bạn vẫn có hiệu lực. {terms}{transferredNote}",
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);

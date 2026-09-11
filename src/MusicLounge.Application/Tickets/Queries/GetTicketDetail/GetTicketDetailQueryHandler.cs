@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Tickets.DTOs;
@@ -43,6 +44,7 @@ internal sealed class GetTicketDetailQueryHandler : IRequestHandler<GetTicketDet
                 ticket.PhysicalDetail.SeatInfo,
                 ticket.PhysicalDetail.CheckedInAt),
             ticket.LivestreamDetail is null ? null : new TicketLivestreamDetailDto(
-                ticket.LivestreamDetail.AccessToken));
+                ticket.LivestreamDetail.AccessToken),
+            TicketRefundPolicy.FullRefundUntil(ticket.Show, ticket, ticket.Tier.AccessType));
     }
 }
