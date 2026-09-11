@@ -61,6 +61,11 @@ public sealed class AutoConfirmDonationsJob
             donation.AutoConfirmed = true;
             // Chỉ là lúc hệ thống ghi nhận — không còn là mốc tính hạn trả nghệ sĩ (MLACP-362).
             donation.OwnerAckAt = now;
+            // MLACP-363: ghi ro la he thong xac nhan, khong phai phong tra.
+            await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.VenueAutoAcknowledged,
+                actorUserId: null,
+                detail: $"Phòng trà không xác nhận trong {holdDays} ngày kể từ khi nhận tiền — hệ thống tự xác nhận.",
+                ct: ct);
         }
 
         await _ctx.SaveChangesAsync(ct);

@@ -18,6 +18,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
     private readonly ILedgerService _ledger;
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
+    private readonly IFileStorageService _fileStorage;
     private readonly ILogger<ConfirmDonationPaidCommandHandler> _logger;
 
     public ConfirmDonationPaidCommandHandler(
@@ -27,6 +28,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         ILedgerService ledger,
         ISystemConfigService config,
         IAsyncKeyedLock @lock,
+        IFileStorageService fileStorage,
         ILogger<ConfirmDonationPaidCommandHandler> logger)
     {
         _uow = uow;
@@ -35,6 +37,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         _ledger = ledger;
         _config = config;
         _lock = @lock;
+        _fileStorage = fileStorage;
         _logger = logger;
     }
 
@@ -73,6 +76,16 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         var bankAccountId = performerAccounts.FirstOrDefault()?.Id
             ?? throw new DomainException(
                 "Nghệ sĩ chưa đăng ký tài khoản ngân hàng mặc định — không thể xác nhận đã thanh toán cho tới khi có tài khoản để ghi nhận.");
+
+        // MLACP-363: anh chung tu upload qua he thong thi bam dung noi dung file ngay luc nop — thay file
+        // ve sau se khong con khop ban bam. Khong doc duoc file da nop thi tu choi: dang khang dinh co bang
+        // chung ma bang chung khong ton tai. URL ben ngoai chi duoc ghi lai, khong tai ve (tranh SSRF).
+        string? evidenceSha256 = null;
+        var evidenceIsOurs = !string.IsNullOrWhiteSpace(request.PaymentEvidenceUrl)
+                             && _fileStorage.IsOwnUploadUrl(request.PaymentEvidenceUrl);
+        if (evidenceIsOurs)
+            evidenceSha256 = DonationEvidence.Sha256Hex(
+                await _fileStorage.ReadPublicImageAsync(request.PaymentEvidenceUrl!, ct));
 
         donation.Status = DonationStatus.PerformerPaid;
         donation.OwnerPaidAt = DateTimeOffset.UtcNow;
@@ -113,6 +126,15 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
                 new(AccountType.Performer, ownership.PerformerId, split.PerformerAmount, IsDebit: false,
                     Description: $"Donate #{donation.Id} — nhận từ chủ phòng trà")
             }, ct);
+
+        await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.VenueReportedPaid,
+            _currentUser.UserId, amount: split.PerformerAmount, reference: request.PaymentRef,
+            evidenceUrl: request.PaymentEvidenceUrl, evidenceSha256: evidenceSha256,
+            detail: $"Phòng trà báo đã chuyển vào tài khoản ngân hàng #{bankAccountId} của nghệ sĩ." +
+                    (!string.IsNullOrWhiteSpace(request.PaymentEvidenceUrl) && !evidenceIsOurs
+                        ? " Bằng chứng là liên kết bên ngoài hệ thống — không lưu được bản băm nội dung."
+                        : ""),
+            ct: ct);
 
         await _uow.SaveChangesAsync(ct);
 

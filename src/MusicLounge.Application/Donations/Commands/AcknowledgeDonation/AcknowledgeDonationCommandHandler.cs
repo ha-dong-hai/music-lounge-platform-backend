@@ -63,6 +63,9 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
         donation.Status = DonationStatus.OwnerReceived;
         donation.OwnerAckAt = DateTimeOffset.UtcNow;
         _uow.Repository<Donation, int>().Update(donation);
+        // MLACP-363: bang chung hai chieu — nen tang ghi da chuyen, phong tra ghi da nhan.
+        await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.VenueAcknowledged,
+            _currentUser.UserId, detail: "Phòng trà xác nhận đã nhận tiền.", ct: ct);
         await _uow.SaveChangesAsync(ct);
 
         // MLACP-360: canh bao livestream khong con phat o day nua — no phat ngay luc VNPay xac nhan

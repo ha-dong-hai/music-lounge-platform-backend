@@ -6,6 +6,7 @@ using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Donations.Commands.HideDonationMessage;
 
@@ -76,6 +77,8 @@ internal sealed class HideDonationMessageCommandHandler : IRequestHandler<HideDo
         donation.MessageHiddenAt = DateTimeOffset.UtcNow;
         donation.MessageHiddenByUserId = _currentUser.UserId;
         _uow.Repository<Donation, int>().Update(donation);
+        await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.MessageHidden,
+            _currentUser.UserId, detail: "Gỡ lời nhắn khỏi livestream (không hoàn tiền).", ct: ct);
         await _uow.SaveChangesAsync(ct);
 
         var livestream = await _livestreamRepo.GetByShowIdAsync(show.Id, ct);
