@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -28,8 +29,11 @@ internal sealed class CancelSubscriptionCommandHandler : IRequestHandler<CancelS
         var isActive = lastSub.Status == SubscriptionStatus.Active && lastSub.ExpiresAt > now;
         if (!isActive)
             throw new ConflictException("Bạn không có gói subscription nào đang hoạt động để hủy.");
+        if (lastSub.CancelledAt is not null)
+            throw new ConflictException(
+                $"Gói đã được huỷ trước đó và vẫn dùng được tới {VietnamTime.Format(lastSub.ExpiresAt, "dd/MM/yyyy")}.");
 
-        lastSub.Status = SubscriptionStatus.Cancelled;
+        // MLACP-371: van Active toi het ky — chi ghi lai la chu da huy (xem CancelSubscriptionCommand).
         lastSub.CancelledAt = now;
         subRepo.Update(lastSub);
         await _uow.SaveChangesAsync(ct);

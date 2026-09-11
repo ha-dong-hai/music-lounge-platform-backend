@@ -43,9 +43,10 @@ internal sealed class SubscribeToPackageCommandHandler
 
         if (hasActiveSubscription)
             throw new ConflictException(
-                "Bạn đã có gói đang hoạt động — đợi gói hiện tại hết hạn hoặc hủy trước khi đăng ký gói mới.");
+                "Bạn đã có gói đang hoạt động — dùng Gia hạn để cộng thêm thời gian, hoặc Đổi gói để chuyển sang gói khác " +
+                "(phần còn lại của gói hiện tại được quy đổi sang gói mới).");
 
-        var orderId = $"SUB-{now:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
+        var orderId = SubscriptionTerms.NewOrderId(SubscriptionPurchase.Subscribe, now);
 
         var payment = new Payment
         {

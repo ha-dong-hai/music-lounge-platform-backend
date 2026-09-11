@@ -10,4 +10,5 @@ public sealed record MySubscriptionDto(
     int MaxTicketsPerEventSnapshot,
     bool HasAiPosterSnapshot,
     int MaxAiPostersPerMonthSnapshot,
-    int MaxTourScenesSnapshot);
+    int MaxTourScenesSnapshot,
+    DateTimeOffset? CancelledAt); // MLACP-371: đã huỷ — gói vẫn dùng tới ExpiresAt, không gia hạn nữa

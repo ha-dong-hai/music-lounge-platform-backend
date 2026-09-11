@@ -85,5 +85,7 @@ public enum NotificationType
     // MLACP-352: phong tra doi dia chi — bao nguoi giu ve vao cua cua buoi dien sap toi.
     EventVenueChanged,
     // MLACP-352: phong tra doi ten/dia chi sau khi da duoc duyet — bao Admin kem truoc/sau.
-    VenueIdentityChanged
+    VenueIdentityChanged,
+    // MLACP-371: gia hạn sớm hoặc đổi gói vừa được VNPay xác nhận — nói rõ hạn mới và phần đã quy đổi.
+    SubscriptionUpdated
 }

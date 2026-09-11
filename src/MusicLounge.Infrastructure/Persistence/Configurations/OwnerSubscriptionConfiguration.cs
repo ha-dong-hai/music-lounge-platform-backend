@@ -11,6 +11,7 @@ internal sealed class OwnerSubscriptionConfiguration : IEntityTypeConfiguration<
         b.ToTable("owner_subscriptions");
         b.HasKey(x => x.Id);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.AmountPaid).HasPrecision(18, 2);
 
         b.HasIndex(x => new { x.OwnerId, x.Status });
 

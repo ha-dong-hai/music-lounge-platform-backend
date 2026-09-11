@@ -2,11 +2,12 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Subscriptions.Commands.CancelSubscription;
 
-// Nền tảng không có auto-charge (VNPay token_pay vẫn cần OTP mỗi kỳ — xem header comment của
-// RenewSubscriptionCommand), nên "hủy" ở đây không phải "tắt gia hạn tự động" mà là chấm dứt SỚM
-// kỳ đã trả trước, có chủ đích, để mở khóa đăng ký gói khác ngay — đúng ý mà thông báo lỗi của
-// SubscribeToPackageCommandHandler/RenewSubscriptionCommandHandler đang ám chỉ ("... hoặc hủy
-// trước khi đăng ký/gia hạn gói mới"). Hiệu lực NGAY LẬP TỨC, không hoàn tiền phần thời gian
-// chưa dùng (Luật Bảo vệ quyền lợi người tiêu dùng 2023: không bắt buộc hoàn tiền phần dịch vụ
-// đã được cung cấp/sử dụng).
+// MLACP-371. Nền tảng không tự thu tiền kỳ sau (VNPay token_pay vẫn cần OTP mỗi lần — xem
+// RenewSubscriptionCommand), nên "huỷ" nghĩa là: không gia hạn nữa, và gói VẪN dùng được tới hết kỳ đã trả —
+// như Stripe cancel_at_period_end ("allows the subscription to complete the duration of time the customer has
+// already paid for"). Không hoàn tiền phần còn lại (Shopify: "no refunds are issued for any remaining period
+// post-cancellation").
+//
+// Trước đây huỷ có hiệu lực NGAY để mở khoá đăng ký gói khác — tức muốn đổi gói thì mất trắng số ngày đã trả.
+// Đổi gói nay là lệnh riêng (ChangeSubscriptionPackage) quy phần còn lại của gói cũ thành thời gian ở gói mới.
 public sealed record CancelSubscriptionCommand : ICommand;

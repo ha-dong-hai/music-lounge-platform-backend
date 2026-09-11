@@ -298,7 +298,7 @@ public sealed class SubscriptionTests
     }
 
     [Fact]
-    public async Task Renew_WhileCurrentSubscriptionStillActive_Returns409()
+    public async Task Renew_WhileCurrentSubscriptionStillActive_IsAllowedAsEarlyRenewal()
     {
         var packageId = await CreatePackageAsync(price: 250_000m);
         var ownerId = await CreateFreshOwnerAsync();
@@ -312,7 +312,8 @@ public sealed class SubscriptionTests
 
         var res = await ownerClient.PostAsync("/api/v1/subscriptions/renew", null);
 
-        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        // MLACP-371: gia han som duoc phep — thoi gian cong noi vao han hien tai (xem SubscriptionChangeTests).
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
     [Fact]
@@ -373,7 +374,7 @@ public sealed class SubscriptionTests
         body.Should().Contain("không còn mở đăng ký");
     }
 
-    // ─── Cancel (hiệu lực NGAY LẬP TỨC, không hoàn tiền — xem CancelSubscriptionCommand) ──────────
+    // ─── Cancel (MLACP-371: không gia hạn nữa, gói vẫn dùng tới hết kỳ, không hoàn tiền) ──────────
 
     [Fact]
     public async Task Cancel_NoSubscriptionEver_Returns422()
@@ -387,7 +388,7 @@ public sealed class SubscriptionTests
     }
 
     [Fact]
-    public async Task Cancel_ActiveSubscription_Returns204_AndPersistsCancelledStatus()
+    public async Task Cancel_ActiveSubscription_Returns204_AndKeepsThePlanUntilItsEnd()
     {
         var packageId = await CreatePackageAsync(price: 250_000m);
         var ownerId = await CreateFreshOwnerAsync();
@@ -406,12 +407,12 @@ public sealed class SubscriptionTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var sub = await db.OwnerSubscriptions.SingleAsync(s => s.OwnerId == ownerId);
-        sub.Status.Should().Be(SubscriptionStatus.Cancelled);
+        sub.Status.Should().Be(SubscriptionStatus.Active, "MLACP-371: the plan runs to the end of what was paid for");
         sub.CancelledAt.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task Cancel_ThenSubscribeToAnotherPackage_Succeeds()
+    public async Task Cancel_ThenSubscribeToAnotherPackage_IsRefused_ChangePackageInstead()
     {
         var packageId = await CreatePackageAsync(price: 250_000m);
         var otherPackageId = await CreatePackageAsync(price: 400_000m);
@@ -425,12 +426,13 @@ public sealed class SubscriptionTests
             $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
         await ownerClient.PostAsync("/api/v1/subscriptions/cancel", null);
 
-        // Hủy phải mở khóa đăng ký gói khác NGAY, không cần đợi ExpiresAt — đây là mục đích chính
-        // của tính năng, khác hẳn khuyến nghị SaaS chuẩn "hiệu lực cuối kỳ".
+        // MLACP-371: truoc day huy co hieu luc ngay de mo khoa dang ky goi khac — tuc doi goi la mat trang so ngay
+        // da tra. Nay huy giu goi toi het ky; doi goi la lenh rieng co quy doi phan con lai.
         var res = await ownerClient.PostAsJsonAsync(
             "/api/v1/subscriptions/subscribe", new { PackageId = otherPackageId });
 
-        res.StatusCode.Should().Be(HttpStatusCode.Created);
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("Đổi gói");
     }
 
     [Fact]
