@@ -62,24 +62,22 @@ public sealed class AutoApproveOverdueAppealsJob
 
             var wasAlreadyApplied = current.AppliedAt is not null;
 
-            // A venue can have more than one Suspension/Ban in effect at once — only reset to
-            // Approved if no OTHER currently-in-effect penalty still justifies keeping it locked.
-            var hasOtherActivePenalty = await _ctx.VenuePenalties.AnyAsync(
-                p => p.LoungeId == current.LoungeId
-                    && p.Id != current.Id
-                    && PenaltyLifecycle.InForce.Contains(p.Status)
-                    && p.AppliedAt != null
-                    && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
-                ct);
-            if (!hasOtherActivePenalty)
-                lounge.Status = LoungeStatus.Approved;
+            // MLACP-367: cung quy tac voi ReviewAppeal va ExpireServedSuspensions (PenaltyLifecycle) — trang
+            // thai suy tu cac an CON hieu luc, va thong bao noi dung trang thai sau cung.
+            var remaining = await _ctx.VenuePenalties
+                .Where(p => p.LoungeId == current.LoungeId
+                            && p.Id != current.Id
+                            && PenaltyLifecycle.InForce.Contains(p.Status))
+                .ToListAsync(ct);
+            if (PenaltyLifecycle.StatusAfterReleasing(lounge.Status, current.PenaltyType, remaining) is { } releasedStatus)
+                lounge.Status = releasedStatus;
 
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.AppealResolved,
                 "Kháng cáo tự động được chấp thuận",
                 $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong thời hạn SLA — kháng cáo được " +
-                "tự động chấp thuận, venue trở lại hoạt động bình thường.",
+                $"tự động chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
                 referenceType: "venue_penalty",
                 referenceId: current.Id.ToString(),
                 ct: ct);

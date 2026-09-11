@@ -78,22 +78,21 @@ public sealed class ExpireServedSuspensionsJob
             var lounge = await _ctx.Lounges.FirstOrDefaultAsync(l => l.Id == penalty.LoungeId, ct);
             if (lounge is null) continue;
 
-            // Cùng quy tắc ReviewAppealCommandHandler đang dùng: chỉ trả phòng trà về trạng thái
-            // bình thường khi không còn án phạt nào khác đang thi hành. Hai lệnh treo chồng nhau mà
-            // gỡ theo cái hết hạn trước thì phòng trà được thả sớm hơn mức đáng bị.
-            var otherActive = await _ctx.VenuePenalties.CountAsync(
-                p => p.LoungeId == lounge.Id
-                     && p.Id != penalty.Id
-                     && PenaltyLifecycle.InForce.Contains(p.Status)
-                     && p.AppliedAt != null
-                     && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
-                ct);
+            // Cùng quy tắc với mọi chỗ khác (PenaltyLifecycle, MLACP-367): trạng thái sau cùng suy từ các án
+            // CÒN hiệu lực — hai lệnh treo chồng nhau mà gỡ theo cái hết hạn trước thì phòng trà được thả
+            // sớm hơn mức đáng bị. Không đụng vào trạng thái nặng hơn mức một lệnh tạm khoá từng đặt ra:
+            // nếu Admin đã chuyển phòng trà đi chỗ khác thì quyết định đó thắng — job này không ghi đè.
+            var remaining = await _ctx.VenuePenalties
+                .Where(p => p.LoungeId == lounge.Id
+                            && p.Id != penalty.Id
+                            && PenaltyLifecycle.InForce.Contains(p.Status))
+                .ToListAsync(ct);
+            var otherActive = remaining.Count;
 
-            // Chỉ đụng vào phòng trà đang thực sự bị treo. Nếu Admin đã chuyển nó sang trạng thái
-            // khác bằng tay thì quyết định đó thắng — job này không ghi đè.
-            var restored = otherActive == 0 && lounge.Status == LoungeStatus.Suspended;
-            if (restored)
-                lounge.Status = LoungeStatus.Approved;
+            var wasOperating = VenueLifecycle.CanOperate(lounge.Status);
+            if (PenaltyLifecycle.StatusAfterReleasing(lounge.Status, penalty.PenaltyType, remaining) is { } releasedStatus)
+                lounge.Status = releasedStatus;
+            var restored = !wasOperating && VenueLifecycle.CanOperate(lounge.Status);
 
             await _ctx.SaveChangesAsync(ct);
 
@@ -107,8 +106,8 @@ public sealed class ExpireServedSuspensionsJob
                 NotificationType.PenaltyExpired,
                 restored ? "Phòng trà đã được mở khoá" : "Lệnh tạm khoá đã hết hạn",
                 restored
-                    ? $"\"{lounge.Name}\" đã hết hạn tạm khoá theo phạt #{penalty.Id} và hoạt động trở lại bình thường."
-                    : $"Lệnh tạm khoá theo phạt #{penalty.Id} đã hết hạn, nhưng \"{lounge.Name}\" vẫn đang chịu một án phạt khác nên chưa mở khoá.",
+                    ? $"\"{lounge.Name}\" đã hết hạn tạm khoá theo phạt #{penalty.Id}. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
+                    : $"Lệnh tạm khoá theo phạt #{penalty.Id} đã hết hạn, nhưng \"{lounge.Name}\" chưa được mở khoá. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);

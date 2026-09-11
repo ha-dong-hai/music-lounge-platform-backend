@@ -61,22 +61,19 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
 
         if (decision == PenaltyStatus.Overturned)
         {
-            // A venue CAN have more than one Suspension/Ban in effect at once (e.g. a second
-            // violation while the first is still unresolved) — only reset to Approved if no OTHER
-            // currently-in-effect penalty still justifies keeping this venue locked/suspended.
-            // Previously this reset unconditionally, which could re-open a venue that another,
-            // still-active penalty should have kept locked.
-            var otherActivePenalties = await _uow.Repository<VenuePenalty, int>().FindAsync(
+            // A venue CAN have more than one penalty in effect at once — its status afterwards comes from
+            // whatever is STILL in force. MLACP-367: the same rule every other place uses (PenaltyLifecycle).
+            // This used to count only Suspension/Ban, so lifting one warning while another stood reset the
+            // venue to Approved; and it reset a status no penalty had set.
+            var remaining = await _uow.Repository<VenuePenalty, int>().FindAsync(
                 p => p.LoungeId == penalty.LoungeId
                     && p.Id != penalty.Id
-                    && PenaltyLifecycle.InForce.Contains(p.Status)
-                    && p.AppliedAt != null
-                    && (p.PenaltyType == PenaltyType.Suspension || p.PenaltyType == PenaltyType.Ban),
+                    && PenaltyLifecycle.InForce.Contains(p.Status),
                 ct);
 
-            if (otherActivePenalties.Count == 0)
+            if (PenaltyLifecycle.StatusAfterReleasing(lounge.Status, penalty.PenaltyType, remaining) is { } releasedStatus)
             {
-                lounge.Status = LoungeStatus.Approved;
+                lounge.Status = releasedStatus;
                 _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
             }
 
@@ -101,7 +98,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
             NotificationType.AppealResolved,
             decision == PenaltyStatus.Overturned ? "Kháng cáo được chấp thuận" : "Kháng cáo bị từ chối",
             decision == PenaltyStatus.Overturned
-                ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. Venue trở lại hoạt động bình thường."
+                ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
                 : $"Kháng cáo của bạn cho phạt #{penalty.Id} bị từ chối. {request.ReviewNote ?? ""}".Trim(),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
