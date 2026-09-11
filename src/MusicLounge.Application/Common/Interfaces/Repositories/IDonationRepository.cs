@@ -6,8 +6,15 @@ namespace MusicLounge.Application.Common.Interfaces.Repositories;
 
 public interface IDonationRepository : IRepository<Donation, int>
 {
-    Task<PaginatedResult<PublicDonationDto>> GetPublicHistoryByPerformerAsync(
+    /// <summary>
+    /// MLACP-365: trả dữ liệu thô — <c>PublicDonationStatement</c> quyết định trường nào được công khai.
+    /// Gồm cả donate nền tảng đang giữ (PendingOwnerAck): tiền đã thu thật.
+    /// </summary>
+    Task<PaginatedResult<PublicDonationRow>> GetPublicHistoryByPerformerAsync(
         int performerId, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>MLACP-365: mọi khoản công khai của nghệ sĩ, cho phần tổng hợp.</summary>
+    Task<IReadOnlyList<PublicDonationRow>> ListPublicByPerformerAsync(int performerId, CancellationToken ct = default);
 
     /// <summary>
     /// Single JOIN query returning the venue OwnerId, LoungeShowId, and PerformerId for a

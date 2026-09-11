@@ -133,31 +133,55 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
         return new PaginatedResult<MyDonationDto>(items, page, pageSize, total);
     }
 
-    public async Task<PaginatedResult<PublicDonationDto>> GetPublicHistoryByPerformerAsync(
+    public async Task<PaginatedResult<PublicDonationRow>> GetPublicHistoryByPerformerAsync(
         int performerId, int page, int pageSize, CancellationToken ct = default)
     {
-        var baseQuery = _ctx.Donations
-            .AsNoTracking()
-            .Where(d => d.Performance.PerformerId == performerId
-                && (d.Status == DonationStatus.OwnerReceived || d.Status == DonationStatus.PerformerPaid));
+        var baseQuery = PublicByPerformer(performerId);
 
         var total = await baseQuery.CountAsync(ct);
 
-        var items = await baseQuery
-            .OrderByDescending(d => d.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(d => new PublicDonationDto(
-                d.Id,
-                d.Performance.LoungeShow.Name,
-                d.Performance.LoungeShow.Lounge.Name,
-                d.Performance.LoungeShow.ScheduledStart,
-                d.IsAnonymous ? null : d.DisplayName,
-                d.IsAmountPublic ? (decimal?)d.Gross : null,
-                d.Status.ToString(),
-                d.CreatedAt))
+        var items = await ToPublicRows(baseQuery
+                .OrderByDescending(d => d.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize))
             .ToListAsync(ct);
 
-        return new PaginatedResult<PublicDonationDto>(items, page, pageSize, total);
+        return new PaginatedResult<PublicDonationRow>(items, page, pageSize, total);
     }
+
+    public async Task<IReadOnlyList<PublicDonationRow>> ListPublicByPerformerAsync(
+        int performerId, CancellationToken ct = default)
+        => await ToPublicRows(PublicByPerformer(performerId).OrderByDescending(d => d.Id)).ToListAsync(ct);
+
+    // MLACP-365: tinh ca donate nen tang dang giu (PendingOwnerAck) — tien da thu that, truoc day khong
+    // hien tren trang cong khai cho toi khi chu phong tra bam "da nhan".
+    private IQueryable<Donation> PublicByPerformer(int performerId)
+        => _ctx.Donations
+            .AsNoTracking()
+            .Where(d => d.Performance.PerformerId == performerId
+                && (d.Status == DonationStatus.PendingOwnerAck
+                    || d.Status == DonationStatus.OwnerReceived
+                    || d.Status == DonationStatus.PerformerPaid));
+
+    private static IQueryable<PublicDonationRow> ToPublicRows(IQueryable<Donation> query)
+        => query.Select(d => new PublicDonationRow(
+            d.Id,
+            d.Performance.LoungeShow.Name,
+            d.Performance.LoungeShow.Lounge.Name,
+            d.Performance.LoungeShow.ScheduledStart,
+            d.IsAnonymous ? null : d.DisplayName,
+            d.IsAmountPublic,
+            d.Gross,
+            d.Net,
+            d.PerformerShareRateSnapshot,
+            d.Status,
+            d.AutoConfirmed,
+            d.PaymentConfirmedAt,
+            d.OwnerAckAt,
+            d.OwnerPaidAt,
+            d.Message,
+            d.IsMessagePublic,
+            d.MessageHiddenAt,
+            d.PaymentEvidenceUrl != null && d.PaymentEvidenceUrl != "",
+            d.CreatedAt));
 }

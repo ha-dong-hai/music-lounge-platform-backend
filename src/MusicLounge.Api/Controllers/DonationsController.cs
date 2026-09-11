@@ -17,6 +17,7 @@ using MusicLounge.Application.Donations.Queries.GetMyDonations;
 using MusicLounge.Application.Donations.Queries.GetOwnerDonationHistory;
 using MusicLounge.Application.Donations.Queries.GetOwnerReceivedDonations;
 using MusicLounge.Application.Donations.Queries.GetPendingDonations;
+using MusicLounge.Application.Donations.Queries.GetPerformerDonationSummary;
 using MusicLounge.Application.Donations.Queries.GetPublicDonationHistory;
 
 namespace MusicLounge.Api.Controllers;
@@ -208,6 +209,17 @@ public sealed class PerformerDonationsController : ControllerBase
         var result = await _sender.Send(
             new GetPublicDonationHistoryQuery(performerId, page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<PublicDonationDto>>.Ok(result));
+    }
+
+    /// <summary>MLACP-365 — tổng hợp sao kê công khai của nghệ sĩ và chính sách donate đang áp dụng.</summary>
+    [HttpGet("{performerId:int}/donations/summary")]
+    [AllowAnonymous]
+    [ProducesResponseType<ApiResponse<PerformerDonationSummaryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPublicSummary(int performerId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPerformerDonationSummaryQuery(performerId), ct);
+        return Ok(ApiResponse<PerformerDonationSummaryDto>.Ok(result));
     }
 }
 
