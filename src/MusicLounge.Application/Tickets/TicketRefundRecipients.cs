@@ -22,6 +22,13 @@ public static class TicketRefundRecipients
     public const string TransferredHolderNote =
         " Vé này được chuyển nhượng cho bạn, nên tiền được hoàn về người đã mua vé ban đầu.";
 
+    /// <summary>
+    /// MLACP-372 — câu nối vào thông báo "bạn có thể huỷ vé" cho người đang giữ vé đã chuyển nhượng: từ MLACP-370 chỉ
+    /// người đã trả tiền mới tự huỷ được, nên thiếu câu này thì lời báo là một quyền họ không dùng được.
+    /// </summary>
+    public const string TransferredHolderCancelNote =
+        " Vé được chuyển nhượng cho bạn thì chỉ người mua ban đầu mới huỷ để hoàn được — hãy chuyển vé lại cho họ.";
+
     /// <summary>Người đã trả tiền của từng thanh toán mà các vé này thuộc về.</summary>
     public static async Task<IReadOnlyDictionary<int, int?>> PayersAsync(
         IUnitOfWork uow, IEnumerable<Ticket> tickets, CancellationToken ct)

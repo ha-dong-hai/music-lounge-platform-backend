@@ -22,6 +22,12 @@ public sealed class LoungeShow : Common.AuditableEntity<int>
     public bool CancellationAllowed { get; set; } = true;           // D13: cho phép hoàn vé không
     public int? CancellationDeadlineHours { get; set; }             // D13: hoàn trước bao nhiêu giờ
     public decimal? RefundPercentage { get; set; }                  // D13: % hoàn tiền (0-100)
+
+    // MLACP-372: lần gần nhất phòng trà đổi lịch / đổi địa chỉ khi đã mở bán. Người mua TRƯỚC thời điểm đó được huỷ và
+    // hoàn 100% trong một cửa sổ riêng (TicketRefundPolicy.FullRefundUntil); chính sách D13 ở trên — áp cho người mua
+    // sau — không bị sửa. Đổi địa chỉ chỉ ảnh hưởng vé vào cửa.
+    public DateTimeOffset? RescheduledAt { get; set; }
+    public DateTimeOffset? VenueMovedAt { get; set; }
     public bool IsPublic { get; set; } = true;                      // ẩn/hiện event với public
     public bool PosterByAi { get; set; } = false;                   // poster có phải AI tạo không (W02 subscription gate)
     public DateTimeOffset? RatingOpenUntil { get; set; }   // §6.13: set = actual_end + 7d when show ends

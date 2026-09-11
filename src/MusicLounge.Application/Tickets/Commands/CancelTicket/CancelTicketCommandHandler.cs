@@ -88,7 +88,16 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         // chinh phong tra khong giao duoc thu da ban — ca ba chot duoi day deu phai nhuong.
         var neverDelivered = ShowCompletion.WasNeverDelivered(show, DateTimeOffset.UtcNow);
 
-        if (!neverDelivered && !show.CancellationAllowed)
+        // MLACP-372: phong tra doi lich / doi dia chi sau khi nguoi nay mua — trong cua so rieng, huy duoc va hoan 100%
+        // bat ke chinh sach cua buoi dien (nguoi mua sau van theo chinh sach do). Het cua so thi ve chinh sach thuong.
+        var tier = await _uow.Repository<TicketTier, int>().GetByIdAsync(ticket.TierId, ct)
+            ?? throw new NotFoundException(nameof(TicketTier), ticket.TierId);
+        var changedAfterPurchase = !neverDelivered
+            && TicketRefundPolicy.FullRefundUntil(show, ticket, tier.AccessType) is DateTimeOffset fullRefundUntil
+            && DateTimeOffset.UtcNow <= fullRefundUntil;
+        var fullRefund = neverDelivered || changedAfterPurchase;
+
+        if (!fullRefund && !show.CancellationAllowed)
             throw new DomainException("Event này không cho phép hủy vé.");
 
         // MLACP-257: CancellationDeadlineHours la optional — neu Owner khong dat, khong co gi khac
@@ -120,7 +129,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         if (!neverDelivered && (show.Status == LoungeShowStatus.Ended || neverStartedButOverdue))
             throw new DomainException("Không thể hủy vé sau khi event đã kết thúc.");
 
-        if (!neverDelivered && show.CancellationDeadlineHours.HasValue &&
+        if (!fullRefund && show.CancellationDeadlineHours.HasValue &&
             DateTimeOffset.UtcNow > show.ScheduledStart.AddHours(-show.CancellationDeadlineHours.Value))
             throw new DomainException(
                 $"Đã quá hạn hủy vé — event yêu cầu hủy trước {show.CancellationDeadlineHours.Value} giờ so với giờ diễn. Vui lòng liên hệ phòng trà nếu cần hỗ trợ thêm.");
@@ -139,7 +148,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         //
         // MLACP-338: tru khi buoi dien chua tung duoc cung cap — luc do khong con la chuyen chinh
         // sach nua, va 100% o day khop dung voi moi duong hoan tien do nen tang ep khac.
-        var refundPercentage = neverDelivered
+        var refundPercentage = fullRefund
             ? 100m
             : TicketRefundPolicy.Resolve(show).RefundPercentage;
         var refundRequest = new RefundRequest
@@ -148,7 +157,9 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
             RequestedBy = _currentUser.UserId,
             Reason = neverDelivered
                 ? "Buổi diễn không được tổ chức — hoàn 100%"
-                : "Audience yêu cầu hủy vé",
+                : changedAfterPurchase
+                    ? "Phòng trà đổi lịch hoặc địa chỉ sau khi mua vé — hoàn 100%"
+                    : "Audience yêu cầu hủy vé",
             AmountRequested = Math.Round(price.Price * refundPercentage / 100m, 2),
             RefundPercentage = refundPercentage,
             Status = RefundRequestStatus.Pending

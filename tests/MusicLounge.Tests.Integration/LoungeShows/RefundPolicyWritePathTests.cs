@@ -269,12 +269,12 @@ public sealed class RefundPolicyWritePathTests
     }
 
     [Fact]
-    public async Task Rescheduling_DropsADeadlineTheNewDateHasAlreadyMadeImpossible()
+    public async Task Rescheduling_LeavesTheOwnersPolicyForLaterBuyersAlone_AndRecordsWhenItHappened()
     {
-        // RescheduleLoungeShow re-opens cancellation because the venue moved the date. Before
-        // MLACP-288 that was the whole story; now the show can also carry a deadline it inherited
-        // from the old date, and a deadline further out than the new date is a reopened right that
-        // is shut again on the same line.
+        // MLACP-372. RescheduleLoungeShow used to re-open cancellation for good and drop a deadline the new date had
+        // made impossible — rewriting the owner's policy for every later buyer, who saw the new date before paying.
+        // Earlier buyers now get their own 100% window instead (ChangedAfterSaleRefundTests pins it, including when
+        // this very deadline can no longer be met); the owner's policy stays what the owner chose.
         int showId;
         using (var scope = _factory.Services.CreateScope())
         {
@@ -308,9 +308,10 @@ public sealed class RefundPolicyWritePathTests
             var show = await db.LoungeShows.SingleAsync(s => s.Id == showId);
 
             show.CancellationAllowed.Should().BeTrue();
-            show.CancellationDeadlineHours.Should().BeNull(
-                "keeping it would mean telling ticket holders their refund window reopened while " +
-                "the endpoint rejected every one of them");
+            show.CancellationDeadlineHours.Should().Be(TicketRefundPolicy.MaxCancellationDeadlineHours,
+                "that deadline is the policy later buyers are shown and held to");
+            db.Entry(show).Property<DateTimeOffset?>("RescheduledAt").CurrentValue.Should().NotBeNull(
+                "earlier buyers' own 100% window is measured from it");
         }
     }
 

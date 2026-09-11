@@ -3,6 +3,7 @@ using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Utils;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -72,33 +73,35 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
         if (show.ScheduledEnd.HasValue)
             show.ScheduledEnd = show.ScheduledEnd.Value + delta;
 
-        // D13: "mo cua so hoan tien theo refund_percentage" - dam bao ticket holder thuc su dung
-        // duoc CancelTicket sau khi doi lich (deadline se duoc tinh lai theo ScheduledStart moi).
-        show.CancellationAllowed = true;
-        // MLACP-288 made CancellationDeadlineHours settable, which turned the line above into half a
-        // promise: re-opening cancellation is worthless if the show's own deadline already sits in
-        // the past for the new date. The venue moved the date, so the venue absorbs the cost of the
-        // buyer no longer being able to meet a deadline they agreed to for a different evening.
-        if (!TicketRefundPolicy.IsDeadlineStillReachable(show, DateTimeOffset.UtcNow))
-            show.CancellationDeadlineHours = null;
+        // D13 + MLACP-372. Truoc day: bat CancellationAllowed = true VINH VIEN va bo han huy cua chu neu khong con dat
+        // duoc — nguoi mua SAU khi doi lich (da thay ngay moi) cung huy duoc, con nguoi mua TRUOC bi hoan theo
+        // RefundPercentage cua phong tra du chinh phong tra doi ngay. Nay chi ghi lai thoi diem doi: nguoi mua truoc
+        // duoc huy va hoan 100% toi TicketRefundPolicy.FullRefundWindowEnd (han huy theo lich moi; khong co / da qua
+        // luc doi thi toi gio bat dau — phong tra doi ngay thi phong tra chiu). Chinh sach cua chu giu nguyen.
+        var changedAt = DateTimeOffset.UtcNow;
+        show.RescheduledAt = changedAt;
         showRepo.Update(show);
+        var refundUntil = TicketRefundPolicy.FullRefundWindowEnd(show, changedAt);
 
         var tickets = await _uow.Repository<Ticket, Guid>().FindAsync(
             t => t.ShowId == show.Id && t.Status == TicketStatus.Confirmed && t.BuyerId != null, ct);
-        var buyerIds = tickets.Select(t => t.BuyerId!.Value).Distinct();
+        var payers = await TicketRefundRecipients.PayersAsync(_uow, tickets, ct);
 
         // Was NotificationType.EventReminder — collided with EventReminderJob's own dedup key
         // (Type=EventReminder + ReferenceType="show" + ReferenceId=show.Id, per buyer). The job
         // saw this reschedule notice, concluded the buyer was "already reminded" for the show, and
         // silently never sent the real pre-show reminder for the new date.
-        foreach (var buyerId in buyerIds)
+        foreach (var holding in tickets.GroupBy(t => t.BuyerId!.Value))
             await _notifications.NotifyAsync(
-                buyerId,
+                holding.Key,
                 NotificationType.EventRescheduled,
                 "Lịch diễn đã thay đổi",
                 $"\"{show.Name}\" đã đổi lịch từ {VietnamTime.Format(oldStart, "HH:mm dd/MM/yyyy")} sang " +
                 $"{VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}. " +
-                "Bạn có thể hủy vé để được hoàn tiền nếu không thể tham dự vào thời gian mới.",
+                TicketRefundPolicy.DescribeFullRefundWindow(refundUntil) +
+                (holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers))
+                    ? TicketRefundRecipients.TransferredHolderCancelNote
+                    : ""),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

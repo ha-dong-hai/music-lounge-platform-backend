@@ -193,7 +193,7 @@ public sealed class VenueIdentityChangeTests
     }
 
     [Fact]
-    public async Task DoiDiaChiMoCuaSoHoanTienVaKhachHuyVeDuocThat()
+    public async Task DoiDiaChiThiNguoiMuaTruocHuyDuocVaHoanDu_ChinhSachChoNguoiMuaSauGiuNguyen()
     {
         var venue = await CreateVenueAsync();
         var showId = await CreateShowAsync(venue.LoungeId, refundPercentage: 80m);
@@ -201,7 +201,8 @@ public sealed class VenueIdentityChangeTests
 
         (await UpdateAsync(venue, street: NewStreet)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await ShowAsync(showId)).CancellationAllowed.Should().BeTrue("đúng như khi phòng trà đổi lịch");
+        (await ShowAsync(showId)).CancellationAllowed.Should().BeFalse(
+            "MLACP-372: chính sách phòng trà cho người mua sau — đã thấy địa chỉ mới — giữ nguyên");
 
         var cancel = await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience")
             .PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
@@ -211,21 +212,31 @@ public sealed class VenueIdentityChangeTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var refund = await db.RefundRequests.SingleAsync(r => r.PaymentId == paymentId);
-        refund.RefundPercentage.Should().Be(80m, "theo đúng chính sách phòng trà đã công bố — như đổi lịch");
+        refund.RefundPercentage.Should().Be(100m,
+            "MLACP-372: phòng trà đổi địa chỉ sau khi khách mua — hoàn đủ, không theo mức 80% của phòng trà");
     }
 
     [Fact]
-    public async Task HanHuyKhongConDatDuocThiBoHan()
+    public async Task HanHuyKhongConDatDuocThiNguoiMuaTruocVanHuyDuocToiGioDien()
     {
-        // Buổi diễn còn 24 giờ, hạn huỷ là 48 giờ trước giờ diễn: mở lại quyền huỷ mà giữ hạn đó thì
-        // khách vẫn không huỷ được — nửa lời hứa.
+        // Buổi diễn còn 24 giờ, hạn huỷ là 48 giờ trước giờ diễn: hạn đó đã qua ngay lúc đổi địa chỉ. Trước đây hạn bị
+        // xoá khỏi buổi diễn — cho mọi người mua. MLACP-372: hạn của phòng trà giữ nguyên, còn người mua trước vẫn huỷ
+        // được, tới giờ diễn, và được hoàn đủ.
         var venue = await CreateVenueAsync();
         var showId = await CreateShowAsync(venue.LoungeId, startsInHours: 24, cancellationDeadlineHours: 48);
-        await AddTicketAsync(showId, SeedHelper.AudienceId);
+        var (ticketId, paymentId) = await AddTicketAsync(showId, SeedHelper.AudienceId);
 
         (await UpdateAsync(venue, street: NewStreet)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await ShowAsync(showId)).CancellationDeadlineHours.Should().BeNull();
+        (await ShowAsync(showId)).CancellationDeadlineHours.Should().Be(48);
+        (await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience")
+                .PostAsync($"/api/v1/tickets/{ticketId}/cancel", null))
+            .IsSuccessStatusCode.Should().BeTrue("hạn đã qua ngay lúc đổi thì cửa sổ kéo tới giờ diễn");
+
+        using var scope = _factory.Services.CreateScope();
+        (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().RefundRequests
+                .SingleAsync(r => r.PaymentId == paymentId))
+            .RefundPercentage.Should().Be(100m);
     }
 
     // ── Chỉ những ai thật sự phải tới địa chỉ đó ────────────────────────────
