@@ -17,7 +17,6 @@ public sealed class Payment : Common.BaseEntity<int>
     public decimal NetAmount { get; set; }                   // gross - platformFee - VAT - TNCN
     public PaymentMethod Method { get; set; } = PaymentMethod.Gateway;
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
-    public PaymentSettlementStatus SettlementStatus { get; set; } = PaymentSettlementStatus.NotApplicable;
     public string? IdempotencyKey { get; set; }              // prevent double-charge across all payment types
     public string? TransactionId { get; set; }              // vnp_TransactionNo
     public string? VnPayResponseCode { get; set; }

@@ -454,8 +454,13 @@ public sealed class SubscriptionTests
         res.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
+    // MLACP-378: xoa SubscriptionStatus.Suspended (khong noi nao trong src/ gan gia tri nay —
+    // CancelSubscriptionCommandHandler chi kiem Status == Active, khong co nhanh rieng cho Suspended,
+    // nen dat ten cu "CannotEscapePenaltyByCancelling" nham lan ve mot co che khong ton tai). Bai nay
+    // gio dung dung ban chat: gói đã Expired (một trạng thái không phải Active có thật trong hệ thống)
+    // thì không huỷ được nữa.
     [Fact]
-    public async Task Cancel_WhileSuspended_Returns409_CannotEscapePenaltyByCancelling()
+    public async Task Cancel_AnExpiredPlan_Returns409()
     {
         var packageId = await CreatePackageAsync(price: 250_000m);
         var ownerId = await CreateFreshOwnerAsync();
@@ -471,7 +476,7 @@ public sealed class SubscriptionTests
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var sub = await db.OwnerSubscriptions.SingleAsync(s => s.OwnerId == ownerId);
-            sub.Status = SubscriptionStatus.Suspended;
+            sub.Status = SubscriptionStatus.Expired;
             await db.SaveChangesAsync();
         }
 
