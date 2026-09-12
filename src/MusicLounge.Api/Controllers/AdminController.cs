@@ -321,7 +321,8 @@ public sealed class AdminController : ControllerBase
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
         await _sender.Send(
             new ProcessRefundRequestCommand(
-                id, body.Decision, body.ApprovedAmount, ip, body.ResolutionNote), ct);
+                id, body.Decision, body.ApprovedAmount, ip, body.ResolutionNote,
+                ManualTransferReference: body.ManualTransferReference), ct);
         return NoContent();
     }
 
@@ -524,8 +525,10 @@ public sealed record UpdateEventCategoryRequest(string Name, string? Description
 public sealed record ReviewShowRequest(string Decision, string? ReviewNote);
 
 public sealed record ReviewVenueRequest(string Decision, string? ReviewNote);
+/// <param name="ManualTransferReference">MLACP-384: chỉ gửi khi giao dịch đã quá hạn VNPay nhận lệnh hoàn và
+/// Admin đã tự chuyển khoản cho người mua — mã giao dịch ngân hàng của lần chuyển đó.</param>
 public sealed record ProcessRefundRequestBody(
-    string Decision, decimal? ApprovedAmount, string? ResolutionNote = null);
+    string Decision, decimal? ApprovedAmount, string? ResolutionNote = null, string? ManualTransferReference = null);
 
 public sealed record ReviewSettlementBody(string Decision, string Note);
 public sealed record RemoveRatingRequest(string Reason);
