@@ -20,7 +20,6 @@ internal sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.Property(p => p.NetAmount).HasPrecision(18, 2).HasDefaultValue(0m);
         b.Property(p => p.Method).HasConversion<string>().HasMaxLength(20).HasDefaultValue(PaymentMethod.Gateway);
         b.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
-        b.Property(p => p.SettlementStatus).HasConversion<string>().HasMaxLength(30).HasDefaultValue(PaymentSettlementStatus.NotApplicable);
         b.Property(p => p.IdempotencyKey).HasMaxLength(100);
         b.Property(p => p.TransactionId).HasMaxLength(100);
         b.Property(p => p.VnPayResponseCode).HasMaxLength(10);
