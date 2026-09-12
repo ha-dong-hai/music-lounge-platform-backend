@@ -17,6 +17,9 @@ internal sealed class VenuePenaltyConfiguration : IEntityTypeConfiguration<Venue
         b.Property(x => x.AppealReason).HasMaxLength(1000);
         b.Property(x => x.AppealResult).HasMaxLength(255);
         b.Property(x => x.CompensationNote).HasMaxLength(500);
+        // MLACP-378 (audit thiet ke DB): 3 cot MLACP-375 nay bi bo sot khong cau hinh tuong minh — chi
+        // song sot nho convention mac dinh cua EF Core, khong nhat quan voi phong cach ca file.
+        b.Property(x => x.SubscriptionCompensationDays).HasPrecision(18, 2);
 
         b.HasIndex(x => new { x.LoungeId, x.Status });
 
