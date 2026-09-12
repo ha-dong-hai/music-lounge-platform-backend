@@ -25,6 +25,16 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
+        // MLACP-380: cung quy uoc MLACP-354 da dat cho ve/donation — F&B bi bo sot. Cau cho nguoi mua khac cau cho
+        // nhan vien/chu phong tra (ExplainRestriction), giong SellWalkInTicketCommandHandler.
+        if (!VenueLifecycle.CanOperate(lounge.Status))
+        {
+            var isStaffSide = _currentUser.Role is Roles.Staff or Roles.Owner or Roles.Admin;
+            throw new DomainException(isStaffSide
+                ? $"{VenueLifecycle.ExplainRestriction(lounge.Status)} Không thể tạo order F&B lúc này."
+                : VenueLifecycle.TradingPausedForBuyers);
+        }
+
         // ZoneId/ShowId were accepted as-is with no check they actually belong to this LoungeId
         // (unlike MenuItemId below, which is validated) — order could silently point at another
         // venue's zone/show, showing up on the wrong venue's floor display.

@@ -173,7 +173,7 @@ public sealed class ApplyDuePenaltiesJob
             if (show is null || show.Status != LoungeShowStatus.Published) continue;
 
             total += await ShowCancellation.CancelAsync(
-                _uow, _notifications, show, ShowCancellation.VenueStoppedTrading, ct);
+                _uow, _notifications, _lock, show, ShowCancellation.VenueStoppedTrading, ct);
             await _uow.SaveChangesAsync(ct);
         }
 
@@ -190,6 +190,9 @@ public sealed class ApplyDuePenaltiesJob
         if (cancelled.WalkInTickets > 0)
             text += $" {cancelled.WalkInTickets} vé bán tại quầy không có tài khoản để nền tảng báo — phòng trà phải " +
                     "hoàn tiền mặt khi khách liên hệ và xác nhận đã trả trên hệ thống.";
+        // MLACP-380: don F&B chua dong gan voi cac show tren cung bi huy theo.
+        if (cancelled.FnbOrders > 0)
+            text += $" {cancelled.FnbOrders} đơn F&B chưa đóng cũng bị huỷ theo, kèm hoàn 100% cho phần đã trả trước.";
         return text;
     }
 }
