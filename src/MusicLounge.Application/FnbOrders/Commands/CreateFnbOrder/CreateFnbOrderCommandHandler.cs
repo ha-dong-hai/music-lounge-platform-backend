@@ -52,6 +52,13 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
                 ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId.Value);
             if (show.LoungeId != request.LoungeId)
                 throw new DomainException("Show này không thuộc venue này.");
+
+            // MLACP-390: don gan voi mot buoi dien la phuc vu khach tai cho cua buoi dien do. Buoi dien chi dien online
+            // hoac da bi huy thi khong co ai tai cho — va don se khong con duoc huy/hoan theo buoi dien nua.
+            if (show.Format == LoungeShowFormat.Online || show.Status == LoungeShowStatus.Cancelled)
+                throw new DomainException(
+                    "Buổi diễn này không có khán giả tại chỗ (chỉ diễn online hoặc đã bị huỷ) — không nhận order F&B " +
+                    "gắn với buổi diễn này.");
         }
 
         int? audienceUserId = null;

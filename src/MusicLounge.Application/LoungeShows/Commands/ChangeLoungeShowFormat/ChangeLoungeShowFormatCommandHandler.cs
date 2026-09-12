@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
@@ -103,6 +104,12 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                         ct: ct);
             }
         }
+
+        // MLACP-390: khong con khan gia tai cho — don F&B chua phuc vu gan voi buoi dien nay bi huy, tien tra truoc
+        // hoan 100%. Mon da mang ra (Served) la hang da giao, phong tra van thu. Cung thu tu khoa voi ShowCancellation:
+        // show-status-change (dang giu o tren) roi moi toi fnb-order:{id}.
+        await FnbOrderCancellation.CancelOpenOrdersAsync(
+            _uow, _notifications, _lock, o => o.ShowId == show.Id, servedToo: false, "buổi diễn chuyển sang online", ct);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
