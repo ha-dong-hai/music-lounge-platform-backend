@@ -66,6 +66,11 @@ internal sealed class SellWalkInTicketCommandHandler
         if (show.Status is not LoungeShowStatus.Published and not LoungeShowStatus.Ongoing)
             throw new DomainException("Không thể bán vé cho show này.");
 
+        // MLACP-383: cung quy tac voi ban online — quay ve ban vao cua cho mot buoi dien da chuyen online la thu
+        // tien cho mot cho ngoi khong con.
+        if (!PhysicalAccess.IsOffered(show, tier.AccessType))
+            throw new DomainException(PhysicalAccess.NoLongerOffered);
+
         // MLACP-354: cung quy tac voi ban vé online. Nguoi doc cau nay la nhan vien/chu phong tra, nen
         // noi dung ly do (ExplainRestriction) — khac voi cau cho nguoi mua.
         var venueStatus = await VenueLifecycle.StatusOfAsync(_uow, show.LoungeId, ct);

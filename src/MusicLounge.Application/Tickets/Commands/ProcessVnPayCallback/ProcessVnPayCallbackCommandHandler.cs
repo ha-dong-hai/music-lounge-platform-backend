@@ -132,9 +132,19 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             // huy trong luc khach con tren trang VNPay — ShowCancellation chi hoan ve Confirmed nen bo qua ve nay —
             // roi tien ve: ve bi chuyen Confirmed cho mot buoi dien khong con to chuc, khong ai tao yeu cau hoan.
             if (tickets.Count > 0
-                && await _uow.Repository<LoungeShow, int>().GetByIdAsync(tickets[0].ShowId, ct) is
-                    { Status: LoungeShowStatus.Cancelled } cancelledShow)
-                return await RecordNotIssuedAsync(payment, tickets, cancelledShow, result, txnRef, ct);
+                && await _uow.Repository<LoungeShow, int>().GetByIdAsync(tickets[0].ShowId, ct) is { } showNow)
+            {
+                if (showNow.Status == LoungeShowStatus.Cancelled)
+                    return await RecordNotIssuedAsync(
+                        payment, tickets, showNow, NotIssued.ShowCancelled, result, txnRef, ct);
+
+                // MLACP-383: cung ke ho do voi ChangeLoungeShowFormat — no chi hoan ve vao cua da Confirmed, con ve
+                // vao cua dang Pending luc buoi dien chuyen online thi den day moi co tien.
+                var tierNow = await _uow.Repository<TicketTier, int>().GetByIdAsync(tickets[0].TierId, ct);
+                if (tierNow is not null && !PhysicalAccess.IsOffered(showNow, tierNow.AccessType))
+                    return await RecordNotIssuedAsync(
+                        payment, tickets, showNow, NotIssued.WentOnline, result, txnRef, ct);
+            }
 
             payment.Status = PaymentStatus.Confirmed;
             payment.TransactionId = result.TransactionId;
@@ -235,9 +245,25 @@ internal sealed class ProcessVnPayCallbackCommandHandler
     /// đảo bút toán cho thanh toán <c>Failed</c>, vì bút toán mua chỉ được ghi khi vé được xác nhận.</para>
     /// </summary>
     private async Task<VnPayIpnOutcome> RecordNotIssuedAsync(
-        Payment payment, IReadOnlyList<Ticket> tickets, LoungeShow show, VnPayCallbackResult result,
+        Payment payment, IReadOnlyList<Ticket> tickets, LoungeShow show, NotIssued why, VnPayCallbackResult result,
         string? txnRef, CancellationToken ct)
     {
+        var (refundReason, noticeType, noticeTitle, whatHappened, incidentLabel) = why switch
+        {
+            NotIssued.WentOnline => (
+                $"Tiền về cho vé vào cửa của buổi diễn #{show.Id} đã chuyển sang online — hoàn 100% (D13)",
+                NotificationType.EventFormatChanged,
+                "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
+                "buổi diễn đã chuyển sang hình thức online trong lúc bạn đang thanh toán nên vé vào cửa không được cấp",
+                "ve vao cua cua buoi dien da chuyen online"),
+            _ => (
+                $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
+                NotificationType.EventCancelled,
+                "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",
+                "buổi diễn đã bị huỷ trong lúc bạn đang thanh toán nên vé không được cấp",
+                "ve cua buoi dien da huy")
+        };
+
         var now = DateTimeOffset.UtcNow;
 
         payment.Status = PaymentStatus.Failed;
@@ -262,7 +288,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         {
             PaymentId = payment.Id,
             RequestedBy = payerId,
-            Reason = $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
+            Reason = refundReason,
             AmountRequested = payment.GrossAmount,
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
@@ -271,10 +297,10 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         if (payerId is int buyerId)
             await _notifications.NotifyAsync(
                 buyerId,
-                NotificationType.EventCancelled,
-                "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",
+                noticeType,
+                noticeTitle,
                 $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) cho vé \"{show.Name}\" đã bị trừ " +
-                "tiền, nhưng buổi diễn đã bị huỷ trong lúc bạn đang thanh toán nên vé không được cấp. Chúng tôi đã " +
+                $"tiền, nhưng {whatHappened}. Chúng tôi đã " +
                 "tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — bạn không cần làm gì " +
                 "thêm và sẽ được báo khi yêu cầu được xử lý.",
                 referenceType: "show",
@@ -285,14 +311,24 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogWarning(
-            "VNPay ticket payment arrived for a cancelled show — tickets not issued, full refund queued: " +
+            "VNPay ticket payment arrived but tickets were not issued ({Why}) — full refund queued: " +
             "PaymentId={PaymentId} TxnRef={TxnRef} ShowId={ShowId} Amount={Amount} at {At}",
-            payment.Id, txnRef, show.Id, payment.GrossAmount, now);
+            why, payment.Id, txnRef, show.Id, payment.GrossAmount, now);
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
-            _uow, _notifications, _logger, "ve cua buoi dien da huy", txnRef, result.Amount,
+            _uow, _notifications, _logger, incidentLabel, txnRef, result.Amount,
             "payment", payment.Id.ToString(), ct);
 
         return VnPayIpnOutcome.ConfirmedTooLate;
+    }
+
+    /// <summary>Vì sao vé không được cấp dù VNPay đã thu tiền.</summary>
+    private enum NotIssued
+    {
+        /// <summary>MLACP-382: buổi diễn bị huỷ trong lúc khách đang trả tiền.</summary>
+        ShowCancelled,
+
+        /// <summary>MLACP-383: vé vào cửa, buổi diễn chuyển sang online trong lúc khách đang trả tiền — D13 hoàn 100%.</summary>
+        WentOnline
     }
 }
