@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.FnbOrders.DTOs;
@@ -46,6 +47,12 @@ internal sealed class InitiateFnbOrderPaymentCommandHandler
 
         if (order.Status == FnbOrderStatus.Cancelled)
             throw new DomainException("Đơn này đã bị huỷ, không thể thanh toán.");
+
+        // MLACP-380: cung quy uoc MLACP-354 — nguoi tra tien luon la Audience (kiem o tren), nen chi can cau
+        // cho nguoi mua.
+        if (await VenueLifecycle.StatusOfAsync(_uow, order.LoungeId, ct) is not { } venueStatus
+            || !VenueLifecycle.CanOperate(venueStatus))
+            throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
 
         // MLACP-349: truoc day chi soi Status == Paid. Don tra truoc qua VNPay nay khong con nhay sang
         // Paid (bep van phai lam tiep), nen phai hoi bang payments — khong thi khach tra duoc lan hai.
