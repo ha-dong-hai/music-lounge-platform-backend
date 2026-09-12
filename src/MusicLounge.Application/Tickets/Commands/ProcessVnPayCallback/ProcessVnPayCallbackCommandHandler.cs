@@ -94,6 +94,24 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                     && payment.TransactionId == result.TransactionId)
                     return VnPayIpnOutcome.ConfirmedTooLate;
 
+                // MLACP-385: thanh toan da bi dong truoc khi tien ve — khach tu huy ve dang cho (CancelTicket) hoac
+                // CancelAbandonedPaymentsJob dong vi qua han — ma chua ve nao duoc cap. Truoc day chi bao Admin: tien
+                // cua khach treo toi khi co nguoi xu ly tay. Van KHONG tu cap lai ve (ly do MLACP-334: cho co the da ban
+                // cho nguoi khac) — nhung don khong duoc dap ung thi khong giu tien cua khach (Ticketmaster: "can't be
+                // fulfilled, your card won't be charged"): tu tao yeu cau hoan 100%, Admin van duoc bao va van co the
+                // tu choi yeu cau de cap lai ve bang tay neu khach muon.
+                if (payment.Status == PaymentStatus.Failed
+                    && string.IsNullOrEmpty(payment.TransactionId)
+                    && result.Amount == payment.GrossAmount)
+                {
+                    var closedTickets = await _uow.Repository<Ticket, Guid>().FindAsync(t => t.PaymentId == payment.Id, ct);
+                    if (closedTickets.Count > 0
+                        && closedTickets.All(t => t.Status is TicketStatus.Cancelled or TicketStatus.Pending)
+                        && await _uow.Repository<LoungeShow, int>().GetByIdAsync(closedTickets[0].ShowId, ct) is { } closedShow)
+                        return await RecordNotIssuedAsync(
+                            payment, closedTickets, closedShow, NotIssued.OrderClosed, result, txnRef, ct);
+                }
+
                 await PaymentIncident.RecordConfirmedTooLateAsync(
                     _uow, _notifications, _logger, "mua ve", txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
@@ -256,6 +274,12 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
                 "buổi diễn đã chuyển sang hình thức online trong lúc bạn đang thanh toán nên vé vào cửa không được cấp",
                 "ve vao cua cua buoi dien da chuyen online"),
+            NotIssued.OrderClosed => (
+                $"Tiền về sau khi đơn vé của buổi diễn #{show.Id} đã đóng (khách huỷ hoặc quá hạn thanh toán) — vé không được cấp, hoàn 100%",
+                NotificationType.RefundUpdate,
+                "Vé không được cấp — bạn sẽ được hoàn tiền",
+                "đơn vé này đã được huỷ hoặc đã hết hạn thanh toán trước khi tiền về nên vé không được cấp",
+                "mua ve (don da dong truoc khi tien ve)"),
             _ => (
                 $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
                 NotificationType.EventCancelled,
@@ -329,6 +353,10 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         ShowCancelled,
 
         /// <summary>MLACP-383: vé vào cửa, buổi diễn chuyển sang online trong lúc khách đang trả tiền — D13 hoàn 100%.</summary>
-        WentOnline
+        WentOnline,
+
+        /// <summary>MLACP-385: thanh toán đã bị đóng (khách tự huỷ vé đang chờ, hoặc quá hạn thanh toán) trước khi tiền
+        /// về, và chưa vé nào được cấp. Không tự cấp lại vé (MLACP-334) — hoàn 100%.</summary>
+        OrderClosed
     }
 }

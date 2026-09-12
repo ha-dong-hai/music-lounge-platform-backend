@@ -486,7 +486,9 @@ public sealed class TicketBookingTests
             Status = PaymentStatus.Pending,
             ReferenceType = "TicketHold",
             ReferenceId = "0",
-            CreatedAt = DateTimeOffset.UtcNow
+            // MLACP-385: link VNPay (15 phut) da het han — luc link con hieu luc CancelTicket chan huy (409, xem
+            // LatePaymentAfterTicketClosedTests). Bai nay giu dung muc dich cu: huy khong can cho job, khong tao yeu cau hoan.
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-20)
         };
         db.Add(payment);
         await db.SaveChangesAsync();
