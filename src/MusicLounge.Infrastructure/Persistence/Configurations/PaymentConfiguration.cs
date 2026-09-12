@@ -17,6 +17,9 @@ internal sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.Property(p => p.GatewayFee).HasPrecision(18, 2).HasDefaultValue(0m);
         b.Property(p => p.PlatformFee).HasPrecision(18, 2).HasDefaultValue(0m);
         b.Property(p => p.TaxWithheld).HasPrecision(18, 2).HasDefaultValue(0m);
+        // MLACP-378 (audit thiet ke DB): bi bo sot khi them (MLACP-289) — chi song sot nho convention
+        // mac dinh cua EF Core, khong nhat quan voi TaxWithheld cung muc dich ngay tren.
+        b.Property(p => p.PersonalIncomeTaxWithheld).HasPrecision(18, 2).HasDefaultValue(0m);
         b.Property(p => p.NetAmount).HasPrecision(18, 2).HasDefaultValue(0m);
         b.Property(p => p.Method).HasConversion<string>().HasMaxLength(20).HasDefaultValue(PaymentMethod.Gateway);
         b.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
