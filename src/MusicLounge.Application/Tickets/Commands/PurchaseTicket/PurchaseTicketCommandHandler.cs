@@ -68,6 +68,10 @@ internal sealed class PurchaseTicketCommandHandler
             throw new DomainException(
                 $"Show này không còn mở bán vé (trạng thái hiện tại: '{show.Status}'). Vui lòng quay lại trang show để kiểm tra tình trạng bán vé mới nhất.");
 
+        // MLACP-383: hoi lai o day, khong chi o HoldTicket — cho giu co the duoc tao truoc khi buoi dien chuyen online.
+        if (!PhysicalAccess.IsOffered(show, tier.AccessType))
+            throw new DomainException(PhysicalAccess.NoLongerOffered);
+
         // Hoi lai o day chu khong chi o HoldTicket: cho giu duoc tao truoc khi phong tra bi dinh chi,
         // con tien thi thu SAU.
         // MLACP-354: VenueLifecycle.CanOperate quyet "ban ve, nhan donation" — nhung truoc day khong
