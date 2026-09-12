@@ -34,7 +34,9 @@ public sealed class TicketTiersController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<TicketTierSummaryDto>>.Ok(result));
     }
 
-    /// <summary>Chỉ thêm được khi buổi diễn còn Draft. Tổng TotalCapacity của mọi hạng vé không được
+    /// <summary>Thêm được khi buổi diễn còn Draft. MLACP-388: buổi diễn đã đăng (Published/Ongoing) chỉ được thêm hạng
+    /// vé livestream, khi hình thức là Online/Hybrid và đã có livestream — giá của hạng vé đó chờ Admin duyệt
+    /// (POST /moderations/ticket-tiers/{id}/review) mới mở bán. Tổng TotalCapacity của mọi hạng vé không được
     /// vượt giới hạn vé/event của gói subscription đang hoạt động.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]

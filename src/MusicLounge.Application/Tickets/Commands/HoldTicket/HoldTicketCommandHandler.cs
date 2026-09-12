@@ -58,6 +58,12 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
         if (!PhysicalAccess.IsOffered(show, tier.AccessType))
             throw new DomainException(PhysicalAccess.NoLongerOffered);
 
+        // MLACP-388: gia cua hang ve them sau khi buoi dien da dang chi mo ban khi Admin da duyet. Truoc task nay khong
+        // diem ban nao hoi IsActive — co nay ton tai ma khong co tac dung. Thanh toan luon di sau mot cho da giu, va ban
+        // tai quay chi ban ve vao cua, nen chot o day la du.
+        if (!price.IsActive)
+            throw new DomainException("Hạng vé này đang chờ duyệt, chưa mở bán.");
+
         // MLACP-354: VenueLifecycle.CanOperate quyet "ban ve, nhan donation" — nhung truoc day khong
         // lenh thu tien nao hoi no. Phong tra dang bi tam dinh chi / khoa vinh vien bi an khoi danh
         // sach, nhung ai co duong dan van tra tien that duoc.

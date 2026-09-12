@@ -21,7 +21,8 @@ internal static class LoungeShowMappingExtensions
     private static LoungeShowListItemDto ToListItemDtoCore(
         this LoungeShow show, bool? isWishlisted)
     {
-        var prices = show.TicketTiers.SelectMany(t => t.Prices).ToList();
+        // MLACP-388: gia chua duyet khong phai gia dang ban — khong dua vao khoang gia hien cho nguoi mua.
+        var prices = show.TicketTiers.SelectMany(t => t.Prices).Where(p => p.IsActive).ToList();
         return new LoungeShowListItemDto(
             show.Id,
             show.Name,
@@ -69,7 +70,9 @@ internal static class LoungeShowMappingExtensions
                show.Lounge.ToSummaryDto(galleryImages ?? []),
                show.Performances.OrderBy(p => p.OrderIndex)
                    .Select(p => p.Performer.ToSummaryDto(p.Id, p.AcceptsDonation, p.Role, p.SetTime)).ToList(),
-               show.TicketTiers.Select(t => t.ToSummaryDto(soldAndHeld, lastEntry)).ToList(),
+               // MLACP-388: an hang ve ma moi gia deu dang cho duyet — nguoi mua khong mua duoc no.
+               show.TicketTiers.Where(t => t.Prices.Count == 0 || t.Prices.Any(p => p.IsActive))
+                   .Select(t => t.ToSummaryDto(soldAndHeld, lastEntry)).ToList(),
                show.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
                show.Moods.Select(m => new MoodDto(m.Mood.Id, m.Mood.Name)).ToList(),
                show.Atmospheres.Select(a => new AtmosphereDto(a.Atmosphere.Id, a.Atmosphere.Name)).ToList(),
@@ -118,7 +121,8 @@ internal static class LoungeShowMappingExtensions
     internal static RecommendedLoungeShowDto ToRecommendedDto(
         this LoungeShow show, float score, string reason)
     {
-        var prices = show.TicketTiers.SelectMany(t => t.Prices).ToList();
+        // MLACP-388: gia chua duyet khong phai gia dang ban — khong dua vao khoang gia hien cho nguoi mua.
+        var prices = show.TicketTiers.SelectMany(t => t.Prices).Where(p => p.IsActive).ToList();
         return new RecommendedLoungeShowDto(
             show.Id, show.Name, show.DisplayImageUrl(),
             show.Lounge.Name, show.Lounge.Address.District, show.Lounge.Address.City,
@@ -159,7 +163,7 @@ internal static class LoungeShowMappingExtensions
     private static TicketTierSummaryDto ToSummaryDto(
         this TicketTier tier, IReadOnlyDictionary<int, int>? soldAndHeld, DateTimeOffset lastEntry)
         => new(tier.Id, tier.Name, tier.Description, tier.AccessType, tier.TotalCapacity, tier.ZoneId,
-               tier.Prices.Select(p => p.ToSummaryDto(soldAndHeld, lastEntry)).ToList());
+               tier.Prices.Where(p => p.IsActive).Select(p => p.ToSummaryDto(soldAndHeld, lastEntry)).ToList());
 
     /// <param name="lastEntry">
     /// BR-31: giờ nhận khách cuối của buổi diễn. Không đợt bán nào đóng muộn hơn mốc này, và đợt
