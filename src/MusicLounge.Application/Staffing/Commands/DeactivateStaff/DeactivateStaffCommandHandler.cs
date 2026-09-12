@@ -15,10 +15,13 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<DeactivateStaffCommandHandler> _logger;
+    private readonly INotificationService _notifications;
 
     public DeactivateStaffCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<DeactivateStaffCommandHandler> logger)
+        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<DeactivateStaffCommandHandler> logger,
+        INotificationService notifications)
     {
+        _notifications = notifications;
         _uow = uow;
         _currentUser = currentUser;
         _logger = logger;
@@ -43,6 +46,7 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
 
         assignment.IsActive = false;
         assignment.DeactivatedAt = DateTimeOffset.UtcNow;
+        assignment.DeactivatedBy = _currentUser.UserId;
         staffRepo.Update(assignment);
 
         // AssignStaffCommandHandler thang cap Audience -> Staff luc gan; o day phai lam nguoc lai
@@ -60,6 +64,20 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
                 userRepo.Update(user);
             }
         }
+
+        // MLACP-391: cung ly do voi AssignStaff — chu phong tra phai biet ai vua mat quyen soat ve/ban quay cua ho.
+        var staffName = user?.FullName ?? $"tài khoản #{assignment.UserId}";
+        if (_currentUser.UserId != lounge.OwnerId)
+            await _notifications.NotifyAsync(
+                lounge.OwnerId,
+                NotificationType.VenueStaffChanged,
+                "Quản trị viên đã gỡ một nhân viên khỏi phòng trà của bạn",
+                $"Quản trị viên đã gỡ {staffName} khỏi danh sách nhân viên của " +
+                $"\"{lounge.Name}\" — tài khoản này không còn soát vé hay bán tại quầy cho phòng trà. Nếu bạn cần biết lý " +
+                "do, hãy liên hệ bộ phận hỗ trợ.",
+                referenceType: "lounge",
+                referenceId: lounge.Id.ToString(),
+                ct: ct);
 
         await _uow.SaveChangesAsync(ct);
 

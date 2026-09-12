@@ -7,4 +7,5 @@ public sealed record LoungeStaffDto(
     string Email,
     bool IsActive,
     DateTimeOffset AssignedAt,
-    DateTimeOffset? DeactivatedAt);
+    DateTimeOffset? DeactivatedAt,
+    int? DeactivatedBy);

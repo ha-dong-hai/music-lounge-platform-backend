@@ -46,7 +46,8 @@ internal sealed class GetLoungeStaffQueryHandler
                 usersById.TryGetValue(a.UserId, out var u2) ? u2.Email : "",
                 a.IsActive,
                 a.AssignedAt,
-                a.DeactivatedAt))
+                a.DeactivatedAt,
+                a.DeactivatedBy))
             .ToList();
     }
 }
