@@ -162,6 +162,14 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 if (tierNow is not null && !PhysicalAccess.IsOffered(showNow, tierNow.AccessType))
                     return await RecordNotIssuedAsync(
                         payment, tickets, showNow, NotIssued.WentOnline, result, txnRef, ct);
+
+                // MLACP-389: buoi dien da KET THUC luc tien ve. Ve cua giao dich nay con Pending nen chua tung soat duoc —
+                // CheckIn doi show Ongoing VA ve Confirmed — nen cap ve bay gio la ban ve cho mot buoi dien da xong. Tru ve
+                // livestream con xem lai duoc ban ghi: nguoi mua van nhan duoc thu minh tra tien (xem ReplayStillDeliverable).
+                if (showNow.Status == LoungeShowStatus.Ended
+                    && !await ReplayStillDeliverableAsync(showNow, tierNow, ct))
+                    return await RecordNotIssuedAsync(
+                        payment, tickets, showNow, NotIssued.ShowEnded, result, txnRef, ct);
             }
 
             payment.Status = PaymentStatus.Confirmed;
@@ -274,6 +282,12 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
                 "buổi diễn đã chuyển sang hình thức online trong lúc bạn đang thanh toán nên vé vào cửa không được cấp",
                 "ve vao cua cua buoi dien da chuyen online"),
+            NotIssued.ShowEnded => (
+                $"Tiền về sau khi buổi diễn #{show.Id} đã kết thúc — vé không được cấp, hoàn 100%",
+                NotificationType.RefundUpdate,
+                "Buổi diễn đã kết thúc — bạn sẽ được hoàn tiền",
+                "buổi diễn đã kết thúc trước khi giao dịch được xác nhận nên vé không được cấp",
+                "ve cua buoi dien da ket thuc"),
             NotIssued.OrderClosed => (
                 $"Tiền về sau khi đơn vé của buổi diễn #{show.Id} đã đóng (khách huỷ hoặc quá hạn thanh toán) — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
@@ -346,6 +360,21 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         return VnPayIpnOutcome.ConfirmedTooLate;
     }
 
+    /// <summary>
+    /// MLACP-389. Vé livestream của buổi diễn đã kết thúc vẫn giao được giá trị khi người mua xem lại được bản ghi NGAY
+    /// BÂY GIỜ — đúng điều kiện <c>GetLivestreamDetailQueryHandler</c> dùng khi trả link xem lại: có
+    /// <c>RecordingUrl</c> (Mux asset.ready đã về) và chưa quá <c>ReplayAvailableUntil</c>. Bản ghi chưa về thì không
+    /// hứa trước: có buổi không bao giờ có bản ghi, nên hoàn tiền là lựa chọn không để ai trả tiền mà không nhận gì.
+    /// Vé vào cửa thì không.
+    /// </summary>
+    private async Task<bool> ReplayStillDeliverableAsync(LoungeShow show, TicketTier? tier, CancellationToken ct)
+    {
+        if (tier?.AccessType != AccessType.Livestream) return false;
+        var livestream = await _livestreamRepo.GetByShowIdAsync(show.Id, ct);
+        return livestream?.RecordingUrl is not null
+               && (livestream.ReplayAvailableUntil is null || DateTimeOffset.UtcNow <= livestream.ReplayAvailableUntil);
+    }
+
     /// <summary>Vì sao vé không được cấp dù VNPay đã thu tiền.</summary>
     private enum NotIssued
     {
@@ -357,6 +386,10 @@ internal sealed class ProcessVnPayCallbackCommandHandler
 
         /// <summary>MLACP-385: thanh toán đã bị đóng (khách tự huỷ vé đang chờ, hoặc quá hạn thanh toán) trước khi tiền
         /// về, và chưa vé nào được cấp. Không tự cấp lại vé (MLACP-334) — hoàn 100%.</summary>
-        OrderClosed
+        OrderClosed,
+
+        /// <summary>MLACP-389: buổi diễn đã kết thúc khi tiền về, và vé không còn giao được gì (vé vào cửa, hoặc vé
+        /// livestream không có bản ghi xem lại còn hạn).</summary>
+        ShowEnded
     }
 }
