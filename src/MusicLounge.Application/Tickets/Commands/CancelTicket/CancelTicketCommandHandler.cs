@@ -34,24 +34,40 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         if (ticket.BuyerId != _currentUser.UserId)
             throw new ForbiddenException("Vé này không thuộc về bạn.");
 
-        // Ve Pending = don thanh toan chua hoan tat (chua tung tra tien that) — cho phep buyer tu
-        // huy bo NGAY, khong can cho het 15-30 phut de job nen tu dong huy. Khac hoan toan ve
-        // Confirmed (da tra tien that, huy phai qua RefundRequest o duoi) nen tach nhanh rieng,
-        // khong ap dung chinh sach huy/deadline cua show (nhung dieu do chi danh cho ve da mua that).
+        // Ve Pending = don thanh toan chua hoan tat — cho phep buyer tu huy ma khong can cho job nen tu dong huy.
+        // MLACP-385: tru luc link VNPay cua no con hieu luc (xem chot ben duoi) — "chua tung tra tien that" chi dung
+        // khi khach khong con tra duoc nua. Khac hoan toan ve Confirmed (da tra tien that, huy phai qua RefundRequest
+        // o duoi) nen tach nhanh rieng, khong ap dung chinh sach huy/deadline cua show (nhung dieu do chi danh cho ve
+        // da mua that).
         if (ticket.Status == TicketStatus.Pending)
         {
+            var pendingPayment = ticket.PaymentId is { } paymentId
+                ? await _uow.Repository<Payment, int>().GetByIdAsync(paymentId, ct)
+                : null;
+            var now = DateTimeOffset.UtcNow;
+
+            // MLACP-385: VNPay khong co lenh huy mot link thanh toan dang mo, nen huy ve luc link con hieu luc khong
+            // ngan duoc khach tra tien — khach bi tru tien cho mot ve da huy. Chan tu goc nhu Stripe ("cancel a payment
+            // before it's completed") va nhu chinh don F&B (MLACP-349: khong huy khi giao dich online con chay). Link
+            // het han sau VnPayPaymentWindow; tien ve muon sau do (IPN goi lai toi ~50 phut) do IPN hoan tu dong.
+            if (pendingPayment is { Status: PaymentStatus.Pending, Method: PaymentMethod.Gateway }
+                && pendingPayment.CreatedAt.AddMinutes(VnPayPaymentWindow.Minutes) > now)
+            {
+                var minutesLeft = Math.Max(1, (int)Math.Ceiling(
+                    (pendingPayment.CreatedAt.AddMinutes(VnPayPaymentWindow.Minutes) - now).TotalMinutes));
+                throw new ConflictException(
+                    $"Vé này đang có giao dịch VNPay còn hiệu lực khoảng {minutesLeft} phút. Huỷ lúc này thì bạn vẫn " +
+                    "có thể bị trừ tiền cho một vé đã huỷ — hãy hoàn tất thanh toán, hoặc chờ link hết hạn rồi huỷ.");
+            }
+
             ticket.Status = TicketStatus.Cancelled;
             ticketRepo.Update(ticket);
 
-            if (ticket.PaymentId.HasValue)
+            if (pendingPayment is not null && pendingPayment.Status == PaymentStatus.Pending)
             {
-                var pendingPayment = await _uow.Repository<Payment, int>().GetByIdAsync(ticket.PaymentId.Value, ct);
-                if (pendingPayment is not null && pendingPayment.Status == PaymentStatus.Pending)
-                {
-                    pendingPayment.Status = PaymentStatus.Failed;
-                    pendingPayment.UpdatedAt = DateTimeOffset.UtcNow;
-                    _uow.Repository<Payment, int>().Update(pendingPayment);
-                }
+                pendingPayment.Status = PaymentStatus.Failed;
+                pendingPayment.UpdatedAt = now;
+                _uow.Repository<Payment, int>().Update(pendingPayment);
             }
 
             await _uow.SaveChangesAsync(ct);
