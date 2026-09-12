@@ -6,6 +6,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Refunds.Commands.ConfirmCashRefundHandedBack;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Refunds.DTOs;
+using MusicLounge.Application.Refunds.Commands.ProvideRefundPayoutAccount;
 using MusicLounge.Application.Refunds.Queries.GetMyRefundRequests;
 using MusicLounge.Application.Tickets.Commands.AcceptTicketTransfer;
 using MusicLounge.Application.Tickets.Commands.CancelHold;
@@ -213,6 +214,25 @@ public sealed class TicketsController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<RefundRequestDto>>.Ok(result));
     }
 
+    /// <summary>MLACP-387: người mua tự khai tài khoản ngân hàng và đồng ý nhận hoàn bằng chuyển khoản — chỉ cho yêu cầu
+    /// hoàn của chính mình, còn chờ xử lý, mà giao dịch gốc qua VNPay đã quá hạn VNPay nhận lệnh hoàn (422 nếu còn hoàn
+    /// được về phương thức đã thanh toán). Gửi lại để sửa tài khoản khi yêu cầu còn chờ. Luật BVQLNTD 2023 Điều 38 khoản 4:
+    /// hoàn bằng phương thức khác chỉ khi người tiêu dùng đồng ý.</summary>
+    [HttpPut("refund-requests/{id:int}/payout-account")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ProvideRefundPayoutAccount(
+        int id, [FromBody] ProvideRefundPayoutAccountRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ProvideRefundPayoutAccountCommand(
+            id, body.BankName, body.AccountNumber, body.AccountHolder, body.Consent), ct);
+        return NoContent();
+    }
+
     // ---- Chuyển nhượng vé ----
 
     /// <summary>Khởi tạo chuyển nhượng vé cho người nhận qua email — chỉ chủ vé, vé phải Confirmed,
@@ -273,3 +293,6 @@ public sealed class TicketsController : ControllerBase
 public sealed record InitiateTransferRequest(string RecipientEmail);
 
 public sealed record PurchaseTicketRequest(int HoldId);
+
+public sealed record ProvideRefundPayoutAccountRequest(
+    string BankName, string AccountNumber, string AccountHolder, bool Consent);

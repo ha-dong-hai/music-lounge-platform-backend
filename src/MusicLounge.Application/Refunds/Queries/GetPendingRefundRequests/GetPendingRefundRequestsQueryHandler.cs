@@ -33,12 +33,21 @@ internal sealed class GetPendingRefundRequestsQueryHandler
         // dang duoc hen, chu khong phai mot moc khac.
         var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, 72, ct);
 
+        // MLACP-387: Admin can thay yeu cau nao dang cho nguoi mua khai tai khoan, va tai khoan da khai de chuyen khoan.
+        var paymentIds = pending.Select(r => r.PaymentId).Distinct().ToList();
+        var payments = (await _uow.Repository<Payment, int>().FindAsync(p => paymentIds.Contains(p.Id), ct))
+            .ToDictionary(p => p.Id);
+        var windowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
+        var now = DateTimeOffset.UtcNow;
+
         var items = pending
             .Select(r => new RefundRequestDto(
                 r.Id, r.PaymentId, r.RequestedBy, r.Reason, r.AmountRequested,
                 r.AmountApproved, r.RefundPercentage, r.Status,
                 new DateTimeOffset(r.CreatedAt, TimeSpan.Zero), r.ResolvedAt,
-                new DateTimeOffset(r.CreatedAt, TimeSpan.Zero).AddHours(slaHours)))
+                new DateTimeOffset(r.CreatedAt, TimeSpan.Zero).AddHours(slaHours),
+                RefundGatewayWindow.NeedsPayoutAccount(r, payments.GetValueOrDefault(r.PaymentId), windowDays, now),
+                r.PayoutBankName, r.PayoutAccountNumber, r.PayoutAccountHolder, r.PayoutConsentAt))
             .ToList();
 
         return new PaginatedResult<RefundRequestDto>(items, page, size, total);

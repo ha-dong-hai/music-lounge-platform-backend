@@ -35,6 +35,13 @@ internal sealed class GetMyRefundRequestsQueryHandler
         // phai la cung mot con so, neu khong thi mot ben se im lang trong khi ben kia da tre han.
         var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, 72, ct);
 
+        // MLACP-387: nguoi mua phai thay yeu cau nao dang cho ho khai tai khoan nhan hoan.
+        var paymentIds = mine.Select(r => r.PaymentId).Distinct().ToList();
+        var payments = (await _uow.Repository<Payment, int>().FindAsync(p => paymentIds.Contains(p.Id), ct))
+            .ToDictionary(p => p.Id);
+        var windowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
+        var now = DateTimeOffset.UtcNow;
+
         var ordered = mine.OrderByDescending(r => r.CreatedAt).ToList();
         var items = ordered
             .Skip((page - 1) * size)
@@ -45,7 +52,9 @@ internal sealed class GetMyRefundRequestsQueryHandler
                 new DateTimeOffset(r.CreatedAt, TimeSpan.Zero), r.ResolvedAt,
                 r.Status == RefundRequestStatus.Pending
                     ? new DateTimeOffset(r.CreatedAt, TimeSpan.Zero).AddHours(slaHours)
-                    : null))
+                    : null,
+                RefundGatewayWindow.NeedsPayoutAccount(r, payments.GetValueOrDefault(r.PaymentId), windowDays, now),
+                r.PayoutBankName, r.PayoutAccountNumber, r.PayoutAccountHolder, r.PayoutConsentAt))
             .ToList();
 
         return new PaginatedResult<RefundRequestDto>(items, page, size, ordered.Count);

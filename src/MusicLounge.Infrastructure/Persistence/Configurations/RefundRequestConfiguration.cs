@@ -16,6 +16,10 @@ internal sealed class RefundRequestConfiguration : IEntityTypeConfiguration<Refu
         b.Property(x => x.AmountApproved).HasPrecision(18, 2);
         b.Property(x => x.RefundPercentage).HasPrecision(5, 2);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+        // MLACP-387: tai khoan nguoi mua tu khai de nhan hoan bang chuyen khoan (qua han VNPay).
+        b.Property(x => x.PayoutBankName).HasMaxLength(100);
+        b.Property(x => x.PayoutAccountNumber).HasMaxLength(30);
+        b.Property(x => x.PayoutAccountHolder).HasMaxLength(100);
 
         b.HasIndex(x => new { x.PaymentId, x.Status });
 

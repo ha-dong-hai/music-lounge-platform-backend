@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Refunds;
 using MusicLounge.Application.Refunds.Commands.ProcessRefundRequest;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -76,11 +77,25 @@ public sealed class AutoApproveOverdueRefundsJob
         // dịch được phép so enum kèm DateTimeOffset trong cùng một truy vấn.
         var pending = await _ctx.RefundRequests
             .Where(r => r.Status == RefundRequestStatus.Pending)
-            .Select(r => new { r.Id, r.CreatedAt })
+            .Select(r => new { r.Id, r.PaymentId, r.CreatedAt })
             .ToListAsync(ct);
+
+        // MLACP-387: qua han VNPay thi lenh hoan tu dong chac chan bi handler tu choi — truoc day job thu lai moi lan chay,
+        // am tham, mai mai. Yeu cau nhu vay chi dong duoc bang chuyen khoan tay voi su dong y cua nguoi mua;
+        // RefundSlaBreachAlertJob nhac nguoi mua va bao Admin.
+        var windowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
+        var paymentIds = pending.Select(r => r.PaymentId).Distinct().ToList();
+        var gatewayClosed = (await _ctx.Payments
+                .Where(p => paymentIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.Method, p.PaidAt, p.CreatedAt })
+                .ToListAsync(ct))
+            .Where(p => RefundGatewayWindow.IsClosed(p.Method, p.PaidAt ?? p.CreatedAt, windowDays, now))
+            .Select(p => p.Id)
+            .ToHashSet();
 
         var due = pending
             .Where(r => new DateTimeOffset(r.CreatedAt, TimeSpan.Zero).AddHours(waitedHours) <= now)
+            .Where(r => !gatewayClosed.Contains(r.PaymentId))
             .OrderBy(r => r.Id)
             .Select(r => r.Id)
             .ToList();
