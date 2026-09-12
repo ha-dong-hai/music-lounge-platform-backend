@@ -75,6 +75,14 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             // MLACP-334. Xem chu thich cung ten o duong ve.
             if (result.IsSuccess && payment.Status != PaymentStatus.Confirmed)
             {
+                // MLACP-386: callback lap lai (trinh duyet quay ve + IPN, hoac VNPay goi lai) cua giao dich da ghi nhan
+                // la "tien goi ve luc phong tra dang bi khoa" (RecordNotActivatedAsync) — su co da bao, yeu cau hoan da
+                // tao. Chi nhanh do ghi TransactionId len mot thanh toan Failed.
+                if (payment.Status == PaymentStatus.Failed
+                    && !string.IsNullOrEmpty(payment.TransactionId)
+                    && payment.TransactionId == result.TransactionId)
+                    return VnPayIpnOutcome.ConfirmedTooLate;
+
                 await PaymentIncident.RecordConfirmedTooLateAsync(
                     _uow, _notifications, _logger, "goi dang ky", txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
@@ -114,6 +122,13 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         if (package is null || payment.PayerId is null) return VnPayIpnOutcome.InternalError;
 
         var ownerId = payment.PayerId.Value;
+
+        // MLACP-386: SubscriptionVenueGate (MLACP-376) chi chan luc BAT DAU thanh toan. Phong tra bi tam khoa / khoa
+        // dung luc chu con tren trang VNPay thi den day tien van ve va goi van duoc kich hoat, gia han hay doi —
+        // thu tien cho mot goi chu khong dung duoc. Hoi lai cung quy tac o day, cho ca ba nhanh ben duoi (dang ky
+        // moi, gia han/doi goi, thanh toan trung). Shopify: cua hang bi dong bang thi "all billing attempts stop".
+        if (await SubscriptionVenueGate.PenalizedStatusAsync(_uow, ownerId, ct) is { } penalized)
+            return await RecordNotActivatedAsync(payment, ownerId, penalized, result, txnRef, now, ct);
 
         payment.Status = PaymentStatus.Confirmed;
         payment.TransactionId = result.TransactionId;
@@ -319,5 +334,64 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         return $"Đã chuyển sang gói \"{newPackage.Name}\". Phần còn lại của gói cũ " +
                $"({SubscriptionTerms.DescribeCredit(credit, extra)}) đã được cộng vào — gói mới dùng tới " +
                $"{VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy")}.";
+    }
+
+    /// <summary>
+    /// MLACP-386. Tiền gói về trong lúc phòng trà của chủ đang bị tạm khoá / khoá vĩnh viễn.
+    ///
+    /// <para>Không kích hoạt, gia hạn hay đổi gói — đúng ý MLACP-376: không bán gói cho phòng trà không dùng được nó.
+    /// Khoản này chưa từng là gói đang chạy lúc án có hiệu lực, nên không thuộc diện "khoá thì không hoàn" của
+    /// MLACP-369 (điều đó áp cho gói đang chạy như một phần hình phạt). Làm theo đúng mẫu tiền-về-mà-không-áp-vào
+    /// đã có cho F&amp;B (MLACP-351) và vé (MLACP-382/385): <c>Failed</c> giữ mã giao dịch VNPay, tự tạo yêu cầu hoàn
+    /// 100%, báo chủ, báo Admin. <c>ProcessRefundRequest</c> không đảo bút toán cho thanh toán <c>Failed</c> vì bút toán
+    /// doanh thu gói chỉ được ghi khi gói được kích hoạt.</para>
+    /// </summary>
+    private async Task<VnPayIpnOutcome> RecordNotActivatedAsync(
+        Payment payment, int ownerId, LoungeStatus penalized, VnPayCallbackResult result, string? txnRef,
+        DateTimeOffset now, CancellationToken ct)
+    {
+        payment.Status = PaymentStatus.Failed;
+        payment.TransactionId = result.TransactionId;
+        payment.VnPayResponseCode = result.ResponseCode;
+        payment.PaidAt = now;
+        payment.UpdatedAt = now;
+        _uow.Repository<Payment, int>().Update(payment);
+
+        var why = penalized == LoungeStatus.Locked ? "bị khoá vĩnh viễn" : "bị tạm khoá";
+
+        _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+        {
+            PaymentId = payment.Id,
+            RequestedBy = ownerId,
+            Reason = $"Tiền gói về khi phòng trà đang {why} — gói không được kích hoạt, hoàn 100%",
+            AmountRequested = payment.GrossAmount,
+            RefundPercentage = 100m,
+            Status = RefundRequestStatus.Pending
+        });
+
+        await _notifications.NotifyAsync(
+            ownerId,
+            NotificationType.RefundUpdate,
+            "Gói dịch vụ chưa được kích hoạt — bạn sẽ được hoàn tiền",
+            $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) đã bị trừ tiền, nhưng phòng trà của bạn " +
+            $"đang {why} nên gói không được kích hoạt, gia hạn hay đổi. Chúng tôi đã tự động tạo yêu cầu hoàn 100% " +
+            "khoản này — bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
+            referenceType: "payment",
+            referenceId: payment.Id.ToString(),
+            ct: ct);
+
+        // Luu thanh toan, yeu cau hoan va thong bao cho chu; PaymentIncident tu luu phan cua no.
+        await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "VNPay subscription payment arrived while the venue is {VenueStatus} — plan not activated, full refund " +
+            "queued: PaymentId={PaymentId} TxnRef={TxnRef} OwnerId={OwnerId} Amount={Amount} at {At}",
+            penalized, payment.Id, txnRef, ownerId, payment.GrossAmount, now);
+
+        await PaymentIncident.RecordConfirmedTooLateAsync(
+            _uow, _notifications, _logger, "goi dich vu cua phong tra dang bi khoa/tam khoa", txnRef, result.Amount,
+            "payment", payment.Id.ToString(), ct);
+
+        return VnPayIpnOutcome.ConfirmedTooLate;
     }
 }
