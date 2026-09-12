@@ -116,12 +116,46 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // the buyer is still owed the money, it just cannot travel back down the same rails.
         var refundWindowDays = await _config.GetIntAsync(ConfigKeys.VnPayRefundWindowDays, 90, ct);
         var transactionAt = payment.PaidAt ?? payment.CreatedAt;
-        if (transactionAt.AddDays(refundWindowDays) < DateTimeOffset.UtcNow)
+        var pastGatewayWindow = transactionAt.AddDays(refundWindowDays) < DateTimeOffset.UtcNow;
+
+        // MLACP-384: cau loi cu bao Admin "chuyen khoan thu cong roi ghi nhan lai" — nhung khong co noi nao de ghi
+        // nhan, nen yeu cau hoan nam Pending vinh vien. Nay Admin duyet lai kem ma chuyen khoan. Chi nhan khi VNPay
+        // THAT SU khong con hoan duoc: trong han thi tien phai di dung duong cu, co doi soat voi cong thanh toan.
+        var manualTransferRef = string.IsNullOrWhiteSpace(request.ManualTransferReference)
+            ? null
+            : request.ManualTransferReference.Trim();
+
+        // MLACP-384: han nay la han cua VNPay — chi chan thanh toan qua cong. Truoc day no chan ca ve tien mat tai
+        // quay, thu VNPay chua tung biet toi: ve tai quay cua mot buoi dien huy sau 90 ngay khong bao gio duyet
+        // duoc, nen phong tra cung khong xac nhan duoc da tra tien mat (can Approved).
+        if (payment.Method == PaymentMethod.Gateway && pastGatewayWindow && manualTransferRef is null)
             throw new DomainException(
                 $"Giao dịch này đã quá {refundWindowDays} ngày kể từ lúc thanh toán " +
                 $"({VietnamTime.Format(transactionAt, "dd/MM/yyyy")}), vượt quá thời hạn VNPay còn nhận lệnh hoàn tiền. " +
-                "Không thể hoàn tự động — cần chuyển khoản thủ công cho người mua rồi ghi nhận lại, " +
-                "và yêu cầu này vẫn giữ nguyên trạng thái chờ xử lý.");
+                "Không thể hoàn qua VNPay — hãy chuyển khoản thủ công cho người mua rồi duyệt lại yêu cầu này kèm " +
+                "mã chuyển khoản (ManualTransferReference) để hệ thống ghi nhận. Đến lúc đó yêu cầu vẫn giữ nguyên " +
+                "trạng thái chờ xử lý.");
+
+        if (manualTransferRef is not null && payment.Method != PaymentMethod.Gateway)
+            throw new DomainException(
+                "Giao dịch này trả bằng tiền mặt tại quầy — không có chuyển khoản nào để ghi nhận. Hãy duyệt bình " +
+                "thường; phòng trà hoàn tiền mặt và xác nhận đã trả.");
+
+        if (manualTransferRef is not null && !pastGatewayWindow)
+            throw new DomainException(
+                "Giao dịch này vẫn trong thời hạn VNPay nhận lệnh hoàn — hãy duyệt để hoàn qua VNPay, không ghi nhận " +
+                "chuyển khoản thủ công.");
+
+        if (manualTransferRef is not null)
+        {
+            var note = $"Chuyển khoản thủ công, mã {manualTransferRef}"
+                       + (refund.ResolutionNote is { } adminNote ? $" — {adminNote}" : "");
+            refund.ResolutionNote = note.Length > 500 ? note[..500] : note;
+        }
+
+        var gatewayOutflowNote = manualTransferRef is null
+            ? $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán"
+            : $"Refund #{refund.Id} — hoàn thủ công bằng chuyển khoản (mã {manualTransferRef}), quá hạn hoàn qua VNPay";
 
         var amountApproved = request.ApprovedAmount ?? refund.AmountRequested;
         if (amountApproved > payment.GrossAmount)
@@ -157,7 +191,16 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // hoan tien qua he thong.
         var isGatewayPayment = payment.Method == PaymentMethod.Gateway;
 
-        if (isGatewayPayment)
+        if (manualTransferRef is not null)
+        {
+            // MLACP-384: Admin da tu chuyen khoan — khong goi VNPay (VNPay tu choi vi qua han). Phan con lai (dao but
+            // toan, co lich quyet toan, danh Refunded) giong het duong hoan qua cong.
+            _logger.LogWarning(
+                "Ghi nhan hoan tien bang chuyen khoan thu cong (qua han VNPay) — RefundRequestId={RefundRequestId} " +
+                "PaymentId={PaymentId} MaChuyenKhoan={Reference} SoTien={Amount} by AdminUserId={AdminUserId} at {At}",
+                refund.Id, payment.Id, manualTransferRef, amountApproved, actorId, DateTimeOffset.UtcNow);
+        }
+        else if (isGatewayPayment)
         {
             // MLACP-100: goi VNPay Merchant API that su TRUOC khi dong bo cai — chi ghi so cai/chuyen
             // trang thai neu VNPay xac nhan da hoan tien thanh cong. Chua live-verify duoc chu ky nay
@@ -233,7 +276,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                     new LedgerLine(AccountType.Platform, null, amountApproved, IsDebit: true,
                         Description: $"Refund #{refund.Id} — hoàn tiền gói dịch vụ"),
                     new LedgerLine(AccountType.Gateway, null, amountApproved, IsDebit: false,
-                        Description: $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán")
+                        Description: gatewayOutflowNote)
                 ], ct);
         }
         else if (shouldReverseJournal)
@@ -323,7 +366,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                     : [],
                 .. ownerShareLines,
                 new LedgerLine(AccountType.Gateway, null, amountApproved, IsDebit: false,
-                    Description: $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán")
+                    Description: gatewayOutflowNote)
             ], ct);
         }
 
@@ -360,7 +403,17 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // MLACP-337. Noi dung khac nhau theo duong tien, va cho nao noi that cho do: voi ve mua
         // online thi nen tang da thuc su phat lenh hoan; voi ve mua tai quay thi nen tang chua bao
         // gio giu khoan do nen KHONG duoc hua thay phong tra.
-        if (isGatewayPayment)
+        if (manualTransferRef is not null)
+        {
+            // MLACP-384: noi dung su that — tien khong di qua VNPay ma da duoc chuyen khoan truc tiep.
+            await NotifyBuyerAsync(
+                refund,
+                "Yeu cau hoan tien da duoc duyet",
+                $"{amountApproved:N0}d da duoc chuyen khoan truc tiep cho ban (ma giao dich {manualTransferRef}), vi " +
+                "giao dich goc da qua thoi han hoan qua VNPay. Neu chua nhan duoc, hay gui khieu nai kem ma nay.",
+                ct);
+        }
+        else if (isGatewayPayment)
         {
             await NotifyBuyerAsync(
                 refund,

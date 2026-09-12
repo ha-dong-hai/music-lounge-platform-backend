@@ -10,5 +10,7 @@ public sealed record ProcessRefundRequestCommand(
     string? ResolutionNote = null,  // MLACP-342: ly do cua Admin, tuy chon
     // MLACP-348: chi AutoApproveOverdueRefundsJob dat co nay. Khong co tren body cua API — controller
     // tu dung command tu cac truong rieng cua no, nen khong ai goi HTTP dat duoc gia tri nay.
-    bool AutoApproved = false
+    bool AutoApproved = false,
+    // MLACP-384: ma chuyen khoan Admin da tu chuyen cho nguoi mua khi giao dich qua han VNPay nhan lenh hoan.
+    string? ManualTransferReference = null
 ) : ICommand;

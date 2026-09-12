@@ -29,5 +29,17 @@ internal sealed class ProcessRefundRequestCommandValidator : AbstractValidator<P
             .When(x => x.ResolutionNote is not null);
 
         RuleFor(x => x.ClientIpAddress).NotEmpty().WithMessage("Địa chỉ IP không được rỗng.");
+
+        // MLACP-384: ghi nhan chuyen khoan thu cong chi co nghia khi duyet — tu choi thi khong co khoan tien nao.
+        RuleFor(x => x.ManualTransferReference)
+            .Must(r => !string.IsNullOrWhiteSpace(r))
+            .WithMessage("ManualTransferReference không được rỗng khi được gửi.")
+            .MaximumLength(100)
+            .When(x => x.ManualTransferReference is not null);
+
+        RuleFor(x => x.Decision)
+            .Equal("Approved")
+            .When(x => x.ManualTransferReference is not null)
+            .WithMessage("Chỉ ghi nhận chuyển khoản thủ công khi duyệt (Approved) yêu cầu hoàn tiền.");
     }
 }
