@@ -107,92 +107,12 @@ public static class ShowCancellation
     /// <summary>
     /// MLACP-380: trước task này, huỷ show không đụng gì tới các <see cref="FnbOrder"/> gắn với nó (ShowId) — đơn
     /// khách đã đặt/đã trả trước cho một buổi diễn không còn tổ chức treo nguyên, tiền trả trước (nếu có) không ai
-    /// hoàn.
-    ///
-    /// <para>Đơn đã đóng (<see cref="FnbOrderStatus.Paid"/>) là giao dịch đã xong trước khi show bị huỷ — dù đóng
-    /// bằng tiền mặt hay online — không đụng tới, giữ đúng ranh giới <c>UpdateFnbOrderStatusCommandHandler</c> đã
-    /// đặt cho việc huỷ một đơn F&amp;B (MLACP-349/351: chỉ huỷ được đơn CHƯA đóng). Đơn chưa đóng mà đã có một giao
-    /// dịch Gateway Confirmed (khách trả trước qua VNPay, bếp chưa kịp phục vụ xong) thì hoàn 100% — cùng logic đã
-    /// có ở đó. Đơn chưa đóng và chưa có giao dịch nào thì huỷ thẳng, không có gì để hoàn.</para>
+    /// hoàn. Huỷ mọi đơn chưa đóng, kể cả đơn đã phục vụ, theo luật chung ở <see cref="FnbOrderCancellation"/>
+    /// (MLACP-390 tách ra để đường chuyển sang online dùng lại).
     /// </summary>
-    private static async Task<int> CancelFnbOrdersAsync(
+    private static Task<int> CancelFnbOrdersAsync(
         IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show, string because,
         CancellationToken ct)
-    {
-        var orderRepo = uow.Repository<FnbOrder, int>();
-        var orders = await orderRepo.FindAsync(
-            o => o.ShowId == show.Id && o.Status != FnbOrderStatus.Cancelled, ct);
-        if (orders.Count == 0) return 0;
-
-        var itemRepo = uow.Repository<OrderItem, int>();
-        var paymentRepo = uow.Repository<Payment, int>();
-        var refundRepo = uow.Repository<RefundRequest, int>();
-        var affected = 0;
-
-        foreach (var order in orders)
-        {
-            // Cung khoa voi InitiateFnbOrderPayment / UpdateFnbOrderStatus / ProcessFnbOrderPayment (IPN) —
-            // khong thi mot don co the vua bi huy o day vua duoc xu ly o mot trong ba noi do cung luc.
-            await using var _ = await @lock.AcquireAsync(FnbOrderPayments.LockKey(order.Id), ct);
-
-            // Doc lai sau khi co khoa: don co the da doi trang thai (vi du da duoc danh dau Paid) giua luc
-            // truy van o tren va luc lay duoc khoa nay.
-            var current = await orderRepo.GetByIdAsync(order.Id, ct);
-            if (current is null || current.Status is FnbOrderStatus.Paid or FnbOrderStatus.Cancelled) continue;
-
-            var referenceId = current.Id.ToString();
-            var gatewayPayment = (await paymentRepo.FindAsync(
-                    p => p.ReferenceType == FnbOrderPayments.ReferenceType
-                         && p.ReferenceId == referenceId
-                         && p.Status == PaymentStatus.Confirmed
-                         && p.Method == PaymentMethod.Gateway, ct))
-                .FirstOrDefault();
-
-            current.Status = FnbOrderStatus.Cancelled;
-            orderRepo.Update(current);
-
-            var items = await itemRepo.FindAsync(i => i.FnbOrderId == current.Id, ct);
-            foreach (var item in items)
-            {
-                item.Cancelled = true;
-                itemRepo.Update(item);
-            }
-
-            decimal? refundAmount = null;
-            if (gatewayPayment is not null)
-            {
-                refundAmount = gatewayPayment.GrossAmount;
-                refundRepo.Add(new RefundRequest
-                {
-                    PaymentId = gatewayPayment.Id,
-                    RequestedBy = current.AudienceUserId ?? gatewayPayment.PayerId,
-                    Reason = $"Buổi diễn bị huỷ{because} — đơn F&B #{current.Id} chưa phục vụ xong, hoàn 100%",
-                    AmountRequested = gatewayPayment.GrossAmount,
-                    RefundPercentage = 100m,
-                    Status = RefundRequestStatus.Pending
-                });
-            }
-
-            affected++;
-
-            // Don nhan vien dat ho khach vang lai (khong tai khoan) khong bao duoc — giong quy uoc
-            // NotifyAudienceAsync cua UpdateFnbOrderStatusCommandHandler.
-            if (current.AudienceUserId is { } audienceUserId)
-            {
-                var (title, body) = refundAmount is { } amount
-                    ? ("Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
-                       $"Đơn #{current.Id} của bạn đã bị hủy vì buổi diễn bị huỷ{because}. Chúng tôi đã tự động " +
-                       $"tạo yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần " +
-                       "làm gì thêm và sẽ được báo khi yêu cầu được xử lý.")
-                    : ("Đơn F&B đã bị hủy",
-                       $"Đơn #{current.Id} của bạn đã bị hủy vì buổi diễn bị huỷ{because}.");
-
-                await notifications.NotifyAsync(
-                    audienceUserId, NotificationType.FnbOrderUpdate, title, body,
-                    referenceType: "fnbOrder", referenceId: current.Id.ToString(), ct: ct);
-            }
-        }
-
-        return affected;
-    }
+        => FnbOrderCancellation.CancelOpenOrdersAsync(
+            uow, notifications, @lock, o => o.ShowId == show.Id, servedToo: true, $"buổi diễn bị huỷ{because}", ct);
 }
