@@ -204,10 +204,11 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // the doi giua luc ban ve va luc hoan tien — nen doc but toan that thay vi soi lai co.
         //
         // MLACP-351: tru mot truong hop — thanh toan he thong da ghi nhan la Failed. Journal mua chi duoc
-        // ghi khi xac nhan, nen mot thanh toan Failed CHUA TUNG duoc ghi so. Duong duy nhat co yeu cau
-        // hoan cho mot thanh toan nhu vay la khoan "VNPay da thu nhung khong ap vao don" cua F&B (tra
-        // trung, hoac tien ve cho don da huy — ProcessFnbOrderPayment.RecordNotAppliedAsync). Dao but toan
-        // cho no la tru Platform mot khoan Platform chua tung giu.
+        // ghi khi xac nhan, nen mot thanh toan Failed CHUA TUNG duoc ghi so. Hai duong tao yeu cau hoan cho
+        // mot thanh toan nhu vay, deu la khoan "VNPay da thu nhung khong ap vao": F&B (tra trung, hoac tien
+        // ve cho don da huy — ProcessFnbOrderPayment.RecordNotAppliedAsync) va ve (MLACP-382, tien ve cho
+        // buoi dien da huy — ProcessVnPayCallback.RecordNotIssuedAsync). Dao but toan cho no la tru Platform
+        // mot khoan Platform chua tung giu.
         var neverBooked = payment.Status == PaymentStatus.Failed;
         var shouldReverseJournal = !neverBooked
             && (isGatewayPayment

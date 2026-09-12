@@ -85,6 +85,15 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             // thu hai — tien that da thu — bien mat sau mot dong log muc Information.
             if (result.IsSuccess && payment.Status != PaymentStatus.Confirmed)
             {
+                // MLACP-382: callback lap lai (trinh duyet quay ve + IPN, hoac VNPay goi lai) cua mot giao dich
+                // da duoc ghi nhan la "tien ve cho ve cua buoi dien da huy" (RecordNotIssuedAsync) — su co da
+                // duoc bao va yeu cau hoan da tao, khong bao lan nua. Chi nhanh do ghi TransactionId len mot
+                // thanh toan Failed: nhanh that bai o duoi va CancelAbandonedPaymentsJob deu khong ghi.
+                if (payment.Status == PaymentStatus.Failed
+                    && !string.IsNullOrEmpty(payment.TransactionId)
+                    && payment.TransactionId == result.TransactionId)
+                    return VnPayIpnOutcome.ConfirmedTooLate;
+
                 await PaymentIncident.RecordConfirmedTooLateAsync(
                     _uow, _notifications, _logger, "mua ve", txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
@@ -110,8 +119,23 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         var ticketRepo = _uow.Repository<Ticket, Guid>();
         var tickets = await ticketRepo.FindAsync(t => t.PaymentId == payment.Id, ct);
 
+        // MLACP-382: cung khoa voi CancelLoungeShow / ApplyDuePenaltiesJob (ShowCancellation) — khong co no thi
+        // buoi dien co the bi huy ngay giua luc doc trang thai o duoi va luc ve duoc xac nhan, va ShowCancellation
+        // (chi doc ve Confirmed) bo sot dung nhung ve nay.
+        await using var showLock = tickets.Count > 0
+            ? await _lock.AcquireAsync($"show-status-change:{tickets[0].ShowId}", ct)
+            : null;
+
         if (result.IsSuccess)
         {
+            // MLACP-382: truoc day nhanh nay khong nhin buoi dien. Khach bam thanh toan (ve Pending), buoi dien bi
+            // huy trong luc khach con tren trang VNPay — ShowCancellation chi hoan ve Confirmed nen bo qua ve nay —
+            // roi tien ve: ve bi chuyen Confirmed cho mot buoi dien khong con to chuc, khong ai tao yeu cau hoan.
+            if (tickets.Count > 0
+                && await _uow.Repository<LoungeShow, int>().GetByIdAsync(tickets[0].ShowId, ct) is
+                    { Status: LoungeShowStatus.Cancelled } cancelledShow)
+                return await RecordNotIssuedAsync(payment, tickets, cancelledShow, result, txnRef, ct);
+
             payment.Status = PaymentStatus.Confirmed;
             payment.TransactionId = result.TransactionId;
             payment.VnPayResponseCode = result.ResponseCode;
@@ -198,5 +222,77 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         }
 
         return result.IsSuccess ? VnPayIpnOutcome.Confirmed : VnPayIpnOutcome.RecordedAsFailed;
+    }
+
+    /// <summary>
+    /// MLACP-382. Tiền đã rời tài khoản khách cho vé của một buổi diễn đã bị huỷ trong lúc khách còn đang trả.
+    ///
+    /// <para>Không cấp vé — cấp là bán vé cho một buổi diễn không còn tổ chức. Nhưng cũng không để khoản tiền biến
+    /// mất: làm đúng mẫu F&amp;B đã chốt (<c>ProcessFnbOrderPayment.RecordNotAppliedAsync</c>, MLACP-351). Giữ lại
+    /// đúng dữ liệu VNPay báo — mã giao dịch chính là thứ lệnh hoàn qua VNPay cần — và <c>Failed</c> nghĩa là
+    /// "không áp vào vé". Tự tạo yêu cầu hoàn 100%: buổi diễn bị huỷ thì mọi người mua của nó được hoàn đủ
+    /// (<c>ShowCancellation</c>), người trả tiền muộn vài phút không phải ngoại lệ. <c>ProcessRefundRequest</c> không
+    /// đảo bút toán cho thanh toán <c>Failed</c>, vì bút toán mua chỉ được ghi khi vé được xác nhận.</para>
+    /// </summary>
+    private async Task<VnPayIpnOutcome> RecordNotIssuedAsync(
+        Payment payment, IReadOnlyList<Ticket> tickets, LoungeShow show, VnPayCallbackResult result,
+        string? txnRef, CancellationToken ct)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        payment.Status = PaymentStatus.Failed;
+        payment.TransactionId = result.TransactionId;
+        payment.VnPayResponseCode = result.ResponseCode;
+        payment.PaidAt = now;
+        payment.UpdatedAt = now;
+        _uow.Repository<Payment, int>().Update(payment);
+
+        var ticketRepo = _uow.Repository<Ticket, Guid>();
+        foreach (var ticket in tickets)
+        {
+            ticket.Status = TicketStatus.Cancelled;
+            ticketRepo.Update(ticket);
+        }
+
+        // Luc bam thanh toan ve chua the duoc chuyen nhuong, nen nguoi giu ve chinh la nguoi tra tien — dung
+        // BuyerId khi thanh toan thieu PayerId.
+        var payerId = payment.PayerId ?? tickets.Select(t => t.BuyerId).FirstOrDefault(b => b is not null);
+
+        _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+        {
+            PaymentId = payment.Id,
+            RequestedBy = payerId,
+            Reason = $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
+            AmountRequested = payment.GrossAmount,
+            RefundPercentage = 100m,
+            Status = RefundRequestStatus.Pending
+        });
+
+        if (payerId is int buyerId)
+            await _notifications.NotifyAsync(
+                buyerId,
+                NotificationType.EventCancelled,
+                "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",
+                $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) cho vé \"{show.Name}\" đã bị trừ " +
+                "tiền, nhưng buổi diễn đã bị huỷ trong lúc bạn đang thanh toán nên vé không được cấp. Chúng tôi đã " +
+                "tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — bạn không cần làm gì " +
+                "thêm và sẽ được báo khi yêu cầu được xử lý.",
+                referenceType: "show",
+                referenceId: show.Id.ToString(),
+                ct: ct);
+
+        // Luu ban ghi thanh toan, ve, yeu cau hoan va thong bao cho khach; PaymentIncident tu luu phan cua no.
+        await _uow.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "VNPay ticket payment arrived for a cancelled show — tickets not issued, full refund queued: " +
+            "PaymentId={PaymentId} TxnRef={TxnRef} ShowId={ShowId} Amount={Amount} at {At}",
+            payment.Id, txnRef, show.Id, payment.GrossAmount, now);
+
+        await PaymentIncident.RecordConfirmedTooLateAsync(
+            _uow, _notifications, _logger, "ve cua buoi dien da huy", txnRef, result.Amount,
+            "payment", payment.Id.ToString(), ct);
+
+        return VnPayIpnOutcome.ConfirmedTooLate;
     }
 }
