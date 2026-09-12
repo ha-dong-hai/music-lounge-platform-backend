@@ -20,13 +20,23 @@ namespace MusicLounge.Application.Common;
 /// </summary>
 public static class SubscriptionVenueGate
 {
-    public static async Task EnsureNotPenalizedAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
+    /// <summary>
+    /// MLACP-386: trạng thái phạt (<see cref="LoungeStatus.Suspended"/>/<see cref="LoungeStatus.Locked"/>) của phòng
+    /// trà thuộc chủ này, hoặc null nếu không bị phạt. Tách khỏi <see cref="EnsureNotPenalizedAsync"/> để IPN VNPay hỏi
+    /// cùng một quy tắc mà không ném lỗi — IPN mà ném lỗi thì VNPay nhận mã retry được và gọi lại mãi.
+    /// </summary>
+    public static async Task<LoungeStatus?> PenalizedStatusAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
     {
         var lounge = (await uow.Repository<MusicLoungeEntity, int>().FindAsync(l => l.OwnerId == ownerId, ct))
             .FirstOrDefault();
-        if (lounge is null || lounge.Status is not (LoungeStatus.Suspended or LoungeStatus.Locked)) return;
+        return lounge?.Status is LoungeStatus.Suspended or LoungeStatus.Locked ? lounge.Status : null;
+    }
 
-        var action = lounge.Status == LoungeStatus.Locked ? "bị khoá vĩnh viễn" : "bị tạm khoá";
+    public static async Task EnsureNotPenalizedAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
+    {
+        if (await PenalizedStatusAsync(uow, ownerId, ct) is not { } status) return;
+
+        var action = status == LoungeStatus.Locked ? "bị khoá vĩnh viễn" : "bị tạm khoá";
         throw new ConflictException(
             $"Phòng trà của bạn đang {action} do vi phạm — chưa thể mua, gia hạn hay đổi gói dịch vụ lúc này.");
     }
