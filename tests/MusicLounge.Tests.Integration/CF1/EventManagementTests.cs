@@ -490,6 +490,65 @@ public sealed class EventManagementTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
+    /// <summary>MLACP-381: cung lop loi B1 da dong o MLACP-263 (CreateFnbMenu) — endpoint khai bao
+    /// Policies.RequireOwner (cho ca Admin qua tang authorize) nhung chot tu tay trong handler chi so
+    /// OwnerId nen Admin luon bi chan, du chinh sach da cho phep Admin can thiep venue bat ky.</summary>
+    [Fact]
+    public async Task AssignStaff_ByAdmin_NotTheOwner_Returns201()
+    {
+        int candidateUserId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var candidate = new User
+            {
+                Email = $"admin-assign-381-{Guid.NewGuid():N}@test.com", FullName = "Admin Assign Candidate",
+                Role = UserRole.Audience
+            };
+            db.Users.Add(candidate);
+            await db.SaveChangesAsync();
+            candidateUserId = candidate.Id;
+        }
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.PostAsJsonAsync(
+            $"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = candidateUserId });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created,
+            "Admin must be able to manage any venue's staff, matching the controller's declared RequireOwner policy");
+    }
+
+    /// <summary>MLACP-381: cung nhu AssignStaff — DeactivateStaff cung chi so OwnerId, chan ca Admin.</summary>
+    [Fact]
+    public async Task DeactivateStaff_ByAdmin_NotTheOwner_Returns204()
+    {
+        int candidateUserId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var candidate = new User
+            {
+                Email = $"admin-deactivate-381-{Guid.NewGuid():N}@test.com", FullName = "Admin Deactivate Candidate",
+                Role = UserRole.Audience
+            };
+            db.Users.Add(candidate);
+            await db.SaveChangesAsync();
+            candidateUserId = candidate.Id;
+        }
+
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var assignRes = await ownerClient.PostAsJsonAsync(
+            $"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = candidateUserId });
+        assignRes.StatusCode.Should().Be(HttpStatusCode.Created);
+        var staffId = (await assignRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var res = await adminClient.DeleteAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/staff/{staffId}");
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "Admin must be able to manage any venue's staff, matching the controller's declared RequireOwner policy");
+    }
+
     [Fact]
     public async Task GetLoungeStaff_ByOwnerOfDifferentVenue_Returns403()
     {

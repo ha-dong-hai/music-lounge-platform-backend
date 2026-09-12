@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -28,7 +29,10 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
-        if (lounge.OwnerId != _currentUser.UserId)
+        // MLACP-381: endpoint khai bao Policies.RequireOwner (cho ca Admin di qua tang authorize), nhung
+        // chot tu tay o day chi so OwnerId nen Admin luon bi chan — cung lop loi B1 da dong o MLACP-263
+        // (CreateFnbMenu). Admin can can thiep duoc (ho tro, tranh chap, chu phong tra mat quyen truy cap).
+        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền quản lý staff cho venue này.");
 
         var userRepo = _uow.Repository<User, int>();
