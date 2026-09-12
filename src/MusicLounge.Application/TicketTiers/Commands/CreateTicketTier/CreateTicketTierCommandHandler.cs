@@ -2,6 +2,7 @@ using MediatR;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -15,11 +16,13 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
     private readonly ICurrentUserService _currentUser;
     private readonly IAsyncKeyedLock _lock;
     private readonly ISystemConfigService _config;
+    private readonly ILivestreamRepository _livestreamRepo;
 
     public CreateTicketTierCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock,
-        ISystemConfigService config)
+        ISystemConfigService config, ILivestreamRepository livestreamRepo)
     {
+        _livestreamRepo = livestreamRepo;
         _uow = uow;
         _currentUser = currentUser;
         _config = config;
@@ -37,8 +40,25 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền thiết lập giá vé cho event này.");
 
-        if (show.Status != LoungeShowStatus.Draft)
+        var accessType = Enum.Parse<AccessType>(request.AccessType, ignoreCase: true);
+
+        // MLACP-388: buoi dien da dang ma phai chuyen sang online (MLACP-383 hoan 100% ve vao cua) truoc day khong the co
+        // hang ve livestream — tao hang ve chi chay khi Draft va la duong duy nhat — nen khong ban duoc ve xem online. Nay
+        // duoc them DUY NHAT hang ve livestream, cho buoi dien Online/Hybrid da co livestream; gia chua mo ban cho toi khi
+        // Admin duyet (ReviewTicketTier). Hang ve vao cua va gia da cong bo van khoa nhu da hua voi nguoi mua.
+        var addingAfterPublish = show.Status is LoungeShowStatus.Published or LoungeShowStatus.Ongoing;
+        if (show.Status != LoungeShowStatus.Draft && !addingAfterPublish)
             throw new DomainException("Chỉ có thể thêm hạng vé khi event còn ở trạng thái Draft.");
+
+        if (addingAfterPublish)
+        {
+            if (accessType != AccessType.Livestream || show.Format == LoungeShowFormat.Offline)
+                throw new DomainException(
+                    "Buổi diễn đã đăng chỉ được thêm hạng vé livestream, và chỉ khi hình thức là online hoặc hybrid — " +
+                    "hạng vé vào cửa và giá đã công bố được giữ nguyên như đã hứa với người mua.");
+            if (await _livestreamRepo.GetByShowIdAsync(show.Id, ct) is null)
+                throw new DomainException("Cần thiết lập livestream cho buổi diễn trước khi thêm hạng vé livestream.");
+        }
 
         // D14: tong TotalCapacity cac tier cua show khong duoc vuot MaxTicketsPerEvent cua goi
         // subscription dang Active (snapshot tai luc dang ky, khong bi anh huong neu gia goi doi sau).
@@ -70,8 +90,6 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
                     cap.ExceededMessage($"Tổng sức chứa các hạng vé của buổi hòa nhạc này ({totalCapacity})"));
         }
 
-        var accessType = Enum.Parse<AccessType>(request.AccessType, ignoreCase: true);
-
         var tier = new TicketTier
         {
             LoungeShowId = request.ShowId,
@@ -96,11 +114,26 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
                 Quota = priceInput.Quota,
                 PurchaseChannel = channel,
                 SaleStart = priceInput.SaleStart,
-                SaleEnd = priceInput.SaleEnd
+                SaleEnd = priceInput.SaleEnd,
+                // MLACP-388: gia them sau khi dang chua ai duyet — chi mo ban khi Admin dong y.
+                IsActive = !addingAfterPublish
             });
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        if (addingAfterPublish)
+        {
+            // Cung SLA voi duyet buoi dien va livestream (ND 147/2024 — doc tu system_config, khong co dinh).
+            var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
+            _uow.Repository<EventModeration, int>().Add(new EventModeration
+            {
+                TargetType = ModerationTargetType.TicketTier,
+                TargetId = tier.Id,
+                SlaDeadline = DateTimeOffset.UtcNow.AddHours(slaHours)
+            });
+            await _uow.SaveChangesAsync(ct);
+        }
 
         return tier.Id;
     }
