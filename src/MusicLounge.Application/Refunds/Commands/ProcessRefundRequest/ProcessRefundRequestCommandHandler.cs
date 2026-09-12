@@ -114,9 +114,9 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // gateway refuses the reversal outright, so calling it would fail with a bare response code
         // and leave the Admin guessing. Say plainly what happened and what has to be done instead —
         // the buyer is still owed the money, it just cannot travel back down the same rails.
-        var refundWindowDays = await _config.GetIntAsync(ConfigKeys.VnPayRefundWindowDays, 90, ct);
+        var refundWindowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
         var transactionAt = payment.PaidAt ?? payment.CreatedAt;
-        var pastGatewayWindow = transactionAt.AddDays(refundWindowDays) < DateTimeOffset.UtcNow;
+        var pastGatewayWindow = RefundGatewayWindow.Deadline(transactionAt, refundWindowDays) < DateTimeOffset.UtcNow;
 
         // MLACP-384: cau loi cu bao Admin "chuyen khoan thu cong roi ghi nhan lai" — nhung khong co noi nao de ghi
         // nhan, nen yeu cau hoan nam Pending vinh vien. Nay Admin duyet lai kem ma chuyen khoan. Chi nhan khi VNPay
@@ -146,16 +146,27 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 "Giao dịch này vẫn trong thời hạn VNPay nhận lệnh hoàn — hãy duyệt để hoàn qua VNPay, không ghi nhận " +
                 "chuyển khoản thủ công.");
 
+        // MLACP-387: Luat BVQLNTD 2023 Dieu 38 khoan 4 — hoan theo phuong thuc nguoi tieu dung da thanh toan, tru khi ho
+        // DONG Y phuong thuc khac. Chuyen khoan la phuong thuc khac: chi ghi nhan khi nguoi mua da tu khai tai khoan va
+        // dong y (ProvideRefundPayoutAccount) — Admin khong duoc tu chon tai khoan dich.
+        if (manualTransferRef is not null && refund.PayoutConsentAt is null)
+            throw new DomainException(
+                "Người mua chưa đồng ý nhận hoàn bằng chuyển khoản và chưa khai tài khoản nhận. Theo Luật Bảo vệ quyền " +
+                "lợi người tiêu dùng 2023 (Điều 38 khoản 4), tiền phải hoàn theo phương thức người mua đã thanh toán, trừ " +
+                "khi họ đồng ý phương thức khác — hệ thống đang nhắc người mua khai tài khoản.");
+
         if (manualTransferRef is not null)
         {
-            var note = $"Chuyển khoản thủ công, mã {manualTransferRef}"
+            var note = $"Chuyển khoản thủ công tới {refund.PayoutBankName} " +
+                       $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} ({refund.PayoutAccountHolder}), mã {manualTransferRef}"
                        + (refund.ResolutionNote is { } adminNote ? $" — {adminNote}" : "");
             refund.ResolutionNote = note.Length > 500 ? note[..500] : note;
         }
 
         var gatewayOutflowNote = manualTransferRef is null
             ? $"Refund #{refund.Id} — hoàn tiền qua cổng thanh toán"
-            : $"Refund #{refund.Id} — hoàn thủ công bằng chuyển khoản (mã {manualTransferRef}), quá hạn hoàn qua VNPay";
+            : $"Refund #{refund.Id} — hoàn thủ công bằng chuyển khoản tới {refund.PayoutBankName} " +
+              $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} (mã {manualTransferRef}), quá hạn hoàn qua VNPay";
 
         var amountApproved = request.ApprovedAmount ?? refund.AmountRequested;
         if (amountApproved > payment.GrossAmount)
@@ -409,7 +420,8 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             await NotifyBuyerAsync(
                 refund,
                 "Yeu cau hoan tien da duoc duyet",
-                $"{amountApproved:N0}d da duoc chuyen khoan truc tiep cho ban (ma giao dich {manualTransferRef}), vi " +
+                $"{amountApproved:N0}d da duoc chuyen khoan truc tiep toi tai khoan {refund.PayoutBankName} " +
+                $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} cua ban (ma giao dich {manualTransferRef}), vi " +
                 "giao dich goc da qua thoi han hoan qua VNPay. Neu chua nhan duoc, hay gui khieu nai kem ma nay.",
                 ct);
         }

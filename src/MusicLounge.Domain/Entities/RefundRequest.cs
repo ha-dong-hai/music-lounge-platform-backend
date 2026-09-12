@@ -24,6 +24,16 @@ public sealed class RefundRequest : Common.AuditableEntity<int>
     // truoc task nay sau loi nhac RefundOwedByVenue khong ai theo doi tiep.
     public DateTimeOffset? CashHandedBackAt { get; set; }
 
+    // MLACP-387: tai khoan NGUOI MUA tu khai de nhan hoan bang chuyen khoan khi giao dich goc da qua han VNPay nhan
+    // lenh hoan. Luat BVQLNTD 2023 Dieu 38 khoan 4: hoan theo phuong thuc nguoi tieu dung da thanh toan, tru khi nguoi
+    // tieu dung DONG Y phuong thuc khac — PayoutConsentAt la bang chung cua su dong y do.
+    public string? PayoutBankName { get; set; }
+    public string? PayoutAccountNumber { get; set; }
+    public string? PayoutAccountHolder { get; set; }
+    public DateTimeOffset? PayoutConsentAt { get; set; }
+    // Lan gan nhat he thong nhac nguoi mua khai tai khoan — de nhac dinh ky, khong nhac moi lan job chay.
+    public DateTimeOffset? PayoutAccountRequestedAt { get; set; }
+
     public int? ProcessedBy { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
 

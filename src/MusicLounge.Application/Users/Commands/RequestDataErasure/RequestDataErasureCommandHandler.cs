@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Users.Commands.RequestDataErasure;
@@ -85,6 +86,21 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         // yeu cau xoa du lieu sinh ra de xoa. No cung khong tu bien mat: job tinh lai chi upsert,
         // khong bao gio xoa, nen dong cu nam lai vinh vien sau khi nguon da bi xoa.
         await _inferredProfile.ForgetAsync(userId, ct);
+
+        // MLACP-387: tai khoan ngan hang nguoi mua tu khai de nhan hoan la du lieu dinh danh — xoa voi yeu cau hoan DA
+        // xu ly xong (ghi chu xu ly va but toan chi giu ban che so, du lam chung tu). Giu lai voi yeu cau CON CHO: nen tang
+        // van dang no nguoi nay khoan tien do, va xoa di nghia la khong con cach nao tra — tai khoan dang nhap bi khoa ngay
+        // ben duoi nen ho cung khong khai lai duoc.
+        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var resolvedWithAccount = await refundRepo.FindAsync(
+            r => r.RequestedBy == userId && r.Status != RefundRequestStatus.Pending && r.PayoutAccountNumber != null, ct);
+        foreach (var refund in resolvedWithAccount)
+        {
+            refund.PayoutBankName = null;
+            refund.PayoutAccountNumber = null;
+            refund.PayoutAccountHolder = null;
+            refundRepo.Update(refund);
+        }
 
         var now = DateTimeOffset.UtcNow;
         user.Email = $"deleted-user-{userId}@musiclounge.local";

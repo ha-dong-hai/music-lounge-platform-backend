@@ -31,7 +31,10 @@ public sealed class ManualRefundPastVnPayWindowTests
     /// <param name="transactionId">Null cho thanh toán qua cổng thì một lệnh gọi VNPay chắc chắn thất bại
     /// (<c>FakeVnPayService.RefundAsync</c> từ chối khi không có mã giao dịch) — nên duyệt thành công nghĩa là
     /// VNPay KHÔNG bị gọi.</param>
-    private async Task<Seeded> SeedAsync(int paidDaysAgo, PaymentMethod method, string? transactionId = null)
+    /// <param name="payoutConsent">MLACP-387: người mua đã tự khai tài khoản và đồng ý nhận hoàn bằng chuyển khoản —
+    /// điều kiện để Admin ghi nhận chuyển khoản tay (Luật BVQLNTD 2023 Điều 38 khoản 4).</param>
+    private async Task<Seeded> SeedAsync(
+        int paidDaysAgo, PaymentMethod method, string? transactionId = null, bool payoutConsent = false)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -96,7 +99,11 @@ public sealed class ManualRefundPastVnPayWindowTests
         {
             PaymentId = payment.Id, RequestedBy = method == PaymentMethod.Cash ? null : SeedHelper.AudienceId,
             Reason = "Event bị hủy — hoàn 100% tiền vé", AmountRequested = 200_000m, RefundPercentage = 100m,
-            Status = RefundRequestStatus.Pending
+            Status = RefundRequestStatus.Pending,
+            PayoutBankName = payoutConsent ? "Vietcombank" : null,
+            PayoutAccountNumber = payoutConsent ? "0123456789" : null,
+            PayoutAccountHolder = payoutConsent ? "NGUYEN VAN A" : null,
+            PayoutConsentAt = payoutConsent ? DateTimeOffset.UtcNow : null
         };
         db.Add(refund);
         await db.SaveChangesAsync();
@@ -132,7 +139,8 @@ public sealed class ManualRefundPastVnPayWindowTests
     [Fact]
     public async Task PastWindow_WithAReference_ClosesTheRefund_WithoutCallingVnPay()
     {
-        var seeded = await SeedAsync(paidDaysAgo: 120, PaymentMethod.Gateway, transactionId: null);
+        // MLACP-387: chuyển khoản tay chỉ được ghi nhận khi người mua đã đồng ý và khai tài khoản.
+        var seeded = await SeedAsync(paidDaysAgo: 120, PaymentMethod.Gateway, transactionId: null, payoutConsent: true);
         const string reference = "FT26255123456";
 
         var res = await ProcessAsync(seeded.RefundId, "Approved", reference);
