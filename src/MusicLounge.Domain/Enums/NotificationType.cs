@@ -87,5 +87,7 @@ public enum NotificationType
     // MLACP-352: phong tra doi ten/dia chi sau khi da duoc duyet — bao Admin kem truoc/sau.
     VenueIdentityChanged,
     // MLACP-371: gia hạn sớm hoặc đổi gói vừa được VNPay xác nhận — nói rõ hạn mới và phần đã quy đổi.
-    SubscriptionUpdated
+    SubscriptionUpdated,
+    // MLACP-391: Admin them/go nhan vien cua mot phong tra — bao chu phong tra, nguoi chiu trach nhiem van hanh.
+    VenueStaffChanged
 }

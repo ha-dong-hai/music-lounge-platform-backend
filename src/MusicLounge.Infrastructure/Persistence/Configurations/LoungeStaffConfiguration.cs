@@ -34,5 +34,10 @@ internal sealed class LoungeStaffConfiguration : IEntityTypeConfiguration<Lounge
             .WithMany()
             .HasForeignKey(x => x.AssignedBy)
             .OnDelete(DeleteBehavior.Restrict);
+
+        b.HasOne(x => x.DeactivatedByUser)
+            .WithMany()
+            .HasForeignKey(x => x.DeactivatedBy)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
