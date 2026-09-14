@@ -35,6 +35,7 @@ internal sealed class GetMyTaxProfileQueryHandler : IRequestHandler<GetMyTaxProf
         return new TaxProfileDto(
             user.BusinessType?.ToString(),
             user.TaxCode is not null ? _piiEncryption.Decrypt(user.TaxCode) : null,
+            user.LegalName,
             user.TaxProfileSubmittedAt,
             user.TaxProfileVerifiedAt,
             user.TaxProfileReviewStatus?.ToString(),

@@ -341,7 +341,7 @@ public sealed class TaxWithholdingTests
         try
         {
             var res = await client.PutAsJsonAsync("/api/v1/me/tax-profile",
-                new { BusinessType = "Enterprise", TaxCode = "0101243150" });
+                new { BusinessType = "Enterprise", TaxCode = "0101243150", LegalName = "CÔNG TY TNHH THỬ NGHIỆM THUẾ" });
             res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
             var profile = (await (await client.GetAsync("/api/v1/me/tax-profile"))
@@ -370,6 +370,7 @@ public sealed class TaxWithholdingTests
             owner.BusinessType = null;
             owner.TaxCode = null;
             owner.TaxCodeHash = null;
+            owner.LegalName = null;
             owner.TaxProfileSubmittedAt = null;
             owner.TaxProfileVerifiedAt = null;
             owner.TaxProfileVerifiedBy = null;
@@ -390,7 +391,7 @@ public sealed class TaxWithholdingTests
             // Approved as a household, now claiming to be a company. Carrying the old approval over
             // would let a seller switch their own withholding off through a checked front door.
             var res = await client.PutAsJsonAsync("/api/v1/me/tax-profile",
-                new { BusinessType = "Enterprise", TaxCode = "8012345678" });
+                new { BusinessType = "Enterprise", TaxCode = "8012345678", LegalName = "CÔNG TY TNHH THỬ NGHIỆM THUẾ" });
             res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
             using var scope = _factory.Services.CreateScope();
@@ -409,6 +410,7 @@ public sealed class TaxWithholdingTests
             owner.BusinessType = null;
             owner.TaxCode = null;
             owner.TaxCodeHash = null;
+            owner.LegalName = null;
             owner.TaxProfileSubmittedAt = null;
             owner.TaxProfileVerifiedAt = null;
             owner.TaxProfileVerifiedBy = null;

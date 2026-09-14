@@ -3,6 +3,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Admin.Queries.GetKycReviewQueue;
 
@@ -35,9 +36,20 @@ internal sealed class GetKycReviewQueueQueryHandler
             .OrderBy(u => u.CitizenCardSubmittedAt ?? u.TaxProfileSubmittedAt ?? DateTimeOffset.MaxValue)
             .ToList();
 
-        var page = ordered
+        var pageUsers = ordered
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
+            .ToList();
+
+        // MLACP-398: duyệt hồ sơ doanh nghiệp cần giấy chứng nhận đăng ký kinh doanh của phòng trà — cho Admin thấy ngay
+        // trên danh sách hồ sơ nào đã có, như danh sách duyệt phòng trà đang làm.
+        var pageUserIds = pageUsers.Select(u => u.Id).ToList();
+        var licensedOwnerIds = (await _uow.Repository<MusicLoungeEntity, int>().FindAsync(
+                l => pageUserIds.Contains(l.OwnerId) && l.BusinessLicenseUrl != null && l.BusinessLicenseUrl != "", ct))
+            .Select(l => l.OwnerId)
+            .ToHashSet();
+
+        var page = pageUsers
             .Select(u => new KycReviewItemDto(
                 u.Id,
                 u.FullName,
@@ -48,10 +60,12 @@ internal sealed class GetKycReviewQueueQueryHandler
                 u.CitizenCardReviewStatus?.ToString(),
                 u.BusinessType?.ToString(),
                 Decrypt(u.TaxCode),
+                u.LegalName,
                 u.TaxProfileSubmittedAt,
                 u.TaxProfileReviewStatus?.ToString(),
                 u.BusinessType == PayeeBusinessType.Enterprise
-                    && u.TaxProfileReviewStatus == KycReviewStatus.Pending))
+                    && u.TaxProfileReviewStatus == KycReviewStatus.Pending,
+                licensedOwnerIds.Contains(u.Id)))
             .ToList();
 
         return new PaginatedResult<KycReviewItemDto>(page, request.Page, request.PageSize, ordered.Count);

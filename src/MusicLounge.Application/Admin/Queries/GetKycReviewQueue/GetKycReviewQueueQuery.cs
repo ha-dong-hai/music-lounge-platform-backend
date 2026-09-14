@@ -19,6 +19,10 @@ public sealed record GetKycReviewQueueQuery(
 /// to stop deducting tax, and it should not look like the routine case in the queue.
 /// </param>
 /// <param name="DateOfBirth">MLACP-397. Ngày sinh người nộp khai, để Admin đối chiếu với ảnh CCCD/CMND.</param>
+/// <param name="LegalName">MLACP-398. Tên doanh nghiệp đã khai — null với hộ/cá nhân.</param>
+/// <param name="HasBusinessLicense">
+/// MLACP-398. Phòng trà của người nộp đã có giấy chứng nhận đăng ký kinh doanh chưa — duyệt hồ sơ doanh nghiệp cần nó.
+/// </param>
 public sealed record KycReviewItemDto(
     int UserId,
     string FullName,
@@ -29,6 +33,8 @@ public sealed record KycReviewItemDto(
     string? CitizenCardReviewStatus,
     string? BusinessType,
     string? TaxCode,
+    string? LegalName,
     DateTimeOffset? TaxProfileSubmittedAt,
     string? TaxProfileReviewStatus,
-    bool WithholdingWouldStopIfApproved);
+    bool WithholdingWouldStopIfApproved,
+    bool HasBusinessLicense);
