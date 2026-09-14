@@ -82,14 +82,14 @@ internal sealed class PurchaseTicketCommandHandler
             throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
 
         var totalAmount = price.Price * hold.Quantity;
-        var orderId = $"ML-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
+        var orderId = $"{VnPayOrderRefs.TicketPrefix}{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
 
         var payment = new Payment
         {
             OrderId = orderId,
             GrossAmount = totalAmount,
             Status = PaymentStatus.Pending,
-            ReferenceType = "TicketHold",
+            ReferenceType = VnPayOrderRefs.TicketPaymentReferenceType,
             ReferenceId = hold.Id.ToString(),
             // A hold can back at most 1 Payment — final DB-level backstop behind the IsReleased
             // check and the lock above (PaymentConfiguration already has a filtered unique index

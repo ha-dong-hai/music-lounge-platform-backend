@@ -66,7 +66,11 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         await using var _ = await _lock.AcquireAsync($"vnpay-ticket:{txnRef}", ct);
 
         var paymentRepo = _uow.Repository<Payment, int>();
-        var payments = await paymentRepo.FindAsync(p => p.OrderId == txnRef, ct);
+        // MLACP-394: chi nhan thanh toan cua ve. Truoc day tra theo ma giao dich thoi, nen mot IPN cua F&B/goi/donate lac
+        // vao day (URL IPN chung khi chua re nhanh, hoac URL return cua ve) bi danh dau da tra ma khong luong nao cua no
+        // duoc chay — tien bao da nhan nhung don khong duoc ghi so, khong duoc cap nhat.
+        var payments = await paymentRepo.FindAsync(
+            p => p.OrderId == txnRef && p.ReferenceType == VnPayOrderRefs.TicketPaymentReferenceType, ct);
 
         var payment = payments.FirstOrDefault();
         if (payment is null)

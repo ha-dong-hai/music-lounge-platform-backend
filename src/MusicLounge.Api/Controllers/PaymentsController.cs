@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.Donations.Commands.ProcessDonationPayment;
+using MusicLounge.Application.FnbOrders.Commands.ProcessFnbOrderPayment;
+using MusicLounge.Application.Subscriptions.Commands.ProcessSubscriptionPayment;
 using MusicLounge.Application.Tickets.Commands.ProcessVnPayCallback;
 
 namespace MusicLounge.Api.Controllers;
@@ -37,7 +40,8 @@ public sealed class PaymentsController : ControllerBase
         return Redirect(VnPayIpnProtocol.BuyerLandingUrl(outcome, _settings));
     }
 
-    // Register this URL (not vnpay/callback) as the order's IPN URL in the VNPay merchant portal.
+    // Register this URL (not vnpay/callback) as the IPN URL of the VNPay terminal — it is the ONE IPN URL for every
+    // online payment flow (tickets, donations, F&B, subscriptions), see MLACP-394 below.
     // vnpay/callback above only ever fires if the buyer's browser makes it back to this server —
     // it does not fire if they close the tab, lose connectivity, or the app is backgrounded right
     // after paying. VNPay calls this URL server-to-server, independent of the buyer's browser, and
@@ -53,8 +57,17 @@ public sealed class PaymentsController : ControllerBase
         var queryParams = Request.Query
             .ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
-        var outcome = await _sender.Send(
-            new ProcessVnPayCallbackCommand(queryParams), ct);
+        // MLACP-394: VNPay gan IPN URL theo terminal (vnp_TmnCode), khong theo giao dich, ma ca 4 luong dung chung mot
+        // TmnCode — nen day la URL IPN duy nhat. Re nhanh theo tien to vnp_TxnRef he thong tu sinh (VnPayOrderRefs); moi
+        // command van tu kiem chu ky va tu tra ket qua y nhu khi goi qua endpoint rieng cua no.
+        queryParams.TryGetValue("vnp_TxnRef", out var txnRef);
+        var outcome = VnPayOrderRefs.FlowOf(txnRef) switch
+        {
+            VnPayFlow.Donation => await _sender.Send(new ProcessDonationPaymentCommand(queryParams), ct),
+            VnPayFlow.FnbOrder => await _sender.Send(new ProcessFnbOrderPaymentCommand(queryParams), ct),
+            VnPayFlow.Subscription => await _sender.Send(new ProcessSubscriptionPaymentCommand(queryParams), ct),
+            _ => await _sender.Send(new ProcessVnPayCallbackCommand(queryParams), ct)
+        };
 
         // MLACP-334. Truoc day moi thu khong phai thanh cong deu tra 99 "Unknown error", ma
         // theo tai lieu VNPay la ma RETRY DUOC — nen mot callback trung lap binh thuong hay mot

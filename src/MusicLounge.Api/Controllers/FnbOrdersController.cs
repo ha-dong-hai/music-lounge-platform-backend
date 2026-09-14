@@ -111,9 +111,8 @@ public sealed class FnbOrdersController : ControllerBase
         return Redirect(VnPayIpnProtocol.BuyerLandingUrl(outcome, _settings));
     }
 
-    // Register this URL (not vnpay-return) as the order's IPN URL in the VNPay merchant portal —
-    // see PaymentsController.VnPayIpn for why the browser-redirect endpoint above isn't a reliable
-    // substitute for it.
+    // MLACP-394: URL IPN dang ky voi VNPay la /payments/vnpay/ipn — mot URL cho moi luong, vi VNPay gan IPN theo
+    // terminal. Endpoint rieng nay giu lai de khong pha ket noi da co; no chay dung command nhu URL chung.
     [HttpGet("vnpay-ipn")]
     [AllowAnonymous]
     [ProducesResponseType<VnPayIpnResponse>(StatusCodes.Status200OK)]
