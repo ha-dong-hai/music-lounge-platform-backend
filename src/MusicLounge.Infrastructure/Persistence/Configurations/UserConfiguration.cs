@@ -36,6 +36,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.LegalName).HasMaxLength(255);
         b.Property(u => u.CitizenCardReviewStatus).HasConversion<string>().HasMaxLength(32);
         b.Property(u => u.CitizenCardReviewNote).HasMaxLength(1000);
+        b.Property(u => u.CitizenCardVerifiedName).HasMaxLength(200);
         b.Property(u => u.TaxProfileReviewStatus).HasConversion<string>().HasMaxLength(32);
         b.Property(u => u.TaxProfileReviewNote).HasMaxLength(1000);
         b.Property(u => u.SecurityStamp).IsRequired();

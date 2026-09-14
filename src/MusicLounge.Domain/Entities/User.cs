@@ -53,6 +53,10 @@ public sealed class User : Common.AuditableEntity<int>
     public DateTimeOffset? CitizenCardReviewedAt { get; set; }
     public int? CitizenCardReviewedBy { get; set; }
     public string? CitizenCardReviewNote { get; set; }
+    // MLACP-399. Họ tên được chốt lúc Admin DUYỆT CCCD/CMND — ở bước đó Admin đối chiếu họ tên với ảnh giấy tờ. Tách khỏi
+    // FullName vì FullName sửa được bất cứ lúc nào mà không mất trạng thái đã duyệt. Tài khoản nhận tiền của hộ/cá nhân
+    // phải đứng tên này. Bị xoá khi nộp lại, khi bị từ chối, và khi xoá dữ liệu cá nhân.
+    public string? CitizenCardVerifiedName { get; set; }
 
     // Hồ sơ thuế (NĐ 117/2025). The decree makes the platform responsible for collecting an
     // identifying number — a tax code or a personal identification number — for sellers it

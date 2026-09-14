@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Settlements;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -45,6 +46,24 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
         if (request.Approve && owner.CitizenCardReviewStatus != KycReviewStatus.Approved)
             throw new DomainException(
                 "Chủ phòng trà chưa được duyệt CCCD/CMND — cần duyệt danh tính trước để đối chiếu tên chủ tài khoản.");
+
+        // MLACP-399. Tài khoản phải đứng tên đúng người — hoặc đúng doanh nghiệp — đã được xác minh. Trước đây việc đối chiếu
+        // này hoàn toàn bằng mắt và không gì chặn khi tên lệch. Chỉ chặn khi XÁC MINH; từ chối luôn được.
+        if (request.Approve)
+        {
+            var expected = PayoutAccountName.ExpectedFor(owner);
+            if (string.IsNullOrWhiteSpace(expected.Name))
+                throw new DomainException(expected.IsEnterprise
+                    ? "Hồ sơ doanh nghiệp được duyệt khi hệ thống chưa lưu tên doanh nghiệp — chủ phòng trà cần khai lại hồ sơ thuế kèm tên doanh nghiệp."
+                    : "CCCD/CMND của chủ phòng trà được duyệt khi hệ thống chưa chốt họ tên — Admin cần duyệt lại CCCD/CMND trước khi xác minh tài khoản.");
+
+            if (!PayoutAccountName.Matches(account.AccountHolder, expected.Name))
+            {
+                var whose = expected.IsEnterprise ? "tên doanh nghiệp đã duyệt" : "họ tên đã duyệt trên CCCD/CMND";
+                throw new DomainException(
+                    $"Tên chủ tài khoản “{account.AccountHolder}” không khớp {whose} “{expected.Name}” — không xác minh được tài khoản này.");
+            }
+        }
 
         account.IsVerified = request.Approve;
         repo.Update(account);

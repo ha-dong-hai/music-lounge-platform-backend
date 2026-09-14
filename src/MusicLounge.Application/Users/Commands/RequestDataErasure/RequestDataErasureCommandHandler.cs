@@ -138,6 +138,7 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         user.CitizenCardReviewedAt = null;
         user.CitizenCardReviewedBy = null;
         user.CitizenCardReviewNote = null;
+        user.CitizenCardVerifiedName = null;
         user.TaxProfileReviewStatus = null;
         user.TaxProfileReviewNote = null;
         user.IsActive = false;

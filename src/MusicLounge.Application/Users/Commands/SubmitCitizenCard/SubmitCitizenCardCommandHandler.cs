@@ -59,6 +59,7 @@ internal sealed class SubmitCitizenCardCommandHandler : IRequestHandler<SubmitCi
         user.CitizenCardReviewedAt = null;
         user.CitizenCardReviewedBy = null;
         user.CitizenCardReviewNote = null;
+        user.CitizenCardVerifiedName = null;
 
         userRepo.Update(user);
         await _uow.SaveChangesAsync(ct);

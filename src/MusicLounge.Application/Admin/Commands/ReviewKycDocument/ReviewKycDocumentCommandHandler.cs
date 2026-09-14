@@ -50,6 +50,11 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
             user.CitizenCardReviewedAt = now;
             user.CitizenCardReviewedBy = _currentUser.UserId;
             user.CitizenCardReviewNote = request.Note;
+
+            // MLACP-399. Chốt họ tên đúng lúc duyệt — Admin vừa đối chiếu họ tên này (cùng ngày sinh, số giấy tờ) với ảnh
+            // CCCD/CMND. FullName sửa được bất cứ lúc nào mà không mất trạng thái đã duyệt, nên tài khoản nhận tiền được so
+            // với tên đã chốt này. Từ chối thì không còn tên nào được xác nhận.
+            user.CitizenCardVerifiedName = request.Approve ? user.FullName : null;
             documentName = "CCCD/CMND";
         }
         else
