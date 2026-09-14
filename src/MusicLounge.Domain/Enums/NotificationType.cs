@@ -89,5 +89,7 @@ public enum NotificationType
     // MLACP-371: gia hạn sớm hoặc đổi gói vừa được VNPay xác nhận — nói rõ hạn mới và phần đã quy đổi.
     SubscriptionUpdated,
     // MLACP-391: Admin them/go nhan vien cua mot phong tra — bao chu phong tra, nguoi chiu trach nhiem van hanh.
-    VenueStaffChanged
+    VenueStaffChanged,
+    // MLACP-395: tien quyet toan bi giu vi nguoi nhan chua xac minh — bao chu phong tra hoac Admin, tuy ai go duoc chan.
+    PayoutOnHold
 }

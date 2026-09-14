@@ -45,7 +45,12 @@ public sealed class DonationVenuePayoutTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var owner = new User { Email = $"payout-owner-{Guid.NewGuid():N}@test.com", FullName = "Payout Owner" };
+        var owner = new User
+        {
+            Email = $"payout-owner-{Guid.NewGuid():N}@test.com", FullName = "Payout Owner",
+            // MLACP-395: giai ngan chi chuyen cho chu phong tra da duyet CCCD.
+            CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved
+        };
         db.Users.Add(owner);
         await db.SaveChangesAsync();
 

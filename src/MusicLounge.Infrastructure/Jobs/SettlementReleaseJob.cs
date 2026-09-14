@@ -4,6 +4,7 @@ using Hangfire;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Donations;
+using MusicLounge.Application.Settlements;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -80,6 +81,7 @@ public sealed class SettlementReleaseJob
 
         // Nap mot lan, va chi khi thuc su co khoan bi giu — phan lon lan chay khong park cai nao.
         List<User>? admins = null;
+        List<(int OwnerId, PayoutBlocker Blocker, decimal Amount)>? held = null;
 
         foreach (var settlement in due)
         {
@@ -105,6 +107,17 @@ public sealed class SettlementReleaseJob
                     "payout account. The venue must register a default BankAccount before this can be " +
                     "released at {At}",
                     settlement.Id, settlement.OwnerId, now);
+                continue;
+            }
+
+            // MLACP-395: chi chuyen tien cho nguoi nhan da xac minh danh tinh, vao tai khoan da xac minh — xem
+            // PayeeVerification. Hoan chu khong huy: khoan nay van Scheduled, lan chay sau tu chuyen khi du dieu kien.
+            if (await PayeeVerification.BlockerAsync(_uow, settlement.OwnerId, settlement.BankAccountId.Value, ct) is { } blocker)
+            {
+                _logger.LogWarning(
+                    "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} payee not verified " +
+                    "({Blocker}) at {At}", settlement.Id, settlement.OwnerId, blocker, now);
+                (held ??= []).Add((settlement.OwnerId, blocker, settlement.NetAmount));
                 continue;
             }
 
@@ -230,6 +243,68 @@ public sealed class SettlementReleaseJob
             // settlement's unit of work fully self-contained).
             await _ctx.SaveChangesAsync(ct);
         }
+
+        // MLACP-395: bao sau vong lap, gop theo chu phong tra — mot thong bao cho moi khoan dang bi giu cua ho.
+        if (held is not null)
+            await NotifyHeldPayoutsAsync(held, now, ct);
+    }
+
+    /// <summary>
+    /// MLACP-395. Khoản bị giữ vì người nhận chưa xác minh phải tới đúng người gỡ được: chủ phòng trà khi họ cần nộp hoặc
+    /// nộp lại CCCD/CMND; Admin khi hồ sơ đang chờ duyệt hoặc tài khoản nhận tiền chưa được xác minh — thiếu thông báo cho
+    /// Admin thì tiền nằm im vì không ai biết cần làm gì. Job chạy hằng ngày, nên mỗi người chỉ được báo tối đa một lần mỗi
+    /// 7 ngày về cùng một chủ phòng trà.
+    /// </summary>
+    private async Task NotifyHeldPayoutsAsync(
+        List<(int OwnerId, PayoutBlocker Blocker, decimal Amount)> held, DateTimeOffset now, CancellationToken ct)
+    {
+        var since = now.AddDays(-7);
+        foreach (var group in held.GroupBy(h => h.OwnerId))
+        {
+            var ownerId = group.Key;
+            var blocker = group.First().Blocker;
+            var total = group.Sum(h => h.Amount);
+            var reference = ownerId.ToString();
+
+            List<int> recipients;
+            string title, body;
+            if (PayeeVerification.WaitsOnAdmin(blocker))
+            {
+                recipients = await _ctx.Users.Where(u => u.Role == UserRole.Admin).Select(u => u.Id).ToListAsync(ct);
+                title = "Khoản giải ngân đang chờ xác minh người nhận";
+                body = blocker == PayoutBlocker.IdentityAwaitingReview
+                    ? $"Chủ phòng trà #{ownerId} có {total:N0}đ tiền quyết toán đang bị giữ vì hồ sơ CCCD/CMND chờ duyệt. " +
+                      "Duyệt hồ sơ ở mục KYC để khoản này được chuyển ở lần giải ngân kế tiếp."
+                    : $"Chủ phòng trà #{ownerId} có {total:N0}đ tiền quyết toán đang bị giữ vì tài khoản nhận tiền chưa được " +
+                      "xác minh. Đối chiếu chủ tài khoản với CCCD/CMND đã duyệt rồi xác minh tài khoản.";
+            }
+            else
+            {
+                recipients = [ownerId];
+                title = "Tiền quyết toán của phòng trà đang được giữ";
+                body = blocker == PayoutBlocker.IdentityRejected
+                    ? $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì hồ sơ CCCD/CMND chưa được chấp nhận. Hãy " +
+                      "nộp lại hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp."
+                    : $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì tài khoản chưa xác minh danh tính. Hãy nộp " +
+                      "CCCD/CMND trong mục Hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.";
+            }
+
+            foreach (var recipient in recipients)
+            {
+                // So thoi gian phia client — DateTimeOffset khong dich duoc sang SQLite (cung ly do voi truy van o dau job).
+                var recent = await _ctx.Notifications.AsNoTracking()
+                    .Where(n => n.UserId == recipient && n.Type == NotificationType.PayoutOnHold && n.ReferenceId == reference)
+                    .Select(n => n.CreatedAt)
+                    .ToListAsync(ct);
+                if (recent.Any(at => at >= since)) continue;
+
+                await _notifications.NotifyAsync(
+                    recipient, NotificationType.PayoutOnHold, title, body,
+                    referenceType: "payout_owner", referenceId: reference, ct: ct);
+            }
+        }
+
+        await _ctx.SaveChangesAsync(ct);
     }
 
     /// <summary>

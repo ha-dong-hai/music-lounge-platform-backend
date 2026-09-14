@@ -78,9 +78,10 @@ public static class SeedHelper
         db.Users.AddRange(
             new User { Id = AdminId,          Email = "admin@test.com",      FullName = "Admin",          Role = UserRole.Admin },
             new User { Id = StaffId,          Email = "staff@test.com",      FullName = "Staff",          Role = UserRole.Staff },
-            new User { Id = OwnerId,          Email = "owner@test.com",      FullName = "Owner",          Role = UserRole.Owner },
+            // MLACP-395: giai ngan chi chuyen cho chu phong tra da duyet CCCD — hai chu phong tra mau la nguoi nhan da xac minh.
+            new User { Id = OwnerId,          Email = "owner@test.com",      FullName = "Owner",          Role = UserRole.Owner, CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved },
             new User { Id = AudienceId,       Email = "audience@test.com",   FullName = "Audience",       Role = UserRole.Audience },
-            new User { Id = OtherOwnerId,     Email = "owner2@test.com",     FullName = "OtherOwner",     Role = UserRole.Owner },
+            new User { Id = OtherOwnerId,     Email = "owner2@test.com",     FullName = "OtherOwner",     Role = UserRole.Owner, CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved },
             new User { Id = OtherVenueStaffId, Email = "staff2@test.com",    FullName = "OtherVenueStaff", Role = UserRole.Staff }
         );
 

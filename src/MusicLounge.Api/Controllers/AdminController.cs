@@ -39,6 +39,7 @@ using MusicLounge.Application.Users.Commands.ReactivateUserAccount;
 using MusicLounge.Application.Users.DTOs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Admin.Commands.ReviewKycDocument;
+using MusicLounge.Application.Admin.Commands.ReviewPayoutBankAccount;
 using MusicLounge.Application.Admin.Commands.TriggerRecurringJob;
 using MusicLounge.Application.Admin.Queries.GetKycReviewQueue;
 using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
@@ -460,6 +461,21 @@ public sealed class AdminController : ControllerBase
         CancellationToken ct = default)
     {
         await _sender.Send(new ReviewKycDocumentCommand(id, document, body.Approve, body.Note), ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-395: xác minh hoặc từ chối tài khoản nhận tiền quyết toán của một phòng trà. Chỉ xác minh được khi
+    /// chủ phòng trà đã được duyệt CCCD/CMND (422 nếu chưa); từ chối bắt buộc nêu lý do (400). Giải ngân chỉ chuyển vào
+    /// tài khoản đã xác minh.</summary>
+    [HttpPost("bank-accounts/{id:int}/review")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReviewPayoutBankAccount(
+        int id, [FromBody] ReviewKycDocumentBody body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewPayoutBankAccountCommand(id, body.Approve, body.Note), ct);
         return NoContent();
     }
 

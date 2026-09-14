@@ -23,12 +23,13 @@ public sealed class BankAccountTests
     [Fact]
     public async Task Create_AsLoungeOwner_Returns201()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var (ownerId, loungeId) = await OwnVenueAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
         var res = await client.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
             OwnerType = "Lounge",
-            OwnerId = SeedHelper.LoungeId,
+            OwnerId = loungeId,
             BankName = "Vietcombank",
             AccountNumber = "0123456789",
             AccountHolder = "NGUYEN VAN A",
@@ -47,12 +48,13 @@ public sealed class BankAccountTests
     [Fact]
     public async Task Create_StampsCreatedByWithCurrentUser()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var (ownerId, loungeId) = await OwnVenueAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
         var res = await client.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
             OwnerType = "Lounge",
-            OwnerId = SeedHelper.LoungeId,
+            OwnerId = loungeId,
             BankName = "Vietcombank",
             AccountNumber = "0123456789",
             AccountHolder = "NGUYEN VAN A",
@@ -64,7 +66,7 @@ public sealed class BankAccountTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var account = await db.Set<MusicLounge.Domain.Entities.BankAccount>().FindAsync(id);
 
-        account!.CreatedBy.Should().Be(SeedHelper.OwnerId);
+        account!.CreatedBy.Should().Be(ownerId);
         account.CreatedAt.Should().NotBe(default);
         account.UpdatedAt.Should().BeNull("not yet updated since creation");
     }
@@ -73,11 +75,12 @@ public sealed class BankAccountTests
     [Fact]
     public async Task Update_StampsUpdatedByAndUpdatedAt()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var (ownerId, loungeId) = await OwnVenueAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
         var createRes = await client.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
             OwnerType = "Lounge",
-            OwnerId = SeedHelper.LoungeId,
+            OwnerId = loungeId,
             BankName = "Vietcombank",
             AccountNumber = "0123456789",
             AccountHolder = "NGUYEN VAN A",
@@ -97,7 +100,7 @@ public sealed class BankAccountTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var account = await db.Set<MusicLounge.Domain.Entities.BankAccount>().FindAsync(id);
 
-        account!.UpdatedBy.Should().Be(SeedHelper.OwnerId);
+        account!.UpdatedBy.Should().Be(ownerId);
         account.UpdatedAt.Should().NotBeNull();
     }
 
@@ -123,12 +126,13 @@ public sealed class BankAccountTests
     [Fact]
     public async Task CreateSecondDefault_ClearsPreviousDefault()
     {
-        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        var (ownerId, loungeId) = await OwnVenueAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
         await client.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
             OwnerType = "Lounge",
-            OwnerId = SeedHelper.LoungeId,
+            OwnerId = loungeId,
             BankName = "Vietcombank",
             AccountNumber = "0111111111",
             AccountHolder = "NGUYEN VAN A",
@@ -137,7 +141,7 @@ public sealed class BankAccountTests
         await client.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
             OwnerType = "Lounge",
-            OwnerId = SeedHelper.LoungeId,
+            OwnerId = loungeId,
             BankName = "Techcombank",
             AccountNumber = "0222222222",
             AccountHolder = "NGUYEN VAN A",
@@ -145,7 +149,7 @@ public sealed class BankAccountTests
         });
 
         var listRes = await client.GetAsync(
-            $"/api/v1/bank-accounts?ownerType=Lounge&ownerId={SeedHelper.LoungeId}");
+            $"/api/v1/bank-accounts?ownerType=Lounge&ownerId={loungeId}");
         var body = await listRes.Content.ReadAsStringAsync();
 
         // Exactly one account should still be flagged default after the second Create.
@@ -160,6 +164,33 @@ public sealed class BankAccountTests
         var res = await client.GetAsync($"/api/v1/bank-accounts?ownerType=Lounge&ownerId={SeedHelper.LoungeId}");
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    /// <summary>
+    /// MLACP-395: phòng trà riêng cho mỗi bài tạo/sửa tài khoản mặc định. Làm việc đó trên phòng trà mẫu sẽ hạ tài khoản đã
+    /// xác minh của nó xuống không mặc định — và mọi khoản giải ngân lên lịch sau đó của chủ phòng trà mẫu (nhiều test
+    /// khác chờ đợi) bị giữ vì tài khoản nhận tiền chưa xác minh.
+    /// </summary>
+    private async Task<(int OwnerId, int LoungeId)> OwnVenueAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var owner = new MusicLounge.Domain.Entities.User
+        {
+            Email = $"bank-owner-{Guid.NewGuid():N}@test.com", FullName = "Bank Owner",
+            Role = MusicLounge.Domain.Enums.UserRole.Owner
+        };
+        db.Users.Add(owner);
+        await db.SaveChangesAsync();
+        var lounge = new MusicLounge.Domain.Entities.MusicLounge
+        {
+            OwnerId = owner.Id, Name = $"BankVenue-{Guid.NewGuid():N}"[..30],
+            Status = MusicLounge.Domain.Enums.LoungeStatus.Approved,
+            Address = new MusicLounge.Domain.ValueObjects.VenueAddress { Street = "1 Test St", District = "1", City = "HCM" }
+        };
+        db.Lounges.Add(lounge);
+        await db.SaveChangesAsync();
+        return (owner.Id, lounge.Id);
     }
 
     private sealed record IdResponse(bool Success, int Data);

@@ -54,7 +54,8 @@ public sealed class DonationEvidenceLogTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var pii = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
 
-        var owner = new User { Email = $"evidence-owner-{Guid.NewGuid():N}@test.com", FullName = "Evidence Owner" };
+        // MLACP-395: giai ngan chi chuyen cho chu phong tra da duyet CCCD, vao tai khoan da xac minh.
+        var owner = new User { Email = $"evidence-owner-{Guid.NewGuid():N}@test.com", FullName = "Evidence Owner", CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved };
         db.Users.Add(owner);
         await db.SaveChangesAsync();
 
@@ -81,7 +82,7 @@ public sealed class DonationEvidenceLogTests
         db.Add(new BankAccount
         {
             OwnerType = BankAccountOwnerType.Lounge, OwnerId = lounge.Id, BankName = "Test Bank",
-            AccountNumber = pii.Encrypt("0000000363"), AccountHolder = "Evidence Owner", IsDefault = true
+            AccountNumber = pii.Encrypt("0000000363"), AccountHolder = "Evidence Owner", IsDefault = true, IsVerified = true
         });
         db.Add(new BankAccount
         {

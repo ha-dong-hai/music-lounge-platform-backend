@@ -54,7 +54,8 @@ public sealed class DonationLiveAlertTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var owner = new User { Email = $"live-owner-{Guid.NewGuid():N}@test.com", FullName = "Live Alert Owner" };
+        // MLACP-395: giai ngan chi chuyen cho chu phong tra da duyet CCCD, vao tai khoan da xac minh.
+        var owner = new User { Email = $"live-owner-{Guid.NewGuid():N}@test.com", FullName = "Live Alert Owner", CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved };
         var staff = new User { Email = $"live-staff-{Guid.NewGuid():N}@test.com", FullName = "Live Alert Staff" };
         db.Users.AddRange(owner, staff);
         await db.SaveChangesAsync();
