@@ -9,8 +9,13 @@ internal sealed class TransactionBehavior<TRequest, TResponse>
     where TRequest : ICommand<TResponse>
 {
     private readonly IUnitOfWork _uow;
+    private readonly ITransactionLockScope _locks;
 
-    public TransactionBehavior(IUnitOfWork uow) => _uow = uow;
+    public TransactionBehavior(IUnitOfWork uow, ITransactionLockScope locks)
+    {
+        _uow = uow;
+        _locks = locks;
+    }
 
     public async Task<TResponse> Handle(
         TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
@@ -18,17 +23,26 @@ internal sealed class TransactionBehavior<TRequest, TResponse>
         if (request is INoTransactionCommand)
             return await next();
 
-        await _uow.BeginTransactionAsync(ct);
+        // MLACP-396: moi khoa handler lay tu day duoc giu toi khi commit/rollback xong — xem ITransactionLockScope.
+        _locks.Begin();
         try
         {
-            var response = await next();
-            await _uow.CommitTransactionAsync(ct);
-            return response;
+            await _uow.BeginTransactionAsync(ct);
+            try
+            {
+                var response = await next();
+                await _uow.CommitTransactionAsync(ct);
+                return response;
+            }
+            catch
+            {
+                await _uow.RollbackTransactionAsync(ct);
+                throw;
+            }
         }
-        catch
+        finally
         {
-            await _uow.RollbackTransactionAsync(ct);
-            throw;
+            await _locks.EndAsync();
         }
     }
 }
