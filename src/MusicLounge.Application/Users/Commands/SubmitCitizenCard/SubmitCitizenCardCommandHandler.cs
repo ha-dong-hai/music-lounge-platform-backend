@@ -51,6 +51,7 @@ internal sealed class SubmitCitizenCardCommandHandler : IRequestHandler<SubmitCi
         user.CitizenCardNumberHash = cardNumberHash;
         user.CitizenCardFrontImageUrl = await _fileStorage.RelocateToPrivateAsync(request.FrontImageUrl, ct);
         user.CitizenCardBackImageUrl = await _fileStorage.RelocateToPrivateAsync(request.BackImageUrl, ct);
+        user.DateOfBirth = request.DateOfBirth;
         user.CitizenCardSubmittedAt = DateTimeOffset.UtcNow;
         // Re-submitting reopens the review. A previously approved card that has been replaced is no
         // longer the card anyone approved, and one that was rejected has to be able to come back.

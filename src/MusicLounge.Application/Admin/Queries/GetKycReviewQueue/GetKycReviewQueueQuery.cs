@@ -18,9 +18,11 @@ public sealed record GetKycReviewQueueQuery(
 /// Flags the reviews where approving actually changes money — an enterprise declaration is a request
 /// to stop deducting tax, and it should not look like the routine case in the queue.
 /// </param>
+/// <param name="DateOfBirth">MLACP-397. Ngày sinh người nộp khai, để Admin đối chiếu với ảnh CCCD/CMND.</param>
 public sealed record KycReviewItemDto(
     int UserId,
     string FullName,
+    DateOnly? DateOfBirth,
     string Email,
     string? CitizenCardNumberMasked,
     DateTimeOffset? CitizenCardSubmittedAt,

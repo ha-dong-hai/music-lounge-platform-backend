@@ -73,7 +73,8 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = cardNumber,
             FrontImageUrl = frontUrl,
-            BackImageUrl = backUrl
+            BackImageUrl = backUrl,
+            DateOfBirth = "1990-05-17"
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -94,6 +95,7 @@ public sealed class ProfileManagementTests
         user.CitizenCardFrontImageUrl.Should().NotBeNullOrEmpty().And.NotBe(frontUrl);
         user.CitizenCardBackImageUrl.Should().NotBeNullOrEmpty().And.NotBe(backUrl);
         user.CitizenCardSubmittedAt.Should().NotBeNull();
+        user.DateOfBirth.Should().Be(new DateOnly(1990, 5, 17), "MLACP-397: Admin đối chiếu ngày sinh với ảnh giấy tờ");
 
         // The public file must have been moved (not copied) out of wwwroot/uploads...
         File.Exists(PublicUploadPath(frontUrl)).Should().BeFalse();
@@ -113,7 +115,8 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = cardNumber,
             FrontImageUrl = CreateFakeUploadedImage(),
-            BackImageUrl = CreateFakeUploadedImage()
+            BackImageUrl = CreateFakeUploadedImage(),
+            DateOfBirth = "1990-05-17"
         });
         first.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -122,7 +125,8 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = cardNumber,
             FrontImageUrl = CreateFakeUploadedImage(),
-            BackImageUrl = CreateFakeUploadedImage()
+            BackImageUrl = CreateFakeUploadedImage(),
+            DateOfBirth = "1990-05-17"
         });
         second.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
@@ -140,7 +144,8 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = cardNumber,
             FrontImageUrl = CreateFakeUploadedImage(),
-            BackImageUrl = CreateFakeUploadedImage()
+            BackImageUrl = CreateFakeUploadedImage(),
+            DateOfBirth = "1990-05-17"
         });
         ownerRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -151,10 +156,47 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = cardNumber,
             FrontImageUrl = "/uploads/front2.png",
-            BackImageUrl = "/uploads/back2.png"
+            BackImageUrl = "/uploads/back2.png",
+            DateOfBirth = "1990-05-17"
         });
 
         audienceRes.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task SubmitCitizenCard_WithoutDateOfBirth_Returns400()
+    {
+        // MLACP-397: ngày sinh là một trong ba thông tin xác thực người bán là cá nhân — thiếu nó Admin không đối chiếu
+        // được với ảnh giấy tờ.
+        var userId = await CreateDedicatedUserAsync();
+        var client = _factory.CreateAuthenticatedClient(userId, "Owner");
+
+        var res = await client.PostAsJsonAsync("/api/v1/me/citizen-card", new
+        {
+            CitizenCardNumber = UniqueCardNumber(),
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage()
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("ngày sinh");
+    }
+
+    [Fact]
+    public async Task SubmitCitizenCard_DateOfBirthNotInThePast_Returns400()
+    {
+        var userId = await CreateDedicatedUserAsync();
+        var client = _factory.CreateAuthenticatedClient(userId, "Owner");
+
+        var res = await client.PostAsJsonAsync("/api/v1/me/citizen-card", new
+        {
+            CitizenCardNumber = UniqueCardNumber(),
+            FrontImageUrl = CreateFakeUploadedImage(),
+            BackImageUrl = CreateFakeUploadedImage(),
+            DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1)
+        });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -181,7 +223,8 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = UniqueCardNumber(),
             FrontImageUrl = CreateFakeUploadedImage(),
-            BackImageUrl = CreateFakeUploadedImage()
+            BackImageUrl = CreateFakeUploadedImage(),
+            DateOfBirth = "1990-05-17"
         });
         submit.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -205,7 +248,8 @@ public sealed class ProfileManagementTests
         {
             CitizenCardNumber = UniqueCardNumber(),
             FrontImageUrl = CreateFakeUploadedImage(),
-            BackImageUrl = CreateFakeUploadedImage()
+            BackImageUrl = CreateFakeUploadedImage(),
+            DateOfBirth = "1990-05-17"
         });
         submit.StatusCode.Should().Be(HttpStatusCode.NoContent);
 

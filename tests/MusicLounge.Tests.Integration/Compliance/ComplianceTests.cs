@@ -200,7 +200,9 @@ public sealed class ComplianceTests
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner" };
+        // MLACP-397: chủ phòng trà đã được duyệt danh tính — bài ở đây xét quy tắc khác; cổng danh tính người bán có bài riêng (SellingRequiresVerifiedSellerTests).
+        var freshOwner = new User { Email = $"v377-{Guid.NewGuid():N}@test.com", FullName = "Test Venue Owner",
+            CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-1), CitizenCardReviewStatus = KycReviewStatus.Approved };
         db.Users.Add(freshOwner);
         await db.SaveChangesAsync();
 

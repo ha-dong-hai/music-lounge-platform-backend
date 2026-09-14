@@ -17,7 +17,7 @@ namespace MusicLounge.Tests.Integration.E2E;
 /// precondition vào DB). Test này gọi tuần tự đúng chuỗi API thật một Owner sẽ đi qua:
 ///
 /// Register(Role=Owner) → VerifyEmail → Login → CreateLounge → Admin duyệt phòng trà →
-/// Subscribe(VNPay) →
+/// Xác minh danh tính người bán (CCCD + Admin duyệt) → Subscribe(VNPay) →
 /// CreateLoungeShow → CreateTicketTier → SetLegalApproval → Publish (Draft→Pending) →
 /// Admin ReviewShow Approve (Pending→Published) → show xuất hiện trên GET /lounge-shows
 /// (homepage feed công khai) → AssignStaff → Staff bán vé walk-in → vé Confirmed.
@@ -38,6 +38,15 @@ public sealed class OwnerGoldenPathTests
 
     private static string HashCode(string rawCode)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawCode)));
+
+    private static string FakeUploadedImage()
+    {
+        var fileName = $"{Guid.NewGuid():N}.png";
+        var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        Directory.CreateDirectory(uploadsDir);
+        File.WriteAllBytes(Path.Combine(uploadsDir, fileName), [0x89, 0x50, 0x4E, 0x47]);
+        return $"/uploads/{fileName}";
+    }
 
     [Fact]
     public async Task Owner_FullJourney_RegisterToPublishedShowToSoldTicket_Succeeds()
@@ -104,6 +113,23 @@ public sealed class OwnerGoldenPathTests
             $"/api/v1/admin/venues/{loungeId}/review",
             new { Decision = "Approved", ReviewNote = "Hồ sơ hợp lệ" });
         venueReviewRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // ── 4c. Xác minh danh tính người bán (MLACP-397, Luật TMĐT 2025 Điều 17) ─────────────
+        // Nền tảng chỉ cho chủ phòng trà bán khi danh tính đã được xác minh. Trong sandbox, xác minh là nộp CCCD/CMND rồi
+        // Admin duyệt — bản mô phỏng của xác thực điện tử qua VNeID. Ảnh giấy tờ được đặt sẵn vào wwwroot/uploads, đúng
+        // như một lần POST /uploads/images trước đó để lại (cùng cách ProfileManagementTests làm).
+        var cardRes = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
+        {
+            CitizenCardNumber = Random.Shared.NextInt64(100_000_000_000, 999_999_999_999).ToString(),
+            FrontImageUrl = FakeUploadedImage(),
+            BackImageUrl = FakeUploadedImage(),
+            DateOfBirth = "1988-08-08"
+        });
+        cardRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var identityReviewRes = await adminClient.PostAsJsonAsync(
+            $"/api/v1/admin/kyc-reviews/{ownerId}/CitizenCard", new { Approve = true, Note = "Khớp giấy tờ" });
+        identityReviewRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // ── 5. Subscribe to an active package via real VNPay callback simulation
         //       (FakeVnPayService — same mechanism SubscriptionTests already proves works) ──

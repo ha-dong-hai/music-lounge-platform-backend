@@ -48,7 +48,11 @@ public sealed class VenueApprovalGateTests
             Role = UserRole.Owner,
             AuthProvider = "local",
             EmailVerifiedAt = DateTimeOffset.UtcNow,
-            IsActive = true
+            IsActive = true,
+            // MLACP-397: danh tính người bán đã duyệt — bài ở đây xét trạng thái PHÒNG TRÀ; cổng danh tính người bán có
+            // bài riêng (SellingRequiresVerifiedSellerTests).
+            CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            CitizenCardReviewStatus = KycReviewStatus.Approved
         };
         db.Users.Add(owner);
         await db.SaveChangesAsync();

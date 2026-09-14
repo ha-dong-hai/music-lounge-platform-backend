@@ -41,6 +41,7 @@ internal sealed class GetKycReviewQueueQueryHandler
             .Select(u => new KycReviewItemDto(
                 u.Id,
                 u.FullName,
+                u.DateOfBirth,
                 u.Email,
                 Mask(Decrypt(u.CitizenCardNumber)),
                 u.CitizenCardSubmittedAt,

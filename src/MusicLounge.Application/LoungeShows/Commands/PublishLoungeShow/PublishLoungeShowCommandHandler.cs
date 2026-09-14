@@ -68,6 +68,14 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
             throw new DomainException(
                 $"{VenueLifecycle.ExplainRestriction(lounge.Status)} Chưa thể nộp duyệt buổi diễn mới.");
 
+        // MLACP-397. Người bán phải được xác minh danh tính trước khi nền tảng cho phép bán (Luật TMĐT 2025 Điều 17
+        // khoản 1 điểm c). Nộp duyệt là lúc buổi diễn được phép mở bán vé. Điều kiện nằm ở người bán, không ở người bấm:
+        // Admin nộp thay cho một chủ phòng trà chưa xác minh cũng bị chặn.
+        var sellerIdentity = await SellerIdentity.StatusOfAsync(_uow, lounge.OwnerId, ct);
+        if (!SellerIdentity.IsVerified(sellerIdentity))
+            throw new DomainException(
+                $"{SellerIdentity.ExplainForSeller(sellerIdentity)} Chưa thể nộp duyệt buổi diễn mới.");
+
         if (show.Status != LoungeShowStatus.Draft)
             throw new DomainException("Chỉ có thể nộp duyệt event đang ở trạng thái Draft.");
 

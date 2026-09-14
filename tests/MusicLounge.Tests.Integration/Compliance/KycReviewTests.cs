@@ -196,6 +196,31 @@ public sealed class KycReviewTests
     }
 
     [Fact]
+    public async Task Queue_ShowsTheDateOfBirthToCompareWithTheCard()
+    {
+        // MLACP-397: Admin đối chiếu họ tên, ngày sinh và số giấy tờ với ảnh CCCD/CMND — không thấy ngày sinh thì không
+        // đối chiếu được. Nộp từ lâu để hồ sơ nằm đầu hàng đợi (sắp theo thời điểm nộp), không rơi khỏi trang đầu.
+        var userId = await SeedSellerAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Id == userId);
+            user.DateOfBirth = new DateOnly(1985, 3, 9);
+            user.CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddYears(-20);
+            user.CitizenCardReviewStatus = KycReviewStatus.Pending;
+            await db.SaveChangesAsync();
+        }
+
+        var body = await (await Admin().GetAsync("/api/v1/admin/kyc-reviews?status=Pending&pageSize=100"))
+            .Content.ReadAsStringAsync();
+        using var json = System.Text.Json.JsonDocument.Parse(body);
+        var item = json.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
+            .Single(i => i.GetProperty("userId").GetInt32() == userId);
+
+        item.GetProperty("dateOfBirth").GetString().Should().Be("1985-03-09");
+    }
+
+    [Fact]
     public async Task ReviewingSomethingNeverSubmitted_IsRefused()
     {
         var userId = await SeedSellerAsync();
