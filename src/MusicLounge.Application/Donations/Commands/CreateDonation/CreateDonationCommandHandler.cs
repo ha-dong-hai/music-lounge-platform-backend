@@ -78,7 +78,7 @@ internal sealed class CreateDonationCommandHandler
         var net = PaymentFeeCalculator
             .Split(request.Amount, commissionRate, taxRate, personalIncomeTaxRate).OwnerNet;
 
-        var orderId = $"DON-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
+        var orderId = $"{VnPayOrderRefs.DonationPrefix}{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
 
         var donation = new Donation
         {

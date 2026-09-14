@@ -65,7 +65,7 @@ internal sealed class InitiateFnbOrderPaymentCommandHandler
         // chi khien khach dong nham tab bi ket toi het han link. Cho hai link cung duoc tra la viec cua
         // IPN: no kiem trang thai DON, dung nhu tai lieu VNPay yeu cau.
 
-        var orderId = $"FNB-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
+        var orderId = $"{VnPayOrderRefs.FnbOrderPrefix}{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40];
 
         // MLACP-349: KHONG doi order.PaymentMethod o day nua. Truoc day no bi dat Gateway ngay khi khach
         // bam "thanh toan" — truoc khi co dong nao — nen neu khach bo do roi tra tien mat, ban ghi tien
