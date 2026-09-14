@@ -72,7 +72,8 @@ public sealed class PublicDonationStatementTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var pii = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
 
-        var owner = new User { Email = $"statement-owner-{Guid.NewGuid():N}@test.com", FullName = "Statement Owner" };
+        // MLACP-395: giai ngan chi chuyen cho chu phong tra da duyet CCCD, vao tai khoan da xac minh.
+        var owner = new User { Email = $"statement-owner-{Guid.NewGuid():N}@test.com", FullName = "Statement Owner", CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved };
         db.Users.Add(owner);
         await db.SaveChangesAsync();
 
@@ -102,7 +103,7 @@ public sealed class PublicDonationStatementTests
         db.Add(new BankAccount
         {
             OwnerType = BankAccountOwnerType.Lounge, OwnerId = lounge.Id, BankName = "Test Bank",
-            AccountNumber = pii.Encrypt(VenueAccountNumber), AccountHolder = "Statement Owner", IsDefault = true
+            AccountNumber = pii.Encrypt(VenueAccountNumber), AccountHolder = "Statement Owner", IsDefault = true, IsVerified = true
         });
         db.Add(new BankAccount
         {

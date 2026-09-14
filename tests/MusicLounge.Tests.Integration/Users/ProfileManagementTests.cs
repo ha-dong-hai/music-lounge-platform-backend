@@ -130,7 +130,10 @@ public sealed class ProfileManagementTests
     [Fact]
     public async Task SubmitCitizenCard_NumberTakenByAnotherUser_Returns409()
     {
-        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        // MLACP-395: user rieng, khong dung chu phong tra mau — nop CCCD dua trang thai KYC ve Pending, va moi khoan
+        // giai ngan cua chu phong tra mau (nhieu test khac cho doi) se bi giu.
+        var ownerId = await CreateDedicatedUserAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
         var cardNumber = UniqueCardNumber();
 
         var ownerRes = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
@@ -170,7 +173,10 @@ public sealed class ProfileManagementTests
     [Fact]
     public async Task GetCitizenCardImage_AsAdmin_CanViewAnyUsersImage()
     {
-        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        // MLACP-395: user rieng, khong dung chu phong tra mau — nop CCCD dua trang thai KYC ve Pending, va moi khoan
+        // giai ngan cua chu phong tra mau (nhieu test khac cho doi) se bi giu.
+        var ownerId = await CreateDedicatedUserAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
         var submit = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
             CitizenCardNumber = UniqueCardNumber(),
@@ -180,7 +186,7 @@ public sealed class ProfileManagementTests
         submit.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
-        var res = await adminClient.GetAsync($"/api/v1/admin/users/{SeedHelper.OwnerId}/citizen-card/front");
+        var res = await adminClient.GetAsync($"/api/v1/admin/users/{ownerId}/citizen-card/front");
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
@@ -191,7 +197,10 @@ public sealed class ProfileManagementTests
     [Fact]
     public async Task GetMyCitizenCardImage_AnotherUsersImage_IsNotExposedViaSelfEndpoint()
     {
-        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        // MLACP-395: user rieng, khong dung chu phong tra mau — nop CCCD dua trang thai KYC ve Pending, va moi khoan
+        // giai ngan cua chu phong tra mau (nhieu test khac cho doi) se bi giu.
+        var ownerId = await CreateDedicatedUserAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
         var submit = await ownerClient.PostAsJsonAsync("/api/v1/me/citizen-card", new
         {
             CitizenCardNumber = UniqueCardNumber(),

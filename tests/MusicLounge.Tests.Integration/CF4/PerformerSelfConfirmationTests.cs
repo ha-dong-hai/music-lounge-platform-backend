@@ -232,7 +232,8 @@ public sealed class PerformerSelfConfirmationTests
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var pii = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
-            var owner = new User { Email = $"receipt-owner-{Guid.NewGuid():N}@test.com", FullName = "Receipt Owner" };
+            // MLACP-395: giai ngan chi chuyen cho chu phong tra da duyet CCCD, vao tai khoan da xac minh.
+            var owner = new User { Email = $"receipt-owner-{Guid.NewGuid():N}@test.com", FullName = "Receipt Owner", CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-30), CitizenCardReviewStatus = KycReviewStatus.Approved };
             db.Users.Add(owner);
             await db.SaveChangesAsync();
 
@@ -262,7 +263,7 @@ public sealed class PerformerSelfConfirmationTests
             db.Add(new BankAccount
             {
                 OwnerType = BankAccountOwnerType.Lounge, OwnerId = lounge.Id, BankName = "Test Bank",
-                AccountNumber = pii.Encrypt("0000000364"), AccountHolder = "Receipt Owner", IsDefault = true
+                AccountNumber = pii.Encrypt("0000000364"), AccountHolder = "Receipt Owner", IsDefault = true, IsVerified = true
             });
             db.Add(new BankAccount
             {
