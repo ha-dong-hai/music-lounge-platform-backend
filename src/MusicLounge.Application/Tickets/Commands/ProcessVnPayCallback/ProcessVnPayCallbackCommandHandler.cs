@@ -322,7 +322,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         // BuyerId khi thanh toan thieu PayerId.
         var payerId = payment.PayerId ?? tickets.Select(t => t.BuyerId).FirstOrDefault(b => b is not null);
 
-        _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+        var refund = new RefundRequest
         {
             PaymentId = payment.Id,
             RequestedBy = payerId,
@@ -330,7 +330,8 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             AmountRequested = payment.GrossAmount,
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
-        });
+        };
+        _uow.Repository<RefundRequest, int>().Add(refund);
 
         if (payerId is int buyerId)
             await _notifications.NotifyAsync(
@@ -355,7 +356,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
             _uow, _notifications, _logger, incidentLabel, txnRef, result.Amount,
-            "payment", payment.Id.ToString(), ct);
+            "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;
     }

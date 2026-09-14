@@ -130,15 +130,25 @@ public static class PaymentIncident
         decimal amount,
         string referenceType,
         string referenceId,
-        CancellationToken ct)
+        CancellationToken ct,
+        int? refundRequestId = null)
     {
         logger.LogError(
             "VNPay xac nhan THANH CONG cho mot ban ghi da dong — tien da thu ma he thong khong con " +
-            "ghi nhan. Loai={What} TxnRef={TxnRef} SoTien={Amount} Ref={ReferenceType}/{ReferenceId} at {At}",
-            what, txnRef, amount, referenceType, referenceId, DateTimeOffset.UtcNow);
+            "ghi nhan. Loai={What} TxnRef={TxnRef} SoTien={Amount} Ref={ReferenceType}/{ReferenceId} " +
+            "RefundRequestId={RefundRequestId} at {At}",
+            what, txnRef, amount, referenceType, referenceId, refundRequestId, DateTimeOffset.UtcNow);
 
         var admins = await uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin, ct);
         if (admins.Count == 0) return;
+
+        // MLACP-392: tu MLACP-351/382/383/385/386/389, cac duong "tien ve nhung khong cap/khong ap duoc" da TU TAO yeu
+        // cau hoan 100% truoc khi goi toi day. Bao Admin "cap lai hoac hoan tien" luc do la chi sai viec: Admin co the cap
+        // lai tay hoac tao them mot yeu cau hoan trung. Co ma yeu cau hoan thi noi thang viec can lam la duyet no.
+        var whatToDo = refundRequestId is { } refundId
+            ? $"Hệ thống đã tự tạo yêu cầu hoàn 100% #{refundId} cho khách — việc cần làm là duyệt yêu cầu đó " +
+              "(hoàn qua VNPay theo mã giao dịch trên), không cấp lại bằng tay và không tạo thêm yêu cầu hoàn."
+            : "Cần đối soát với VNPay rồi cấp lại hoặc hoàn tiền cho khách.";
 
         foreach (var admin in admins)
         {
@@ -147,8 +157,7 @@ public static class PaymentIncident
                 NotificationType.PaymentConfirmedAfterExpiry,
                 "Thanh toán được xác nhận sau khi đơn đã đóng",
                 $"VNPay báo thành công {amount:N0}đ cho {what} (mã giao dịch {txnRef}), nhưng bản ghi " +
-                "đã bị đóng trước đó nên hệ thống không cấp được gì. Cần đối soát với VNPay rồi " +
-                "cấp lại hoặc hoàn tiền cho khách.",
+                $"đã bị đóng trước đó nên hệ thống không cấp được gì. {whatToDo}",
                 referenceType: referenceType,
                 referenceId: referenceId,
                 ct: ct);

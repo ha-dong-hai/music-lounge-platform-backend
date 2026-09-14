@@ -359,7 +359,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
 
         var why = penalized == LoungeStatus.Locked ? "bị khoá vĩnh viễn" : "bị tạm khoá";
 
-        _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+        var refund = new RefundRequest
         {
             PaymentId = payment.Id,
             RequestedBy = ownerId,
@@ -367,7 +367,8 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             AmountRequested = payment.GrossAmount,
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
-        });
+        };
+        _uow.Repository<RefundRequest, int>().Add(refund);
 
         await _notifications.NotifyAsync(
             ownerId,
@@ -390,7 +391,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
             _uow, _notifications, _logger, "goi dich vu cua phong tra dang bi khoa/tam khoa", txnRef, result.Amount,
-            "payment", payment.Id.ToString(), ct);
+            "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;
     }
