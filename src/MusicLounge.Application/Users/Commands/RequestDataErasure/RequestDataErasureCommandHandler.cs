@@ -130,6 +130,7 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         // survive an erasure request the way every other financial record does.
         user.TaxCode = null;
         user.TaxCodeHash = null;
+        user.LegalName = null;
         user.TaxProfileSubmittedAt = null;
         user.TaxProfileVerifiedAt = null;
         user.TaxProfileVerifiedBy = null;

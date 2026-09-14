@@ -10,4 +10,9 @@ namespace MusicLounge.Application.Users.Commands.SubmitTaxProfile;
 /// platform to hold either this or the seller's personal identification number; the citizen card
 /// already covers the second, so this completes the pair rather than duplicating it.
 /// </param>
-public sealed record SubmitTaxProfileCommand(string BusinessType, string TaxCode) : ICommand;
+/// <param name="LegalName">
+/// MLACP-398. Tên doanh nghiệp đúng như trên giấy chứng nhận đăng ký kinh doanh. Bắt buộc khi khai là doanh nghiệp; bỏ
+/// qua khi khai là hộ/cá nhân. Theo NĐ 248/2026/NĐ-CP Điều 18 (bản trên luatvietnam), người bán là tổ chức được xác
+/// thực bằng tên tổ chức, số định danh của tổ chức và người đại diện theo pháp luật.
+/// </param>
+public sealed record SubmitTaxProfileCommand(string BusinessType, string TaxCode, string? LegalName) : ICommand;

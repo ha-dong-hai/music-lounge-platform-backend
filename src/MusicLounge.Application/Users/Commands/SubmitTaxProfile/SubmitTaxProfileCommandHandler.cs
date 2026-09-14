@@ -50,11 +50,14 @@ internal sealed class SubmitTaxProfileCommandHandler : IRequestHandler<SubmitTax
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 
         var declared = Enum.Parse<PayeeBusinessType>(request.BusinessType, ignoreCase: true);
+        // MLACP-398. Tên doanh nghiệp chỉ có nghĩa với doanh nghiệp — khai lại là hộ/cá nhân thì không giữ tên cũ.
+        var legalName = declared == PayeeBusinessType.Enterprise ? request.LegalName?.Trim() : null;
 
         // Re-declaring drops any previous verification. Otherwise a seller could get verified as a
         // hộ kinh doanh and then quietly re-declare as a doanh nghiệp, carrying the old approval
         // over to a claim nobody checked and switching their own withholding off.
-        if (user.BusinessType != declared || user.TaxCodeHash != taxCodeHash)
+        // MLACP-398: đổi tên doanh nghiệp cũng vậy — tên đã duyệt là tên đã được đối chiếu với giấy chứng nhận.
+        if (user.BusinessType != declared || user.TaxCodeHash != taxCodeHash || user.LegalName != legalName)
         {
             user.TaxProfileVerifiedAt = null;
             user.TaxProfileVerifiedBy = null;
@@ -64,6 +67,7 @@ internal sealed class SubmitTaxProfileCommandHandler : IRequestHandler<SubmitTax
         user.TaxProfileReviewNote = null;
 
         user.BusinessType = declared;
+        user.LegalName = legalName;
         user.TaxCode = _piiEncryption.Encrypt(taxCode);
         user.TaxCodeHash = taxCodeHash;
         user.TaxProfileSubmittedAt = DateTimeOffset.UtcNow;

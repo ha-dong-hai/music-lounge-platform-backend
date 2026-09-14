@@ -16,6 +16,8 @@ public sealed record GetMyTaxProfileQuery : IQuery<TaxProfileDto>;
 public sealed record TaxProfileDto(
     string? BusinessType,
     string? TaxCode,
+    /// <summary>MLACP-398. Tên doanh nghiệp đã khai — null với hộ/cá nhân.</summary>
+    string? LegalName,
     DateTimeOffset? SubmittedAt,
     DateTimeOffset? VerifiedAt,
     string? ReviewStatus,

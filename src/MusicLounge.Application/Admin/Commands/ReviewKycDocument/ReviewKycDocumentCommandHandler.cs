@@ -3,6 +3,7 @@ using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Admin.Commands.ReviewKycDocument;
 
@@ -55,6 +56,26 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
         {
             if (user.TaxProfileSubmittedAt is null)
                 throw new DomainException("Người dùng này chưa khai báo hồ sơ thuế nào để duyệt.");
+
+            // MLACP-398. Duyệt hồ sơ doanh nghiệp là xác nhận tổ chức này có thật và tài khoản này đại diện cho nó — và
+            // duyệt xong thì nền tảng thôi khấu trừ thuế. Admin cần đủ thứ để đối chiếu: tên doanh nghiệp đã khai, danh
+            // tính người đại diện theo pháp luật (CCCD/CMND của tài khoản chủ phòng trà, đã duyệt) và giấy chứng nhận
+            // đăng ký kinh doanh của phòng trà. Chỉ chặn khi DUYỆT: từ chối luôn được, và hộ/cá nhân không cần các thứ này.
+            if (request.Approve && user.BusinessType == PayeeBusinessType.Enterprise)
+            {
+                if (string.IsNullOrWhiteSpace(user.LegalName))
+                    throw new DomainException(
+                        "Chưa duyệt được hồ sơ doanh nghiệp: người nộp chưa khai tên doanh nghiệp — cần khai lại hồ sơ thuế.");
+
+                if (user.CitizenCardReviewStatus != KycReviewStatus.Approved)
+                    throw new DomainException(
+                        "Chưa duyệt được hồ sơ doanh nghiệp: CCCD/CMND của người đại diện (chủ tài khoản) chưa được duyệt.");
+
+                var venues = await _uow.Repository<MusicLoungeEntity, int>().FindAsync(l => l.OwnerId == user.Id, ct);
+                if (!venues.Any(l => !string.IsNullOrWhiteSpace(l.BusinessLicenseUrl)))
+                    throw new DomainException(
+                        "Chưa duyệt được hồ sơ doanh nghiệp: phòng trà chưa nộp giấy chứng nhận đăng ký kinh doanh để đối chiếu.");
+            }
 
             user.TaxProfileReviewStatus = decision;
             user.TaxProfileReviewNote = request.Note;

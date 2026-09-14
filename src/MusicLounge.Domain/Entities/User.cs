@@ -67,6 +67,10 @@ public sealed class User : Common.AuditableEntity<int>
     // for the uniqueness check that the non-deterministic ciphertext cannot support.
     public string? TaxCode { get; set; }
     public string? TaxCodeHash { get; set; }
+    // MLACP-398. Tên doanh nghiệp đúng như trên giấy chứng nhận đăng ký kinh doanh — chỉ có khi khai là doanh nghiệp.
+    // Không mã hoá: tên doanh nghiệp là thông tin công khai trên cổng đăng ký doanh nghiệp, không định danh một thể
+    // nhân. Là tên Admin đối chiếu với giấy chứng nhận, và với tên chủ tài khoản nhận tiền của doanh nghiệp.
+    public string? LegalName { get; set; }
     public DateTimeOffset? TaxProfileSubmittedAt { get; set; }
     // Until this is set, a declaration of being a doanh nghiệp does not stop withholding — see
     // TaxWithholdingPolicy. Self-service "please stop deducting tax from me" is not a claim a seller

@@ -69,6 +69,16 @@ public sealed class DataErasureTests
         var userId = await CreateLocalAccountAsync(email, "P@ssword123-safe");
         var client = _factory.CreateAuthenticatedClient(userId, "Audience");
 
+        // MLACP-398: tên doanh nghiệp đi cùng hồ sơ thuế — xoá dữ liệu thì xoá cả nó.
+        using (var seed = _factory.Services.CreateScope())
+        {
+            var seedDb = seed.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var seller = await seedDb.Users.SingleAsync(u => u.Id == userId);
+            seller.BusinessType = PayeeBusinessType.Enterprise;
+            seller.LegalName = "CÔNG TY TNHH SẼ BỊ XOÁ";
+            await seedDb.SaveChangesAsync();
+        }
+
         var res = await client.PostAsJsonAsync("/api/v1/me/data-erasure", new { CurrentPassword = "P@ssword123-safe" });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -81,6 +91,7 @@ public sealed class DataErasureTests
         user.PasswordHash.Should().BeNull();
         user.IsActive.Should().BeFalse();
         user.DataErasedAt.Should().NotBeNull();
+        user.LegalName.Should().BeNull();
     }
 
     [Fact]

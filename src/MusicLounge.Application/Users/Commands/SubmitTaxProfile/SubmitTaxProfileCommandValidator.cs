@@ -20,5 +20,13 @@ public sealed partial class SubmitTaxProfileCommandValidator : AbstractValidator
             .NotEmpty().WithMessage("Mã số thuế không được để trống.")
             .Must(c => TaxCodePattern().IsMatch(c.Trim()))
             .WithMessage("Mã số thuế phải gồm 10 chữ số, hoặc 10 chữ số kèm 3 chữ số đơn vị trực thuộc (ví dụ 0123456789-001).");
+
+        RuleFor(x => x.LegalName)
+            .NotEmpty()
+            .When(x => Enum.TryParse<PayeeBusinessType>(x.BusinessType, ignoreCase: true, out var t)
+                       && t == PayeeBusinessType.Enterprise)
+            .WithMessage("Doanh nghiệp phải khai tên doanh nghiệp đúng như trên giấy chứng nhận đăng ký kinh doanh.");
+
+        RuleFor(x => x.LegalName).MaximumLength(255);
     }
 }
