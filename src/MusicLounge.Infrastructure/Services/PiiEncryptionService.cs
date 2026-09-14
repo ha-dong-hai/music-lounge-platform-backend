@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using System.Security.Cryptography;
 using MusicLounge.Application.Common.Interfaces;
 
 namespace MusicLounge.Infrastructure.Services;
@@ -13,4 +14,16 @@ internal sealed class PiiEncryptionService : IPiiEncryptionService
 
     public string Encrypt(string plaintext) => _protector.Protect(plaintext);
     public string Decrypt(string ciphertext) => _protector.Unprotect(ciphertext);
+
+    public string? TryDecrypt(string ciphertext)
+    {
+        try
+        {
+            return _protector.Unprotect(ciphertext);
+        }
+        catch (CryptographicException)
+        {
+            return null;
+        }
+    }
 }

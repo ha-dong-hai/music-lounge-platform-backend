@@ -23,6 +23,8 @@ public sealed record GetKycReviewQueueQuery(
 /// <param name="HasBusinessLicense">
 /// MLACP-398. Phòng trà của người nộp đã có giấy chứng nhận đăng ký kinh doanh chưa — duyệt hồ sơ doanh nghiệp cần nó.
 /// </param>
+/// <param name="CitizenCardNumberUnreadable">MLACP-401. Số CCCD/CMND đã lưu không còn giải mã được — cần nộp lại.</param>
+/// <param name="TaxCodeUnreadable">MLACP-401. Mã số thuế đã lưu không còn giải mã được — cần khai lại.</param>
 public sealed record KycReviewItemDto(
     int UserId,
     string FullName,
@@ -37,4 +39,6 @@ public sealed record KycReviewItemDto(
     DateTimeOffset? TaxProfileSubmittedAt,
     string? TaxProfileReviewStatus,
     bool WithholdingWouldStopIfApproved,
-    bool HasBusinessLicense);
+    bool HasBusinessLicense,
+    bool CitizenCardNumberUnreadable,
+    bool TaxCodeUnreadable);

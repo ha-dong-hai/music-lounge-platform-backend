@@ -35,8 +35,10 @@ internal sealed class GetBankAccountsQueryHandler
             .OrderByDescending(a => a.IsDefault)
             .ThenBy(a => a.Id)
             .Select(a => new BankAccountDto(
-                a.Id, a.OwnerType, a.OwnerId, a.BankName, _piiEncryption.Decrypt(a.AccountNumber), a.AccountHolder,
-                a.IsDefault, a.IsVerified))
+                a.Id, a.OwnerType, a.OwnerId, a.BankName, _piiEncryption.TryDecrypt(a.AccountNumber), a.AccountHolder,
+                a.IsDefault, a.IsVerified,
+                // MLACP-401: số mã hoá bằng khoá đã mất — null kèm cờ để chủ phòng trà nhập lại, thay vì 500 cho cả danh sách.
+                _piiEncryption.TryDecrypt(a.AccountNumber) is null))
             .ToList();
     }
 }

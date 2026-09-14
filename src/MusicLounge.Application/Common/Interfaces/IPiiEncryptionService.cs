@@ -12,4 +12,11 @@ public interface IPiiEncryptionService
 {
     string Encrypt(string plaintext);
     string Decrypt(string ciphertext);
+
+    /// <summary>
+    /// MLACP-401. Như <see cref="Decrypt"/>, nhưng trả null khi giá trị không giải mã được bằng bộ khoá hiện có — ví dụ được mã
+    /// hoá bằng khoá đã mất trong lần triển khai 04/09/2026. Chỉ nuốt lỗi mật mã; lỗi khác vẫn ném. Dùng ở chỗ đọc để báo "không
+    /// đọc được" thay vì trả 500; chỗ nào tiền phụ thuộc vào giá trị này phải chặn khi nhận null.
+    /// </summary>
+    string? TryDecrypt(string ciphertext);
 }

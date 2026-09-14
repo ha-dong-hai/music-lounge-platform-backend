@@ -26,4 +26,6 @@ public sealed record TaxProfileDto(
     bool WithholdingApplies,
     decimal VatRate,
     decimal PersonalIncomeTaxRate,
-    string Explanation);
+    string Explanation,
+    /// <summary>MLACP-401. Mã số thuế đã lưu nhưng không còn giải mã được (khoá mã hoá cũ đã mất) — cần khai lại.</summary>
+    bool TaxCodeUnreadable);

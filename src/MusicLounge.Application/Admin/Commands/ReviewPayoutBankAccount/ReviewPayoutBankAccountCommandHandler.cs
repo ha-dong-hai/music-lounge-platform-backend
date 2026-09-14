@@ -21,11 +21,14 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
 {
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notifications;
+    private readonly IPiiEncryptionService _pii;
 
-    public ReviewPayoutBankAccountCommandHandler(IUnitOfWork uow, INotificationService notifications)
+    public ReviewPayoutBankAccountCommandHandler(
+        IUnitOfWork uow, INotificationService notifications, IPiiEncryptionService pii)
     {
         _uow = uow;
         _notifications = notifications;
+        _pii = pii;
     }
 
     public async Task<Unit> Handle(ReviewPayoutBankAccountCommand request, CancellationToken ct)
@@ -46,6 +49,12 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
         if (request.Approve && owner.CitizenCardReviewStatus != KycReviewStatus.Approved)
             throw new DomainException(
                 "Chủ phòng trà chưa được duyệt CCCD/CMND — cần duyệt danh tính trước để đối chiếu tên chủ tài khoản.");
+
+        // MLACP-401. Không xác minh một tài khoản mà số của nó không còn đọc được (mã hoá bằng khoá đã mất) — xác minh xong thì
+        // tiền quyết toán đi vào đó. Chủ phòng trà cập nhật tài khoản thì số được mã hoá lại bằng khoá hiện tại.
+        if (request.Approve && _pii.TryDecrypt(account.AccountNumber) is null)
+            throw new DomainException(
+                "Số tài khoản này không còn đọc được trên hệ thống (khoá mã hoá cũ đã mất) — chủ phòng trà cần nhập lại tài khoản trước khi xác minh.");
 
         // MLACP-399. Tài khoản phải đứng tên đúng người — hoặc đúng doanh nghiệp — đã được xác minh. Trước đây việc đối chiếu
         // này hoàn toàn bằng mắt và không gì chặn khi tên lệch. Chỉ chặn khi XÁC MINH; từ chối luôn được.
