@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Hangfire;
+using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.LoungeShows;
@@ -64,6 +65,7 @@ public sealed class ApplyDuePenaltiesJob
             // mua toi mot buoi dien khong con ai to chuc, khong ai duoc hoan. Huy TRUOC khi danh dau AppliedAt: job chet
             // giua chung thi lan chay sau lam tiep (buoi da huy khong con Published nen khong bi huy lai).
             var cancelled = await CancelShowsInsideAsync(penalty, now, ct);
+            var venueFnbOrders = await CancelOpenFnbOrdersOnBanAsync(penalty, ct);
 
             // MLACP-367: khong bao gio nhe di — mot lenh tam khoa co hieu luc sau lenh khoa vinh vien truoc
             // day ha Locked xuong Suspended, roi ExpireServedSuspensionsJob mo khoa luon khi het han.
@@ -125,7 +127,7 @@ public sealed class ApplyDuePenaltiesJob
                     ? " Gói dịch vụ đã dừng; phí gói không được hoàn khi phòng trà bị khoá vĩnh viễn do vi phạm. " +
                       "Nếu lệnh khoá được huỷ, gói được kích hoạt lại với đúng số ngày còn lại."
                     : "") +
-                DescribeCancelled(penalty.PenaltyType, cancelled),
+                DescribeCancelled(penalty.PenaltyType, cancelled) + DescribeVenueFnb(venueFnbOrders),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);
@@ -179,6 +181,36 @@ public sealed class ApplyDuePenaltiesJob
 
         return total;
     }
+
+    /// <summary>
+    /// MLACP-393 — khoá vĩnh viễn thì phòng trà không còn phục vụ ai trên nền tảng. <see cref="CancelShowsInsideAsync"/>
+    /// chỉ huỷ đơn F&amp;B gắn với buổi diễn vừa bị huỷ; đơn đặt ngoài giờ diễn (ShowId null) hay gắn với buổi khác mà đang
+    /// chờ/đang làm thì tiền khách đã trả trước treo trên nền tảng. Huỷ những đơn đó, hoàn 100%.
+    ///
+    /// <para>Chỉ đơn khách đã trả trước (<c>prepaidOnly</c>): khoá phòng trà không chặn nhân viên đổi trạng thái đơn
+    /// (<c>UpdateFnbOrderStatus</c> chỉ kiểm quyền vận hành), nên đơn chưa trả vẫn được nhân viên tự đóng — huỷ hộ không
+    /// bảo vệ thêm ai mà có thể giẫm lên một bàn đang được phục vụ. Không huỷ đơn đã phục vụ (<c>servedToo: false</c>):
+    /// món đã mang ra là hàng đã giao.
+    /// Tạm khoá có ngày mở lại nên không dùng tới. Lưu ngay, trước khi đánh dấu <c>AppliedAt</c> — cùng thứ tự với việc
+    /// huỷ buổi diễn: job chết giữa chừng thì lần chạy sau làm tiếp (đơn đã huỷ không còn mở nên không bị huỷ lại).</para>
+    /// </summary>
+    private async Task<int> CancelOpenFnbOrdersOnBanAsync(VenuePenalty penalty, CancellationToken ct)
+    {
+        if (penalty.PenaltyType != PenaltyType.Ban) return 0;
+
+        var cancelled = await FnbOrderCancellation.CancelOpenOrdersAsync(
+            _uow, _notifications, _lock, o => o.LoungeId == penalty.LoungeId, servedToo: false,
+            ShowCancellation.VenueStoppedTrading, ct, prepaidOnly: true);
+        if (cancelled > 0) await _uow.SaveChangesAsync(ct);
+        return cancelled;
+    }
+
+    /// <summary>MLACP-393: câu báo chủ phòng trà về đơn F&amp;B bị huỷ khi khoá vĩnh viễn.</summary>
+    private static string DescribeVenueFnb(int cancelledOrders)
+        => cancelledOrders == 0
+            ? ""
+            : $" {cancelledOrders} đơn F&B khách đã trả trước mà chưa phục vụ đã bị huỷ, kèm hoàn 100% cho khách; " +
+              "đơn chưa trả hoặc đã phục vụ vẫn giữ để phòng trà tự xử lý.";
 
     /// <summary>Câu báo chủ phòng trà — vé bán tại quầy không có tài khoản, chỉ phòng trà liên hệ được người mua.</summary>
     private static string DescribeCancelled(PenaltyType type, ShowCancellation.Outcome cancelled)

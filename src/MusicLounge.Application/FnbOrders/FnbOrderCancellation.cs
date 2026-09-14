@@ -15,7 +15,9 @@ namespace MusicLounge.Application.FnbOrders;
 /// trước qua VNPay, bếp chưa kịp phục vụ xong) thì hoàn 100% — cùng logic đã có ở đó. Đơn chưa đóng và chưa có giao
 /// dịch nào thì huỷ thẳng, không có gì để hoàn. Nơi gọi tự kiểm quyền, giữ khoá của mình và tự lưu.</para>
 /// </summary>
-internal static class FnbOrderCancellation
+// public: ApplyDuePenaltiesJob (Infrastructure) goi khi phong tra bi khoa vinh vien (MLACP-393) — cung ly do
+// ShowCancellation la public.
+public static class FnbOrderCancellation
 {
     /// <param name="lock">Mỗi đơn bị đụng tới phải khoá đúng key <c>fnb-order:{id}</c> — cùng khoá với lúc khách trả
     /// tiền/nhân viên đổi trạng thái/IPN VNPay, tránh một đơn vừa bị huỷ ở đây vừa được xử lý ở một trong ba đường đó
@@ -24,10 +26,13 @@ internal static class FnbOrderCancellation
     /// <param name="servedToo">Có huỷ cả đơn đã phục vụ nhưng chưa đóng không. Huỷ buổi diễn giữ đúng như MLACP-380 đã
     /// ship: có. Chuyển online: không — món đã mang ra là hàng đã giao, phòng trà vẫn thu tiền được.</param>
     /// <param name="why">Cụm lý do viết thường, ghép sau "vì" trong thông báo cho khách, ví dụ "buổi diễn bị huỷ".</param>
+    /// <param name="prepaidOnly">MLACP-393: chỉ huỷ đơn khách đã trả trước qua cổng thanh toán. Đơn chưa trả thì không
+    /// có tiền của khách nằm trên nền tảng để bảo vệ, và nhân viên vẫn tự đóng được đơn.</param>
     /// <returns>Số đơn đã huỷ.</returns>
     public static async Task<int> CancelOpenOrdersAsync(
         IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock,
-        Expression<Func<FnbOrder, bool>> scope, bool servedToo, string why, CancellationToken ct)
+        Expression<Func<FnbOrder, bool>> scope, bool servedToo, string why, CancellationToken ct,
+        bool prepaidOnly = false)
     {
         var orderRepo = uow.Repository<FnbOrder, int>();
         var orders = (await orderRepo.FindAsync(scope, ct)).Where(o => IsOpen(o.Status, servedToo)).ToList();
@@ -57,6 +62,8 @@ internal static class FnbOrderCancellation
                          && p.Status == PaymentStatus.Confirmed
                          && p.Method == PaymentMethod.Gateway, ct))
                 .FirstOrDefault();
+
+            if (prepaidOnly && gatewayPayment is null) continue;
 
             current.Status = FnbOrderStatus.Cancelled;
             orderRepo.Update(current);
