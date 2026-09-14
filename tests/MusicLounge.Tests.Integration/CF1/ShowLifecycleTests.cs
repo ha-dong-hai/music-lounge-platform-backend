@@ -26,6 +26,9 @@ public sealed class ShowLifecycleTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        // Buoi dien Published o phong tra mau giu cho trong lich. Moc co dinh +20 ngay truoc day nam trong day khung gio
+        // SeedHelper.NextShowStart() cap cho test khac o cung phong tra, nen tuy thu tu chay test do nhan 409 trung gio.
+        var start = scheduledStart ?? SeedHelper.NextShowStart();
         var show = new MusicLounge.Domain.Entities.LoungeShow
         {
             LoungeId = SeedHelper.LoungeId,
@@ -33,8 +36,8 @@ public sealed class ShowLifecycleTests
             Description = "test",
             Format = format,
             Status = LoungeShowStatus.Published,
-            ScheduledStart = scheduledStart ?? DateTimeOffset.UtcNow.AddDays(20),
-            ScheduledEnd = (scheduledStart ?? DateTimeOffset.UtcNow.AddDays(20)).AddHours(2),
+            ScheduledStart = start,
+            ScheduledEnd = start.AddHours(2),
             VcpmcRoyaltyReference = "VCPMC-TEST"
         };
         db.LoungeShows.Add(show);

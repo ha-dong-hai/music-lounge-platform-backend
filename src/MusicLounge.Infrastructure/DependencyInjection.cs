@@ -123,8 +123,12 @@ public static class DependencyInjection
         services.AddSingleton<IPiiEncryptionService, PiiEncryptionService>();
         services.AddScoped<IAuthAttemptTracker, AuthAttemptTracker>();
         // Singleton: the per-show semaphore dictionary must be shared process-wide, not per-request.
-        services.AddSingleton<IShowBookingLock, ShowBookingLock>();
-        services.AddSingleton<IAsyncKeyedLock, AsyncKeyedLock>();
+        // MLACP-396: Scoped (khong con Singleton) de khoa thay duoc transaction cua request — tu dien semaphore van la
+        // static, dung chung toan tien trinh. Xem TransactionLockScope.
+        services.AddScoped<TransactionLockScope>();
+        services.AddScoped<ITransactionLockScope>(sp => sp.GetRequiredService<TransactionLockScope>());
+        services.AddScoped<IShowBookingLock, ShowBookingLock>();
+        services.AddScoped<IAsyncKeyedLock, AsyncKeyedLock>();
         services.AddSingleton<IChatRateLimiter, ChatRateLimiter>();
         services.AddScoped<ReleaseExpiredHoldsJob>();
         services.AddScoped<RefreshRecommendationsJob>();

@@ -40,8 +40,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             // ── 1. Replace SQL Server DbContext with SQLite in-memory (shared cache) ──
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
             services.RemoveAll<DbContextOptions>();
-            services.AddDbContext<ApplicationDbContext>(opts =>
-                opts.UseSqlite($"DataSource=file:{_dbName}?mode=memory&cache=shared"));
+            // MLACP-396: bat dung luc mot transaction sap commit — de test khang dinh khoa con duoc giu luc do.
+            services.AddSingleton<TransactionCommitProbe>();
+            services.AddDbContext<ApplicationDbContext>((sp, opts) =>
+                opts.UseSqlite($"DataSource=file:{_dbName}?mode=memory&cache=shared")
+                    .AddInterceptors(sp.GetRequiredService<TransactionCommitProbe>()));
 
             // ── 2. Replace Hangfire SQL Server storage with in-memory ─────────────
             // Remove only the Hangfire *library* descriptors registered by AddInfrastructure.

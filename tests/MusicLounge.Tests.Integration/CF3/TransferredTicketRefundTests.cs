@@ -92,13 +92,22 @@ public sealed class TransferredTicketRefundTests
         return new Seeded(show.Id, ticket.Id, payment.Id, people);
     }
 
-    private static LoungeShow UpcomingShow(LoungeShowFormat format = LoungeShowFormat.Offline) => new()
+    /// <summary>
+    /// Buổi diễn Published ở phòng trà mẫu giữ chỗ trong lịch. Mốc cố định +20 ngày trước đây nằm trong dãy khung giờ
+    /// <see cref="SeedHelper.NextShowStart"/> cấp cho test khác ở cùng phòng trà, nên tuỳ thứ tự chạy, test đó nhận 409 trùng giờ.
+    /// Các bài ở đây không cần một ngày cụ thể.
+    /// </summary>
+    private static LoungeShow UpcomingShow(LoungeShowFormat format = LoungeShowFormat.Offline)
     {
-        LoungeId = SeedHelper.LoungeId, Name = $"TransferRefund-{Guid.NewGuid():N}"[..28], Description = "test",
-        Format = format, Status = LoungeShowStatus.Published, CancellationAllowed = true,
-        ScheduledStart = DateTimeOffset.UtcNow.AddDays(20), ScheduledEnd = DateTimeOffset.UtcNow.AddDays(20).AddHours(2),
-        VcpmcRoyaltyReference = "VCPMC-TEST"
-    };
+        var start = SeedHelper.NextShowStart();
+        return new()
+        {
+            LoungeId = SeedHelper.LoungeId, Name = $"TransferRefund-{Guid.NewGuid():N}"[..28], Description = "test",
+            Format = format, Status = LoungeShowStatus.Published, CancellationAllowed = true,
+            ScheduledStart = start, ScheduledEnd = start.AddHours(2),
+            VcpmcRoyaltyReference = "VCPMC-TEST"
+        };
+    }
 
     private HttpClient Owner => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
     private HttpClient Admin => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
