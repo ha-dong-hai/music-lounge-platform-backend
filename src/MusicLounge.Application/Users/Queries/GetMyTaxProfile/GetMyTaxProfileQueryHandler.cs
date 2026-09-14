@@ -34,7 +34,7 @@ internal sealed class GetMyTaxProfileQueryHandler : IRequestHandler<GetMyTaxProf
 
         return new TaxProfileDto(
             user.BusinessType?.ToString(),
-            user.TaxCode is not null ? _piiEncryption.Decrypt(user.TaxCode) : null,
+            user.TaxCode is not null ? _piiEncryption.TryDecrypt(user.TaxCode) : null,
             user.LegalName,
             user.TaxProfileSubmittedAt,
             user.TaxProfileVerifiedAt,
@@ -43,7 +43,8 @@ internal sealed class GetMyTaxProfileQueryHandler : IRequestHandler<GetMyTaxProf
             withholds,
             rates.VatRate,
             rates.PersonalIncomeTaxRate,
-            Explain(user, withholds, rates));
+            Explain(user, withholds, rates),
+            user.TaxCode is not null && _piiEncryption.TryDecrypt(user.TaxCode) is null);
     }
 
     /// <summary>

@@ -65,14 +65,17 @@ internal sealed class GetKycReviewQueueQueryHandler
                 u.TaxProfileReviewStatus?.ToString(),
                 u.BusinessType == PayeeBusinessType.Enterprise
                     && u.TaxProfileReviewStatus == KycReviewStatus.Pending,
-                licensedOwnerIds.Contains(u.Id)))
+                licensedOwnerIds.Contains(u.Id),
+                // MLACP-401: giá trị mã hoá bằng khoá đã mất — báo rõ thay vì 500 cho cả hàng đợi.
+                u.CitizenCardNumber is not null && Decrypt(u.CitizenCardNumber) is null,
+                u.TaxCode is not null && Decrypt(u.TaxCode) is null))
             .ToList();
 
         return new PaginatedResult<KycReviewItemDto>(page, request.Page, request.PageSize, ordered.Count);
     }
 
     private string? Decrypt(string? ciphertext)
-        => ciphertext is null ? null : _piiEncryption.Decrypt(ciphertext);
+        => ciphertext is null ? null : _piiEncryption.TryDecrypt(ciphertext);
 
     private static string? Mask(string? cardNumber)
         => cardNumber is null || cardNumber.Length < 4

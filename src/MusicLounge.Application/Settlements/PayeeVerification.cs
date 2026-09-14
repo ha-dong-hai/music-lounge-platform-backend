@@ -20,7 +20,7 @@ namespace MusicLounge.Application.Settlements;
 public static class PayeeVerification
 {
     public static async Task<PayoutBlocker?> BlockerAsync(
-        IUnitOfWork uow, int ownerId, int bankAccountId, CancellationToken ct)
+        IUnitOfWork uow, IPiiEncryptionService pii, int ownerId, int bankAccountId, CancellationToken ct)
     {
         var owner = await uow.Repository<User, int>().GetByIdAsync(ownerId, ct);
         PayoutBlocker? identity = owner?.CitizenCardReviewStatus switch
@@ -33,6 +33,10 @@ public static class PayeeVerification
         if (identity is not null) return identity;
 
         var account = await uow.Repository<BankAccount, int>().GetByIdAsync(bankAccountId, ct);
+        // MLACP-401. Số tài khoản không còn giải mã được (khoá mã hoá cũ đã mất) thì không chuyển tiền vào đó. Kiểm TRƯỚC bước
+        // xác minh: chỉ chủ phòng trà nhập lại được số, nên việc gỡ chặn không được giao cho Admin.
+        if (account is not null && pii.TryDecrypt(account.AccountNumber) is null)
+            return PayoutBlocker.PayoutAccountUnreadable;
         return account is { IsVerified: true } ? null : PayoutBlocker.PayoutAccountUnverified;
     }
 
@@ -48,5 +52,8 @@ public enum PayoutBlocker
     IdentityNotSubmitted,
     IdentityRejected,
     IdentityAwaitingReview,
-    PayoutAccountUnverified
+    PayoutAccountUnverified,
+
+    /// <summary>MLACP-401. Số tài khoản nhận tiền không còn giải mã được — chủ phòng trà cần nhập lại.</summary>
+    PayoutAccountUnreadable
 }

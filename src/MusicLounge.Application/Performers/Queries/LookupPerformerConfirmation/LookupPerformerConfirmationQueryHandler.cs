@@ -47,7 +47,10 @@ internal sealed class LookupPerformerConfirmationQueryHandler
                 outdated = PerformerConfirmations.FingerprintOf(account) != confirmation.BankAccountFingerprint;
                 bankName = account.BankName;
                 holder = account.AccountHolder;
-                masked = PerformerConfirmations.MaskAccountNumber(_pii.Decrypt(account.AccountNumber));
+                // MLACP-401: số mã hoá bằng khoá đã mất — nói thẳng là không đọc được thay vì 500.
+                masked = _pii.TryDecrypt(account.AccountNumber) is { } plainNumber
+                    ? PerformerConfirmations.MaskAccountNumber(plainNumber)
+                    : PerformerConfirmations.UnreadableAccountNumber;
             }
         }
         else if (confirmation.Purpose == PerformerConfirmationPurpose.DonationReceipt

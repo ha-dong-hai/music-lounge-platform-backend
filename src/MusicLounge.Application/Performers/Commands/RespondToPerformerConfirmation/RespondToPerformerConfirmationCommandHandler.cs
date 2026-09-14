@@ -104,7 +104,10 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
 
         if (!dispute) return;
 
-        var masked = PerformerConfirmations.MaskAccountNumber(_pii.Decrypt(account.AccountNumber));
+        // MLACP-401: số mã hoá bằng khoá đã mất vẫn phải để cảnh báo tới được Admin.
+        var masked = _pii.TryDecrypt(account.AccountNumber) is { } plainNumber
+            ? PerformerConfirmations.MaskAccountNumber(plainNumber)
+            : PerformerConfirmations.UnreadableAccountNumber;
         var admins = await _uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin, ct);
         foreach (var admin in admins)
         {

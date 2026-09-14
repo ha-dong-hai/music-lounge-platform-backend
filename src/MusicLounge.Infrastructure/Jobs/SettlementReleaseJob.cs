@@ -25,11 +25,14 @@ public sealed class SettlementReleaseJob
     private readonly INotificationService _notifications;
     private readonly IUnitOfWork _uow;
     private readonly ILogger<SettlementReleaseJob> _logger;
+    private readonly IPiiEncryptionService _pii;
 
     public SettlementReleaseJob(
         ApplicationDbContext ctx, ILedgerService ledger, ISystemConfigService config,
-        INotificationService notifications, IUnitOfWork uow, ILogger<SettlementReleaseJob> logger)
+        INotificationService notifications, IUnitOfWork uow, ILogger<SettlementReleaseJob> logger,
+        IPiiEncryptionService pii)
     {
+        _pii = pii;
         _ctx = ctx;
         _uow = uow;
         _ledger = ledger;
@@ -112,7 +115,7 @@ public sealed class SettlementReleaseJob
 
             // MLACP-395: chi chuyen tien cho nguoi nhan da xac minh danh tinh, vao tai khoan da xac minh — xem
             // PayeeVerification. Hoan chu khong huy: khoan nay van Scheduled, lan chay sau tu chuyen khi du dieu kien.
-            if (await PayeeVerification.BlockerAsync(_uow, settlement.OwnerId, settlement.BankAccountId.Value, ct) is { } blocker)
+            if (await PayeeVerification.BlockerAsync(_uow, _pii, settlement.OwnerId, settlement.BankAccountId.Value, ct) is { } blocker)
             {
                 _logger.LogWarning(
                     "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} payee not verified " +
@@ -282,11 +285,19 @@ public sealed class SettlementReleaseJob
             {
                 recipients = [ownerId];
                 title = "Tiền quyết toán của phòng trà đang được giữ";
-                body = blocker == PayoutBlocker.IdentityRejected
-                    ? $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì hồ sơ CCCD/CMND chưa được chấp nhận. Hãy " +
-                      "nộp lại hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp."
-                    : $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì tài khoản chưa xác minh danh tính. Hãy nộp " +
-                      "CCCD/CMND trong mục Hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.";
+                body = blocker switch
+                {
+                    PayoutBlocker.IdentityRejected =>
+                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì hồ sơ CCCD/CMND chưa được chấp nhận. Hãy " +
+                        "nộp lại hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
+                    // MLACP-401: chỉ chủ phòng trà sửa được — số tài khoản của họ không còn đọc được trên hệ thống.
+                    PayoutBlocker.PayoutAccountUnreadable =>
+                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì số tài khoản nhận tiền không còn đọc được trên " +
+                        "hệ thống. Hãy nhập lại tài khoản nhận tiền; sau khi Admin xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
+                    _ =>
+                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì tài khoản chưa xác minh danh tính. Hãy nộp " +
+                        "CCCD/CMND trong mục Hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp."
+                };
             }
 
             foreach (var recipient in recipients)

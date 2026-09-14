@@ -58,6 +58,9 @@ public static class PerformerConfirmations
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
     }
 
+    /// <summary>MLACP-401. Hiển thị thay cho số đã che khi số tài khoản không còn giải mã được.</summary>
+    public const string UnreadableAccountNumber = "(số tài khoản không đọc được)";
+
     public static string MaskAccountNumber(string plain)
         => plain.Length <= 4 ? new string('*', plain.Length) : new string('*', plain.Length - 4) + plain[^4..];
 
