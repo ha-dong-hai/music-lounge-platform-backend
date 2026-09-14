@@ -15,10 +15,13 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<AssignStaffCommandHandler> _logger;
+    private readonly INotificationService _notifications;
 
     public AssignStaffCommandHandler(
-        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<AssignStaffCommandHandler> logger)
+        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<AssignStaffCommandHandler> logger,
+        INotificationService notifications)
     {
+        _notifications = notifications;
         _uow = uow;
         _currentUser = currentUser;
         _logger = logger;
@@ -69,6 +72,21 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
         };
 
         staffRepo.Add(assignment);
+
+        // MLACP-391: nguoi khac chu phong tra (Admin — chot quyen o tren chi cho chu hoac Admin qua) vua trao quyen soat ve
+        // va ban tai quay cho mot tai khoan — chu phong tra la nguoi chiu trach nhiem van hanh, phai biet.
+        if (_currentUser.UserId != lounge.OwnerId)
+            await _notifications.NotifyAsync(
+                lounge.OwnerId,
+                NotificationType.VenueStaffChanged,
+                "Quản trị viên đã thêm nhân viên cho phòng trà của bạn",
+                $"Quản trị viên đã thêm {user.FullName} ({user.Email}) làm nhân viên của \"{lounge.Name}\" — tài khoản này " +
+                "có thể soát vé và bán tại quầy cho phòng trà. Nếu bạn không yêu cầu việc này, hãy gỡ nhân viên trong mục " +
+                "Nhân viên và liên hệ bộ phận hỗ trợ.",
+                referenceType: "lounge",
+                referenceId: lounge.Id.ToString(),
+                ct: ct);
+
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogWarning(

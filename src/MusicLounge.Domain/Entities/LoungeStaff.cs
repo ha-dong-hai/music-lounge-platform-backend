@@ -9,8 +9,12 @@ public sealed class LoungeStaff : Common.BaseEntity<int>
     public bool IsActive { get; set; } = true;
     public DateTimeOffset AssignedAt { get; set; }
     public DateTimeOffset? DeactivatedAt { get; set; }
+    // MLACP-391: ai da go — doi xung voi AssignedBy. Truoc day chi con trong log, khong co dau vet ben de doi soat khi
+    // Admin can thiep (MLACP-381). Null voi cac dong go truoc khi co cot nay.
+    public int? DeactivatedBy { get; set; }
 
     public MusicLounge Lounge { get; set; } = null!;
     public User User { get; set; } = null!;
     public User AssignedByUser { get; set; } = null!;
+    public User? DeactivatedByUser { get; set; }
 }
