@@ -33,7 +33,9 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
-        var owner = new User { Email = $"fnb390-{Guid.NewGuid():N}@test.com", FullName = "Chủ phòng trà" };
+        // MLACP-397: chủ phòng trà đã được duyệt danh tính — bài ở đây xét quy tắc khác; cổng danh tính người bán có bài riêng (SellingRequiresVerifiedSellerTests).
+        var owner = new User { Email = $"fnb390-{Guid.NewGuid():N}@test.com", FullName = "Chủ phòng trà",
+            CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-1), CitizenCardReviewStatus = KycReviewStatus.Approved };
         db.Users.Add(owner);
         await db.SaveChangesAsync();
         var lounge = new MusicLoungeVenue

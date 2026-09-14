@@ -54,6 +54,11 @@ internal sealed class InitiateFnbOrderPaymentCommandHandler
             || !VenueLifecycle.CanOperate(venueStatus))
             throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
 
+        // MLACP-397. Tiền thu ở bước này, nên người bán phải vẫn đang được xác minh danh tính — cùng lý do MLACP-380 chốt
+        // trạng thái phòng trà ở đây chứ không chỉ ở bước tạo đơn.
+        if (!SellerIdentity.IsVerified(await SellerIdentity.StatusOfVenueSellerAsync(_uow, order.LoungeId, ct)))
+            throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
+
         // MLACP-349: truoc day chi soi Status == Paid. Don tra truoc qua VNPay nay khong con nhay sang
         // Paid (bep van phai lam tiep), nen phai hoi bang payments — khong thi khach tra duoc lan hai.
         if (order.Status == FnbOrderStatus.Paid

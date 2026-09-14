@@ -35,6 +35,17 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
                 : VenueLifecycle.TradingPausedForBuyers);
         }
 
+        // MLACP-397. Bán F&B không qua bước nộp duyệt buổi diễn nào, nên tạo đơn chính là lúc nền tảng cho phép bán —
+        // người bán phải đã được xác minh danh tính (Luật TMĐT 2025 Điều 17). Người mua chỉ cần biết là chưa mua được.
+        var sellerIdentity = await SellerIdentity.StatusOfAsync(_uow, lounge.OwnerId, ct);
+        if (!SellerIdentity.IsVerified(sellerIdentity))
+        {
+            var isStaffSide = _currentUser.Role is Roles.Staff or Roles.Owner or Roles.Admin;
+            throw new DomainException(isStaffSide
+                ? $"{SellerIdentity.ExplainForSeller(sellerIdentity)} Không thể tạo order F&B lúc này."
+                : VenueLifecycle.TradingPausedForBuyers);
+        }
+
         // ZoneId/ShowId were accepted as-is with no check they actually belong to this LoungeId
         // (unlike MenuItemId below, which is validated) — order could silently point at another
         // venue's zone/show, showing up on the wrong venue's floor display.
