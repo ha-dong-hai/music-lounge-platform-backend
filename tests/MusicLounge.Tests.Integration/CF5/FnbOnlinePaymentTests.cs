@@ -196,6 +196,13 @@ public sealed class FnbOnlinePaymentTests
                 && n.Type == NotificationType.PaymentConfirmedAfterExpiry
                 && n.ReferenceType == "payment" && n.ReferenceId == duplicate.Id.ToString()))
             .Should().Be(1, "Admin phải biết có một khoản tiền đã thu mà không gắn với đơn nào");
+        var refundId = (await db.RefundRequests.SingleAsync(r => r.PaymentId == duplicate.Id)).Id;
+        (await db.Notifications.AnyAsync(n =>
+                n.UserId == SeedHelper.AdminId
+                && n.Type == NotificationType.PaymentConfirmedAfterExpiry
+                && n.ReferenceType == "payment" && n.ReferenceId == duplicate.Id.ToString()
+                && n.Body.Contains($"yêu cầu hoàn 100% #{refundId}")))
+            .Should().BeTrue("khoản trả trùng đã có yêu cầu hoàn tự tạo — Admin phải được chỉ tới đúng yêu cầu đó (MLACP-392)");
         (await db.Notifications.AnyAsync(n =>
                 n.UserId == SeedHelper.AudienceId
                 && n.Title == "Giao dịch không được ghi vào đơn"

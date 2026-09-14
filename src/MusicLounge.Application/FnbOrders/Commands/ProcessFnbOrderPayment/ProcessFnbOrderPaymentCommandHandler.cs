@@ -217,7 +217,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         // tranh cai ve so tien, nen tao ngay yeu cau hoan 100% va de no di qua dung luong duyet hoan tien
         // san co (Admin duyet, hoac tu duyet khi qua han — MLACP-348). Chot "callback lap lai" o dau
         // Handle bao dam ham nay chi chay mot lan cho moi giao dich.
-        _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+        var refund = new RefundRequest
         {
             PaymentId = payment.Id,
             RequestedBy = payment.PayerId,
@@ -227,7 +227,8 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
             AmountRequested = payment.GrossAmount,
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
-        });
+        };
+        _uow.Repository<RefundRequest, int>().Add(refund);
 
         if (payment.PayerId is { } payerId)
         {
@@ -251,7 +252,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
             _uow, _notifications, _logger, why, txnRef, callbackResult.Amount,
-            "payment", payment.Id.ToString(), ct);
+            "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;
     }
