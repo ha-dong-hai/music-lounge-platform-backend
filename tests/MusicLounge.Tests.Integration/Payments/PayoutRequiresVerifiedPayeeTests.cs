@@ -41,7 +41,9 @@ public sealed class PayoutRequiresVerifiedPayeeTests
         {
             Email = $"payee395-{Guid.NewGuid():N}@test.com", FullName = "Chủ phòng trà 395", Role = UserRole.Owner,
             CitizenCardSubmittedAt = identity is null ? null : DateTimeOffset.UtcNow.AddDays(-2),
-            CitizenCardReviewStatus = identity
+            CitizenCardReviewStatus = identity,
+            // MLACP-399: CCCD đã duyệt thì có họ tên đã chốt — tài khoản nhận tiền "Chu phong tra 395" khớp tên này khi bỏ dấu.
+            CitizenCardVerifiedName = identity == KycReviewStatus.Approved ? "Chủ phòng trà 395" : null
         };
         db.Users.Add(owner);
         await db.SaveChangesAsync();

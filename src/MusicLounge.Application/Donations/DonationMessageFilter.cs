@@ -1,7 +1,8 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using MusicLounge.Application.Common.Interfaces;
+
+using MusicLounge.Application.Common;using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 
 namespace MusicLounge.Application.Donations;
@@ -83,26 +84,6 @@ public static class DonationMessageFilter
         return ContainsBlocked(message, blockedWords) ? null : message;
     }
 
-    internal static string Normalize(string value)
-    {
-        var lowered = value.ToLowerInvariant().Replace('đ', 'd');
-        var decomposed = lowered.Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder(decomposed.Length);
-        var lastWasSpace = true;
-        foreach (var c in decomposed)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark) continue;
-            if (char.IsLetterOrDigit(c))
-            {
-                sb.Append(c);
-                lastWasSpace = false;
-            }
-            else if (!lastWasSpace)
-            {
-                sb.Append(' ');
-                lastWasSpace = true;
-            }
-        }
-        return sb.ToString().Trim();
-    }
+    // MLACP-399: thân hàm chuyển nguyên văn sang VietnameseText.Fold để so tên chủ tài khoản dùng chung một cách chuẩn hoá.
+    internal static string Normalize(string value) => VietnameseText.Fold(value);
 }

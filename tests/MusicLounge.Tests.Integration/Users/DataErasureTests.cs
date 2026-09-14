@@ -76,6 +76,7 @@ public sealed class DataErasureTests
             var seller = await seedDb.Users.SingleAsync(u => u.Id == userId);
             seller.BusinessType = PayeeBusinessType.Enterprise;
             seller.LegalName = "CÔNG TY TNHH SẼ BỊ XOÁ";
+            seller.CitizenCardVerifiedName = "Erase Me";
             await seedDb.SaveChangesAsync();
         }
 
@@ -92,6 +93,7 @@ public sealed class DataErasureTests
         user.IsActive.Should().BeFalse();
         user.DataErasedAt.Should().NotBeNull();
         user.LegalName.Should().BeNull();
+        user.CitizenCardVerifiedName.Should().BeNull();
     }
 
     [Fact]
