@@ -122,7 +122,8 @@ public sealed class TicketsController : ControllerBase
     }
 
     /// <summary>Chi tiết đầy đủ 1 vé — QR code, thông tin buổi diễn, khu vực/chỗ ngồi (nếu Physical),
-    /// trạng thái. Chỉ chính chủ vé xem được (403 nếu khác).</summary>
+    /// trạng thái. Chỉ chính chủ vé xem được; riêng vé bán tại quầy (không có người mua) thì nhân viên/chủ của đúng phòng trà
+    /// xem được để in lại (MLACP-402). 403 nếu khác.</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType<ApiResponse<TicketDetailDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -170,7 +171,7 @@ public sealed class TicketsController : ControllerBase
     /// <summary>Bán vé vật lý tại quầy (Staff/Owner của đúng venue) — thanh toán Cash, xác nhận
     /// ngay, không qua flow hold/VNPay. Chịu chung mọi giới hạn quota (mức giá/tier/zone/
     /// access-type/subscription cap) như đường mua online, khóa theo show để tránh bán vượt khi
-    /// nhiều quầy/nhiều request cùng bán lúc gần hết vé.</summary>
+    /// nhiều quầy/nhiều request cùng bán lúc gần hết vé. Trả kèm mã QR của từng vé để quầy in cho khách (MLACP-402).</summary>
     [HttpPost("walk-in")]
     [ProducesResponseType<ApiResponse<WalkInSaleResultDto>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

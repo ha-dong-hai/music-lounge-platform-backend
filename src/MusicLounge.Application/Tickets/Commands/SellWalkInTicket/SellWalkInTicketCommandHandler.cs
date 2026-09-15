@@ -151,7 +151,8 @@ internal sealed class SellWalkInTicketCommandHandler
                 LivestreamId: null,
                 ShowId: tier.LoungeShowId), ct);
 
-            return new WalkInSaleResultDto(payment.Id, totalAmount, tickets.Select(t => t.Id).ToArray());
+            return new WalkInSaleResultDto(payment.Id, totalAmount, tickets.Select(t => t.Id).ToArray(),
+                tickets.Select(t => new WalkInTicketDto(t.Id, t.QrCode!)).ToList());
         }
     }
 

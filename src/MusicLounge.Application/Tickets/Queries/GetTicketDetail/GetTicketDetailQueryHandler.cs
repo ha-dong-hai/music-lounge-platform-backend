@@ -23,7 +23,13 @@ internal sealed class GetTicketDetailQueryHandler : IRequestHandler<GetTicketDet
         var ticket = await _ticketRepo.GetByIdWithDetailsAsync(request.TicketId, ct)
             ?? throw new NotFoundException("Ticket", request.TicketId);
 
-        if (ticket.BuyerId != _currentUser.UserId)
+        // MLACP-402: vé bán tại quầy không có người mua, nên trước đây không ai mở lại được — kể cả để in lại khi khách làm mất vé.
+        // Nhân viên/chủ của đúng phòng trà giữ vé đó thay khách. Vé có người mua vẫn chỉ người mua xem, để mã QR của khách mua
+        // online không lộ ra cho người khác.
+        var isBuyer = ticket.BuyerId == _currentUser.UserId;
+        var isVenueCounterTicket = ticket.BuyerId is null
+            && VenueOperatorAccess.CanOperate(_currentUser, ticket.Show.LoungeId, ticket.Show.Lounge.OwnerId);
+        if (!isBuyer && !isVenueCounterTicket)
             throw new ForbiddenException("Bạn không có quyền xem vé này.");
 
         return new TicketDetailDto(
