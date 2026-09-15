@@ -110,6 +110,32 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
 
     private static string NewTransactionNo() => $"S{Guid.NewGuid():N}"[..16];
 
+    /// <summary>MLACP-406. Tiền gói đăng ký về cho một thanh toán đã đóng (không phải lần gọi lại của một sự cố đã ghi) —
+    /// Admin được báo, và câu báo nói rõ khoản tiền thuộc gói đăng ký.</summary>
+    [Fact]
+    public async Task MoneyArrivingForAClosedSubscriptionPayment_TellsAdminsItIsASubscription()
+    {
+        var (ownerId, _) = await OwnerWithVenueAsync();
+        var packageId = await PackageAsync();
+        var paid = await PaidFromAsync(
+            await Owner(ownerId).PostAsJsonAsync("/api/v1/subscriptions/subscribe", new { PackageId = packageId }));
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = Db(scope);
+            (await db.Payments.SingleAsync(p => p.Id == paid.PaymentId)).Status = PaymentStatus.Failed;
+            await db.SaveChangesAsync();
+        }
+
+        (await PaidIpnAsync(paid, NewTransactionNo())).RspCode.Should().Be("02");
+
+        using var verify = _factory.Services.CreateScope();
+        (await Db(verify).Notifications.AsNoTracking()
+                .AnyAsync(n => n.UserId == SeedHelper.AdminId && n.Type == NotificationType.PaymentConfirmedAfterExpiry
+                               && n.ReferenceId == paid.PaymentId.ToString()
+                               && n.Body.Contains("cho gói đăng ký (mã giao dịch")))
+            .Should().BeTrue("Admin phải biết khoản tiền này thuộc một gói đăng ký");
+    }
+
     [Fact]
     public async Task ASubscriptionPaidJustAfterTheVenueWasLocked_IsNotActivated_AndRefundedInFull()
     {

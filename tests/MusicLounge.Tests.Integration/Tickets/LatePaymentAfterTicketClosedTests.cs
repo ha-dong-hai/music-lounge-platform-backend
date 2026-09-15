@@ -118,6 +118,29 @@ public sealed class LatePaymentAfterTicketClosedTests
 
     private static string NewTransactionNo() => $"T{Guid.NewGuid():N}"[..16];
 
+    /// <summary>MLACP-406. Tiền vé về cho một thanh toán đã ở trạng thái khác (ở đây: đã hoàn) và không rơi vào nhánh nào có
+    /// xử lý riêng — Admin vẫn phải được báo, và câu báo phải nói rõ khoản tiền thuộc đơn mua vé.</summary>
+    [Fact]
+    public async Task MoneyArrivingForAPaymentAlreadyRefunded_TellsAdminsItIsATicketOrder()
+    {
+        var purchase = await StartPaymentAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await db.Payments.SingleAsync(p => p.Id == purchase.PaymentId)).Status = PaymentStatus.Refunded;
+            await db.SaveChangesAsync();
+        }
+
+        (await PaidIpnAsync(purchase, NewTransactionNo())).RspCode.Should().Be("02");
+
+        using var verify = _factory.Services.CreateScope();
+        (await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+                .AnyAsync(n => n.UserId == SeedHelper.AdminId && n.Type == NotificationType.PaymentConfirmedAfterExpiry
+                               && n.ReferenceId == purchase.PaymentId.ToString()
+                               && n.Body.Contains("cho đơn mua vé (mã giao dịch")))
+            .Should().BeTrue("Admin phải biết khoản tiền này thuộc một đơn mua vé");
+    }
+
     // ── Chặn từ gốc ───────────────────────────────────────────────────────────
 
     [Fact]
