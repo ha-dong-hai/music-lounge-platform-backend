@@ -190,6 +190,10 @@ public sealed class FnbOnlinePaymentTests
                 .Where(e => e.ReferenceType == "fnb_order" && e.ReferenceId == orderId.ToString())
                 .Select(e => e.JournalId).Distinct().CountAsync())
             .Should().Be(1, "sổ cái chỉ được ghi một lần cho một đơn");
+        // MLACP-406: dòng giữ hộ hiện trong lịch sử giao dịch của chủ phòng trà — cùng câu chữ với vé và donate.
+        (await db.LedgerEntries.AnyAsync(e => e.ReferenceType == "fnb_order" && e.ReferenceId == orderId.ToString()
+                && e.Description == $"Giữ hộ chủ phòng trà #{SeedHelper.OwnerId} — đơn F&B #{orderId}, chờ quyết toán"))
+            .Should().BeTrue("chủ phòng trà đọc dòng này trong lịch sử giao dịch");
 
         (await db.Notifications.CountAsync(n =>
                 n.UserId == SeedHelper.AdminId

@@ -134,7 +134,8 @@ public sealed class VnPayReconciliationTests
             using var scope = _factory.Services.CreateScope();
             (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AnyAsync(n =>
                     n.UserId == SeedHelper.AdminId && n.ReferenceId == paymentId.ToString()
-                    && n.Title == "Đối soát VNPay: giao dịch đã thanh toán nhưng hệ thống chưa ghi nhận"))
+                    && n.Title == "Đối soát VNPay: giao dịch đã thanh toán nhưng hệ thống chưa ghi nhận"
+                    && n.Body.Contains("giữ lại, chưa huỷ. Cần đối chiếu rồi cấp vé hoặc hoàn tiền cho khách.")))
                 .Should().BeTrue();
         }
         finally { FakeVnPayService.Forget(txnRef); }

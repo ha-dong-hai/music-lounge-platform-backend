@@ -184,6 +184,40 @@ public sealed class CashRefundHandedBackTests
         (await MessageAsync(res)).Should().Be("Yêu cầu hoàn tiền này chưa được duyệt.");
     }
 
+    /// <summary>MLACP-406. Dữ liệu lệch — yêu cầu hoàn tiền mặt gắn với một giao dịch không có vé — phải nhận lỗi đọc được.</summary>
+    [Fact]
+    public async Task YeuCauGanVoiGiaoDichKhongCoVeThiBaoLoiRo()
+    {
+        int refundId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var payment = new Payment
+            {
+                OrderId = $"MLACP406-{Guid.NewGuid():N}"[..30], PayerId = SeedHelper.AudienceId, GrossAmount = 90_000m,
+                NetAmount = 90_000m, Method = PaymentMethod.Cash, Status = PaymentStatus.Confirmed,
+                ReferenceType = "WalkIn", ReferenceId = "0", CreatedAt = DateTimeOffset.UtcNow.AddDays(-1)
+            };
+            db.Add(payment);
+            await db.SaveChangesAsync();
+            var refund = new RefundRequest
+            {
+                PaymentId = payment.Id, RequestedBy = SeedHelper.AudienceId, Reason = "Buổi diễn bị huỷ",
+                AmountRequested = 90_000m, AmountApproved = 90_000m, RefundPercentage = 100m,
+                Status = RefundRequestStatus.Approved, ResolvedAt = DateTimeOffset.UtcNow.AddHours(-1),
+                CreatedAt = DateTime.UtcNow.AddHours(-2)
+            };
+            db.Add(refund);
+            await db.SaveChangesAsync();
+            refundId = refund.Id;
+        }
+
+        var res = await ConfirmAsync(refundId, SeedHelper.OwnerId, "Owner");
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await MessageAsync(res)).Should().Be("Không xác định được vé của giao dịch này.");
+    }
+
     // ── Quá hạn mà chưa trả thì phải có người biết ──────────────────────────
 
     [Fact]

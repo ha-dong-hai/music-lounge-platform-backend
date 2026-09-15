@@ -152,7 +152,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                 {
                     new(AccountType.Gateway, null, payment.GrossAmount, IsDebit: true),
                     new(AccountType.Platform, null, payment.GrossAmount, IsDebit: false,
-                        Description: $"Giu ho chu phong tra #{lounge.OwnerId} — don F&B #{order.Id}, cho quyet toan")
+                        Description: $"Giữ hộ chủ phòng trà #{lounge.OwnerId} — đơn F&B #{order.Id}, chờ quyết toán")
                 }, ct);
         }
 
