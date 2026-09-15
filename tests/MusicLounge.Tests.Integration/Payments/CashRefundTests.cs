@@ -149,11 +149,23 @@ public sealed class CashRefundTests
         var told = await QueryAsync(db => db.Notifications.AnyAsync(n =>
             n.UserId == SeedHelper.OwnerId
             && n.Type == NotificationType.RefundOwedByVenue
-            && n.ReferenceId == refundId.ToString()));
+            && n.ReferenceId == refundId.ToString()
+            && n.Title == "Cần hoàn tiền mặt cho khách"
+            && n.Body.Contains("được mua tại quầy bằng tiền mặt")));
 
         told.Should().BeTrue(
             "nền tảng chưa bao giờ giữ khoản này nên không trả thay được — phòng trà phải biết " +
             "chính họ nợ khách số tiền đó");
+
+        // MLACP-404: người mua vé tại quầy được báo đúng tiếng Việt ai là người trả lại tiền cho họ.
+        var buyerTold = await QueryAsync(db => db.Notifications.AnyAsync(n =>
+            n.UserId == SeedHelper.AudienceId
+            && n.Type == NotificationType.RefundUpdate
+            && n.ReferenceId == refundId.ToString()
+            && n.Title == "Yêu cầu hoàn tiền đã được duyệt"
+            && n.Body.Contains("phòng trà hoàn trực tiếp cho bạn")));
+
+        buyerTold.Should().BeTrue("người mua vé tại quầy phải biết ai là người trả lại tiền cho họ");
     }
 
     // ── Vé mua online vẫn phải đi đúng đường cũ ─────────────────────────────
@@ -230,6 +242,7 @@ public sealed class CashRefundTests
             && n.ReferenceId == refundId.ToString());
 
         note.Body.Should().Contain("Ve da duoc check-in tai cua");
+        note.Title.Should().Be("Yêu cầu hoàn tiền không được chấp nhận");
     }
 
     [Fact]
@@ -250,7 +263,7 @@ public sealed class CashRefundTests
             && n.ReferenceType == "refund"
             && n.ReferenceId == refundId.ToString());
 
-        note.Body.Should().Contain("khieu nai", "phai chi cho ho duong de duoc xem xet lai");
+        note.Body.Should().Contain("hãy gửi khiếu nại để được xem xét lại", "phai chi cho ho duong de duoc xem xet lai");
     }
 
     [Fact]

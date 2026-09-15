@@ -164,7 +164,7 @@ public sealed class ManualRefundPastVnPayWindowTests
                 .Where(n => n.UserId == SeedHelper.AudienceId && n.Type == NotificationType.RefundUpdate
                             && n.ReferenceId == seeded.RefundId.ToString())
                 .ToListAsync())
-            .Should().Contain(n => n.Body.Contains(reference) && n.Body.Contains("chuyen khoan"),
+            .Should().Contain(n => n.Body.Contains(reference) && n.Body.Contains("chuyển khoản trực tiếp"),
                 "the buyer is told the truth: a transfer, with a reference they can chase");
     }
 

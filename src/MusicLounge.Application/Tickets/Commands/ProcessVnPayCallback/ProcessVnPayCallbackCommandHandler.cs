@@ -117,7 +117,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 }
 
                 await PaymentIncident.RecordConfirmedTooLateAsync(
-                    _uow, _notifications, _logger, "mua ve", txnRef, result.Amount,
+                    _uow, _notifications, _logger, "đơn mua vé", txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
                 return VnPayIpnOutcome.ConfirmedTooLate;
             }
@@ -285,25 +285,25 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 NotificationType.EventFormatChanged,
                 "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
                 "buổi diễn đã chuyển sang hình thức online trong lúc bạn đang thanh toán nên vé vào cửa không được cấp",
-                "ve vao cua cua buoi dien da chuyen online"),
+                "vé vào cửa của buổi diễn đã chuyển sang online"),
             NotIssued.ShowEnded => (
                 $"Tiền về sau khi buổi diễn #{show.Id} đã kết thúc — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
                 "Buổi diễn đã kết thúc — bạn sẽ được hoàn tiền",
                 "buổi diễn đã kết thúc trước khi giao dịch được xác nhận nên vé không được cấp",
-                "ve cua buoi dien da ket thuc"),
+                "vé của buổi diễn đã kết thúc"),
             NotIssued.OrderClosed => (
                 $"Tiền về sau khi đơn vé của buổi diễn #{show.Id} đã đóng (khách huỷ hoặc quá hạn thanh toán) — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
                 "Vé không được cấp — bạn sẽ được hoàn tiền",
                 "đơn vé này đã được huỷ hoặc đã hết hạn thanh toán trước khi tiền về nên vé không được cấp",
-                "mua ve (don da dong truoc khi tien ve)"),
+                "đơn mua vé (đã đóng trước khi tiền về)"),
             _ => (
                 $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
                 NotificationType.EventCancelled,
                 "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",
                 "buổi diễn đã bị huỷ trong lúc bạn đang thanh toán nên vé không được cấp",
-                "ve cua buoi dien da huy")
+                "vé của buổi diễn đã huỷ")
         };
 
         var now = DateTimeOffset.UtcNow;

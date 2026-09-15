@@ -305,18 +305,18 @@ public sealed class RefundSlaBreachAlertJob
             if (ownerId is int owner)
                 notified |= await NotifyOnceAsync(
                     owner, NotificationType.RefundOwedByVenue, refund.Id,
-                    "Chua xac nhan tra tien mat cho khach",
-                    $"Yeu cau hoan #{refund.Id} ({amount:N0}d) da duoc duyet qua {slaHours}h ma phong tra " +
-                    "chua xac nhan da tra tien mat cho khach. Khach van dang cho.",
+                    "Chưa xác nhận trả tiền mặt cho khách",
+                    $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ) đã được duyệt quá {slaHours} giờ mà phòng trà " +
+                    "chưa xác nhận đã trả tiền mặt cho khách. Khách vẫn đang chờ.",
                     ct);
 
             foreach (var adminId in admins)
                 notified |= await NotifyOnceAsync(
                     adminId, NotificationType.RefundSlaBreached, refund.Id,
-                    "Phong tra chua tra tien mat hoan cho khach",
-                    $"Yeu cau hoan #{refund.Id} ({amount:N0}d, ve ban tai quay) da duoc duyet qua " +
-                    $"{slaHours}h ma phong tra chua xac nhan da tra. Nen tang khong giu khoan nay nen " +
-                    "khong tu hoan thay duoc — can lien he phong tra.",
+                    "Phòng trà chưa trả tiền mặt hoàn cho khách",
+                    $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ, vé bán tại quầy) đã được duyệt quá " +
+                    $"{slaHours} giờ mà phòng trà chưa xác nhận đã trả. Nền tảng không giữ khoản này nên " +
+                    "không tự hoàn thay được — cần liên hệ phòng trà.",
                     ct);
         }
 

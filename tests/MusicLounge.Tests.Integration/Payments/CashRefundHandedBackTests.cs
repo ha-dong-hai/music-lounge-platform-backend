@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Net;
 using FluentAssertions;
 using Hangfire;
@@ -87,6 +88,12 @@ public sealed class CashRefundHandedBackTests
         return refund.Id;
     }
 
+    private static async Task<string?> MessageAsync(HttpResponseMessage res)
+    {
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        return doc.RootElement.GetProperty("message").GetString();
+    }
+
     private Task<HttpResponseMessage> ConfirmAsync(int refundId, int userId, string role)
         => _factory.CreateAuthenticatedClient(userId, role)
             .PostAsync($"/api/v1/tickets/refund-requests/{refundId}/cash-handed-back", null);
@@ -124,6 +131,9 @@ public sealed class CashRefundHandedBackTests
 
         (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund", refundId))
             .Should().Be(1, "khách phải biết phòng trà đã xác nhận trả — kèm lối khiếu nại nếu chưa nhận");
+        (await db.Notifications.AnyAsync(n => n.UserId == SeedHelper.AudienceId && n.ReferenceId == refundId.ToString()
+                && n.Title == "Phòng trà xác nhận đã hoàn tiền mặt" && n.Body.Contains("hãy gửi khiếu nại để chúng tôi xử lý")))
+            .Should().BeTrue();
     }
 
     [Fact]
@@ -134,8 +144,9 @@ public sealed class CashRefundHandedBackTests
         (await ConfirmAsync(refundId, SeedHelper.OwnerId, "Owner")).StatusCode
             .Should().Be(HttpStatusCode.NoContent);
 
-        (await ConfirmAsync(refundId, SeedHelper.OwnerId, "Owner")).StatusCode
-            .Should().Be(HttpStatusCode.Conflict);
+        var second = await ConfirmAsync(refundId, SeedHelper.OwnerId, "Owner");
+        second.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await MessageAsync(second)).Should().Be("Đã xác nhận trả tiền cho yêu cầu này từ trước.");
     }
 
     [Fact]
@@ -147,6 +158,7 @@ public sealed class CashRefundHandedBackTests
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             "chỉ nhân viên hoặc chủ của đúng phòng trà mới là người trả tiền mặt tại quầy");
+        (await MessageAsync(res)).Should().Be("Bạn không phải nhân viên hay chủ của phòng trà này.");
     }
 
     [Fact]
@@ -158,6 +170,7 @@ public sealed class CashRefundHandedBackTests
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             "vé online được hoàn qua cổng thanh toán — phòng trà không cầm khoản đó");
+        (await MessageAsync(res)).Should().StartWith("Chỉ xác nhận trả tiền mặt cho vé bán tại quầy.");
     }
 
     [Fact]
@@ -168,6 +181,7 @@ public sealed class CashRefundHandedBackTests
         var res = await ConfirmAsync(refundId, SeedHelper.OwnerId, "Owner");
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await MessageAsync(res)).Should().Be("Yêu cầu hoàn tiền này chưa được duyệt.");
     }
 
     // ── Quá hạn mà chưa trả thì phải có người biết ──────────────────────────
@@ -184,6 +198,13 @@ public sealed class CashRefundHandedBackTests
             .Should().Be(1, "phòng trà là người đang nợ khách");
         (await CountAsync(SeedHelper.AdminId, NotificationType.RefundSlaBreached, "cash_refund", refundId))
             .Should().Be(1, "Admin là người có thể can thiệp");
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.Notifications.AnyAsync(n => n.UserId == SeedHelper.OwnerId && n.ReferenceId == refundId.ToString()
+                && n.Title == "Chưa xác nhận trả tiền mặt cho khách")).Should().BeTrue();
+        (await db.Notifications.AnyAsync(n => n.UserId == SeedHelper.AdminId && n.ReferenceId == refundId.ToString()
+                && n.Title == "Phòng trà chưa trả tiền mặt hoàn cho khách")).Should().BeTrue();
     }
 
     [Fact]

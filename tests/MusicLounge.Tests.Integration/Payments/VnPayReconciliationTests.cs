@@ -131,6 +131,11 @@ public sealed class VnPayReconciliationTests
             (await AlertCountAsync(paymentId)).Should().Be(1,
                 "job chạy mỗi phút và thanh toán này vẫn ở Pending — thiếu chốt chống trùng là báo " +
                 "mỗi phút một lần");
+            using var scope = _factory.Services.CreateScope();
+            (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AnyAsync(n =>
+                    n.UserId == SeedHelper.AdminId && n.ReferenceId == paymentId.ToString()
+                    && n.Title == "Đối soát VNPay: giao dịch đã thanh toán nhưng hệ thống chưa ghi nhận"))
+                .Should().BeTrue();
         }
         finally { FakeVnPayService.Forget(txnRef); }
     }
