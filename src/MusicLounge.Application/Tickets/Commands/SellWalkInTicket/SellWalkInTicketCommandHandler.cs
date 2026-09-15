@@ -57,6 +57,14 @@ internal sealed class SellWalkInTicketCommandHandler
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, loungeOwnerId))
             throw new ForbiddenException("Bạn không có quyền bán vé tại quầy cho venue này.");
 
+        // MLACP-410: tra lai luot ban cu TRUOC moi kiem tra nghiep vu — luot ban dau co the vua lay dung cho cuoi, hoac
+        // gio nhan khach cuoi vua qua trong luc quay cho phan hoi; kiem tra lai se bao "het ve" cho mot luot da thu tien.
+        var idempotencyKey = request.ClientRequestId is { } requestId
+            ? $"walkin:{_currentUser.UserId}:{requestId:N}"
+            : null;
+        if (await FindPreviousSaleAsync(idempotencyKey, request, ct) is { } previous)
+            return previous;
+
         if (tier.AccessType != AccessType.Physical)
             throw new DomainException("Chỉ có thể bán vé vật lý tại quầy.");
 
@@ -98,6 +106,10 @@ internal sealed class SellWalkInTicketCommandHandler
         // a Staff walk-in sale and an online buyer's hold can target the same show concurrently.
         await using (await _bookingLock.AcquireAsync(show.Id, ct))
         {
+            // Hai lan gui cung ma toi gan nhu cung luc deu lot qua lan tim o tren; khoa theo show xep chung lai.
+            if (await FindPreviousSaleAsync(idempotencyKey, request, ct) is { } concurrent)
+                return concurrent;
+
             await ValidateQuotaAsync(price, tier, show, request.Quantity, loungeOwnerId, ct);
 
             var totalAmount = price.Price * request.Quantity;
@@ -111,6 +123,7 @@ internal sealed class SellWalkInTicketCommandHandler
                 Status = PaymentStatus.Confirmed,
                 ReferenceType = "WalkIn",
                 ReferenceId = tier.LoungeShowId.ToString(),
+                IdempotencyKey = idempotencyKey,
                 PaidAt = now,
                 CreatedAt = now
             };
@@ -154,6 +167,28 @@ internal sealed class SellWalkInTicketCommandHandler
             return new WalkInSaleResultDto(payment.Id, totalAmount, tickets.Select(t => t.Id).ToArray(),
                 tickets.Select(t => new WalkInTicketDto(t.Id, t.QrCode!)).ToList());
         }
+    }
+
+    private async Task<WalkInSaleResultDto?> FindPreviousSaleAsync(
+        string? idempotencyKey, SellWalkInTicketCommand request, CancellationToken ct)
+    {
+        if (idempotencyKey is null)
+            return null;
+
+        var payment = (await _uow.Repository<Payment, int>().FindAsync(p => p.IdempotencyKey == idempotencyKey, ct))
+            .SingleOrDefault();
+        if (payment is null)
+            return null;
+
+        var tickets = (await _uow.Repository<Ticket, Guid>().FindAsync(t => t.PaymentId == payment.Id, ct))
+            .OrderBy(t => t.CreatedAt).ThenBy(t => t.Id).ToList();
+        if (payment.ReferenceType != "WalkIn" || tickets.Count != request.Quantity ||
+            tickets.Any(t => t.PriceId != request.PriceId))
+            throw new ConflictException(
+                "Mã lượt bán này đã dùng cho một lượt bán khác. Hãy tạo lượt bán mới trên máy quầy.");
+
+        return new WalkInSaleResultDto(payment.Id, payment.GrossAmount, tickets.Select(t => t.Id).ToArray(),
+            tickets.Select(t => new WalkInTicketDto(t.Id, t.QrCode!)).ToList());
     }
 
     private async Task ValidateQuotaAsync(

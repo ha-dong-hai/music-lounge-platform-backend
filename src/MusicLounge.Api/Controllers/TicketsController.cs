@@ -171,12 +171,15 @@ public sealed class TicketsController : ControllerBase
     /// <summary>Bán vé vật lý tại quầy (Staff/Owner của đúng venue) — thanh toán Cash, xác nhận
     /// ngay, không qua flow hold/VNPay. Chịu chung mọi giới hạn quota (mức giá/tier/zone/
     /// access-type/subscription cap) như đường mua online, khóa theo show để tránh bán vượt khi
-    /// nhiều quầy/nhiều request cùng bán lúc gần hết vé. Trả kèm mã QR của từng vé để quầy in cho khách (MLACP-402).</summary>
+    /// nhiều quầy/nhiều request cùng bán lúc gần hết vé. Trả kèm mã QR của từng vé để quầy in cho khách (MLACP-402).
+    /// Gửi kèm <c>clientRequestId</c> (mỗi lượt bán một mã) thì gửi lại cùng mã trả đúng lượt bán cũ, không bán thêm;
+    /// dùng lại mã đó cho một lượt bán khác trả 409 (MLACP-410).</summary>
     [HttpPost("walk-in")]
     [ProducesResponseType<ApiResponse<WalkInSaleResultDto>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> SellWalkIn(
         [FromBody] SellWalkInTicketCommand command, CancellationToken ct = default)

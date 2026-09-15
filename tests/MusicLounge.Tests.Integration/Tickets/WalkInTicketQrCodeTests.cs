@@ -141,6 +141,86 @@ public sealed class WalkInTicketQrCodeTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
+    // ── MLACP-410: quầy mất phản hồi rồi bấm bán lại không được thành bán trùng ──────────────────────────────
+
+    private static async Task<(int PaymentId, List<string> QrCodes)> ReadSaleAsync(HttpResponseMessage res)
+    {
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var data = doc.RootElement.GetProperty("data");
+        return (data.GetProperty("paymentId").GetInt32(),
+            data.GetProperty("tickets").EnumerateArray().Select(t => t.GetProperty("qrCode").GetString()!).ToList());
+    }
+
+    private async Task<int> TicketsSoldForPriceAsync(int priceId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return await db.Tickets.AsNoTracking().CountAsync(t => t.PriceId == priceId);
+    }
+
+    [Fact]
+    public async Task ResendingTheSameSale_ReturnsTheFirstSale_AndSellsNothingMore()
+    {
+        var (_, priceId) = await SeedOngoingShowWithCounterPriceAsync();
+        var sale = new { PriceId = priceId, Quantity = 2, ClientRequestId = Guid.NewGuid() };
+
+        var first = await VenueStaff().PostAsJsonAsync("/api/v1/tickets/walk-in", sale);
+        var retry = await VenueStaff().PostAsJsonAsync("/api/v1/tickets/walk-in", sale);
+
+        first.StatusCode.Should().Be(HttpStatusCode.Created);
+        retry.StatusCode.Should().Be(HttpStatusCode.Created);
+        var (firstPayment, firstQrs) = await ReadSaleAsync(first);
+        var (retryPayment, retryQrs) = await ReadSaleAsync(retry);
+        retryPayment.Should().Be(firstPayment);
+        retryQrs.Should().BeEquivalentTo(firstQrs);
+        (await TicketsSoldForPriceAsync(priceId)).Should().Be(2);
+    }
+
+    [Fact]
+    public async Task ReusingARequestIdForADifferentSale_Returns409()
+    {
+        var (_, priceId) = await SeedOngoingShowWithCounterPriceAsync();
+        var requestId = Guid.NewGuid();
+        (await VenueStaff().PostAsJsonAsync("/api/v1/tickets/walk-in",
+            new { PriceId = priceId, Quantity = 1, ClientRequestId = requestId })).StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var res = await VenueStaff().PostAsJsonAsync("/api/v1/tickets/walk-in",
+            new { PriceId = priceId, Quantity = 3, ClientRequestId = requestId });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await TicketsSoldForPriceAsync(priceId)).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task TheSameRequestIdFromAnotherCounterStaff_IsASeparateSale()
+    {
+        // Ma do may quay sinh; khoa theo tung nhan vien de hai may khong the de len luot ban cua nhau.
+        var (_, priceId) = await SeedOngoingShowWithCounterPriceAsync();
+        var requestId = Guid.NewGuid();
+        var owner = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+
+        var byStaff = await VenueStaff().PostAsJsonAsync("/api/v1/tickets/walk-in",
+            new { PriceId = priceId, Quantity = 1, ClientRequestId = requestId });
+        var byOwner = await owner.PostAsJsonAsync("/api/v1/tickets/walk-in",
+            new { PriceId = priceId, Quantity = 1, ClientRequestId = requestId });
+
+        byStaff.StatusCode.Should().Be(HttpStatusCode.Created);
+        byOwner.StatusCode.Should().Be(HttpStatusCode.Created);
+        (await ReadSaleAsync(byOwner)).PaymentId.Should().NotBe((await ReadSaleAsync(byStaff)).PaymentId);
+        (await TicketsSoldForPriceAsync(priceId)).Should().Be(2);
+    }
+
+    [Fact]
+    public async Task WithoutARequestId_TwoSalesAreStillTwoSales()
+    {
+        var (_, priceId) = await SeedOngoingShowWithCounterPriceAsync();
+
+        await SellAtCounterAsync(priceId, 1);
+        await SellAtCounterAsync(priceId, 1);
+
+        (await TicketsSoldForPriceAsync(priceId)).Should().Be(2);
+    }
+
     [Fact]
     public async Task VenueStaff_StillCannotOpenATicketBoughtByAnAudienceMember()
     {
