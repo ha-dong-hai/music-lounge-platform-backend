@@ -9,7 +9,7 @@ public sealed record UpdateLoungeCommand(
     int? AtmosphereId,
     string Street,
     string Ward,
-    string District,
+    string? District,
     string City,
     double? Latitude,
     double? Longitude

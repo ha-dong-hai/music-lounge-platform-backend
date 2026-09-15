@@ -48,7 +48,8 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         {
             Street = request.Street,
             Ward = request.Ward,
-            District = request.District,
+            // MLACP-403: PUT thay cả địa chỉ — null nghĩa là không có quận, không phải giữ quận cũ.
+            District = request.District ?? string.Empty,
             City = request.City,
             Latitude = request.Latitude,
             Longitude = request.Longitude

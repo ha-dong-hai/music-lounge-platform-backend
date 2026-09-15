@@ -39,7 +39,7 @@ internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeC
             {
                 Street = request.Street,
                 Ward = request.Ward,
-                District = request.District,
+                District = request.District ?? string.Empty,
                 City = request.City,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude
