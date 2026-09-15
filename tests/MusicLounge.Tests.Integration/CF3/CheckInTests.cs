@@ -98,13 +98,36 @@ public sealed class CheckInTests
     }
 
     [Fact]
-    public async Task CheckIn_AlreadyCheckedIn_Returns422()
+    public async Task CheckIn_AlreadyCheckedIn_Returns409WithTheEntryTime()
     {
-        // Handler flips Status Confirmed→Used on first check-in, so the second attempt fails the
-        // "Status != Confirmed" guard (422) before it ever reaches the CheckedInAt/409 guard.
+        // MLACP-409: truoc day lan quet thu 2 vap dieu kien "Status != Confirmed" (vi check-in doi ve sang Used) va
+        // tra 422 "Vé không hợp lệ" — nhan vien o cua khong phan biet duoc ve da vao cua voi ve bi huy/hoan tien.
         var qrCode = await SeedConfirmedPhysicalTicketOnOngoingShowAsync();
         var client = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
-        await client.PostAsJsonAsync("/api/v1/tickets/check-in", new { QrCode = qrCode });
+        (await client.PostAsJsonAsync("/api/v1/tickets/check-in", new { QrCode = qrCode }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var res = await client.PostAsJsonAsync("/api/v1/tickets/check-in", new { QrCode = qrCode });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var body = await res.Content.ReadAsStringAsync();
+        body.Should().Contain("Vé này đã được check-in lúc");
+        body.Should().MatchRegex(@"\d{2}:\d{2} \d{2}/\d{2}/\d{4}");
+    }
+
+    [Fact]
+    public async Task CheckIn_CancelledTicket_StillReturns422()
+    {
+        // Doi thu tu kiem tra khong duoc lam ve bi huy (chua tung vao cua) roi vao nhanh 409.
+        var qrCode = await SeedConfirmedPhysicalTicketOnOngoingShowAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var ticket = db.Tickets.Single(t => t.QrCode == qrCode);
+            ticket.Status = TicketStatus.Cancelled;
+            await db.SaveChangesAsync();
+        }
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
 
         var res = await client.PostAsJsonAsync("/api/v1/tickets/check-in", new { QrCode = qrCode });
 
