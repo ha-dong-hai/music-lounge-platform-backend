@@ -59,7 +59,8 @@ public sealed class FnbOrdersController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<FnbOrderDto>>.Ok(result));
     }
 
-    /// <summary>Staff/Owner — hàng đợi đơn F&B của venue, lọc theo trạng thái.</summary>
+    /// <summary>Staff/Owner — hàng đợi đơn F&B của venue, lọc theo trạng thái. Sắp **mới nhất trước**
+    /// (MLACP-411); màn bếp/bar muốn đơn cũ lên đầu thì tự sắp lại phía client.</summary>
     [HttpGet]
     [ProducesResponseType<ApiResponse<PaginatedResult<FnbOrderDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

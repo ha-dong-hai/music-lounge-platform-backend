@@ -39,10 +39,11 @@ internal sealed class GetFnbOrdersQueryHandler
 
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
-        // Order by Id (auto-increment, so it's already insertion/CreatedAt order) rather than
-        // CreatedAt itself — SQLite's EF Core provider flatly refuses to translate ORDER BY on a
-        // DateTimeOffset column ("SQLite does not support expressions of type 'DateTimeOffset' in
-        // ORDER BY clauses"), a hard limitation independent of the rest of the query shape.
+        // Newest first: GetPagedAsync orders DESCENDING (MLACP-411 — this comment used to read as insertion order and a
+        // client took it literally). Kept that way on purpose: the same list is the Owner's order history, where page 1
+        // must be recent orders; a bar board filters by status and sorts oldest-first on its side.
+        // Keyed on Id (auto-increment, same sequence as CreatedAt) rather than CreatedAt itself — SQLite's EF Core
+        // provider refuses ORDER BY on a DateTimeOffset column, a hard limitation independent of the query shape.
         var (pageItems, total) = await _uow.Repository<FnbOrder, int>().GetPagedAsync(
             o => o.LoungeId == request.LoungeId && (!statusFilter.HasValue || o.Status == statusFilter.Value),
             o => o.Id, page, pageSize, ct);
