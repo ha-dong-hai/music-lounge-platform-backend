@@ -47,11 +47,14 @@ internal sealed class CheckInTicketCommandHandler : IRequestHandler<CheckInTicke
         if (ticket.Tier.AccessType != AccessType.Physical)
             throw new DomainException("Vé online không cần check-in tại cửa.");
 
+        // MLACP-409: phai dung TRUOC dieu kien trang thai. Check-in doi ve sang Used, nen neu dat sau thi lan quet thu 2
+        // luon roi vao cau 422 "Vé không hợp lệ" — nhan vien khong phan biet duoc ve da vao cua voi ve bi huy/hoan tien.
+        if (ticket.PhysicalDetail?.CheckedInAt is { } checkedInAt)
+            throw new ConflictException(
+                $"Vé này đã được check-in lúc {VietnamTime.Format(checkedInAt, "HH:mm dd/MM/yyyy")}.");
+
         if (ticket.Status != TicketStatus.Confirmed)
             throw new DomainException("Vé không hợp lệ để check-in. Chỉ vé đã xác nhận mới được quét.");
-
-        if (ticket.PhysicalDetail?.CheckedInAt is not null)
-            throw new ConflictException("Vé này đã được check-in trước đó.");
 
         if (ticket.PendingTransferToUserId is not null)
             throw new DomainException("Vé đang trong quá trình chuyển nhượng, không thể check-in lúc này.");
