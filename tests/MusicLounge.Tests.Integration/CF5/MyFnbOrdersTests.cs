@@ -127,4 +127,22 @@ public sealed class MyFnbOrdersTests
         (await _factory.CreateClient().GetAsync("/api/v1/fnb-orders/my")).StatusCode
             .Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task HangDoiCuaPhongTra_TraDonMoiNhatTruoc()
+    {
+        // MLACP-411: chu thich cu ghi "theo thu tu tao" nhung API tra moi nhat truoc; client doc chu thich da hien nguoc.
+        // Khoa thu tu nay: chu phong tra xem lich su order can trang 1 la don gan day, khong phai don tu nhieu thang truoc.
+        var first = await PlaceOrderAsync(Staff());
+        var second = await PlaceOrderAsync(Staff());
+        var third = await PlaceOrderAsync(Staff());
+
+        var res = await Staff().GetAsync($"/api/v1/fnb-orders?loungeId={SeedHelper.LoungeId}&pageSize=2");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var page = (await res.Content.ReadFromJsonAsync<DataResponse<OrderPage>>())!.Data;
+        page.Items.Select(o => o.Id).Should().Equal(third, second);
+        page.TotalCount.Should().BeGreaterThanOrEqualTo(3);
+        first.Should().BeLessThan(second);
+    }
 }
