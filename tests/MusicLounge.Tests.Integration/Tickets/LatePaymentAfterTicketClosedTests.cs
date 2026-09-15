@@ -188,7 +188,8 @@ public sealed class LatePaymentAfterTicketClosedTests
                 "the buyer who was charged is told the money is coming back");
         (await db.Notifications.AsNoTracking()
                 .AnyAsync(n => n.Type == NotificationType.PaymentConfirmedAfterExpiry
-                               && n.ReferenceId == purchase.PaymentId.ToString()))
+                               && n.ReferenceId == purchase.PaymentId.ToString()
+                               && n.Body.Contains("đơn mua vé (đã đóng trước khi tiền về)")))
             .Should().BeTrue("Admins are still told, and can still re-issue by hand");
     }
 

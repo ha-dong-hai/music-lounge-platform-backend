@@ -324,7 +324,9 @@ public sealed class SettlementReviewTests
         (await verifyDb.Notifications.AnyAsync(n =>
             n.UserId == SeedHelper.AdminId
             && n.Type == NotificationType.SettlementPendingReview
-            && n.ReferenceId == settlementId.ToString()))
+            && n.ReferenceId == settlementId.ToString()
+            && n.Title == "Khoản quyết toán cần duyệt"
+            && n.Body.Contains("bị giữ lại vì buổi diễn")))
             .Should().BeTrue(
                 "giữ tiền lại rồi không báo ai thì không khác gì làm mất nó — không ai biết có " +
                 "khoản đang chờ quyết");

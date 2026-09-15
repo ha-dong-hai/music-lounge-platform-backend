@@ -87,12 +87,12 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             // duong khieu nai de duoc xem lai, thay vi bo ho lai voi mot chu "bi tu choi".
             await NotifyBuyerAsync(
                 refund,
-                "Yeu cau hoan tien khong duoc chap nhan",
+                "Yêu cầu hoàn tiền không được chấp nhận",
                 refund.ResolutionNote is { } why
-                    ? $"Yeu cau hoan tien cua ban khong duoc chap nhan. Ly do: {why}. Neu ban khong " +
-                      "dong y, hay gui khieu nai de duoc xem xet lai."
-                    : "Yeu cau hoan tien cua ban da duoc xem xet va khong duoc chap nhan. Neu ban " +
-                      "khong dong y, hay gui khieu nai de duoc xem xet lai.",
+                    ? $"Yêu cầu hoàn tiền của bạn không được chấp nhận. Lý do: {why}. Nếu bạn không " +
+                      "đồng ý, hãy gửi khiếu nại để được xem xét lại."
+                    : "Yêu cầu hoàn tiền của bạn đã được xem xét và không được chấp nhận. Nếu bạn " +
+                      "không đồng ý, hãy gửi khiếu nại để được xem xét lại.",
                 ct);
 
             await _uow.SaveChangesAsync(ct);
@@ -419,36 +419,36 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             // MLACP-384: noi dung su that — tien khong di qua VNPay ma da duoc chuyen khoan truc tiep.
             await NotifyBuyerAsync(
                 refund,
-                "Yeu cau hoan tien da duoc duyet",
-                $"{amountApproved:N0}d da duoc chuyen khoan truc tiep toi tai khoan {refund.PayoutBankName} " +
-                $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} cua ban (ma giao dich {manualTransferRef}), vi " +
-                "giao dich goc da qua thoi han hoan qua VNPay. Neu chua nhan duoc, hay gui khieu nai kem ma nay.",
+                "Yêu cầu hoàn tiền đã được duyệt",
+                $"{amountApproved:N0}đ đã được chuyển khoản trực tiếp tới tài khoản {refund.PayoutBankName} " +
+                $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} của bạn (mã giao dịch {manualTransferRef}), vì " +
+                "giao dịch gốc đã quá thời hạn hoàn qua VNPay. Nếu chưa nhận được, hãy gửi khiếu nại kèm mã này.",
                 ct);
         }
         else if (isGatewayPayment)
         {
             await NotifyBuyerAsync(
                 refund,
-                "Yeu cau hoan tien da duoc duyet",
-                $"{amountApproved:N0}d se duoc hoan ve phuong thuc thanh toan ban da dung. Thoi gian " +
-                "tien ve tai khoan phu thuoc ngan hang phat hanh.",
+                "Yêu cầu hoàn tiền đã được duyệt",
+                $"{amountApproved:N0}đ sẽ được hoàn về phương thức thanh toán bạn đã dùng. Thời gian " +
+                "tiền về tài khoản phụ thuộc ngân hàng phát hành.",
                 ct);
         }
         else
         {
             await NotifyBuyerAsync(
                 refund,
-                "Yeu cau hoan tien da duoc duyet",
-                $"{amountApproved:N0}d se duoc phong tra hoan truc tiep cho ban, vi ve nay duoc mua " +
-                "tai quay. Chung toi da thong bao cho phong tra. Neu chua nhan duoc, hay gui khieu nai.",
+                "Yêu cầu hoàn tiền đã được duyệt",
+                $"{amountApproved:N0}đ sẽ được phòng trà hoàn trực tiếp cho bạn, vì vé này được mua " +
+                "tại quầy. Chúng tôi đã thông báo cho phòng trà. Nếu chưa nhận được, hãy gửi khiếu nại.",
                 ct);
 
             await _notifications.NotifyAsync(
                 ownerId!.Value, // tien mat luon ban tai quay cua mot phong tra
                 NotificationType.RefundOwedByVenue,
-                "Can hoan tien mat cho khach",
-                $"Ve #{refund.PaymentId} duoc mua tai quay bang tien mat nen nen tang khong giu khoan " +
-                $"nay. Phong tra can hoan {amountApproved:N0}d truc tiep cho khach.",
+                "Cần hoàn tiền mặt cho khách",
+                $"Vé #{refund.PaymentId} được mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
+                $"này. Phòng trà cần hoàn {amountApproved:N0}đ trực tiếp cho khách.",
                 referenceType: "refund",
                 referenceId: refund.Id.ToString(),
                 ct: ct);

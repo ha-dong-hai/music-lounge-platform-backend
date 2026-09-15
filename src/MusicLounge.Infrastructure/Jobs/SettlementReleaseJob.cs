@@ -170,18 +170,18 @@ public sealed class SettlementReleaseJob
                     .ToListAsync(ct);
 
                 var body = undelivered
-                    ? $"Khoan {settlement.NetAmount:N0}d cua phong tra bi giu lai vi buoi dien chua " +
-                      "tung duoc danh dau bat dau — co the no da khong dien ra. Can kiem chung: neu " +
-                      "buoi dien that su khong dien ra thi nguoi mua ve can duoc hoan tien."
-                    : $"Khoan {settlement.NetAmount:N0}d cua phong tra bi giu lai vi buoi dien " +
-                      "khong chay du thoi luong da ban. Can kiem chung roi quyet chi tra hay giu lai.";
+                    ? $"Khoản {settlement.NetAmount:N0}đ của phòng trà bị giữ lại vì buổi diễn chưa " +
+                      "từng được đánh dấu bắt đầu — có thể nó đã không diễn ra. Cần kiểm chứng: nếu " +
+                      "buổi diễn thật sự không diễn ra thì người mua vé cần được hoàn tiền."
+                    : $"Khoản {settlement.NetAmount:N0}đ của phòng trà bị giữ lại vì buổi diễn " +
+                      "không chạy đủ thời lượng đã bán. Cần kiểm chứng rồi quyết định chi trả hay giữ lại.";
 
                 foreach (var admin in admins)
                 {
                     await _notifications.NotifyAsync(
                         admin.Id,
                         NotificationType.SettlementPendingReview,
-                        "Khoan quyet toan can duyet",
+                        "Khoản quyết toán cần duyệt",
                         body,
                         referenceType: "settlement",
                         referenceId: settlement.Id.ToString(),

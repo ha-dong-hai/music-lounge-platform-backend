@@ -45,7 +45,7 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
         var ticket = (await _uow.Repository<Ticket, Guid>()
                 .FindAsync(t => t.PaymentId == payment.Id, ct))
             .FirstOrDefault()
-            ?? throw new DomainException("Khong xac dinh duoc ve cua giao dich nay.");
+            ?? throw new DomainException("Không xác định được vé của giao dịch này.");
         var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(ticket.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), ticket.ShowId);
         var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
@@ -54,18 +54,18 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
         // Phan quyen truoc moi dieu kien nghiep vu: nguoi ngoai khong duoc biet ca trang thai cua
         // yeu cau cua phong tra khac.
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId))
-            throw new ForbiddenException("Ban khong phai nhan vien hay chu cua phong tra nay.");
+            throw new ForbiddenException("Bạn không phải nhân viên hay chủ của phòng trà này.");
 
         if (payment.Method != PaymentMethod.Cash)
             throw new DomainException(
-                "Chi xac nhan tra tien mat cho ve ban tai quay. Ve mua online duoc hoan qua cong thanh " +
-                "toan, phong tra khong can lam gi.");
+                "Chỉ xác nhận trả tiền mặt cho vé bán tại quầy. Vé mua online được hoàn qua cổng thanh " +
+                "toán, phòng trà không cần làm gì.");
 
         if (refund.Status != RefundRequestStatus.Approved)
-            throw new DomainException("Yeu cau hoan tien nay chua duoc duyet.");
+            throw new DomainException("Yêu cầu hoàn tiền này chưa được duyệt.");
 
         if (refund.CashHandedBackAt is not null)
-            throw new ConflictException("Da xac nhan tra tien cho yeu cau nay tu truoc.");
+            throw new ConflictException("Đã xác nhận trả tiền cho yêu cầu này từ trước.");
 
         refund.CashHandedBackAt = DateTimeOffset.UtcNow;
         refundRepo.Update(refund);
@@ -76,9 +76,9 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
             await _notifications.NotifyAsync(
                 buyerId,
                 NotificationType.RefundUpdate,
-                "Phong tra xac nhan da hoan tien mat",
-                $"Phong tra xac nhan da tra lai {refund.AmountApproved ?? refund.AmountRequested:N0}d " +
-                "tien mat cho ban. Neu ban chua nhan duoc, hay gui khieu nai de chung toi xu ly.",
+                "Phòng trà xác nhận đã hoàn tiền mặt",
+                $"Phòng trà xác nhận đã trả lại {refund.AmountApproved ?? refund.AmountRequested:N0}đ " +
+                "tiền mặt cho bạn. Nếu bạn chưa nhận được, hãy gửi khiếu nại để chúng tôi xử lý.",
                 referenceType: "refund",
                 referenceId: refund.Id.ToString(),
                 ct: ct);

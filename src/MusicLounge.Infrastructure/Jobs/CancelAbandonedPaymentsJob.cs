@@ -169,10 +169,10 @@ public sealed class CancelAbandonedPaymentsJob
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.PaymentConfirmedAfterExpiry,
-                    "Doi soat VNPay: giao dich da thanh toan nhung he thong chua ghi nhan",
-                    $"Doi soat voi VNPay cho thay giao dich {payment.OrderId} DA duoc thanh toan, nhung " +
-                    "he thong chua nhan duoc callback nen chua cap gi cho khach. Ve cua khach da duoc " +
-                    "giu lai chua huy. Can doi chieu roi cap ve hoac hoan tien cho khach.",
+                    "Đối soát VNPay: giao dịch đã thanh toán nhưng hệ thống chưa ghi nhận",
+                    $"Đối soát với VNPay cho thấy giao dịch {payment.OrderId} ĐÃ được thanh toán, nhưng " +
+                    "hệ thống chưa nhận được callback nên chưa cấp gì cho khách. Vé của khách đã được " +
+                    "giữ lại, chưa huỷ. Cần đối chiếu rồi cấp vé hoặc hoàn tiền cho khách.",
                     referenceType: "payment",
                     referenceId: payment.Id.ToString(),
                     ct: ct);

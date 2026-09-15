@@ -135,8 +135,14 @@ public sealed class AutoApproveOverdueRefundsTests
         refund.ProcessedBy.Should().BeNull("không có Admin nào duyệt — null nghĩa là hệ thống");
         refund.ResolutionNote.Should().Contain("Tự động duyệt");
 
-        (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund", refundId))
+        (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund", refundId,
+                title: "Yêu cầu hoàn tiền đã được duyệt"))
             .Should().Be(1, "người mua được báo như khi Admin duyệt tay — cùng một handler");
+        using (var wording = _factory.Services.CreateScope())
+            (await wording.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AnyAsync(n =>
+                    n.UserId == SeedHelper.AudienceId && n.ReferenceId == refundId.ToString()
+                    && n.Body.Contains("sẽ được hoàn về phương thức thanh toán bạn đã dùng")))
+                .Should().BeTrue("tiền vé mua online quay về đúng nơi người mua đã trả");
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

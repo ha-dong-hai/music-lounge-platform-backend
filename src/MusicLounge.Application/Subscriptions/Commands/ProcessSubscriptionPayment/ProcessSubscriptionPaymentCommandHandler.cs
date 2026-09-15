@@ -84,7 +84,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                     return VnPayIpnOutcome.ConfirmedTooLate;
 
                 await PaymentIncident.RecordConfirmedTooLateAsync(
-                    _uow, _notifications, _logger, "goi dang ky", txnRef, result.Amount,
+                    _uow, _notifications, _logger, "gói đăng ký", txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
                 return VnPayIpnOutcome.ConfirmedTooLate;
             }
@@ -390,7 +390,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             penalized, payment.Id, txnRef, ownerId, payment.GrossAmount, now);
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
-            _uow, _notifications, _logger, "goi dich vu cua phong tra dang bi khoa/tam khoa", txnRef, result.Amount,
+            _uow, _notifications, _logger, "gói dịch vụ của phòng trà đang bị khoá/tạm khoá", txnRef, result.Amount,
             "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;

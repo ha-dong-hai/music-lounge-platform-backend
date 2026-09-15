@@ -184,6 +184,7 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
                         && n.ReferenceType == "payment" && n.ReferenceId == paid.PaymentId.ToString())
             .ToListAsync();
         alerts.Should().NotBeEmpty();
+        alerts.Should().OnlyContain(n => n.Body.Contains("gói dịch vụ của phòng trà đang bị khoá/tạm khoá"));
         var refundId = (await db.RefundRequests.AsNoTracking().SingleAsync(r => r.PaymentId == paid.PaymentId)).Id;
         alerts.Should().OnlyContain(n => n.Body.Contains($"yêu cầu hoàn 100% #{refundId}"),
             "the refund already exists — Admins must be sent to approve it (MLACP-392)");
