@@ -85,7 +85,12 @@ public static class DependencyInjection
         services.AddScoped<IImageModerationService, GeminiImageModerationService>();
         services.AddScoped<IImageModerationGate, ImageModerationGate>();
         services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
-        services.AddScoped<IAiImageGenerationService, OpenAiImageGenerationService>();
+        // MLACP-418: co cau hinh Cloudflare thi dung Workers AI (co bac mien phi ~230 anh/ngay); khong thi quay ve OpenAI
+        // (khong co bac mien phi). Chon o day thay vi trong handler de tang Application khong phai biet ten nha cung cap.
+        services.AddScoped<IAiImageGenerationService>(sp =>
+            AiImageProvider.UseCloudflare(sp.GetRequiredService<IOptions<CloudflareSettings>>().Value)
+                ? ActivatorUtilities.CreateInstance<CloudflareImageGenerationService>(sp)
+                : ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp));
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
