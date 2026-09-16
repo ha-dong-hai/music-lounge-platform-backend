@@ -175,18 +175,6 @@ internal sealed class GeneratePosterCommandHandler
                 .Select(a => a.Name);
 
         var tags = genreNames.Concat(moodNames).Concat(atmosphereNames).ToList();
-        var tagLine = tags.Count > 0 ? string.Join(", ", tags) : "nhạc sống";
-
-        var prompt =
-            $"Thiết kế poster quảng cáo cho một buổi diễn nhạc sống tại Việt Nam. " +
-            $"Tên chương trình: \"{show.Name}\". Địa điểm: \"{lounge.Name}\". " +
-            $"Ngày diễn: {VietnamTime.Format(show.ScheduledStart)}. " +
-            $"Thể loại/không khí: {tagLine}. " +
-            "Phong cách: chuyên nghiệp, hấp dẫn, phù hợp đăng mạng xã hội, bố cục rõ ràng có chỗ cho tiêu đề.";
-
-        if (!string.IsNullOrWhiteSpace(styleHint))
-            prompt += $" Yêu cầu thêm từ chủ buổi diễn: {styleHint}.";
-
-        return prompt;
+        return PosterPrompt.Build(lounge.Name, tags, styleHint);
     }
 }
