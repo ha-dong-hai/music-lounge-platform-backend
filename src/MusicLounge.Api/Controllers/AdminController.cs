@@ -22,6 +22,7 @@ using MusicLounge.Application.Admin.Queries.GetSystemConfigs;
 using MusicLounge.Application.Admin.Queries.GetLedgerIntegrity;
 using MusicLounge.Application.Admin.Commands.ReviewVenue;
 using MusicLounge.Application.Admin.Queries.GetVenueReviewQueue;
+using MusicLounge.Application.Common.Configuration;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.LoungeShows.Commands.RemoveRating;
@@ -433,6 +434,15 @@ public sealed class AdminController : ControllerBase
         await _sender.Send(new TriggerRecurringJobCommand(jobId), ct);
         return NoContent();
     }
+
+    /// <summary>MLACP-420 — hệ thống đang thiếu cấu hình gì và hậu quả ra sao. Chỉ trả tên cài đặt và hậu quả,
+    /// KHÔNG bao giờ trả giá trị cài đặt. Thiếu cấu hình trước đây chỉ lộ ra khi đọc log hoặc đọc mã: thiếu
+    /// Firebase:ProjectId làm đăng nhập Google hỏng với mọi người dùng suốt nhiều tuần.</summary>
+    [HttpGet("configuration-audit")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<ConfigurationGap>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult GetConfigurationAudit([FromServices] IConfigurationAudit audit)
+        => Ok(ApiResponse<IReadOnlyList<ConfigurationGap>>.Ok(audit.Inspect()));
 
     /// <summary>Hàng đợi hồ sơ định danh/thuế đang chờ duyệt. Trước MLACP-290 hồ sơ nộp vào rồi nằm
     /// im: Admin xem được ảnh nhưng không có bước chấp nhận hay từ chối nào (phát hiện R7).</summary>

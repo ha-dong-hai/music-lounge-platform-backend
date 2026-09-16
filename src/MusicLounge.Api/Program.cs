@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Api.Middleware;
 using MusicLounge.Application;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Infrastructure;
 using MusicLounge.Infrastructure.Hubs;
 using MusicLounge.Infrastructure.Persistence;
@@ -291,6 +292,12 @@ try
     // nho vay deploy khong con ghi de len du lieu, va bat duoc WEBSITE_RUN_FROM_PACKAGE. Duong dan cong khai van la
     // /uploads/... nhu cu, nen anh da luu trong DB khong phai sua. Van giu UseStaticFiles mac dinh ben duoi de anh cu
     // con nam trong wwwroot tiep tuc xem duoc.
+    // MLACP-420: in ra ngay luc khoi dong nhung cai dat con thieu va hau qua that. Truoc day thieu cau hinh la tinh nang
+    // chet im lang — Firebase:ProjectId thieu lam dang nhap Google hong suot nhieu tuan ma khong ai biet.
+    foreach (var gap in app.Services.GetRequiredService<IConfigurationAudit>().Inspect())
+        Log.Warning("Thiếu cấu hình [{Severity}] {Feature} ({Key}): {Impact}",
+            gap.Severity, gap.Feature, gap.Key, gap.Impact);
+
     var storageRootPath = builder.Configuration["Storage:RootPath"];
     var externalUploadsRoot = string.IsNullOrWhiteSpace(storageRootPath)
         ? null
