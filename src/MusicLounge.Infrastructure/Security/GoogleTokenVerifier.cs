@@ -48,6 +48,15 @@ internal sealed class GoogleTokenVerifier : IGoogleTokenVerifier
             ValidateIssuerSigningKey = true,
         };
 
+        // MLACP-412: token khong doc noi (rong, thieu phan, khong phai base64) lam thu vien JWT nem
+        // SecurityTokenMalformedException/ArgumentException/ArgumentNullException — KHONG phai
+        // SecurityTokenException — nen truoc day chung lot ra ngoai thanh 500 "An unexpected error occurred".
+        // Day van chi la "token khong hop le", tra ve cung mot cau nhu moi truong hop dang nhap that bai khac.
+        var readable = !string.IsNullOrWhiteSpace(idToken)
+                       && new JwtSecurityTokenHandler().CanReadToken(idToken);
+        if (!readable)
+            throw new UnauthorizedException("Google ID token không hợp lệ hoặc đã hết hạn.");
+
         ClaimsPrincipal principal;
         try
         {
@@ -59,7 +68,7 @@ internal sealed class GoogleTokenVerifier : IGoogleTokenVerifier
             var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
             principal = handler.ValidateToken(idToken, validationParameters, out _);
         }
-        catch (SecurityTokenException)
+        catch (Exception ex) when (ex is SecurityTokenException or ArgumentException)
         {
             throw new UnauthorizedException("Google ID token không hợp lệ hoặc đã hết hạn.");
         }
