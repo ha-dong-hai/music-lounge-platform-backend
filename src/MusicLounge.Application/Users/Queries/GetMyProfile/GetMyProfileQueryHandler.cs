@@ -40,7 +40,7 @@ internal sealed class GetMyProfileQueryHandler
         var favAtmospheres = await _favAtmosphereRepo.FindAsync(a => a.UserId == _currentUser.UserId, ct);
 
         return new UserProfileDto(
-            user.Id, user.FullName, user.Email, user.AvatarUrl, user.AiConsent,
+            user.Id, user.FullName, user.Email, user.Phone, user.PhoneVerified, user.AvatarUrl, user.AiConsent,
             favGenres.Select(g => g.GenreId).ToList(),
             favMoods.Select(m => m.MoodId).ToList(),
             favAtmospheres.Select(a => a.AtmosphereId).ToList());
