@@ -1,3 +1,5 @@
+using MusicLounge.Application.Lounges.DTOs;
+
 namespace MusicLounge.Application.LoungeShows.DTOs;
 
 public sealed record LoungeSummaryDto(
@@ -13,6 +15,6 @@ public sealed record LoungeSummaryDto(
     string? PrimaryImageUrl,
     string? Model3DUrl,
     string? AtmosphereName,
+    // MLACP-413: dung chung LoungeGalleryImageDto cua Lounges.DTOs. Truoc day day la mot record rieng TRUNG TEN voi no,
+    // nen Swashbuckle khong sinh noi tai lieu API (schemaId dung nhau) va /swagger/v1/swagger.json tra 500 tren Azure.
     IReadOnlyList<LoungeGalleryImageDto> GalleryImages);
-
-public sealed record LoungeGalleryImageDto(int Id, string ImageUrl, string? Caption);
