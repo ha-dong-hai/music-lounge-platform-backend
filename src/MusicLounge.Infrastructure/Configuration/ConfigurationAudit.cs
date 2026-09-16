@@ -21,6 +21,7 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
     private readonly OpenAiSettings _openAi;
     private readonly CloudflareSettings _cloudflare;
     private readonly BusinessSettings _business;
+    private readonly SmsSettings _sms;
     private readonly IHostEnvironment _env;
 
     public ConfigurationAudit(
@@ -31,6 +32,7 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
         IOptions<OpenAiSettings> openAi,
         IOptions<CloudflareSettings> cloudflare,
         IOptions<BusinessSettings> business,
+        IOptions<SmsSettings> sms,
         IHostEnvironment env)
     {
         _firebase = firebase.Value;
@@ -40,6 +42,7 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
         _openAi = openAi.Value;
         _cloudflare = cloudflare.Value;
         _business = business.Value;
+        _sms = sms.Value;
         _env = env;
     }
 
@@ -75,6 +78,16 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
             gaps.Add(new ConfigurationGap(
                 "Tạo poster AI", "Cloudflare:AccountId + Cloudflare:ApiToken (hoặc OpenAi:ApiKey)",
                 "Chủ phòng trà đã mua gói có tính năng này nhưng mọi lần tạo poster đều thất bại.",
+                ConfigurationGapSeverity.Broken));
+
+        // MLACP-426. Truoc day bang kiem khong soi SMS, nen ra soat Azure 16/09 khong phat hien luong xac minh so dien
+        // thoai chua bao gio gui duoc tin nao.
+        if (string.IsNullOrWhiteSpace(_sms.AccountSid)
+            || string.IsNullOrWhiteSpace(_sms.AuthToken)
+            || string.IsNullOrWhiteSpace(_sms.FromNumber))
+            gaps.Add(new ConfigurationGap(
+                "Xác minh số điện thoại", "Sms:AccountSid + Sms:AuthToken + Sms:FromNumber",
+                "Người dùng bấm gửi mã xác minh nhưng không bao giờ nhận được tin, nên không ai xác minh được số điện thoại.",
                 ConfigurationGapSeverity.Broken));
 
         if (string.IsNullOrWhiteSpace(_firebase.CredentialsPath))

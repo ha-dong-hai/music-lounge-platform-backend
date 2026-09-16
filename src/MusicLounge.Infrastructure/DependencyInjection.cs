@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.Configure<SecurityDetectionSettings>(configuration.GetSection("SecurityDetection"));
         services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
         services.Configure<StorageSettings>(configuration.GetSection("Storage"));
+        services.Configure<SmsSettings>(configuration.GetSection("Sms"));
 
         // MLACP-420: bang kiem cau hinh — thieu cai dat nao, hau qua ra sao.
         services.AddSingleton<IConfigurationAudit, Configuration.ConfigurationAudit>();
@@ -174,6 +175,7 @@ public static class DependencyInjection
         services.AddScoped<SendEmailVerificationCodeJob>();
         // Same registration discipline as the two jobs above — see comment there.
         services.AddScoped<SendPhoneVerificationCodeJob>();
+        services.AddScoped<PhoneVerificationSmsJob>();
         // Fourth and fifth instances of that exact bug, found in the đợt-2 audit by cross-checking
         // every *Job class in the codebase against this list. Both are enqueued for real by
         // HangfireBackgroundJobService (Schedule<> / Enqueue<>) and neither was registered, so both
@@ -197,6 +199,7 @@ public static class DependencyInjection
         services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("vnpay").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        services.AddHttpClient(SmsService.HttpClientName).ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         // Image generation can run noticeably longer than the other external calls this app makes —
         // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
         // (not hung) generation doesn't get cut off right as it would have succeeded.

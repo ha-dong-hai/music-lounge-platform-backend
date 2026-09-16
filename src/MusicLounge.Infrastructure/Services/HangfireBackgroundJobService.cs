@@ -60,7 +60,8 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     public void EnqueuePhoneVerificationCode(string toPhone, string code)
     {
         var protectedCode = _secretProtector.Protect(code);
-        BackgroundJob.Enqueue<SendPhoneVerificationCodeJob>(
+        // MLACP-426: qua lop boc co gioi han thu lai — xem PhoneVerificationSmsJob.
+        BackgroundJob.Enqueue<PhoneVerificationSmsJob>(
             j => j.ExecuteAsync(toPhone, protectedCode, CancellationToken.None));
     }
 

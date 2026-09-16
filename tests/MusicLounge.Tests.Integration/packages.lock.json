@@ -252,6 +252,11 @@
           "Hangfire.Core": "[1.8.17]"
         }
       },
+      "libphonenumber-csharp": {
+        "type": "Transitive",
+        "resolved": "9.0.39",
+        "contentHash": "NiBrwzjHgtBj1XxTVQrWrxn+XOUmiDRcpqxBG5/DtZn8c2vm29FS9aBaCPG5+hBTDYXEid1r0SAZd7a063oGWg=="
+      },
       "MediatR": {
         "type": "Transitive",
         "resolved": "12.4.1",
@@ -1206,7 +1211,8 @@
           "Microsoft.ML": "[5.0.0, )",
           "Microsoft.ML.Recommender": "[0.23.0, )",
           "MusicLounge.Application": "[1.0.0, )",
-          "MusicLounge.Domain": "[1.0.0, )"
+          "MusicLounge.Domain": "[1.0.0, )",
+          "libphonenumber-csharp": "[9.0.39, )"
         }
       }
     }

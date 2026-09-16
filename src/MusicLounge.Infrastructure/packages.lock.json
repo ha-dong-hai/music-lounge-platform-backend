@@ -41,6 +41,12 @@
           "Hangfire.Core": "[1.8.17]"
         }
       },
+      "libphonenumber-csharp": {
+        "type": "Direct",
+        "requested": "[9.0.39, )",
+        "resolved": "9.0.39",
+        "contentHash": "NiBrwzjHgtBj1XxTVQrWrxn+XOUmiDRcpqxBG5/DtZn8c2vm29FS9aBaCPG5+hBTDYXEid1r0SAZd7a063oGWg=="
+      },
       "Microsoft.Data.SqlClient": {
         "type": "Direct",
         "requested": "[5.2.3, )",
