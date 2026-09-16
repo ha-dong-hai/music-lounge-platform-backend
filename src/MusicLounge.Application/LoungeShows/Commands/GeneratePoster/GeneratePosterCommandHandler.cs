@@ -59,9 +59,13 @@ internal sealed class GeneratePosterCommandHandler
 
         var genRepo = _uow.Repository<AiPosterGeneration, int>();
 
-        // Anti-abuse: every attempt (success or failure) on THIS show counts.
+        // MLACP-419: chi dem lan TAO DUOC POSTER. Truoc day dem ca lan that bai, nen khi nha cung cap hong hoac chua
+        // cau hinh (dung tinh trang Azure 16/09), chu phong tra bam 5 lan la khoa vinh vien tinh nang cho buoi dien do —
+        // ma chua nhan duoc tam poster nao, trong khi day la tinh nang trong goi ho da tra tien. Chong lam dung van con:
+        // han muc thang theo goi (dem ben duoi) va bo gioi han so request cua API.
         var maxAttemptsPerShow = await _config.GetIntAsync(ConfigKeys.AiPosterMaxAttemptsPerShow, 5, ct);
-        var attemptsForShow = await genRepo.CountAsync(g => g.ShowId == request.ShowId, ct);
+        var attemptsForShow = await genRepo.CountAsync(
+            g => g.ShowId == request.ShowId && g.Status == AiPosterGenerationStatus.Succeeded, ct);
         if (attemptsForShow >= maxAttemptsPerShow)
             throw new DomainException(
                 $"Show này đã đạt giới hạn {maxAttemptsPerShow} lần tạo poster AI. Vui lòng liên hệ hỗ trợ nếu cần thêm.");
