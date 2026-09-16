@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
@@ -88,12 +89,40 @@ public static class DependencyInjection
         services.AddScoped<IImageModerationService, GeminiImageModerationService>();
         services.AddScoped<IImageModerationGate, ImageModerationGate>();
         services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
-        // MLACP-418: co cau hinh Cloudflare thi dung Workers AI (co bac mien phi ~230 anh/ngay); khong thi quay ve OpenAI
-        // (khong co bac mien phi). Chon o day thay vi trong handler de tang Application khong phai biet ten nha cung cap.
+        // MLACP-418/424: dung CHUOI UU TIEN thay vi chon cung mot nha cung cap luc khoi dong. Moi mat xich la mot
+        // model cua mot nha cung cap; hong mat xich nay thi thu mat xich sau, chi bao hong khi tat ca deu hong.
+        // Mien phi dat truoc (Cloudflare Workers AI), tra phi dat sau cung (OpenAI) — nen mat xich tra phi chi bi
+        // cham toi khi cac mat xich mien phi da het duong. Chon o day thay vi trong handler de tang Application
+        // khong phai biet ten nha cung cap.
         services.AddScoped<IAiImageGenerationService>(sp =>
-            AiImageProvider.UseCloudflare(sp.GetRequiredService<IOptions<CloudflareSettings>>().Value)
-                ? ActivatorUtilities.CreateInstance<CloudflareImageGenerationService>(sp)
-                : ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp));
+        {
+            var cloudflare = sp.GetRequiredService<IOptions<CloudflareSettings>>().Value;
+            var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+
+            var chuoi = new List<IAiImageGenerationService>();
+            foreach (var model in AiImageProvider.CloudflareModels(cloudflare))
+            {
+                chuoi.Add(new CloudflareImageGenerationService(httpFactory, Options.Create(new CloudflareSettings
+                {
+                    AccountId = cloudflare.AccountId,
+                    ApiToken = cloudflare.ApiToken,
+                    ImageModel = model
+                })));
+            }
+
+            if (AiImageProvider.UseOpenAi(sp.GetRequiredService<IOptions<OpenAiSettings>>().Value))
+                chuoi.Add(ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp));
+
+            // Chua cau hinh nha cung cap nao: giu nguyen hanh vi cu — tra ve service OpenAI de no bao loi cau hinh
+            // ro rang, thay vi dung im lang hoac nem loi kho hieu luc khoi dong.
+            if (chuoi.Count == 0)
+                return ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp);
+
+            return chuoi.Count == 1
+                ? chuoi[0]
+                : new FallbackAiImageGenerationService(
+                    chuoi, sp.GetRequiredService<ILogger<FallbackAiImageGenerationService>>());
+        });
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
