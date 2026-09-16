@@ -56,11 +56,30 @@ public sealed class ContentReportSlaBreachAlertJob
         var admins = await _ctx.Users.Where(u => u.Role == UserRole.Admin).ToListAsync(ct);
         if (admins.Count == 0) return;
 
+        // MLACP-414: khong gui lai canh bao moi gio cho cung mot dich. Canh bao o day gom theo DICH bao cao chu khong
+        // theo tung bao cao, nen chong trung phai kem moc thoi gian: chi bo qua khi canh bao cu duoc tao SAU bao cao
+        // som nhat cua dot dang mo. Nho vay mot dot bao cao moi (sau khi dot cu da duoc xu ly) van duoc canh bao lai,
+        // thay vi im lang vinh vien cho dich do.
+        var breachedRefs = breachedGroups.Select(g => $"{g.TargetType}:{g.TargetId}").ToList();
+        var previousAlerts = (await _ctx.Notifications
+                .Where(n => n.Type == NotificationType.ContentReportSlaBreached
+                            && n.ReferenceType == "content_report_target"
+                            && n.ReferenceId != null
+                            && breachedRefs.Contains(n.ReferenceId))
+                .Select(n => new { n.UserId, n.ReferenceId, n.CreatedAt })
+                .ToListAsync(ct))
+            .ToList();
+
         foreach (var group in breachedGroups)
         {
+            var reference = $"{group.TargetType}:{group.TargetId}";
             var hoursOverdue = (int)(now - group.EarliestReportedAt.AddHours(slaHours)).TotalHours;
             foreach (var admin in admins)
             {
+                if (previousAlerts.Any(n => n.UserId == admin.Id && n.ReferenceId == reference
+                                            && n.CreatedAt >= group.EarliestReportedAt))
+                    continue;
+
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.ContentReportSlaBreached,
