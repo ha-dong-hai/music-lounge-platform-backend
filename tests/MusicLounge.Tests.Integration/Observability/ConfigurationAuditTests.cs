@@ -36,7 +36,7 @@ public sealed class ConfigurationAuditTests
         string openAiKey = "sk", string cloudflareAccount = "", string cloudflareToken = "",
         string firebaseCredentials = "/duong/dan.json", string performerUrl = "https://x/y",
         string processingUrl = "https://x/dang-xu-ly", string successUrl = "https://x/thanh-cong",
-        string moiTruong = "Production")
+        string moiTruong = "Production", string smsAccountSid = "AC123")
         => new(
             Options.Create(new FirebaseSettings { ProjectId = firebaseProjectId, CredentialsPath = firebaseCredentials }),
             Options.Create(new MuxSettings { WebhookSecret = muxWebhookSecret }),
@@ -52,6 +52,7 @@ public sealed class ConfigurationAuditTests
                 PaymentFailedUrl = "https://x/that-bai",
                 PasswordResetUrl = "https://x/dat-lai-mat-khau"
             }),
+            Options.Create(new SmsSettings { AccountSid = smsAccountSid, AuthToken = "tok", FromNumber = "+15551234567" }),
             new MoiTruong(moiTruong));
 
     [Fact]
@@ -66,6 +67,17 @@ public sealed class ConfigurationAuditTests
         gaps.Should().ContainSingle(g => g.Key == "Firebase:ProjectId")
             .Which.Severity.Should().Be(ConfigurationGapSeverity.Broken);
         gaps.Single(g => g.Key == "Firebase:ProjectId").Impact.Should().Contain("đăng nhập bằng Google");
+    }
+
+    [Fact]
+    public void ThieuCauHinhTwilio_BaoXacMinhSoDienThoaiHong()
+    {
+        // MLACP-426. Bảng kiểm trước đây không soi SMS, nên rà soát Azure 16/09 không phát hiện luồng xác minh số điện
+        // thoại chưa bao giờ gửi được tin nào.
+        var gap = TaoBangKiem(smsAccountSid: "").Inspect().Should().ContainSingle(g => g.Key.Contains("Sms:AccountSid")).Which;
+
+        gap.Severity.Should().Be(ConfigurationGapSeverity.Broken);
+        gap.Impact.Should().Contain("mã xác minh");
     }
 
     [Fact]
