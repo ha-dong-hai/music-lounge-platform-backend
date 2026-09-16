@@ -28,6 +28,14 @@ internal sealed class UnitOfWork : IUnitOfWork
         _transaction = null;
     }
 
+    public Task<T> ExecuteWithRetryAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken ct = default)
+        => _ctx.Database.CreateExecutionStrategy()
+            .ExecuteAsync(
+                operation,
+                static (_, op, token) => op(token),
+                verifySucceeded: null,
+                cancellationToken: ct);
+
     public async Task RollbackTransactionAsync(CancellationToken ct = default)
     {
         if (_transaction is null) return;
