@@ -1,5 +1,6 @@
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common;
+using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;

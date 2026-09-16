@@ -2,6 +2,7 @@ using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
+using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -89,7 +90,7 @@ internal sealed class GetLoungeShowDetailQueryHandler
             .FindAsync(g => g.LoungeId == show.LoungeId, ct);
         var galleryDtos = galleryImages
             .OrderBy(g => g.OrderIndex)
-            .Select(g => new LoungeGalleryImageDto(g.Id, g.ImageUrl, g.Caption))
+            .Select(g => new LoungeGalleryImageDto(g.Id, g.ImageUrl, g.Caption, g.OrderIndex))
             .ToList();
 
         var lastEntryMinutes = await _config.GetIntAsync(
