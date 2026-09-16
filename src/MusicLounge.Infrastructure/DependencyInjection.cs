@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.Configure<OpenAiSettings>(configuration.GetSection("OpenAi"));
         services.Configure<SecurityDetectionSettings>(configuration.GetSection("SecurityDetection"));
         services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
+        services.Configure<StorageSettings>(configuration.GetSection("Storage"));
 
         // DbContext
         // MLACP-415: Azure SQL reset ket noi vai lan moi ngay ("an error occurred during the login process ... Connection

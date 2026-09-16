@@ -1,5 +1,7 @@
-﻿using MusicLounge.Application.Common.Interfaces;
+using Microsoft.Extensions.Options;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Exceptions;
+using MusicLounge.Infrastructure.Settings;
 
 namespace MusicLounge.Infrastructure.Services;
 
@@ -13,13 +15,18 @@ internal sealed class LocalFileStorageService : IFileStorageService
     private readonly string _webRootPath;
     private readonly string _privateRootPath;
 
-    public LocalFileStorageService()
+    public LocalFileStorageService(IOptions<StorageSettings> storage)
     {
-        _webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        // MLACP-416: mac dinh van la thu muc chay app; tren Azure tro ra /home/data de file nguoi dung khong nam trong
+        // thu muc bi deploy ghi de. Xem StorageSettings.
+        var root = string.IsNullOrWhiteSpace(storage.Value.RootPath)
+            ? Directory.GetCurrentDirectory()
+            : storage.Value.RootPath;
+        _webRootPath = Path.Combine(root, "wwwroot");
         // Outside wwwroot on purpose — UseStaticFiles() only serves the wwwroot tree, so anything
         // stored here can only ever reach a client through an authenticated controller action that
         // explicitly reads it back via OpenPrivateFileAsync, never by guessing/leaking a URL.
-        _privateRootPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "private-uploads");
+        _privateRootPath = Path.Combine(root, "App_Data", "private-uploads");
     }
 
     public Task<string> SaveImageAsync(Stream content, string originalFileName, CancellationToken ct = default)

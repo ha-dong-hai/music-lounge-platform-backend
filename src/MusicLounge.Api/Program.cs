@@ -3,6 +3,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -290,6 +291,17 @@ try
     // upload sau nay se van 404 du duong dan dung (ASP.NET Core bind file provider 1 lan luc startup).
     Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
 
+    // MLACP-416: khi Storage:RootPath duoc dat (tren Azure la /home/data), file nguoi dung nam NGOAI thu muc deploy —
+    // nho vay deploy khong con ghi de len du lieu, va bat duoc WEBSITE_RUN_FROM_PACKAGE. Duong dan cong khai van la
+    // /uploads/... nhu cu, nen anh da luu trong DB khong phai sua. Van giu UseStaticFiles mac dinh ben duoi de anh cu
+    // con nam trong wwwroot tiep tuc xem duoc.
+    var storageRootPath = builder.Configuration["Storage:RootPath"];
+    var externalUploadsRoot = string.IsNullOrWhiteSpace(storageRootPath)
+        ? null
+        : Path.Combine(storageRootPath, "wwwroot");
+    if (externalUploadsRoot is not null)
+        Directory.CreateDirectory(Path.Combine(externalUploadsRoot, "uploads"));
+
     // Rate limiter (o duoi) key theo ctx.Connection.RemoteIpAddress — sau reverse proxy (nginx/LB,
     // gan nhu chac chan co khi len production that) dia chi nay luon la IP cua proxy cho MOI
     // request, khien rate limit gop chung tat ca user lam 1 "IP" duy nhat thay vi tach theo tung
@@ -372,6 +384,12 @@ try
     // <img>/canvas/WebGL-texture tu 1 domain khac domain backend se luon that bai truoc lay du
     // lieu pixel (vd Pannellum ve panorama 360 bang WebGL) — phat hien khi test tinh nang tour 360.
     app.UseCors("Default");
+    if (externalUploadsRoot is not null)
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(externalUploadsRoot),
+            ContentTypeProvider = uploadContentTypeProvider
+        });
     app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = uploadContentTypeProvider });
     // Testing host chay hang loat request lien tuc trong 1 suite (khong phai traffic that) —
     // rate limiter theo IP se tu chan chinh no. Chi bat o Development/Production.
