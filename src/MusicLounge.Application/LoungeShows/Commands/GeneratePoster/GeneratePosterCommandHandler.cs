@@ -87,9 +87,24 @@ internal sealed class GeneratePosterCommandHandler
         var prompt = await BuildPromptAsync(show, lounge, request.StyleHint, ct);
 
         byte[] imageBytes;
+        string tenFile;
         try
         {
             imageBytes = await _aiImage.GenerateImageAsync(prompt, ct);
+
+            // MLACP-421: dat ten file theo DINH DANG THAT cua anh. Truoc day luon la "poster.png", nhung Cloudflare
+            // Workers AI (nha cung cap mien phi them o MLACP-418) tra ve JPEG — ma UploadContentRules doi chieu phan mo
+            // rong voi chu ky file (chong doi duoi de lach kiem duyet), nen anh bi tu choi ngay o buoc luu, sau khi da
+            // tieu mot luot goi nha cung cap.
+            tenFile = ImageMimeTypeHelper.FromContent(imageBytes) switch
+            {
+                "image/png" => "poster.png",
+                "image/jpeg" => "poster.jpg",
+                "image/webp" => "poster.webp",
+                "image/gif" => "poster.gif",
+                _ => throw new ExternalServiceException(
+                    "AiImage", "Nhà cung cấp trả về dữ liệu không phải ảnh nhận dạng được.")
+            };
         }
         catch (ExternalServiceException ex)
         {
@@ -109,7 +124,7 @@ internal sealed class GeneratePosterCommandHandler
         string imageUrl;
         await using (var stream = new MemoryStream(imageBytes))
         {
-            imageUrl = await _fileStorage.SaveImageAsync(stream, "poster.png", ct);
+            imageUrl = await _fileStorage.SaveImageAsync(stream, tenFile, ct);
         }
 
         genRepo.Add(new AiPosterGeneration
