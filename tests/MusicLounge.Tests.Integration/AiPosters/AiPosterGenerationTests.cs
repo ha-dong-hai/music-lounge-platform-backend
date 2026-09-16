@@ -95,21 +95,48 @@ public sealed class AiPosterGenerationTests
     }
 
     [Fact]
-    public async Task GeneratePoster_ExceedsPerShowAttemptCap_ReturnsClearLimitError()
+    public async Task GeneratePoster_NhaCungCapHong_KhongTruVaoGioiHanMoiBuoiDien()
     {
+        // MLACP-419: truoc day moi lan thu deu bi tinh, nen tren moi truong chua cau hinh nha cung cap (dung nhu Azure
+        // hom 16/09) chu phong tra bam 5 lan la KHOA VINH VIEN tinh nang cho buoi dien do — ma chua nhan duoc tam poster
+        // nao, trong khi day la tinh nang ho da tra tien trong goi subscription.
         var showId = await CreateShowAsync();
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        // Default cap (system_config: ai_poster_max_attempts_per_show) is 5 — every call fails
-        // (no Gemini key in tests) but still counts toward the per-show anti-abuse limit.
-        for (var i = 0; i < 5; i++)
-            await client.PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/ai-poster", new { });
+        for (var i = 0; i < 6; i++)
+        {
+            var thu = await client.PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/ai-poster", new { });
+            thu.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable,
+                "nha cung cap hong thi tra loi 'dich vu khong san sang', khong phai 'het luot'");
+        }
+    }
+
+    [Fact]
+    public async Task GeneratePoster_DaTaoDuSoPosterChoBuoiDien_BaoHetLuot()
+    {
+        var showId = await CreateShowAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            // 5 poster ĐÃ TẠO ĐƯỢC (mặc định ai_poster_max_attempts_per_show = 5).
+            for (var i = 0; i < 5; i++)
+                db.Add(new AiPosterGeneration
+                {
+                    ShowId = showId,
+                    OwnerId = SeedHelper.OwnerId,
+                    Status = AiPosterGenerationStatus.Succeeded,
+                    Prompt = "poster",
+                    ImageUrl = $"/uploads/poster-{i}.png",
+                    CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-i)
+                });
+            await db.SaveChangesAsync();
+        }
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
         var res = await client.PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/ai-poster", new { });
 
         res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        var body = await res.Content.ReadAsStringAsync();
-        body.Should().Contain("giới hạn");
+        (await res.Content.ReadAsStringAsync()).Should().Contain("giới hạn");
     }
 
     private sealed record IdResponse(bool Success, int Data);
