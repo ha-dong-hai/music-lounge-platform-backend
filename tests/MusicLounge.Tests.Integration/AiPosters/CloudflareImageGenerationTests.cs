@@ -32,15 +32,28 @@ public sealed class CloudflareImageGenerationTests
 
     private sealed class MotClient(HttpMessageHandler handler) : IHttpClientFactory
     {
-        public HttpClient CreateClient(string name) => new(handler, disposeHandler: false);
+        public string? TenClientDaXin { get; private set; }
+
+        public HttpClient CreateClient(string name)
+        {
+            TenClientDaXin = name;
+            return new HttpClient(handler, disposeHandler: false);
+        }
     }
 
     private static CloudflareImageGenerationService TaoService(
         TraLoiSan handler, string accountId = "acc-123", string token = "tok-123", string model = "")
-        => new(new MotClient(handler), Options.Create(new CloudflareSettings
+        => TaoServiceVoiFactory(handler, accountId, token, model).Service;
+
+    private static (CloudflareImageGenerationService Service, MotClient Factory) TaoServiceVoiFactory(
+        TraLoiSan handler, string accountId = "acc-123", string token = "tok-123", string model = "")
+    {
+        var factory = new MotClient(handler);
+        return (new CloudflareImageGenerationService(factory, Options.Create(new CloudflareSettings
         {
             AccountId = accountId, ApiToken = token, ImageModel = model
-        }));
+        })), factory);
+    }
 
     [Fact]
     public async Task TaoAnhThanhCong_TraVeAnhVaGoiDungModelMienPhi()
@@ -98,4 +111,58 @@ public sealed class CloudflareImageGenerationTests
     public void ChonNhaCungCap_ChiDungCloudflareKhiDuCauHinh(string accountId, string token, bool mongDoi)
         => AiImageProvider.UseCloudflare(new CloudflareSettings { AccountId = accountId, ApiToken = token })
             .Should().Be(mongDoi);
+
+    // ---- MLACP-423 ----
+
+    [Theory]
+    [InlineData("@cf/black-forest-labs/flux-2-klein-4b")]
+    [InlineData("@cf/black-forest-labs/flux-2-klein-9b")]
+    [InlineData("@cf/black-forest-labs/flux-2-dev")]
+    public async Task ModelFlux2_PhaiGuiDangMultipart(string model)
+    {
+        // Cac model FLUX 2 chi nhan multipart/form-data. Goi that API Cloudflare ngay 16/09: cung mot prompt, gui JSON
+        // bi tra "400 required properties at '/' are 'multipart'", gui multipart tra ve anh 690-770 KB. Neu khong tach
+        // nhanh nay thi doi sang FLUX 2 la tinh nang hong ngay tu lan goi dau — chu phong tra mat luot tao poster.
+        var handler = new TraLoiSan(HttpStatusCode.OK, $"{{\"result\":{{\"image\":\"{AnhPngGia}\"}},\"success\":true}}");
+
+        await TaoService(handler, model: model).GenerateImageAsync("Đêm nhạc Trịnh – Hạ trắng");
+
+        handler.YeuCauCuoi!.Content!.Headers.ContentType!.MediaType.Should().Be("multipart/form-data");
+        // Nhay kep quanh ten bien: day la dang da goi thu that va Cloudflare chap nhan. MultipartFormDataContent
+        // mac dinh ghi name=prompt khong nhay — chua kiem chung, nen ghim lai dang da biet chac chan chay duoc.
+        handler.BodyCuoi.Should().Contain("Content-Disposition: form-data; name=\"prompt\"")
+            .And.Contain("Đêm nhạc Trịnh – Hạ trắng");
+        // Chi gui dung nhung gi da goi thu that va duoc chap nhan. Chua kiem chung FLUX 2 co nhan "steps" hay khong,
+        // nen khong gui thua — mot lan bi tu choi la chu phong tra mat mot luot tao poster.
+        handler.BodyCuoi.Should().NotContain("steps");
+        // Ban goi thu that khong kem Content-Type o tung phan; .NET mac dinh tu them "text/plain; charset=utf-8".
+        handler.BodyCuoi.Should().NotContain("text/plain");
+    }
+
+    [Fact]
+    public async Task ModelFlux1Schnell_VanGuiJsonNhuCu()
+    {
+        // Doi chung cho test tren: sua cho FLUX 2 khong duoc lam hong nhanh dang chay tren Azure.
+        var handler = new TraLoiSan(HttpStatusCode.OK, $"{{\"result\":{{\"image\":\"{AnhPngGia}\"}},\"success\":true}}");
+
+        await TaoService(handler, model: "@cf/black-forest-labs/flux-1-schnell").GenerateImageAsync("poster");
+
+        handler.YeuCauCuoi!.Content!.Headers.ContentType!.MediaType.Should().Be("application/json");
+        handler.BodyCuoi.Should().Contain("\"steps\":4");
+    }
+
+    [Fact]
+    public async Task TaoAnh_DungHttpClientRieng_KhongDungChungVoiLivestream()
+    {
+        // Client "cloudflare" la cua livestream, timeout 30 giay. Do that ngay 16/09: flux-2-dev mat 77-86 giay/anh,
+        // nen dung chung client do thi moi lan tao poster deu dut giua chung. Timeout cua client rieng nay duoc
+        // kiem o CauHinhHttpClientTests.
+        var handler = new TraLoiSan(HttpStatusCode.OK, $"{{\"result\":{{\"image\":\"{AnhPngGia}\"}},\"success\":true}}");
+        var (service, factory) = TaoServiceVoiFactory(handler);
+
+        await service.GenerateImageAsync("poster");
+
+        factory.TenClientDaXin.Should().Be(CloudflareImageGenerationService.HttpClientName);
+        CloudflareImageGenerationService.HttpClientName.Should().NotBe("cloudflare");
+    }
 }

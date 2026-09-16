@@ -200,7 +200,16 @@ public static class DependencyInjection
         // Image generation can run noticeably longer than the other external calls this app makes —
         // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow
         // (not hung) generation doesn't get cut off right as it would have succeeded.
-        services.AddHttpClient("openai").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(90));
+        //
+        // MLACP-423: 120s, do thuc te chu khong phai uoc luong. Goi that Cloudflare Workers AI ngay 16/09:
+        // flux-2-dev mat 77-86 giay mot anh, nen muc 90 giay cu gan nhu khong con bien an toan. Truoc day nhanh
+        // Cloudflare dung chung client "cloudflare" cua livestream (30 giay) — moi lan tao poster bang FLUX 2
+        // deu dut giua chung. Livestream van giu 30 giay: noi chung cho ca hai thi mot loi goi treo se giu chan
+        // thread cua request khac.
+        var imageGenerationTimeout = TimeSpan.FromSeconds(120);
+        services.AddHttpClient("openai").ConfigureHttpClient(c => c.Timeout = imageGenerationTimeout);
+        services.AddHttpClient(CloudflareImageGenerationService.HttpClientName)
+            .ConfigureHttpClient(c => c.Timeout = imageGenerationTimeout);
         // Stitching several phone photos can genuinely take a while (feature detection + matching
         // + blending scales with image count/resolution) — longer than the other external calls.
         services.AddHttpClient("panorama-stitcher").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(120));
