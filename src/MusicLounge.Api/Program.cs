@@ -287,10 +287,6 @@ try
 
     var app = builder.Build();
 
-    // wwwroot phai ton tai TRUOC khi UseStaticFiles() khoi tao WebRootFileProvider, neu khong file
-    // upload sau nay se van 404 du duong dan dung (ASP.NET Core bind file provider 1 lan luc startup).
-    Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
-
     // MLACP-416: khi Storage:RootPath duoc dat (tren Azure la /home/data), file nguoi dung nam NGOAI thu muc deploy —
     // nho vay deploy khong con ghi de len du lieu, va bat duoc WEBSITE_RUN_FROM_PACKAGE. Duong dan cong khai van la
     // /uploads/... nhu cu, nen anh da luu trong DB khong phai sua. Van giu UseStaticFiles mac dinh ben duoi de anh cu
@@ -299,8 +295,20 @@ try
     var externalUploadsRoot = string.IsNullOrWhiteSpace(storageRootPath)
         ? null
         : Path.Combine(storageRootPath, "wwwroot");
-    if (externalUploadsRoot is not null)
+
+    if (externalUploadsRoot is null)
+    {
+        // wwwroot phai ton tai TRUOC khi UseStaticFiles() khoi tao WebRootFileProvider, neu khong file
+        // upload sau nay se van 404 du duong dan dung (ASP.NET Core bind file provider 1 lan luc startup).
+        Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
+    }
+    else
+    {
+        // MLACP-417: KHONG duoc tao thu muc trong thu muc deploy o nhanh nay. Khi chay tu goi
+        // (WEBSITE_RUN_FROM_PACKAGE), Azure gan goi zip vao /home/site/wwwroot o che do CHI DOC — mot lenh tao thu muc
+        // o day se lam app chet ngay luc khoi dong. File nguoi dung da nam o cho khac roi nen cung khong can nua.
         Directory.CreateDirectory(Path.Combine(externalUploadsRoot, "uploads"));
+    }
 
     // Rate limiter (o duoi) key theo ctx.Connection.RemoteIpAddress — sau reverse proxy (nginx/LB,
     // gan nhu chac chan co khi len production that) dia chi nay luon la IP cua proxy cho MOI
