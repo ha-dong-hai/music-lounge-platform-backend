@@ -27,18 +27,24 @@ internal sealed class TransactionBehavior<TRequest, TResponse>
         _locks.Begin();
         try
         {
-            await _uow.BeginTransactionAsync(ct);
-            try
+            // MLACP-415: transaction phai nam BEN TRONG execution strategy. Azure SQL reset ket noi vai lan moi ngay
+            // (log 14-15/09); khong co lop nay thi moi lan nhu vay la mot loi 500 giua chung mot lenh, con bat
+            // EnableRetryOnFailure ma van mo transaction ben ngoai thi EF nem thang loi cau hinh.
+            return await _uow.ExecuteWithRetryAsync(async token =>
             {
-                var response = await next();
-                await _uow.CommitTransactionAsync(ct);
-                return response;
-            }
-            catch
-            {
-                await _uow.RollbackTransactionAsync(ct);
-                throw;
-            }
+                await _uow.BeginTransactionAsync(token);
+                try
+                {
+                    var response = await next();
+                    await _uow.CommitTransactionAsync(token);
+                    return response;
+                }
+                catch
+                {
+                    await _uow.RollbackTransactionAsync(token);
+                    throw;
+                }
+            }, ct);
         }
         finally
         {

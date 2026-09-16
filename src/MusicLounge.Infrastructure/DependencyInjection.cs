@@ -46,8 +46,14 @@ public static class DependencyInjection
         services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
 
         // DbContext
+        // MLACP-415: Azure SQL reset ket noi vai lan moi ngay ("an error occurred during the login process ... Connection
+        // reset by peer" trong log 14-15/09). Khong bat retry thi moi lan nhu vay la mot loi 500 that su cho nguoi dung.
+        // Di kem: TransactionBehavior mo transaction ben trong execution strategy (xem IUnitOfWork.ExecuteWithRetryAsync).
         services.AddDbContext<ApplicationDbContext>(opts =>
-            opts.UseSqlServer(connectionString));
+            opts.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null)));
 
         // Generic Repository + UnitOfWork
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
