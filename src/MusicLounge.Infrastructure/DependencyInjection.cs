@@ -46,6 +46,9 @@ public static class DependencyInjection
         services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
         services.Configure<StorageSettings>(configuration.GetSection("Storage"));
 
+        // MLACP-420: bang kiem cau hinh — thieu cai dat nao, hau qua ra sao.
+        services.AddSingleton<IConfigurationAudit, Configuration.ConfigurationAudit>();
+
         // DbContext
         // MLACP-415: Azure SQL reset ket noi vai lan moi ngay ("an error occurred during the login process ... Connection
         // reset by peer" trong log 14-15/09). Khong bat retry thi moi lan nhu vay la mot loi 500 that su cho nguoi dung.
