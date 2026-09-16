@@ -20,12 +20,40 @@ public sealed class StorageRootPathTests : IDisposable
 {
     private readonly ApiFactory _factory;
     private readonly string _root = Path.Combine(Path.GetTempPath(), $"ml-storage-{Guid.NewGuid():N}");
+    private readonly List<string> _thuMucTam = [];
 
     public StorageRootPathTests(ApiFactory factory) => _factory = factory;
 
     public void Dispose()
     {
-        try { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); } catch { /* dọn dẹp thôi */ }
+        foreach (var d in _thuMucTam.Append(_root))
+            try { if (Directory.Exists(d)) Directory.Delete(d, recursive: true); } catch { /* dọn dẹp thôi */ }
+    }
+
+    [Fact]
+    public async Task CoCauHinh_KhongTaoThuMucTrongThuMucDeploy()
+    {
+        // MLACP-417: khi chay tu goi (WEBSITE_RUN_FROM_PACKAGE), thu muc deploy la CHI DOC — mot lenh tao thu muc o do
+        // lam app chet ngay luc khoi dong. Dung mot thu muc goc TAM cho host nay (khong dung thu muc du an that, noi
+        // dang chua anh dev) roi xem khoi dong co dong vao no khong.
+        var thuMucDeployGia = Path.Combine(Path.GetTempPath(), $"ml-content-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(thuMucDeployGia);
+        _thuMucTam.Add(thuMucDeployGia);
+        var duAn = _factory.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
+        foreach (var cauHinh in Directory.GetFiles(duAn, "appsettings*.json").Where(f => !f.Contains(".Local.")))
+            File.Copy(cauHinh, Path.Combine(thuMucDeployGia, Path.GetFileName(cauHinh)));
+
+        var factory = _factory.WithWebHostBuilder(b =>
+        {
+            b.UseContentRoot(thuMucDeployGia);
+            b.UseSetting("Storage:RootPath", _root);
+        });
+        var res = await factory.CreateClient().GetAsync("/health");
+
+        res.EnsureSuccessStatusCode();
+        Directory.Exists(Path.Combine(thuMucDeployGia, "wwwroot", "uploads")).Should().BeFalse(
+            "khoi dong khong duoc tao thu muc trong thu muc deploy khi da co noi luu rieng — cho do se la chi doc");
+        Directory.Exists(Path.Combine(_root, "wwwroot", "uploads")).Should().BeTrue("thu muc moi phai duoc tao");
     }
 
     private static byte[] Png() => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
