@@ -51,11 +51,26 @@ public sealed class ModerationSlaBreachAlertJob
         var admins = await _ctx.Users.Where(u => u.Role == UserRole.Admin).ToListAsync(ct);
         if (admins.Count == 0) return;
 
+        // MLACP-414: moi Admin nhan dung mot canh bao cho moi muc kiem duyet, thay vi mot canh bao moi gio (xem
+        // ComplaintSlaBreachAlertJob va RefundSlaBreachAlertJob).
+        var breachedIds = breached.Select(m => m.Id.ToString()).ToList();
+        var alreadyAlerted = (await _ctx.Notifications
+                .Where(n => n.Type == NotificationType.ModerationSlaBreached
+                            && n.ReferenceType == "event_moderation"
+                            && n.ReferenceId != null
+                            && breachedIds.Contains(n.ReferenceId))
+                .Select(n => new { n.UserId, n.ReferenceId })
+                .ToListAsync(ct))
+            .Select(n => (n.UserId, n.ReferenceId))
+            .ToHashSet();
+
         foreach (var moderation in breached)
         {
             var hoursOverdue = (int)(now - moderation.SlaDeadline!.Value).TotalHours;
             foreach (var admin in admins)
             {
+                if (alreadyAlerted.Contains((admin.Id, moderation.Id.ToString()))) continue;
+
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.ModerationSlaBreached,
