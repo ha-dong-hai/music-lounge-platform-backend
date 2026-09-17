@@ -1,0 +1,99 @@
+# MLACP-434. Test va dong image cho dich vu ghep anh 360 (services/panorama-stitcher).
+#
+# Dich vu nay khong chay tren App Service B1 cua backend (Hugin + PyTorch CPU + LoFTR qua nang), ma chay rieng tren Azure
+# Container Apps ban Consumption: scale 0-1, nam trong goi mien phi hang thang, khong dung thi khong tinh tien.
+# Container Apps can mot image de keo ve — repo public nen GitHub Actions va GitHub Container Registry (GHCR) deu mien
+# phi.
+#
+#   - PR co sua dich vu: chay pytest + build thu image (khong push) de bat Dockerfile hong truoc khi merge.
+#   - Push len master: chay pytest, roi build va push ghcr.io/<owner>/musiclounge-panorama-stitcher voi tag
+#     sha-<commit> (dung tag nay khi cap nhat Container Apps) va latest.
+#
+# Cach trien khai/cap nhat Container Apps: services/panorama-stitcher/README.md, muc "Deploying".
+name: Panorama stitcher
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "services/panorama-stitcher/**"
+      - ".github/workflows/panorama-stitcher.yml"
+  push:
+    branches: [master]
+    paths:
+      - "services/panorama-stitcher/**"
+      - ".github/workflows/panorama-stitcher.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: panorama-stitcher-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/panorama-stitcher
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12" # cung phien ban voi Dockerfile (python:3.12-slim)
+          cache: pip
+          cache-dependency-path: services/panorama-stitcher/requirements*.txt
+
+      # Cai du requirements (ke ca torch CPU) chu khong loc bot: buoc nay cung la noi phat hien som mot phien ban ghim
+      # khong ton tai, truoc khi toi buoc build image lau hon nhieu.
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Test
+        run: python -m pytest -q
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/musiclounge-panorama-stitcher
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Cache cua GitHub Actions giu lop cai torch va tai trong so LoFTR (lop nang nhat) giua cac lan build.
+      - name: Build (PR) / Build + push (master)
+        uses: docker/build-push-action@v6
+        with:
+          context: services/panorama-stitcher
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

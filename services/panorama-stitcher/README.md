@@ -67,13 +67,68 @@ design plan for what full end-to-end coverage would need.
 
 ```bash
 docker build -t musiclounge-panorama-stitcher .
-docker run -p 8000:8000 -e STITCHER_API_KEY=dev-only-key   -e ALLOWED_IMAGE_ORIGINS=http://host.docker.internal:5299 musiclounge-panorama-stitcher
+docker run -p 8000:8000 \
+  -e STITCHER_API_KEY=dev-only-key \
+  -e ALLOWED_IMAGE_ORIGINS=http://host.docker.internal:5299 \
+  musiclounge-panorama-stitcher
 ```
 
 ## Deploying
 
-This needs to be hosted as its own reachable HTTP service (a small container instance is enough —
-it's stateless and only runs briefly per request). Point the main backend at it via
-`PanoramaStitcher:BaseUrl` in `appsettings.json` / `appsettings.Development.Local.json`. It is
-**not** started by the main backend's `dotnet run` — start it separately (see above) for local
-development, or deploy it alongside the backend in production.
+This is **not** started by the main backend's `dotnet run` — run it separately (see above) for local
+development. In production it is its own HTTP service: the backend's App Service plan (B1) is too
+small for Hugin + PyTorch CPU + LoFTR, so it runs on **Azure Container Apps (Consumption)**, scaled
+0–1. Scaled to zero it costs nothing; a month of occasional stitching fits inside the monthly free
+grant (180,000 vCPU-seconds / 360,000 GiB-seconds per subscription).
+
+### Image
+
+`.github/workflows/panorama-stitcher.yml` runs the tests and, on every push to `master` that touches
+this folder, publishes `ghcr.io/ha-dong-hai/musiclounge-panorama-stitcher` tagged `sha-<commit>` and
+`latest`. **GHCR creates new packages as private, even for a public repo** — after the first
+publish, open the package on GitHub → *Package settings* → *Change visibility* → Public, or Container
+Apps cannot pull it without registry credentials.
+
+### One-time setup (Azure CLI)
+
+```bash
+RG=<resource-group>                     # same resource group as the backend
+KEY=$(openssl rand -hex 32)             # shared secret; never commit it
+
+az provider register --namespace Microsoft.App --wait
+
+# No Log Analytics workspace: it bills per GB ingested, and this service logs little worth keeping.
+az containerapp env create -n musiclounge-aca-env -g $RG -l eastasia --logs-destination none
+
+az containerapp create -n musiclounge-stitcher -g $RG --environment musiclounge-aca-env \
+  --image ghcr.io/ha-dong-hai/musiclounge-panorama-stitcher:latest \
+  --ingress external --target-port 8000 \
+  --min-replicas 0 --max-replicas 1 --cpu 2 --memory 4Gi \
+  --secrets stitcher-key=$KEY \
+  --env-vars STITCHER_API_KEY=secretref:stitcher-key \
+             ALLOWED_IMAGE_ORIGINS=https://musiclounge-api.azurewebsites.net
+```
+
+Then point the backend at it (App Service → Environment variables):
+
+| Setting | Value |
+|---|---|
+| `PanoramaStitcher__BaseUrl` | `https://<app FQDN from the create output>` |
+| `PanoramaStitcher__ApiKey` | the same `$KEY` |
+| `PanoramaStitcher__PublicBaseUrl` | `https://musiclounge-api.azurewebsites.net` (needed while uploads are stored on local disk) |
+
+### Updating
+
+Container Apps does not re-pull a tag that did not change name, so deploy the commit tag:
+
+```bash
+az containerapp update -n musiclounge-stitcher -g $RG \
+  --image ghcr.io/ha-dong-hai/musiclounge-panorama-stitcher:sha-<short commit>
+```
+
+### Cold start
+
+With zero replicas the first request waits for the container to start. Container Apps holds the
+request meanwhile, but ingress times out any single request after **240 seconds** — so the backend
+calls `GET /health` first to wake the service (up to 3 minutes, retrying), and only then sends
+`/stitch`, instead of spending that budget on startup and stitching combined.
