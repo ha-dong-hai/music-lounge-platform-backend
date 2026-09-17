@@ -28,15 +28,17 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
     private readonly ICurrentUserService _currentUser;
     private readonly ISystemConfigService _config;
     private readonly IBackgroundJobService _backgroundJobs;
+    private readonly IPanoramaStitchingService _stitcher;
 
     public StitchVenueTourSceneCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config,
-        IBackgroundJobService backgroundJobs)
+        IBackgroundJobService backgroundJobs, IPanoramaStitchingService stitcher)
     {
         _uow = uow;
         _currentUser = currentUser;
         _config = config;
         _backgroundJobs = backgroundJobs;
+        _stitcher = stitcher;
     }
 
     public async Task<int> Handle(StitchVenueTourSceneCommand request, CancellationToken ct)
@@ -74,6 +76,14 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
         if (attemptsForLounge >= maxAttempts)
             throw new DomainException(
                 $"Venue này đã đạt giới hạn {maxAttempts} lần ghép ảnh. Vui lòng liên hệ hỗ trợ nếu cần thêm.");
+
+        // MLACP-432: chua co dich vu ghep anh thi tu choi NGAY, truoc khi tao luot thu. Truoc day luot van duoc tao roi
+        // that bai trong job, va moi luot tinh vao gioi han tron doi o tren — bam du so lan la phong tra bi khoa vinh vien
+        // du chua ghep that lan nao. Dat sau cac kiem tra gioi han de nguoi bi chan vi goi/gioi han van nhan dung ly do.
+        if (!_stitcher.IsConfiguredFor(request.SourceImageUrls))
+            throw new DomainException(
+                "Tính năng ghép ảnh 360° đang tạm ngưng nên chưa ghép được — lượt ghép của bạn không bị trừ. "
+                + "Bạn vẫn có thể tải lên ảnh 360° chụp sẵn.");
 
         var attempt = new VenueTourStitchAttempt
         {

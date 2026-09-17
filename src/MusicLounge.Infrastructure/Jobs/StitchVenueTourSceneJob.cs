@@ -49,7 +49,8 @@ public sealed class StitchVenueTourSceneJob
         catch (ExternalServiceException ex)
         {
             attempt.Status = VenueTourStitchStatus.Failed;
-            attempt.ErrorMessage = ex.Message;
+            // MLACP-432: Detail, khong phai Message — chu phong tra doc loi nay, khong can tien to "[PanoramaStitcher]".
+            attempt.ErrorMessage = ex.Detail;
             await _ctx.SaveChangesAsync(ct);
             return;
         }
