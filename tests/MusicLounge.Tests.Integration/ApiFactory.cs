@@ -51,10 +51,19 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             // Namespace-based check (not a bare name Contains) so app types like
             // HangfireBackgroundJobService (implements IBackgroundJobService) survive —
             // they only call Hangfire's static API and work fine against in-memory storage.
+            //
+            // MLACP-435: AddHangfireServer() dang ky IHostedService bang factory lambda — ServiceType la
+            // Microsoft.Extensions.Hosting.IHostedService, ImplementationType la null — nen bo loc cu bo sot va
+            // BackgroundJobServerHostedService VAN CHAY trong test (da liet ke IHostedService de xac nhan), trai voi
+            // dong "no background processing" ben duoi. Job chay ngam khong xac dinh thoi diem: test doc trang thai co
+            // the thang hoac thua cuoc dua voi job. Voi dang ky bang factory, kieu cai dat nam o tham so generic cuoi
+            // cua delegate Func<IServiceProvider, TImplementation>.
             var hangfireDescriptors = services
                 .Where(d =>
                     d.ServiceType.Namespace?.StartsWith("Hangfire") == true ||
-                    d.ImplementationType?.Namespace?.StartsWith("Hangfire") == true)
+                    d.ImplementationType?.Namespace?.StartsWith("Hangfire") == true ||
+                    d.ImplementationFactory?.GetType().GenericTypeArguments.LastOrDefault()?.Namespace
+                        ?.StartsWith("Hangfire") == true)
                 .ToList();
             foreach (var d in hangfireDescriptors) services.Remove(d);
 

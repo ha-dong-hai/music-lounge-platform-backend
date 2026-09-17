@@ -156,6 +156,7 @@ public static class DependencyInjection
         services.AddScoped<ComplaintSlaBreachAlertJob>();
         services.AddScoped<ScoreModerationWithAiJob>();
         services.AddScoped<StitchVenueTourSceneJob>();
+        services.AddScoped<ExpireStuckStitchAttemptsJob>();
         services.AddScoped<LoginSpikeDetectionJob>();
         services.AddScoped<AdminRoleDriftDetectionJob>();
         // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing
@@ -285,6 +286,12 @@ public static class DependencyInjection
             "expire-stuck-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
+
+        // MLACP-435: luot ghep anh ket Pending (job bi gian doan giua chung) — 10 phut mot lan, dong luot qua 30 phut.
+        Recurring<ExpireStuckStitchAttemptsJob>(
+            "expire-stuck-stitch-attempts",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            "*/10 * * * *");
 
         Recurring<CancelAbandonedPaymentsJob>(
             "cancel-abandoned-payments",

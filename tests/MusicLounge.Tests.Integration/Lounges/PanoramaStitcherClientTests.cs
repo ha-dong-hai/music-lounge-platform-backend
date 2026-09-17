@@ -140,7 +140,23 @@ public sealed class PanoramaStitcherClientTests
 
         var act = () => Tao(http, new GhiLog()).StitchAsync(Anh);
 
-        (await act.Should().ThrowAsync<ExternalServiceException>()).Which.Detail.Should().Be(lyDo);
+        // MLACP-435: DomainException — loi cua dau vao, tinh vao gioi han so lan ghep (CPU da chay).
+        (await act.Should().ThrowAsync<DomainException>()).Which.Message.Should().Be(lyDo);
+    }
+
+    /// <summary>
+    /// MLACP-435. Ghep qua thoi gian cho cua HttpClient nghia la CPU da chay suot thoi gian do. Neu coi la loi he thong
+    /// (khong tinh vao gioi han), gui lien tuc bo anh nang la dot CPU vo han ma khong bao gio cham gioi han.
+    /// </summary>
+    [Fact]
+    public async Task GhepQuaThoiGianCho_LaLoiTinhVaoGioiHan_KhongPhaiLoiHeThong()
+    {
+        var http = new DichVuGia { StitchTraVe = () => throw new TaskCanceledException("HttpClient.Timeout") };
+
+        var act = () => Tao(http, new GhiLog()).StitchAsync(Anh);
+
+        (await act.Should().ThrowAsync<DomainException>()).Which.Message
+            .Should().Be(HttpPanoramaStitchingService.ThongBaoQuaLau);
     }
 
     [Fact]

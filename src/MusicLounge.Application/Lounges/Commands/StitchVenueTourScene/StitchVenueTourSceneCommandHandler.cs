@@ -71,8 +71,11 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
         // stitch runs on our own server's CPU, unlike the AI vendor calls elsewhere in this
         // codebase. Counting Pending too (not just terminal states) stops a burst of concurrent
         // requests from all slipping past the cap before any of them finishes.
+        // MLACP-435: tru cac luot that bai do phia he thong (FailedBySystem) — CPU chua xu ly gi, va neu tinh thi dich vu
+        // ngung vai lan la phong tra bi khoa tinh nang vinh vien vi loi khong phai cua ho.
         var maxAttempts = await _config.GetIntAsync(ConfigKeys.TourStitchMaxAttemptsPerLounge, 20, ct);
-        var attemptsForLounge = await attemptRepo.CountAsync(a => a.LoungeId == request.LoungeId, ct);
+        var attemptsForLounge = await attemptRepo.CountAsync(
+            a => a.LoungeId == request.LoungeId && !a.FailedBySystem, ct);
         if (attemptsForLounge >= maxAttempts)
             throw new DomainException(
                 $"Venue này đã đạt giới hạn {maxAttempts} lần ghép ảnh. Vui lòng liên hệ hỗ trợ nếu cần thêm.");

@@ -17,9 +17,10 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
     // MLACP-432: chu phong tra doc truc tiep loi cua lan ghep. Truoc day ho thay chuoi ky thuat nhu
     // "[PanoramaStitcher] Chưa cấu hình PanoramaStitcher:BaseUrl." hay "401: Thiếu hoặc sai khoá xác thực." — khong lam
     // gi duoc voi no. Chi tiet ky thuat van day du trong log cho nguoi van hanh.
+    // MLACP-435: loi phia he thong khong tinh vao gioi han so lan ghep — noi ro de chu phong tra yen tam thu lai.
     internal const string ThongBaoSuCo =
-        "Dịch vụ ghép ảnh đang gặp sự cố nên lượt ghép này chưa thành công. Vui lòng thử lại sau ít phút; nếu vẫn lỗi, "
-        + "hãy liên hệ hỗ trợ.";
+        "Dịch vụ ghép ảnh đang gặp sự cố nên lượt ghép này chưa thành công và không bị tính vào giới hạn số lần ghép. "
+        + "Vui lòng thử lại sau ít phút; nếu vẫn lỗi, hãy liên hệ hỗ trợ.";
 
     internal const string ThongBaoQuaLau =
         "Bộ ảnh này ghép quá lâu nên hệ thống đã dừng. Hãy thử lại với ít ảnh hơn.";
@@ -104,7 +105,10 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
         catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
         {
             // Het thoi gian cho cua HttpClient (120 giay). Dich vu da thuc day o buoc tren nen day la do ghep lau.
-            throw BaoLoiHeThong(ThongBaoQuaLau, "Gọi /stitch quá thời gian chờ của HttpClient.", ex);
+            // MLACP-435: DomainException — CPU da chay suot 120 giay nen PHAI tinh vao gioi han so lan ghep. Neu coi la
+            // loi he thong (khong tinh), gui lien tuc bo anh nang la dot CPU vo han ma khong bao gio cham gioi han.
+            _logger.LogWarning(ex, "Gọi /stitch quá thời gian chờ của HttpClient — bộ ảnh ghép quá lâu.");
+            throw new DomainException(ThongBaoQuaLau);
         }
         catch (HttpRequestException ex)
         {
@@ -124,10 +128,11 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
             // hinh, 400 nguon anh sai hay khong tai duoc anh, 500...) la loi phia he thong, chu phong tra khong lam gi
             // duoc. Detail phai la CHUOI: FastAPI cung tra 422 cho body sai dinh dang, nhung khi do detail la mang loi
             // ky thuat.
+            // MLACP-435: DomainException (loi cua dau vao, tinh vao gioi han) chu khong phai ExternalServiceException.
             if (response.StatusCode == HttpStatusCode.UnprocessableEntity && lyDo is not null)
             {
                 _logger.LogInformation("Bộ ảnh không ghép được: {Reason}", lyDo);
-                throw new ExternalServiceException(TenDichVu, lyDo);
+                throw new DomainException(lyDo);
             }
 
             throw BaoLoiHeThong(
