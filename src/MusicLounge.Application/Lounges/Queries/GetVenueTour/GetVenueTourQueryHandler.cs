@@ -32,6 +32,8 @@ internal sealed class GetVenueTourQueryHandler : IRequestHandler<GetVenueTourQue
 
         var sceneDtos = scenes
             .OrderBy(s => s.OrderIndex)
+            // MLACP-436: du lieu cu co the co hai canh trung OrderIndex — them Id de thu tu luon xac dinh.
+            .ThenBy(s => s.Id)
             .Select(s => new VenueTourSceneDto(
                 s.Id,
                 s.ImageUrl,
