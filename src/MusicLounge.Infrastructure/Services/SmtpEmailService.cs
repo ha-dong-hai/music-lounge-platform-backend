@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
@@ -20,11 +21,13 @@ internal sealed class SmtpEmailService : IEmailService
 {
     private readonly EmailSettings _settings;
     private readonly ILogger<SmtpEmailService> _logger;
+    private readonly IHostEnvironment _env;
 
-    public SmtpEmailService(IOptions<EmailSettings> settings, ILogger<SmtpEmailService> logger)
+    public SmtpEmailService(IOptions<EmailSettings> settings, ILogger<SmtpEmailService> logger, IHostEnvironment env)
     {
         _settings = settings.Value;
         _logger = logger;
+        _env = env;
     }
 
     public async Task SendPasswordResetEmailAsync(
@@ -44,9 +47,12 @@ internal sealed class SmtpEmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(_settings.Host))
         {
-            _logger.LogWarning(
-                "EmailSettings:Host chưa cấu hình — không gửi email thật. Reset link cho {Email}: {ResetLink}",
-                toEmail, resetLink);
+            if (DuocGhiBiMat)
+                _logger.LogWarning(
+                    "EmailSettings:Host chưa cấu hình — không gửi email thật. Reset link cho {Email}: {ResetLink}",
+                    toEmail, resetLink);
+            else
+                BaoKhongGui("đặt lại mật khẩu", toEmail);
             return;
         }
 
@@ -86,9 +92,12 @@ internal sealed class SmtpEmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(_settings.Host))
         {
-            _logger.LogWarning(
-                "EmailSettings:Host chưa cấu hình — không gửi email thật. Mã xác thực cho {Email}: {Code}",
-                toEmail, code);
+            if (DuocGhiBiMat)
+                _logger.LogWarning(
+                    "EmailSettings:Host chưa cấu hình — không gửi email thật. Mã xác thực cho {Email}: {Code}",
+                    toEmail, code);
+            else
+                BaoKhongGui("mã xác minh email", toEmail);
             return;
         }
 
@@ -129,9 +138,12 @@ internal sealed class SmtpEmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(_settings.Host))
         {
-            _logger.LogWarning(
-                "EmailSettings:Host chưa cấu hình — không gửi email thật. Liên kết xác nhận cho {Email}: {ConfirmationLink}",
-                toEmail, link);
+            if (DuocGhiBiMat)
+                _logger.LogWarning(
+                    "EmailSettings:Host chưa cấu hình — không gửi email thật. Liên kết xác nhận cho {Email}: {ConfirmationLink}",
+                    toEmail, link);
+            else
+                BaoKhongGui("mời nghệ sĩ xác nhận", toEmail);
             return;
         }
 
@@ -153,5 +165,27 @@ internal sealed class SmtpEmailService : IEmailService
         };
 
         await client.SendMailAsync(mail, ct);
+    }
+
+    /// <summary>
+    /// MLACP-429. Ghi link/ma bi mat ra log CHI o Development va Testing: lap trinh vien khong co SMTP van lay duoc ma de
+    /// thu, va 3 bo test (PerformerSelfConfirmation, PublicDonationStatement, DataEncryptedWithALostKey) doc link tu log.
+    /// Moi truong khac ma thieu SMTP (vd cau hinh tren Azure bi mat) thi link dat lai mat khau nam trong log la ai doc
+    /// log cung chiem duoc tai khoan — cung kieu loi voi ban gia SMS da sua o MLACP-426.
+    /// </summary>
+    private bool DuocGhiBiMat => _env.IsDevelopment() || _env.IsEnvironment("Testing");
+
+    /// <summary>Error chu khong phai Warning: nguoi dung dang cho mot email se khong bao gio toi.</summary>
+    private void BaoKhongGui(string loaiEmail, string toEmail)
+        => _logger.LogError(
+            "SMTP chưa cấu hình (Email:Host) — email {LoaiEmail} KHÔNG được gửi tới {Email}.", loaiEmail, CheEmail(toEmail));
+
+    /// <summary>Giu 2 ky tu dau va ten mien — du de doi chieu khi ho tro nguoi dung, khong du de lo dia chi.</summary>
+    internal static string CheEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        if (at <= 0) return "***";
+        var ten = email[..at];
+        return (ten.Length <= 2 ? ten[..1] : ten[..2]) + "***" + email[at..];
     }
 }
