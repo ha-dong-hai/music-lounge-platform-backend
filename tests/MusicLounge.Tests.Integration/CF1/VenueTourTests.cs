@@ -142,6 +142,37 @@ public sealed class VenueTourTests
         res.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
+    /// <summary>
+    /// MLACP-439. Ảnh panorama thật 8000×3314 (tỉ lệ 2,41 — qua kiểm tỉ lệ) nhưng GPano cho biết chỉ phủ ~192°.
+    /// </summary>
+    [Fact]
+    public async Task AddTourScene_PartialPanoramaByGPano_Returns422_EvenThoughWiderThan2x1()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client, AnhMau.JpegVoiXmp(8000, 3314, AnhMau.XmpGPanoThat192Do), "jpg");
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes",
+            new { ImageUrl = imageUrl, Name = (string?)null });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("192°").And.Contain("đủ một vòng");
+        await AssertNoScenesAsync(loungeId);
+    }
+
+    [Fact]
+    public async Task AddTourScene_FullPanoramaByGPano_Returns201()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client, AnhMau.JpegVoiXmp(4397, 922, AnhMau.XmpGPanoThat360Do), "jpg");
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes",
+            new { ImageUrl = imageUrl, Name = (string?)null });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
     [Fact]
     public async Task AddTourScene_JpegStored2x1ButRotatedPortraitByExif_Returns422()
     {

@@ -26,6 +26,10 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
     // the phu du 360 do ngang. Dung sai 1% cho vai pixel bi cat khi chinh sua (198/100 = 1.98).
     private const int TiLeToiThieuPhanTram = 198;
 
+    // MLACP-439: cung nguong voi dich vu ghep anh (_MIN_HORIZONTAL_COVERAGE_DEG, MLACP-438) — ho toi da 10 do, viewer
+    // keo gian ngang ~2.8%.
+    private const double GocPhuNgangToiThieu = 350.0;
+
     public AddVenueTourSceneCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, IFileStorageService fileStorage,
         IImageModerationGate moderationGate, ISystemConfigService config, IImageSizeReader imageSize,
@@ -65,6 +69,15 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
             throw new DomainException(
                 $"Ảnh {size.Width}×{size.Height} không phải ảnh 360°: ảnh 360° có chiều ngang ít nhất gấp đôi chiều cao "
                 + "(tỉ lệ 2:1, ví dụ 4096×2048). Hãy chụp bằng chế độ 360°/Photo Sphere của điện thoại hoặc camera 360°, "
+                + "hoặc dùng tính năng ghép nhiều ảnh chụp thường.");
+
+        // MLACP-439: ti le >= 2:1 chua du — mot dai panorama chup mot phan vong ma cat bot tran/san van rong hon 2:1 (anh
+        // that 8000×3314 chi phu ~192°). Anh co metadata GPano (chuan Photo Sphere) thi biet chinh xac goc phu; anh
+        // khong co thi giu cach kiem ti le o tren.
+        if (_imageSize.ReadGPanoHorizontalCoverageDegrees(imageBytes) is { } phuNgang && phuNgang < GocPhuNgangToiThieu)
+            throw new DomainException(
+                $"Ảnh này là panorama chỉ phủ khoảng {phuNgang:0}° theo chiều ngang (theo thông tin panorama lưu trong "
+                + "ảnh) — tour 360° cần ảnh chụp đủ một vòng. Hãy chụp lại bằng chế độ 360°/Photo Sphere xoay đủ vòng, "
                 + "hoặc dùng tính năng ghép nhiều ảnh chụp thường.");
 
         var moderation = await _moderationGate.CheckOrThrowAsync(
