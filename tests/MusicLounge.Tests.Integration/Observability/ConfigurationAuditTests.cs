@@ -12,8 +12,8 @@ namespace MusicLounge.Tests.Integration.Observability;
 
 /// <summary>
 /// MLACP-420. Thiếu cấu hình từng làm tính năng chết âm thầm nhiều lần: thiếu <c>Firebase:ProjectId</c> khiến đăng nhập
-/// Google hỏng với mọi người dùng suốt nhiều tuần (phát hiện 15/09), thiếu <c>Mux:WebhookSecret</c> làm mất bản xem lại
-/// livestream (16/09). Bảng kiểm này biến "im lặng" thành danh sách đọc được.
+/// Google hỏng với mọi người dùng suốt nhiều tuần (phát hiện 15/09), thiếu <c>Mux:WebhookSecret</c> làm livestream mất
+/// các chuyển trạng thái tự động (16/09). Bảng kiểm này biến "im lặng" thành danh sách đọc được.
 /// </summary>
 [Collection("Integration")]
 public sealed class ConfigurationAuditTests
@@ -36,9 +36,14 @@ public sealed class ConfigurationAuditTests
         string openAiKey = "sk", string cloudflareAccount = "", string cloudflareToken = "",
         string firebaseCredentials = "/duong/dan.json", string performerUrl = "https://x/y",
         string processingUrl = "https://x/dang-xu-ly", string successUrl = "https://x/thanh-cong",
-        string moiTruong = "Production", string smsAccountSid = "AC123")
+        string moiTruong = "Production", string smsAccountSid = "AC123", string emailHost = "smtp.test",
+        string stitcherUrl = "https://ghep-anh.test", string stitcherKey = "khoa-ghep-anh",
+        string stitcherPublicUrl = "https://musiclounge-api.azurewebsites.net", string storageBucket = "")
         => new(
-            Options.Create(new FirebaseSettings { ProjectId = firebaseProjectId, CredentialsPath = firebaseCredentials }),
+            Options.Create(new FirebaseSettings
+            {
+                ProjectId = firebaseProjectId, CredentialsPath = firebaseCredentials, StorageBucket = storageBucket
+            }),
             Options.Create(new MuxSettings { WebhookSecret = muxWebhookSecret }),
             Options.Create(new LivestreamSettings { Provider = "mux" }),
             Options.Create(new GeminiSettings { ApiKey = geminiKey }),
@@ -53,6 +58,11 @@ public sealed class ConfigurationAuditTests
                 PasswordResetUrl = "https://x/dat-lai-mat-khau"
             }),
             Options.Create(new SmsSettings { AccountSid = smsAccountSid, AuthToken = "tok", FromNumber = "+15551234567" }),
+            Options.Create(new EmailSettings { Host = emailHost }),
+            Options.Create(new PanoramaStitcherSettings
+            {
+                BaseUrl = stitcherUrl, ApiKey = stitcherKey, PublicBaseUrl = stitcherPublicUrl
+            }),
             new MoiTruong(moiTruong));
 
     [Fact]
@@ -81,9 +91,64 @@ public sealed class ConfigurationAuditTests
     }
 
     [Fact]
-    public void ThieuMuxWebhookSecret_BaoMatBanXemLai()
-        => TaoBangKiem(muxWebhookSecret: "").Inspect()
-            .Should().ContainSingle(g => g.Key == "Mux:WebhookSecret" && g.Impact.Contains("xem lại"));
+    public void ThieuMuxWebhookSecret_BaoMatChuyenTrangThaiTuDong()
+    {
+        // MLACP-428: câu cũ nói "không có bản xem lại" — nhưng livestream KHÔNG có tính năng xem lại (chủ xác nhận
+        // 16/09). Webhook Mux chỉ lo chuyển trạng thái tự động, nên câu cảnh báo phải nói đúng thứ bị mất.
+        var gap = TaoBangKiem(muxWebhookSecret: "").Inspect().Should().ContainSingle(g => g.Key == "Mux:WebhookSecret").Which;
+
+        gap.Impact.Should().NotContain("xem lại").And.Contain("tự kết thúc");
+    }
+
+    [Fact]
+    public void ThieuSmtp_BaoEmailQuanTrongKhongGui()
+    {
+        // MLACP-428. Thiếu SMTP thì email đặt lại mật khẩu, mã xác minh email và email mời nghệ sĩ tự xác nhận đều âm
+        // thầm không gửi — trước đây bảng kiểm không soi mục này.
+        var gap = TaoBangKiem(emailHost: "").Inspect().Should().ContainSingle(g => g.Key == "Email:Host").Which;
+
+        gap.Severity.Should().Be(ConfigurationGapSeverity.Broken);
+        gap.Impact.Should().Contain("đặt lại mật khẩu");
+    }
+
+    [Fact]
+    public void ThieuDichVuGhepAnh360_BaoSuyGiam()
+    {
+        // MLACP-428. Đang thiếu thật trên Azure (rà soát 17/09): ghép ảnh báo lỗi nhưng không ai được cảnh báo. Là suy
+        // giảm chứ chưa chết hẳn — chủ phòng trà vẫn tải được ảnh 360 dựng sẵn.
+        var gap = TaoBangKiem(stitcherUrl: "").Inspect().Should().ContainSingle(g => g.Key == "PanoramaStitcher:BaseUrl").Which;
+
+        gap.Severity.Should().Be(ConfigurationGapSeverity.Degraded);
+        gap.Impact.Should().Contain("ảnh 360");
+    }
+
+    [Fact]
+    public void CoDiaChiGhepAnhNhungThieuKhoa_VanBaoSuyGiam()
+    {
+        // MLACP-431: dịch vụ ghép ảnh từ chối mọi yêu cầu không kèm khoá. Chỉ soi BaseUrl thì bảng kiểm báo xanh trong khi
+        // chủ phòng trà bấm ghép vẫn bị báo "tạm ngưng".
+        TaoBangKiem(stitcherKey: "").Inspect().Should().ContainSingle(g => g.Key == "PanoramaStitcher:ApiKey")
+            .Which.Severity.Should().Be(ConfigurationGapSeverity.Degraded);
+    }
+
+    [Fact]
+    public void AnhLuuTrenDiaCucBo_ThieuPublicBaseUrl_BaoSuyGiam()
+    {
+        // Không có Firebase Storage thì ảnh lưu trên đĩa với đường dẫn tương đối — dịch vụ ghép ảnh cần URL đầy đủ để tải.
+        TaoBangKiem(stitcherPublicUrl: "", storageBucket: "").Inspect()
+            .Should().ContainSingle(g => g.Key == "PanoramaStitcher:PublicBaseUrl");
+    }
+
+    [Fact]
+    public void AnhLuuTrenFirebase_KhongCanPublicBaseUrl()
+        => TaoBangKiem(stitcherPublicUrl: "", storageBucket: "musiclounge.appspot.com").Inspect()
+            .Should().NotContain(g => g.Key.Contains("PanoramaStitcher"));
+
+    [Fact]
+    public void ChuaCoGiCaChoGhepAnh_GopMotMucLietKeDuCacThieuSot()
+        => TaoBangKiem(stitcherUrl: "", stitcherKey: "", stitcherPublicUrl: "").Inspect()
+            .Should().ContainSingle(g => g.Feature == "Tour 360° phòng trà")
+            .Which.Key.Should().Be("PanoramaStitcher:BaseUrl + PanoramaStitcher:ApiKey + PanoramaStitcher:PublicBaseUrl");
 
     [Fact]
     public void ThieuGeminiApiKey_NoiRoAnhKhongDuocKiemDuyet()

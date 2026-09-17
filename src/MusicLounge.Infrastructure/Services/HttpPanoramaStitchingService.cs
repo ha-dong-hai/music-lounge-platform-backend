@@ -21,6 +21,9 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
     {
         if (string.IsNullOrWhiteSpace(_settings.BaseUrl))
             throw new ExternalServiceException("PanoramaStitcher", "Chưa cấu hình PanoramaStitcher:BaseUrl.");
+        // MLACP-431: dich vu ghep anh bat buoc khoa (header X-Stitcher-Key). Bao ro o day thay vi goi di roi nhan 401.
+        if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+            throw new ExternalServiceException("PanoramaStitcher", "Chưa cấu hình PanoramaStitcher:ApiKey.");
         // StitchVenueTourSceneCommandValidator đã xác nhận mọi URL tới đây đều do chính hệ thống
         // này phát ra (IFileStorageService.IsOwnUploadUrl) — đó mới là thứ bịt lỗ SSRF, không phải
         // việc ghép chuỗi bên dưới.
@@ -44,8 +47,12 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
         HttpResponseMessage response;
         try
         {
-            response = await http.PostAsJsonAsync(
-                $"{_settings.BaseUrl.TrimEnd('/')}/stitch", new { image_urls = absoluteUrls }, ct);
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{_settings.BaseUrl.TrimEnd('/')}/stitch")
+            {
+                Content = JsonContent.Create(new { image_urls = absoluteUrls })
+            };
+            request.Headers.Add("X-Stitcher-Key", _settings.ApiKey);
+            response = await http.SendAsync(request, ct);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
