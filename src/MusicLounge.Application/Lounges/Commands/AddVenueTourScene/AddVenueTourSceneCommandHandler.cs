@@ -18,16 +18,23 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
     private readonly IFileStorageService _fileStorage;
     private readonly IImageModerationGate _moderationGate;
     private readonly ISystemConfigService _config;
+    private readonly IImageSizeReader _imageSize;
+
+    // Anh 360 chuan (phep chieu equirectangular) phu 360 do ngang x 180 do doc voi so do tren moi pixel bang nhau theo ca
+    // hai chieu, nen ti le dung 2:1. Anh rong hon 2:1 van hop le (dai ghep bi cat bot tran/san). Anh hep hon thi khong
+    // the phu du 360 do ngang. Dung sai 1% cho vai pixel bi cat khi chinh sua (198/100 = 1.98).
+    private const int TiLeToiThieuPhanTram = 198;
 
     public AddVenueTourSceneCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, IFileStorageService fileStorage,
-        IImageModerationGate moderationGate, ISystemConfigService config)
+        IImageModerationGate moderationGate, ISystemConfigService config, IImageSizeReader imageSize)
     {
         _uow = uow;
         _currentUser = currentUser;
         _fileStorage = fileStorage;
         _moderationGate = moderationGate;
         _config = config;
+        _imageSize = imageSize;
     }
 
     public async Task<int> Handle(AddVenueTourSceneCommand request, CancellationToken ct)
@@ -58,6 +65,18 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         // IImageModerationGate. Checked BEFORE creating the scene so a blocked image never lands
         // in the DB at all, not even transiently.
         var imageBytes = await _fileStorage.ReadPublicImageAsync(request.ImageUrl, ct);
+
+        // MLACP-433: truoc day nhan ca anh chup thuong (4:3, 16:9) — viewer trai anh do len mat cau nen hien thi meo.
+        // Kiem TRUOC kiem duyet AI: anh bi tu choi thi khong ton luot goi Gemini.
+        var size = _imageSize.ReadDisplaySize(imageBytes)
+            ?? throw new DomainException(
+                "Không đọc được kích thước ảnh. Hãy tải lên ảnh 360° dạng JPEG, PNG hoặc WebP.");
+        if ((long)size.Width * 100 < (long)size.Height * TiLeToiThieuPhanTram)
+            throw new DomainException(
+                $"Ảnh {size.Width}×{size.Height} không phải ảnh 360°: ảnh 360° có chiều ngang ít nhất gấp đôi chiều cao "
+                + "(tỉ lệ 2:1, ví dụ 4096×2048). Hãy chụp bằng chế độ 360°/Photo Sphere của điện thoại hoặc camera 360°, "
+                + "hoặc dùng tính năng ghép nhiều ảnh chụp thường.");
+
         var moderation = await _moderationGate.CheckOrThrowAsync(
             imageBytes, ImageMimeTypeHelper.ForModeration(imageBytes), ct);
 
