@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -22,6 +23,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # test: a broken torch/kornia CPU install fails the build here, loudly, instead of failing
 # silently in production. If this fails with a libgomp.so.1 error (a known occasional issue for
 # torch CPU wheels on slim Debian images), add libgomp1 to the apt-get install line above.
+#
+# MLACP-437: the checkpoint is a pickle loaded with torch.load, so a tampered file runs arbitrary code — both at build
+# time and in the container. kornia 0.8.3 fetches it over plain http:// with no hash check (torch.hub
+# load_state_dict_from_url, check_hash=False). ADD --checksum is Docker's own integrity check: the build fails if the
+# bytes differ. It writes to the exact cache path torch.hub looks up (hub/checkpoints/<file name from the URL>), so the
+# line below finds the verified file and downloads nothing. Hash pinned 2026-09-17; size matched the server's
+# Content-Length/ETag (46336731 bytes). If kornia is upgraded and the URL changes, re-pin.
+ADD --checksum=sha256:d73c54720370ba0690cd477e38404a626e881292cc0be09a6801da0cc6f53198 \
+    https://cmp.felk.cvut.cz/~mishkdmy/models/loftr_indoor.ckpt /root/.cache/torch/hub/checkpoints/loftr_indoor.ckpt
 RUN python -c "import kornia.feature as KF; KF.LoFTR(pretrained='indoor')"
 
 COPY main.py .
