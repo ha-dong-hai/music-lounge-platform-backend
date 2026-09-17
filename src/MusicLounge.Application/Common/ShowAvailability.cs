@@ -50,8 +50,8 @@ public static class ShowAvailability
 {
     /// <param name="takenByPriceId">
     /// Số vé đã bán cộng số đang giữ chỗ, theo từng mức giá — lấy từ
-    /// <c>ILoungeShowRepository.GetSoldAndHeldCountsByPriceAsync</c>. Cột <c>TicketPrice.Sold</c>
-    /// KHÔNG dùng được: nó là cột cũ không bao giờ được ghi, luôn bằng 0.
+    /// <c>ILoungeShowRepository.GetSoldAndHeldCountsByPriceAsync</c> — nguồn duy nhất. (Cột đếm sẵn
+    /// <c>TicketPrice.Sold</c> từng tồn tại nhưng không bao giờ được ghi; đã gỡ hẳn ở MLACP-441.)
     /// </param>
     public static ShowSaleState StateOf(
         LoungeShow show, IReadOnlyDictionary<int, int> takenByPriceId,

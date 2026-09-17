@@ -30,7 +30,7 @@ internal sealed class GetShowTicketStatsQueryHandler
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền xem thống kê vé của show này.");
 
-        // Đếm trực tiếp trên bảng Ticket (không dùng TicketPrice.Sold — field đó không bao giờ
+        // Đếm trực tiếp trên bảng Ticket (cột đếm sẵn TicketPrice.Sold đã gỡ ở MLACP-441; nó chưa bao giờ
         // được ghi, xem comment trên chính entity) để số liệu luôn khớp thời gian thực. "Đã bán"
         // gồm Confirmed và Used (đã check-in) — Pending (đang giữ chỗ chưa thanh toán)/Cancelled/
         // Refunded không tính, khớp quy ước đã dùng ở GetLoungeShowDetailQueryHandler/RateShowCommandHandler.

@@ -57,7 +57,7 @@ internal sealed class GetShowSeatingMapQueryHandler : IRequestHandler<GetShowSea
         var zonesById = zones.ToDictionary(z => z.Id);
 
         // Live-computed từ tickets + holds thực tế, cùng nguồn với GetTicketTiersQueryHandler —
-        // TicketPrice.Sold không được dùng vì cột đó không bao giờ được ghi (luôn = 0).
+        // Đếm live từ vé thật; cột đếm sẵn TicketPrice.Sold đã gỡ ở MLACP-441 (chưa bao giờ được ghi).
         var allPriceIds = tiersByZone.Values
             .SelectMany(tiers => tiers.SelectMany(t => t.Prices))
             .Select(p => p.Id)

@@ -45,7 +45,7 @@ internal sealed class GetTicketTiersQueryHandler
             .FindAsync(p => tierIds.Contains(p.TierId), ct);
         var pricesByTier = prices.ToLookup(p => p.TierId);
 
-        // Live-computed từ tickets + holds thực tế (không dùng TicketPrice.Sold — cột đó không
+        // Live-computed từ tickets + holds thực tế (cột đếm sẵn TicketPrice.Sold đã gỡ ở MLACP-441; nó không
         // được ghi ở bất kỳ đâu trong codebase, luôn = 0, nên luôn hiển thị sai "còn đủ vé").
         var reserved = await _ticketRepo.GetReservedQuantitiesByPriceIdsAsync(
             prices.Select(p => p.Id).ToList(), ct);
