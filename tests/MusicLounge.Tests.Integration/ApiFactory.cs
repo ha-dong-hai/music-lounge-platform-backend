@@ -93,6 +93,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<IGoogleTokenVerifier>();
             services.AddSingleton<IGoogleTokenVerifier, FakeGoogleTokenVerifier>();
 
+            services.RemoveAll<IPanoramaStitchingService>();
+            services.AddSingleton<IPanoramaStitchingService, FakePanoramaStitchingService>();
+
             // MLACP-360: ghi lại sự kiện gửi xuống livestream để test khẳng định được. Singleton để
             // test lấy đúng một bản mà các request đã ghi vào.
             services.RemoveAll<ILivestreamHubService>();

@@ -3,11 +3,16 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Hangfire;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Infrastructure.Jobs;
+using MusicLounge.Infrastructure.Services;
+using MusicLounge.Tests.Integration.Fakes;
 using MusicLounge.Tests.Integration.Helpers;
 using MusicLoungeVenue = MusicLounge.Domain.Entities.MusicLounge;
 
@@ -24,9 +29,10 @@ namespace MusicLounge.Tests.Integration.CF1;
 /// pattern ModerationAiScoringTests uses for ScoreModerationWithAiJob), rather than relying on
 /// Hangfire's own worker to have picked it up by the time the test asserts.
 ///
-/// No PanoramaStitcher:BaseUrl is configured in appsettings.Testing.json, so running the job here
-/// always exercises the "vendor unavailable" path — proving the fail-closed design holds: a failed
-/// attempt must never consume the Owner's MaxTourScenes quota.
+/// ApiFactory swaps in FakePanoramaStitchingService (configured, but every stitch fails), so running
+/// the job here always exercises the "vendor unavailable" path — proving the fail-closed design
+/// holds: a failed attempt must never consume the Owner's MaxTourScenes quota. The real, unconfigured
+/// service is used only by the MLACP-432 fail-fast test.
 /// POST /api/v1/lounges/{id}/tour/scenes/stitch | GET .../tour/scenes/stitch/{attemptId}
 /// </summary>
 [Collection("Integration")]
@@ -70,7 +76,7 @@ public sealed class VenueTourStitchTests
     // Validator rejects anything else outright (SSRF gate: the panorama-stitcher would otherwise
     // fetch whatever URL it's given, no network restriction of its own). These don't need to be
     // real files on disk — the stitch call itself always fails first in this test environment
-    // (no PanoramaStitcher:BaseUrl configured), so nothing ever tries to read them.
+    // (FakePanoramaStitchingService), so nothing ever tries to read them.
     private static object StitchBody(int photoCount = 3, string? name = null) => new
     {
         SourceImageUrls = Enumerable.Range(1, photoCount)
@@ -135,9 +141,45 @@ public sealed class VenueTourStitchTests
         var attempt = await db.VenueTourStitchAttempts.FirstAsync(a => a.Id == attemptId);
         attempt.Status.Should().Be(VenueTourStitchStatus.Failed);
         attempt.ResultSceneId.Should().BeNull();
+        // MLACP-432: chủ phòng trà đọc thẳng lỗi này — không kèm tiền tố kỹ thuật "[PanoramaStitcher]".
+        attempt.ErrorMessage.Should().Be(FakePanoramaStitchingService.ThongBaoLoi);
 
         var scenes = await db.VenueTourScenes.Where(s => s.LoungeId == loungeId).ToListAsync();
         scenes.Should().BeEmpty("a failed stitch must not create a scene or otherwise touch the quota");
+    }
+
+    /// <summary>
+    /// MLACP-432. Trước đây chưa cấu hình dịch vụ ghép ảnh thì lượt thử vẫn được tạo rồi thất bại trong job, và mỗi lượt
+    /// tính vào giới hạn 20 lượt trọn đời của phòng trà — bấm đủ số lần là bị khoá vĩnh viễn dù chưa ghép thật lần nào.
+    /// Dùng dịch vụ THẬT (không cấu hình gì trong môi trường test), không dùng bản giả của ApiFactory.
+    /// </summary>
+    [Fact]
+    public async Task StitchTourScene_StitcherNotConfigured_RejectsImmediately_NoAttemptNoLimitUsed()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        using var realStitcher = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
+        {
+            s.RemoveAll<IPanoramaStitchingService>();
+            s.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
+        }));
+        var client = realStitcher.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderUserId, ownerId.ToString());
+        client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderRole, "Owner");
+
+        for (var i = 0; i < 3; i++)
+        {
+            var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/stitch", StitchBody());
+
+            res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+            var body = await res.Content.ReadAsStringAsync();
+            body.Should().Contain("không bị trừ").And.NotContain("PanoramaStitcher",
+                "chủ phòng trà không làm gì được với tên cấu hình — tên đó chỉ vào log");
+        }
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.VenueTourStitchAttempts.CountAsync(a => a.LoungeId == loungeId))
+            .Should().Be(0, "không có lượt thử nào được tạo nên không lượt nào bị tính vào giới hạn");
     }
 
     [Fact]
