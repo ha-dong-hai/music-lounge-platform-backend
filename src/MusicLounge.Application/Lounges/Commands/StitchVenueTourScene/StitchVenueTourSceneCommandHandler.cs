@@ -29,16 +29,18 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
     private readonly ISystemConfigService _config;
     private readonly IBackgroundJobService _backgroundJobs;
     private readonly IPanoramaStitchingService _stitcher;
+    private readonly IAsyncKeyedLock _lock;
 
     public StitchVenueTourSceneCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config,
-        IBackgroundJobService backgroundJobs, IPanoramaStitchingService stitcher)
+        IBackgroundJobService backgroundJobs, IPanoramaStitchingService stitcher, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
         _config = config;
         _backgroundJobs = backgroundJobs;
         _stitcher = stitcher;
+        _lock = @lock;
     }
 
     public async Task<int> Handle(StitchVenueTourSceneCommand request, CancellationToken ct)
@@ -49,21 +51,17 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        var now = DateTimeOffset.UtcNow;
-        var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
-            s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-        var activeSub = activeStatusSubs
-            .Where(s => s.ExpiresAt > now)
-            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
+        // MLACP-436: khoa theo phong tra cho ca doan dem luot/dem canh -> tao luot. Command nay khong co transaction
+        // (INoTransactionCommand) nen khoa nha ngay khi ra khoi ham — sau khi SaveChangesAsync da commit luot moi.
+        await using var _ = await _lock.AcquireAsync(VenueTourRules.LockKey(request.LoungeId), ct);
 
-        var sceneRepo = _uow.Repository<VenueTourScene, int>();
-        var existingScenes = await sceneRepo.FindAsync(s => s.LoungeId == request.LoungeId, ct);
-        var maxScenes = activeSub?.MaxTourScenesSnapshot ?? 0;
-        if (existingScenes.Count >= maxScenes)
-            throw new DomainException(
-                maxScenes == 0
-                    ? "Gói subscription hiện tại không hỗ trợ tour ảo 360° — vui lòng nâng cấp gói."
-                    : $"Tour đã đạt giới hạn {maxScenes} scene của gói subscription hiện tại.");
+        var now = DateTimeOffset.UtcNow;
+        var subscriptions = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+            s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
+        var existingScenes = await _uow.Repository<VenueTourScene, int>().FindAsync(s => s.LoungeId == request.LoungeId, ct);
+        // Kiem so bo luc tao luot — job kiem LAI ngay truoc khi tao canh, vi job co the nam cho vai phut.
+        if (VenueTourRules.QuotaViolation(existingScenes.Count, VenueTourRules.MaxScenes(subscriptions, now)) is { } loi)
+            throw new DomainException(loi);
 
         var attemptRepo = _uow.Repository<VenueTourStitchAttempt, int>();
 

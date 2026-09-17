@@ -2,6 +2,7 @@ using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Lounges;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
@@ -30,10 +31,12 @@ public sealed class StitchVenueTourSceneJob
     private readonly IImageModerationGate _moderationGate;
     private readonly ISystemConfigService _config;
     private readonly ILogger<StitchVenueTourSceneJob> _logger;
+    private readonly IAsyncKeyedLock _lock;
 
     public StitchVenueTourSceneJob(
         ApplicationDbContext ctx, IPanoramaStitchingService stitcher, IFileStorageService fileStorage,
-        IImageModerationGate moderationGate, ISystemConfigService config, ILogger<StitchVenueTourSceneJob> logger)
+        IImageModerationGate moderationGate, ISystemConfigService config, ILogger<StitchVenueTourSceneJob> logger,
+        IAsyncKeyedLock @lock)
     {
         _ctx = ctx;
         _stitcher = stitcher;
@@ -41,6 +44,7 @@ public sealed class StitchVenueTourSceneJob
         _moderationGate = moderationGate;
         _config = config;
         _logger = logger;
+        _lock = @lock;
     }
 
     public async Task ExecuteAsync(
@@ -111,36 +115,53 @@ public sealed class StitchVenueTourSceneJob
             return;
         }
 
-        string imageUrl;
-        await using (var stream = new MemoryStream(imageBytes))
+        // MLACP-436: khoa theo phong tra (cung khoa voi AddVenueTourSceneCommandHandler) va KIEM LAI gioi han ngay truoc
+        // khi tao canh. Job co the nam cho vai phut sau khi handler kiem: trong luc do chu phong tra co the them canh
+        // khac hoac goi het han. Truoc day job khong kiem lai nen co the vuot so canh cua goi. Kiem TRUOC khi luu file de
+        // bi tu choi thi khong de lai file mo coi. Job khong chay trong transaction nen khoa nha khi ra khoi khoi nay —
+        // sau SaveChangesAsync.
+        VenueTourScene scene;
+        await using (await _lock.AcquireAsync(VenueTourRules.LockKey(loungeId), ct))
         {
-            imageUrl = await _fileStorage.SaveImageAsync(stream, "panorama.jpg", ct);
+            var ownerId = await _ctx.Lounges.Where(l => l.Id == loungeId).Select(l => l.OwnerId).FirstAsync(ct);
+            var subscriptions = await _ctx.OwnerSubscriptions
+                .Where(s => s.OwnerId == ownerId && s.Status == SubscriptionStatus.Active)
+                .ToListAsync(ct);
+            var existingScenes = await _ctx.Set<VenueTourScene>().Where(s => s.LoungeId == loungeId).ToListAsync(ct);
+
+            if (VenueTourRules.QuotaViolation(
+                    existingScenes.Count, VenueTourRules.MaxScenes(subscriptions, DateTimeOffset.UtcNow)) is { } loi)
+            {
+                // Khong phai loi he thong: gioi han cua goi, va CPU da ghep xong — tinh vao gioi han so lan ghep.
+                attempt.Status = VenueTourStitchStatus.Failed;
+                attempt.ErrorMessage = loi;
+                await _ctx.SaveChangesAsync(ct);
+                return;
+            }
+
+            string imageUrl;
+            await using (var stream = new MemoryStream(imageBytes))
+            {
+                imageUrl = await _fileStorage.SaveImageAsync(stream, "panorama.jpg", ct);
+            }
+
+            scene = new VenueTourScene
+            {
+                LoungeId = loungeId,
+                ImageUrl = imageUrl,
+                Name = name,
+                OrderIndex = VenueTourRules.NextOrderIndex(existingScenes)
+            };
+            _ctx.Set<VenueTourScene>().Add(scene);
+
+            attempt.Status = VenueTourStitchStatus.Succeeded;
+            // ExpireStuckStitchAttemptsJob co the da danh dau luot nay trong luc job con chay — ket qua that la thanh cong.
+            attempt.FailedBySystem = false;
+            attempt.ErrorMessage = null;
+            attempt.ResultScene = scene;
+
+            await _ctx.SaveChangesAsync(ct);
         }
-
-        // Quota (MaxTourScenesSnapshot) was already checked at enqueue time in the handler - not
-        // re-checked here. Going async widens an already-existing race (two concurrent requests
-        // both passing the same "count < max" check) from a sub-millisecond window to however long
-        // this job sits in queue, so a burst of near-simultaneous stitch requests could land one or
-        // two scenes over quota. Not re-litigated here - same class of race the direct-upload path
-        // (AddVenueTourSceneCommandHandler) already has, just a wider window; fixing it properly
-        // needs a DB-level constraint or compensating rollback, out of scope for this pass.
-        var existingSceneCount = await _ctx.Set<VenueTourScene>().CountAsync(s => s.LoungeId == loungeId, ct);
-        var scene = new VenueTourScene
-        {
-            LoungeId = loungeId,
-            ImageUrl = imageUrl,
-            Name = name,
-            OrderIndex = existingSceneCount
-        };
-        _ctx.Set<VenueTourScene>().Add(scene);
-
-        attempt.Status = VenueTourStitchStatus.Succeeded;
-        // ExpireStuckStitchAttemptsJob co the da danh dau luot nay trong luc job con chay — ket qua that la thanh cong.
-        attempt.FailedBySystem = false;
-        attempt.ErrorMessage = null;
-        attempt.ResultScene = scene;
-
-        await _ctx.SaveChangesAsync(ct);
 
         if (moderation is not null)
         {

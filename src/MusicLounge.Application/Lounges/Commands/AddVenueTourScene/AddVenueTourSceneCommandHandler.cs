@@ -19,6 +19,7 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
     private readonly IImageModerationGate _moderationGate;
     private readonly ISystemConfigService _config;
     private readonly IImageSizeReader _imageSize;
+    private readonly IAsyncKeyedLock _lock;
 
     // Anh 360 chuan (phep chieu equirectangular) phu 360 do ngang x 180 do doc voi so do tren moi pixel bang nhau theo ca
     // hai chieu, nen ti le dung 2:1. Anh rong hon 2:1 van hop le (dai ghep bi cat bot tran/san). Anh hep hon thi khong
@@ -27,7 +28,8 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
 
     public AddVenueTourSceneCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, IFileStorageService fileStorage,
-        IImageModerationGate moderationGate, ISystemConfigService config, IImageSizeReader imageSize)
+        IImageModerationGate moderationGate, ISystemConfigService config, IImageSizeReader imageSize,
+        IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
@@ -35,6 +37,7 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         _moderationGate = moderationGate;
         _config = config;
         _imageSize = imageSize;
+        _lock = @lock;
     }
 
     public async Task<int> Handle(AddVenueTourSceneCommand request, CancellationToken ct)
@@ -45,21 +48,8 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
-            s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-        var activeSub = activeStatusSubs
-            .Where(s => s.ExpiresAt > DateTimeOffset.UtcNow)
-            .OrderByDescending(s => s.StartedAt).FirstOrDefault();
-
-        var existingScenes = await _uow.Repository<VenueTourScene, int>().FindAsync(
-            s => s.LoungeId == request.LoungeId, ct);
-
-        var maxScenes = activeSub?.MaxTourScenesSnapshot ?? 0;
-        if (existingScenes.Count >= maxScenes)
-            throw new DomainException(
-                maxScenes == 0
-                    ? "Gói subscription hiện tại không hỗ trợ tour ảo 360° — vui lòng nâng cấp gói."
-                    : $"Tour đã đạt giới hạn {maxScenes} scene của gói subscription hiện tại.");
+        // Kiem som (chua khoa) de tu choi nhanh truoc khi doc anh va goi kiem duyet AI; kiem LAI trong khoa ben duoi.
+        await KiemGioiHanAsync(lounge.OwnerId, request.LoungeId, ct);
 
         // Throws (blocks the upload entirely) if the image scores high enough - see
         // IImageModerationGate. Checked BEFORE creating the scene so a blocked image never lands
@@ -80,12 +70,18 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         var moderation = await _moderationGate.CheckOrThrowAsync(
             imageBytes, ImageMimeTypeHelper.ForModeration(imageBytes), ct);
 
+        // MLACP-436: khoa theo phong tra roi dem lai ngay truoc khi ghi — hai yeu cau dong thoi tung cung qua buoc kiem o
+        // tren roi cung them, vuot gioi han goi. Khoa lay SAU buoc doc anh + kiem duyet AI (vai giay) de khong giu khoa
+        // trong luc goi dich vu ngoai; trong transaction cua command, khoa duoc giu toi luc commit (MLACP-396).
+        await using var _ = await _lock.AcquireAsync(VenueTourRules.LockKey(request.LoungeId), ct);
+        var existingScenes = await KiemGioiHanAsync(lounge.OwnerId, request.LoungeId, ct);
+
         var scene = new VenueTourScene
         {
             LoungeId = request.LoungeId,
             ImageUrl = request.ImageUrl,
             Name = request.Name,
-            OrderIndex = existingScenes.Count
+            OrderIndex = VenueTourRules.NextOrderIndex(existingScenes)
         };
         _uow.Repository<VenueTourScene, int>().Add(scene);
         await _uow.SaveChangesAsync(ct);
@@ -94,6 +90,17 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
             await FlagForReviewAsync(scene.Id, moderation, ct);
 
         return scene.Id;
+    }
+
+    private async Task<IReadOnlyList<VenueTourScene>> KiemGioiHanAsync(int ownerId, int loungeId, CancellationToken ct)
+    {
+        var subscriptions = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+            s => s.OwnerId == ownerId && s.Status == SubscriptionStatus.Active, ct);
+        var existingScenes = await _uow.Repository<VenueTourScene, int>().FindAsync(s => s.LoungeId == loungeId, ct);
+
+        var loi = VenueTourRules.QuotaViolation(
+            existingScenes.Count, VenueTourRules.MaxScenes(subscriptions, DateTimeOffset.UtcNow));
+        return loi is null ? existingScenes : throw new DomainException(loi);
     }
 
     private async Task FlagForReviewAsync(int sceneId, AiModerationResult moderation, CancellationToken ct)
