@@ -60,13 +60,14 @@ public sealed class VenueTourTests
 
     // AddVenueTourSceneCommandHandler now reads the image back off disk (IImageModerationGate) —
     // needs a real uploaded file, a fake "https://cdn.example.com/..." URL 404s at that read.
-    private async Task<string> UploadRealImageAsync(HttpClient client)
+    // MLACP-433: mac dinh la anh 360 dung ti le 2:1 — handler nay tu choi anh hep hon.
+    private async Task<string> UploadRealImageAsync(HttpClient client, byte[]? anh = null, string duoi = "png")
     {
-        byte[] pngBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
         using var form = new MultipartFormDataContent();
-        var fileContent = new ByteArrayContent(pngBytes);
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
-        form.Add(fileContent, "file", $"pano-{Guid.NewGuid():N}.png");
+        var fileContent = new ByteArrayContent(anh ?? AnhMau.Png(4096, 2048));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+            duoi == "png" ? "image/png" : "image/jpeg");
+        form.Add(fileContent, "file", $"pano-{Guid.NewGuid():N}.{duoi}");
 
         var res = await client.PostAsync("/api/v1/uploads/images", form);
         res.EnsureSuccessStatusCode();
@@ -101,6 +102,83 @@ public sealed class VenueTourTests
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    /// <summary>
+    /// MLACP-433. Trước đây nhận cả ảnh chụp thường — viewer trải ảnh lên mặt cầu nên hiển thị méo. Ảnh 360 chuẩn
+    /// (equirectangular) có tỉ lệ 2:1; ảnh hẹp hơn không thể phủ đủ 360° ngang.
+    /// </summary>
+    [Theory]
+    [InlineData(4032, 3024, "png")] // ảnh chụp thường 4:3
+    [InlineData(1920, 1080, "png")] // 16:9
+    [InlineData(4000, 2030, "png")] // 1.97:1 — ngoài dung sai 1%
+    public async Task AddTourScene_NotA360Image_Returns422_NoSceneCreated(int width, int height, string duoi)
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client, AnhMau.Png(width, height), duoi);
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes",
+            new { ImageUrl = imageUrl, Name = (string?)null });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain($"{width}×{height}").And.Contain("2:1");
+        await AssertNoScenesAsync(loungeId);
+    }
+
+    [Theory]
+    [InlineData(4096, 2048)] // 2:1 chuẩn
+    [InlineData(4000, 2020)] // 1.98:1 — trong dung sai 1% (vài pixel bị cắt khi chỉnh sửa)
+    [InlineData(8000, 2000)] // dải ghép 4:1 (bị cắt bớt trần/sàn) — rộng hơn 2:1 vẫn hợp lệ
+    public async Task AddTourScene_Proper360Proportions_Returns201(int width, int height)
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client, AnhMau.Png(width, height));
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes",
+            new { ImageUrl = imageUrl, Name = (string?)null });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task AddTourScene_JpegStored2x1ButRotatedPortraitByExif_Returns422()
+    {
+        // Lưu 4096×2048 nhưng thẻ EXIF Orientation = 6 (điện thoại cầm dọc): trình duyệt xoay lại khi hiển thị thành
+        // 2048×4096. Chỉ đọc kích thước lưu trữ thì lọt qua.
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client, AnhMau.Jpeg(4096, 2048, exifOrientation: 6), "jpg");
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes",
+            new { ImageUrl = imageUrl, Name = (string?)null });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("2048×4096");
+    }
+
+    [Fact]
+    public async Task AddTourScene_ImageSizeUnreadable_Returns422()
+    {
+        // Qua được khâu upload (đúng chữ ký PNG) nhưng không có phần đầu chứa kích thước.
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var imageUrl = await UploadRealImageAsync(client, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0]);
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes",
+            new { ImageUrl = imageUrl, Name = (string?)null });
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("Không đọc được kích thước ảnh");
+        await AssertNoScenesAsync(loungeId);
+    }
+
+    private async Task AssertNoScenesAsync(int loungeId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.VenueTourScenes.CountAsync(s => s.LoungeId == loungeId)).Should().Be(0);
     }
 
     [Fact]

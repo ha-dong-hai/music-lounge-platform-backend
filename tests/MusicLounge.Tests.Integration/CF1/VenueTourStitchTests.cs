@@ -80,9 +80,9 @@ public sealed class VenueTourStitchTests
 
     private async Task<string> UploadRealImageAsync(HttpClient client)
     {
-        byte[] pngBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
+        // MLACP-433: thêm scene trực tiếp giờ đòi ảnh 360 đúng tỉ lệ 2:1.
         using var form = new MultipartFormDataContent();
-        var fileContent = new ByteArrayContent(pngBytes);
+        var fileContent = new ByteArrayContent(AnhMau.Png(4096, 2048));
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
         form.Add(fileContent, "file", $"pano-{Guid.NewGuid():N}.png");
 

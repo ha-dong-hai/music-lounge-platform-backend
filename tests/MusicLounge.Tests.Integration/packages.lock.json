@@ -271,6 +271,14 @@
         "resolved": "2.0.1",
         "contentHash": "FYv95bNT4UwcNA+G/J1oX5OpRiSUxteXaUt2BJbRSdRNiIUNbggJF69wy6mnk2wYToaanpdXZdCwVylt96MpwQ=="
       },
+      "MetadataExtractor": {
+        "type": "Transitive",
+        "resolved": "2.9.3",
+        "contentHash": "7dBcqlPC2Zc/bsZtXnv8nCWe5h5WsLHszzHtxnpcsVy4MwlD3KQ3wVNoiYBm0a3rzt5hRwAosPvLPhlXrV5lyg==",
+        "dependencies": {
+          "XmpCore": "6.1.10.1"
+        }
+      },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
         "type": "Transitive",
         "resolved": "8.0.11",
@@ -1131,6 +1139,11 @@
         "resolved": "4.5.4",
         "contentHash": "zteT+G8xuGu6mS+mzDzYXbzS7rd3K6Fjb9RiZlYlJPam2/hU7JCBZBVEcywNuR+oZ1ncTvc/cq0faRr3P01OVg=="
       },
+      "XmpCore": {
+        "type": "Transitive",
+        "resolved": "6.1.10.1",
+        "contentHash": "/Tp2/e39e7z8hLtS4TXt0FNNZHbf5yNFfHS0/59soXlgOzZlyRZivvzWpvujyaWkTWWgecp/1nHxkuc5vntn7A=="
+      },
       "xunit.abstractions": {
         "type": "Transitive",
         "resolved": "2.0.3",
@@ -1206,6 +1219,7 @@
           "Google.Cloud.Storage.V1": "[4.15.0, )",
           "Hangfire.AspNetCore": "[1.8.17, )",
           "Hangfire.SqlServer": "[1.8.17, )",
+          "MetadataExtractor": "[2.9.3, )",
           "Microsoft.Data.SqlClient": "[5.2.3, )",
           "Microsoft.EntityFrameworkCore.SqlServer": "[8.0.11, )",
           "Microsoft.ML": "[5.0.0, )",

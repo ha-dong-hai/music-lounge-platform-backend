@@ -116,6 +116,7 @@ public static class DependencyInjection
                 : ActivatorUtilities.CreateInstance<LocalFileStorageService>(sp));
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<ISmsService, SmsService>();
+        services.AddSingleton<IImageSizeReader, MetadataImageSizeReader>();
         // MLACP-400. Bộ khoá Data Protection giữ khả năng giải mã mọi cột PII và tham số job Hangfire — mất nó là mất các giá
         // trị đó vĩnh viễn. DataProtectionKeyRing chọn chỗ lưu nằm ngoài thư mục site trên Azure và mang khoá cũ sang.
         services.AddMusicLoungeDataProtection(Directory.GetCurrentDirectory(), Environment.GetEnvironmentVariable);
