@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -31,8 +31,6 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// </summary>
 public sealed class RefundSlaBreachAlertJob
 {
-    private const int DefaultSlaHours = 72;
-    private const int DefaultWindowDays = 90;
 
     /// <summary>Warn this long before the gateway window shuts, while it can still be acted on.</summary>
     private const int WindowWarningDays = 14;
@@ -74,10 +72,9 @@ public sealed class RefundSlaBreachAlertJob
         var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
-        var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, DefaultSlaHours, ct);
+        var slaHours = await RefundSla.SlaHoursAsync(_config, ct);
         var windowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
-        var graceHours = await _config.GetIntAsync(
-            ConfigKeys.RefundAutoApproveGraceHours, AutoApproveOverdueRefundsJob.DefaultGraceHours, ct);
+        var graceHours = await RefundSla.AutoApproveGraceHoursAsync(_config, ct);
 
         // MLACP-345: chay TRUOC phan Pending ben duoi, vi phan do return som khi khong co yeu cau nao
         // dang cho — ma yeu cau tien mat can nhac lai chinh la nhung yeu cau DA duoc duyet.

@@ -1,4 +1,4 @@
-using Hangfire;
+﻿using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,8 +36,6 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// </summary>
 public sealed class AutoApproveOverdueRefundsJob
 {
-    internal const int DefaultSlaHours = 72;
-    internal const int DefaultGraceHours = 24;
 
     /// <summary>
     /// VNPay đòi IP của máy khởi lệnh hoàn. Job không có request nào để lấy IP, nên dùng đúng giá trị
@@ -68,9 +66,8 @@ public sealed class AutoApproveOverdueRefundsJob
         var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
-        var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, DefaultSlaHours, ct);
-        var graceHours = await _config.GetIntAsync(
-            ConfigKeys.RefundAutoApproveGraceHours, DefaultGraceHours, ct);
+        var slaHours = await RefundSla.SlaHoursAsync(_config, ct);
+        var graceHours = await RefundSla.AutoApproveGraceHoursAsync(_config, ct);
         var waitedHours = slaHours + graceHours;
 
         // Lọc trạng thái phía server, so thời gian phía client — provider SQLite dùng trong test không

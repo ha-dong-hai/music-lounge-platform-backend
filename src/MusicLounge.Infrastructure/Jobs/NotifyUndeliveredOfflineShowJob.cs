@@ -1,7 +1,8 @@
-using Hangfire;
+﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.LoungeShows;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -29,7 +30,6 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// </summary>
 public sealed class NotifyUndeliveredOfflineShowJob
 {
-    private const int DefaultGraceHours = 6;
 
     /// <summary>Mặc định khi <c>system_config</c> chưa có khoá.</summary>
     public const int DefaultConfirmationHours = 24;
@@ -52,7 +52,7 @@ public sealed class NotifyUndeliveredOfflineShowJob
         var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
-        var graceHours = await _config.GetIntAsync(ConfigKeys.ShowAutoEndGraceHours, DefaultGraceHours, ct);
+        var graceHours = await ShowAutoEndGrace.GraceHoursAsync(_config, ct);
         var confirmationHours = await _config.GetIntAsync(
             ConfigKeys.ShowDeliveryConfirmationHours, DefaultConfirmationHours, ct);
 

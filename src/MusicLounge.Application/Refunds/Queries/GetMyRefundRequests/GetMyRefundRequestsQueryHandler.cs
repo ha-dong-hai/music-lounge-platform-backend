@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Refunds.DTOs;
@@ -33,7 +33,7 @@ internal sealed class GetMyRefundRequestsQueryHandler
 
         // Cung mot nguon voi RefundSlaBreachAlertJob — cai canh bao Admin va cai hua voi nguoi mua
         // phai la cung mot con so, neu khong thi mot ben se im lang trong khi ben kia da tre han.
-        var slaHours = await _config.GetIntAsync(ConfigKeys.RefundSlaHours, 72, ct);
+        var slaHours = await RefundSla.SlaHoursAsync(_config, ct);
 
         // MLACP-387: nguoi mua phai thay yeu cau nao dang cho ho khai tai khoan nhan hoan.
         var paymentIds = mine.Select(r => r.PaymentId).Distinct().ToList();

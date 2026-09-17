@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -36,7 +36,7 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         // since a ledger journal with no matching settlement (or vice versa) breaks the invariant
         // that payment.NetAmount always equals what the owner is actually scheduled to receive.
         if (payment.Method == PaymentMethod.Cash
-            && !await _config.GetBoolAsync(ConfigKeys.WalkInCommissionEnabled, false, ct))
+            && !await WalkInCommission.IsEnabledAsync(_config, ct))
             return;
 
         // Schedule payout: fetch show + lounge from tickets — needed for both the D3 payout-speed
