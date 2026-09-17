@@ -37,6 +37,25 @@ public sealed class ImageSizeReaderTests
         => Reader.ReadDisplaySize(AnhMau.Jpeg(4096, 2048, orientation))
             .Should().Be(new ImageSize(rongHienThi, caoHienThi));
 
+    [Theory]
+    [InlineData(AnhMau.XmpGPanoThat192Do, 8000, 3314, 192.13)]
+    [InlineData(AnhMau.XmpGPanoThat360Do, 4397, 922, 360.0)]
+    [InlineData(AnhMau.XmpGPanoThuocTinh180Do, 4000, 2000, 180.0)]
+    public void GPano_TraGocPhuNgangTheoCongThucPannellum(string xmp, int width, int height, double doMongDoi)
+        => Reader.ReadGPanoHorizontalCoverageDegrees(AnhMau.JpegVoiXmp(width, height, xmp))
+            .Should().BeApproximately(doMongDoi, 0.01);
+
+    [Fact]
+    public void KhongCoGPano_TraNull_KhongDoan()
+    {
+        Reader.ReadGPanoHorizontalCoverageDegrees(AnhMau.Jpeg(4096, 2048)).Should().BeNull();
+        Reader.ReadGPanoHorizontalCoverageDegrees(AnhMau.JpegVoiXmp(4096, 2048,
+            "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">"
+            + "<rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" dc:format=\"image/jpeg\"/>"
+            + "</rdf:RDF></x:xmpmeta>")).Should().BeNull();
+        Reader.ReadGPanoHorizontalCoverageDegrees("khong phai anh"u8.ToArray()).Should().BeNull();
+    }
+
     [Fact]
     public void KhongPhaiAnh_TraNull_KhongNemLoi()
     {
