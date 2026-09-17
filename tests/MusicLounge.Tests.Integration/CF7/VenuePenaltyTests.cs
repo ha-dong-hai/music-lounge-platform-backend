@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.ValueObjects;
@@ -382,6 +383,62 @@ public sealed class VenuePenaltyTests
 
         var lounge2 = await verifyDb.Lounges.SingleAsync(l => l.Id == loungeId);
         lounge2.Status.Should().Be(LoungeStatus.Approved, "bảo vệ Owner khỏi bị phạt oan khi Admin không xử lý kịp SLA");
+    }
+
+    /// <summary>
+    /// MLACP-443. <c>appeal_auto_approve</c> được seed <c>true</c> ngay từ migration đầu tiên và hiện
+    /// trên trang cấu hình của Admin, nhưng trước đây không một dòng code nào đọc nó: tắt công tắc
+    /// vẫn nhận 200 OK, lịch sử vẫn ghi lại, và án phạt vẫn tiếp tục được gỡ tự động.
+    ///
+    /// Tự gỡ phạt là hành động một chiều — một phòng trà đang bị đình chỉ hoạt động trở lại mà không
+    /// ai xem lại hồ sơ. Công tắc này là cách dừng nó lại khi nghi có sai sót, nên phải thật sự dừng.
+    /// </summary>
+    [Fact]
+    public async Task AutoApproveOverdueAppealsJob_KhiTatCongTacTrongCauHinh_KhongTuGoAnPhat()
+    {
+        var (_, loungeId, _) = await CreateFreshOwnerLoungeSubscriptionAsync();
+        var penaltyId = await SeedPenaltyAsync(
+            loungeId, PenaltyType.Warning, DateTimeOffset.UtcNow, status: PenaltyStatus.Appealed,
+            appealDeadline: DateTimeOffset.UtcNow.AddMinutes(-1)); // đã quá hạn SLA
+
+        // system_config dùng chung giữa các test nên phải trả lại nguyên trạng, kể cả khi test hỏng.
+        var truoc = await DocCauHinhAsync(ConfigKeys.AppealAutoApprove);
+        truoc.Should().Be("true", "tiền đề của test: mặc định hệ thống vẫn đang tự duyệt");
+        await DatCauHinhAsync(ConfigKeys.AppealAutoApprove, "false");
+        try
+        {
+            using var scope = _factory.Services.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<AutoApproveOverdueAppealsJob>()
+                .ExecuteAsync(new JobCancellationToken(false));
+        }
+        finally
+        {
+            await DatCauHinhAsync(ConfigKeys.AppealAutoApprove, truoc);
+        }
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var penalty = await verifyDb.VenuePenalties.SingleAsync(p => p.Id == penaltyId);
+        penalty.Status.Should().Be(PenaltyStatus.Appealed,
+            "tắt công tắc thì kháng cáo quá hạn phải nằm nguyên chờ người xử lý, không bị tự duyệt");
+        penalty.ReviewedAt.Should().BeNull("không có ai xem xét thì không được ghi là đã xem xét");
+    }
+
+    private async Task<string> DocCauHinhAsync(string key)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return (await db.SystemConfigs.AsNoTracking().SingleAsync(c => c.ConfigKey == key)).ConfigValue;
+    }
+
+    private async Task DatCauHinhAsync(string key, string value)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.SystemConfigs.SingleAsync(c => c.ConfigKey == key)).ConfigValue = value;
+        await db.SaveChangesAsync();
+        // SystemConfigService cache 60 giây — không xoá thì job vẫn đọc giá trị cũ.
+        scope.ServiceProvider.GetRequiredService<ISystemConfigService>().Invalidate(key);
     }
 
     // ─── Enforcement ──────────────────────────────────────────────────────────
