@@ -85,9 +85,21 @@ grant (180,000 vCPU-seconds / 360,000 GiB-seconds per subscription).
 
 `.github/workflows/panorama-stitcher.yml` runs the tests and, on every push to `master` that touches
 this folder, publishes `ghcr.io/ha-dong-hai/musiclounge-panorama-stitcher` tagged `sha-<commit>` and
-`latest`. **GHCR creates new packages as private, even for a public repo** — after the first
-publish, open the package on GitHub → *Package settings* → *Change visibility* → Public, or Container
-Apps cannot pull it without registry credentials.
+`latest`. Container Apps pulls it without registry credentials, so the package must be publicly
+readable. This one was pullable anonymously right after its first publish (checked 2026-09-17). Check
+it again if you publish under a different owner or repository, because a private package makes the
+container app fail to start with an image-pull error:
+
+```bash
+TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:ha-dong-hai/musiclounge-panorama-stitcher:pull" | jq -r .token)
+curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.oci.image.index.v1+json" \
+  https://ghcr.io/v2/ha-dong-hai/musiclounge-panorama-stitcher/manifests/latest   # 200 = public
+```
+
+If it is not public: open the package on GitHub → *Package settings* → *Change visibility* → Public.
+
+The LoFTR checkpoint is verified at build time with `ADD --checksum` (see the Dockerfile).
 
 ### One-time setup (Azure CLI)
 
