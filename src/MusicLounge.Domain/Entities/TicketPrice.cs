@@ -10,11 +10,10 @@ public sealed class TicketPrice : Common.BaseEntity<int>
     public decimal Price { get; set; }
     public int? Quota { get; set; }
 
-    // Legacy field — never written anywhere in the codebase (audited 2026-08-05), always 0.
-    // Do NOT read this for availability. The real source of truth is computed live from
-    // Tickets + TicketHolds via ITicketRepository.GetReservedQuantitiesByPriceIdsAsync, which
-    // both the booking handlers (write path) and the display queries (read path) now share.
-    public int Sold { get; set; } = 0;
+    // MLACP-441: cot "Sold" da bi go han (khong con trong entity lan DB). No chua bao gio duoc ghi — do that tren Azure
+    // 17/09: ca 5 dot ban deu Sold = 0 trong khi ve that la 3/1/2/2/4 — nen chi la bay: ai doc no de tinh ve con lai se
+    // cho ban vuot. So ve da ban/dang giu luon tinh truc tiep tu Tickets + TicketHolds qua
+    // ITicketRepository.GetReservedQuantitiesByPriceIdsAsync, dung chung cho ca duong ghi (dat ve) va duong doc (hien thi).
     public bool IsActive { get; set; } = true;
     public DateTimeOffset SaleStart { get; set; }
     // BR-31: bo trong nghia la ban toi khi buoi dien ket thuc. Ve ban tai quay khong the chot

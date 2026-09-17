@@ -195,9 +195,8 @@ public sealed class SeatingZoneLayoutTests
             db.TicketPrices.AddRange(priceEarly, priceStandard);
             await db.SaveChangesAsync();
 
-            // Availability được tính live từ tickets Confirmed/Pending thực tế (không còn đọc
-            // TicketPrice.Sold — xem ghi chú trên entity) nên seed đúng 3 và 1 vé đã bán thay vì
-            // gán thẳng vào cột đếm.
+            // Availability được tính live từ tickets Confirmed/Pending thực tế, nên seed đúng 3 và 1 vé đã bán
+            // (cột đếm sẵn TicketPrice.Sold đã gỡ ở MLACP-441).
             db.Tickets.AddRange(
                 Enumerable.Range(0, 3).Select(_ => new Ticket
                 {
@@ -260,7 +259,7 @@ public sealed class SeatingZoneLayoutTests
 
             db.TicketPrices.Add(new TicketPrice
             {
-                TierId = tierId, Name = "Vé", Price = 80_000m, Quota = 8, Sold = 2,
+                TierId = tierId, Name = "Vé", Price = 80_000m, Quota = 8,
                 PurchaseChannel = PurchaseChannel.Online,
                 SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(5)
             });

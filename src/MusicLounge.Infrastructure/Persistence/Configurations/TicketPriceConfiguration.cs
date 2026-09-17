@@ -13,7 +13,6 @@ internal sealed class TicketPriceConfiguration : IEntityTypeConfiguration<Ticket
         b.Property(p => p.Name).HasMaxLength(100).IsRequired();
         b.Property(p => p.Description).HasMaxLength(500);
         b.Property(p => p.Price).HasPrecision(15, 2);
-        b.Property(p => p.Sold).HasDefaultValue(0);
         b.Property(p => p.IsActive).HasDefaultValue(true);
         b.Property(p => p.PurchaseChannel).HasConversion<string>().HasMaxLength(20);
 
