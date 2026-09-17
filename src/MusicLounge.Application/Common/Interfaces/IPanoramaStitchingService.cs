@@ -10,7 +10,10 @@ public interface IPanoramaStitchingService
     // tinh vao gioi han 20 luot tron doi cua phong tra — bam 20 lan la khoa vinh vien du chua ghep that lan nao.
     bool IsConfiguredFor(IReadOnlyList<string> imageUrls);
 
-    // Loi nem ra la ExternalServiceException co Detail doc duoc voi chu phong tra: ly do do chinh bo anh (khong du
-    // chong lan...) duoc giu nguyen, con loi he thong thay bang cau de hieu va chi tiet ky thuat nam trong log.
+    // Hai loai loi, theo dung nghia da dung khap API (DomainException -> 422, ExternalServiceException -> 503):
+    //   - DomainException: dich vu DA xu ly bo anh nhung khong ghep duoc (khong du chong lan...) hoac ghep qua thoi gian.
+    //     Message doc duoc voi chu phong tra. Tinh vao gioi han so lan ghep vi CPU da chay.
+    //   - ExternalServiceException: loi phia he thong (khong danh thuc duoc, sai cau hinh, 5xx). Detail la cau de hieu,
+    //     chi tiet ky thuat nam trong log. MLACP-435: khong tinh vao gioi han.
     Task<byte[]> StitchAsync(IReadOnlyList<string> imageUrls, CancellationToken ct = default);
 }
