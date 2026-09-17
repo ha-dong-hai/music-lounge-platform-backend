@@ -57,7 +57,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-`test_security.py` covers authentication and the image-origin allowlist. `test_main.py` covers the LoFTR rescue's control flow (`_append_control_points`, `_rescue_disconnected_with_loftr`,
+`test_security.py` covers authentication and the image-origin allowlist. `test_coverage.py` covers the full-turn check (a set that doesn't go all the way round is rejected with 422 before OpenCV runs), using yaw/HFOV values measured with real Hugin on a capture set with known geometry. `test_main.py` covers the LoFTR rescue's control flow (`_append_control_points`, `_rescue_disconnected_with_loftr`,
 `_check_connectivity`'s wiring to it) with `_loftr_match_pair` mocked — no `torch`/`kornia`/Hugin
 binaries needed to run these. Everything else in `main.py` shells out to real Hugin binaries or
 `cv2`, which isn't covered by automated tests; see the "Verification" note in the LoFTR rescue's

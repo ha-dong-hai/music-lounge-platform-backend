@@ -553,6 +553,14 @@ _MAX_PLAUSIBLE_ROLL_RANGE_DEG = 90.0
 # (theoretical span assumes none), not a bug in the math.
 _MIN_COVERAGE_FRACTION = 0.4
 
+# MLACP-438: the tour viewer treats every scene as a full 360-degree turn. A set shot around only part of the room
+# still passes the connectivity check (neighbouring photos do overlap) and stitches "successfully" into a strip that
+# the viewer then stretches across 360 degrees. Measured 2026-09-17 with this file's own _check_connectivity +
+# _optimize_geometry on local Hugin, using a capture set with known geometry (9 photos, 40-degree yaw steps, 65-degree
+# HFOV): full set -> 360.0 degrees, photos 1-5 only -> 223.6 degrees (truth 225). 350 allows a gap of up to 10 degrees,
+# which the viewer shows as a ~2.8% horizontal stretch.
+_MIN_HORIZONTAL_COVERAGE_DEG = 350.0
+
 
 class _ImageGeometry:
     __slots__ = ("yaw", "pitch", "hfov", "vfov")
@@ -633,6 +641,38 @@ def _expected_coverage_px(geoms: list[_ImageGeometry], avg_width: float, avg_hei
     return expected_width, expected_height
 
 
+def _horizontal_coverage_deg(geoms: list[_ImageGeometry]) -> float:
+    """Degrees of the full circle covered by the union of each image's horizontal arc
+    [yaw - hfov/2, yaw + hfov/2]. Works on the circle: Hugin reports yaw in -180..180, so a full turn
+    wraps across +/-180 and a naive max - min would over- or under-count."""
+    segments: list[tuple[float, float]] = []
+    for g in geoms:
+        width = g.hfov
+        if width >= 360.0:
+            return 360.0
+        start = (g.yaw - width / 2) % 360.0
+        end = start + width
+        if end <= 360.0:
+            segments.append((start, end))
+        else:
+            segments += [(start, 360.0), (0.0, end - 360.0)]
+
+    segments.sort()
+    covered = 0.0
+    cur_start: float | None = None
+    cur_end = 0.0
+    for start, end in segments:
+        if cur_start is None or start > cur_end:
+            if cur_start is not None:
+                covered += cur_end - cur_start
+            cur_start, cur_end = start, end
+        else:
+            cur_end = max(cur_end, end)
+    if cur_start is not None:
+        covered += cur_end - cur_start
+    return min(covered, 360.0)
+
+
 def _stitch_with_hugin_from_pto(work_dir: str) -> np.ndarray | None:
     """Runs the rest of the Hugin blend pipeline against the project.pto that _optimize_geometry
     already aligned (geometry, incl. the roll check, already done - avoids re-running autooptimiser
@@ -686,6 +726,19 @@ def stitch(req: StitchRequest, _: None = Depends(_yeu_cau_khoa)):
                 "chụp lại ảnh này gối lên ảnh bên cạnh nhiều hơn rồi thử lại.",
             )
 
+        # Geometry only reads the project.pto that _check_connectivity just wrote - it does not depend on the cv2 stitch
+        # below, so it runs first: a set that doesn't go all the way round is rejected before spending CPU stitching it.
+        geoms = _optimize_geometry(work_dir)
+        if geoms is not None:
+            coverage = _horizontal_coverage_deg(geoms)
+            if coverage < _MIN_HORIZONTAL_COVERAGE_DEG:
+                raise HTTPException(
+                    422,
+                    f"Bộ ảnh mới phủ khoảng {coverage:.0f}° theo chiều ngang — tour 360° cần chụp xoay đủ một vòng. "
+                    "Hãy đứng yên một chỗ, chụp tiếp các hướng còn thiếu (mỗi ảnh gối lên ảnh trước khoảng một "
+                    "phần ba) cho tới khi quay về hướng ban đầu, rồi ghép lại.",
+                )
+
         ok, result, error_reason = _stitch_with_opencv(images)
 
         # cv2.Stitcher can "succeed" while having silently joined only a fraction of the images
@@ -697,7 +750,6 @@ def stitch(req: StitchRequest, _: None = Depends(_yeu_cau_khoa)):
         # shots, which a width-only check would never notice.
         avg_width = sum(img.shape[1] for img in images) / len(images)
         avg_height = sum(img.shape[0] for img in images) / len(images)
-        geoms = _optimize_geometry(work_dir)
 
         looks_complete = ok and result is not None
         if looks_complete and geoms is not None:
