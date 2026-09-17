@@ -71,17 +71,19 @@ import os
 os.environ["OPENCV_OPENCL_RUNTIME"] = "disabled"
 os.environ["OPENCV_OPENCL_DEVICE"] = "null"
 
+import hmac
 import io
 import subprocess
 import tempfile
 import threading
 import time
 from collections import defaultdict
+from urllib.parse import urlsplit
 
 import cv2
 import numpy as np
 import requests
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import Response
 from PIL import Image, ImageOps
 from pydantic import BaseModel
@@ -111,6 +113,60 @@ class StitchRequest(BaseModel):
     image_urls: list[str]
 
 
+# ---------------------------------------------------------------------------
+# MLACP-431: xac thuc va chan SSRF.
+#
+# Truoc day /stitch khong xac thuc va requests.get() voi BAT KY URL nao, lai tu di theo redirect. Rao chan SSRF chi nam o
+# backend .NET (validator kiem URL do chinh he thong cap), nen goi thang vao dich vu nay la vuot qua: bat server tai dia chi
+# noi bo, endpoint metadata cua cloud (169.254.169.254), hoac lam te liet CPU bang cac lan ghep gia. Phai chan truoc khi
+# trien khai cong khai len Azure Container Apps.
+#
+# Ca hai kiem tra deu DONG KHI THIEU CAU HINH: lo trien khai thieu bien moi truong thi tu choi het, khong thanh cong vien mo.
+# ---------------------------------------------------------------------------
+
+
+def _yeu_cau_khoa(x_stitcher_key: str | None = Header(default=None)) -> None:
+    khoa = os.environ.get("STITCHER_API_KEY", "")
+    if not khoa:
+        raise HTTPException(503, "Dịch vụ ghép ảnh chưa được cấu hình khoá xác thực.")
+    # So sanh thoi gian hang: so sanh thuong dung som o ky tu sai dau tien, lo dan do dai phan dung qua thoi gian phan hoi.
+    if not x_stitcher_key or not hmac.compare_digest(x_stitcher_key.encode(), khoa.encode()):
+        raise HTTPException(401, "Thiếu hoặc sai khoá xác thực.")
+
+
+def _nguon_cua(url: str) -> str | None:
+    """Origin chuan hoa (scheme://host[:port]) cua mot URL, hoac None neu URL khong dung duoc de tai anh.
+
+    So tren origin da phan tich chu khong so chuoi, vi cac chieu vuot danh sach quen thuoc deu lua duoc phep so chuoi:
+    duoi ten mien gia ("...azurewebsites.net.evil.com"), giau host that sau dau @ ("...azurewebsites.net@evil.com").
+    URL co thong tin dang nhap (user@host) bi loai han — anh cua he thong khong bao gio can.
+    """
+    try:
+        parts = urlsplit(url)
+        port = parts.port
+    except ValueError:
+        return None
+    if parts.scheme not in ("http", "https") or not parts.hostname or parts.username or parts.password:
+        return None
+    mac_dinh = 443 if parts.scheme == "https" else 80
+    host = parts.hostname.lower() + ("" if port in (None, mac_dinh) else f":{port}")
+    return f"{parts.scheme}://{host}"
+
+
+def _kiem_nguon_anh(urls: list[str]) -> None:
+    """Kiem HET cac URL truoc khi tai bat ky anh nao."""
+    cho_phep = {
+        nguon
+        for nguon in (_nguon_cua(muc.strip()) for muc in os.environ.get("ALLOWED_IMAGE_ORIGINS", "").split(","))
+        if nguon
+    }
+    if not cho_phep:
+        raise HTTPException(503, "Dịch vụ ghép ảnh chưa được cấu hình nguồn ảnh cho phép.")
+    for url in urls:
+        if _nguon_cua(url) not in cho_phep:
+            raise HTTPException(400, "Có ảnh không đến từ nguồn được phép.")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -134,7 +190,10 @@ def _download_and_correct_orientation(url: str) -> np.ndarray:
     which silently tanks feature-matching. This is a routine real-world failure mode for phone
     photos specifically, not a hypothetical edge case."""
     try:
-        with requests.get(url, timeout=20, stream=True) as resp:
+        # allow_redirects=False: mot host hop le van co the redirect sang dia chi noi bo (MLACP-431).
+        with requests.get(url, timeout=20, stream=True, allow_redirects=False) as resp:
+            if 300 <= resp.status_code < 400:
+                raise HTTPException(400, f"Ảnh {url} chuyển hướng sang nơi khác — không tải theo.")
             resp.raise_for_status()
             content_length = resp.headers.get("Content-Length")
             if content_length is not None and int(content_length) > _MAX_DOWNLOAD_BYTES:
@@ -603,7 +662,8 @@ def _stitch_with_hugin_from_pto(work_dir: str) -> np.ndarray | None:
 
 
 @app.post("/stitch")
-def stitch(req: StitchRequest):
+def stitch(req: StitchRequest, _: None = Depends(_yeu_cau_khoa)):
+    _kiem_nguon_anh(req.image_urls)
     if len(req.image_urls) < 2:
         raise HTTPException(400, "Cần ít nhất 2 ảnh để ghép panorama.")
 

@@ -17,4 +17,8 @@ public sealed class PanoramaStitcherSettings
     // would defeat the point (SSRF: a malicious Owner could otherwise point the stitcher at
     // internal network addresses or cloud metadata endpoints).
     public string PublicBaseUrl { get; init; } = string.Empty;
+
+    // MLACP-431: khoa bi mat dich vu ghep anh bat buoc (header X-Stitcher-Key). Truoc day dich vu khong xac thuc, ai biet
+    // dia chi cung goi duoc va bat no tai URL bat ky (SSRF).
+    public string ApiKey { get; init; } = string.Empty;
 }

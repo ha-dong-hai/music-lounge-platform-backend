@@ -19,17 +19,36 @@ outbound network access for it and pays no cold-start penalty.
 ## API
 
 - `GET /health` → `{"status": "ok"}`
-- `POST /stitch` — body `{"image_urls": ["https://...", "https://..."]}` (2+ URLs, images taken
+- `POST /stitch` — requires header `X-Stitcher-Key` (see **Security** below). Body
+  `{"image_urls": ["https://...", "https://..."]}` (2+ URLs, images taken
   from the same vantage point with overlap between consecutive shots). Returns the stitched
   panorama as `image/jpeg` bytes on success, or a JSON `{"detail": "..."}` error (400/422/500)
   with a specific, actionable reason on failure.
+
+## Security (MLACP-431)
+
+The service is reachable over HTTP and downloads the image URLs it is given, so both checks below are
+**closed when not configured** — a deployment missing either variable rejects every `/stitch` call
+(503) instead of running wide open.
+
+| Variable | Meaning |
+|---|---|
+| `STITCHER_API_KEY` | Shared secret. `/stitch` requires header `X-Stitcher-Key` with this exact value (constant-time compare). The backend sends it from `PanoramaStitcher:ApiKey`. |
+| `ALLOWED_IMAGE_ORIGINS` | Comma-separated origins (`scheme://host[:port]`) images may be downloaded from — normally just the backend's public URL, e.g. `https://musiclounge-api.azurewebsites.net`. Compared as parsed origins, so look-alike hosts (`…net.evil.com`), `user@host` tricks, wrong scheme or wrong port are all rejected. |
+
+Redirects are never followed: an allowed host could otherwise bounce the download to an internal
+address. `/health` stays open for platform health probes and for the backend's warm-up call.
 
 ## Run locally
 
 ```bash
 pip install -r requirements.txt
+export STITCHER_API_KEY=dev-only-key
+export ALLOWED_IMAGE_ORIGINS=http://localhost:5299
 uvicorn main:app --reload --port 8000
 ```
+
+Set the same key as `PanoramaStitcher:ApiKey` in the backend's `appsettings.Development.Local.json`.
 
 ## Tests
 
@@ -38,7 +57,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-Covers the LoFTR rescue's control flow (`_append_control_points`, `_rescue_disconnected_with_loftr`,
+`test_security.py` covers authentication and the image-origin allowlist. `test_main.py` covers the LoFTR rescue's control flow (`_append_control_points`, `_rescue_disconnected_with_loftr`,
 `_check_connectivity`'s wiring to it) with `_loftr_match_pair` mocked — no `torch`/`kornia`/Hugin
 binaries needed to run these. Everything else in `main.py` shells out to real Hugin binaries or
 `cv2`, which isn't covered by automated tests; see the "Verification" note in the LoFTR rescue's
@@ -48,7 +67,7 @@ design plan for what full end-to-end coverage would need.
 
 ```bash
 docker build -t musiclounge-panorama-stitcher .
-docker run -p 8000:8000 musiclounge-panorama-stitcher
+docker run -p 8000:8000 -e STITCHER_API_KEY=dev-only-key   -e ALLOWED_IMAGE_ORIGINS=http://host.docker.internal:5299 musiclounge-panorama-stitcher
 ```
 
 ## Deploying

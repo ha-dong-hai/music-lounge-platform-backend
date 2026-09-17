@@ -1,2 +1,5 @@
 -r requirements.txt
 pytest==8.3.3
+# fastapi.testclient (used by test_security.py) needs httpx - without it, tests only pass on machines
+# that happen to have httpx installed already.
+httpx==0.28.1
