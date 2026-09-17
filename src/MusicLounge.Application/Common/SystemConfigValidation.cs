@@ -28,7 +28,8 @@ public static class SystemConfigValidation
         ConfigKeys.TaxRate,
         ConfigKeys.PersonalIncomeTaxRate,
         ConfigKeys.DonationPerformerShareRate,
-        "gateway_fee_rate",
+        // MLACP-444: "gateway_fee_rate" đã gỡ khỏi seed — không nơi nào tính phí cổng, nên để nó
+        // trong danh sách này chỉ khiến bộ kiểm trông như đang bảo vệ một tỉ lệ đang có hiệu lực.
         ConfigKeys.SettlementTierNewPreRate,
         ConfigKeys.SettlementTierStandardPreRate,
         ConfigKeys.SettlementTierPremiumPreRate,

@@ -192,11 +192,12 @@ public static class ConfigKeys
 
     // Anti-abuse ceilings on a single hold/walk-in-sale/donation — not statutory figures, but
     // operational limits that BELONG in config (D9) rather than baked into validator code.
-    // NOTE: "tunable" is where this is heading, not where it is. There is no write path to
-    // system_config anywhere in this solution — ISystemConfigService exposes only Get*, no Admin
-    // endpoint updates it, and SystemConfigHistory (the table built to audit exactly these
-    // changes) is written by nothing. Changing any value below today means running SQL by hand,
-    // with no audit trail. See the same note on every "Admin-tunable" mention in this file.
+    // MLACP-444: ghi chú cũ ở đây nói "không có đường ghi system_config nào trong solution" và
+    // "đổi giá trị nghĩa là chạy SQL bằng tay, không có dấu vết kiểm toán". Điều đó KHÔNG còn đúng
+    // và là một lời khuyên nguy hiểm: đường ghi đã có — PUT /admin/system-config/{key} qua
+    // UpdateSystemConfigCommandHandler, có kiểm giá trị (SystemConfigValidation), bắt buộc ghi lý
+    // do, lưu giá trị cũ vào SystemConfigHistory và xoá cache ngay. Đổi bằng SQL tay giờ là cách
+    // tệ hơn hẳn: mất dấu vết kiểm toán và bỏ qua toàn bộ ràng buộc chéo giữa các tỉ lệ tiền.
     // Defaults preserve this system's existing behavior exactly; only the storage moved.
     public const string TicketHoldMaxQuantity = "ticket_hold_max_quantity";
     public const string WalkInTicketMaxQuantity = "walkin_ticket_max_quantity";
@@ -224,8 +225,8 @@ public static class ConfigKeys
     public const string AiPosterMaxAttemptsPerShow = "ai_poster_max_attempts_per_show";
 
     // NĐ 85/2021's complaint-channel requirement doesn't itself specify a numeric deadline — this is
-    // a reasonable operational default (config-driven, though only editable via direct SQL today
-    // — see the note at the top of this file), not a literal statutory figure.
+    // a reasonable operational default (config-driven, sửa được qua PUT /admin/system-config), not a
+    // literal statutory figure.
     public const string ComplaintSlaHours = "complaint_sla_hours";
 
     // Version label of the currently-published Terms of Service / Privacy Policy — bump this (via
@@ -246,8 +247,8 @@ public static class ConfigKeys
     // donation). Default 0.88 matches docs/04-design-decisions.md §6.5 — benchmarked 2026-08-09
     // against industry donation/tip intermediary practice (YouTube Super Chat keeps 30%, Twitch
     // Bits nets creators ~55-71%; venue-holds-tip-for-performer arrangements commonly run 0-20%+
-    // house cut) and found generous to the performer, not an outlier. Config-driven, but only
-    // editable via direct SQL today (see the note at the top of this file) — via
+    // house cut) and found generous to the performer, not an outlier. Config-driven và sửa được qua
+    // PUT /admin/system-config (có kiểm ràng buộc chéo bốn khoản cùng cắt trên một gốc) — via
     // system_config, not hardcoded (§6.7) — ConfirmDonationPaidCommandHandler re-reads this at
     // confirmation time, so a rate change applies to donations confirmed after the change without
     // a deploy.

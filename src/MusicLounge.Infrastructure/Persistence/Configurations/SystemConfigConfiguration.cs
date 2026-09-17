@@ -54,7 +54,12 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             // every household seller's share, so it is a decision an Admin makes deliberately
             // through PUT /admin/system-config — where the reason is recorded and the old value
             // kept — rather than something that starts happening because a deployment shipped.
-            new { Id = 1,  ConfigKey = "gateway_fee_rate",                   ConfigValue = "0.02", DataType = ConfigDataType.Decimal,  Description = "VNPay gateway processing fee (2%) — mức thương mại của cổng, không do văn bản pháp luật ấn định", UpdatedAt = seed },
+            //
+            // MLACP-444: gateway_fee_rate (Id 1) đã gỡ. Nó mô tả phí cổng VNPay 2% nhưng không nơi
+            // nào trong hệ thống tính khoản phí đó — ai đọc trang cấu hình sẽ tưởng nền tảng đang
+            // trừ 2% trên mỗi giao dịch. Phí cổng hiện KHÔNG được mô hình hoá (cột Payment.GatewayFee
+            // cũng chưa bao giờ được ghi). Muốn tính phí cổng thì phải làm thật ở PaymentFeeCalculator
+            // rồi mới seed lại khoá này, chứ một dòng cấu hình không ai đọc không làm nên chính sách.
             new { Id = 2,  ConfigKey = "platform_commission_rate",           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Hoa hồng nền tảng (5%) — quyết định thương mại của dự án, KHÔNG do nghị định nào quy định", UpdatedAt = seed },
             new { Id = 3,  ConfigKey = "tax_rate",                           ConfigValue = "0.05", DataType = ConfigDataType.Decimal,  Description = "Thuế GTGT khấu trừ tại nguồn (5% — tỷ lệ cho DỊCH VỤ theo NĐ 117/2025/NĐ-CP). Chỉ khấu trừ cho hộ/cá nhân kinh doanh; doanh nghiệp tự kê khai.", UpdatedAt = seed },
             new { Id = 32, ConfigKey = "personal_income_tax_rate",            ConfigValue = "0",    DataType = ConfigDataType.Decimal,  Description = "Thuế TNCN khấu trừ tại nguồn. NĐ 117/2025/NĐ-CP quy định 2% cho DỊCH VỤ của cá nhân cư trú; seed bằng 0 để việc bật khấu trừ là một quyết định vận hành có ghi lý do, không phải hệ quả của một lần triển khai. Chỉ áp cho hộ/cá nhân kinh doanh.", UpdatedAt = seed },
@@ -76,8 +81,13 @@ internal sealed class SystemConfigConfiguration : IEntityTypeConfiguration<Syste
             new { Id = 11, ConfigKey = "settlement_tier_premium_min_score",  ConfigValue = "4.2",  DataType = ConfigDataType.Decimal,  Description = "D3: reputation_score threshold to qualify for Tier Premium",       UpdatedAt = seed },
             new { Id = 12, ConfigKey = "settlement_tier_premium_min_shows",  ConfigValue = "10",   DataType = ConfigDataType.Integer,  Description = "D3: minimum completed shows to qualify for Tier Premium",          UpdatedAt = seed },
             // Moderation (NĐ 147/2024, D11)
-            new { Id = 13, ConfigKey = "ai_priority_high_threshold",         ConfigValue = "0.60", DataType = ConfigDataType.Decimal,  Description = "AI score ≥ this → urgent queue for Admin review — D11",           UpdatedAt = seed },
-            new { Id = 14, ConfigKey = "ai_priority_low_threshold",          ConfigValue = "0.20", DataType = ConfigDataType.Decimal,  Description = "AI score ≤ this → normal queue for Admin review — D11",           UpdatedAt = seed },
+            //
+            // MLACP-444: ai_priority_high_threshold (Id 13) và ai_priority_low_threshold (Id 14) đã
+            // gỡ. Chúng mô tả việc chia hàng đợi duyệt thành "gấp"/"thường" theo điểm AI, nhưng hàng
+            // đợi thật (GetPendingModerations) sắp theo AiScore giảm dần — một thang liên tục, không
+            // có khái niệm nhóm nào cả. Thiết kế chia nhóm đó chưa bao giờ được xây, và sắp theo điểm
+            // vốn đã làm đúng việc mà hai ngưỡng này định làm. Hai khoá anh em ai_auto_pass_threshold
+            // và ai_auto_reject_threshold đã được gỡ khỏi seed từ trước vì cùng lý do.
             new { Id = 15, ConfigKey = "moderation_sla_hours",               ConfigValue = "24",   DataType = ConfigDataType.Integer,  Description = "Admin SLA to review flagged content — NĐ 147/2024",               UpdatedAt = seed },
             // Tickets & Donations
             new { Id = 16, ConfigKey = "ticket_hold_minutes",                ConfigValue = "15",   DataType = ConfigDataType.Integer,  Description = "Checkout hold duration before slot released — §6.3",              UpdatedAt = seed },
