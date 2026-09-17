@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Tests.Integration.Helpers;
 using Serilog.Events;
 
@@ -49,6 +53,54 @@ public sealed class RequestLoggingLevelTests
         completions[0].Level.Should().Be(expectedLevel,
             "một tình huống nghiệp vụ bình thường không được nằm trong nhật ký lỗi — nếu không, " +
             "sự cố thật sẽ chìm giữa hàng nghìn dòng như thế này");
+    }
+
+    [Fact]
+    public async Task ABusinessNotFound_ProducesNoErrorLevelEntryAnywhere()
+    {
+        // MLACP-430. Test tren chi kiem dong "hoan tat request". Log Azure 16/09 cho thay moi loi nghiep vu con sinh
+        // them MOT dong ERR "An unhandled exception has occurred while executing the request." tu middleware bat loi
+        // cua ASP.NET — ghi TRUOC khi GlobalExceptionHandler xu ly thanh 404. 88 dong ERROR trong ngay phan lon la nhieu
+        // kieu nay, va loi that (mat ket noi DB) chim giua chung.
+        CapturingLogSink.Clear();
+
+        var res = await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
+            .GetAsync("/api/v1/admin/users/999998");
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound, "tiền đề: người gọi vẫn nhận 404");
+        var loi = CapturingLogSink.Snapshot()
+            .Where(e => e.Level >= LogEventLevel.Error)
+            .Select(e => $"[{(e.Properties.TryGetValue("SourceContext", out var nguon) ? nguon : "?")}] {e.MessageTemplate.Text}")
+            .ToList();
+        loi.Should().BeEmpty("lỗi nghiệp vụ đã được trả 404 đúng thì không phải sự cố — không được nằm trong nhật ký lỗi");
+    }
+
+    /// <summary>
+    /// Gia lap mot su co that o dung luc co request. Khong dung bang kiem cau hinh: Program.cs goi no ngay luc khoi dong,
+    /// nen ban gia nem loi lam host khong khoi dong duoc — do that khi viet test nay.
+    /// </summary>
+    private sealed class XacMinhGoogleNo : IGoogleTokenVerifier
+    {
+        public Task<GoogleUserInfo> VerifyAsync(string idToken, CancellationToken ct = default)
+            => throw new InvalidOperationException("su co that de kiem log");
+    }
+
+    [Fact]
+    public async Task ARealServerError_IsStillLoggedAtErrorWithTheException()
+    {
+        // Chot chan nguoc cho MLACP-430: ha nguong log de bo dong trung KHONG duoc lo tay tat luon loi 500 that.
+        CapturingLogSink.Clear();
+        // Khong dispose: Program.cs goi Log.CloseAndFlush() khi host tat (xem StorageRootPathTests).
+        WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
+            s.Replace(ServiceDescriptor.Scoped<IGoogleTokenVerifier>(_ => new XacMinhGoogleNo()))));
+
+        var res = await factory.CreateClient().PostAsJsonAsync("/api/v1/auth/google", new { IdToken = "bat-ky", AcceptTerms = true });
+
+        res.StatusCode.Should().Be(HttpStatusCode.InternalServerError, "tiền đề: lỗi thật trả 500");
+        CapturingLogSink.Snapshot().Should().Contain(
+            e => e.Level == LogEventLevel.Error && e.Exception is InvalidOperationException
+                 && e.Exception.Message == "su co that de kiem log",
+            "sự cố thật phải nằm trong nhật ký lỗi kèm ngoại lệ để còn điều tra");
     }
 
     [Fact]
