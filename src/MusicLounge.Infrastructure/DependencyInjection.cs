@@ -1,5 +1,7 @@
 using Hangfire;
+using Hangfire.Common;
 using Hangfire.SqlServer;
+using Hangfire.Storage;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -246,18 +248,28 @@ public static class DependencyInjection
     public static IReadOnlyList<string> RecurringJobIds => RegisteredRecurringJobIds;
 
     private static void Recurring<TJob>(
+        IRecurringJobManager manager,
         string recurringJobId,
         System.Linq.Expressions.Expression<Func<TJob, Task>> methodCall,
         string cronExpression)
     {
-        RecurringJob.AddOrUpdate(recurringJobId, methodCall, cronExpression);
+        // MLACP-440: dung manager tuong minh thay RecurringJob.AddOrUpdate tinh — theo ma nguon Hangfire 1.8.17 ban tinh la
+        // Lazy<RecurringJobManager>() bam vao JobStorage.Current o LAN DUNG DAU, con cung goi y het
+        // AddOrUpdate(id, Job.FromExpression(expr), cron, new RecurringJobOptions()). Tuong minh de dang ky va buoc go job
+        // mo coi chac chan chay tren CUNG mot storage.
+        manager.AddOrUpdate(recurringJobId, Job.FromExpression(methodCall), cronExpression, new RecurringJobOptions());
         if (!RegisteredRecurringJobIds.Contains(recurringJobId))
             RegisteredRecurringJobIds.Add(recurringJobId);
     }
 
-    public static void ConfigureRecurringJobs()
+    /// <returns>MLACP-440: cac job dinh ky mo coi vua bi go khoi storage (xem RemoveUnregisteredRecurringJobs).</returns>
+    public static IReadOnlyList<string> ConfigureRecurringJobs()
     {
+        var storage = JobStorage.Current;
+        var manager = new RecurringJobManager(storage);
+
         Recurring<ReleaseExpiredHoldsJob>(
+            manager,
             "release-expired-holds",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
@@ -268,32 +280,38 @@ public static class DependencyInjection
         // not hourly like the recommendation refresh itself (aggregating every table this job reads
         // hourly would be wasted work for a signal that doesn't meaningfully shift that often).
         Recurring<RecomputeUserEventScoresJob>(
+            manager,
             "recompute-user-event-scores",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily(3)); // 03:00 UTC, ahead of every hourly refresh-recommendations run that day
 
         Recurring<RefreshRecommendationsJob>(
+            manager,
             "refresh-recommendations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<AutoConfirmDonationsJob>(
+            manager,
             "auto-confirm-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<ExpireStuckDonationsJob>(
+            manager,
             "expire-stuck-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         // MLACP-435: luot ghep anh ket Pending (job bi gian doan giua chung) — 10 phut mot lan, dong luot qua 30 phut.
         Recurring<ExpireStuckStitchAttemptsJob>(
+            manager,
             "expire-stuck-stitch-attempts",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             "*/10 * * * *");
 
         Recurring<CancelAbandonedPaymentsJob>(
+            manager,
             "cancel-abandoned-payments",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
@@ -301,12 +319,14 @@ public static class DependencyInjection
         // Moi phut: nhac cang som cang cuu duoc dem dien. Truy van chi cham cac show Published va
         // co chot chong trung nen khong gay tai va khong gui lap.
         Recurring<RemindOwnerToStartShowJob>(
+            manager,
             "remind-owner-to-start-show",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Minutely());
 
         // Moi gio la du: bien an toan da la 6 tieng, nen som hon cung khong hoan duoc som hon.
         Recurring<RefundUndeliveredLivestreamTicketsJob>(
+            manager,
             "refund-undelivered-livestream-tickets",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
@@ -314,11 +334,13 @@ public static class DependencyInjection
         // Moi gio: hai chang cua job nay deu do bang moc thoi gian tinh tu gio ket thuc du kien,
         // nen chay day hon cung khong bao som hon.
         Recurring<NotifyUndeliveredOfflineShowJob>(
+            manager,
             "notify-undelivered-offline-show",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<SettlementReleaseJob>(
+            manager,
             "release-due-settlements",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
@@ -327,36 +349,43 @@ public static class DependencyInjection
         // window, so a whole day of drift is a whole day of tickets still refundable for a show
         // that already happened.
         Recurring<AutoEndStaleShowsJob>(
+            manager,
             "auto-end-stale-shows",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<EventReminderJob>(
+            manager,
             "send-event-reminders",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<DonationOverdueCheckJob>(
+            manager,
             "check-overdue-donations",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         Recurring<TicketTransferExpiryJob>(
+            manager,
             "expire-ticket-transfers",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<SubscriptionExpiryWarningJob>(
+            manager,
             "warn-expiring-subscriptions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         Recurring<ExpireSubscriptionsJob>(
+            manager,
             "expire-subscriptions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Daily());
 
         Recurring<ApplyDuePenaltiesJob>(
+            manager,
             "apply-due-venue-penalties",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
@@ -364,37 +393,44 @@ public static class DependencyInjection
         // Nua con lai cua job tren: no AP lenh tam khoa, cai nay GO ra khi da phuc vu du han.
         // Thieu cai nay thi "tam khoa N ngay" tren thuc te la khoa vinh vien.
         Recurring<ExpireServedSuspensionsJob>(
+            manager,
             "expire-served-suspensions",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<AutoApproveOverdueAppealsJob>(
+            manager,
             "auto-approve-overdue-appeals",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<ModerationSlaBreachAlertJob>(
+            manager,
             "alert-moderation-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<ContentReportSlaBreachAlertJob>(
+            manager,
             "alert-content-report-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<ComplaintSlaBreachAlertJob>(
+            manager,
             "alert-complaint-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         Recurring<RefundSlaBreachAlertJob>(
+            manager,
             "alert-refund-sla-breaches",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
         // Moi gio, cung nhip voi canh bao SLA: moc tu duyet tinh bang gio ke tu luc tao yeu cau.
         Recurring<AutoApproveOverdueRefundsJob>(
+            manager,
             "auto-approve-overdue-refunds",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
@@ -402,13 +438,47 @@ public static class DependencyInjection
         // Every 5 minutes against a 10-minute detection window, so a spike is never more than one
         // extra run away from being caught, while still cheap enough to poll this often.
         Recurring<LoginSpikeDetectionJob>(
+            manager,
             "detect-login-spikes",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             "*/5 * * * *");
 
         Recurring<AdminRoleDriftDetectionJob>(
+            manager,
             "detect-admin-role-drift",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
+
+        return RemoveUnregisteredRecurringJobs(storage, RegisteredRecurringJobIds);
+    }
+
+    /// <summary>
+    /// MLACP-440. Go khoi storage moi job dinh ky ma code KHONG con dang ky.
+    ///
+    /// Hangfire khong bao gio tu xoa job dinh ky: code ngung dang ky (doi ten, bo job, hay mot ban deploy khac tung ghi vao
+    /// cung database) thi ban ghi van nam trong storage va toi lich lai chay — hoac loi. Tren Azure 17/09 co 4 job nhu vay,
+    /// deu "Could not load type" vi lop khong ton tai trong code nay (alert-push-failures, check-ledger-integrity,
+    /// prune-stale-device-tokens, reconcile-vnpay-payments): dashboard bao 31 job trong khi code chi dang ky 27, va ten
+    /// "reconcile-vnpay-payments" de khien nguoi van hanh tuong co doi soat VNPay.
+    ///
+    /// Cung nguyen tac voi RecurringJobIds (MLACP-295): danh sach dang ky tu code la nguon su that. Gia dinh chi MOT ban
+    /// app dung storage nay — hai ban khac nhau cung tro vao mot database se go job cua nhau moi lan khoi dong.
+    /// Nhan storage lam tham so de test dung storage rieng, khong dung JobStorage.Current dung chung.
+    /// </summary>
+    internal static IReadOnlyList<string> RemoveUnregisteredRecurringJobs(JobStorage storage, IReadOnlyCollection<string> registeredIds)
+    {
+        List<string> stale;
+        using (var connection = storage.GetConnection())
+        {
+            stale = connection.GetRecurringJobs()
+                .Select(j => j.Id)
+                .Where(id => !registeredIds.Contains(id))
+                .ToList();
+        }
+
+        var manager = new RecurringJobManager(storage);
+        foreach (var id in stale)
+            manager.RemoveIfExists(id);
+        return stale;
     }
 }

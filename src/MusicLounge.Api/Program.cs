@@ -433,8 +433,15 @@ try
     // stale definition already in SQL Server storage) is Hangfire's own concern to self-heal —
     // it already retries a failed recurring-job trigger automatically, and this call rewrites the
     // stored definition with the current signature within that same retry window.
-    app.Lifetime.ApplicationStarted.Register(
-        MusicLounge.Infrastructure.DependencyInjection.ConfigureRecurringJobs);
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        var removed = MusicLounge.Infrastructure.DependencyInjection.ConfigureRecurringJobs();
+        // MLACP-440: Warning — moi job bi go la mot job ma storage van giu du code da bo; nguoi van hanh nen biet.
+        if (removed.Count > 0)
+            app.Logger.LogWarning(
+                "Đã gỡ {Count} job định kỳ không còn đăng ký trong code khỏi Hangfire: {RecurringJobIds}",
+                removed.Count, string.Join(", ", removed));
+    });
 
     app.Run();
 }
