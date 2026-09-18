@@ -79,7 +79,7 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
                 "Phòng trà xác nhận đã hoàn tiền mặt",
                 $"Phòng trà xác nhận đã trả lại {refund.AmountApproved ?? refund.AmountRequested:N0}đ " +
                 "tiền mặt cho bạn. Nếu bạn chưa nhận được, hãy gửi khiếu nại để chúng tôi xử lý.",
-                referenceType: "refund",
+                referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
                 ct: ct);
 

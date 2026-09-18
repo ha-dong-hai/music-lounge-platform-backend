@@ -171,7 +171,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                     ? $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ."
                     : $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ. " +
                       "Phòng trà vẫn đang chuẩn bị món — bạn sẽ được báo khi món được phục vụ.",
-                referenceType: "fnbOrder", referenceId: order.Id.ToString(), ct: ct);
+                referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
         }
 
         _logger.LogInformation(
@@ -244,7 +244,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                       "nhận. ") +
                 "Chúng tôi đã tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — " +
                 "bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
-                referenceType: "fnbOrder", referenceId: order.Id.ToString(), ct: ct);
+                referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
         }
 
         // Luu ban ghi thanh toan va thong bao cho khach; PaymentIncident tu luu phan cua no.

@@ -219,6 +219,6 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
         return _notifications.NotifyAsync(
             audienceUserId, NotificationType.FnbOrderUpdate, title, body!,
-            referenceType: "fnbOrder", referenceId: order.Id.ToString(), ct: ct);
+            referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
     }
 }
