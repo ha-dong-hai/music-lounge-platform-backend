@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
 using MusicLounge.Tests.Integration.Helpers;
 
@@ -154,6 +155,42 @@ public sealed class BankAccountTests
 
         // Exactly one account should still be flagged default after the second Create.
         System.Text.RegularExpressions.Regex.Matches(body, "\"isDefault\":true").Count.Should().Be(1);
+    }
+
+    /// <summary>
+    /// MLACP-454. <c>ownerId</c> của tài khoản ngân hàng là mã phòng trà hoặc mã nghệ sĩ — không phải mã người dùng như
+    /// mọi chỗ khác. Hai trường rõ nghĩa phải thật sự có trong JSON (thuộc tính suy ra trong record chỉ có ích nếu bộ
+    /// tuần tự hoá đưa nó ra), nên đi qua API thật.
+    /// </summary>
+    [Fact]
+    public async Task GetAll_TaiKhoanPhongTra_CoLoungeIdRoNghia()
+    {
+        var (ownerId, loungeId) = await OwnVenueAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        (await client.PostAsJsonAsync("/api/v1/bank-accounts", new
+        {
+            OwnerType = "Lounge", OwnerId = loungeId, BankName = "Vietcombank",
+            AccountNumber = "0333333333", AccountHolder = "NGUYEN VAN A", IsDefault = true
+        })).EnsureSuccessStatusCode();
+
+        var res = await client.GetAsync($"/api/v1/bank-accounts?ownerType=Lounge&ownerId={loungeId}");
+
+        using var doc = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var acc = doc.RootElement.GetProperty("data")[0];
+        acc.GetProperty("loungeId").GetInt32().Should().Be(loungeId);
+        acc.GetProperty("performerId").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+        acc.GetProperty("ownerId").GetInt32().Should().Be(loungeId, "ownerId giữ nguyên cho client cũ");
+        ownerId.Should().NotBe(loungeId, "tiền đề: mã người dùng và mã phòng trà khác nhau, nên nhầm là thấy ngay");
+    }
+
+    [Fact]
+    public void TaiKhoanNgheSi_CoPerformerIdRoNghia()
+    {
+        var dto = new MusicLounge.Application.BankAccounts.DTOs.BankAccountDto(
+            1, BankAccountOwnerType.Performer, 42, "ACB", "0444", "TRAN THI B", true, true, false);
+
+        dto.PerformerId.Should().Be(42);
+        dto.LoungeId.Should().BeNull();
     }
 
     [Fact]
