@@ -60,7 +60,7 @@ try
                 return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
                 {
                     success = false,
-                    message = "One or more validation errors occurred.",
+                    message = MusicLounge.Application.Common.Exceptions.ValidationException.ThongBaoChung,
                     errors
                 });
             };
@@ -219,6 +219,10 @@ try
         opt.AddPolicy(Policies.RequireOwner, p => p.RequireRole("Owner", "Admin"));
         opt.AddPolicy(Policies.RequireAdmin, p => p.RequireRole("Admin"));
     });
+    // MLACP-448: 401/403 cua middleware phan quyen tra body {success, message, errors} nhu moi loi khac, thay vi rong.
+    builder.Services.AddSingleton<
+        Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler,
+        MusicLounge.Api.Middleware.JsonAuthorizationResultHandler>();
 
     builder.Services.AddSignalR();
     builder.Services.AddApplication();
