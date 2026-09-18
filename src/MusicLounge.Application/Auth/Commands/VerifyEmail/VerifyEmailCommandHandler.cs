@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Auth.DTOs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -70,13 +70,8 @@ internal sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCom
         userRepo.Update(user);
         await _uow.SaveChangesAsync(ct);
 
-        int? loungeId = null;
-        if (user.Role == UserRole.Staff)
-        {
-            var staffAssignments = await _uow.Repository<LoungeStaff, int>()
-                .FindAsync(s => s.UserId == user.Id && s.IsActive, ct);
-            loungeId = staffAssignments.FirstOrDefault()?.LoungeId;
-        }
+        // MLACP-449: mot nguon cho ca bon luong cap token — Staff va Owner deu co lounge_id (xem TokenLounge).
+        var loungeId = await TokenLounge.ResolveAsync(_uow, user, ct);
 
         var (token, expiresAt) = _jwtTokenService.GenerateToken(user, loungeId);
 
