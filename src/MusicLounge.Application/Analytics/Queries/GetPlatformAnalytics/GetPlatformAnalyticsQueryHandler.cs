@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -16,7 +17,16 @@ internal sealed class GetPlatformAnalyticsQueryHandler
 
     public async Task<PlatformAnalyticsDto> Handle(GetPlatformAnalyticsQuery request, CancellationToken ct)
     {
-        var totalVenues = await _uow.Repository<MusicLoungeEntity, int>().CountAsync(_ => true, ct);
+        // MLACP-452: dem theo tung trang thai roi SUY RA tong va so dang hoat dong tu cung bang dem — ba con so khong the
+        // lech nhau. "Dang hoat dong" lay dung VenueLifecycle.Operating, dinh nghia chung ma danh sach cong khai va
+        // /analytics/admin-overview cung dung; truoc day endpoint nay dem moi trang thai ma khong noi ro.
+        var loungeRepo = _uow.Repository<MusicLoungeEntity, int>();
+        var venuesByStatus = new Dictionary<string, int>();
+        foreach (var status in Enum.GetValues<LoungeStatus>())
+            venuesByStatus[status.ToString()] = await loungeRepo.CountAsync(l => l.Status == status, ct);
+
+        var totalVenues = venuesByStatus.Values.Sum();
+        var operatingVenues = VenueLifecycle.Operating.Sum(s => venuesByStatus[s.ToString()]);
 
         var totalPublishedShows = await _uow.Repository<LoungeShow, int>().CountAsync(
             s => s.Status == LoungeShowStatus.Published
@@ -50,6 +60,8 @@ internal sealed class GetPlatformAnalyticsQueryHandler
             totalTicketsSold,
             totalGmv,
             totalDonationVolume,
-            pendingModerations);
+            pendingModerations,
+            operatingVenues,
+            venuesByStatus);
     }
 }

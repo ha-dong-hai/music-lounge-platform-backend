@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -39,8 +40,10 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
         // "Đang hoạt động" is a present-tense snapshot (how many venues can transact right now),
         // not a period metric — Warned still means open for business, just flagged; Pending/
         // Suspended/Locked are not currently operating.
+        // MLACP-452: dung dinh nghia chung VenueLifecycle.Operating thay vi viet lai dieu kien — cung con so voi
+        // OperatingVenues cua /analytics/platform va danh sach phong tra cong khai. Gia tri khong doi.
         var activeVenuesCount = await _uow.Repository<MusicLoungeEntity, int>().CountAsync(
-            l => l.Status == LoungeStatus.Approved || l.Status == LoungeStatus.Warned, ct);
+            l => VenueLifecycle.Operating.Contains(l.Status), ct);
 
         // Filter by equality server-side, then narrow to the date range client-side — combining an
         // enum/navigation equality filter with a DateTimeOffset range comparison in one query does
