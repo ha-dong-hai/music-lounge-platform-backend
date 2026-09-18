@@ -11,8 +11,8 @@ using MusicLounge.Application.Moderations.Queries.GetContentReportQueue;
 
 namespace MusicLounge.Api.Controllers;
 
-// MLACP-222: hang doi bao cao vi pham cho noi dung DA hien thi (show/livestream/rating) — khac voi
-// ModerationController (cong duyet AI truoc khi dang).
+// MLACP-222: hang doi bao cao vi pham cho noi dung DA hien thi (show/livestream/rating, va tu MLACP-456 la ca
+// tung tin nhan chat) — khac voi ModerationController (cong duyet AI truoc khi dang).
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/content-reports")]
@@ -22,7 +22,8 @@ public sealed class ContentReportsController : ControllerBase
 
     public ContentReportsController(ISender sender) => _sender = sender;
 
-    /// <summary>Người dùng đã đăng nhập — báo cáo 1 nội dung (show/livestream/rating) vi phạm.
+    /// <summary>Người dùng đã đăng nhập — báo cáo 1 nội dung vi phạm: buổi hòa nhạc, buổi livestream, đánh giá,
+    /// hoặc một tin nhắn chat cụ thể (MLACP-456).
     /// 409 nếu bạn đã báo cáo nội dung này và báo cáo đó vẫn đang chờ xử lý.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireAuthenticated)]

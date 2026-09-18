@@ -10,6 +10,9 @@ public interface ILivestreamHubService
 
     // MLACP-360: phòng trà gỡ lời nhắn của một donate — client xoá nó khỏi màn hình.
     Task BroadcastDonationMessageHiddenAsync(int livestreamId, int donationId, CancellationToken ct = default);
+
+    /// <summary>MLACP-456: mot tin nhan chat vua bi go theo bao cao vi pham — nguoi dang xem phai thay no bien mat ngay.</summary>
+    Task BroadcastChatMessageHiddenAsync(int livestreamId, int chatMessageId, CancellationToken ct = default);
     Task BroadcastViewerCountAsync(int livestreamId, int count, CancellationToken ct = default);
     Task BroadcastLivestreamTerminatedAsync(int livestreamId, string reason, CancellationToken ct = default);
 
