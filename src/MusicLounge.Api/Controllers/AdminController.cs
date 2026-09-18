@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -514,17 +514,18 @@ public sealed class AdminController : ControllerBase
     /// thị chúng dưới dạng phần trăm và cảnh báo trước khi sửa, vì nhìn giá trị thô "0.05" thì
     /// không cách nào biết đó là toàn bộ hoa hồng của nền tảng.</summary>
     [HttpGet("system-config")]
-    [ProducesResponseType<IReadOnlyList<SystemConfigDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<SystemConfigDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSystemConfigs(CancellationToken ct = default)
-        => Ok(new { success = true, data = await _sender.Send(new GetSystemConfigsQuery(), ct) });
+        => Ok(ApiResponse<IReadOnlyList<SystemConfigDto>>.Ok(await _sender.Send(new GetSystemConfigsQuery(), ct)));
 
     /// <summary>Toàn bộ lịch sử thay đổi của một tham số, mới nhất trước: giá trị cũ, giá trị mới,
     /// ai đổi, khi nào, và lý do. Bảng này là INSERT-only nên không sửa hay xoá được — đó chính là
     /// điều làm nó có giá trị khi đối soát.</summary>
     [HttpGet("system-config/{key}/history")]
-    [ProducesResponseType<IReadOnlyList<SystemConfigHistoryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<SystemConfigHistoryDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSystemConfigHistory(string key, CancellationToken ct = default)
-        => Ok(new { success = true, data = await _sender.Send(new GetSystemConfigHistoryQuery(key), ct) });
+        => Ok(ApiResponse<IReadOnlyList<SystemConfigHistoryDto>>.Ok(
+            await _sender.Send(new GetSystemConfigHistoryQuery(key), ct)));
 
     /// <summary>Đổi giá trị một tham số nghiệp vụ. BẮT BUỘC ghi lý do — mỗi lần đổi sinh một dòng
     /// lịch sử bất biến lưu cả giá trị cũ lẫn mới. Tỉ lệ tiền bị chặn ngoài khoảng 0..1, và riêng

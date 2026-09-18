@@ -44,7 +44,7 @@ public sealed class ComplaintsController : ControllerBase
     /// hai trường hợp sẽ biến nó thành công cụ dò mã.</summary>
     [HttpGet("lookup/{reference}")]
     [AllowAnonymous]
-    [ProducesResponseType<ComplaintLookupDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<ComplaintLookupDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Lookup(string reference, CancellationToken ct = default)
         => Ok(ApiResponse<ComplaintLookupDto>.Ok(await _sender.Send(new LookupComplaintQuery(reference), ct)));
