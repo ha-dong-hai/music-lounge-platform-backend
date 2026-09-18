@@ -153,6 +153,28 @@ public sealed class DonationLiveAlertTests
             .Should().Be(DonationStatus.PendingOwnerAck, "chủ phòng trà chưa làm gì cả");
     }
 
+    /// <summary>
+    /// MLACP-451. Lượt donate gắn với một tiết mục — tức một nghệ sĩ cụ thể — nhưng thông báo trên sóng trước đây không
+    /// nói ai nhận. Buổi hòa nhạc có nhiều nghệ sĩ thì không ai biết lượt donate dành cho ai.
+    /// </summary>
+    [Fact]
+    public async Task DonationAlert_NoiDungNgheSiDuocNhan()
+    {
+        var venue = await SeedVenueAsync();
+        string tenNgheSi;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var performerId = (await db.Set<Performance>().SingleAsync(p => p.Id == venue.PerformanceId)).PerformerId;
+            tenNgheSi = (await db.Set<Performer>().SingleAsync(p => p.Id == performerId)).Name;
+        }
+
+        await DonateAndConfirmAsync(venue.PerformanceId, "Hát hay lắm");
+
+        AlertsOn(venue.LivestreamId).Should().ContainSingle().Subject
+            .PerformerName.Should().Be(tenNgheSi);
+    }
+
     [Fact]
     public async Task AnonymousDonor_AndPrivateMessage_AreRespectedOnAir()
     {
