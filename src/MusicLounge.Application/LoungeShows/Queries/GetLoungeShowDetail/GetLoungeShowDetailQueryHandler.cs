@@ -46,8 +46,8 @@ internal sealed class GetLoungeShowDetailQueryHandler
         // MLACP-60 DONE WHEN: Pending (da nop duyet, cho Admin, chua cong khai) cung phai 404 cho
         // nguoi ngoai — truoc day chi chan Draft, Pending bi lot ra cong khai y het gap da fix o
         // SearchAsync (MLACP-58).
-        if (show.Status is LoungeShowStatus.Draft or LoungeShowStatus.Pending
-            && !VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId))
+        var canOperate = VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId);
+        if (show.Status is LoungeShowStatus.Draft or LoungeShowStatus.Pending && !canOperate)
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
         var wishlisted = _currentUser.IsAuthenticated
@@ -96,7 +96,35 @@ internal sealed class GetLoungeShowDetailQueryHandler
         var lastEntryMinutes = await _config.GetIntAsync(
             ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
 
-        return show.ToDetailDto(
+        var dto = show.ToDetailDto(
             wishlisted, userHasTicket, userHasRated, soldAndHeld, galleryDtos, lastEntryMinutes);
+
+        // MLACP-450: cung mot phep kiem voi cho chan ban nhap o tren — ai thay duoc ban nhap thi thay duoc ly do bi tu
+        // choi va ma VCPMC; khan gia thi khong.
+        return canOperate ? dto with { OperatorInfo = await OperatorInfoAsync(show, ct) } : dto;
+    }
+
+    private async Task<OperatorShowInfoDto> OperatorInfoAsync(Domain.Entities.LoungeShow show, CancellationToken ct)
+    {
+        // Moi lan gui duyet la mot dong moi (bi tu choi -> sua -> gui lai), nen dong moi nhat la trang thai hien tai.
+        var latest = (await _uow.Repository<EventModeration, int>()
+                .FindAsync(m => m.TargetType == ModerationTargetType.Show && m.TargetId == show.Id, ct))
+            .OrderByDescending(m => m.Id)
+            .FirstOrDefault();
+
+        var moderation = latest is null
+            ? null
+            : new ShowModerationDto(
+                latest.AdminDecision,
+                latest.ReviewNote,
+                // AuditableEntity.CreatedAt la DateTime danh dau bang DateTime.UtcNow (ApplicationDbContext).
+                new DateTimeOffset(latest.CreatedAt, TimeSpan.Zero),
+                latest.ReviewedAt,
+                latest.SlaDeadline);
+
+        return new OperatorShowInfoDto(
+            moderation,
+            !string.IsNullOrWhiteSpace(show.VcpmcRoyaltyReference),
+            show.VcpmcRoyaltyReference);
     }
 }
