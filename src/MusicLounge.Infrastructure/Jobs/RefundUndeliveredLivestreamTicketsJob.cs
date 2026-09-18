@@ -1,9 +1,10 @@
-using Hangfire;
+﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.LoungeShows;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -44,7 +45,6 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// </summary>
 public sealed class RefundUndeliveredLivestreamTicketsJob
 {
-    private const int DefaultGraceHours = 6;
 
     /// <summary>
     /// Chỉ xét stream kết thúc trong khoảng này. Tranche cuối được giải ngân 14 ngày sau buổi diễn —
@@ -87,7 +87,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
     {
         // Cùng biên an toàn AutoEndStaleShowsJob dùng: đợi quá hạn rồi mới kết luận, để không hoàn
         // nhầm một buổi diễn bắt đầu rất trễ. StartLivestream không chặn theo đồng hồ.
-        var graceHours = await _config.GetIntAsync(ConfigKeys.ShowAutoEndGraceHours, DefaultGraceHours, ct);
+        var graceHours = await ShowAutoEndGrace.GraceHoursAsync(_config, ct);
 
         // Lọc trạng thái phía server, so thời gian phía client — cùng giới hạn provider SQLite đã
         // ghi khắp thư mục này. Cancelled bỏ qua: đường đó đã có cơ chế hoàn riêng ở

@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Moderations;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -33,7 +34,7 @@ public sealed class ContentReportSlaBreachAlertJob
     {
         var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
-        var slaHours = await _config.GetIntAsync(ConfigKeys.ContentReportSlaHours, 48, ct);
+        var slaHours = await ContentReportSla.SlaHoursAsync(_config, ct);
 
         var openReports = await _ctx.ContentReports
             .Where(r => r.Status == ContentReportStatus.Open)

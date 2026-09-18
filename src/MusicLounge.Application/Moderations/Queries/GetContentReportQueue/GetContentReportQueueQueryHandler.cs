@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Moderations.DTOs;
@@ -47,7 +47,7 @@ internal sealed class GetContentReportQueueQueryHandler
         var total = groups.Count;
         var pageItems = groups.Skip((page - 1) * size).Take(size).ToList();
 
-        var slaHours = await _config.GetIntAsync(ConfigKeys.ContentReportSlaHours, 48, ct);
+        var slaHours = await ContentReportSla.SlaHoursAsync(_config, ct);
 
         var summaries = await ResolveTargetSummariesAsync(pageItems.Select(g => (g.TargetType, g.TargetId)), ct);
 

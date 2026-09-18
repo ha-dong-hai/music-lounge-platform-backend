@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.LoungeShows;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
 
@@ -32,7 +33,6 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// </summary>
 public sealed class AutoEndStaleShowsJob
 {
-    private const int DefaultGraceHours = 6;
 
     private readonly ApplicationDbContext _ctx;
     private readonly ISystemConfigService _config;
@@ -52,7 +52,7 @@ public sealed class AutoEndStaleShowsJob
         var ct = cancellationToken.ShutdownToken;
         var now = DateTimeOffset.UtcNow;
 
-        var graceHours = await _config.GetIntAsync(ConfigKeys.ShowAutoEndGraceHours, DefaultGraceHours, ct);
+        var graceHours = await ShowAutoEndGrace.GraceHoursAsync(_config, ct);
         var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
 
         // Filter by Status server-side and the date client-side — combining an enum equality with a

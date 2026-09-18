@@ -33,7 +33,7 @@ internal sealed class WriteTicketLedgerHandler : INotificationHandler<TicketPaym
         // (product decision 2026-08-09) — see ConfigKeys.WalkInCommissionEnabled for what turning
         // this on does and does not cover.
         if (payment.Method == PaymentMethod.Cash
-            && !await _config.GetBoolAsync(ConfigKeys.WalkInCommissionEnabled, false, ct))
+            && !await WalkInCommission.IsEnabledAsync(_config, ct))
             return;
 
         var commissionRate = await _config.GetDecimalAsync(ConfigKeys.PlatformCommissionRate, 0.05m, ct);
