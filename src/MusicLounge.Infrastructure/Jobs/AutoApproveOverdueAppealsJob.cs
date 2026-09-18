@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -12,19 +13,28 @@ namespace MusicLounge.Infrastructure.Jobs;
 /// §6.17 — Appeal SLA (system_config: appeal_sla_hours) sets each penalty's AppealDeadline at
 /// submission time (see SubmitAppealCommandHandler); if Admin hasn't resolved it by then, auto-approve
 /// (Overturned) so an unattended appeal never leaves an Owner penalized indefinitely.
+///
+/// MLACP-443: viec tu duyet do co the TAT bang system_config `appeal_auto_approve`. Khoa nay duoc
+/// seed `true` ngay tu migration dau tien nhung truoc day khong noi nao doc — Admin tat no van thay
+/// 200 OK va lich su thay doi duoc ghi, trong khi an phat van tiep tuc duoc go tu dong.
 /// </summary>
 public sealed class AutoApproveOverdueAppealsJob
 {
     private readonly ApplicationDbContext _ctx;
     private readonly INotificationService _notifications;
     private readonly IAsyncKeyedLock _lock;
+    private readonly ISystemConfigService _config;
+    private readonly ILogger<AutoApproveOverdueAppealsJob> _logger;
 
     public AutoApproveOverdueAppealsJob(
-        ApplicationDbContext ctx, INotificationService notifications, IAsyncKeyedLock @lock)
+        ApplicationDbContext ctx, INotificationService notifications, IAsyncKeyedLock @lock,
+        ISystemConfigService config, ILogger<AutoApproveOverdueAppealsJob> logger)
     {
         _ctx = ctx;
         _notifications = notifications;
         _lock = @lock;
+        _config = config;
+        _logger = logger;
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -38,6 +48,18 @@ public sealed class AutoApproveOverdueAppealsJob
             .ToListAsync(ct);
         var overdue = appealed.Where(p => p.AppealDeadline <= now).ToList();
         if (overdue.Count == 0) return;
+
+        // MLACP-443: kiem SAU khi da dem duoc so ho so qua han, khong phai truoc. Tat cong tac roi
+        // im lang la cach mot chong ho so dong lai ma khong ai biet — chinh la thu cong tac nay sinh
+        // ra de tranh. Moi lan chay ghi lai con so do de con thay ma xu ly tay.
+        if (!await _config.GetBoolAsync(ConfigKeys.AppealAutoApprove, true, ct))
+        {
+            _logger.LogWarning(
+                "Tu duyet khang cao dang TAT (system_config {ConfigKey}) — {Count} khang cao da qua han " +
+                "SLA va dang cho Admin xu ly tay: phat #{PenaltyIds}.",
+                ConfigKeys.AppealAutoApprove, overdue.Count, string.Join(", ", overdue.Select(p => p.Id)));
+            return;
+        }
 
         foreach (var penalty in overdue)
         {

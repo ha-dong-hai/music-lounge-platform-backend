@@ -157,6 +157,21 @@ public static class ConfigKeys
     // migration, but SubmitAppealCommandHandler hardcoded `AddHours(48)` independently.
     public const string AppealSlaHours = "appeal_sla_hours";
 
+    /// <summary>
+    /// MLACP-443: §6.17 — có tự chấp thuận kháng cáo khi Admin để quá hạn SLA hay không.
+    ///
+    /// <para>Seed <c>true</c> từ migration đầu tiên nhưng KHÔNG nơi nào đọc: AutoApproveOverdueAppealsJob
+    /// tự gỡ án phạt vô điều kiện. Admin tắt công tắc này vẫn thấy 200 OK, vẫn thấy lịch sử ghi lại,
+    /// và án phạt vẫn tiếp tục được gỡ tự động.</para>
+    ///
+    /// <para>Công tắc tồn tại vì tự động gỡ phạt là hành động một chiều: một phòng trà đang bị đình
+    /// chỉ sẽ hoạt động trở lại mà không ai xem lại hồ sơ. Khi nghi có sai sót — một đợt phạt hàng
+    /// loạt do lỗi, hoặc giai đoạn Admin không trực được — cần dừng được cái tự động đó lại mà không
+    /// phải triển khai lại mã nguồn. Tắt thì kháng cáo quá hạn nằm nguyên ở <c>Appealed</c> chờ
+    /// người xử lý, chứ không bị từ chối.</para>
+    /// </summary>
+    public const string AppealAutoApprove = "appeal_auto_approve";
+
     // D18 (NĐ 144/2020/NĐ-CP Điều 10): minimum business-day lead time between submitting a ticketed
     // show for moderation (or rescheduling one) and its scheduled date. Was hardcoded as a bare `7`
     // literal in both PublishLoungeShowCommandHandler and RescheduleLoungeShowCommandHandler despite
