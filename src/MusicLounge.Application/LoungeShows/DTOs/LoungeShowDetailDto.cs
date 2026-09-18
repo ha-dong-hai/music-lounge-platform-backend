@@ -32,7 +32,36 @@ public sealed record LoungeShowDetailDto(
     // (sàn phải công khai chính sách bảo vệ người mua) and every comparable platform treat
     // publishing this as a precondition of selling, not a nice-to-have.
     TicketRefundPolicyDto RefundPolicy,
-    DateTimeOffset? TicketSaleClosesAt);
+    DateTimeOffset? TicketSaleClosesAt,
+    // MLACP-450: chi tra cho nguoi van hanh phong tra (chu, nhan vien duoc phan cong, Admin — dung
+    // VenueOperatorAccess.CanOperate). Endpoint nay cong khai, nen ly do bi tu choi va ma VCPMC khong duoc lo
+    // cho khan gia: nguoi ngoai nhan null.
+    OperatorShowInfoDto? OperatorInfo = null);
+
+/// <summary>
+/// MLACP-450. Những gì người vận hành phòng trà cần biết về buổi hòa nhạc của mình mà khán giả không cần.
+/// </summary>
+/// <param name="Moderation">Lần kiểm duyệt gần nhất; <c>null</c> nếu buổi hòa nhạc chưa từng được gửi duyệt.</param>
+/// <param name="VcpmcDeclared">D19: đã khai số tham chiếu phí tác quyền VCPMC/RIAV chưa — frontend dựa vào đây để ẩn/hiện form.</param>
+public sealed record OperatorShowInfoDto(
+    ShowModerationDto? Moderation,
+    bool VcpmcDeclared,
+    string? VcpmcRoyaltyReference);
+
+/// <summary>
+/// Trạng thái kiểm duyệt của buổi hòa nhạc, nhìn từ phía phòng trà.
+///
+/// <para>Cần riêng khối này vì <see cref="LoungeShowDetailDto.Status"/> không phân biệt được: bị từ chối thì buổi hòa nhạc
+/// quay về <c>Draft</c>, giống hệt bản nháp chưa từng gửi, còn lý do từ chối trước đây chỉ đi qua một thông báo.</para>
+/// </summary>
+/// <param name="Decision"><c>null</c> = đang chờ Admin duyệt; <c>Approved</c>; <c>Rejected</c> (xem <paramref name="ReviewNote"/>).</param>
+/// <param name="SlaDeadline">Hạn Admin phải duyệt xong (NĐ 147/2024) — có ý nghĩa khi đang chờ.</param>
+public sealed record ShowModerationDto(
+    ModerationDecision? Decision,
+    string? ReviewNote,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset? ReviewedAt,
+    DateTimeOffset? SlaDeadline);
 
 /// <param name="Summary">Ready-to-display Vietnamese sentence — built server-side so every client
 /// states the same terms, and so the wording cannot drift from what CancelTicket actually enforces.</param>
