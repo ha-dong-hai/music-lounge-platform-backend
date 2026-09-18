@@ -271,13 +271,27 @@ internal sealed class ProcessDonationPaymentCommandHandler
 
             var donorName = donation.IsAnonymous ? "Ẩn danh" : (donation.DisplayName ?? "Khán giả");
             var message = await DonationMessageFilter.MessageForBroadcastAsync(donation, _config, ct);
+            var performerName = await PerformerNameAsync(donation.PerformanceId, ct);
             await _hub.BroadcastDonationAlertAsync(
-                livestream.Id, new DonationAlertDto(donorName, donation.Gross, message, donation.Id), ct);
+                livestream.Id,
+                new DonationAlertDto(donorName, donation.Gross, message, donation.Id, performerName), ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogWarning(ex,
                 "Donation live alert failed (payment unaffected): DonationId={DonationId}", donation.Id);
         }
+    }
+
+    /// <summary>
+    /// MLACP-451: nghệ sĩ nhận lượt donate (Donation → Performance → Performer). Chỉ gọi từ trong khối try của
+    /// <see cref="AnnounceOnLivestreamAsync"/>, nên tra lỗi thì thông báo không phát nhưng giao dịch không bị ảnh hưởng.
+    /// </summary>
+    private async Task<string?> PerformerNameAsync(int performanceId, CancellationToken ct)
+    {
+        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(performanceId, ct);
+        if (performance is null) return null;
+        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(performance.PerformerId, ct);
+        return performer?.Name;
     }
 }
