@@ -7,6 +7,12 @@ namespace MusicLounge.Api.Middleware;
 
 internal sealed class GlobalExceptionHandler : IExceptionHandler
 {
+    /// <summary>
+    /// MLACP-448: câu cho mọi lỗi 500 không lường trước. Trước đây là tiếng Anh ("An unexpected error occurred.") trong một
+    /// app tiếng Việt. Cố ý không kèm chi tiết ngoại lệ — chi tiết chỉ nằm trong log, không lộ ra ngoài.
+    /// </summary>
+    internal const string ThongBaoLoiHeThong = "Đã có lỗi hệ thống. Vui lòng thử lại sau.";
+
     private readonly ILogger<GlobalExceptionHandler> _logger;
 
     public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) => _logger = logger;
@@ -21,13 +27,13 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
             ForbiddenException e     => (StatusCodes.Status403Forbidden,           e.Message,  null),
             ConflictException e      => (StatusCodes.Status409Conflict,            e.Message,  null),
             DomainException e        => (StatusCodes.Status422UnprocessableEntity, e.Message,  null),
-            ValidationException e    => (StatusCodes.Status400BadRequest,          "One or more validation errors occurred.", (object?)e.Errors),
+            ValidationException e    => (StatusCodes.Status400BadRequest,          ValidationException.ThongBaoChung, (object?)e.Errors),
             ExternalServiceException e => (StatusCodes.Status503ServiceUnavailable, e.Message, null),
             // Race condition hiem (2 request dong thoi cung vi pham 1 unique constraint, vd trung
             // email luc dang ky) — DB da chan dung du lieu, chi can tra ve 409 sach thay vi de lot
             // thanh 500 tho gay hieu lam la loi server.
             DbUpdateException           => (StatusCodes.Status409Conflict, "Dữ liệu đã tồn tại hoặc xung đột, vui lòng thử lại.", null),
-            _                        => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", null)
+            _                        => (StatusCodes.Status500InternalServerError, ThongBaoLoiHeThong, null)
         };
 
         // DbUpdateException tra 409 than thien cho nguoi dung, nhung van la 1 loi DB khong luong
