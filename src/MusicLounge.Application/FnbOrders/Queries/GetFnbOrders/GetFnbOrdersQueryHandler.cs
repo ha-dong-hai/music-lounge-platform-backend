@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.FnbOrders.DTOs;
@@ -28,7 +29,10 @@ internal sealed class GetFnbOrdersQueryHandler
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         var isOwner = lounge.OwnerId == _currentUser.UserId;
-        var isScopedStaff = _currentUser.LoungeId == request.LoungeId;
+        // MLACP-449: kiem ca vai tro, nhu 4 cho doc LoungeId con lai. Tu MLACP-449 chu phong tra cung co claim lounge_id
+        // (phong tra cua chinh ho) — khong leo quyen vi chu da qua bang isOwner, nhung check nay phai noi dung y
+        // "nhan vien duoc phan cong o phong tra nay", khong phai "ai co lounge_id trung".
+        var isScopedStaff = _currentUser.Role == Roles.Staff && _currentUser.LoungeId == request.LoungeId;
         if (!isOwner && !isScopedStaff)
             throw new ForbiddenException("Bạn không có quyền xem order F&B của venue này.");
 

@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using MediatR;
 using MusicLounge.Application.Auth.DTOs;
 using MusicLounge.Application.Common.Interfaces;
@@ -38,13 +38,8 @@ internal sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenC
         if (user is null || !user.IsActive || user.SecurityStamp != tokenStamp)
             throw new UnauthorizedException("Refresh token không hợp lệ hoặc đã hết hạn.");
 
-        int? loungeId = null;
-        if (user.Role == UserRole.Staff)
-        {
-            var staffAssignments = await _uow.Repository<LoungeStaff, int>()
-                .FindAsync(s => s.UserId == user.Id && s.IsActive, ct);
-            loungeId = staffAssignments.FirstOrDefault()?.LoungeId;
-        }
+        // MLACP-449: mot nguon cho ca bon luong cap token — Staff va Owner deu co lounge_id (xem TokenLounge).
+        var loungeId = await TokenLounge.ResolveAsync(_uow, user, ct);
 
         var (token, expiresAt) = _jwtTokenService.GenerateToken(user, loungeId);
         // Rotate the refresh token too (not just reuse the one the client sent) — a fresh token per
