@@ -106,7 +106,7 @@ public static class FnbOrderCancellation
 
                 await notifications.NotifyAsync(
                     audienceUserId, NotificationType.FnbOrderUpdate, title, body,
-                    referenceType: "fnbOrder", referenceId: current.Id.ToString(), ct: ct);
+                    referenceType: "fnb_order", referenceId: current.Id.ToString(), ct: ct);
             }
         }
 

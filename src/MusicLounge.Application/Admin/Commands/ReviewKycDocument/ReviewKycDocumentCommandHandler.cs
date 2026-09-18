@@ -107,7 +107,7 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
         // it. Saving the decision first and notifying afterwards would leave the row uncommitted.
         await _notifications.NotifyAsync(
             user.Id, NotificationType.KycReviewResult, title, body,
-            referenceType: "kyc-review", referenceId: user.Id.ToString(), ct: ct);
+            referenceType: "kyc_review", referenceId: user.Id.ToString(), ct: ct);
 
         await _uow.SaveChangesAsync(ct);
 

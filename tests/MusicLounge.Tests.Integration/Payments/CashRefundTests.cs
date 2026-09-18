@@ -211,7 +211,7 @@ public sealed class CashRefundTests
         var told = await QueryAsync(db => db.Notifications.AnyAsync(n =>
             n.UserId == SeedHelper.AudienceId
             && n.Type == NotificationType.RefundUpdate
-            && n.ReferenceType == "refund"
+            && n.ReferenceType == "refund_request"
             && n.ReferenceId == refundId.ToString()));
 
         told.Should().BeTrue("gửi yêu cầu rồi phải tự đi hỏi kết quả là không chấp nhận được");
@@ -238,7 +238,7 @@ public sealed class CashRefundTests
         var note = await db.Notifications.FirstAsync(n =>
             n.UserId == SeedHelper.AudienceId
             && n.Type == NotificationType.RefundUpdate
-            && n.ReferenceType == "refund"
+            && n.ReferenceType == "refund_request"
             && n.ReferenceId == refundId.ToString());
 
         note.Body.Should().Contain("Ve da duoc check-in tai cua");
@@ -260,7 +260,7 @@ public sealed class CashRefundTests
         var note = await db.Notifications.FirstAsync(n =>
             n.UserId == SeedHelper.AudienceId
             && n.Type == NotificationType.RefundUpdate
-            && n.ReferenceType == "refund"
+            && n.ReferenceType == "refund_request"
             && n.ReferenceId == refundId.ToString());
 
         note.Body.Should().Contain("hãy gửi khiếu nại để được xem xét lại", "phai chi cho ho duong de duoc xem xet lai");
@@ -276,7 +276,7 @@ public sealed class CashRefundTests
         var told = await QueryAsync(db => db.Notifications.AnyAsync(n =>
             n.UserId == SeedHelper.AudienceId
             && n.Type == NotificationType.RefundUpdate
-            && n.ReferenceType == "refund"
+            && n.ReferenceType == "refund_request"
             && n.ReferenceId == refundId.ToString()));
 
         told.Should().BeTrue(

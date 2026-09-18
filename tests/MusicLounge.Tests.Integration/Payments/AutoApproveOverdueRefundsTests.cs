@@ -135,7 +135,7 @@ public sealed class AutoApproveOverdueRefundsTests
         refund.ProcessedBy.Should().BeNull("không có Admin nào duyệt — null nghĩa là hệ thống");
         refund.ResolutionNote.Should().Contain("Tự động duyệt");
 
-        (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund", refundId,
+        (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund_request", refundId,
                 title: "Yêu cầu hoàn tiền đã được duyệt"))
             .Should().Be(1, "người mua được báo như khi Admin duyệt tay — cùng một handler");
         using (var wording = _factory.Services.CreateScope())
@@ -181,7 +181,7 @@ public sealed class AutoApproveOverdueRefundsTests
         await RunAutoApproveAsync();
 
         (await RefundAsync(refundId)).Status.Should().Be(RefundRequestStatus.Approved);
-        (await CountAsync(SeedHelper.OwnerId, NotificationType.RefundOwedByVenue, "refund", refundId))
+        (await CountAsync(SeedHelper.OwnerId, NotificationType.RefundOwedByVenue, "refund_request", refundId))
             .Should().Be(1, "nền tảng chưa từng giữ khoản tiền mặt — phòng trà mới là người phải trả");
     }
 

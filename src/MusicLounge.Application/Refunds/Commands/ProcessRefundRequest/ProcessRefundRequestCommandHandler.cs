@@ -449,7 +449,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 "Cần hoàn tiền mặt cho khách",
                 $"Vé #{refund.PaymentId} được mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
                 $"này. Phòng trà cần hoàn {amountApproved:N0}đ trực tiếp cho khách.",
-                referenceType: "refund",
+                referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
                 ct: ct);
         }
@@ -477,7 +477,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             NotificationType.RefundUpdate,
             title,
             body,
-            referenceType: "refund",
+            referenceType: "refund_request",
             referenceId: refund.Id.ToString(),
             ct: ct);
     }

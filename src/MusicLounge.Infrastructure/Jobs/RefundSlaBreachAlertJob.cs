@@ -133,7 +133,7 @@ public sealed class RefundSlaBreachAlertJob
                 "lệnh hoàn về phương thức bạn đã thanh toán. Để nhận lại tiền, hãy khai tài khoản ngân hàng nhận hoàn và " +
                 "xác nhận đồng ý nhận bằng chuyển khoản trong mục Yêu cầu hoàn tiền. Chúng tôi chỉ chuyển khoản khi có " +
                 "sự đồng ý của bạn.",
-                referenceType: "refund",
+                referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
                 ct: ct);
             reminded = true;

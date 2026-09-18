@@ -129,7 +129,7 @@ public sealed class CashRefundHandedBackTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         (await db.RefundRequests.FindAsync(refundId))!.CashHandedBackAt.Should().NotBeNull();
 
-        (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund", refundId))
+        (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund_request", refundId))
             .Should().Be(1, "khách phải biết phòng trà đã xác nhận trả — kèm lối khiếu nại nếu chưa nhận");
         (await db.Notifications.AnyAsync(n => n.UserId == SeedHelper.AudienceId && n.ReferenceId == refundId.ToString()
                 && n.Title == "Phòng trà xác nhận đã hoàn tiền mặt" && n.Body.Contains("hãy gửi khiếu nại để chúng tôi xử lý")))
