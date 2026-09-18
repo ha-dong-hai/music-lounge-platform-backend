@@ -85,6 +85,7 @@ public class NotFoundException : Exception
         ["FnbOrder"] = "đơn gọi món",
 
         // Khác
+        ["AiPosterGeneration"] = "đơn tạo poster",
         ["User"] = "người dùng",
         ["Notification"] = "thông báo",
         ["Complaint"] = "khiếu nại",
