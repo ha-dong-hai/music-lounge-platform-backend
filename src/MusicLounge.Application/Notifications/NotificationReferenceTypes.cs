@@ -25,8 +25,13 @@ public static class NotificationReferenceTypes
     /// <summary>Vé — <c>Ticket.Id</c> (GUID).</summary>
     public const string Ticket = "ticket";
 
-    /// <summary>Buổi phát trực tiếp — <c>Livestream.Id</c>. Lưu ý: KHÔNG phải mã buổi hòa nhạc, nên frontend muốn mở trang
-    /// livestream theo buổi hòa nhạc thì phải tra ngược (ghi nhận trong ghi chú của FE).</summary>
+    /// <summary>
+    /// Kết quả duyệt buổi phát trực tiếp — mã đi kèm là <c>LoungeShow.Id</c> (MLACP-460), KHÔNG phải <c>Livestream.Id</c>.
+    ///
+    /// Trước đây trả mã buổi phát, mà mọi đường dẫn của frontend đều nhận mã buổi hòa nhạc — nên bấm vào thông báo hoặc
+    /// mở nhầm buổi khác (hai bảng đánh số riêng nên mã dễ trùng số), hoặc ra trang trống. Giữ tên loại là
+    /// <c>livestream</c> để frontend vẫn phân biệt được đây là kết quả duyệt buổi PHÁT, không phải duyệt buổi hòa nhạc.
+    /// </summary>
     public const string Livestream = "livestream";
 
     /// <summary>Giao dịch thanh toán — <c>Payment.Id</c>.</summary>
