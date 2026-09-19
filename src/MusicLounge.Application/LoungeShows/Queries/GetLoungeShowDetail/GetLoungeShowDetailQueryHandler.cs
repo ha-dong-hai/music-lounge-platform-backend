@@ -125,6 +125,9 @@ internal sealed class GetLoungeShowDetailQueryHandler
         return new OperatorShowInfoDto(
             moderation,
             !string.IsNullOrWhiteSpace(show.VcpmcRoyaltyReference),
-            show.VcpmcRoyaltyReference);
+            show.VcpmcRoyaltyReference,
+            // MLACP-461: cùng lý do với VCPMC ở trên — chủ phòng trà khai xong phải xem lại được chính số mình đã khai.
+            show.LegalApprovalReference,
+            show.LegalApprovalConfirmedAt);
     }
 }
