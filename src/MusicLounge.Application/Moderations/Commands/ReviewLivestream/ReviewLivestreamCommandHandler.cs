@@ -75,7 +75,11 @@ internal sealed class ReviewLivestreamCommandHandler : IRequestHandler<ReviewLiv
                     ? $"Livestream cho \"{show!.Name}\" đã được duyệt, có thể bắt đầu phát sóng."
                     : $"Livestream cho \"{show!.Name}\" bị từ chối. Lý do: {request.ReviewNote ?? "không có ghi chú"}.",
                 referenceType: "livestream",
-                referenceId: livestream.Id.ToString(),
+                // MLACP-460: mã BUỔI HÒA NHẠC, không phải mã buổi phát. Frontend bấm vào thông báo là mở trang buổi hòa
+                // nhạc — đường dẫn đó nhận mã show. Trước đây trả mã livestream nên hoặc mở nhầm buổi khác (hai mã trùng
+                // số), hoặc ra trang trống. Loại tham chiếu vẫn là "livestream" để frontend biết đây là kết quả duyệt
+                // buổi phát chứ không phải duyệt nội dung buổi hòa nhạc.
+                referenceId: show!.Id.ToString(),
                 ct: ct);
         }
 
