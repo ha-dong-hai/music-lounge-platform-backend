@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Moderations.DTOs;
@@ -54,20 +55,24 @@ internal sealed class GetContentReportQueueQueryHandler
         var items = pageItems.Select(g => new ContentReportQueueItemDto(
             g.TargetType.ToString(),
             g.TargetId,
-            summaries.GetValueOrDefault((g.TargetType, g.TargetId)),
+            summaries.GetValueOrDefault((g.TargetType, g.TargetId))?.TomTat,
             g.ReportCount,
             g.LatestReason,
             g.EarliestReportedAt,
-            g.EarliestReportedAt.AddHours(slaHours)
+            g.EarliestReportedAt.AddHours(slaHours),
+            summaries.GetValueOrDefault((g.TargetType, g.TargetId))?.ShowId
         )).ToList();
 
         return new PaginatedResult<ContentReportQueueItemDto>(items, page, size, total);
     }
 
-    private async Task<Dictionary<(ReportTargetType, int), string>> ResolveTargetSummariesAsync(
+    /// <summary>MLACP-456: mỗi nội dung bị báo cáo trả kèm buổi hòa nhạc nó thuộc về, để hàng đợi mở được ngữ cảnh.</summary>
+    private sealed record MucTieu(string TomTat, int? ShowId);
+
+    private async Task<Dictionary<(ReportTargetType, int), MucTieu>> ResolveTargetSummariesAsync(
         IEnumerable<(ReportTargetType TargetType, int TargetId)> targets, CancellationToken ct)
     {
-        var result = new Dictionary<(ReportTargetType, int), string>();
+        var result = new Dictionary<(ReportTargetType, int), MucTieu>();
 
         var showIds = targets.Where(t => t.TargetType == ReportTargetType.Show).Select(t => t.TargetId).ToList();
         var livestreamIds = targets.Where(t => t.TargetType == ReportTargetType.Livestream).Select(t => t.TargetId).ToList();
@@ -76,7 +81,7 @@ internal sealed class GetContentReportQueueQueryHandler
         if (showIds.Count > 0)
         {
             var shows = await _uow.Repository<LoungeShow, int>().FindAsync(s => showIds.Contains(s.Id), ct);
-            foreach (var s in shows) result[(ReportTargetType.Show, s.Id)] = s.Name;
+            foreach (var s in shows) result[(ReportTargetType.Show, s.Id)] = new MucTieu(s.Name, s.Id);
         }
 
         if (livestreamIds.Count > 0)
@@ -88,15 +93,46 @@ internal sealed class GetContentReportQueueQueryHandler
                 : [];
             var showNameById = relatedShows.ToDictionary(s => s.Id, s => s.Name);
             foreach (var l in livestreams)
-                result[(ReportTargetType.Livestream, l.Id)] = showNameById.GetValueOrDefault(l.LoungeShowId, $"Livestream #{l.Id}");
+                result[(ReportTargetType.Livestream, l.Id)] = new MucTieu(
+                    showNameById.GetValueOrDefault(l.LoungeShowId, $"Livestream #{l.Id}"), l.LoungeShowId);
         }
 
         if (ratingIds.Count > 0)
         {
             var ratings = await _uow.Repository<LoungeShowRating, int>().FindAsync(r => ratingIds.Contains(r.Id), ct);
             foreach (var r in ratings)
-                result[(ReportTargetType.Rating, r.Id)] =
-                    string.IsNullOrWhiteSpace(r.Comment) ? $"Đánh giá {r.Score}★" : r.Comment;
+                result[(ReportTargetType.Rating, r.Id)] = new MucTieu(
+                    string.IsNullOrWhiteSpace(r.Comment) ? $"Đánh giá {r.Score}★" : r.Comment, r.LoungeShowId);
+        }
+
+        // MLACP-456: Admin phải đọc được CHÍNH tin nhắn bị báo cáo mới quyết được gỡ hay bỏ qua — một con số mã tin
+        // nhắn thì không nói lên gì. Kèm người gửi và thời điểm, và buổi hòa nhạc để mở ngữ cảnh.
+        var chatIds = targets.Where(t => t.TargetType == ReportTargetType.ChatMessage).Select(t => t.TargetId).ToList();
+        if (chatIds.Count > 0)
+        {
+            var messages = await _uow.Repository<LivestreamChatMessage, int>()
+                .FindAsync(m => chatIds.Contains(m.Id), ct);
+
+            var senderIds = messages.Select(m => m.UserId).Distinct().ToList();
+            var senderNameById = senderIds.Count > 0
+                ? (await _uow.Repository<User, int>().FindAsync(u => senderIds.Contains(u.Id), ct))
+                    .ToDictionary(u => u.Id, u => u.FullName)
+                : [];
+
+            var streamIds = messages.Select(m => m.LivestreamId).Distinct().ToList();
+            var showIdByStream = streamIds.Count > 0
+                ? (await _uow.Repository<Livestream, int>().FindAsync(l => streamIds.Contains(l.Id), ct))
+                    .ToDictionary(l => l.Id, l => l.LoungeShowId)
+                : [];
+
+            foreach (var m in messages)
+            {
+                var nguoiGui = senderNameById.GetValueOrDefault(m.UserId, $"Người dùng #{m.UserId}");
+                var luc = VietnamTime.Format(m.SentAt, "HH:mm dd/MM/yyyy");
+                result[(ReportTargetType.ChatMessage, m.Id)] = new MucTieu(
+                    $"\"{m.Message}\" — {nguoiGui}, {luc}",
+                    showIdByStream.TryGetValue(m.LivestreamId, out var showId) ? showId : null);
+            }
         }
 
         return result;
