@@ -1,4 +1,6 @@
 ﻿using Asp.Versioning;
+using MusicLounge.Application.Complaints.Queries.GetComplaintHistory;
+using MusicLounge.Application.Complaints.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -433,6 +435,29 @@ public sealed class AdminController : ControllerBase
     {
         await _sender.Send(new TriggerRecurringJobCommand(jobId), ct);
         return NoContent();
+    }
+
+    /// <summary>
+    /// MLACP-462 — LỊCH SỬ khiếu nại, khác với hàng đợi ở <c>GET /complaints/pending</c> (chỉ việc chưa xử lý xong).
+    /// Sau khi Admin xử lý, khiếu nại biến mất khỏi hàng đợi và trước đây không còn đường nào tra lại đã quyết gì, cho ai.
+    /// <para><c>status</c> nhận NHIỀU giá trị: <c>?status=Resolved&amp;status=Rejected</c>. Bỏ trống = mọi trạng thái.
+    /// Tên trạng thái sai trả 422 kèm danh sách giá trị hợp lệ.</para>
+    /// <para>Mỗi lần gọi đều được GHI LOG kèm mã Admin và bộ lọc: dữ liệu ở đây gồm mô tả sự việc và số điện thoại
+    /// người khiếu nại (kể cả khách không có tài khoản), nên phải trả lời được câu "ai đã đọc dữ liệu của tôi".</para>
+    /// </summary>
+    [HttpGet("complaints")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<ComplaintDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GetComplaintHistory(
+        [FromQuery] string[]? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetComplaintHistoryQuery(status, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<ComplaintDto>>.Ok(result));
     }
 
     /// <summary>MLACP-420 — hệ thống đang thiếu cấu hình gì và hậu quả ra sao. Chỉ trả tên cài đặt và hậu quả,

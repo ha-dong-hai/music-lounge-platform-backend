@@ -29,6 +29,21 @@ internal sealed class ComplaintRepository : Repository<Complaint, int>, IComplai
         return await ProjectPageAsync(query, page, pageSize, ct);
     }
 
+    /// <summary>
+    /// MLACP-462. Toàn bộ khiếu nại cho Admin, lọc theo trạng thái. Khác <see cref="GetPendingAsync"/> ở chỗ đó là HÀNG ĐỢI
+    /// (chỉ việc chưa xong), còn đây là LỊCH SỬ: không truyền trạng thái nào thì trả tất cả.
+    ///
+    /// Trước đây không có đường nào xem khiếu nại ĐÃ xử lý, nên Admin xử lý xong là mất dấu — không tra lại được đã quyết
+    /// gì cho ai, trong khi chính họ là người phải trả lời nếu người khiếu nại hỏi lại.
+    /// </summary>
+    public async Task<PaginatedResult<ComplaintDto>> GetHistoryAsync(
+        IReadOnlyList<ComplaintStatus> statuses, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = _ctx.Complaints.AsNoTracking();
+        if (statuses.Count > 0) query = query.Where(c => statuses.Contains(c.Status));
+        return await ProjectPageAsync(query, page, pageSize, ct);
+    }
+
     private static async Task<PaginatedResult<ComplaintDto>> ProjectPageAsync(
         IQueryable<Complaint> query, int page, int pageSize, CancellationToken ct)
     {
