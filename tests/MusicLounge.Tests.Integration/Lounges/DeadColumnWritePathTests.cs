@@ -131,11 +131,19 @@ public sealed class DeadColumnWritePathTests
         await Owner().PutAsJsonAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/business-license",
             new { DocumentUrl = await UploadPublicImageAsync() });
 
-        var res = await _factory.CreateClient().GetAsync("/api/v1/lounges?pageSize=50");
-        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        // Danh sách công khai sắp theo TÊN và dùng chung cho cả bộ test: mỗi bài test tạo thêm một phòng trà đã duyệt là
+        // phòng trà mẫu ("Test Lounge", vần T) lại bị đẩy xuống. Lấy đúng trang đầu rồi mong nó còn ở đó là trông vào may
+        // rủi — đã hỏng thật trên CI ngày 19/09 dù chạy ở máy vẫn xanh. Duyệt hết các trang cho tới khi tìm thấy.
+        LoungeListItem? seeded = null;
+        for (var page = 1; page <= 50 && seeded is null; page++)
+        {
+            var res = await _factory.CreateClient().GetAsync($"/api/v1/lounges?page={page}&pageSize=50");
+            res.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await res.Content.ReadFromJsonAsync<Envelope<Paged<LoungeListItem>>>();
-        var seeded = body!.Data.Items.SingleOrDefault(l => l.Id == SeedHelper.LoungeId);
+            var body = await res.Content.ReadFromJsonAsync<Envelope<Paged<LoungeListItem>>>();
+            if (body!.Data.Items.Count == 0) break;
+            seeded = body.Data.Items.SingleOrDefault(l => l.Id == SeedHelper.LoungeId);
+        }
 
         seeded.Should().NotBeNull("removing the field would be a response-shape change for clients");
         seeded!.BusinessLicenseUrl.Should().NotStartWith("/uploads/",

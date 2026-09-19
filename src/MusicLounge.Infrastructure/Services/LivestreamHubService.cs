@@ -31,6 +31,11 @@ public sealed class LivestreamHubService : ILivestreamHubService
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("DonationMessageHidden", new { donationId }, ct);
 
+    public Task BroadcastChatMessageHiddenAsync(int livestreamId, int chatMessageId, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("ChatMessageHidden", new { chatMessageId }, ct);
+
     public Task BroadcastViewerCountAsync(int livestreamId, int count, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))

@@ -53,6 +53,8 @@ public class NotFoundException : Exception
         ["Show"] = "buổi hòa nhạc",
         ["LoungeShowRating"] = "đánh giá buổi hòa nhạc",
         ["Rating"] = "đánh giá",
+        ["ChatMessage"] = "tin nhắn chat",
+        ["LivestreamChatMessage"] = "tin nhắn chat",
         ["EventCategory"] = "danh mục buổi hòa nhạc",
         ["Mood"] = "thẻ tâm trạng",
         ["MusicGenre"] = "thể loại nhạc",
@@ -85,6 +87,7 @@ public class NotFoundException : Exception
         ["FnbOrder"] = "đơn gọi món",
 
         // Khác
+        ["AiPosterGeneration"] = "đơn tạo poster",
         ["User"] = "người dùng",
         ["Notification"] = "thông báo",
         ["Complaint"] = "khiếu nại",

@@ -360,19 +360,29 @@ public sealed class LoungeShowsController : ControllerBase
     /// <summary>W02: tạo poster bằng AI (Gemini) — chỉ Owner có gói subscription bao gồm
     /// HasAiPoster. 2 giới hạn độc lập: MaxAiPostersPerMonth (hạn mức tính phí, chỉ tính lần thành
     /// công) và ai_poster_max_attempts_per_show (chống lạm dụng, tính mọi lần thử kể cả thất bại).
-    /// 503 nếu vendor AI lỗi — lần thử thất bại KHÔNG bị trừ vào hạn mức.</summary>
+    /// 503 nếu vendor AI lỗi — lần thử thất bại KHÔNG bị trừ vào hạn mức.
+    /// <para>MLACP-458: khi nền tảng đang chạy chế độ hàng đợi (ảnh do máy trạm sinh qua Google Flow, mất 50–90 giây),
+    /// endpoint này trả <b>202</b> với <c>status = "Queued"</c> và <c>attemptId</c> thay vì ảnh; giao diện hỏi lại trạng
+    /// thái qua lịch sử tạo poster, và chủ phòng trà nhận thông báo khi xong. Chế độ gọi thẳng vẫn trả 200 kèm ảnh như
+    /// trước.</para></summary>
     [HttpPost("{id:int}/ai-poster")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<PosterGenerationResultDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<PosterGenerationResultDto>>(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GeneratePoster(
         int id, [FromBody] GeneratePosterRequest? body, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GeneratePosterCommand(id, body?.StyleHint), ct);
-        return Ok(ApiResponse<PosterGenerationResultDto>.Ok(result));
+        var envelope = ApiResponse<PosterGenerationResultDto>.Ok(result);
+
+        return result.Status == nameof(AiPosterGenerationStatus.Queued)
+            ? Accepted(envelope)
+            : Ok(envelope);
     }
 
     /// <summary>Đối chứng thủ công của tạo poster AI — Owner tự tải poster riêng thay vì dùng AI
