@@ -51,22 +51,81 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
         if (!includeSoldOut)
         {
-            var now = DateTimeOffset.UtcNow;
-            query = query.Where(s => s.TicketTiers.Any(tier =>
-                tier.Prices.Any(price =>
-                    !price.Quota.HasValue
-                    || price.Quota.Value > (
-                        _ctx.Tickets.Count(t =>
-                            t.PriceId == price.Id &&
-                            (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending))
-                        + (_ctx.TicketHolds
-                            .Where(h => h.PriceId == price.Id && h.ExpiresAt > now)
-                            .Sum(h => (int?)h.Quantity) ?? 0))
-                )
-            ));
+            var hetVe = await MaBuoiDienHetVeAsync(DateTimeOffset.UtcNow, ct);
+            query = query.Where(s => !hetVe.Contains(s.Id));
         }
 
         return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
+    }
+
+    /// <summary>
+    /// MLACP-457. "Chưa hết vé" — dùng chung cho danh sách duyệt và tìm kiếm.
+    ///
+    /// Trước đây điều kiện này được CHÉP ở hai nơi và cả hai bản chép đều thiếu <c>IsActive</c>: một mức giá chưa duyệt
+    /// còn chỗ cũng làm buổi diễn được coi là còn vé, trong khi không ai mua được mức giá đó. Chép hai bản thì sửa một
+    /// bản là quên bản kia — gom về một chỗ.
+    ///
+    /// <b>Không có mức giá nào đã duyệt thì KHÔNG coi là hết vé.</b> Theo đúng nguyên tắc của <c>ShowAvailability</c>
+    /// (MLACP-327): thiếu thông tin không phải bằng chứng. Buổi diễn vừa đăng thường chưa cấu hình hạng vé; coi nó là
+    /// "hết vé" sẽ giấu mất đúng những buổi mới nhất. "Hết vé" là một khẳng định — phải có vé thật rồi bán hết.
+    ///
+    /// MLACP-459 (chưa làm): phép đếm dưới đây bỏ sót vé <c>Used</c> — vé đã soát vào cửa không còn được tính là đã
+    /// chiếm chỗ. Cố ý KHÔNG sửa kèm ở đây: đó là lỗi của đường BÁN vé (bán vượt sức chứa), cần test tái hiện riêng và
+    /// phải sửa ở <c>ITicketRepository.GetReservedQuantitiesByPriceIdsAsync</c> — nguồn đếm của cả đường ghi lẫn đường đọc.
+    ///
+    /// <b>Vì sao tính bằng hai truy vấn rồi lọc bằng danh sách mã, thay vì một biểu thức lồng:</b> bản cũ đặt phép cộng
+    /// <c>Count(...) + Sum(...)</c> LỒNG bên trong <c>Any</c> của navigation, kèm so sánh <c>DateTimeOffset</c> trong
+    /// truy vấn con. SQL Server dịch được (đã gọi thật lên Azure ngày 19/09: <c>includeSoldOut=false</c> trả 200), nhưng
+    /// provider SQLite trong test thì KHÔNG — đúng giới hạn "so sánh DateTimeOffset trong truy vấn con" đã ghi ở nhiều
+    /// chỗ khác của dự án. Hệ quả: bộ lọc này chưa từng có test nào chạy tới, hỏng lúc nào cũng không ai biết.
+    /// Nay lọc phần dịch được ở DB, phần ngày giờ tính ở phía ứng dụng — đúng cách
+    /// <c>GetSoldAndHeldCountsByPriceAsync</c> và <c>GetReservedQuantitiesByPriceIdsAsync</c> đang làm.
+    ///
+    /// <b>Trần giới hạn cố ý:</b> hàm nạp mọi mức giá đã duyệt của toàn nền tảng (kèm lượt giữ chỗ chưa nhả) rồi mới
+    /// tính. Với quy mô hiện tại (vài phòng trà, vài chục đợt bán) thì rẻ hơn nhiều so với một truy vấn không test được.
+    /// Khi số đợt bán lên tới hàng nghìn, đường nâng cấp là thu hẹp trước theo tập buổi diễn đang xét, hoặc chuyển hẳn
+    /// sang một câu SQL viết tay chỉ chạy trên SQL Server kèm test tích hợp chạy trên SQL Server thật.
+    /// </summary>
+    private async Task<HashSet<int>> MaBuoiDienHetVeAsync(DateTimeOffset now, CancellationToken ct)
+    {
+        // Lấy MỌI mức giá đã duyệt, kể cả mức không đặt giới hạn số vé (Quota null). Bỏ chúng ra khỏi đây là sai: một
+        // buổi có mức "hạng thường" đã hết và mức "đứng xem" không giới hạn thì vẫn còn vé để bán.
+        var mucGia = await _ctx.Set<TicketPrice>()
+            .Where(p => p.IsActive)
+            .Select(p => new { p.Id, ShowId = p.Tier.LoungeShowId, p.Quota })
+            .ToListAsync(ct);
+        if (mucGia.Count == 0) return [];
+
+        var maMucGia = mucGia.Select(p => p.Id).ToList();
+
+        var veDaChiem = (await _ctx.Tickets
+                .Where(t => maMucGia.Contains(t.PriceId)
+                    && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending))
+                .GroupBy(t => t.PriceId)
+                .Select(g => new { PriceId = g.Key, SoLuong = g.Count() })
+                .ToListAsync(ct))
+            .ToDictionary(x => x.PriceId, x => x.SoLuong);
+
+        // Lọc PriceId ở DB, so hạn giữ chỗ ở phía ứng dụng: gộp Contains(danh sách) với một so sánh DateTimeOffset trong
+        // cùng một Where là thứ provider SQLite không dịch được.
+        var luotGiuCho = await _ctx.TicketHolds
+            .Where(h => maMucGia.Contains(h.PriceId) && !h.IsReleased)
+            .Select(h => new { h.PriceId, h.ExpiresAt, h.Quantity })
+            .ToListAsync(ct);
+        var dangGiu = luotGiuCho
+            .Where(h => h.ExpiresAt > now)
+            .GroupBy(h => h.PriceId)
+            .ToDictionary(g => g.Key, g => g.Sum(h => h.Quantity));
+
+        // Một buổi hòa nhạc chỉ "hết vé" khi MỌI mức giá đã duyệt của nó đều hết. Buổi không có mức giá đã duyệt nào
+        // không xuất hiện trong danh sách này — nên nó không bị coi là hết vé, đúng nguyên tắc ở trên.
+        return mucGia
+            .GroupBy(p => p.ShowId)
+            .Where(g => g.All(p =>
+                p.Quota != null
+                && p.Quota.Value <= veDaChiem.GetValueOrDefault(p.Id) + dangGiu.GetValueOrDefault(p.Id)))
+            .Select(g => g.Key)
+            .ToHashSet();
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetMineAsync(
@@ -138,13 +197,25 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         if (p.Format.HasValue)
             query = query.Where(s => s.Format == p.Format.Value);
 
-        if (p.MinPrice.HasValue)
+        // MLACP-457. Trước đây min và max là HAI điều kiện rời: buổi diễn có vé 100.000đ và vé 1.000.000đ vẫn khớp khoảng
+        // 400.000–500.000đ, vì mức này thoả vế dưới còn mức kia thoả vế trên — không có vé nào thực sự nằm trong khoảng
+        // người dùng chọn. Gộp thành MỘT điều kiện trên CÙNG một mức giá.
+        //
+        // Và chỉ tính giá ĐÃ DUYỆT (IsActive): khoảng giá hiện trên thẻ buổi diễn cũng chỉ tính giá đã duyệt (MLACP-388),
+        // nên nếu lọc tính cả giá chưa duyệt thì kết quả trả về một buổi diễn mà giá hiện trên thẻ nằm ngoài khoảng đã
+        // chọn — người dùng thấy hệ thống nói dối. Lọc và hiển thị phải nhìn cùng một tập giá.
+        //
+        // Ba nhánh tường minh thay vì một biểu thức có "min == null ||": nửa khoảng là trường hợp thật (người dùng chỉ
+        // điền một ô), và viết rời ra thì câu SQL sinh cho từng trường hợp không mang theo vế luôn đúng.
+        if (p.MinPrice is { } min && p.MaxPrice is { } max)
             query = query.Where(s => s.TicketTiers.Any(t =>
-                t.Prices.Any(pr => pr.Price >= p.MinPrice.Value)));
-
-        if (p.MaxPrice.HasValue)
+                t.Prices.Any(pr => pr.IsActive && pr.Price >= min && pr.Price <= max)));
+        else if (p.MinPrice is { } chiMin)
             query = query.Where(s => s.TicketTiers.Any(t =>
-                t.Prices.Any(pr => pr.Price <= p.MaxPrice.Value)));
+                t.Prices.Any(pr => pr.IsActive && pr.Price >= chiMin)));
+        else if (p.MaxPrice is { } chiMax)
+            query = query.Where(s => s.TicketTiers.Any(t =>
+                t.Prices.Any(pr => pr.IsActive && pr.Price <= chiMax)));
 
         if (!p.IncludeEnded)
             query = query.Where(s => s.Status != LoungeShowStatus.Ended
@@ -152,19 +223,8 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
         if (!p.IncludeSoldOut)
         {
-            var now = DateTimeOffset.UtcNow;
-            query = query.Where(s => s.TicketTiers.Any(tier =>
-                tier.Prices.Any(price =>
-                    !price.Quota.HasValue
-                    || price.Quota.Value > (
-                        _ctx.Tickets.Count(t =>
-                            t.PriceId == price.Id &&
-                            (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending))
-                        + (_ctx.TicketHolds
-                            .Where(h => h.PriceId == price.Id && h.ExpiresAt > now)
-                            .Sum(h => (int?)h.Quantity) ?? 0))
-                )
-            ));
+            var hetVe = await MaBuoiDienHetVeAsync(DateTimeOffset.UtcNow, ct);
+            query = query.Where(s => !hetVe.Contains(s.Id));
         }
 
         return await SortAndPaginateAsync(query, p.SortBy, p.Page, p.PageSize, ct);
