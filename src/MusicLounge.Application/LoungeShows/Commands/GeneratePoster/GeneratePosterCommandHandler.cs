@@ -75,16 +75,30 @@ internal sealed class GeneratePosterCommandHandler
         // translation limitation documented throughout this codebase: combining an equality check
         // with a DateTimeOffset comparison in one Where clause fails to translate under the test
         // provider.
+        //
+        // MLACP-458: đơn ĐANG CHỜ cũng phải tính. Quy tắc "chỉ lần thành công mới trừ lượt" đúng với đường gọi thẳng, vì
+        // lúc trả lời thì đã biết thành hay bại. Với hàng đợi thì giữa lúc bấm và lúc có ảnh là hàng phút, nên nếu chỉ
+        // đếm lần thành công, chủ phòng trà còn 1 lượt vẫn bấm được 10 lần liên tiếp và hệ thống nhận cả 10. Đơn đang chờ
+        // được coi là GIỮ CHỖ; đơn hỏng (Failed/Expired) thì không tính nữa, tức là tự trả lại lượt — giữ nguyên tinh thần
+        // "lỗi của nhà cung cấp thì không được tính vào tiền người ta đã trả" của MLACP-419.
         var monthStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        var ownerSucceeded = await genRepo.FindAsync(
-            g => g.OwnerId == lounge.OwnerId && g.Status == AiPosterGenerationStatus.Succeeded, ct);
-        var succeededThisMonth = ownerSucceeded.Count(g => g.CreatedAt >= monthStart);
+        var ownerCounted = await genRepo.FindAsync(
+            g => g.OwnerId == lounge.OwnerId
+                && (g.Status == AiPosterGenerationStatus.Succeeded
+                    || g.Status == AiPosterGenerationStatus.Queued
+                    || g.Status == AiPosterGenerationStatus.Rendering), ct);
+        var succeededThisMonth = ownerCounted.Count(g => g.CreatedAt >= monthStart);
         if (succeededThisMonth >= activeSub.MaxAiPostersPerMonthSnapshot)
             throw new DomainException(
                 $"Bạn đã dùng hết {activeSub.MaxAiPostersPerMonthSnapshot} poster AI trong tháng này. " +
                 "Hạn mức sẽ làm mới vào đầu tháng sau.");
 
-        var prompt = await BuildPromptAsync(show, lounge, request.StyleHint, ct);
+        var prompt = await BuildPromptAsync(show, lounge, request.StyleHint, _aiImage.IsDeferred, ct);
+
+        // MLACP-458: nhà cung cấp không trả ảnh trong cùng lượt gọi (máy trạm chạy Google Flow) — ghi đơn rồi trả lời ngay.
+        if (_aiImage.IsDeferred)
+            return await QueueJobAsync(show, lounge.OwnerId, prompt, activeSub.MaxAiPostersPerMonthSnapshot,
+                succeededThisMonth, now, ct);
 
         byte[] imageBytes;
         string tenFile;
@@ -114,6 +128,7 @@ internal sealed class GeneratePosterCommandHandler
                 OwnerId = lounge.OwnerId,
                 Status = AiPosterGenerationStatus.Failed,
                 Prompt = prompt,
+                Provider = _aiImage.ProviderName,
                 ErrorMessage = ex.Message,
                 CreatedAt = now
             });
@@ -133,6 +148,7 @@ internal sealed class GeneratePosterCommandHandler
             OwnerId = lounge.OwnerId,
             Status = AiPosterGenerationStatus.Succeeded,
             Prompt = prompt,
+            Provider = _aiImage.ProviderName,
             ImageUrl = imageUrl,
             CreatedAt = now
         });
@@ -147,8 +163,47 @@ internal sealed class GeneratePosterCommandHandler
         return new PosterGenerationResultDto(imageUrl, remaining);
     }
 
+    /// <summary>
+    /// MLACP-458. Ghi một đơn <c>Queued</c> và trả lời ngay, thay vì giữ người dùng chờ 50–90 giây.
+    ///
+    /// Mỗi buổi hòa nhạc chỉ được có MỘT đơn đang chờ: bấm nhiều lần trong lúc chờ không tạo thêm đơn, vì mỗi đơn là một
+    /// lượt hạn mức Google thật, và người dùng bấm lại thường vì họ tưởng lần trước chưa ăn chứ không phải muốn hai poster.
+    /// </summary>
+    private async Task<PosterGenerationResultDto> QueueJobAsync(
+        LoungeShow show, int ownerId, string prompt, int monthlyQuota, int usedThisMonth,
+        DateTimeOffset now, CancellationToken ct)
+    {
+        var genRepo = _uow.Repository<AiPosterGeneration, int>();
+
+        var dangCho = await genRepo.AnyAsync(
+            g => g.ShowId == show.Id
+                && (g.Status == AiPosterGenerationStatus.Queued
+                    || g.Status == AiPosterGenerationStatus.Rendering), ct);
+        if (dangCho)
+            throw new ConflictException(
+                "Buổi hòa nhạc này đang có một poster được tạo. Vui lòng đợi kết quả trước khi tạo thêm.");
+
+        var job = new AiPosterGeneration
+        {
+            ShowId = show.Id,
+            OwnerId = ownerId,
+            Status = AiPosterGenerationStatus.Queued,
+            Prompt = prompt,
+            Provider = _aiImage.ProviderName,
+            CreatedAt = now
+        };
+        genRepo.Add(job);
+        await _uow.SaveChangesAsync(ct);
+
+        return new PosterGenerationResultDto(
+            null,
+            Math.Max(0, monthlyQuota - (usedThisMonth + 1)),
+            nameof(AiPosterGenerationStatus.Queued),
+            job.Id);
+    }
+
     private async Task<string> BuildPromptAsync(
-        LoungeShow show, MusicLoungeEntity lounge, string? styleHint, CancellationToken ct)
+        LoungeShow show, MusicLoungeEntity lounge, string? styleHint, bool anhNenKhongChu, CancellationToken ct)
     {
         // The generic repository never eager-loads navigation properties (no .Include anywhere in
         // Repository<T,TKey>), so a Genre/Mood/Atmosphere nav on these join rows would always come
@@ -186,6 +241,15 @@ internal sealed class GeneratePosterCommandHandler
 
         if (!string.IsNullOrWhiteSpace(styleHint))
             prompt += $" Yêu cầu thêm từ chủ buổi diễn: {styleHint}.";
+
+        // MLACP-458: ở chế độ hàng đợi, ảnh lấy từ Google Flow là ẢNH NỀN — chữ tiếng Việt sẽ được in bằng font ở bước
+        // sau, không để mô hình tự vẽ. Lý do: mô hình sinh ảnh viết tiếng Việt sai dấu, mà poster sai tên buổi diễn thì
+        // không dùng được. Thử ngày 19/09 cho thấy Flow TUÂN THỦ câu cấm này (FLUX trước đây thì không nghe lệnh phủ
+        // định). Lớp in chữ bằng font là phần việc riêng, chưa làm trong task này.
+        if (anhNenKhongChu)
+            prompt +=
+                " Yêu cầu bắt buộc: đây là ẢNH NỀN, tuyệt đối KHÔNG chứa chữ, không chữ cái, không con số, không logo, " +
+                "không watermark. Chừa một phần ba phía trên thoáng, ít chi tiết, để chỗ in tiêu đề sau.";
 
         return prompt;
     }

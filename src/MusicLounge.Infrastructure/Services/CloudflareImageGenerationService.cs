@@ -24,6 +24,9 @@ public sealed class CloudflareImageGenerationService : IAiImageGenerationService
     /// <summary>Model mac dinh: nhanh (4 buoc), chat luong du dung cho poster xem tren dien thoai.</summary>
     public const string DefaultModel = "@cf/black-forest-labs/flux-1-schnell";
 
+    /// <summary>MLACP-458: ghi vao nhat ky de sau con doi chieu anh nao do nha cung cap nao sinh ra.</summary>
+    public string ProviderName => "cloudflare";
+
     private readonly IHttpClientFactory _httpFactory;
     private readonly CloudflareSettings _settings;
 

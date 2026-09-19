@@ -15,8 +15,15 @@ internal sealed class AiPosterGenerationConfiguration : IEntityTypeConfiguration
         b.Property(x => x.ImageUrl).HasMaxLength(500);
         b.Property(x => x.ErrorMessage).HasMaxLength(1000);
 
+        // MLACP-458: cột của chế độ hàng đợi.
+        b.Property(x => x.ClaimedBy).HasMaxLength(60);
+        b.Property(x => x.Provider).HasMaxLength(20);
+
         b.HasIndex(x => new { x.OwnerId, x.CreatedAt });
         b.HasIndex(x => new { x.ShowId, x.CreatedAt });
+        // Máy trạm hỏi việc vài giây một lần và luôn hỏi cùng một câu ("đơn Queued cũ nhất"); job dọn đơn treo quét đúng
+        // hai trạng thái. Không có chỉ mục này thì cả hai đều quét toàn bảng nhật ký, mà bảng nhật ký chỉ dài thêm.
+        b.HasIndex(x => new { x.Status, x.CreatedAt });
 
         b.HasOne(x => x.Show)
             .WithMany()
