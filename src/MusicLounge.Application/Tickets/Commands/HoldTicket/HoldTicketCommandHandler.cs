@@ -126,8 +126,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
         if (!price.Quota.HasValue) return;
 
         var confirmedCount = await _uow.Repository<Ticket, Guid>().CountAsync(
-            t => t.PriceId == price.Id
-                && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending), ct);
+            t => t.PriceId == price.Id && TicketOccupancy.ChiemCho.Contains(t.Status), ct);
         var activeHolds = await _uow.Repository<TicketHold, int>().FindAsync(
             h => h.PriceId == price.Id && !h.IsReleased, ct);
         var heldCount = activeHolds.Where(h => h.ExpiresAt > DateTimeOffset.UtcNow).Sum(h => h.Quantity);
