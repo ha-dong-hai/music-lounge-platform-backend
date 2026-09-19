@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using MusicLounge.Application.Analytics.Queries.GetAdminDashboard;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -114,6 +115,30 @@ public sealed class AnalyticsController : ControllerBase
     {
         var result = await _sender.Send(new GetAdminPlatformOverviewQuery(from, to), ct);
         return Ok(ApiResponse<AdminPlatformOverviewDto>.Ok(result));
+    }
+
+    /// <summary>
+    /// MLACP-463 — Admin: dữ liệu cho trang tổng quan. Bốn khối: tiền theo tháng tách theo nguồn (vé / gói dịch vụ /
+    /// donate), bảng xếp hạng buổi hòa nhạc theo doanh thu vé, và thể loại nhạc bán được nhiều vé nhất.
+    /// <para>Mỗi nguồn có HAI con số cố ý tách riêng: <c>gmv</c> (tiền người mua trả) và <c>platformRevenue</c> (phần nền
+    /// tảng thực nhận, lấy từ sổ cái). Vé bán tại quầy bằng tiền mặt nằm trong <c>gmv</c> nhưng gần như không có trong
+    /// <c>platformRevenue</c> — phòng trà thu trực tiếp, mặc định không qua sổ cái.</para>
+    /// <para>Khối tháng luôn là 6 tháng gần nhất theo giờ Việt Nam (tháng hiện tại chưa trọn), không phụ thuộc
+    /// <c>from</c>/<c>to</c>; hai khối còn lại theo khoảng thời gian đã chọn.</para>
+    /// </summary>
+    [HttpGet("admin-dashboard")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<AdminDashboardDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetAdminDashboard(
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        [FromQuery] int limit = 10,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetAdminDashboardQuery(from, to, limit), ct);
+        return Ok(ApiResponse<AdminDashboardDto>.Ok(result));
     }
 
     /// <summary>Owner — thống kê hiệu suất 1 buổi diễn: lượt xem trang, tỷ lệ chuyển đổi sang mua vé,

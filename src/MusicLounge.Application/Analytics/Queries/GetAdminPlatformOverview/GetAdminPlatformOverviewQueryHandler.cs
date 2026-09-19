@@ -55,11 +55,16 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
                 || s.Status == LoungeShowStatus.Ended, ct);
         var eventsInPeriodCount = shows.Count(s => s.ScheduledStart >= from && s.ScheduledStart <= to);
 
-        var platformCredits = await _uow.Repository<LedgerEntry, int>().FindAsync(
-            e => e.Account.OwnerType == AccountType.Platform && !e.IsDebit, ct);
-        var platformRevenueInPeriod = platformCredits
-            .Where(e => e.CreatedAt >= from && e.CreatedAt <= to)
-            .Sum(e => e.Amount);
+        // MLACP-463: TRƯỚC ĐÂY cộng MỌI bút toán ghi CÓ vào tài khoản nền tảng. Nhưng tài khoản đó nhận hai loại tiền
+        // khác hẳn nhau: hoa hồng (nền tảng được hưởng) và tiền GIỮ HỘ chủ phòng trà chờ quyết toán (rồi sẽ đi ra).
+        // Cộng cả hai làm con số phồng lên gần bằng tổng tiền người mua trả — tức là báo cáo rằng nền tảng ăn gần trọn
+        // mỗi tấm vé. Nay dùng định nghĩa chung ở PlatformRevenue, cùng con số với /analytics/admin-dashboard nên hai
+        // màn hình không bao giờ lệch nhau.
+        var thanhToanDaXacNhan = await _uow.Repository<Payment, int>().FindAsync(
+            p => p.Status == PaymentStatus.Confirmed, ct);
+        var platformRevenueInPeriod = thanhToanDaXacNhan
+            .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= from && p.PaidAt.Value <= to)
+            .Sum(PlatformRevenue.CuaThanhToan);
 
         // User.CreatedAt (AuditableEntity) is a plain DateTime — always written as
         // DateTime.UtcNow (ApplicationDbContext.SaveChangesAsync) — so compare against the UTC
