@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.Configure<OpenAiSettings>(configuration.GetSection("OpenAi"));
         services.Configure<SecurityDetectionSettings>(configuration.GetSection("SecurityDetection"));
         services.Configure<PanoramaStitcherSettings>(configuration.GetSection("PanoramaStitcher"));
+        services.Configure<PosterWorkerSettings>(configuration.GetSection("PosterWorker"));
         services.Configure<StorageSettings>(configuration.GetSection("Storage"));
         services.Configure<SmsSettings>(configuration.GetSection("Sms"));
 
@@ -93,10 +94,14 @@ public static class DependencyInjection
         services.AddScoped<IAiTextGenerationService, GeminiTextGenerationService>();
         // MLACP-418: co cau hinh Cloudflare thi dung Workers AI (co bac mien phi ~230 anh/ngay); khong thi quay ve OpenAI
         // (khong co bac mien phi). Chon o day thay vi trong handler de tang Application khong phai biet ten nha cung cap.
+        // MLACP-458: bat PosterWorker thi uu tien che do hang doi (may tram chay Google Flow) — dung truoc hai nha cung
+        // cap goi thang, vi no la lua chon co y cua nguoi van hanh, khong phai duong du phong.
         services.AddScoped<IAiImageGenerationService>(sp =>
-            AiImageProvider.UseCloudflare(sp.GetRequiredService<IOptions<CloudflareSettings>>().Value)
-                ? ActivatorUtilities.CreateInstance<CloudflareImageGenerationService>(sp)
-                : ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp));
+            AiImageProvider.UseDeferredQueue(sp.GetRequiredService<IOptions<PosterWorkerSettings>>().Value)
+                ? ActivatorUtilities.CreateInstance<DeferredPosterImageGenerationService>(sp)
+                : AiImageProvider.UseCloudflare(sp.GetRequiredService<IOptions<CloudflareSettings>>().Value)
+                    ? ActivatorUtilities.CreateInstance<CloudflareImageGenerationService>(sp)
+                    : ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp));
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
@@ -159,6 +164,7 @@ public static class DependencyInjection
         services.AddScoped<ScoreModerationWithAiJob>();
         services.AddScoped<StitchVenueTourSceneJob>();
         services.AddScoped<ExpireStuckStitchAttemptsJob>();
+        services.AddScoped<ExpirePosterJobsJob>();
         services.AddScoped<LoginSpikeDetectionJob>();
         services.AddScoped<AdminRoleDriftDetectionJob>();
         // W23/D-donation: both scheduled below via RecurringJob.AddOrUpdate but were missing
@@ -309,6 +315,14 @@ public static class DependencyInjection
             "expire-stuck-stitch-attempts",
             j => j.ExecuteAsync(JobCancellationToken.Null),
             "*/10 * * * *");
+
+        // MLACP-458: hang doi poster — 2 phut mot lan. Day hon expire-stuck-stitch-attempts vi hang doi nay do NGUOI DUNG
+        // dang cho: don bi may tram bo roi phai quay lai hang doi nhanh, khong phai doi them 10 phut.
+        Recurring<ExpirePosterJobsJob>(
+            manager,
+            "expire-poster-jobs",
+            j => j.ExecuteAsync(JobCancellationToken.Null),
+            "*/2 * * * *");
 
         Recurring<CancelAbandonedPaymentsJob>(
             manager,

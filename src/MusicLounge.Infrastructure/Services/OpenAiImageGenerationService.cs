@@ -10,6 +10,9 @@ namespace MusicLounge.Infrastructure.Services;
 
 public sealed class OpenAiImageGenerationService : IAiImageGenerationService
 {
+    /// <summary>MLACP-458: ghi vao nhat ky de sau con doi chieu anh nao do nha cung cap nao sinh ra.</summary>
+    public string ProviderName => "openai";
+
     private readonly IHttpClientFactory _httpFactory;
     private readonly OpenAiSettings _settings;
 

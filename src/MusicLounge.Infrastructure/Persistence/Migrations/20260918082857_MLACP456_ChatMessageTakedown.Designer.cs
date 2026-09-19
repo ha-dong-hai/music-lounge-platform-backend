@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MusicLounge.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918082857_MLACP456_ChatMessageTakedown")]
+    partial class MLACP456_ChatMessageTakedown
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,16 +62,6 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AttemptCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("ClaimedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("ClaimedBy")
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -80,9 +73,6 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
@@ -90,10 +80,6 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("Provider")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("ShowId")
                         .HasColumnType("int");
@@ -108,8 +94,6 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.HasIndex("OwnerId", "CreatedAt");
 
                     b.HasIndex("ShowId", "CreatedAt");
-
-                    b.HasIndex("Status", "CreatedAt");
 
                     b.ToTable("ai_poster_generations", (string)null);
                 });

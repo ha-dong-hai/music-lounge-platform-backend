@@ -12,6 +12,8 @@ public sealed class LivestreamChatMessageConfiguration : IEntityTypeConfiguratio
         builder.HasKey(m => m.Id);
 
         builder.Property(m => m.Message).IsRequired().HasMaxLength(500);
+        builder.Property(m => m.IsRemoved).HasDefaultValue(false);
+        builder.Property(m => m.RemovedReason).HasMaxLength(500);
 
         builder.HasOne(m => m.Livestream)
             .WithMany(l => l.ChatMessages)

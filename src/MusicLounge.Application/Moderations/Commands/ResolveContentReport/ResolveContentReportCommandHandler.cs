@@ -100,6 +100,9 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
             case ReportTargetType.Rating:
                 await TakeDownRatingAsync(targetId, note, ct);
                 break;
+            case ReportTargetType.ChatMessage:
+                await TakeDownChatMessageAsync(targetId, note, ct);
+                break;
         }
     }
 
@@ -211,6 +214,38 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         }
 
         await _livestreamHub.BroadcastLivestreamTerminatedAsync(livestreamId, reason, ct);
+    }
+
+    /// <summary>
+    /// MLACP-456. Gỡ một tin nhắn chat theo báo cáo vi phạm. Gỡ mềm (giữ bản ghi để đối chiếu) như cách đang làm với
+    /// đánh giá, đồng thời báo cho người ĐANG xem để tin nhắn biến mất ngay — người vào xem sau thì đã bị lọc khỏi lịch
+    /// sử chat. Thiếu một trong hai thì việc gỡ chỉ có hiệu lực với một nửa khán giả.
+    /// </summary>
+    private async Task TakeDownChatMessageAsync(int chatMessageId, string? note, CancellationToken ct)
+    {
+        var repo = _uow.Repository<LivestreamChatMessage, int>();
+        var message = await repo.GetByIdAsync(chatMessageId, ct)
+            ?? throw new NotFoundException(nameof(LivestreamChatMessage), chatMessageId);
+
+        if (message.IsRemoved)
+            throw new ConflictException("Tin nhắn này đã bị gỡ trước đó.");
+
+        message.IsRemoved = true;
+        message.RemovedReason = string.IsNullOrWhiteSpace(note) ? "Gỡ theo báo cáo vi phạm từ người dùng" : note;
+        repo.Update(message);
+
+        // Cùng cách xử lý lỗi với việc gỡ livestream: phát sóng là best-effort, bản ghi trong database mới là nguồn sự
+        // thật. Hub lỗi thì tin nhắn vẫn đã bị gỡ và vẫn bị lọc khỏi lịch sử.
+        try
+        {
+            await _livestreamHub.BroadcastChatMessageHiddenAsync(message.LivestreamId, message.Id, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex,
+                "Khong phat duoc su kien go tin nhan chat (tin nhan van da bi go): ChatMessageId={ChatMessageId}",
+                message.Id);
+        }
     }
 
     // Mirrors RemoveRatingCommandHandler.

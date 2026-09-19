@@ -91,5 +91,9 @@ public enum NotificationType
     // MLACP-391: Admin them/go nhan vien cua mot phong tra — bao chu phong tra, nguoi chiu trach nhiem van hanh.
     VenueStaffChanged,
     // MLACP-395: tien quyet toan bi giu vi nguoi nhan chua xac minh — bao chu phong tra hoac Admin, tuy ai go duoc chan.
-    PayoutOnHold
+    PayoutOnHold,
+    // MLACP-458: poster AI chay o che do hang doi nen chu phong tra khong con ngoi cho ket qua — phai bao khi xong hoac
+    // khi khong tao duoc. Mot loai dung chung cho ca hai ket cuc: noi dung thong bao noi ro ket qua, con FE chi can mot
+    // luat dieu huong (mo buoi hoa nhac).
+    PosterGenerationResult
 }

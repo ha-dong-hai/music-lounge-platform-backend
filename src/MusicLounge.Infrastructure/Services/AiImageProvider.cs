@@ -10,4 +10,12 @@ internal static class AiImageProvider
 {
     public static bool UseCloudflare(CloudflareSettings settings)
         => !string.IsNullOrWhiteSpace(settings.AccountId) && !string.IsNullOrWhiteSpace(settings.ApiToken);
+
+    /// <summary>
+    /// MLACP-458: chế độ hàng đợi (máy trạm chạy Google Flow). Đòi ĐỦ CẢ HAI — bật cờ và có khoá — vì bật mà quên khoá thì
+    /// ba endpoint <c>/poster-jobs</c> sẽ không ai gọi được, và để hệ thống nhận đơn vào một hàng đợi không bao giờ có
+    /// người lấy là tệ hơn việc quay về nhà cung cấp gọi thẳng.
+    /// </summary>
+    public static bool UseDeferredQueue(PosterWorkerSettings settings)
+        => settings.Enabled && !string.IsNullOrWhiteSpace(settings.ApiKey);
 }
