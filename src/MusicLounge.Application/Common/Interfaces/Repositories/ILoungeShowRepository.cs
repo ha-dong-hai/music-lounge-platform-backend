@@ -19,6 +19,15 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
         int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
         LoungeShowStatus? status = null, CancellationToken ct = default);
 
+    /// <summary>
+    /// MLACP-466. Mọi buổi hòa nhạc của MỘT phòng trà, mọi trạng thái kể cả bản nháp — cho người VẬN HÀNH phòng trà đó.
+    /// Khác <see cref="GetByLoungeAsync"/> (danh sách công khai: bỏ bản nháp, chặn phòng trà bị đình chỉ): người vận
+    /// hành cần thấy đủ để làm việc, kể cả khi phòng trà đang bị xử lý.
+    /// </summary>
+    Task<PaginatedResult<LoungeShow>> GetForOperatedLoungeAsync(
+        int loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
+        LoungeShowStatus? status = null, CancellationToken ct = default);
+
     Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams searchParams, CancellationToken ct = default);
 

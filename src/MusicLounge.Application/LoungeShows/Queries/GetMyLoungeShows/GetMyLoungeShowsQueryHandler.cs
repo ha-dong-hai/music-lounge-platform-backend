@@ -2,6 +2,7 @@ using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.LoungeShows;
 using MusicLounge.Application.LoungeShows.DTOs;
 
 namespace MusicLounge.Application.LoungeShows.Queries.GetMyLoungeShows;
@@ -26,8 +27,9 @@ internal sealed class GetMyLoungeShowsQueryHandler
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
 
-        var result = await _showRepo.GetMineAsync(
-            _currentUser.UserId, page, pageSize, request.SortBy, request.Status, ct);
+        // MLACP-466: cung quy tac voi /lounge-shows?mine=true — xem OperatedShows.
+        var result = await OperatedShows.QueryAsync(
+            _showRepo, _currentUser, page, pageSize, request.SortBy, request.Status, ct);
 
         var items = result.Items.Select(s => s.ToListItemDto()).ToList();
         return new PaginatedResult<LoungeShowListItemDto>(items, result.Page, result.PageSize, result.TotalCount);

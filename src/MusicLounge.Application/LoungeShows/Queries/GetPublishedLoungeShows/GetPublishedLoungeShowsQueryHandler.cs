@@ -2,6 +2,7 @@ using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.LoungeShows;
 using MusicLounge.Application.LoungeShows.DTOs;
 using MusicLounge.Domain.Exceptions;
 
@@ -33,8 +34,9 @@ internal sealed class GetPublishedLoungeShowsQueryHandler
             if (!_currentUser.IsAuthenticated)
                 throw new UnauthorizedException("Vui lòng đăng nhập để xem event của bạn.");
 
-            result = await _showRepo.GetMineAsync(
-                _currentUser.UserId, page, pageSize, request.SortBy, status: null, ct);
+            // MLACP-466: nhan vien lay theo phong tra minh van hanh, khong theo chu so huu — xem OperatedShows.
+            result = await OperatedShows.QueryAsync(
+                _showRepo, _currentUser, page, pageSize, request.SortBy, status: null, ct);
         }
         else
         {
