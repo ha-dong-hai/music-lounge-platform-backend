@@ -45,8 +45,12 @@ public sealed class AdminDashboardTests
 
     private static string ThangNay() => DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7)).ToString("yyyy-MM");
 
-    /// <summary>Một khoản thanh toán đã xác nhận. <paramref name="tienNenTangNhan"/> &gt; 0 thì ghi thêm bút toán sổ cái.</summary>
-    private async Task ThanhToanAsync(string referenceType, decimal gross, decimal tienNenTangNhan = 0m)
+    /// <summary>
+    /// Một khoản thanh toán đã xác nhận. <paramref name="hoaHong"/> là phần nền tảng được hưởng (cột PlatformFee).
+    /// <paramref name="giuHo"/> &gt; 0 thì ghi thêm một bút toán ghi CÓ vào tài khoản nền tảng mô phỏng TIỀN GIỮ HỘ chủ
+    /// phòng trà — thứ nằm ở tài khoản nền tảng nhưng KHÔNG phải doanh thu của nền tảng.
+    /// </summary>
+    private async Task ThanhToanAsync(string referenceType, decimal gross, decimal hoaHong = 0m, decimal giuHo = 0m)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -55,7 +59,8 @@ public sealed class AdminDashboardTests
         {
             OrderId = $"DASH-{Guid.NewGuid():N}"[..30],
             GrossAmount = gross,
-            NetAmount = gross,
+            PlatformFee = hoaHong,
+            NetAmount = gross - hoaHong,
             Method = PaymentMethod.Gateway,
             Status = PaymentStatus.Confirmed,
             ReferenceType = referenceType,
@@ -66,7 +71,7 @@ public sealed class AdminDashboardTests
         db.Add(payment);
         await db.SaveChangesAsync();
 
-        if (tienNenTangNhan <= 0) return;
+        if (giuHo <= 0) return;
 
         var taiKhoanNenTang = await db.Set<Account>().FirstOrDefaultAsync(a => a.OwnerType == AccountType.Platform);
         if (taiKhoanNenTang is null)
@@ -80,10 +85,11 @@ public sealed class AdminDashboardTests
         {
             JournalId = Guid.NewGuid().ToString("N"),
             AccountId = taiKhoanNenTang.Id,
-            Amount = tienNenTangNhan,
+            Amount = giuHo,
             IsDebit = false,
             ReferenceType = "payment",
             ReferenceId = payment.Id.ToString(),
+            Description = $"Giữ hộ chủ phòng trà — chờ quyết toán",
             PaymentId = payment.Id,
             CreatedAt = DateTimeOffset.UtcNow
         });
@@ -190,10 +196,11 @@ public sealed class AdminDashboardTests
         var thang = ThangNay();
         var truoc = await DocAsync();
 
-        // Vé bán tại quầy: phòng trà thu tiền mặt trực tiếp, mặc định không sinh bút toán nào.
-        await ThanhToanAsync("WalkIn", 400_000m);
-        // Vé bán online: nền tảng giữ hộ và hưởng hoa hồng — có bút toán ghi CÓ vào tài khoản nền tảng.
-        await ThanhToanAsync("TicketHold", 1_000_000m, tienNenTangNhan: 150_000m);
+        // Vé bán tại quầy: phòng trà thu tiền mặt trực tiếp, nền tảng không hưởng hoa hồng.
+        await ThanhToanAsync("WalkIn", 400_000m, hoaHong: 0m);
+        // Vé bán online: nền tảng hưởng 150.000đ hoa hồng, và giữ hộ 850.000đ cho chủ phòng trà tới khi quyết toán.
+        // Khoản giữ hộ đó CŨNG nằm ở tài khoản nền tảng trong sổ cái — đúng chỗ phép tính cũ đếm nhầm thành doanh thu.
+        await ThanhToanAsync("TicketHold", 1_000_000m, hoaHong: 150_000m, giuHo: 850_000m);
 
         var sau = await DocAsync();
         var (gmvTruoc, nhanTruoc) = Nguon(truoc, thang, "ticket");
@@ -201,7 +208,38 @@ public sealed class AdminDashboardTests
 
         (gmvSau - gmvTruoc).Should().Be(1_400_000m, "cả hai đều là tiền người mua trả");
         (nhanSau - nhanTruoc).Should().Be(150_000m,
-            "chỉ phần ghi trong sổ cái mới là tiền nền tảng thực nhận — bán 1,4 triệu không có nghĩa nền tảng thu 1,4 triệu");
+            "chỉ hoa hồng mới là doanh thu nền tảng — 850.000đ giữ hộ chủ phòng trà rồi sẽ đi ra, cộng vào là báo cáo " +
+            "rằng nền tảng ăn gần trọn mỗi vé");
+    }
+
+    /// <summary>
+    /// MLACP-463. Hai màn hình quản trị cùng nói "doanh thu nền tảng" thì phải ra cùng một con số. Thẻ tổng quan
+    /// (<c>/analytics/admin-overview</c>) trước đây cộng MỌI bút toán ghi CÓ vào tài khoản nền tảng — gồm cả tiền giữ hộ
+    /// chủ phòng trà — nên nó luôn lớn hơn hẳn tổng của biểu đồ. Đúng bệnh "hai con số cùng tên, cùng trang, khác nhau".
+    /// </summary>
+    [Fact]
+    public async Task ThePhanTramTongQuan_VaBieuDo_CungMotConSoDoanhThu()
+    {
+        var thang = ThangNay();
+        await ThanhToanAsync("TicketHold", 1_000_000m, hoaHong: 150_000m, giuHo: 850_000m);
+        await ThanhToanAsync("Subscription", 500_000m, hoaHong: 500_000m);
+
+        var dauThang = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
+        var tuNgay = new DateTimeOffset(dauThang.Year, dauThang.Month, 1, 0, 0, 0, TimeSpan.FromHours(7));
+        var res = await Admin().GetAsync(
+            $"/api/v1/analytics/admin-overview?from={Uri.EscapeDataString(tuNgay.ToString("o"))}" +
+            $"&to={Uri.EscapeDataString(tuNgay.AddMonths(1).AddTicks(-1).ToString("o"))}");
+        res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var theTongQuan = doc.RootElement.GetProperty("data").GetProperty("platformRevenueInPeriod").GetDecimal();
+
+        var data = await DocAsync();
+        var tongBieuDo = Nguon(data, thang, "ticket").ThucNhan
+            + Nguon(data, thang, "package").ThucNhan
+            + Nguon(data, thang, "donation").ThucNhan;
+
+        theTongQuan.Should().Be(tongBieuDo,
+            "cùng một khái niệm thì phải cùng một phép tính — lệch nhau là một trong hai đang nói sai");
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
 using MusicLounge.Application.Common.Interfaces;
@@ -71,15 +72,7 @@ internal sealed class GetAdminDashboardQueryHandler
             .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= thangDau)
             .ToList();
 
-        // Bút toán ghi CÓ vào tài khoản nền tảng, gắn với một khoản thanh toán — PaymentId là đường duy nhất biết bút
-        // toán này sinh ra từ nguồn nào (bản thân LedgerEntry.ReferenceType chỉ có "payment"/"settlement"/"donation"/
-        // "refund", không phân biệt vé với gói dịch vụ).
-        var butToanNenTang = (await _uow.Repository<LedgerEntry, int>()
-                .FindAsync(e => e.Account.OwnerType == AccountType.Platform && !e.IsDebit, ct))
-            .Where(e => e.CreatedAt >= thangDau && e.PaymentId.HasValue)
-            .ToList();
 
-        var nguonTheoThanhToan = thanhToan.ToDictionary(p => p.Id, NguonCua);
 
         string Thang(DateTimeOffset luc) => luc.ToOffset(VnOffset).ToString("yyyy-MM");
 
@@ -88,10 +81,13 @@ internal sealed class GetAdminDashboardQueryHandler
             .GroupBy(p => (Thang: Thang(p.PaidAt!.Value), Nguon: NguonCua(p)!))
             .ToDictionary(g => g.Key, g => g.Sum(p => p.GrossAmount));
 
-        var thucNhan = butToanNenTang
-            .Where(e => nguonTheoThanhToan.GetValueOrDefault(e.PaymentId!.Value) is not null)
-            .GroupBy(e => (Thang: Thang(e.CreatedAt), Nguon: nguonTheoThanhToan[e.PaymentId!.Value]!))
-            .ToDictionary(g => g.Key, g => g.Sum(e => e.Amount));
+        // Phần nền tảng THỰC NHẬN, theo định nghĩa dùng chung ở PlatformRevenue: hoa hồng, KHÔNG gồm tiền giữ hộ chủ
+        // phòng trà đang nằm tạm ở tài khoản nền tảng chờ quyết toán. Cộng cả tiền giữ hộ vào đây sẽ nói với người đọc
+        // rằng nền tảng ăn gần trọn mỗi vé.
+        var thucNhan = thanhToan
+            .Where(p => NguonCua(p) is not null)
+            .GroupBy(p => (Thang: Thang(p.PaidAt!.Value), Nguon: NguonCua(p)!))
+            .ToDictionary(g => g.Key, g => g.Sum(PlatformRevenue.CuaThanhToan));
 
         RevenueBySourceDto Khoi(string thang, string nguon) => new(
             gmv.GetValueOrDefault((thang, nguon)),
