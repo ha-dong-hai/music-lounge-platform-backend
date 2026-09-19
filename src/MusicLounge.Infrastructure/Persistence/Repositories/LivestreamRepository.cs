@@ -104,7 +104,9 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
     {
         var query = _db.LivestreamChatMessages
             .AsNoTracking()
-            .Where(m => m.LivestreamId == livestreamId)
+            // MLACP-456: tin nhan da go theo bao cao vi pham khong duoc hien lai cho nguoi vao xem tre — neu khong,
+            // viec go chi la hinh thuc (ND 147/2024 doi go phai co hieu luc that).
+            .Where(m => m.LivestreamId == livestreamId && !m.IsRemoved)
             .Include(m => m.User);
 
         var totalCount = await query.CountAsync(ct);

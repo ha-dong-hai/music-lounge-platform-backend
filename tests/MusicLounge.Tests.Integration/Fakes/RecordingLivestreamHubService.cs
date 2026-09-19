@@ -35,6 +35,9 @@ public sealed class RecordingLivestreamHubService : ILivestreamHubService
     public Task BroadcastDonationMessageHiddenAsync(int livestreamId, int donationId, CancellationToken ct = default)
         => Record(livestreamId, "DonationMessageHidden", donationId);
 
+    public Task BroadcastChatMessageHiddenAsync(int livestreamId, int chatMessageId, CancellationToken ct = default)
+        => Record(livestreamId, "ChatMessageHidden", chatMessageId);
+
     public Task BroadcastViewerCountAsync(int livestreamId, int count, CancellationToken ct = default)
         => Record(livestreamId, "ViewerCountUpdated", count);
 

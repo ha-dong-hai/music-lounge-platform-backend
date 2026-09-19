@@ -52,6 +52,7 @@ internal sealed class SubmitContentReportCommandHandler : IRequestHandler<Submit
             ReportTargetType.Show => await _uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == targetId, ct),
             ReportTargetType.Livestream => await _uow.Repository<Livestream, int>().AnyAsync(l => l.Id == targetId, ct),
             ReportTargetType.Rating => await _uow.Repository<LoungeShowRating, int>().AnyAsync(r => r.Id == targetId, ct),
+            ReportTargetType.ChatMessage => await _uow.Repository<LivestreamChatMessage, int>().AnyAsync(m => m.Id == targetId, ct),
             _ => throw new DomainException("TargetType không hợp lệ.")
         };
         if (!exists)
