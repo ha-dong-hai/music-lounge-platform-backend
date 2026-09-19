@@ -223,8 +223,11 @@ public sealed class AdminDashboardTests
     [Fact]
     public async Task TopBuoiHoaNhac_XepTheoDoanhThuVe_VaDuThongTinDeHienBang()
     {
-        var (showCao, tenCao) = await BuoiHoaNhacCoVeAsync(giaVe: 900_000m, soVe: 5);   // 4,5 triệu
-        var (showThap, _) = await BuoiHoaNhacCoVeAsync(giaVe: 100_000m, soVe: 2);       // 200 nghìn
+        // Cố ý dùng số tiền rất lớn: bảng xếp hạng là TOÀN NỀN TẢNG, mà các bài test khác trong cùng phiên cũng bán vé.
+        // Với số tiền đời thường, hai buổi này rớt khỏi top và bài test hỏng vì lý do chẳng liên quan (đã xảy ra khi chạy
+        // full suite). Số lớn khiến chúng chắc chắn đứng đầu, nên phép so thứ tự mới nói lên điều nó định nói.
+        var (showCao, tenCao) = await BuoiHoaNhacCoVeAsync(giaVe: 900_000_000m, soVe: 5);
+        var (showThap, _) = await BuoiHoaNhacCoVeAsync(giaVe: 300_000_000m, soVe: 2);
 
         var data = await DocAsync("?limit=50");
         var top = data.GetProperty("topShows").EnumerateArray().ToList();
@@ -232,7 +235,7 @@ public sealed class AdminDashboardTests
         var dongCao = top.Single(x => x.GetProperty("showId").GetInt32() == showCao);
         dongCao.GetProperty("title").GetString().Should().Be(tenCao);
         dongCao.GetProperty("ticketsSold").GetInt32().Should().Be(5);
-        dongCao.GetProperty("ticketRevenue").GetDecimal().Should().Be(4_500_000m);
+        dongCao.GetProperty("ticketRevenue").GetDecimal().Should().Be(4_500_000_000m);
         dongCao.GetProperty("loungeName").GetString().Should().NotBeNullOrEmpty("bảng cần tên phòng trà");
         dongCao.GetProperty("startTime").ValueKind.Should().NotBe(JsonValueKind.Null);
 
