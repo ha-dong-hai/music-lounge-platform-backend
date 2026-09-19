@@ -43,10 +43,18 @@ public sealed record LoungeShowDetailDto(
 /// </summary>
 /// <param name="Moderation">Lần kiểm duyệt gần nhất; <c>null</c> nếu buổi hòa nhạc chưa từng được gửi duyệt.</param>
 /// <param name="VcpmcDeclared">D19: đã khai số tham chiếu phí tác quyền VCPMC/RIAV chưa — frontend dựa vào đây để ẩn/hiện form.</param>
+/// <param name="LegalApprovalReference">
+/// MLACP-461: số văn bản/đường dẫn chấp thuận của cơ quan quản lý do chính chủ phòng trà khai. Khán giả chỉ thấy cờ
+/// <see cref="LoungeShowDetailDto.LegalApprovalConfirmed"/> (đã xác nhận hay chưa) — nhưng người vận hành cần đọc lại
+/// CHÍNH số họ đã khai, nếu không thì sau khi khai xong không còn chỗ nào xem lại để đối chiếu hay sửa.
+/// </param>
+/// <param name="LegalApprovalConfirmedAt">Thời điểm Admin xác nhận văn bản hợp lệ; <c>null</c> = chưa xác nhận.</param>
 public sealed record OperatorShowInfoDto(
     ShowModerationDto? Moderation,
     bool VcpmcDeclared,
-    string? VcpmcRoyaltyReference);
+    string? VcpmcRoyaltyReference,
+    string? LegalApprovalReference,
+    DateTimeOffset? LegalApprovalConfirmedAt);
 
 /// <summary>
 /// Trạng thái kiểm duyệt của buổi hòa nhạc, nhìn từ phía phòng trà.

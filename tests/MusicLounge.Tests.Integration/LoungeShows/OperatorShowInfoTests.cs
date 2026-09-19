@@ -139,6 +139,31 @@ public sealed class OperatorShowInfoTests
         info.GetProperty("vcpmcRoyaltyReference").GetString().Should().Be("VCPMC-2026-0450");
     }
 
+    /// <summary>
+    /// MLACP-461. Khán giả chỉ cần biết "đã có chấp thuận hay chưa" (<c>legalApprovalConfirmed</c>), nhưng chủ phòng trà
+    /// khai số văn bản xong thì phải xem lại được CHÍNH số mình đã khai — nếu không, khai xong là mất dấu, không đối
+    /// chiếu hay sửa được.
+    /// </summary>
+    [Fact]
+    public async Task VanBanCapPhep_ChuThayLaiSoDaKhai_VaThoiDiemAdminXacNhan()
+    {
+        // TaoBuoiHoaNhacAsync đã khai sẵn một số (công khai buổi hòa nhạc bắt buộc có), nên bài này kiểm cả hai chiều:
+        // đọc lại được số đang có, và đọc đúng số MỚI sau khi chủ phòng trà sửa.
+        var showId = await TaoBuoiHoaNhacAsync();
+
+        var truoc = (await DocChiTietAsync(Chu(), showId)).GetProperty("operatorInfo");
+        truoc.GetProperty("legalApprovalReference").GetString().Should().Be("SoVHTT-TEST-0450",
+            "khai xong mà không xem lại được thì không đối chiếu hay sửa được");
+        truoc.GetProperty("legalApprovalConfirmedAt").ValueKind.Should().Be(JsonValueKind.Null,
+            "Admin chưa xác nhận văn bản này");
+
+        (await Chu().PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
+            new { LegalApprovalReference = "SVHTT-2026/1234-QD" })).EnsureSuccessStatusCode();
+
+        var sau = (await DocChiTietAsync(Chu(), showId)).GetProperty("operatorInfo");
+        sau.GetProperty("legalApprovalReference").GetString().Should().Be("SVHTT-2026/1234-QD");
+    }
+
     /// <summary>Endpoint công khai: lý do từ chối, lịch sử duyệt và mã VCPMC không được lộ cho người ngoài.</summary>
     [Fact]
     public async Task NguoiNgoai_KhongThayOperatorInfo()
