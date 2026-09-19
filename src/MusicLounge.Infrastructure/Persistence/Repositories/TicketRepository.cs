@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
@@ -115,8 +116,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
 
     public Task<int> CountConfirmedByPriceAsync(int priceId, CancellationToken ct = default)
         => _ctx.Tickets.CountAsync(
-            t => t.PriceId == priceId &&
-                 (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending), ct);
+            t => t.PriceId == priceId && TicketOccupancy.ChiemCho.Contains(t.Status), ct);
 
     public Task<int> CountActiveHoldsByPriceAsync(int priceId, CancellationToken ct = default)
         => _ctx.TicketHolds.CountAsync(
@@ -124,8 +124,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
 
     public Task<int> CountConfirmedByShowAsync(int showId, CancellationToken ct = default)
         => _ctx.Tickets.CountAsync(
-            t => t.ShowId == showId &&
-                 (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending), ct);
+            t => t.ShowId == showId && TicketOccupancy.ChiemCho.Contains(t.Status), ct);
 
     public void AddPhysicalDetail(PhysicalTicketDetail detail)
         => _ctx.PhysicalTicketDetails.Add(detail);
@@ -137,8 +136,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
         if (priceIds.Count == 0) return result;
 
         var ticketCounts = await _ctx.Tickets
-            .Where(t => priceIds.Contains(t.PriceId) &&
-                        (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending))
+            .Where(t => priceIds.Contains(t.PriceId) && TicketOccupancy.ChiemCho.Contains(t.Status))
             .GroupBy(t => t.PriceId)
             .Select(g => new { PriceId = g.Key, Count = g.Count() })
             .ToListAsync(ct);

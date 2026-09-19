@@ -99,8 +99,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         var maMucGia = mucGia.Select(p => p.Id).ToList();
 
         var veDaChiem = (await _ctx.Tickets
-                .Where(t => maMucGia.Contains(t.PriceId)
-                    && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending))
+                .Where(t => maMucGia.Contains(t.PriceId) && TicketOccupancy.ChiemCho.Contains(t.Status))
                 .GroupBy(t => t.PriceId)
                 .Select(g => new { PriceId = g.Key, SoLuong = g.Count() })
                 .ToListAsync(ct))
@@ -574,8 +573,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
         var ticketCounts = await _ctx.Tickets
             .AsNoTracking()
-            .Where(t => priceIds.Contains(t.PriceId)
-                && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Pending))
+            .Where(t => priceIds.Contains(t.PriceId) && TicketOccupancy.ChiemCho.Contains(t.Status))
             .GroupBy(t => t.PriceId)
             .Select(g => new { PriceId = g.Key, Count = g.Count() })
             .ToListAsync(ct);
