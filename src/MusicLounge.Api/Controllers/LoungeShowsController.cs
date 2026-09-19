@@ -92,6 +92,10 @@ public sealed class LoungeShowsController : ControllerBase
         [FromQuery] LoungeShowFormat? format,
         [FromQuery] DateTimeOffset? dateFrom,
         [FromQuery] DateTimeOffset? dateTo,
+        [FromQuery] string? city = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] bool includeSoldOut = true,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
@@ -99,6 +103,7 @@ public sealed class LoungeShowsController : ControllerBase
     {
         var result = await _sender.Send(new SearchLoungeShowsQuery(
             genreIds, moodIds, atmosphereIds, keyword, format, dateFrom, dateTo,
+            city, minPrice, maxPrice, includeSoldOut,
             page, pageSize, sortBy), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
