@@ -137,6 +137,16 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }
 
+    public async Task<PaginatedResult<LoungeShow>> GetForOperatedLoungeAsync(
+        int loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
+        LoungeShowStatus? status = null, CancellationToken ct = default)
+    {
+        var query = WithDetails().Where(s => s.LoungeId == loungeId);
+        if (status.HasValue)
+            query = query.Where(s => s.Status == status.Value);
+        return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
+    }
+
     public async Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams p, CancellationToken ct = default)
     {
