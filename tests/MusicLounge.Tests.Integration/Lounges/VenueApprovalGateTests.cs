@@ -36,7 +36,7 @@ public sealed class VenueApprovalGateTests
     private HttpClient Anonymous() => _factory.CreateClient();
 
     private async Task<(int LoungeId, int OwnerId, string Name)> SeedVenueAsync(
-        LoungeStatus status, string? businessLicenseUrl = null)
+        LoungeStatus status, string? businessLicenseUrl = null, string city = "HCM")
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -65,7 +65,7 @@ public sealed class VenueApprovalGateTests
             Description = "Integration test venue",
             Status = status,
             BusinessLicenseUrl = businessLicenseUrl,
-            Address = new VenueAddress { Street = "1 Thử Nghiệm", Ward = "P1", District = "Q1", City = "HCM" }
+            Address = new VenueAddress { Street = "1 Thử Nghiệm", Ward = "P1", District = "Q1", City = city }
         };
         db.Add(lounge);
         await db.SaveChangesAsync();
@@ -165,15 +165,29 @@ public sealed class VenueApprovalGateTests
 
     // ---------- hiện diện công khai ----------
 
+    /// <summary>
+    /// MLACP-465. Bản cũ lấy trang đầu (50 dòng) của danh sách công khai rồi kiểm tên phòng trà KHÔNG có trong đó. Danh
+    /// sách sắp theo tên và dùng chung cho cả bộ test, nên khi có hơn 50 phòng trà, một phòng trà chưa duyệt bị lọt vào
+    /// danh sách vẫn có thể nằm ở trang sau — và bài test XANH trong khi bộ lọc đã hỏng. Một khẳng định phủ định chỉ có
+    /// nghĩa khi chắc chắn đã nhìn đúng chỗ.
+    ///
+    /// Nay: đặt phòng trà vào một thành phố riêng rồi lọc theo thành phố đó, và thêm một phòng trà ĐÃ DUYỆT cùng thành
+    /// phố làm đối chứng — nếu đối chứng không hiện ra thì phép truy vấn đang không chạm tới dữ liệu, và bài test phải đỏ.
+    /// </summary>
     [Fact]
     public async Task AnUnapprovedVenue_IsNotInThePublicList()
     {
-        var (_, _, name) = await SeedVenueAsync(LoungeStatus.Pending);
+        var city = $"TP-{Guid.NewGuid():N}"[..20];
+        var (_, _, choDuyet) = await SeedVenueAsync(LoungeStatus.Pending, city: city);
+        var (_, _, daDuyet) = await SeedVenueAsync(LoungeStatus.Approved, city: city);
 
-        var res = await Anonymous().GetAsync("/api/v1/lounges?pageSize=50");
+        var res = await Anonymous().GetAsync($"/api/v1/lounges?city={Uri.EscapeDataString(city)}&pageSize=50");
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await res.Content.ReadAsStringAsync()).Should().NotContain(name);
+        var body = await res.Content.ReadAsStringAsync();
+        body.Should().Contain(daDuyet,
+            "đối chứng: phòng trà đã duyệt cùng thành phố phải hiện — không hiện nghĩa là truy vấn không chạm tới dữ liệu");
+        body.Should().NotContain(choDuyet);
     }
 
     [Fact]
