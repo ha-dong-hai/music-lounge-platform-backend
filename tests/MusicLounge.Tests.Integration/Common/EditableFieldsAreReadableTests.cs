@@ -11,7 +11,11 @@ namespace MusicLounge.Tests.Integration.Common;
 /// người dùng bấm Sửa mà không nhập lại đúng ô đó thì giá trị cũ bị xoá âm thầm — không lỗi, không cảnh
 /// báo, không test nào đỏ.
 ///
-/// <para>Lớp lỗi này đã xảy ra thật ba lần, do phía frontend phát hiện khi dựng màn hình sửa:</para>
+/// <para>Lớp lỗi này đã xảy ra thật CHÍN lần: bốn chỗ sửa ở MLACP-467, năm chỗ ở MLACP-469. Phía
+/// frontend phát hiện phần lớn khi dựng màn hình sửa; phần còn lại do chính phép quét này tìm ra sau
+/// khi nó được sửa để không bỏ qua lệnh nào trong im lặng.</para>
+///
+/// <para>Ba ví dụ cho thấy vì sao mất dữ liệu mà không ai biết:</para>
 /// <list type="bullet">
 /// <item><c>UpdateLoungeShowCommand.CategoryId</c> — không DTO đọc nào trả về, sửa buổi hòa nhạc là mất danh mục.</item>
 /// <item><c>UpdateLoungeCommand.AtmosphereId</c> — DTO chỉ trả <c>AtmosphereName</c>; tên hiển thị không
@@ -81,8 +85,10 @@ public sealed class EditableFieldsAreReadableTests
         ["Performance"] = ["PerformerSummaryDto"],
         ["AiPreferences"] = ["UserProfileDto"],
         ["MyProfile"] = ["UserProfileDto"],
-        ["EventCategory"] = ["CatalogItemDto"],
-        ["MusicGenre"] = ["CatalogItemDto"],
+        // MLACP-469 mở đường đọc riêng cho Admin: danh mục công khai (CatalogItemDto) cố ý chỉ có
+        // (Id, Name) và chỉ trả mục đang bật, nên nó KHÔNG phải đường đọc của lệnh sửa.
+        ["EventCategory"] = ["AdminEventCategoryDto"],
+        ["MusicGenre"] = ["AdminMusicGenreDto"],
         ["Mood"] = ["CatalogItemDto"],
         ["VenueAtmosphere"] = ["CatalogItemDto"],
     };
@@ -92,37 +98,6 @@ public sealed class EditableFieldsAreReadableTests
     {
         ["UpdateFnbOrderStatusCommand"] = "chuyển trạng thái đơn (Pending → Preparing → …), người dùng " +
                                           "không nhập lại trạng thái cũ.",
-    };
-
-    /// <summary>
-    /// Khoảng trống ĐÃ BIẾT: trường có đường ghi mà chưa có đường đọc, đã báo nhưng chưa sửa.
-    ///
-    /// <para>Đây là danh sách có chốt hai đầu: mục còn trong đây thì phép quét chính bỏ qua, nhưng
-    /// <see cref="KhoangTrongDaBiet_PhaiDungNhuDangGhi"/> bắt buộc mỗi mục PHẢI còn là khoảng trống thật.
-    /// Sửa xong mà quên xoá khỏi đây là test đỏ — danh sách không phình lên rồi mục nát.</para>
-    /// </summary>
-    private static readonly Dictionary<string, string> KhoangTrongDaBiet = new(StringComparer.Ordinal)
-    {
-        ["UpdateEventCategoryCommand.Description"] =
-            "GET /catalog/event-categories chỉ trả CatalogItemDto(Id, Name) — sửa danh mục là mất mô tả. " +
-            "Frontend báo 20/09/2026; chờ thêm DTO đọc riêng cho Admin.",
-        ["UpdateEventCategoryCommand.IsActive"] =
-            "Tệ hơn mô tả: truy vấn đọc lọc IsActive == true, nên tắt một danh mục xong thì không màn hình " +
-            "nào nhìn thấy nó nữa để bật lại — cửa một chiều. Frontend báo 20/09/2026.",
-        ["UpdateMusicGenreCommand.NameEn"] =
-            "filter-options và catalog đều trả CatalogItemDto(Id, Name), không có NameEn — sửa thể loại là " +
-            "mất tên tiếng Anh. Frontend báo 20/09/2026.",
-        ["UpdatePerformanceCommand.OrderIndex"] =
-            "PerformerSummaryDto không trả OrderIndex, mà UpdatePerformanceCommand bắt buộc có: client " +
-            "phải tự bịa một số hoặc suy từ vị trí trong mảng. Frontend báo 20/09/2026 — và đã dính lỗi " +
-            "thật: gửi vị trí trong mảng cho MỘT người, trong khi số đang lưu là 0, 5, 10, nên sửa vai trò " +
-            "của người thứ ba lại đẩy họ lên trước người thứ hai. Frontend đang phải chữa bằng cách đánh số " +
-            "lại cả danh sách (N lệnh PUT tuần tự, commit 804040d bên kho giao diện). " +
-            "KHI THÊM OrderIndex VÀO DTO: xoá dòng này VÀ báo phía giao diện, để họ bỏ cách chữa đó và " +
-            "quay lại một lệnh PUT.",
-        ["UpdateAiPreferencesCommand.DislikedGenreIds"] =
-            "UserProfileDto trả ba danh sách yêu thích nhưng không trả danh sách thể loại bị loại trừ; " +
-            "người dùng mở lại trang sở thích là mất phần đã loại trừ.",
     };
 
     [Fact]
@@ -187,7 +162,6 @@ public sealed class EditableFieldsAreReadableTests
                 var ten = tham.Name!;
                 var khoa = $"{lenh.Name}.{ten}";
                 if (CoLyDoKhongTraVe.ContainsKey(khoa)) continue;
-                if (KhoangTrongDaBiet.ContainsKey(khoa)) continue;   // đã báo, có chốt ở test dưới
 
                 // Định danh của chính bản ghi đang sửa: luôn là tham số đầu tiên và luôn kết thúc bằng "Id"
                 // (ShowId, ZoneId, MenuId, TierId…). Nó nằm trên đường dẫn URL, người dùng không nhập lại,
@@ -211,50 +185,6 @@ public sealed class EditableFieldsAreReadableTests
             "PUT ghi đè toàn phần, nên client chỉ giữ lại được thứ nó đọc được: mỗi trường ở trên hiện có " +
             "đường GHI mà không có đường ĐỌC, và người dùng bấm Sửa là mất giá trị cũ mà không ai biết. " +
             "Thêm trường vào DTO đọc (và vào hàm ánh xạ), hoặc khai vào CoLyDoKhongTraVe kèm lý do");
-    }
-
-    /// <summary>
-    /// Chốt đầu kia của <see cref="KhoangTrongDaBiet"/>: mỗi mục trong đó phải CÒN là khoảng trống thật.
-    ///
-    /// <para>Không có chốt này thì danh sách "đã biết" chỉ có lớn lên: sửa xong không ai xoá, rồi vài tháng
-    /// sau không ai còn biết mục nào là lỗi thật, mục nào là rác. Sửa được một chỗ là test này đỏ, kèm câu
-    /// nhắc xoá dòng tương ứng — đỏ một lần, rẻ hơn một danh sách mục nát.</para>
-    /// </summary>
-    [Fact]
-    public void KhoangTrongDaBiet_PhaiDungNhuDangGhi()
-    {
-        var assembly = typeof(UpdateLoungeShowCommand).Assembly;
-        var dtoTheoTen = assembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Dto", StringComparison.Ordinal))
-            .GroupBy(t => t.Name, StringComparer.Ordinal)
-            .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
-
-        KhoangTrongDaBiet.Should().NotBeEmpty(
-            "danh sách rỗng thì chính test này vô nghĩa — nếu đã sửa hết thì xoá luôn cả test");
-
-        var daSua = new List<string>();
-
-        foreach (var (khoa, lyDo) in KhoangTrongDaBiet)
-        {
-            var (tenLenh, tenTruong) = (khoa[..khoa.IndexOf('.')], khoa[(khoa.IndexOf('.') + 1)..]);
-            var lenh = assembly.GetTypes().FirstOrDefault(t => t.Name == tenLenh);
-            lenh.Should().NotBeNull($"{tenLenh} không còn tồn tại — xoá dòng '{khoa}' khỏi KhoangTrongDaBiet");
-
-            var thucThe = tenLenh["Update".Length..^"Command".Length];
-            var docDuoc = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var ten in DtoDoc.GetValueOrDefault(thucThe, [$"{thucThe}DetailDto", $"{thucThe}Dto"]))
-                if (dtoTheoTen.TryGetValue(ten, out var dto))
-                    ThuThapThuocTinh(dto, docDuoc, doSau: 0);
-
-            // Mục ghi "ĐỌC ĐƯỢC, chỉ khác tên" là ghi chú ánh xạ cho frontend, không phải khoảng trống;
-            // nó đúng khi trường KHÔNG có tên y hệt trong DTO, và đó cũng là điều kiện kiểm ở dưới.
-            if (docDuoc.Contains(tenTruong))
-                daSua.Add($"{khoa} — nay đã đọc được rồi, xoá dòng này đi (lý do đang ghi: {lyDo[..Math.Min(60, lyDo.Length)]}…)");
-        }
-
-        string.Join(Environment.NewLine, daSua).Should().BeEmpty(
-            "khoảng trống đã được lấp thì phải xoá khỏi KhoangTrongDaBiet, để danh sách luôn là hiện trạng " +
-            "chứ không phải lịch sử");
     }
 
     /// <summary>
