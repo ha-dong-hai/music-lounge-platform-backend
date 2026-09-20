@@ -33,6 +33,13 @@ public sealed record LoungeShowDetailDto(
     // publishing this as a precondition of selling, not a nice-to-have.
     TicketRefundPolicyDto RefundPolicy,
     DateTimeOffset? TicketSaleClosesAt,
+    // MLACP-467: PUT /lounge-shows/{id} GHI ĐÈ toàn phần — trường nào client không gửi thì thành null. Mà client chỉ
+    // gửi lại được thứ nó ĐỌC được. Ba trường dưới đây trước đây không DTO đọc nào trả (hai số vé chỉ có ở danh sách),
+    // nên mỗi lần chủ phòng trà bấm Sửa mà không chọn lại danh mục là danh mục bị xoá âm thầm. Mọi trường của lệnh sửa
+    // đều phải đọc được ở đây — test EditableShowFieldsAreReadableTests quét để thêm trường mới mà quên đường đọc thì đỏ.
+    int? CategoryId,
+    int? OfflineQuota,
+    int? OnlineQuota,
     // MLACP-450: chi tra cho nguoi van hanh phong tra (chu, nhan vien duoc phan cong, Admin — dung
     // VenueOperatorAccess.CanOperate). Endpoint nay cong khai, nen ly do bi tu choi va ma VCPMC khong duoc lo
     // cho khan gia: nguoi ngoai nhan null.

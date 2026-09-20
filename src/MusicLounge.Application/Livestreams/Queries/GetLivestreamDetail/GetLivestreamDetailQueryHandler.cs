@@ -104,7 +104,9 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             livestream.TerminatedReason,
             userHasAccess,
             recordingUrl,
-            viewingSessionId);
+            viewingSessionId,
+            livestream.IsFree,
+            livestream.ChatEnabled);
     }
 
     // Ngoại lệ CQRS có chủ đích: Query này ghi DB (mở 1 phiên xem mới + cập nhật
