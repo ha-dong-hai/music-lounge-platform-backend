@@ -45,6 +45,7 @@ using MusicLounge.Application.Admin.Commands.ReviewKycDocument;
 using MusicLounge.Application.Admin.Commands.ReviewPayoutBankAccount;
 using MusicLounge.Application.Admin.Commands.TriggerRecurringJob;
 using MusicLounge.Application.Admin.Queries.GetKycReviewQueue;
+using MusicLounge.Application.Admin.Queries.GetPayoutAccountReviewQueue;
 using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetUserDetail;
 using MusicLounge.Application.Users.Queries.GetUsers;
@@ -497,6 +498,27 @@ public sealed class AdminController : ControllerBase
     {
         await _sender.Send(new ReviewKycDocumentCommand(id, document, body.Approve, body.Note), ct);
         return NoContent();
+    }
+
+    /// <summary>
+    /// Hàng đợi tài khoản nhận tiền của phòng trà đang chờ xác minh.
+    ///
+    /// <para>Thao tác duyệt bên dưới đã có từ trước, nhưng không có đường nào liệt kê để biết {id} là gì —
+    /// nên màn hình xác minh tài khoản ngân hàng không dựng được, và tiền quyết toán không chuyển đi được
+    /// cho tới khi có người tra tay trong cơ sở dữ liệu. Danh sách trả kèm ba điều kiện mà chính lệnh duyệt
+    /// sẽ kiểm (tên chủ tài khoản có khớp hồ sơ không, CCCD của chủ phòng trà đã duyệt chưa, số tài khoản
+    /// còn đọc được không), để người duyệt thấy trước thay vì bấm rồi nhận lỗi.</para>
+    /// </summary>
+    [HttpGet("bank-accounts")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<PayoutAccountReviewItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPayoutAccountReviewQueue(
+        [FromQuery] bool verified = false,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPayoutAccountReviewQueueQuery(verified, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<PayoutAccountReviewItemDto>>.Ok(result));
     }
 
     /// <summary>MLACP-395: xác minh hoặc từ chối tài khoản nhận tiền quyết toán của một phòng trà. Chỉ xác minh được khi
