@@ -8,6 +8,7 @@ using MusicLounge.Application.VenuePenalties.Commands.IssuePenalty;
 using MusicLounge.Application.VenuePenalties.Commands.ReviewAppeal;
 using MusicLounge.Application.VenuePenalties.Commands.SubmitAppeal;
 using MusicLounge.Application.VenuePenalties.DTOs;
+using MusicLounge.Application.VenuePenalties.Queries.GetAppealQueue;
 using MusicLounge.Application.VenuePenalties.Queries.GetMyVenuePenalties;
 
 namespace MusicLounge.Api.Controllers;
@@ -35,6 +36,27 @@ public sealed class VenuePenaltiesController : ControllerBase
         // Khong co GET /venue-penalties/{id} don le — dung CreatedAtAction(nameof(Issue)) se sinh
         // Location vo nghia (tro ve chinh POST action). Owner tra cuu lai qua GET /venue-penalties/mine.
         return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
+    }
+
+    /// <summary>
+    /// Hàng đợi kháng nghị án phạt đang chờ Admin xử lý.
+    ///
+    /// <para>Thao tác xử lý kháng nghị bên dưới đã có từ trước, nhưng đường liệt kê duy nhất là
+    /// <c>GET /venue-penalties/mine</c> — lọc theo chính chủ phòng trà đang đăng nhập. Admin không có cách
+    /// nào biết phòng trà nào vừa kháng nghị, nên kháng nghị nộp vào rồi nằm im; mà để quá hạn thì theo
+    /// quy trình đang chạy sẽ được duyệt tự động.</para>
+    /// </summary>
+    [HttpGet("appeals")]
+    [Authorize(Policy = Policies.RequireAdmin)]
+    [ProducesResponseType<ApiResponse<PaginatedResult<VenuePenaltyDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAppealQueue(
+        [FromQuery] bool resolved = false,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetAppealQueueQuery(resolved, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<VenuePenaltyDto>>.Ok(result));
     }
 
     /// <summary>Owner — xem toàn bộ penalty (mọi trạng thái) đã bị áp lên các lounge của mình.</summary>

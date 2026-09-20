@@ -7,6 +7,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.CustomCriteria.Commands.CreateCustomCriteria;
 using MusicLounge.Application.CustomCriteria.Commands.SetEventCustomValues;
 using MusicLounge.Application.CustomCriteria.DTOs;
+using MusicLounge.Application.CustomCriteria.Queries.GetEventCustomValues;
 using MusicLounge.Application.CustomCriteria.Queries.GetLoungeCustomCriteria;
 
 namespace MusicLounge.Api.Controllers;
@@ -53,6 +54,23 @@ public sealed class CustomCriteriaController : ControllerBase
     /// <summary>Owner — gắn/cập nhật giá trị các tiêu chí tùy chỉnh cho 1 buổi diễn (upsert theo
     /// CriteriaId). Chỉ chấp nhận tiêu chí thuộc đúng venue của buổi diễn đó. Dữ liệu dùng cho AI
     /// matching nâng cao.</summary>
+    /// <summary>
+    /// Giá trị tiêu chí riêng đang gắn cho một buổi hòa nhạc.
+    ///
+    /// <para>Thao tác ghi bên dưới THAY THẾ TOÀN BỘ danh sách, nhưng trước đây không có đường nào đọc giá
+    /// trị đang gắn — màn hình sửa không hiện được cái gì đang có, nên mỗi lần lưu là phải nhập lại từ
+    /// đầu, quên một tiêu chí là mất tiêu chí đó.</para>
+    /// </summary>
+    [HttpGet("shows/{showId:int}/values")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<EventCustomValueDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetEventValues(int showId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetEventCustomValuesQuery(showId), ct);
+        return Ok(ApiResponse<IReadOnlyList<EventCustomValueDto>>.Ok(result));
+    }
+
     [HttpPost("shows/{showId:int}/values")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

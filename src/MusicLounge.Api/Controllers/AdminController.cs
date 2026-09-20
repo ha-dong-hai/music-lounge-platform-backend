@@ -45,6 +45,8 @@ using MusicLounge.Application.Admin.Commands.ReviewKycDocument;
 using MusicLounge.Application.Admin.Commands.ReviewPayoutBankAccount;
 using MusicLounge.Application.Admin.Commands.TriggerRecurringJob;
 using MusicLounge.Application.Admin.Queries.GetKycReviewQueue;
+using MusicLounge.Application.Admin.Queries.GetPayoutAccountReviewQueue;
+using MusicLounge.Application.Catalog.Queries.GetTaxonomyForAdmin;
 using MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetUserDetail;
 using MusicLounge.Application.Users.Queries.GetUsers;
@@ -96,6 +98,21 @@ public sealed class AdminController : ControllerBase
     }
 
     // ---- Thể loại nhạc ----
+
+    /// <summary>
+    /// Thể loại nhạc nhìn từ phía Admin, kèm <c>NameEn</c>.
+    ///
+    /// <para>Danh mục công khai chỉ trả (Id, Name), trong khi <c>PUT genres/{id}</c> ghi đè cả NameEn —
+    /// nên trước đây sửa tên tiếng Việt là xoá mất tên tiếng Anh, không màn hình nào đọc lại được để
+    /// gửi kèm.</para>
+    /// </summary>
+    [HttpGet("genres")]
+    [ProducesResponseType<ApiResponse<List<AdminMusicGenreDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetGenresForAdmin(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMusicGenresForAdminQuery(), ct);
+        return Ok(ApiResponse<List<AdminMusicGenreDto>>.Ok(result));
+    }
 
     [HttpPost("genres")]
     [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
@@ -195,6 +212,21 @@ public sealed class AdminController : ControllerBase
     }
 
     // ---- Loại buổi diễn ----
+
+    /// <summary>
+    /// Danh mục buổi hòa nhạc nhìn từ phía Admin: có <c>Description</c> và có cả mục ĐÃ TẮT.
+    ///
+    /// <para>Danh mục công khai lọc <c>IsActive == true</c> — đúng cho khán giả, nhưng nó là đường đọc
+    /// duy nhất, mà <c>PUT event-categories/{id}</c> thì ghi đè toàn phần. Hậu quả: sửa tên là mất mô tả,
+    /// và tắt một danh mục xong thì không màn hình nào còn nhìn thấy nó để bật lại — cửa một chiều.</para>
+    /// </summary>
+    [HttpGet("event-categories")]
+    [ProducesResponseType<ApiResponse<List<AdminEventCategoryDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetEventCategoriesForAdmin(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetEventCategoriesForAdminQuery(), ct);
+        return Ok(ApiResponse<List<AdminEventCategoryDto>>.Ok(result));
+    }
 
     [HttpPost("event-categories")]
     [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
@@ -497,6 +529,27 @@ public sealed class AdminController : ControllerBase
     {
         await _sender.Send(new ReviewKycDocumentCommand(id, document, body.Approve, body.Note), ct);
         return NoContent();
+    }
+
+    /// <summary>
+    /// Hàng đợi tài khoản nhận tiền của phòng trà đang chờ xác minh.
+    ///
+    /// <para>Thao tác duyệt bên dưới đã có từ trước, nhưng không có đường nào liệt kê để biết {id} là gì —
+    /// nên màn hình xác minh tài khoản ngân hàng không dựng được, và tiền quyết toán không chuyển đi được
+    /// cho tới khi có người tra tay trong cơ sở dữ liệu. Danh sách trả kèm ba điều kiện mà chính lệnh duyệt
+    /// sẽ kiểm (tên chủ tài khoản có khớp hồ sơ không, CCCD của chủ phòng trà đã duyệt chưa, số tài khoản
+    /// còn đọc được không), để người duyệt thấy trước thay vì bấm rồi nhận lỗi.</para>
+    /// </summary>
+    [HttpGet("bank-accounts")]
+    [ProducesResponseType<ApiResponse<PaginatedResult<PayoutAccountReviewItemDto>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPayoutAccountReviewQueue(
+        [FromQuery] bool verified = false,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPayoutAccountReviewQueueQuery(verified, page, pageSize), ct);
+        return Ok(ApiResponse<PaginatedResult<PayoutAccountReviewItemDto>>.Ok(result));
     }
 
     /// <summary>MLACP-395: xác minh hoặc từ chối tài khoản nhận tiền quyết toán của một phòng trà. Chỉ xác minh được khi

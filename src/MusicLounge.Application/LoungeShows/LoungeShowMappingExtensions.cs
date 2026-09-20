@@ -70,7 +70,7 @@ internal static class LoungeShowMappingExtensions
                show.Livestream?.Id,
                show.Lounge.ToSummaryDto(galleryImages ?? []),
                show.Performances.OrderBy(p => p.OrderIndex)
-                   .Select(p => p.Performer.ToSummaryDto(p.Id, p.AcceptsDonation, p.Role, p.SetTime)).ToList(),
+                   .Select(p => p.Performer.ToSummaryDto(p.Id, p.AcceptsDonation, p.Role, p.SetTime, p.OrderIndex)).ToList(),
                // MLACP-388: an hang ve ma moi gia deu dang cho duyet — nguoi mua khong mua duoc no.
                show.TicketTiers.Where(t => t.Prices.Count == 0 || t.Prices.Any(p => p.IsActive))
                    .Select(t => t.ToSummaryDto(soldAndHeld, lastEntry)).ToList(),
@@ -159,10 +159,10 @@ internal static class LoungeShowMappingExtensions
 
     private static PerformerSummaryDto ToSummaryDto(
         this Performer performer, int performanceId, bool acceptsDonation,
-        PerformerRole role, TimeOnly? setTime)
+        PerformerRole role, TimeOnly? setTime, int orderIndex)
         => new(performer.Id, performer.Name, performer.AvatarUrl, performer.Bio,
                performer.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
-               performanceId, acceptsDonation, role, setTime);
+               performanceId, acceptsDonation, role, orderIndex, setTime);
 
     private static TicketTierSummaryDto ToSummaryDto(
         this TicketTier tier, IReadOnlyDictionary<int, int>? soldAndHeld, DateTimeOffset lastEntry)

@@ -13,4 +13,8 @@ public sealed record UserProfileDto(
     bool AiConsent,
     IReadOnlyList<int> FavouriteGenreIds,
     IReadOnlyList<int> FavouriteMoodIds,
-    IReadOnlyList<int> FavouriteAtmosphereIds);
+    IReadOnlyList<int> FavouriteAtmosphereIds,
+    // PUT /me/preferences ghi đè toàn phần và nhận cả DislikedGenreIds, nhưng trước đây không đường
+    // đọc nào trả danh sách loại trừ về. Người dùng mở lại trang sở thích rồi bấm Lưu là mất sạch
+    // phần đã loại trừ — mà loại trừ thể loại chính là cách duy nhất họ nói "đừng gợi ý thứ này nữa".
+    IReadOnlyList<int> DislikedGenreIds);
