@@ -120,6 +120,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
             .Take(pageSize)
             .Select(d => new MyDonationDto(
                 d.Id,
+                d.Performance.PerformerId,
                 d.Performance.Performer.Name,
                 d.Performance.LoungeShow.Name,
                 d.Gross,
