@@ -85,7 +85,10 @@ internal static class LoungeShowMappingExtensions
                show.LegalApprovalConfirmedAt.HasValue,
                show.PlaybackMode,
                show.ToRefundPolicyDto(),
-               show.TicketSaleClosesAt);
+               show.TicketSaleClosesAt,
+               show.CategoryId,
+               show.OfflineQuota,
+               show.OnlineQuota);
 
     /// <summary>
     /// Built from TicketRefundPolicy, the same resolver CancelTicket uses to decide what a buyer

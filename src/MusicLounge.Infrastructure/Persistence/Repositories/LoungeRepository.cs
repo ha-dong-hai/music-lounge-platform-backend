@@ -72,6 +72,7 @@ internal sealed class LoungeRepository : ILoungeRepository
                 l.Address.Latitude, l.Address.Longitude,
                 FollowerCount = l.Follows.Count,
                 l.Description,
+                l.AtmosphereId,
                 AtmosphereName = l.Atmosphere != null ? l.Atmosphere.Name : null,
                 l.OwnerId, l.Status
             })
@@ -110,7 +111,8 @@ internal sealed class LoungeRepository : ILoungeRepository
             lounge.AtmosphereName,
             galleryImages,
             lounge.OwnerId,
-            lounge.Status.ToString());
+            lounge.Status.ToString(),
+            lounge.AtmosphereId);
     }
 
     /// <summary>

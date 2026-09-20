@@ -46,7 +46,8 @@ internal static class PerformerDtoMapper
                 p.CreatedByUserId,
                 performerGenreIds,
                 performerGenreIds.Select(id => genreNameById.GetValueOrDefault(id, string.Empty)).ToList(),
-                socialLinksByPerformer.GetValueOrDefault(p.Id, []));
+                socialLinksByPerformer.GetValueOrDefault(p.Id, []),
+                p.ContactEmail);
         }).ToList();
     }
 }
