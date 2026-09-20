@@ -115,6 +115,28 @@ internal sealed class FirebaseFileStorageService : IFileStorageService
         return privateName;
     }
 
+    public async Task DeletePrivateFileAsync(string? privateRef, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(privateRef))
+            return;
+
+        // Pinned to the private prefix for the same reason OpenPrivateFileAsync pins it: the value
+        // comes from a database column, and an erasure request must not be turnable into "delete any
+        // object in the bucket" by a tampered row.
+        var objectName = privateRef.StartsWith(UploadContentRules.PrivateFolder + "/", StringComparison.Ordinal)
+            ? privateRef
+            : $"{UploadContentRules.PrivateFolder}/{Path.GetFileName(privateRef)}";
+
+        try
+        {
+            await _storage.DeleteObjectAsync(_bucket, objectName, options: null, cancellationToken: ct);
+        }
+        catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Already gone. An erasure request must not fail because the file was removed by hand.
+        }
+    }
+
     public async Task<(Stream Content, string ContentType)> OpenPrivateFileAsync(
         string privateRef, CancellationToken ct = default)
     {

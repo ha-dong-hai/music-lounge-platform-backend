@@ -95,6 +95,22 @@ internal sealed class LocalFileStorageService : IFileStorageService
         return Task.FromResult((stream, contentType));
     }
 
+    public Task DeletePrivateFileAsync(string? privateRef, CancellationToken ct = default)
+    {
+        // Chỉ lấy phần tên tệp: giá trị lưu trong cột do chính RelocateToPrivateAsync sinh ra, nhưng
+        // nếu một dòng dữ liệu cũ chứa cả đường dẫn thì cũng không được để nó trỏ ra ngoài thư mục
+        // riêng tư — cùng cách phòng thủ mà OpenPrivateFileAsync dùng.
+        var fileName = string.IsNullOrWhiteSpace(privateRef) ? null : Path.GetFileName(privateRef);
+        if (string.IsNullOrWhiteSpace(fileName))
+            return Task.CompletedTask;
+
+        var path = Path.Combine(_privateRootPath, fileName);
+        if (File.Exists(path))
+            File.Delete(path);
+
+        return Task.CompletedTask;
+    }
+
     public bool IsOwnUploadUrl(string url)
         => !string.IsNullOrWhiteSpace(url)
            && url.StartsWith($"/{UploadContentRules.ImageFolder}/", StringComparison.Ordinal);

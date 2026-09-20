@@ -22,6 +22,21 @@ public interface IFileStorageService
     Task<(Stream Content, string ContentType)> OpenPrivateFileAsync(string privateRef, CancellationToken ct = default);
 
     /// <summary>
+    /// Deletes a file previously relocated via RelocateToPrivateAsync. Returns without throwing when
+    /// the reference is empty or the file is already gone.
+    ///
+    /// <para>Exists for erasure, and erasure only. Clearing the column on the User row is not erasure
+    /// while the image of someone's citizen card is still sitting in App_Data/private-uploads: the
+    /// database stops pointing at it, and the photograph of a person's identity document stays on the
+    /// disk forever. Luật 91/2025/QH15 Điều 19 requires the data itself to go, not the reference to it.</para>
+    ///
+    /// <para>Deliberately forgiving: an erasure request must not fail because a file was already
+    /// removed by hand, or because the row was written before the private folder existed. Losing the
+    /// file twice is harmless; refusing to erase a person's data because of it is not.</para>
+    /// </summary>
+    Task DeletePrivateFileAsync(string? privateRef, CancellationToken ct = default);
+
+    /// <summary>
     /// Whether this URL is one this platform's own upload endpoint issued.
     ///
     /// The question the SSRF gate on tour stitching actually needs answered. It used to ask

@@ -30,19 +30,22 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<RequestDataErasureCommandHandler> _logger;
     private readonly IInferredAiProfileRepository _inferredProfile;
+    private readonly IFileStorageService _fileStorage;
 
     public RequestDataErasureCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         IPasswordHasher passwordHasher,
         ILogger<RequestDataErasureCommandHandler> logger,
-        IInferredAiProfileRepository inferredProfile)
+        IInferredAiProfileRepository inferredProfile,
+        IFileStorageService fileStorage)
     {
         _uow = uow;
         _currentUser = currentUser;
         _passwordHasher = passwordHasher;
         _logger = logger;
         _inferredProfile = inferredProfile;
+        _fileStorage = fileStorage;
     }
 
     public async Task<Unit> Handle(RequestDataErasureCommand request, CancellationToken ct)
@@ -121,6 +124,19 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         user.EmailVerificationCodeExpiresAt = null;
         user.CitizenCardNumber = null;
         user.CitizenCardNumberHash = null;
+        // Xoá CHÍNH TỆP ẢNH, không chỉ xoá đường dẫn. Trước đây hai cột này được gán null còn hai
+        // tấm ảnh căn cước công dân vẫn nằm nguyên trong App_Data/private-uploads: cơ sở dữ liệu
+        // thôi không trỏ tới nữa, nhưng ảnh giấy tờ tuỳ thân của một con người thì ở lại trên đĩa
+        // vĩnh viễn, mà sau khi gán null xong thì KHÔNG CÒN ĐƯỜNG NÀO tìm lại tệp đó để xoá — mất
+        // luôn cả khả năng dọn tay. Luật 91/2025/QH15 Điều 19 buộc xoá chính dữ liệu, không phải xoá
+        // tham chiếu tới dữ liệu.
+        //
+        // Xoá trước khi gán null, và đọc giá trị ra biến trước, vì thứ tự ngược lại là tự bịt đường
+        // của chính mình. Lỗi xoá tệp không được làm hỏng cả yêu cầu xoá dữ liệu: ghi log rồi đi
+        // tiếp — phần trong cơ sở dữ liệu quan trọng hơn, và một tệp mồ côi còn dọn được, chứ một
+        // yêu cầu xoá bị từ chối thì người dùng không có cách nào khác.
+        await XoaTepRiengTuAsync(user.CitizenCardFrontImageUrl, userId, "mặt trước căn cước", ct);
+        await XoaTepRiengTuAsync(user.CitizenCardBackImageUrl, userId, "mặt sau căn cước", ct);
         user.CitizenCardFrontImageUrl = null;
         user.CitizenCardBackImageUrl = null;
         user.CitizenCardSubmittedAt = null;
@@ -157,6 +173,30 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         _logger.LogWarning("User data erased (DSAR): UserId={UserId} At={At}", userId, now);
 
         return Unit.Value;
+    }
+
+    /// <summary>
+    /// Xoá một tệp riêng tư, và không để việc xoá tệp làm hỏng cả yêu cầu xoá dữ liệu.
+    ///
+    /// <para>Không nuốt lỗi trong im lặng: ghi log mức cảnh báo kèm đúng tham chiếu tệp, để còn dọn
+    /// tay được. Đây là chỗ duy nhất trong hệ thống biết tệp đó tồn tại — sau dòng này thì cột trong
+    /// cơ sở dữ liệu đã bị gán null.</para>
+    /// </summary>
+    private async Task XoaTepRiengTuAsync(string? privateRef, int userId, string moTa, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(privateRef))
+            return;
+
+        try
+        {
+            await _fileStorage.DeletePrivateFileAsync(privateRef, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "DSAR: không xoá được tệp {MoTa} của UserId={UserId}, tham chiếu {PrivateRef} — cần xoá tay",
+                moTa, userId, privateRef);
+        }
     }
 
     private async Task RemoveAllAsync<T, TKey>(
