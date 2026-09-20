@@ -146,7 +146,9 @@ public sealed class ReviewQueuesAreListableTests
                 IssuedBy = SeedHelper.AdminId,
                 IssuedAt = now.AddDays(-3),
                 EffectiveAt = now.AddDays(-3),
-                Status = PenaltyStatus.Active,
+                // SubmitAppeal đặt Status = Appealed; để Active ở đây là dựng một trạng thái mà luồng
+                // thật không bao giờ tạo ra, và phép kiểm sẽ mô tả sai hành vi cho người đọc.
+                Status = PenaltyStatus.Appealed,
                 AppealDeadline = now.AddDays(4),
                 AppealedAt = now.AddDays(-1),
                 AppealReason = "Chúng tôi đã khắc phục ngay trong đêm"
@@ -159,7 +161,8 @@ public sealed class ReviewQueuesAreListableTests
                 IssuedBy = SeedHelper.AdminId,
                 IssuedAt = now.AddDays(-10),
                 EffectiveAt = now.AddDays(-10),
-                Status = PenaltyStatus.Active,
+                // ReviewAppeal đặt Status = chính quyết định (Overturned/Upheld).
+                Status = PenaltyStatus.Upheld,
                 AppealDeadline = now.AddDays(-3),
                 AppealedAt = now.AddDays(-8),
                 AppealReason = "Kháng nghị cũ",
