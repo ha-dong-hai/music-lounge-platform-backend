@@ -48,6 +48,18 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
                     $"Tiêu chí #{criteriaId} không thuộc venue này.");
         }
 
+        // Giá trị phải khớp KIỂU DỮ LIỆU mà chính tiêu chí đó khai. Trước đây máy chủ nhận mọi chuỗi:
+        // tiêu chí kiểu Boolean vẫn ghi được chữ bất kỳ. Kiểm ở phía giao diện là lớp tiện cho người
+        // dùng, không phải bảo đảm — gọi thẳng API là ghi rác vào được, và rác trong cột này thì mọi
+        // màn hình đọc lên đều phải chịu.
+        foreach (var input in request.Values)
+        {
+            var c = criteriaById[input.CriteriaId];
+            var loi = CustomCriteriaValue.LoiNeuCo(c.DataType, c.Options, input.Value);
+            if (loi is not null)
+                throw new DomainException($"Giá trị của tiêu chí \"{c.Name}\" {loi}");
+        }
+
         var valueRepo = _uow.Repository<EventCustomValue, int>();
         var existing = await valueRepo.FindAsync(
             v => v.ShowId == request.ShowId && criteriaIds.Contains(v.CriteriaId), ct);
