@@ -59,4 +59,11 @@ public sealed record PayoutAccountReviewItemDto(
     bool OwnerIdentityApproved,
     bool IsDefault,
     bool IsVerified,
-    DateTime CreatedAt);
+    /// <summary>
+    /// <c>DateTimeOffset</c> chứ KHÔNG phải <c>DateTime</c>: cột trong cơ sở dữ liệu không mang múi giờ,
+    /// nên EF đọc lên được một mốc <c>Kind=Unspecified</c>, và một mốc như vậy tuần tự hoá thành chuỗi
+    /// KHÔNG có phần múi giờ ("2026-08-17T13:12:19.83"). Trình duyệt gặp chuỗi đó thì hiểu là giờ ĐỊA
+    /// PHƯƠNG, nên ở Việt Nam mọi mốc hiện sớm/muộn đúng 7 tiếng. Toàn bộ 137 trường thời gian khác của
+    /// hệ thống đều đã là <c>DateTimeOffset</c>; đây là một trong hai chỗ sót. (MLACP-475)
+    /// </summary>
+    DateTimeOffset CreatedAt);
