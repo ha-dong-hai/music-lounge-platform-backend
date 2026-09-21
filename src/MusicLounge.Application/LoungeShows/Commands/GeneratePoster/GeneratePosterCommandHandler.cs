@@ -247,9 +247,27 @@ internal sealed class GeneratePosterCommandHandler
         // không dùng được. Thử ngày 19/09 cho thấy Flow TUÂN THỦ câu cấm này (FLUX trước đây thì không nghe lệnh phủ
         // định). Lớp in chữ bằng font là phần việc riêng, chưa làm trong task này.
         if (anhNenKhongChu)
+        {
             prompt +=
                 " Yêu cầu bắt buộc: đây là ẢNH NỀN, tuyệt đối KHÔNG chứa chữ, không chữ cái, không con số, không logo, " +
                 "không watermark. Chừa một phần ba phía trên thoáng, ít chi tiết, để chỗ in tiêu đề sau.";
+        }
+        else
+        {
+            // MLACP-482. Khi để mô hình TỰ VẼ CHỮ thì mối nguy KHÔNG phải sai chính tả mà là BỊA SỰ THẬT.
+            //
+            // Đo thật 21/09/2026 với Gemini 3.1 Flash Image, đúng prompt mà hàm này sinh ra: tiếng Việt có dấu gần như
+            // hoàn hảo ("ĐÊM NHẠC TRỊNH", "HẠ TRẮNG", "20:00 – THỨ BẢY, 27/09/2026" đều đúng) — nhưng tấm poster kèm
+            // theo một địa chỉ "(20 Ngô Văn Thọ, P.6, Q.3, TP.HCM)", một hotline, một website và một trang mạng xã hội
+            // KHÔNG CÁI NÀO CÓ THẬT. Chữ sai dấu thì xấu; địa chỉ bịa thì khách tới nhầm chỗ.
+            //
+            // Nên liệt kê DỨT KHOÁT những gì được phép in, thay vì chỉ cấm chung chung — mô hình sinh ảnh vốn hay bỏ
+            // qua câu phủ định, nhưng một danh sách trắng thì cụ thể hơn nhiều so với "đừng bịa".
+            prompt +=
+                " Chỉ được in đúng những thông tin đã nêu ở trên: tên chương trình, tên phòng trà, ngày và giờ diễn. " +
+                "TUYỆT ĐỐI KHÔNG thêm địa chỉ, số điện thoại, hotline, website, tài khoản mạng xã hội, mã QR, giá vé " +
+                "hay bất kỳ thông tin liên hệ nào không có trong yêu cầu này.";
+        }
 
         return prompt;
     }
