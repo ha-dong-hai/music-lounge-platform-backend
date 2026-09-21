@@ -28,6 +28,7 @@ public sealed class PanoramaStitcherClientTests
     private sealed class DichVuGia : HttpMessageHandler
     {
         public Queue<HttpStatusCode> HealthTraVe { get; } = new();
+        public bool ChanSauKhiHetCauTraLoi { get; set; }
         public Func<HttpResponseMessage> StitchTraVe { get; set; } =
             () => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([0xFF, 0xD8, 0xFF]) };
         public List<(HttpMethod Method, string Path, string? Khoa)> YeuCau { get; } = [];
@@ -39,8 +40,19 @@ public sealed class PanoramaStitcherClientTests
 
             if (request.RequestUri.AbsolutePath == "/health")
             {
-                var ma = HealthTraVe.Count > 0 ? HealthTraVe.Dequeue() : HttpStatusCode.OK;
-                return Task.FromResult(new HttpResponseMessage(ma));
+                if (HealthTraVe.Count > 0)
+                    return Task.FromResult(new HttpResponseMessage(HealthTraVe.Dequeue()));
+
+                // Hết câu trả lời dựng sẵn thì treo cho tới khi bị huỷ — dùng để ép lần gọi CUỐI bị chính
+                // hạn chờ của client huỷ giữa chừng, một cách tất định thay vì trông vào lúc máy bận.
+                if (ChanSauKhiHetCauTraLoi)
+                    return Task.Run(async () =>
+                    {
+                        await Task.Delay(Timeout.Infinite, ct);
+                        return new HttpResponseMessage(HttpStatusCode.OK);
+                    }, ct);
+
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
             }
             return Task.FromResult(StitchTraVe());
         }
@@ -127,6 +139,32 @@ public sealed class PanoramaStitcherClientTests
         http.YeuCau.Should().NotContain(r => r.Path == "/stitch");
         log.Entries.Should().Contain(e => e.Level == LogLevel.Error && e.Text.Contains("/health") && e.Text.Contains("503"),
             "người vận hành cần biết dịch vụ không dậy và mã lỗi cuối cùng");
+    }
+
+    /// <summary>
+    /// Lần gọi /health CUỐI gần như luôn bị chính hạn chờ của mình huỷ giữa chừng. Nếu để thông báo huỷ
+    /// đó ghi đè lên mã trạng thái thật, người vận hành đọc log chỉ thấy "A task was canceled" và không
+    /// biết dịch vụ đang tắt hẳn hay đang bật mà trả 503 — hai tình huống cần hai cách xử lý khác nhau.
+    ///
+    /// <para>Đây cũng chính là chỗ làm phép kiểm bên dưới CHẬP CHỜN (đỏ 1/3 lần chạy): nó phụ thuộc vào
+    /// việc lần gọi cuối có kịp trả lời trước khi hạn chờ đóng hay không. Sửa ở gốc thì phép kiểm hết
+    /// chập chờn như một hệ quả, chứ không phải bằng cách nới thời gian cho đỡ đỏ. (MLACP-476)</para>
+    /// </summary>
+    [Fact]
+    public async Task LanGoiCuoiBiHuy_VanGiuMaTrangThaiThatTrongLog()
+    {
+        var http = new DichVuGia { ChanSauKhiHetCauTraLoi = true };
+        http.HealthTraVe.Enqueue(HttpStatusCode.ServiceUnavailable);   // đúng MỘT câu trả lời thật
+        var log = new GhiLog();
+
+        var act = () => Tao(http, log, choKhoiDong: TimeSpan.FromMilliseconds(300)).StitchAsync(Anh);
+
+        await act.Should().ThrowAsync<ExternalServiceException>();
+
+        var loi = log.Entries.Single(e => e.Level == LogLevel.Error).Text;
+        loi.Should().Contain("503", "mã dịch vụ thật sự trả về là thứ người vận hành cần, đừng để lỗi huỷ của chính mình xoá mất");
+        loi.Should().NotContain("canceled");
+        loi.Should().NotContain("hủy");
     }
 
     [Fact]
