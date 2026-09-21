@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Common.Constants;
+using MusicLounge.Application.CustomCriteria;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Exceptions;
@@ -51,8 +52,12 @@ internal sealed class GetEventCustomValuesQueryHandler
             .Select(v =>
             {
                 var c = criteria[v.CriteriaId];
+                // Dùng ĐÚNG hàm mà lệnh ghi dùng để từ chối, không viết lại phép so ở đây: một luật, một
+                // chỗ. Giá trị sai vẫn còn từ trước khi MLACP-470 dựng hàng rào, và ô chọn không khớp
+                // lựa chọn nào thì màn hình hiện ô TRỐNG — trông như chưa đặt, rồi lần Lưu sau xoá mất.
                 return new EventCustomValueDto(
-                    c.Id, c.Name, c.Key, c.DataType, c.Options, c.IsActive, v.Value);
+                    c.Id, c.Name, c.Key, c.DataType, c.Options, c.IsActive, v.Value,
+                    CustomCriteriaValue.LoiNeuCo(c.DataType, c.Options, v.Value));
             })
             .OrderBy(v => v.Name, StringComparer.CurrentCulture)
             .ToList();
