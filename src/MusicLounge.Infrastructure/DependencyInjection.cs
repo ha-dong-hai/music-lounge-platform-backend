@@ -96,12 +96,19 @@ public static class DependencyInjection
         // (khong co bac mien phi). Chon o day thay vi trong handler de tang Application khong phai biet ten nha cung cap.
         // MLACP-458: bat PosterWorker thi uu tien che do hang doi (may tram chay Google Flow) — dung truoc hai nha cung
         // cap goi thang, vi no la lua chon co y cua nguoi van hanh, khong phai duong du phong.
-        services.AddScoped<IAiImageGenerationService>(sp =>
-            AiImageProvider.UseDeferredQueue(sp.GetRequiredService<IOptions<PosterWorkerSettings>>().Value)
-                ? ActivatorUtilities.CreateInstance<DeferredPosterImageGenerationService>(sp)
-                : AiImageProvider.UseCloudflare(sp.GetRequiredService<IOptions<CloudflareSettings>>().Value)
-                    ? ActivatorUtilities.CreateInstance<CloudflareImageGenerationService>(sp)
-                    : ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp));
+        // MLACP-480: sau hang doi la Gemini (neu da khai Gemini:ImageModel). Dat TREN Cloudflare vi anh dep hon han va
+        // KHONG co dau nhin thay duoc — Flow in ngoi sao 4 canh cua Google len anh, Cloudflare thi nen tho hon. Dat
+        // DUOI hang doi vi bat may tram la lua chon co y cua nguoi van hanh, khong duoc de mot khoa cau hinh khac de len.
+        services.AddScoped<IAiImageGenerationService>(sp => AiImageProvider.Chon(
+                sp.GetRequiredService<IOptions<GeminiSettings>>().Value,
+                sp.GetRequiredService<IOptions<PosterWorkerSettings>>().Value,
+                sp.GetRequiredService<IOptions<CloudflareSettings>>().Value) switch
+            {
+                NhaCungCapAnh.Gemini => ActivatorUtilities.CreateInstance<GeminiImageGenerationService>(sp),
+                NhaCungCapAnh.HangDoiMayTram => ActivatorUtilities.CreateInstance<DeferredPosterImageGenerationService>(sp),
+                NhaCungCapAnh.Cloudflare => ActivatorUtilities.CreateInstance<CloudflareImageGenerationService>(sp),
+                _ => ActivatorUtilities.CreateInstance<OpenAiImageGenerationService>(sp)
+            });
         services.AddScoped<IPanoramaStitchingService, HttpPanoramaStitchingService>();
         services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         services.AddScoped<IVnPayService, VnPayService>();
