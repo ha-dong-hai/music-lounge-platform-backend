@@ -25,6 +25,7 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
     private readonly SmsSettings _sms;
     private readonly EmailSettings _email;
     private readonly PanoramaStitcherSettings _stitcher;
+    private readonly PosterWorkerSettings _posterWorker;
     private readonly IHostEnvironment _env;
 
     public ConfigurationAudit(
@@ -38,6 +39,7 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
         IOptions<SmsSettings> sms,
         IOptions<EmailSettings> email,
         IOptions<PanoramaStitcherSettings> stitcher,
+        IOptions<PosterWorkerSettings> posterWorker,
         IHostEnvironment env)
     {
         _firebase = firebase.Value;
@@ -50,6 +52,7 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
         _sms = sms.Value;
         _email = email.Value;
         _stitcher = stitcher.Value;
+        _posterWorker = posterWorker.Value;
         _env = env;
     }
 
@@ -81,9 +84,26 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
                 + "được cho qua.",
                 ConfigurationGapSeverity.Broken));
 
+        // MLACP-479: chế độ hàng đợi (máy trạm chạy Google Flow) là hướng CHÍNH của tính năng poster, nhưng bảng
+        // kiểm này chưa bao giờ soi nó — nó chỉ soi đường gọi thẳng. Hỏng kiểu im lặng: bật cờ mà quên khoá thì hệ
+        // thống lặng lẽ quay về nhà cung cấp gọi thẳng, còn máy trạm gọi /poster-jobs/claim nhận 401, và người vận
+        // hành không có chỗ nào nhìn ra hai việc đó liên quan tới nhau.
+        // Dùng ĐÚNG hàm quyết định chế độ (AiImageProvider.UseDeferredQueue) chứ không chép lại luật — chép lại là
+        // để hai nơi trôi ra khỏi nhau.
+        var dungHangDoi = AiImageProvider.UseDeferredQueue(_posterWorker);
+
+        if (_posterWorker.Enabled && string.IsNullOrWhiteSpace(_posterWorker.ApiKey))
+            gaps.Add(new ConfigurationGap(
+                "Tạo poster AI", "PosterWorker:ApiKey",
+                "Đã bật chế độ hàng đợi nhưng thiếu khoá, nên hệ thống lặng lẽ quay về nhà cung cấp gọi thẳng và máy "
+                + "trạm bị từ chối với lỗi 401 — nhìn từ ngoài giống hệt lỗi lập trình.",
+                ConfigurationGapSeverity.Broken));
+
         var coCloudflare = !string.IsNullOrWhiteSpace(_cloudflare.AccountId)
                            && !string.IsNullOrWhiteSpace(_cloudflare.ApiToken);
-        if (!coCloudflare && string.IsNullOrWhiteSpace(_openAi.ApiKey))
+        // Chỉ báo thiếu nhà cung cấp gọi thẳng khi KHÔNG chạy hàng đợi — chạy hàng đợi thì không cần tới họ, và báo
+        // thừa ở đây sẽ dạy người vận hành bỏ qua bảng kiểm.
+        if (!dungHangDoi && !coCloudflare && string.IsNullOrWhiteSpace(_openAi.ApiKey))
             gaps.Add(new ConfigurationGap(
                 "Tạo poster AI", "Cloudflare:AccountId + Cloudflare:ApiToken (hoặc OpenAi:ApiKey)",
                 "Chủ phòng trà đã mua gói có tính năng này nhưng mọi lần tạo poster đều thất bại.",

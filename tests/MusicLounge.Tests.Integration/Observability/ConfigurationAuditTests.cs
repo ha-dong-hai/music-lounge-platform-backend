@@ -38,7 +38,8 @@ public sealed class ConfigurationAuditTests
         string processingUrl = "https://x/dang-xu-ly", string successUrl = "https://x/thanh-cong",
         string moiTruong = "Production", string smsAccountSid = "AC123", string emailHost = "smtp.test",
         string stitcherUrl = "https://ghep-anh.test", string stitcherKey = "khoa-ghep-anh",
-        string stitcherPublicUrl = "https://musiclounge-api.azurewebsites.net", string storageBucket = "")
+        string stitcherPublicUrl = "https://musiclounge-api.azurewebsites.net", string storageBucket = "",
+        bool posterWorkerEnabled = false, string posterWorkerKey = "")
         => new(
             Options.Create(new FirebaseSettings
             {
@@ -63,11 +64,50 @@ public sealed class ConfigurationAuditTests
             {
                 BaseUrl = stitcherUrl, ApiKey = stitcherKey, PublicBaseUrl = stitcherPublicUrl
             }),
+            Options.Create(new PosterWorkerSettings { Enabled = posterWorkerEnabled, ApiKey = posterWorkerKey }),
             new MoiTruong(moiTruong));
 
     [Fact]
     public void CauHinhDayDu_KhongBaoThieuGi()
         => TaoBangKiem().Inspect().Should().BeEmpty();
+
+    /// <summary>
+    /// MLACP-479: bảng kiểm trước đây KHÔNG soi chế độ hàng đợi poster (máy trạm chạy Google Flow) — nó chỉ soi
+    /// đường gọi thẳng. Bật cờ mà quên khoá thì hệ thống lặng lẽ quay về nhà cung cấp gọi thẳng, còn máy trạm gọi
+    /// <c>/poster-jobs/claim</c> nhận 401; nhìn từ ngoài giống hệt lỗi lập trình, và không có chỗ nào cho thấy hai
+    /// việc đó liên quan tới nhau.
+    /// </summary>
+    [Fact]
+    public void BatHangDoiPosterMaThieuKhoa_BaoHong()
+    {
+        var gaps = TaoBangKiem(posterWorkerEnabled: true, posterWorkerKey: "").Inspect();
+
+        gaps.Should().ContainSingle(g => g.Key == "PosterWorker:ApiKey")
+            .Which.Severity.Should().Be(ConfigurationGapSeverity.Broken);
+        gaps.Single(g => g.Key == "PosterWorker:ApiKey").Impact.Should().Contain("401");
+    }
+
+    [Fact]
+    public void BatHangDoiPosterDayDu_KhongDoiNhaCungCapGoiThang()
+    {
+        // Chạy hàng đợi thì không cần Cloudflare/OpenAI nữa. Báo thiếu ở đây là báo thừa, và báo thừa thì dạy người
+        // vận hành bỏ qua cả bảng kiểm.
+        var gaps = TaoBangKiem(posterWorkerEnabled: true, posterWorkerKey: "khoa-may-tram",
+                               openAiKey: "", cloudflareAccount: "", cloudflareToken: "").Inspect();
+
+        gaps.Should().NotContain(g => g.Key.StartsWith("Cloudflare:", StringComparison.Ordinal));
+        gaps.Should().NotContain(g => g.Key == "PosterWorker:ApiKey");
+    }
+
+    [Fact]
+    public void KhongBatHangDoiVaKhongCoNhaCungCapNao_VanBaoHong()
+    {
+        var gaps = TaoBangKiem(posterWorkerEnabled: false, openAiKey: "",
+                               cloudflareAccount: "", cloudflareToken: "").Inspect();
+
+        gaps.Should().Contain(g => g.Key.StartsWith("Cloudflare:", StringComparison.Ordinal)
+                                   && g.Severity == ConfigurationGapSeverity.Broken);
+    }
 
     [Fact]
     public void ThieuFirebaseProjectId_BaoDangNhapGoogleHong()
