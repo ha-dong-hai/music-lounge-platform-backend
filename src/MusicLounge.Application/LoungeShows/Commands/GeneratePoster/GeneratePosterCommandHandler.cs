@@ -81,13 +81,12 @@ internal sealed class GeneratePosterCommandHandler
         // đếm lần thành công, chủ phòng trà còn 1 lượt vẫn bấm được 10 lần liên tiếp và hệ thống nhận cả 10. Đơn đang chờ
         // được coi là GIỮ CHỖ; đơn hỏng (Failed/Expired) thì không tính nữa, tức là tự trả lại lượt — giữ nguyên tinh thần
         // "lỗi của nhà cung cấp thì không được tính vào tiền người ta đã trả" của MLACP-419.
-        var monthStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        var ownerCounted = await genRepo.FindAsync(
-            g => g.OwnerId == lounge.OwnerId
-                && (g.Status == AiPosterGenerationStatus.Succeeded
-                    || g.Status == AiPosterGenerationStatus.Queued
-                    || g.Status == AiPosterGenerationStatus.Rendering), ct);
-        var succeededThisMonth = ownerCounted.Count(g => g.CreatedAt >= monthStart);
+        // MLACP-483: luat dem nay dung CHUNG voi GetMySubscription, de man hinh va may chu khong bao giò noi hai so
+        // khac nhau. Xem AiPosterQuota.
+        var monthStart = AiPosterQuota.DauThang(now);
+        var ownerCounted = await genRepo.FindAsync(g => g.OwnerId == lounge.OwnerId, ct);
+        var succeededThisMonth = ownerCounted.Count(
+            g => g.CreatedAt >= monthStart && AiPosterQuota.ChiemMotSuat(g.Status));
         if (succeededThisMonth >= activeSub.MaxAiPostersPerMonthSnapshot)
             throw new DomainException(
                 $"Bạn đã dùng hết {activeSub.MaxAiPostersPerMonthSnapshot} poster AI trong tháng này. " +
@@ -159,7 +158,7 @@ internal sealed class GeneratePosterCommandHandler
 
         await _uow.SaveChangesAsync(ct);
 
-        var remaining = Math.Max(0, activeSub.MaxAiPostersPerMonthSnapshot - (succeededThisMonth + 1));
+        var remaining = AiPosterQuota.ConLai(activeSub.MaxAiPostersPerMonthSnapshot, succeededThisMonth + 1);
         return new PosterGenerationResultDto(imageUrl, remaining);
     }
 
@@ -197,7 +196,7 @@ internal sealed class GeneratePosterCommandHandler
 
         return new PosterGenerationResultDto(
             null,
-            Math.Max(0, monthlyQuota - (usedThisMonth + 1)),
+            AiPosterQuota.ConLai(monthlyQuota, usedThisMonth + 1),
             nameof(AiPosterGenerationStatus.Queued),
             job.Id);
     }
