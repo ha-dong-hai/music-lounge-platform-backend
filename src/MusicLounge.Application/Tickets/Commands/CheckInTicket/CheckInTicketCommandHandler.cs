@@ -80,6 +80,7 @@ internal sealed class CheckInTicketCommandHandler : IRequestHandler<CheckInTicke
 
         return new TicketDetailDto(
             ticket.Id,
+            ticket.ShowId,
             ticket.Show.Name,
             ticket.Show.Lounge.Name,
             ticket.Show.Lounge.Address.FullAddress,

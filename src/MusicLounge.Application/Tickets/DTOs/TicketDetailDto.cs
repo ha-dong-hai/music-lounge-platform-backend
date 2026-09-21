@@ -4,6 +4,10 @@ namespace MusicLounge.Application.Tickets.DTOs;
 
 public sealed record TicketDetailDto(
     Guid Id,
+    // MLACP-478: TicketListItemDto co ShowId ngay tu dau, ban chi tiet thi khong — cung mot thuc the ma
+    // man hinh danh sach biet nhieu hon man hinh chi tiet. Hau qua o giao dien: tu trang chi tiet ve
+    // khong dan sang buoi hoa nhac hay trang xem truc tuyen duoc, vi chi co TEN buoi dien chu khong co ma.
+    int ShowId,
     string ShowName,
     string LoungeName,
     string LoungeAddress,
