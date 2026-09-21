@@ -18,4 +18,13 @@ internal static class AiImageProvider
     /// </summary>
     public static bool UseDeferredQueue(PosterWorkerSettings settings)
         => settings.Enabled && !string.IsNullOrWhiteSpace(settings.ApiKey);
+
+    /// <summary>
+    /// MLACP-480: sinh anh bang Gemini. Doi DU CA HAI — co khoa VA co khai model anh. Chi co khoa thi KHONG du: khoa
+    /// Gemini dung chung voi kiem duyet noi dung, ma kiem duyet chay duoc tren bac mien phi con sinh anh thi khong
+    /// (bac mien phi tra limit: 0 cho ca bon model anh). Suy ra "co khoa la bat sinh anh" se khien moi moi truong
+    /// chi cau hinh kiem duyet lang le chuyen sang mot nha cung cap luon that bai.
+    /// </summary>
+    public static bool UseGemini(GeminiSettings settings)
+        => !string.IsNullOrWhiteSpace(settings.ApiKey) && !string.IsNullOrWhiteSpace(settings.ImageModel);
 }
