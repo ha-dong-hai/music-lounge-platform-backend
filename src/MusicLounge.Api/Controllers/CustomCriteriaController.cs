@@ -6,6 +6,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.CustomCriteria.Commands.CreateCustomCriteria;
 using MusicLounge.Application.CustomCriteria.Commands.SetEventCustomValues;
+using MusicLounge.Application.CustomCriteria.Commands.UpdateCustomCriteria;
 using MusicLounge.Application.CustomCriteria.DTOs;
 using MusicLounge.Application.CustomCriteria.Queries.GetEventCustomValues;
 using MusicLounge.Application.CustomCriteria.Queries.GetLoungeCustomCriteria;
@@ -45,10 +46,32 @@ public sealed class CustomCriteriaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByLounge(
-        [FromQuery] int loungeId, CancellationToken ct = default)
+        [FromQuery] int loungeId, [FromQuery] bool includeInactive = false,
+        CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetLoungeCustomCriteriaQuery(loungeId), ct);
+        var result = await _sender.Send(new GetLoungeCustomCriteriaQuery(loungeId, includeInactive), ct);
         return Ok(ApiResponse<IReadOnlyList<CustomCriteriaDto>>.Ok(result));
+    }
+
+    /// <summary>Owner — sửa tên hiển thị của 1 tiêu chí, và bật/tắt việc dùng nó.
+    ///
+    /// <para>Trước đây tiêu chí tạo xong là vĩnh viễn: gõ sai tên thì cái tên sai ở lại trên màn hình sửa
+    /// của mọi buổi diễn, không cách nào chữa. Tắt (IsActive = false) thì tiêu chí không còn hiện khi
+    /// dựng buổi diễn mới, nhưng giá trị đã gắn cho các buổi diễn cũ GIỮ NGUYÊN — muốn xem lại hoặc bật
+    /// lại thì gọi GET với includeInactive=true.</para>
+    ///
+    /// <para>Key, DataType và Options KHÔNG sửa được ở đây: đổi chúng là làm sai kiểu hoặc làm lạc toàn
+    /// bộ giá trị đã gắn từ trước.</para></summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(
+        int id, [FromBody] UpdateCustomCriteriaCommand command, CancellationToken ct = default)
+    {
+        await _sender.Send(command with { Id = id }, ct);
+        return NoContent();
     }
 
     /// <summary>Owner — gắn/cập nhật giá trị các tiêu chí tùy chỉnh cho 1 buổi diễn (upsert theo

@@ -30,7 +30,7 @@ internal sealed class GetLoungeCustomCriteriaQueryHandler
             throw new ForbiddenException("Bạn không có quyền xem tiêu chí của venue này.");
 
         var criteria = await _uow.Repository<CustomCriteriaEntity, int>().FindAsync(
-            c => c.LoungeId == request.LoungeId && c.IsActive, ct);
+            c => c.LoungeId == request.LoungeId && (request.IncludeInactive || c.IsActive), ct);
 
         return criteria
             .OrderBy(c => c.Name)
