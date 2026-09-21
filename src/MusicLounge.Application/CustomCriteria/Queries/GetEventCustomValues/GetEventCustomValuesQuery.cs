@@ -29,6 +29,14 @@ public sealed record GetEventCustomValuesQuery(int ShowId)
 /// THAY THẾ TOÀN BỘ, lần Lưu kế tiếp xoá luôn giá trị đó mà không ai thấy. Có trường này thì mỗi màn
 /// hình chỉ việc hiển thị, không phải bên nào cũng tự chép lại luật so khớp — hiện đã có hai bản (C# và
 /// JavaScript) và ứng dụng nhân viên sẽ là bản thứ ba. Hai bản đầu đã từng lệch nhau ở hai ca.</para>
+///
+/// <para>ĐỪNG DỌN ĐI VÌ THỬ MÃI KHÔNG THẤY NÓ CHẠY. Thử trên hệ thống đang chạy sẽ không bao giờ thấy
+/// trường này khác <c>null</c>, và đó là ĐÚNG: sau MLACP-470 và MLACP-472 thì không còn đường API nào
+/// ghi được một giá trị sai vào cơ sở dữ liệu nữa (đã thử thật trên Azure ngày 21/09/2026 — gửi một giá
+/// trị ngoài danh sách thì bị từ chối 422). Nó chỉ khác <c>null</c> với dòng ghi TRƯỚC khi có hai hàng
+/// rào đó. Xoá đi thì một dòng dữ liệu cũ đi qua sẽ mất giá trị IM LẶNG đúng lúc có người bấm Lưu — đúng
+/// lớp lỗi mà chính trường này sinh ra để chặn. <c>EventCustomValueValidationReasonTests</c> giữ hành vi
+/// này, xoá là đỏ.</para>
 /// </param>
 /// <param name="CriteriaIsActive">
 /// Tiêu chí đã bị tắt nhưng giá trị cũ vẫn còn gắn ở đây. Màn hình cần biết để hiển thị mờ thay vì lặng lẽ
