@@ -67,9 +67,15 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
 
         foreach (var input in request.Values)
         {
+            // Ghi dạng chuẩn chứ không ghi nguyên văn: "True" và "true" là cùng một ý, nhưng màn hình
+            // dựng ô chọn bằng hai lựa chọn chữ thường sẽ không khớp được dòng ghi "True" — ô hiện trống
+            // như chưa đặt, và vì lệnh này THAY THẾ TOÀN BỘ nên lần Lưu sau xoá mất giá trị đó. Chuẩn hoá
+            // ở đây thay vì để từng màn hình tự hạ chữ thường: một chỗ đúng cho mọi bên đọc. (MLACP-472)
+            var giaTri = CustomCriteriaValue.ChuanHoa(criteriaById[input.CriteriaId].DataType, input.Value);
+
             if (existingByCriteria.TryGetValue(input.CriteriaId, out var row))
             {
-                row.Value = input.Value;
+                row.Value = giaTri;
                 valueRepo.Update(row);
             }
             else
@@ -78,7 +84,7 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
                 {
                     ShowId = request.ShowId,
                     CriteriaId = input.CriteriaId,
-                    Value = input.Value
+                    Value = giaTri
                 });
             }
         }
