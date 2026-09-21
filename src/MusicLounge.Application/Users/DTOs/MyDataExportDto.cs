@@ -14,7 +14,7 @@ public sealed record MyDataExportDto(
     IReadOnlyList<int> WishlistedShowIds);
 
 public sealed record ExportedProfile(
-    int Id, string Email, string FullName, string? Phone, DateTime CreatedAt);
+    int Id, string Email, string FullName, string? Phone, DateTimeOffset CreatedAt);
 
 public sealed record ExportedTicket(
     Guid Id, int ShowId, string Status, DateTimeOffset CreatedAt);

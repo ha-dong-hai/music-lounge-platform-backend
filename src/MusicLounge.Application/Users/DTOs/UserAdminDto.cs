@@ -9,4 +9,9 @@ public sealed record UserAdminDto(
     string Role,
     bool IsActive,
     bool IsEmailVerified,
-    DateTime CreatedAt);
+    /// <summary>
+    /// <c>DateTimeOffset</c>, không phải <c>DateTime</c> — xem lý do ở
+    /// <c>PayoutAccountReviewItemDto.CreatedAt</c>: mốc không mang múi giờ thì trình duyệt hiểu là giờ
+    /// địa phương và hiện lệch 7 tiếng ở Việt Nam. (MLACP-475)
+    /// </summary>
+    DateTimeOffset CreatedAt);
