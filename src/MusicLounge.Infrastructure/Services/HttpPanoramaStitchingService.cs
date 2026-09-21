@@ -160,6 +160,11 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
         var dongHo = Stopwatch.StartNew();
         var soLan = 0;
         var loiCuoi = "(chưa gọi lần nào)";
+        // Mã trạng thái THẬT mà dịch vụ trả về, giữ riêng khỏi loiCuoi. Lần gọi cuối gần như luôn bị
+        // chính hạn chờ của mình huỷ giữa chừng (conLai còn vài phần nghìn giây), và nếu để thông báo
+        // huỷ đó ghi đè thì người vận hành đọc log chỉ thấy "A task was canceled" — không biết dịch vụ
+        // đang tắt hẳn hay đang bật mà trả 503. Đó mới là thứ quyết định họ phải làm gì tiếp. (MLACP-476)
+        string? loiCuoiCoMa = null;
 
         while (dongHo.Elapsed < _choKhoiDong)
         {
@@ -180,6 +185,7 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
                         return;
                     }
                     loiCuoi = $"HTTP {(int)res.StatusCode}";
+                    loiCuoiCoMa = loiCuoi;
                 }
                 catch (Exception ex) when ((ex is HttpRequestException or OperationCanceledException)
                                            && !ct.IsCancellationRequested)
@@ -195,7 +201,8 @@ public sealed class HttpPanoramaStitchingService : IPanoramaStitchingService
 
         throw BaoLoiHeThong(
             ThongBaoSuCo,
-            $"Dịch vụ không sẵn sàng sau {_choKhoiDong.TotalSeconds:0.#}s ({soLan} lần gọi /health), lỗi cuối: {loiCuoi}",
+            $"Dịch vụ không sẵn sàng sau {_choKhoiDong.TotalSeconds:0.#}s ({soLan} lần gọi /health), "
+            + $"lỗi cuối: {loiCuoiCoMa ?? loiCuoi}",
             null);
     }
 
