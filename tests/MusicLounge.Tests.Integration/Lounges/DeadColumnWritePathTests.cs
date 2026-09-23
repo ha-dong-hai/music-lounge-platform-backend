@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -125,8 +126,29 @@ public sealed class DeadColumnWritePathTests
         anonymous.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    /// <summary>
+    /// MLACP-485. Ca này trước đây tên là <c>PublicVenueList_KeepsItsShape_AndLeaksNoPubliclyFetchableLicence</c>
+    /// và khẳng định hai điều: (a) trường <c>businessLicenseUrl</c> phải CÒN trong response vì "bỏ nó đi là đổi
+    /// hình dạng response mà client đang dùng", và (b) giá trị chỉ cần không bắt đầu bằng <c>/uploads/</c>.
+    ///
+    /// <para>Cả hai tiền đề đều đã bị bác bằng phép đo, nên ca test cũ <b>mã hoá chính lỗ hổng</b>:</para>
+    /// <list type="number">
+    /// <item>"Giá trị đã chuyển sang vùng riêng tư thì người lạ không tải được" — <b>sai</b>. Đo thật ngày
+    /// 23/09 (có phép chủ dự án, dùng ảnh thử): gọi object riêng tư bằng đúng download token cũ trả
+    /// <b>HTTP 200 và tải về đủ file</b>; token được kế thừa khi <c>CopyObject</c> không truyền metadata.</item>
+    /// <item>"Đổi hình dạng response là thứ client không được phép hứng chịu" — <b>sai</b>: grep cả
+    /// <c>mlacp-ui</c> lẫn hai app Flutter, <b>không nơi nào đọc</b> <c>businessLicenseUrl</c>.</item>
+    /// </list>
+    ///
+    /// <para>Vì <c>GET /lounges</c> là <c>[AllowAnonymous]</c>, trường đó phát <b>tên object riêng tư</b> cho bất
+    /// kỳ ai không đăng nhập — và chính "tên object là GUID chỉ nằm trong DB" từng bị cả đội coi là một lớp bảo
+    /// vệ. Kỳ vọng mới vì vậy không phải "giá trị trông an toàn" mà là <b>trường không được có mặt</b>.</para>
+    ///
+    /// <para>Kiểm trên JSON thô chứ không qua DTO: deserialize vào record thì "vắng mặt" và "null" ra cùng một
+    /// kết quả, nên bài kiểm sẽ xanh cả khi trường vẫn còn và chỉ tình cờ null.</para>
+    /// </summary>
     [Fact]
-    public async Task PublicVenueList_KeepsItsShape_AndLeaksNoPubliclyFetchableLicence()
+    public async Task PublicVenueList_DoesNotCarryTheBusinessLicenceFieldAtAll()
     {
         await Owner().PutAsJsonAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/business-license",
             new { DocumentUrl = await UploadPublicImageAsync() });
@@ -134,20 +156,31 @@ public sealed class DeadColumnWritePathTests
         // Danh sách công khai sắp theo TÊN và dùng chung cho cả bộ test: mỗi bài test tạo thêm một phòng trà đã duyệt là
         // phòng trà mẫu ("Test Lounge", vần T) lại bị đẩy xuống. Lấy đúng trang đầu rồi mong nó còn ở đó là trông vào may
         // rủi — đã hỏng thật trên CI ngày 19/09 dù chạy ở máy vẫn xanh. Duyệt hết các trang cho tới khi tìm thấy.
-        LoungeListItem? seeded = null;
+        JsonElement? seeded = null;
         for (var page = 1; page <= 50 && seeded is null; page++)
         {
             var res = await _factory.CreateClient().GetAsync($"/api/v1/lounges?page={page}&pageSize=50");
             res.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var body = await res.Content.ReadFromJsonAsync<Envelope<Paged<LoungeListItem>>>();
-            if (body!.Data.Items.Count == 0) break;
-            seeded = body.Data.Items.SingleOrDefault(l => l.Id == SeedHelper.LoungeId);
+            using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+            var items = doc.RootElement.GetProperty("data").GetProperty("items");
+            if (items.GetArrayLength() == 0) break;
+
+            foreach (var item in items.EnumerateArray())
+                if (item.GetProperty("id").GetInt32() == SeedHelper.LoungeId)
+                {
+                    seeded = item.Clone();
+                    break;
+                }
         }
 
-        seeded.Should().NotBeNull("removing the field would be a response-shape change for clients");
-        seeded!.BusinessLicenseUrl.Should().NotStartWith("/uploads/",
-            "whatever this column now holds must not be something a stranger can simply fetch");
+        seeded.Should().NotBeNull("phòng trà mẫu phải có mặt trong danh sách công khai");
+
+        var fieldNames = seeded!.Value.EnumerateObject().Select(p => p.Name).ToList();
+        fieldNames.Should().NotBeEmpty("quét trúng số không thì bài kiểm này xanh mà chẳng kiểm gì");
+        fieldNames.Should().NotContain(
+            n => n.Equals("businessLicenseUrl", StringComparison.OrdinalIgnoreCase),
+            "giấy phép kinh doanh là hồ sơ định danh của chủ phòng trà; endpoint này ai cũng gọi được");
     }
 
     [Fact]
@@ -250,6 +283,5 @@ public sealed class DeadColumnWritePathTests
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
     private sealed record UploadResponse(string Url);
-    private sealed record LoungeListItem(int Id, string Name, string? BusinessLicenseUrl);
     private sealed record ShowDetail(int Id, string Name, string PlaybackMode);
 }
