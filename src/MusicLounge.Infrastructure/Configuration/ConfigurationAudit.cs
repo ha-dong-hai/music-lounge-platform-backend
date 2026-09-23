@@ -144,9 +144,21 @@ internal sealed class ConfigurationAudit : IConfigurationAudit
                 "Không ghép được nhiều ảnh thường thành ảnh 360; chủ phòng trà chỉ tải lên được ảnh 360 đã dựng sẵn.",
                 ConfigurationGapSeverity.Degraded));
 
-        if (string.IsNullOrWhiteSpace(_firebase.CredentialsPath))
+        // MLACP-484: khai đường dẫn mà file không có cũng là thiếu — và là ca NGUY HIỂM HƠN ca bỏ
+        // trống. Bỏ trống thì bảng kiểm báo thiếu và ai cũng thấy; khai rồi mà file biến mất thì bảng
+        // kiểm báo "ổn" trong khi FcmService.TryEnsureInitialized (:110) chỉ ghi một dòng cảnh báo
+        // rồi im lặng không gửi gì nữa. Đúng trạng thái hệ thống rơi vào ngày 23/09/2026 sau khi dời
+        // vùng: /home bị xoá cùng app nên khoá mất, còn app setting thì được nạp lại nguyên vẹn.
+        //
+        // Tách hai thông điệp vì hai ca cần hai hành động khác hẳn nhau: một bên là khai báo còn
+        // thiếu, bên kia là khai đúng nhưng file đã mất và phải tải lại.
+        var khoaFirebase = string.IsNullOrWhiteSpace(_firebase.CredentialsPath)
+            ? "Firebase:CredentialsPath"
+            : File.Exists(_firebase.CredentialsPath) ? null
+            : $"Firebase:CredentialsPath (đã khai \"{_firebase.CredentialsPath}\" nhưng không có file ở đó)";
+        if (khoaFirebase is not null)
             gaps.Add(new ConfigurationGap(
-                "Thông báo đẩy", "Firebase:CredentialsPath",
+                "Thông báo đẩy", khoaFirebase,
                 "Chỉ còn thông báo trong ứng dụng; không có thông báo đẩy về điện thoại.",
                 ConfigurationGapSeverity.Degraded));
 
