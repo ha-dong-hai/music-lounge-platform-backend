@@ -69,9 +69,11 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     /// (MLACP-327): thiếu thông tin không phải bằng chứng. Buổi diễn vừa đăng thường chưa cấu hình hạng vé; coi nó là
     /// "hết vé" sẽ giấu mất đúng những buổi mới nhất. "Hết vé" là một khẳng định — phải có vé thật rồi bán hết.
     ///
-    /// MLACP-459 (chưa làm): phép đếm dưới đây bỏ sót vé <c>Used</c> — vé đã soát vào cửa không còn được tính là đã
-    /// chiếm chỗ. Cố ý KHÔNG sửa kèm ở đây: đó là lỗi của đường BÁN vé (bán vượt sức chứa), cần test tái hiện riêng và
-    /// phải sửa ở <c>ITicketRepository.GetReservedQuantitiesByPriceIdsAsync</c> — nguồn đếm của cả đường ghi lẫn đường đọc.
+    /// MLACP-459 (ĐÃ LÀM — chú thích cũ ghi "chưa làm", sai; sửa lại 24/09/2026 sau khi tab docs phát hiện khi rà soát
+    /// mã nguồn): phép đếm dưới đây trước kia bỏ sót vé <c>Used</c>, nên vé đã soát vào cửa không còn được tính là đang
+    /// chiếm chỗ và hệ thống bán vượt sức chứa. Nay cả đường đọc lẫn đường ghi đều đếm qua cùng một nguồn
+    /// <c>TicketOccupancy.ChiemCho</c> — dùng ở 6 nơi, gồm <c>ITicketRepository.GetReservedQuantitiesByPriceIdsAsync</c>
+    /// (đường ghi, đúng chỗ chú thích cũ nói phải sửa) và chính hai phép đếm trong tệp này.
     ///
     /// <b>Vì sao tính bằng hai truy vấn rồi lọc bằng danh sách mã, thay vì một biểu thức lồng:</b> bản cũ đặt phép cộng
     /// <c>Count(...) + Sum(...)</c> LỒNG bên trong <c>Any</c> của navigation, kèm so sánh <c>DateTimeOffset</c> trong
