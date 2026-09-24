@@ -47,16 +47,62 @@ public sealed class FirebaseStorageTests
     [InlineData("/secrets/firebase.json", "", false)]
     [InlineData("", "musiclounge.appspot.com", false)]
     [InlineData("   ", "  ", false)]
-    [InlineData("/secrets/firebase.json", "musiclounge.appspot.com", true)]
     public void FirebaseIsUsedOnlyWhenBothTheCredentialAndTheBucketAreConfigured(
         string credentialsPath, string bucket, bool expected)
     {
         // Half-configured is the dangerous state: a bucket with no credential would authenticate as
         // nobody, and a credential with no bucket has nowhere to put anything. Either way the
         // failure would appear at the first upload, not at startup.
+        //
+        // MLACP-484: this Theory used to carry a row asserting that a *path string* plus a bucket
+        // was enough to pick Firebase. That row encoded the bug — the path it used never existed on
+        // any machine that ran it — so it is gone. Both halves of the real rule are asserted by the
+        // two cases below, which touch the disk rather than trusting a string.
         FileStorageSelector.UseFirebase(
                 new FirebaseSettings { CredentialsPath = credentialsPath, StorageBucket = bucket })
             .Should().Be(expected);
+    }
+
+    [Fact]
+    public void WithABucketAndAKeyFileThatIsReallyOnDisk_FirebaseIsSelected()
+    {
+        // The positive half of the rule. Writing a real file is the whole point: asserting on a
+        // path string cannot tell the healthy state apart from the outage of 23/09/2026.
+        var keyFile = Path.Combine(Path.GetTempPath(), $"mlacp484-{Guid.NewGuid():N}.json");
+        File.WriteAllText(keyFile, "{}");
+        try
+        {
+            FileStorageSelector.UseFirebase(new FirebaseSettings
+            {
+                CredentialsPath = keyFile,
+                StorageBucket = "musiclounge.appspot.com",
+            }).Should().BeTrue();
+        }
+        finally
+        {
+            File.Delete(keyFile);
+        }
+    }
+
+    [Fact]
+    public void WithABucketButAKeyFileThatIsNotOnDisk_FirebaseIsNotSelected()
+    {
+        // MLACP-484, measured on Azure 23/09/2026. The service-account key lives in /home/data on
+        // App Service — the app's own drive, not part of the deployment package. Moving region
+        // deletes and recreates the app, so /home goes with it, while Firebase:StorageBucket and
+        // Firebase:CredentialsPath are restored intact from app settings. Comparing two strings
+        // still said "use Firebase", DI built FirebaseFileStorageService, its constructor called
+        // CredentialFactory.FromFile on a file that was gone and threw while the dependency was
+        // being built — so every handler taking IFileStorageService returned 500, AI poster
+        // generation included, with no row in the poster history to explain it.
+        var missing = Path.Combine(Path.GetTempPath(), $"mlacp484-absent-{Guid.NewGuid():N}.json");
+        File.Exists(missing).Should().BeFalse("the test is meaningless if the path happens to exist");
+
+        FileStorageSelector.UseFirebase(new FirebaseSettings
+        {
+            CredentialsPath = missing,
+            StorageBucket = "musiclounge.appspot.com",
+        }).Should().BeFalse();
     }
 
     // ---------- the signature check must survive being shared ----------

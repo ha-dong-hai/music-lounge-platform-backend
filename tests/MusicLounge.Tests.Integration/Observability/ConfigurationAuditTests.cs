@@ -31,10 +31,27 @@ public sealed class ConfigurationAuditTests
             new Microsoft.Extensions.FileProviders.NullFileProvider();
     }
 
+    /// <summary>
+    /// MLACP-484. Trước đây helper này truyền <c>"/duong/dan.json"</c> — một đường dẫn GIẢ — làm cấu hình
+    /// "đầy đủ". Từ khi <c>FileStorageSelector.UseFirebase</c> và <c>ConfigurationAudit</c> kiểm <c>File.Exists</c>,
+    /// chuỗi giả nghĩa là "khoá đã mất", nên mọi test lấy mặc định đều mô tả sai trạng thái khoẻ mạnh.
+    /// Sửa ở đây chứ không sửa ở từng test: mọi ca dùng mặc định phải nói về một khoá CÓ THẬT trên đĩa,
+    /// còn ca "khai đường dẫn mà file không có" thì truyền đường dẫn giả một cách cố ý (xem
+    /// <see cref="KhaiDuongDanNhungFileKhongCo_BaoThieu"/>).
+    /// </summary>
+    private static readonly string DuongDanKhoaCoThat =
+        Path.Combine(Path.GetTempPath(), "mlacp484-configaudit-key.json");
+
+    private static string KhoaCoThat()
+    {
+        if (!File.Exists(DuongDanKhoaCoThat)) File.WriteAllText(DuongDanKhoaCoThat, "{}");
+        return DuongDanKhoaCoThat;
+    }
+
     private static Audit TaoBangKiem(
         string firebaseProjectId = "sign-in-52d07", string muxWebhookSecret = "whsec", string geminiKey = "gem",
         string openAiKey = "sk", string cloudflareAccount = "", string cloudflareToken = "",
-        string firebaseCredentials = "/duong/dan.json", string performerUrl = "https://x/y",
+        string? firebaseCredentials = null, string performerUrl = "https://x/y",
         string processingUrl = "https://x/dang-xu-ly", string successUrl = "https://x/thanh-cong",
         string moiTruong = "Production", string smsAccountSid = "AC123", string emailHost = "smtp.test",
         string stitcherUrl = "https://ghep-anh.test", string stitcherKey = "khoa-ghep-anh",
@@ -43,7 +60,9 @@ public sealed class ConfigurationAuditTests
         => new(
             Options.Create(new FirebaseSettings
             {
-                ProjectId = firebaseProjectId, CredentialsPath = firebaseCredentials, StorageBucket = storageBucket
+                ProjectId = firebaseProjectId,
+                CredentialsPath = firebaseCredentials ?? KhoaCoThat(),
+                StorageBucket = storageBucket
             }),
             Options.Create(new MuxSettings { WebhookSecret = muxWebhookSecret }),
             Options.Create(new LivestreamSettings { Provider = "mux" }),
@@ -183,6 +202,35 @@ public sealed class ConfigurationAuditTests
     public void AnhLuuTrenFirebase_KhongCanPublicBaseUrl()
         => TaoBangKiem(stitcherPublicUrl: "", storageBucket: "musiclounge.appspot.com").Inspect()
             .Should().NotContain(g => g.Key.Contains("PanoramaStitcher"));
+
+    /// <summary>
+    /// MLACP-484, đo trên Azure 23/09/2026. Khai đường dẫn mà file không có là ca NGUY HIỂM HƠN ca bỏ trống:
+    /// bỏ trống thì bảng kiểm báo thiếu và ai cũng thấy; khai rồi mà khoá mất thì bảng kiểm từng báo "ổn"
+    /// trong khi đẩy thông báo im lặng không gửi gì. Hai ca phải ra hai thông điệp khác nhau vì cần hai
+    /// hành động khác nhau — một bên là khai thiếu, bên kia là phải tải lại khoá.
+    /// </summary>
+    [Fact]
+    public void KhaiDuongDanNhungFileKhongCo_BaoThieu()
+    {
+        var khongTonTai = Path.Combine(Path.GetTempPath(), $"mlacp484-mat-khoa-{Guid.NewGuid():N}.json");
+        File.Exists(khongTonTai).Should().BeFalse("ca kiểm này vô nghĩa nếu đường dẫn tình cờ có thật");
+
+        var gap = TaoBangKiem(firebaseCredentials: khongTonTai).Inspect()
+            .Should().ContainSingle(g => g.Feature == "Thông báo đẩy").Subject;
+
+        gap.Key.Should().Contain(khongTonTai).And.Contain("không có file ở đó");
+        gap.Key.Should().NotBe("Firebase:CredentialsPath",
+            "khai thiếu và khai sai đường dẫn là hai việc khác nhau, đọc bảng kiểm phải phân biệt được");
+    }
+
+    [Fact]
+    public void BoTrongDuongDanKhoa_BaoThieuTheoCauKhac()
+    {
+        var gap = TaoBangKiem(firebaseCredentials: "").Inspect()
+            .Should().ContainSingle(g => g.Feature == "Thông báo đẩy").Subject;
+
+        gap.Key.Should().Be("Firebase:CredentialsPath");
+    }
 
     [Fact]
     public void ChuaCoGiCaChoGhepAnh_GopMotMucLietKeDuCacThieuSot()
