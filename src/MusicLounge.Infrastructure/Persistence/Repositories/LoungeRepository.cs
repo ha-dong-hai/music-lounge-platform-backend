@@ -50,8 +50,10 @@ internal sealed class LoungeRepository : ILoungeRepository
         var upcomingCounts = await GetUpcomingActiveShowCountsAsync(
             pageLounges.Select(l => l.Id).ToList(), now, ct);
 
+        // MLACP-485: KHÔNG chiếu l.BusinessLicenseUrl vào đây — GET /lounges là AllowAnonymous, xem
+        // lý do đầy đủ ở chú thích của LoungeListItemDto.
         var items = pageLounges.Select(l => new LoungeListItemDto(
-                l.Id, l.Name, l.PrimaryImageUrl, l.BusinessLicenseUrl, l.Model3DUrl, l.AreaLayoutImageUrl,
+                l.Id, l.Name, l.PrimaryImageUrl, l.Model3DUrl, l.AreaLayoutImageUrl,
                 l.Street, l.District, l.City, l.FollowerCount,
                 upcomingCounts.GetValueOrDefault(l.Id)))
             .ToList();

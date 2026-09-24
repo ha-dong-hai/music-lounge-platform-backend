@@ -15,10 +15,22 @@ namespace MusicLounge.Application.Lounges.Commands.SetLoungeBusinessLicense;
 /// điều đó vô hại vì cột luôn null. Ghi một URL public vào đó sẽ biến chính commit này thành thứ
 /// phát tán giấy phép kinh doanh của mọi venue ra ngoài.
 ///
-/// Nên file được chuyển sang vùng lưu riêng tư ngay, đúng cách ảnh CCCD đang được xử lý: URL trong
-/// DTO không còn tải trực tiếp được, và ai muốn xem phải đi qua GetLoungeBusinessLicenseQuery vốn
-/// có kiểm quyền. Cách này cũng tránh phải bỏ trường khỏi DTO — đổi cấu trúc response là thứ phía
-/// client đang dùng không được phép hứng chịu mà không báo trước.
+/// Nên file được chuyển sang vùng lưu riêng tư ngay, đúng cách ảnh CCCD đang được xử lý, và ai muốn
+/// xem phải đi qua GetLoungeBusinessLicenseQuery vốn có kiểm quyền.
+///
+/// MLACP-485 (23/09/2026) — ĐÍNH CHÍNH ĐOẠN TRÊN. Bản trước của chú thích này nói thêm hai ý, cả
+/// hai đều đã bị đo và bác bỏ:
+///
+/// 1. "URL trong DTO không còn tải trực tiếp được" — SAI. objects.copy của GCS kế thừa custom
+///    metadata, nên firebaseStorageDownloadTokens đi theo sang bản riêng tư. Đo thật: gọi object
+///    private-uploads/… bằng chính token cũ trả HTTP 200 và tải đủ 927KB; không kèm token mới 403.
+///    Việc chuyển sang vùng riêng tư KHÔNG tự nó làm file hết tải được (DEF-BE-04).
+///
+/// 2. "tránh phải bỏ trường khỏi DTO — client đang dùng" — SAI nốt. Đã grep mlacp-ui và cả hai app
+///    Flutter: KHÔNG nơi nào đọc businessLicenseUrl. Trường đã được bỏ khỏi LoungeListItemDto.
+///
+/// Bài học: hai tiền đề đó đứng vững thì quyết định cũ đúng; không ai đo chúng, nên một cột vốn
+/// "luôn null nên vô hại" trở thành đường phát tán ngay khi handler này bắt đầu ghi vào.
 /// </summary>
 internal sealed class SetLoungeBusinessLicenseCommandHandler
     : IRequestHandler<SetLoungeBusinessLicenseCommand, Unit>
