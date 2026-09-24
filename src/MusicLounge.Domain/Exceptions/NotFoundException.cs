@@ -107,4 +107,100 @@ public class NotFoundException : Exception
         if (name.Any(c => c > 127)) return char.ToLowerInvariant(name[0]) + name[1..];
         return NhanChung;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+    // MLACP-487 — bản tiếng Anh, đặt NGAY CẠNH bản tiếng Việt chứ không để ở tầng Api.
+    //
+    // Yêu cầu phi chức năng đã đăng ký trong văn bản đề tài (05/04/2026): "Bilingual interface:
+    // Vietnamese & English."
+    //
+    // VÌ SAO ĐẶT Ở ĐÂY, dù localization thường thuộc tầng ngoài: hai từ điển phải có CÙNG BỘ KHOÁ,
+    // và cách rẻ nhất để giữ điều đó là để chúng cạnh nhau — thêm một thực thể mà quên nhãn thì
+    // người sửa nhìn thấy cả hai chỗ trong cùng một màn hình. Tách sang assembly khác thì `Nhan`
+    // (private) không đọc được từ bên ngoài, nên bộ khoá sẽ phải chép tay và sẽ trôi ra khỏi nhau.
+    // Tầng Api chỉ gọi CauTiengAnh(), không tự dựng câu.
+    //
+    // Câu tiếng Việt do constructor dựng, nên tầng Api KHÔNG bóc tách chuỗi đã ghép — nó dựng lại
+    // từ ResourceName + Key vốn đã phơi sẵn. Bóc chuỗi bằng regex sẽ vỡ ngay lần đầu ai sửa dấu câu.
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+
+    internal const string NhanChungEn = "the requested record";
+
+    private static readonly Dictionary<string, string> NhanEn = new(StringComparer.Ordinal)
+    {
+        // Phòng trà và nhân sự
+        ["MusicLoungeEntity"] = "music lounge",
+        ["MusicLounge"] = "music lounge",
+        ["Lounge"] = "music lounge",
+        ["LoungeGalleryImage"] = "lounge photo",
+        ["LoungeStaffEntity"] = "lounge staff member",
+        ["LoungeMute"] = "the choice to stop receiving suggestions from this lounge",
+        ["Follow"] = "lounge follow",
+        ["BusinessLicense"] = "business licence",
+        ["CitizenCardImage"] = "ID card image",
+        ["VenuePenalty"] = "penalty",
+        ["VenueAtmosphere"] = "atmosphere tag",
+        ["VenueTourScene"] = "360° tour scene",
+        ["VenueTourHotspot"] = "360° tour hotspot",
+        ["VenueTourStitchAttempt"] = "360° stitching attempt",
+        // Buổi hòa nhạc
+        ["LoungeShow"] = "concert",
+        ["Show"] = "concert",
+        ["LoungeShowRating"] = "concert rating",
+        ["Rating"] = "rating",
+        ["ChatMessage"] = "chat message",
+        ["LivestreamChatMessage"] = "chat message",
+        ["EventCategory"] = "concert category",
+        ["Mood"] = "mood tag",
+        ["MusicGenre"] = "music genre",
+        ["Performance"] = "performance",
+        ["Performer"] = "performer",
+        ["PerformerConfirmation"] = "performer confirmation link",
+        ["PerformerSocialLink"] = "performer social link",
+        ["SeatingZone"] = "seating zone",
+        ["Livestream"] = "livestream",
+        ["LivestreamViewingSession"] = "livestream viewing session",
+        ["EventModeration for Show"] = "concert moderation request",
+        ["EventModeration for Livestream"] = "livestream moderation request",
+        ["EventModeration for TicketTier"] = "ticket tier moderation request",
+        // Vé và tiền
+        ["Ticket"] = "ticket",
+        ["TicketTier"] = "ticket tier",
+        ["TicketPrice"] = "ticket sale phase",
+        ["TicketHold"] = "ticket hold",
+        ["Payment"] = "payment",
+        ["RefundRequest"] = "refund request",
+        ["Settlement"] = "settlement",
+        ["Donation"] = "donation",
+        ["BankAccount"] = "bank account",
+        ["SubscriptionPackage"] = "subscription package",
+        // F&B
+        ["FnbMenu"] = "menu",
+        ["FnbMenuItem"] = "menu item",
+        ["FnbOrder"] = "food and drink order",
+        // Khác
+        ["AiPosterGeneration"] = "poster generation job",
+        ["User"] = "user",
+        ["Notification"] = "notification",
+        ["Complaint"] = "complaint",
+        ["CustomCriteriaEntity"] = "custom criterion",
+        ["SystemConfig"] = "configuration key",
+        ["Wishlist entry"] = "wishlist entry",
+    };
+
+    /// <summary>
+    /// Câu 404 bằng tiếng Anh, dựng lại từ <paramref name="name"/> và <paramref name="key"/>.
+    ///
+    /// <para>Tên kỹ thuật chưa có nhãn tiếng Anh thì rơi về <see cref="NhanChungEn"/> — KHÔNG bao
+    /// giờ lộ tên lớp C# ra ngoài, đúng lý do MLACP-447 đã sửa cho bản tiếng Việt.</para>
+    ///
+    /// <para>Chuỗi truyền vào vốn đã là tiếng Việt (vài chỗ gọi viết sẵn câu cho người đọc) thì
+    /// KHÔNG dịch được ở đây — trả nhãn chung, vì trả lại tiếng Việt giữa một bản tiếng Anh còn khó
+    /// hiểu hơn.</para>
+    /// </summary>
+    public static string CauTiengAnh(string name, object key)
+    {
+        var nhan = NhanEn.TryGetValue(name, out var n) ? n : NhanChungEn;
+        return $"Could not find {nhan} (id {key}).";
+    }
 }
