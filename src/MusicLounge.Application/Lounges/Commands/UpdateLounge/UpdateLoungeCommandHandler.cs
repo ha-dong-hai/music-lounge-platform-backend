@@ -138,20 +138,27 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
             showRepo.Update(show);
 
             // Đúng mốc mà CancelTicket áp cho người mua trước thay đổi.
-            var terms = TicketRefundPolicy.DescribeFullRefundWindow(TicketRefundPolicy.FullRefundWindowEnd(show, now));
+            var refundUntil = TicketRefundPolicy.FullRefundWindowEnd(show, now);
+            var terms = TicketRefundPolicy.DescribeFullRefundWindow(refundUntil);
+            var termsEn = TicketRefundPolicy.DescribeFullRefundWindowEn(refundUntil);
             var payers = await TicketRefundRecipients.PayersAsync(_uow, tickets, ct);
 
             foreach (var holding in tickets.GroupBy(t => t.BuyerId!.Value))
             {
-                var transferredNote = holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers))
-                    ? TicketRefundRecipients.TransferredHolderCancelNote
-                    : "";
+                var transferred = holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers));
+                var transferredNote = transferred ? TicketRefundRecipients.TransferredHolderCancelNote : "";
+                var transferredNoteEn = transferred ? TicketRefundRecipients.TransferredHolderCancelNoteEn : "";
                 await _notifications.NotifyAsync(
                     holding.Key,
                     NotificationType.EventVenueChanged,
-                    "Phòng trà đã đổi địa chỉ",
-                    $"\"{show.Name}\" sẽ diễn ở địa chỉ mới: {lounge.Address.FullAddress}. " +
-                    $"Địa chỉ cũ: {oldFullAddress}. Vé của bạn vẫn có hiệu lực. {terms}{transferredNote}",
+                    new SongNgu(
+                        "Phòng trà đã đổi địa chỉ",
+                        "The music lounge has changed its address"),
+                    new SongNgu(
+                        $"\"{show.Name}\" sẽ diễn ở địa chỉ mới: {lounge.Address.FullAddress}. " +
+                        $"Địa chỉ cũ: {oldFullAddress}. Vé của bạn vẫn có hiệu lực. {terms}{transferredNote}",
+                        $"\"{show.Name}\" will take place at the new address: {lounge.Address.FullAddress}. " +
+                        $"Previous address: {oldFullAddress}. Your ticket is still valid. {termsEn}{transferredNoteEn}"),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -176,28 +183,42 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
             u => u.Role == UserRole.Admin && u.IsActive && u.Id != _currentUser.UserId, ct);
         if (admins.Count == 0) return;
 
-        var changes = new List<string>();
+        var changes = new List<SongNgu>();
         if (nameChanged)
-            changes.Add($"tên \"{oldName}\" → \"{lounge.Name}\"");
+            changes.Add(new SongNgu(
+                $"tên \"{oldName}\" → \"{lounge.Name}\"",
+                $"name \"{oldName}\" → \"{lounge.Name}\""));
         if (addressChanged)
-            changes.Add($"địa chỉ \"{oldFullAddress}\" → \"{lounge.Address.FullAddress}\"");
+            changes.Add(new SongNgu(
+                $"địa chỉ \"{oldFullAddress}\" → \"{lounge.Address.FullAddress}\"",
+                $"address \"{oldFullAddress}\" → \"{lounge.Address.FullAddress}\""));
         if (pinMoved)
-            changes.Add(string.Create(CultureInfo.InvariantCulture,
-                $"toạ độ ({oldLatitude}, {oldLongitude}) → ({lounge.Address.Latitude}, {lounge.Address.Longitude})"));
+        {
+            var toaDo = string.Create(CultureInfo.InvariantCulture,
+                $"({oldLatitude}, {oldLongitude}) → ({lounge.Address.Latitude}, {lounge.Address.Longitude})");
+            changes.Add(new SongNgu($"toạ độ {toaDo}", $"coordinates {toaDo}"));
+        }
 
-        var body = $"Phòng trà #{lounge.Id} vừa đổi {string.Join("; ", changes)}. " +
-                   (ticketHoldersTold > 0
-                       ? $"Đã gửi {ticketHoldersTold} lượt báo tới người giữ vé vào cửa của các buổi diễn sắp tới. "
-                       : "") +
-                   "Hồ sơ phòng trà đã được duyệt dựa trên thông tin cũ — cần xem lại nếu thay đổi không " +
-                   "khớp giấy phép kinh doanh.";
+        var body = new SongNgu(
+            $"Phòng trà #{lounge.Id} vừa đổi {string.Join("; ", changes.Select(c => c.Vi))}. " +
+            (ticketHoldersTold > 0
+                ? $"Đã gửi {ticketHoldersTold} lượt báo tới người giữ vé vào cửa của các buổi diễn sắp tới. "
+                : "") +
+            "Hồ sơ phòng trà đã được duyệt dựa trên thông tin cũ — cần xem lại nếu thay đổi không " +
+            "khớp giấy phép kinh doanh.",
+            $"Music lounge #{lounge.Id} just changed its {string.Join("; ", changes.Select(c => c.En))}. " +
+            (ticketHoldersTold > 0
+                ? $"{ticketHoldersTold} notice(s) were sent to in-venue ticket holders of upcoming shows. "
+                : "") +
+            "The music lounge profile was approved based on the old information — please review it if the change " +
+            "does not match the business license.");
 
         foreach (var admin in admins)
         {
             await _notifications.NotifyAsync(
                 admin.Id,
                 NotificationType.VenueIdentityChanged,
-                "Phòng trà đổi thông tin nhận diện",
+                new SongNgu("Phòng trà đổi thông tin nhận diện", "A music lounge changed its identifying details"),
                 body,
                 referenceType: "lounge",
                 referenceId: lounge.Id.ToString(),

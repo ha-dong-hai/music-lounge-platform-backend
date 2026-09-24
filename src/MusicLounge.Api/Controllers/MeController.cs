@@ -11,6 +11,7 @@ using MusicLounge.Application.Users.Commands.RequestPhoneVerification;
 using MusicLounge.Application.Users.Commands.SubmitCitizenCard;
 using MusicLounge.Application.Users.Commands.SubmitTaxProfile;
 using MusicLounge.Application.Users.Commands.UpdateAiPreferences;
+using MusicLounge.Application.Users.Commands.UpdateMyLanguage;
 using MusicLounge.Application.Users.Commands.UpdateMyProfile;
 using MusicLounge.Application.Users.Commands.VerifyPhone;
 using MusicLounge.Application.Users.DTOs;
@@ -64,6 +65,21 @@ public sealed class MeController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProfile(
         [FromBody] UpdateMyProfileCommand command,
+        CancellationToken ct = default)
+    {
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-489. Ngôn ngữ nhận push, email và SMS: <c>{"preferredLanguage": "vi"}</c> hoặc <c>"en"</c>.
+    /// Giao diện nên gọi khi người dùng bấm đổi ngôn ngữ lúc đã đăng nhập — những gì hiện TRONG ứng dụng (thông báo,
+    /// thông điệp lỗi) đã theo Accept-Language nên đổi ngay, còn những gì gửi ra ngoài thì chỉ đổi sau lệnh này.</summary>
+    [HttpPut("language")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateLanguage(
+        [FromBody] UpdateMyLanguageCommand command,
         CancellationToken ct = default)
     {
         await _sender.Send(command, ct);

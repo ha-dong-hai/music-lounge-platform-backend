@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -83,11 +84,18 @@ internal sealed class ReviewTicketTierCommandHandler : IRequestHandler<ReviewTic
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.ModerationResult,
-                decision == ModerationDecision.Approved ? "Hạng vé livestream đã được duyệt" : "Hạng vé livestream bị từ chối",
-                decision == ModerationDecision.Approved
-                    ? $"Hạng vé \"{tier.Name}\" của \"{show.Name}\" đã được duyệt và mở bán."
-                    : $"Hạng vé \"{tier.Name}\" của \"{show.Name}\" bị từ chối. Lý do: {request.ReviewNote}. " +
-                      "Hạng vé này không được mở bán.",
+                new SongNgu(
+                    decision == ModerationDecision.Approved ? "Hạng vé livestream đã được duyệt" : "Hạng vé livestream bị từ chối",
+                    decision == ModerationDecision.Approved ? "Livestream ticket tier approved" : "Livestream ticket tier rejected"),
+                new SongNgu(
+                    decision == ModerationDecision.Approved
+                        ? $"Hạng vé \"{tier.Name}\" của \"{show.Name}\" đã được duyệt và mở bán."
+                        : $"Hạng vé \"{tier.Name}\" của \"{show.Name}\" bị từ chối. Lý do: {request.ReviewNote}. " +
+                          "Hạng vé này không được mở bán.",
+                    decision == ModerationDecision.Approved
+                        ? $"The ticket tier \"{tier.Name}\" for \"{show.Name}\" has been approved and is now on sale."
+                        : $"The ticket tier \"{tier.Name}\" for \"{show.Name}\" was rejected. Reason: {request.ReviewNote}. " +
+                          "This ticket tier will not go on sale."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

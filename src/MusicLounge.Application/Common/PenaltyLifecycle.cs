@@ -91,6 +91,16 @@ public static class PenaltyLifecycle
         _ => ""
     };
 
+    /// <summary>MLACP-489: bản tiếng Anh của <see cref="DescribeForOwner"/> — cùng các nhánh, sửa một bên thì sửa cả hai.</summary>
+    public static string DescribeForOwnerEn(LoungeStatus status) => status switch
+    {
+        LoungeStatus.Approved => "Your music lounge is operating normally.",
+        LoungeStatus.Warned => "Your music lounge is operating normally; a warning is still in effect.",
+        LoungeStatus.Suspended => "Your music lounge is still suspended.",
+        LoungeStatus.Locked => "Your music lounge is still locked.",
+        _ => ""
+    };
+
     /// <summary>
     /// Án nặng nhất còn ràng buộc. Tạm khoá/khoá vĩnh viễn chỉ tính khi đã được áp (AppliedAt) — trước đó
     /// là thời gian báo trước, phòng trà vẫn hoạt động. Cảnh cáo có hiệu lực ngay khi ra lệnh.

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -87,10 +88,16 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.ModerationResult,
-                decision == ModerationDecision.Approved ? "Chương trình đã được duyệt" : "Chương trình bị từ chối",
-                decision == ModerationDecision.Approved
-                    ? $"\"{show.Name}\" đã được duyệt và xuất bản."
-                    : $"\"{show.Name}\" bị từ chối duyệt. Lý do: {request.ReviewNote}.",
+                new SongNgu(
+                    decision == ModerationDecision.Approved ? "Chương trình đã được duyệt" : "Chương trình bị từ chối",
+                    decision == ModerationDecision.Approved ? "Concert approved" : "Concert rejected"),
+                new SongNgu(
+                    decision == ModerationDecision.Approved
+                        ? $"\"{show.Name}\" đã được duyệt và xuất bản."
+                        : $"\"{show.Name}\" bị từ chối duyệt. Lý do: {request.ReviewNote}.",
+                    decision == ModerationDecision.Approved
+                        ? $"\"{show.Name}\" has been approved and published."
+                        : $"\"{show.Name}\" was rejected. Reason: {request.ReviewNote}."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);
@@ -103,8 +110,12 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
                     await _notifications.NotifyAsync(
                         userId,
                         NotificationType.NewEvent,
-                        "Chương trình mới",
-                        $"{lounge.Name} vừa đăng chương trình mới: \"{show.Name}\".",
+                        new SongNgu(
+                            "Chương trình mới",
+                            "New concert"),
+                        new SongNgu(
+                            $"{lounge.Name} vừa đăng chương trình mới: \"{show.Name}\".",
+                            $"{lounge.Name} just posted a new concert: \"{show.Name}\"."),
                         referenceType: "show",
                         referenceId: show.Id.ToString(),
                         ct: ct);

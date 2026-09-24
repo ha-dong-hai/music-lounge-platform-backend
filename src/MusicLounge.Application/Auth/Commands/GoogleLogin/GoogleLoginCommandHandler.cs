@@ -13,17 +13,20 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
     private readonly IGoogleTokenVerifier _googleTokenVerifier;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ISystemConfigService _config;
+    private readonly IRequestLanguage _language;
 
     public GoogleLoginCommandHandler(
         IUnitOfWork uow,
         IGoogleTokenVerifier googleTokenVerifier,
         IJwtTokenService jwtTokenService,
-        ISystemConfigService config)
+        ISystemConfigService config,
+        IRequestLanguage language)
     {
         _uow = uow;
         _googleTokenVerifier = googleTokenVerifier;
         _jwtTokenService = jwtTokenService;
         _config = config;
+        _language = language;
     }
 
     public async Task<AuthResultDto> Handle(GoogleLoginCommand request, CancellationToken ct)
@@ -83,6 +86,9 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
                     EmailVerifiedAt = DateTimeOffset.UtcNow,
                     TermsAcceptedAt = DateTimeOffset.UtcNow,
                     TermsVersion = termsVersion,
+                    // MLACP-489: ngôn ngữ của trang người dùng đang đứng khi đăng ký — không đặt thì người đăng ký trên bản tiếng
+                    // Anh vẫn nhận push/email tiếng Việt cho tới khi tự tìm ra cài đặt. Đổi sau bằng PUT /me/language.
+                    PreferredLanguage = _language.Current,
                     CreatedAt = DateTime.UtcNow
                 };
                 userRepo.Add(user);

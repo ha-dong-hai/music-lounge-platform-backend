@@ -50,4 +50,14 @@ public static class PosterQueue
     public const string ThongBaoHetHanCho =
         "Poster của bạn chưa tạo được vì hệ thống tạo ảnh đang tạm nghỉ. Bạn không bị trừ lượt nào — " +
         "vui lòng thử lại, hoặc tự tải poster của bạn lên.";
+
+    // MLACP-489: bản tiếng Anh cho thông báo. Bản tiếng Việt ở trên còn được lưu làm ErrorMessage của đơn poster nên
+    // giữ nguyên chữ; hai bản đặt cạnh nhau để sửa một bên thì thấy bên kia.
+    public const string ThongBaoMayTramKhongPhanHoiEn =
+        "The image service did not respond, so your poster was not created. None of your poster credits were used — " +
+        "please try again later.";
+
+    public const string ThongBaoHetHanChoEn =
+        "Your poster was not created because the image service is temporarily unavailable. None of your credits were " +
+        "used — please try again, or upload your own poster.";
 }

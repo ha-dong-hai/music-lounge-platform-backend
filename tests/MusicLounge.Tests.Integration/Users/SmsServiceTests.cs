@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using System.Net;
 using System.Text;
 using System.Web;
@@ -93,7 +94,7 @@ public sealed class SmsServiceTests
         var http = new TwilioGia(HttpStatusCode.Created, "{}");
         var (service, _, log) = Tao(http, new SmsSettings());
 
-        await service.SendPhoneVerificationCodeAsync("0912345678", Ma);
+        await service.SendPhoneVerificationCodeAsync("0912345678", Ma, NgonNgu.Viet);
 
         http.SoLanGoi.Should().Be(0);
         log.Ban.Should().Contain(b => b.Muc == LogLevel.Error && b.NoiDung.Contains("Sms:AccountSid"),
@@ -106,7 +107,7 @@ public sealed class SmsServiceTests
         var http = new TwilioGia(HttpStatusCode.Created, "{\"sid\":\"SM0123\",\"status\":\"queued\"}");
         var (service, factory, _) = Tao(http);
 
-        await service.SendPhoneVerificationCodeAsync("0912345678", Ma);
+        await service.SendPhoneVerificationCodeAsync("0912345678", Ma, NgonNgu.Viet);
 
         factory.TenDaXin.Should().Be(SmsService.HttpClientName);
         http.YeuCau!.Method.Should().Be(HttpMethod.Post);
@@ -147,7 +148,7 @@ public sealed class SmsServiceTests
         var http = new TwilioGia(HttpStatusCode.Created, "{}");
         var (service, _, log) = Tao(http);
 
-        await service.SendPhoneVerificationCodeAsync("12089464415", Ma);
+        await service.SendPhoneVerificationCodeAsync("12089464415", Ma, NgonNgu.Viet);
 
         http.SoLanGoi.Should().Be(0);
         log.Ban.Should().Contain(b => b.Muc == LogLevel.Error);
@@ -162,7 +163,7 @@ public sealed class SmsServiceTests
         // Twilio: 429 là chạm giới hạn đồng thời, 5xx là sự cố tạm thời phía họ — nên thử lại.
         var (service, _, _) = Tao(new TwilioGia(code, "{\"code\":20429,\"message\":\"Too Many Requests\",\"status\":429}"));
 
-        var act = () => service.SendPhoneVerificationCodeAsync("0912345678", Ma);
+        var act = () => service.SendPhoneVerificationCodeAsync("0912345678", Ma, NgonNgu.Viet);
 
         await act.Should().ThrowAsync<Exception>();
     }
@@ -172,7 +173,7 @@ public sealed class SmsServiceTests
     {
         var (service, _, _) = Tao(new TwilioGia(new HttpRequestException("Connection reset by peer")));
 
-        var act = () => service.SendPhoneVerificationCodeAsync("0912345678", Ma);
+        var act = () => service.SendPhoneVerificationCodeAsync("0912345678", Ma, NgonNgu.Viet);
 
         await act.Should().ThrowAsync<Exception>();
     }
@@ -188,7 +189,7 @@ public sealed class SmsServiceTests
         var body = $"{{\"code\":{maTwilio},\"message\":\"rejected\",\"more_info\":\"https://www.twilio.com/docs/errors/{maTwilio}\",\"status\":{(int)code}}}";
         var (service, _, log) = Tao(new TwilioGia(code, body));
 
-        await service.SendPhoneVerificationCodeAsync("0912345678", Ma);
+        await service.SendPhoneVerificationCodeAsync("0912345678", Ma, NgonNgu.Viet);
 
         log.Ban.Should().Contain(b => b.Muc == LogLevel.Error && b.NoiDung.Contains(maTwilio.ToString()),
             "mã lỗi Twilio là thứ duy nhất cho biết vì sao tin không tới");
@@ -205,7 +206,7 @@ public sealed class SmsServiceTests
         // nổ ngay trong nhánh xử lý lỗi.
         var (service, _, _) = Tao(new TwilioGia(HttpStatusCode.BadRequest, body));
 
-        var act = () => service.SendPhoneVerificationCodeAsync("0912345678", Ma);
+        var act = () => service.SendPhoneVerificationCodeAsync("0912345678", Ma, NgonNgu.Viet);
 
         await act.Should().NotThrowAsync();
     }
@@ -228,7 +229,7 @@ public sealed class SmsServiceTests
         async Task Chay(HttpMessageHandler http, SmsSettings? cauHinh = null, string so = "0912345678")
         {
             var (service, _, ghi) = Tao(http, cauHinh);
-            try { await service.SendPhoneVerificationCodeAsync(so, Ma); }
+            try { await service.SendPhoneVerificationCodeAsync(so, Ma, NgonNgu.Viet); }
             // Loi tam thoi nem ra de Hangfire thu lai — va Hangfire GHI noi dung ngoai le vao log, nen soi ca no.
             catch (Exception ex) { log.Add(ex.ToString()); }
             log.AddRange(ghi.Ban.Select(b => b.NoiDung));

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using FluentAssertions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -50,9 +51,9 @@ public sealed class EmailSecretsNotLoggedTests
         var log = new GhiLog();
         var service = new SmtpEmailService(Options.Create(new EmailSettings { Host = "" }), log, new MoiTruong(moiTruong));
 
-        await service.SendPasswordResetEmailAsync(Email, "Nguoi Dung", ResetLink);
-        await service.SendEmailVerificationCodeAsync(Email, "Nguoi Dung", Code);
-        await service.SendPerformerConfirmationAsync(Email, "Nghe Si", "Xac nhan", "Noi dung", ConfirmLink, DateTimeOffset.UtcNow.AddDays(1));
+        await service.SendPasswordResetEmailAsync(Email, "Nguoi Dung", ResetLink, NgonNgu.Viet);
+        await service.SendEmailVerificationCodeAsync(Email, "Nguoi Dung", Code, NgonNgu.Viet);
+        await service.SendPerformerConfirmationAsync(Email, "Nghe Si", new SongNgu("Xac nhan", "Confirm"), new SongNgu("Noi dung", "Content"), ConfirmLink, DateTimeOffset.UtcNow.AddDays(1));
         return log;
     }
 

@@ -13,6 +13,10 @@ public sealed class User : Common.AuditableEntity<int>
     public string AuthProvider { get; set; } = "local";     // "local" | "google"
     public string? GoogleId { get; set; }
     public bool IsActive { get; set; } = true;
+    // MLACP-489: ngôn ngữ cho những gì gửi BẤT ĐỒNG BỘ tới người này — push, email, SMS. Lúc gửi không có request nào
+    // để đọc Accept-Language, và request đang chạy (nếu có) thường là của người KHÁC (Admin duyệt → báo chủ phòng trà).
+    // "vi" | "en". Đặt lúc đăng ký theo Accept-Language, đổi bằng PUT /me/language.
+    public string PreferredLanguage { get; set; } = "vi";
     // Luật 91/2025/QH15 Điều 19 + Luật Kế toán (10-year retention on accounting records): erasure
     // scrubs identifying fields on this row in place rather than deleting it — Tickets/Donations/
     // Payments/Settlements/LedgerEntries/OwnerSubscription/MusicLounge/VenuePenalty/SystemConfig

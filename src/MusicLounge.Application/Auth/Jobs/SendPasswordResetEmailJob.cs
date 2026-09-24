@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common.Interfaces;
 
 namespace MusicLounge.Application.Auth.Jobs;
@@ -18,7 +19,12 @@ public sealed class SendPasswordResetEmailJob
     }
 
     public Task ExecuteAsync(
-        string toEmail, string toName, string protectedResetLink, CancellationToken ct = default)
+        string toEmail, string toName, string protectedResetLink, string language, CancellationToken ct = default)
         => _emailService.SendPasswordResetEmailAsync(
-            toEmail, toName, _secretProtector.Unprotect(protectedResetLink), ct);
+            toEmail, toName, _secretProtector.Unprotect(protectedResetLink), language, ct);
+
+    /// <summary>MLACP-489: chữ ký cũ, giữ cho job đã xếp hàng trước lần deploy có ngôn ngữ — xoá sau một lần deploy.</summary>
+    public Task ExecuteAsync(
+        string toEmail, string toName, string protectedResetLink, CancellationToken ct = default)
+        => ExecuteAsync(toEmail, toName, protectedResetLink, NgonNgu.Viet, ct);
 }

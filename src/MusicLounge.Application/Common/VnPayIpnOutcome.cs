@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Settings;
@@ -125,7 +126,7 @@ public static class PaymentIncident
         IUnitOfWork uow,
         INotificationService notifications,
         ILogger logger,
-        string what,
+        SongNgu what,
         string? txnRef,
         decimal amount,
         string referenceType,
@@ -137,7 +138,7 @@ public static class PaymentIncident
             "VNPay xac nhan THANH CONG cho mot ban ghi da dong — tien da thu ma he thong khong con " +
             "ghi nhan. Loai={What} TxnRef={TxnRef} SoTien={Amount} Ref={ReferenceType}/{ReferenceId} " +
             "RefundRequestId={RefundRequestId} at {At}",
-            what, txnRef, amount, referenceType, referenceId, refundRequestId, DateTimeOffset.UtcNow);
+            what.Vi, txnRef, amount, referenceType, referenceId, refundRequestId, DateTimeOffset.UtcNow);
 
         var admins = await uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin, ct);
         if (admins.Count == 0) return;
@@ -149,15 +150,26 @@ public static class PaymentIncident
             ? $"Hệ thống đã tự tạo yêu cầu hoàn 100% #{refundId} cho khách — việc cần làm là duyệt yêu cầu đó " +
               "(hoàn qua VNPay theo mã giao dịch trên), không cấp lại bằng tay và không tạo thêm yêu cầu hoàn."
             : "Cần đối soát với VNPay rồi cấp lại hoặc hoàn tiền cho khách.";
+        var whatToDoEn = refundRequestId is { } refundIdEn
+            ? $"The system has automatically created 100% refund request #{refundIdEn} for the customer — what you " +
+              "need to do is approve that request (refund via VNPay using the transaction reference above); do not " +
+              "reissue anything by hand and do not create another refund request."
+            : "Reconcile with VNPay, then reissue or refund the customer.";
+        var whatEn = what.En;
 
         foreach (var admin in admins)
         {
             await notifications.NotifyAsync(
                 admin.Id,
                 NotificationType.PaymentConfirmedAfterExpiry,
-                "Thanh toán được xác nhận sau khi đơn đã đóng",
-                $"VNPay báo thành công {amount:N0}đ cho {what} (mã giao dịch {txnRef}), nhưng bản ghi " +
-                $"đã bị đóng trước đó nên hệ thống không cấp được gì. {whatToDo}",
+                new SongNgu(
+                    "Thanh toán được xác nhận sau khi đơn đã đóng",
+                    "Payment confirmed after the order was closed"),
+                new SongNgu(
+                    $"VNPay báo thành công {amount:N0}đ cho {what.Vi} (mã giao dịch {txnRef}), nhưng bản ghi " +
+                    $"đã bị đóng trước đó nên hệ thống không cấp được gì. {whatToDo}",
+                    $"VNPay reported a successful payment of {amount:N0} VND for {whatEn} (transaction reference {txnRef}), " +
+                    $"but the record had already been closed, so nothing was issued. {whatToDoEn}"),
                 referenceType: referenceType,
                 referenceId: referenceId,
                 ct: ct);

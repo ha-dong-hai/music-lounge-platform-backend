@@ -11,8 +11,10 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
         b.ToTable("notifications");
         b.HasKey(x => x.Id);
         b.Property(x => x.Type).HasConversion<string>().HasMaxLength(50);
-        b.Property(x => x.Title).HasMaxLength(255).IsRequired();
-        b.Property(x => x.Body).HasMaxLength(1000).IsRequired();
+        b.Property(x => x.Title).HasMaxLength(NotificationLimits.TitleMaxLength).IsRequired();
+        b.Property(x => x.Body).HasMaxLength(NotificationLimits.BodyMaxLength).IsRequired();
+        b.Property(x => x.TitleEn).HasMaxLength(NotificationLimits.TitleMaxLength);
+        b.Property(x => x.BodyEn).HasMaxLength(NotificationLimits.BodyMaxLength);
         b.Property(x => x.ReferenceType).HasMaxLength(50);
         b.Property(x => x.ReferenceId).HasMaxLength(100);
         b.Property(x => x.IsRead).HasDefaultValue(false);

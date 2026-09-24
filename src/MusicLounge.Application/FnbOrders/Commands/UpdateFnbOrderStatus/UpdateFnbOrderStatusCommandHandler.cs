@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -202,19 +203,32 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         // Staff-placed orders on behalf of a walk-in guest have no app account to notify.
         if (order.AudienceUserId is not { } audienceUserId) return Task.CompletedTask;
 
-        var (title, body) = step switch
+        SongNgu? title, body;
+        (title, body) = step switch
         {
-            FnbOrderStatus.Preparing => ("Đơn F&B đang được chuẩn bị", $"Đơn #{order.Id} của bạn đang được chuẩn bị."),
-            FnbOrderStatus.Served => ("Đơn F&B đã phục vụ", $"Đơn #{order.Id} của bạn đã được phục vụ."),
-            FnbOrderStatus.Cancelled => ("Đơn F&B đã bị hủy", $"Đơn #{order.Id} của bạn đã bị hủy."),
+            FnbOrderStatus.Preparing => (
+                new SongNgu("Đơn F&B đang được chuẩn bị", "Your food & drink order is being prepared"),
+                new SongNgu($"Đơn #{order.Id} của bạn đang được chuẩn bị.", $"Your order #{order.Id} is being prepared.")),
+            FnbOrderStatus.Served => (
+                new SongNgu("Đơn F&B đã phục vụ", "Your food & drink order has been served"),
+                new SongNgu($"Đơn #{order.Id} của bạn đã được phục vụ.", $"Your order #{order.Id} has been served.")),
+            FnbOrderStatus.Cancelled => (
+                new SongNgu("Đơn F&B đã bị hủy", "Food & drink order cancelled"),
+                new SongNgu($"Đơn #{order.Id} của bạn đã bị hủy.", $"Your order #{order.Id} has been cancelled.")),
             _ => (null, null)
         };
         if (step == FnbOrderStatus.Cancelled && refundAmount is { } amount)
             (title, body) = (
-                "Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
-                $"Đơn #{order.Id} của bạn đã bị phòng trà huỷ trước khi phục vụ. Chúng tôi đã tự động tạo " +
-                $"yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần làm gì " +
-                "thêm và sẽ được báo khi yêu cầu được xử lý.");
+                new SongNgu(
+                    "Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
+                    "Food & drink order cancelled — you will be refunded"),
+                new SongNgu(
+                    $"Đơn #{order.Id} của bạn đã bị phòng trà huỷ trước khi phục vụ. Chúng tôi đã tự động tạo " +
+                    $"yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần làm gì " +
+                    "thêm và sẽ được báo khi yêu cầu được xử lý.",
+                    $"Your order #{order.Id} was cancelled by the music lounge before it was served. We have " +
+                    $"automatically created a 100% refund request ({amount:N0} VND) to your original payment method " +
+                    "— you do not need to do anything, and we will notify you when it is processed."));
         if (title is null) return Task.CompletedTask;
 
         return _notifications.NotifyAsync(

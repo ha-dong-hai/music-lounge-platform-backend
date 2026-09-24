@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common;
@@ -90,10 +91,15 @@ public sealed class RemindOwnerToStartShowJob
             await _notifications.NotifyAsync(
                 ownerId,
                 NotificationType.ShowNotStarted,
-                "Buổi diễn chưa được bắt đầu",
-                $"\"{show.Name}\" đã tới giờ diễn nhưng chưa được bấm Bắt đầu. Chưa bấm thì nhân " +
-                "viên không quét được vé ở cửa, khán giả không donate được, và sau đó không ai " +
-                "đánh giá được buổi diễn.",
+                new SongNgu(
+                    "Buổi diễn chưa được bắt đầu",
+                    "The show has not been started"),
+                new SongNgu(
+                    $"\"{show.Name}\" đã tới giờ diễn nhưng chưa được bấm Bắt đầu. Chưa bấm thì nhân " +
+                    "viên không quét được vé ở cửa, khán giả không donate được, và sau đó không ai " +
+                    "đánh giá được buổi diễn.",
+                    $"\"{show.Name}\" has reached its start time but has not been started. Until you press Start, staff " +
+                    "cannot scan tickets at the door, guests cannot donate, and afterwards no one can rate the show."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

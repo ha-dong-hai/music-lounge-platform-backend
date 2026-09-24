@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common;
@@ -59,9 +60,14 @@ public sealed class SubscriptionExpiryWarningJob
                 await _notifications.NotifyAsync(
                     sub.OwnerId,
                     NotificationType.SubscriptionExpiring,
-                    "Gói subscription sắp hết hạn",
-                    $"Gói subscription của bạn sẽ hết hạn trong {milestone} ngày nữa " +
-                    $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). Gia hạn để tiếp tục tạo event mới.",
+                    new SongNgu(
+                        "Gói subscription sắp hết hạn",
+                        "Your subscription is about to expire"),
+                    new SongNgu(
+                        $"Gói subscription của bạn sẽ hết hạn trong {milestone} ngày nữa " +
+                        $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). Gia hạn để tiếp tục tạo buổi hòa nhạc mới.",
+                        $"Your subscription expires in {milestone} days " +
+                        $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). Renew it to keep creating new concerts."),
                     referenceType: "subscription",
                     referenceId: referenceId,
                     ct: ct);

@@ -17,4 +17,7 @@ public sealed record UserProfileDto(
     // PUT /me/preferences ghi đè toàn phần và nhận cả DislikedGenreIds, nhưng trước đây không đường
     // đọc nào trả danh sách loại trừ về. Người dùng mở lại trang sở thích rồi bấm Lưu là mất sạch
     // phần đã loại trừ — mà loại trừ thể loại chính là cách duy nhất họ nói "đừng gợi ý thứ này nữa".
-    IReadOnlyList<int> DislikedGenreIds);
+    IReadOnlyList<int> DislikedGenreIds,
+    // MLACP-489: có đường ghi (PUT /me/language) thì phải có đường đọc — không thì trang cài đặt không biết đang chọn
+    // gì, và mặc định của nó sẽ âm thầm ghi đè lựa chọn thật khi người dùng bấm Lưu.
+    string PreferredLanguage);

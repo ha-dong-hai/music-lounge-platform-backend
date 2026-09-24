@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -90,9 +91,11 @@ public sealed class ExpirePosterJobsJob
         // SaveChangesAsync bên dưới mới ghi xuống, và nó ghi cùng lượt với trạng thái đơn. Gọi sau SaveChangesAsync thì
         // thông báo rơi mất, vì không còn ai lưu nữa.
         foreach (var job in dongHan)
-            await BaoChuPhongTraAsync(job, PosterQueue.ThongBaoMayTramKhongPhanHoi, ct);
+            await BaoChuPhongTraAsync(
+                job, new SongNgu(PosterQueue.ThongBaoMayTramKhongPhanHoi, PosterQueue.ThongBaoMayTramKhongPhanHoiEn), ct);
         foreach (var job in hetHanCho)
-            await BaoChuPhongTraAsync(job, PosterQueue.ThongBaoHetHanCho, ct);
+            await BaoChuPhongTraAsync(
+                job, new SongNgu(PosterQueue.ThongBaoHetHanCho, PosterQueue.ThongBaoHetHanChoEn), ct);
 
         await _ctx.SaveChangesAsync(ct);
 
@@ -102,11 +105,11 @@ public sealed class ExpirePosterJobsJob
             traVeHangDoi, dongHan.Count, hetHanCho.Count);
     }
 
-    private async Task BaoChuPhongTraAsync(AiPosterGeneration job, string body, CancellationToken ct)
+    private async Task BaoChuPhongTraAsync(AiPosterGeneration job, SongNgu body, CancellationToken ct)
         => await _notifications.NotifyAsync(
             job.OwnerId,
             NotificationType.PosterGenerationResult,
-            "Chưa tạo được poster",
+            new SongNgu("Chưa tạo được poster", "Poster could not be created"),
             body,
             NotificationReferenceTypes.Show,
             job.ShowId.ToString(),

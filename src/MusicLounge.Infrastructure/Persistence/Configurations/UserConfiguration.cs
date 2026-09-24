@@ -19,6 +19,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.AuthProvider).HasMaxLength(20).HasDefaultValue("local");
         b.Property(u => u.GoogleId).HasMaxLength(100);
         b.Property(u => u.IsActive).HasDefaultValue(true);
+        // MLACP-489. Mặc định ở CSDL để migration thêm cột NOT NULL trên bảng đã có dữ liệu mà không cần backfill.
+        b.Property(u => u.PreferredLanguage).HasMaxLength(5).IsRequired().HasDefaultValue("vi");
         b.Property(u => u.DateOfBirth);
         b.Property(u => u.AiConsent).HasDefaultValue(false);
         b.Property(u => u.TermsVersion).HasMaxLength(50);

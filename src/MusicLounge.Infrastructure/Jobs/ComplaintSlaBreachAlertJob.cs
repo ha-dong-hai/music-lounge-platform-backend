@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -27,7 +28,10 @@ public sealed class ComplaintSlaBreachAlertJob
     }
 
     /// <summary>MLACP-414: tieu de nay la khoa chong gui trung — doi no thi canh bao cu khong con nhan ra duoc.</summary>
+    // MLACP-489: bản tiếng Việt của tiêu đề này là KHOÁ CHỐNG GỬI TRÙNG — job so cột Notification.Title (luôn lưu
+    // tiếng Việt) với nó. Đổi chữ tiếng Việt thì mọi cảnh báo cũ không còn khớp và Admin bị báo lại. Chỉ sửa bản En.
     private const string OverdueTitle = "Quá hạn xử lý khiếu nại (NĐ 85/2021)";
+    private const string OverdueTitleEn = "Complaint handling overdue (Decree 85/2021)";
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
     public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
@@ -70,9 +74,12 @@ public sealed class ComplaintSlaBreachAlertJob
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.ComplaintUpdate,
-                    OverdueTitle,
-                    $"Khiếu nại #{complaint.Id} ({complaint.Category}) đã quá hạn xử lý {hoursOverdue}h " +
-                    "mà chưa có kết luận. Vui lòng xử lý ngay.",
+                    new SongNgu(OverdueTitle, OverdueTitleEn),
+                    new SongNgu(
+                        $"Khiếu nại #{complaint.Id} ({complaint.Category}) đã quá hạn xử lý {hoursOverdue}h " +
+                        "mà chưa có kết luận. Vui lòng xử lý ngay.",
+                        $"Complaint #{complaint.Id} ({complaint.Category}) is {hoursOverdue}h overdue " +
+                        "without a conclusion. Please handle it now."),
                     referenceType: "complaint",
                     referenceId: complaint.Id.ToString(),
                     ct: ct);

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -52,14 +53,22 @@ internal sealed class CancelTicketTransferCommandHandler : IRequestHandler<Cance
         if (isSender)
             await _notifications.NotifyAsync(
                 recipientId, NotificationType.EventReminder,
-                "Yêu cầu chuyển nhượng vé đã bị hủy",
-                $"Yêu cầu chuyển vé \"{ticket.Show.Name}\" cho bạn đã bị người gửi hủy.",
+                new SongNgu(
+                    "Yêu cầu chuyển nhượng vé đã bị hủy",
+                    "Ticket transfer cancelled"),
+                new SongNgu(
+                    $"Yêu cầu chuyển vé \"{ticket.Show.Name}\" cho bạn đã bị người gửi hủy.",
+                    $"The sender cancelled the transfer of a ticket for \"{ticket.Show.Name}\" to you."),
                 referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
         else if (ticket.BuyerId is int senderId)
             await _notifications.NotifyAsync(
                 senderId, NotificationType.EventReminder,
-                "Yêu cầu chuyển nhượng vé bị từ chối",
-                $"Người nhận đã từ chối vé \"{ticket.Show.Name}\" bạn muốn chuyển.",
+                new SongNgu(
+                    "Yêu cầu chuyển nhượng vé bị từ chối",
+                    "Ticket transfer declined"),
+                new SongNgu(
+                    $"Người nhận đã từ chối vé \"{ticket.Show.Name}\" bạn muốn chuyển.",
+                    $"The recipient declined the ticket for \"{ticket.Show.Name}\" that you wanted to transfer."),
                 referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
 
         await _uow.SaveChangesAsync(ct);

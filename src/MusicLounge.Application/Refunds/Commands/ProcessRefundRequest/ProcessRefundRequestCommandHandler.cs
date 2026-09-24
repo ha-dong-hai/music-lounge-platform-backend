@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -87,12 +88,18 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             // duong khieu nai de duoc xem lai, thay vi bo ho lai voi mot chu "bi tu choi".
             await NotifyBuyerAsync(
                 refund,
-                "Yêu cầu hoàn tiền không được chấp nhận",
+                new SongNgu("Yêu cầu hoàn tiền không được chấp nhận", "Refund request not accepted"),
                 refund.ResolutionNote is { } why
-                    ? $"Yêu cầu hoàn tiền của bạn không được chấp nhận. Lý do: {why}. Nếu bạn không " +
-                      "đồng ý, hãy gửi khiếu nại để được xem xét lại."
-                    : "Yêu cầu hoàn tiền của bạn đã được xem xét và không được chấp nhận. Nếu bạn " +
-                      "không đồng ý, hãy gửi khiếu nại để được xem xét lại.",
+                    ? new SongNgu(
+                        $"Yêu cầu hoàn tiền của bạn không được chấp nhận. Lý do: {why}. Nếu bạn không " +
+                        "đồng ý, hãy gửi khiếu nại để được xem xét lại.",
+                        $"Your refund request was not accepted. Reason: {why}. If you disagree, " +
+                        "please file a complaint to have it reviewed again.")
+                    : new SongNgu(
+                        "Yêu cầu hoàn tiền của bạn đã được xem xét và không được chấp nhận. Nếu bạn " +
+                        "không đồng ý, hãy gửi khiếu nại để được xem xét lại.",
+                        "Your refund request was reviewed and not accepted. If you disagree, " +
+                        "please file a complaint to have it reviewed again."),
                 ct);
 
             await _uow.SaveChangesAsync(ct);
@@ -419,36 +426,53 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             // MLACP-384: noi dung su that — tien khong di qua VNPay ma da duoc chuyen khoan truc tiep.
             await NotifyBuyerAsync(
                 refund,
-                "Yêu cầu hoàn tiền đã được duyệt",
-                $"{amountApproved:N0}đ đã được chuyển khoản trực tiếp tới tài khoản {refund.PayoutBankName} " +
-                $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} của bạn (mã giao dịch {manualTransferRef}), vì " +
-                "giao dịch gốc đã quá thời hạn hoàn qua VNPay. Nếu chưa nhận được, hãy gửi khiếu nại kèm mã này.",
+                RefundApprovedTitle,
+                new SongNgu(
+                    $"{amountApproved:N0}đ đã được chuyển khoản trực tiếp tới tài khoản {refund.PayoutBankName} " +
+                    $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} của bạn (mã giao dịch {manualTransferRef}), vì " +
+                    "giao dịch gốc đã quá thời hạn hoàn qua VNPay. Nếu chưa nhận được, hãy gửi khiếu nại kèm mã này.",
+                    $"{amountApproved:N0} VND has been transferred directly to your {refund.PayoutBankName} account " +
+                    $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} (transaction reference {manualTransferRef}), " +
+                    "because the original payment was past VNPay's refund window. If you have not received it, please " +
+                    "file a complaint with this reference."),
                 ct);
         }
         else if (isGatewayPayment)
         {
             await NotifyBuyerAsync(
                 refund,
-                "Yêu cầu hoàn tiền đã được duyệt",
-                $"{amountApproved:N0}đ sẽ được hoàn về phương thức thanh toán bạn đã dùng. Thời gian " +
-                "tiền về tài khoản phụ thuộc ngân hàng phát hành.",
+                RefundApprovedTitle,
+                new SongNgu(
+                    $"{amountApproved:N0}đ sẽ được hoàn về phương thức thanh toán bạn đã dùng. Thời gian " +
+                    "tiền về tài khoản phụ thuộc ngân hàng phát hành.",
+                    $"{amountApproved:N0} VND will be refunded to the payment method you used. How long it takes to " +
+                    "reach your account depends on your card-issuing bank."),
                 ct);
         }
         else
         {
             await NotifyBuyerAsync(
                 refund,
-                "Yêu cầu hoàn tiền đã được duyệt",
-                $"{amountApproved:N0}đ sẽ được phòng trà hoàn trực tiếp cho bạn, vì vé này được mua " +
-                "tại quầy. Chúng tôi đã thông báo cho phòng trà. Nếu chưa nhận được, hãy gửi khiếu nại.",
+                RefundApprovedTitle,
+                new SongNgu(
+                    $"{amountApproved:N0}đ sẽ được phòng trà hoàn trực tiếp cho bạn, vì vé này được mua " +
+                    "tại quầy. Chúng tôi đã thông báo cho phòng trà. Nếu chưa nhận được, hãy gửi khiếu nại.",
+                    $"{amountApproved:N0} VND will be refunded to you directly by the music lounge, because this " +
+                    "ticket was bought at the box office. We have notified the music lounge. If you have not " +
+                    "received it, please file a complaint."),
                 ct);
 
             await _notifications.NotifyAsync(
                 ownerId!.Value, // tien mat luon ban tai quay cua mot phong tra
                 NotificationType.RefundOwedByVenue,
-                "Cần hoàn tiền mặt cho khách",
-                $"Vé #{refund.PaymentId} được mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
-                $"này. Phòng trà cần hoàn {amountApproved:N0}đ trực tiếp cho khách.",
+                new SongNgu(
+                    "Cần hoàn tiền mặt cho khách",
+                    "Cash refund needed for a customer"),
+                new SongNgu(
+                    $"Vé #{refund.PaymentId} được mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
+                    $"này. Phòng trà cần hoàn {amountApproved:N0}đ trực tiếp cho khách.",
+                    $"The ticket with payment #{refund.PaymentId} was bought at the box office in cash, so the platform does not " +
+                    $"hold this amount. The music lounge needs to refund {amountApproved:N0} VND directly to the customer."),
                 referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
                 ct: ct);
@@ -467,8 +491,10 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     /// <c>SET NULL</c> khi tai khoan bi xoa theo luat bao ve du lieu ca nhan — luc do khong con ai
     /// de bao, nen bo qua la dung.
     /// </summary>
+    private static readonly SongNgu RefundApprovedTitle = new("Yêu cầu hoàn tiền đã được duyệt", "Refund request approved");
+
     private async Task NotifyBuyerAsync(
-        RefundRequest refund, string title, string body, CancellationToken ct)
+        RefundRequest refund, SongNgu title, SongNgu body, CancellationToken ct)
     {
         if (refund.RequestedBy is not int buyerId) return;
 

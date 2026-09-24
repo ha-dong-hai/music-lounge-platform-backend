@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -76,9 +77,14 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
             await _notifications.NotifyAsync(
                 buyerId,
                 NotificationType.RefundUpdate,
-                "Phòng trà xác nhận đã hoàn tiền mặt",
-                $"Phòng trà xác nhận đã trả lại {refund.AmountApproved ?? refund.AmountRequested:N0}đ " +
-                "tiền mặt cho bạn. Nếu bạn chưa nhận được, hãy gửi khiếu nại để chúng tôi xử lý.",
+                new SongNgu(
+                    "Phòng trà xác nhận đã hoàn tiền mặt",
+                    "The music lounge confirmed your cash refund"),
+                new SongNgu(
+                    $"Phòng trà xác nhận đã trả lại {refund.AmountApproved ?? refund.AmountRequested:N0}đ " +
+                    "tiền mặt cho bạn. Nếu bạn chưa nhận được, hãy gửi khiếu nại để chúng tôi xử lý.",
+                    $"The music lounge confirmed it has returned {refund.AmountApproved ?? refund.AmountRequested:N0} VND " +
+                    "in cash to you. If you have not received it, please file a complaint so we can look into it."),
                 referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
                 ct: ct);

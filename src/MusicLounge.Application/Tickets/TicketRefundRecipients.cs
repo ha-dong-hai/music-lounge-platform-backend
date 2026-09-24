@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -22,12 +23,20 @@ public static class TicketRefundRecipients
     public const string TransferredHolderNote =
         " Vé này được chuyển nhượng cho bạn, nên tiền được hoàn về người đã mua vé ban đầu.";
 
+    /// <summary>MLACP-489: bản tiếng Anh — đặt ngay cạnh để sửa một bản thì thấy bản kia.</summary>
+    public const string TransferredHolderNoteEn =
+        " This ticket was transferred to you, so the money is refunded to the person who originally bought it.";
+
     /// <summary>
     /// MLACP-372 — câu nối vào thông báo "bạn có thể huỷ vé" cho người đang giữ vé đã chuyển nhượng: từ MLACP-370 chỉ
     /// người đã trả tiền mới tự huỷ được, nên thiếu câu này thì lời báo là một quyền họ không dùng được.
     /// </summary>
     public const string TransferredHolderCancelNote =
         " Vé được chuyển nhượng cho bạn thì chỉ người mua ban đầu mới huỷ để hoàn được — hãy chuyển vé lại cho họ.";
+
+    /// <summary>MLACP-489: bản tiếng Anh của <see cref="TransferredHolderCancelNote"/>.</summary>
+    public const string TransferredHolderCancelNoteEn =
+        " A ticket transferred to you can only be cancelled for a refund by the original buyer — transfer it back to them.";
 
     /// <summary>Người đã trả tiền của từng thanh toán mà các vé này thuộc về.</summary>
     public static async Task<IReadOnlyDictionary<int, int?>> PayersAsync(
@@ -55,7 +64,7 @@ public static class TicketRefundRecipients
     /// </summary>
     public static Task NotifyOriginalBuyerAsync(
         INotificationService notifications, Ticket ticket, IReadOnlyDictionary<int, int?> payers,
-        NotificationType type, string showName, int showId, string why, CancellationToken ct)
+        NotificationType type, string showName, int showId, SongNgu why, CancellationToken ct)
     {
         if (!WasTransferred(ticket, payers) || RefundedTo(ticket, payers) is not int payer)
             return Task.CompletedTask;
@@ -63,9 +72,15 @@ public static class TicketRefundRecipients
         return notifications.NotifyAsync(
             payer,
             type,
-            "Vé bạn đã chuyển nhượng được hoàn tiền",
-            $"Vé \"{showName}\" bạn đã mua rồi chuyển nhượng cho người khác được hoàn tiền ({why}). Chúng tôi " +
-            "đã tự động tạo yêu cầu hoàn 100% về phương thức bạn đã thanh toán — bạn không cần làm gì thêm.",
+            new SongNgu(
+                "Vé bạn đã chuyển nhượng được hoàn tiền",
+                "A ticket you transferred has been refunded"),
+            new SongNgu(
+                $"Vé \"{showName}\" bạn đã mua rồi chuyển nhượng cho người khác được hoàn tiền ({why.Vi}). Chúng tôi " +
+                "đã tự động tạo yêu cầu hoàn 100% về phương thức bạn đã thanh toán — bạn không cần làm gì thêm.",
+                $"The ticket for \"{showName}\" that you bought and then transferred to someone else has been refunded " +
+                $"({why.En}). We have automatically created a request to refund 100% to your original payment method — you do " +
+                "not need to do anything."),
             referenceType: "show",
             referenceId: showId.ToString(),
             ct: ct);

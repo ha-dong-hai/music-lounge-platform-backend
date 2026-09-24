@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -40,7 +41,9 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
         var now = DateTimeOffset.UtcNow;
         var decision = request.Approve ? KycReviewStatus.Approved : KycReviewStatus.Rejected;
 
-        string documentName;
+        // MLACP-489: song ngữ. Trước đây nhánh thuế đặt "hồ sơ thuế" rồi ghép sau chữ "Hồ sơ" → người dùng đọc
+        // "Hồ sơ hồ sơ thuế đã được duyệt". Nay là tên giấy tờ trần, "Hồ sơ" do câu ghép thêm.
+        SongNgu documentName;
         if (request.Document == KycDocument.CitizenCard)
         {
             if (user.CitizenCardSubmittedAt is null)
@@ -55,7 +58,7 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
             // CCCD/CMND. FullName sửa được bất cứ lúc nào mà không mất trạng thái đã duyệt, nên tài khoản nhận tiền được so
             // với tên đã chốt này. Từ chối thì không còn tên nào được xác nhận.
             user.CitizenCardVerifiedName = request.Approve ? user.FullName : null;
-            documentName = "CCCD/CMND";
+            documentName = new SongNgu("CCCD/CMND", "ID card");
         }
         else
         {
@@ -89,18 +92,20 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
             // would quietly exempt a seller whose declaration was just turned down.
             user.TaxProfileVerifiedAt = request.Approve ? now : null;
             user.TaxProfileVerifiedBy = request.Approve ? _currentUser.UserId : null;
-            documentName = "hồ sơ thuế";
+            documentName = new SongNgu("thuế", "tax");
         }
 
         userRepo.Update(user);
 
         var title = request.Approve
-            ? $"Hồ sơ {documentName} đã được duyệt"
-            : $"Hồ sơ {documentName} bị từ chối";
+            ? new SongNgu($"Hồ sơ {documentName.Vi} đã được duyệt", $"Your {documentName.En} documents were approved")
+            : new SongNgu($"Hồ sơ {documentName.Vi} bị từ chối", $"Your {documentName.En} documents were rejected");
 
         var body = request.Approve
             ? BuildApprovalMessage(request.Document, user)
-            : $"Lý do: {request.Note} Bạn có thể nộp lại sau khi chỉnh sửa.";
+            : new SongNgu(
+                $"Lý do: {request.Note} Bạn có thể nộp lại sau khi chỉnh sửa.",
+                $"Reason: {request.Note} You can resubmit after making changes.");
 
         // Staged, not saved — NotificationService follows the same contract as ILedgerService, so
         // the single SaveChangesAsync below is what commits both the decision and the message about
@@ -114,15 +119,23 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
         return Unit.Value;
     }
 
-    private static string BuildApprovalMessage(KycDocument document, User user)
+    private static SongNgu BuildApprovalMessage(KycDocument document, User user)
     {
         if (document == KycDocument.CitizenCard)
-            return "Giấy tờ tùy thân của bạn đã được xác minh.";
+            return new SongNgu(
+                "Giấy tờ tùy thân của bạn đã được xác minh.",
+                "Your ID document has been verified.");
 
         return user.BusinessType == PayeeBusinessType.Enterprise
-            ? "Hồ sơ doanh nghiệp của bạn đã được xác minh. Từ các giao dịch sau, nền tảng không " +
-              "khấu trừ thuế thay cho bạn nữa — bạn tự kê khai và nộp theo quy định."
-            : "Hồ sơ thuế của bạn đã được xác minh. Nền tảng tiếp tục khấu trừ và nộp thay thuế " +
-              "trên doanh thu mỗi giao dịch của bạn theo NĐ 117/2025/NĐ-CP.";
+            ? new SongNgu(
+                "Hồ sơ doanh nghiệp của bạn đã được xác minh. Từ các giao dịch sau, nền tảng không " +
+                "khấu trừ thuế thay cho bạn nữa — bạn tự kê khai và nộp theo quy định.",
+                "Your business profile has been verified. From your next transactions, the platform will no longer " +
+                "withhold tax on your behalf — you declare and pay it yourself as required by law.")
+            : new SongNgu(
+                "Hồ sơ thuế của bạn đã được xác minh. Nền tảng tiếp tục khấu trừ và nộp thay thuế " +
+                "trên doanh thu mỗi giao dịch của bạn theo NĐ 117/2025/NĐ-CP.",
+                "Your tax profile has been verified. The platform will continue to withhold and pay tax on your " +
+                "behalf on the revenue of each of your transactions, under Decree 117/2025/ND-CP.");
     }
 }

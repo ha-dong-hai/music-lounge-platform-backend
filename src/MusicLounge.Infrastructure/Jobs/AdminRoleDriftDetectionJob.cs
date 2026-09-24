@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -66,11 +67,17 @@ public sealed class AdminRoleDriftDetectionJob
                     await _notifications.NotifyAsync(
                         admin.Id,
                         NotificationType.SecurityAlert,
-                        "Cảnh báo bảo mật: phát hiện tài khoản Admin mới",
-                        $"Tài khoản \"{newAdmin.Email}\" (UserId={newAdmin.Id}) vừa được phát hiện có quyền " +
-                        "Admin mà hệ thống chưa từng ghi nhận trước đó. Hệ thống hiện chưa có chức năng cấp " +
-                        "quyền Admin qua ứng dụng, nên mọi thay đổi role đều đến từ thao tác trực tiếp trên " +
-                        "cơ sở dữ liệu — nếu đây không phải do bạn thực hiện, vui lòng kiểm tra ngay.",
+                        new SongNgu(
+                            "Cảnh báo bảo mật: phát hiện tài khoản Admin mới",
+                            "Security alert: new Admin account detected"),
+                        new SongNgu(
+                            $"Tài khoản \"{newAdmin.Email}\" (UserId={newAdmin.Id}) vừa được phát hiện có quyền " +
+                            "Admin mà hệ thống chưa từng ghi nhận trước đó. Hệ thống hiện chưa có chức năng cấp " +
+                            "quyền Admin qua ứng dụng, nên mọi thay đổi role đều đến từ thao tác trực tiếp trên " +
+                            "cơ sở dữ liệu — nếu đây không phải do bạn thực hiện, vui lòng kiểm tra ngay.",
+                            $"The account \"{newAdmin.Email}\" (UserId={newAdmin.Id}) was just found to have Admin rights " +
+                            "that the system had never recorded before. The app has no feature for granting Admin rights, so any " +
+                            "role change must come from a direct change in the database — if you did not do this, please check immediately."),
                         referenceType: "user",
                         referenceId: newAdmin.Id.ToString(),
                         ct: ct);

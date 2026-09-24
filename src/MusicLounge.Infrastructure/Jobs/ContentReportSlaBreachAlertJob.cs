@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MusicLounge.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Moderations;
@@ -84,9 +85,14 @@ public sealed class ContentReportSlaBreachAlertJob
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.ContentReportSlaBreached,
-                    "Quá hạn xử lý báo cáo vi phạm (NĐ 147/2024)",
-                    $"{group.TargetType} #{group.TargetId} có {group.ReportCount} báo cáo, đã quá hạn " +
-                    $"{hoursOverdue}h mà chưa được xử lý. Vui lòng xử lý ngay.",
+                    new SongNgu(
+                        "Quá hạn xử lý báo cáo vi phạm (NĐ 147/2024)",
+                        "Violation report overdue (Decree 147/2024)"),
+                    new SongNgu(
+                        $"{group.TargetType} #{group.TargetId} có {group.ReportCount} báo cáo, đã quá hạn " +
+                        $"{hoursOverdue}h mà chưa được xử lý. Vui lòng xử lý ngay.",
+                        $"{group.TargetType} #{group.TargetId} has {group.ReportCount} reports and is " +
+                        $"{hoursOverdue}h overdue without being handled. Please handle it now."),
                     referenceType: "content_report_target",
                     referenceId: $"{group.TargetType}:{group.TargetId}",
                     ct: ct);

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -42,7 +43,8 @@ internal sealed class SmsService : ISmsService
         _logger = logger;
     }
 
-    public async Task SendPhoneVerificationCodeAsync(string toPhone, string code, CancellationToken ct = default)
+    public async Task SendPhoneVerificationCodeAsync(
+        string toPhone, string code, string language, CancellationToken ct = default)
     {
         // Khong bao gio dua ma OTP hay du so dien thoai vao log: so dien thoai la du lieu ca nhan va cot trong DB da
         // duoc ma hoa, con log tren Azure thi ai co quyen xem site deu doc duoc.
@@ -78,7 +80,7 @@ internal sealed class SmsService : ISmsService
         {
             ["To"] = nguoiNhan,
             ["From"] = _settings.FromNumber,
-            ["Body"] = NoiDung(code)
+            ["Body"] = NoiDung(code, language)
         });
 
         // Loi mang / het thoi gian cho: de ngoai le di tiep len Hangfire de thu lai.
@@ -134,6 +136,15 @@ internal sealed class SmsService : ISmsService
     /// thi doi mot cho la tin nhan noi sai.
     /// </summary>
     internal static string NoiDung(string code) => $"Mã xác minh MusicLounge của bạn: {code}. Không chia sẻ mã này.";
+
+    /// <summary>
+    /// MLACP-489. Bản tiếng Anh không có dấu nên đi bằng GSM-7 (160 ký tự một đoạn) — rộng hơn bản tiếng Việt, nhưng
+    /// vẫn giữ gọn để cả hai bản cùng nằm trong MỘT đoạn tính tiền.
+    /// </summary>
+    internal static string NoiDung(string code, string? language)
+        => NgonNgu.LaTiengAnh(language)
+            ? $"Your MusicLounge verification code: {code}. Do not share this code."
+            : NoiDung(code);
 
     /// <summary>Chi giu 3 so cuoi — du de doi chieu khi ho tro nguoi dung, khong du de lo so.</summary>
     internal static string CheSo(string? phone)

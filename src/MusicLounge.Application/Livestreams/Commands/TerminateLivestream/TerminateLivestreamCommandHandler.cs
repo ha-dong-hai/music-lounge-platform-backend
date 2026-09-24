@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -71,7 +72,8 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
             // MLACP-353: voi show Hybrid, Admin dung STREAM chu khong dung duoc phong that — buoi dien
             // giu Ongoing de khan gia toi muon van check-in duoc.
             await StreamLoss.ApplyToShowAsync(
-                _uow, _config, _notifications, show, "bị Admin dừng phát sóng", now, ct);
+                _uow, _config, _notifications, show,
+                new SongNgu("bị Admin dừng phát sóng", "stopped by an Admin"), now, ct);
         }
 
         await _uow.SaveChangesAsync(ct);

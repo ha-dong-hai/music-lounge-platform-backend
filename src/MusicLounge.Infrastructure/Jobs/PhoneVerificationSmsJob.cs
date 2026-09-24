@@ -21,6 +21,10 @@ public sealed class PhoneVerificationSmsJob
 
     public PhoneVerificationSmsJob(SendPhoneVerificationCodeJob inner) => _inner = inner;
 
+    public Task ExecuteAsync(string toPhone, string protectedCode, string language, CancellationToken ct = default)
+        => _inner.ExecuteAsync(toPhone, protectedCode, language, ct);
+
+    /// <summary>MLACP-489: chữ ký cũ, giữ cho job đã xếp hàng trước lần deploy có ngôn ngữ — xoá sau một lần deploy.</summary>
     public Task ExecuteAsync(string toPhone, string protectedCode, CancellationToken ct = default)
         => _inner.ExecuteAsync(toPhone, protectedCode, ct);
 }

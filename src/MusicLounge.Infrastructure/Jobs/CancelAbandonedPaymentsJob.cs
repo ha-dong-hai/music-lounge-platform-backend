@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common;
@@ -169,10 +170,16 @@ public sealed class CancelAbandonedPaymentsJob
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.PaymentConfirmedAfterExpiry,
-                    "Đối soát VNPay: giao dịch đã thanh toán nhưng hệ thống chưa ghi nhận",
-                    $"Đối soát với VNPay cho thấy giao dịch {payment.OrderId} ĐÃ được thanh toán, nhưng " +
-                    "hệ thống chưa nhận được callback nên chưa cấp gì cho khách. Vé của khách đã được " +
-                    "giữ lại, chưa huỷ. Cần đối chiếu rồi cấp vé hoặc hoàn tiền cho khách.",
+                    new SongNgu(
+                        "Đối soát VNPay: giao dịch đã thanh toán nhưng hệ thống chưa ghi nhận",
+                        "VNPay reconciliation: a transaction was paid but not recorded"),
+                    new SongNgu(
+                        $"Đối soát với VNPay cho thấy giao dịch {payment.OrderId} ĐÃ được thanh toán, nhưng " +
+                        "hệ thống chưa nhận được callback nên chưa cấp gì cho khách. Vé của khách đã được " +
+                        "giữ lại, chưa huỷ. Cần đối chiếu rồi cấp vé hoặc hoàn tiền cho khách.",
+                        $"Reconciliation with VNPay shows that transaction {payment.OrderId} WAS paid, but the system never " +
+                        "received the callback, so nothing was issued to the customer. The customer's tickets have been kept on hold, " +
+                        "not cancelled. Please reconcile, then issue the tickets or refund the customer."),
                     referenceType: "payment",
                     referenceId: payment.Id.ToString(),
                     ct: ct);

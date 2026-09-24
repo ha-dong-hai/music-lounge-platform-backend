@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common;
@@ -95,9 +96,14 @@ public sealed class DonationOverdueCheckJob
                         await _notifications.NotifyAsync(
                             info.Value.OwnerId,
                             NotificationType.PenaltyWarning,
-                            "Cảnh báo vi phạm",
-                            $"Phòng trà của bạn bị cảnh báo vì donate #{donation.Id} đã quá {2 * holdDays} ngày " +
-                            "kể từ khi nhận tiền mà chưa chuyển cho nghệ sĩ.",
+                            new SongNgu(
+                                "Cảnh báo vi phạm",
+                                "Violation warning"),
+                            new SongNgu(
+                                $"Phòng trà của bạn bị cảnh báo vì donate #{donation.Id} đã quá {2 * holdDays} ngày " +
+                                "kể từ khi nhận tiền mà chưa chuyển cho nghệ sĩ.",
+                                $"Your music lounge has received a warning because donation #{donation.Id} is more than {2 * holdDays} days " +
+                                "past receipt and has not been passed on to the performer."),
                             referenceType: "donation",
                             referenceId: donation.Id.ToString(),
                             ct: ct);
@@ -116,9 +122,14 @@ public sealed class DonationOverdueCheckJob
                 await _notifications.NotifyAsync(
                     info.Value.OwnerId,
                     NotificationType.DonationPending,
-                    "Nhắc nhở: chưa trả nghệ sĩ",
-                    $"Donate #{donation.Id} đã tới hạn chuyển cho nghệ sĩ ({VietnamTime.Format(dueAt)}) — " +
-                    "vui lòng chuyển khoản cho nghệ sĩ.",
+                    new SongNgu(
+                        "Nhắc nhở: chưa trả nghệ sĩ",
+                        "Reminder: performer not yet paid"),
+                    new SongNgu(
+                        $"Donate #{donation.Id} đã tới hạn chuyển cho nghệ sĩ ({VietnamTime.Format(dueAt)}) — " +
+                        "vui lòng chuyển khoản cho nghệ sĩ.",
+                        $"Donation #{donation.Id} is due to be transferred to the performer ({VietnamTime.Format(dueAt)}) — " +
+                        "please make the transfer to the performer."),
                     referenceType: "donation",
                     referenceId: donation.Id.ToString(),
                     ct: ct);

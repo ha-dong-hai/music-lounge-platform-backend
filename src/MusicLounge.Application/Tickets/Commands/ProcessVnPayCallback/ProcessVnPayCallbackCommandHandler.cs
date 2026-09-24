@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -117,7 +118,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 }
 
                 await PaymentIncident.RecordConfirmedTooLateAsync(
-                    _uow, _notifications, _logger, "đơn mua vé", txnRef, result.Amount,
+                    _uow, _notifications, _logger, new SongNgu("đơn mua vé", "a ticket order"), txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
                 return VnPayIpnOutcome.ConfirmedTooLate;
             }
@@ -283,27 +284,51 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             NotIssued.WentOnline => (
                 $"Tiền về cho vé vào cửa của buổi diễn #{show.Id} đã chuyển sang online — hoàn 100% (D13)",
                 NotificationType.EventFormatChanged,
-                "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
-                "buổi diễn đã chuyển sang hình thức online trong lúc bạn đang thanh toán nên vé vào cửa không được cấp",
-                "vé vào cửa của buổi diễn đã chuyển sang online"),
+                new SongNgu(
+                    "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
+                    "The show moved online — you will be refunded"),
+                new SongNgu(
+                    "buổi diễn đã chuyển sang hình thức online trong lúc bạn đang thanh toán nên vé vào cửa không được cấp",
+                    "the show moved online while you were paying, so no in-venue ticket was issued"),
+                new SongNgu(
+                    "vé vào cửa của buổi diễn đã chuyển sang online",
+                    "an in-venue ticket for a show that moved online")),
             NotIssued.ShowEnded => (
                 $"Tiền về sau khi buổi diễn #{show.Id} đã kết thúc — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
-                "Buổi diễn đã kết thúc — bạn sẽ được hoàn tiền",
-                "buổi diễn đã kết thúc trước khi giao dịch được xác nhận nên vé không được cấp",
-                "vé của buổi diễn đã kết thúc"),
+                new SongNgu(
+                    "Buổi diễn đã kết thúc — bạn sẽ được hoàn tiền",
+                    "The show has ended — you will be refunded"),
+                new SongNgu(
+                    "buổi diễn đã kết thúc trước khi giao dịch được xác nhận nên vé không được cấp",
+                    "the show ended before the payment was confirmed, so no ticket was issued"),
+                new SongNgu(
+                    "vé của buổi diễn đã kết thúc",
+                    "a ticket for a show that has ended")),
             NotIssued.OrderClosed => (
                 $"Tiền về sau khi đơn vé của buổi diễn #{show.Id} đã đóng (khách huỷ hoặc quá hạn thanh toán) — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
-                "Vé không được cấp — bạn sẽ được hoàn tiền",
-                "đơn vé này đã được huỷ hoặc đã hết hạn thanh toán trước khi tiền về nên vé không được cấp",
-                "đơn mua vé (đã đóng trước khi tiền về)"),
+                new SongNgu(
+                    "Vé không được cấp — bạn sẽ được hoàn tiền",
+                    "Ticket not issued — you will be refunded"),
+                new SongNgu(
+                    "đơn vé này đã được huỷ hoặc đã hết hạn thanh toán trước khi tiền về nên vé không được cấp",
+                    "this order was cancelled or its payment window expired before the money arrived, so no ticket was issued"),
+                new SongNgu(
+                    "đơn mua vé (đã đóng trước khi tiền về)",
+                    "a ticket order (closed before the money arrived)")),
             _ => (
                 $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
                 NotificationType.EventCancelled,
-                "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",
-                "buổi diễn đã bị huỷ trong lúc bạn đang thanh toán nên vé không được cấp",
-                "vé của buổi diễn đã huỷ")
+                new SongNgu(
+                    "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",
+                    "The show was cancelled — you will be refunded"),
+                new SongNgu(
+                    "buổi diễn đã bị huỷ trong lúc bạn đang thanh toán nên vé không được cấp",
+                    "the show was cancelled while you were paying, so no ticket was issued"),
+                new SongNgu(
+                    "vé của buổi diễn đã huỷ",
+                    "a ticket for a cancelled show"))
         };
 
         var now = DateTimeOffset.UtcNow;
@@ -342,10 +367,15 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 buyerId,
                 noticeType,
                 noticeTitle,
-                $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) cho vé \"{show.Name}\" đã bị trừ " +
-                $"tiền, nhưng {whatHappened}. Chúng tôi đã " +
-                "tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — bạn không cần làm gì " +
-                "thêm và sẽ được báo khi yêu cầu được xử lý.",
+                new SongNgu(
+                    $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) cho vé \"{show.Name}\" đã bị trừ " +
+                    $"tiền, nhưng {whatHappened.Vi}. Chúng tôi đã " +
+                    "tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — bạn không cần làm gì " +
+                    "thêm và sẽ được báo khi yêu cầu được xử lý.",
+                    $"A payment of {payment.GrossAmount:N0} VND (reference {result.TransactionId}) for a ticket to " +
+                    $"\"{show.Name}\" was charged, but {whatHappened.En}. We have automatically created a request to " +
+                    "refund 100% of this amount to your original payment method — you do not need to do anything, " +
+                    "and we will notify you when it is processed."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

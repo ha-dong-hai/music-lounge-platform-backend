@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -74,9 +75,14 @@ public sealed class ModerationSlaBreachAlertJob
                 await _notifications.NotifyAsync(
                     admin.Id,
                     NotificationType.ModerationSlaBreached,
-                    "Quá hạn duyệt nội dung (NĐ 147/2024)",
-                    $"{moderation.TargetType} #{moderation.TargetId} đã quá hạn SLA duyệt {hoursOverdue}h " +
-                    "mà chưa có quyết định. Vui lòng xử lý ngay.",
+                    new SongNgu(
+                        "Quá hạn duyệt nội dung (NĐ 147/2024)",
+                        "Content review overdue (Decree 147/2024)"),
+                    new SongNgu(
+                        $"{moderation.TargetType} #{moderation.TargetId} đã quá hạn SLA duyệt {hoursOverdue}h " +
+                        "mà chưa có quyết định. Vui lòng xử lý ngay.",
+                        $"{moderation.TargetType} #{moderation.TargetId} is {hoursOverdue}h past its review SLA " +
+                        "without a decision. Please handle it now."),
                     referenceType: "event_moderation",
                     referenceId: moderation.Id.ToString(),
                     ct: ct);

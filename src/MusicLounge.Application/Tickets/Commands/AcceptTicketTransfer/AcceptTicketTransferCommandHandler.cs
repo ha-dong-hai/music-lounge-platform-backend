@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -58,8 +59,12 @@ internal sealed class AcceptTicketTransferCommandHandler : IRequestHandler<Accep
             await _notifications.NotifyAsync(
                 prevId,
                 NotificationType.EventReminder,
-                "Chuyển nhượng vé thành công",
-                $"Vé \"{ticket.Show.Name}\" bạn chuyển đã được người nhận chấp nhận.",
+                new SongNgu(
+                    "Chuyển nhượng vé thành công",
+                    "Ticket transfer completed"),
+                new SongNgu(
+                    $"Vé \"{ticket.Show.Name}\" bạn chuyển đã được người nhận chấp nhận.",
+                    $"The recipient accepted the ticket for \"{ticket.Show.Name}\" that you transferred."),
                 referenceType: "ticket",
                 referenceId: ticket.Id.ToString(),
                 ct: ct);

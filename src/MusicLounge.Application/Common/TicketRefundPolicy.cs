@@ -186,6 +186,11 @@ public static class TicketRefundPolicy
         => "Vì thay đổi này xảy ra sau khi bạn mua vé, bạn có thể huỷ vé và được hoàn 100% tiền vé tới " +
            $"{VietnamTime.Format(until, "HH:mm dd/MM/yyyy")}.";
 
+    /// <summary>MLACP-489: bản tiếng Anh của <see cref="DescribeFullRefundWindow"/> — cùng mốc, cùng định dạng giờ.</summary>
+    public static string DescribeFullRefundWindowEn(DateTimeOffset until)
+        => "Because this change happened after you bought your ticket, you can cancel it for a 100% refund until " +
+           $"{VietnamTime.Format(until, "HH:mm dd/MM/yyyy")} (Vietnam time).";
+
     /// <summary>Human-readable Vietnamese summary for display next to the ticket tiers.</summary>
     public static string Describe(TicketRefundTerms terms)
     {

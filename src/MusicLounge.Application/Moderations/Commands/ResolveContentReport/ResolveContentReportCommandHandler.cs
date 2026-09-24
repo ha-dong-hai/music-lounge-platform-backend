@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Tickets;
@@ -147,7 +148,8 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
             if (ticket.PaymentId is null) continue;
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                NotificationType.EventCancelled, show.Name, show.Id, "nội dung vi phạm bị gỡ", ct);
+                NotificationType.EventCancelled, show.Name, show.Id,
+                new SongNgu("nội dung vi phạm bị gỡ", "content removed for a violation"), ct);
 
             refundRepo.Add(new RefundRequest
             {
@@ -163,9 +165,15 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
-                    "Event đã bị gỡ bỏ",
-                    $"\"{show.Name}\" đã bị gỡ bỏ do vi phạm nội dung. Vé của bạn đã được hủy và tự động " +
-                    "tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                    new SongNgu(
+                        "Buổi hòa nhạc đã bị gỡ bỏ",
+                        "Concert removed"),
+                    new SongNgu(
+                        $"\"{show.Name}\" đã bị gỡ bỏ do vi phạm nội dung. Vé của bạn đã được hủy và tự động " +
+                        "tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                        $"\"{show.Name}\" has been removed for violating content rules. Your ticket has been cancelled and a " +
+                        "100% refund request has been created automatically." +
+                        (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -210,7 +218,8 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
             // khong qua TryMarkEnded. Nay di chung mot quy tac voi Admin go va mat ket noi qua han; voi
             // show Hybrid, go STREAM vi pham khong dong phong that.
             await StreamLoss.ApplyToShowAsync(
-                _uow, _config, _notifications, show, "bị gỡ theo báo cáo vi phạm", now, ct);
+                _uow, _config, _notifications, show,
+                new SongNgu("bị gỡ theo báo cáo vi phạm", "taken down following a violation report"), now, ct);
         }
 
         await _livestreamHub.BroadcastLivestreamTerminatedAsync(livestreamId, reason, ct);

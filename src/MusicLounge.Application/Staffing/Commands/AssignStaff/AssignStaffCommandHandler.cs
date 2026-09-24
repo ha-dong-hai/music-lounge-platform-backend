@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Constants;
@@ -79,10 +80,16 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.VenueStaffChanged,
-                "Quản trị viên đã thêm nhân viên cho phòng trà của bạn",
-                $"Quản trị viên đã thêm {user.FullName} ({user.Email}) làm nhân viên của \"{lounge.Name}\" — tài khoản này " +
-                "có thể soát vé và bán tại quầy cho phòng trà. Nếu bạn không yêu cầu việc này, hãy gỡ nhân viên trong mục " +
-                "Nhân viên và liên hệ bộ phận hỗ trợ.",
+                new SongNgu(
+                    "Quản trị viên đã thêm nhân viên cho phòng trà của bạn",
+                    "An Admin added a staff member to your music lounge"),
+                new SongNgu(
+                    $"Quản trị viên đã thêm {user.FullName} ({user.Email}) làm nhân viên của \"{lounge.Name}\" — tài khoản này " +
+                    "có thể soát vé và bán tại quầy cho phòng trà. Nếu bạn không yêu cầu việc này, hãy gỡ nhân viên trong mục " +
+                    "Nhân viên và liên hệ bộ phận hỗ trợ.",
+                    $"An Admin added {user.FullName} ({user.Email}) as staff of \"{lounge.Name}\" — this account " +
+                    "can check tickets and sell at the box office for your music lounge. If you did not ask for this, remove the " +
+                    "staff member under Staff and contact support."),
                 referenceType: "lounge",
                 referenceId: lounge.Id.ToString(),
                 ct: ct);

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -143,8 +144,12 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
             await _notifications.NotifyAsync(
                 w.UserId,
                 NotificationType.WishlistLowStock,
-                "Sắp hết vé!",
-                $"\"{show.Name}\" trong danh sách yêu thích của bạn chỉ còn {Math.Max(0, remaining)} vé.",
+                new SongNgu(
+                    "Sắp hết vé!",
+                    "Almost sold out!"),
+                new SongNgu(
+                    $"\"{show.Name}\" trong danh sách yêu thích của bạn chỉ còn {Math.Max(0, remaining)} vé.",
+                    $"\"{show.Name}\" on your wishlist has only {Math.Max(0, remaining)} tickets left."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

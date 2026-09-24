@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -166,11 +167,18 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         {
             await _notifications.NotifyAsync(
                 audienceUserId, NotificationType.FnbOrderUpdate,
-                "Thanh toán F&B thành công",
-                closesOrder
-                    ? $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ."
-                    : $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ. " +
-                      "Phòng trà vẫn đang chuẩn bị món — bạn sẽ được báo khi món được phục vụ.",
+                new SongNgu(
+                    "Thanh toán F&B thành công",
+                    "Food & drink payment successful"),
+                new SongNgu(
+                    closesOrder
+                        ? $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ."
+                        : $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ. " +
+                          "Phòng trà vẫn đang chuẩn bị món — bạn sẽ được báo khi món được phục vụ.",
+                    closesOrder
+                        ? $"Your order #{order.Id} was paid successfully: {payment.GrossAmount:N0} VND."
+                        : $"Your order #{order.Id} was paid successfully: {payment.GrossAmount:N0} VND. " +
+                          "The music lounge is still preparing your items — we will let you know when they are served."),
                 referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
         }
 
@@ -212,6 +220,10 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         var why = paidElsewhere
             ? "đơn F&B đã được thanh toán trước đó (khoản trả trùng)"
             : "đơn F&B đã bị huỷ";
+        // MLACP-489: bản tiếng Anh cho cảnh báo gửi Admin (PaymentIncident); `why` tiếng Việt vẫn dùng cho log.
+        var whyEn = paidElsewhere
+            ? "a food & drink order that had already been paid (duplicate payment)"
+            : "a cancelled food & drink order";
 
         // MLACP-351: khoan nay la tien cua khach — tra trung, hoac tra cho mot don da huy. Khong co gi de
         // tranh cai ve so tien, nen tao ngay yeu cau hoan 100% va de no di qua dung luong duyet hoan tien
@@ -234,16 +246,27 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         {
             await _notifications.NotifyAsync(
                 payerId, NotificationType.FnbOrderUpdate,
-                "Giao dịch không được ghi vào đơn",
-                (paidElsewhere
-                    ? $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
-                      $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã được thanh toán trước đó nên đây là " +
-                      "khoản trả trùng và không được ghi vào đơn. "
-                    : $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
-                      $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã bị huỷ trước đó nên không được ghi " +
-                      "nhận. ") +
-                "Chúng tôi đã tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — " +
-                "bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
+                new SongNgu(
+                    "Giao dịch không được ghi vào đơn",
+                    "Payment not applied to your order"),
+                new SongNgu(
+                    (paidElsewhere
+                        ? $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
+                          $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã được thanh toán trước đó nên đây là " +
+                          "khoản trả trùng và không được ghi vào đơn. "
+                        : $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
+                          $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã bị huỷ trước đó nên không được ghi " +
+                          "nhận. ") +
+                    "Chúng tôi đã tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — " +
+                    "bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
+                    (paidElsewhere
+                        ? $"A payment of {payment.GrossAmount:N0} VND (reference {callbackResult.TransactionId}) for order " +
+                          $"#{order.Id} was charged, but this order had already been paid, so this is a duplicate payment and " +
+                          "was not applied to the order. "
+                        : $"A payment of {payment.GrossAmount:N0} VND (reference {callbackResult.TransactionId}) for order " +
+                          $"#{order.Id} was charged, but this order had already been cancelled, so it was not recorded. ") +
+                    "We have automatically created a request to refund 100% of this amount to your original payment method — " +
+                    "you do not need to do anything, and we will notify you when it is processed."),
                 referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
         }
 
@@ -251,7 +274,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         await _uow.SaveChangesAsync(ct);
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
-            _uow, _notifications, _logger, why, txnRef, callbackResult.Amount,
+            _uow, _notifications, _logger, new SongNgu(why, whyEn), txnRef, callbackResult.Amount,
             "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;

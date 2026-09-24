@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -64,9 +65,14 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
             await _notifications.NotifyAsync(
                 settlement.OwnerId,
                 NotificationType.SettlementWithheld,
-                "Khoản quyết toán bị giữ lại",
-                $"Khoản {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) không được chi trả. " +
-                $"Lý do: {request.Note}",
+                new SongNgu(
+                    "Khoản quyết toán bị giữ lại",
+                    "Settlement withheld"),
+                new SongNgu(
+                    $"Khoản {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) không được chi trả. " +
+                    $"Lý do: {request.Note}",
+                    $"The settlement of {settlement.NetAmount:N0} VND ({settlement.ReleaseType}) will not be paid out. " +
+                    $"Reason: {request.Note}"),
                 referenceType: "settlement",
                 referenceId: settlement.Id.ToString(),
                 ct: ct);
@@ -115,8 +121,12 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
         await _notifications.NotifyAsync(
             settlement.OwnerId,
             NotificationType.SettlementReleased,
-            "Khoản quyết toán đã được giải ngân",
-            $"Khoản thanh toán {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) đã được giải ngân.",
+            new SongNgu(
+                "Khoản quyết toán đã được giải ngân",
+                "Settlement paid out"),
+            new SongNgu(
+                $"Khoản thanh toán {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) đã được giải ngân.",
+                $"The payment of {settlement.NetAmount:N0} VND ({settlement.ReleaseType}) has been paid out."),
             referenceType: "settlement",
             referenceId: settlement.Id.ToString(),
             ct: ct);

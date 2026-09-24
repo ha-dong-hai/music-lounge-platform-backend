@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using MusicLounge.Domain.ValueObjects;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -82,16 +83,30 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
         await _notifications.NotifyAsync(
             lounge.OwnerId,
             NotificationType.PenaltyIssued,
-            penaltyType == PenaltyType.Warning ? "Phòng trà bị cảnh cáo" : "Phòng trà bị xử phạt",
-            penaltyType switch
-            {
-                PenaltyType.Warning => $"\"{lounge.Name}\" nhận cảnh cáo: {request.Reason}",
-                PenaltyType.Suspension => $"\"{lounge.Name}\" sẽ bị tạm khoá {request.SuspensionDays} ngày " +
-                    $"kể từ {VietnamTime.Format(effectiveAt)}. Lý do: {request.Reason}. Bạn có thể kháng cáo.",
-                PenaltyType.Ban => $"\"{lounge.Name}\" sẽ bị khoá vĩnh viễn kể từ {VietnamTime.Format(effectiveAt)}. " +
-                    $"Lý do: {request.Reason}. Bạn có thể kháng cáo.",
-                _ => request.Reason
-            },
+            new SongNgu(
+                penaltyType == PenaltyType.Warning ? "Phòng trà bị cảnh cáo" : "Phòng trà bị xử phạt",
+                penaltyType == PenaltyType.Warning
+                    ? "Your music lounge has received a warning"
+                    : "Your music lounge has been penalised"),
+            new SongNgu(
+                penaltyType switch
+                {
+                    PenaltyType.Warning => $"\"{lounge.Name}\" nhận cảnh cáo: {request.Reason}",
+                    PenaltyType.Suspension => $"\"{lounge.Name}\" sẽ bị tạm khoá {request.SuspensionDays} ngày " +
+                        $"kể từ {VietnamTime.Format(effectiveAt)}. Lý do: {request.Reason}. Bạn có thể kháng cáo.",
+                    PenaltyType.Ban => $"\"{lounge.Name}\" sẽ bị khoá vĩnh viễn kể từ {VietnamTime.Format(effectiveAt)}. " +
+                        $"Lý do: {request.Reason}. Bạn có thể kháng cáo.",
+                    _ => request.Reason
+                },
+                penaltyType switch
+                {
+                    PenaltyType.Warning => $"\"{lounge.Name}\" has received a warning: {request.Reason}",
+                    PenaltyType.Suspension => $"\"{lounge.Name}\" will be suspended for {request.SuspensionDays} days " +
+                        $"from {VietnamTime.Format(effectiveAt)}. Reason: {request.Reason}. You can appeal.",
+                    PenaltyType.Ban => $"\"{lounge.Name}\" will be permanently banned from {VietnamTime.Format(effectiveAt)}. " +
+                        $"Reason: {request.Reason}. You can appeal.",
+                    _ => request.Reason
+                }),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
             ct: ct);

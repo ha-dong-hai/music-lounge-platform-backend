@@ -22,9 +22,11 @@ public interface IBackgroundJobService
     void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay);
     void EnqueueFcmNotification(
         int userId, string title, string body, string? referenceType = null, string? referenceId = null);
-    void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink);
-    void EnqueueEmailVerificationCode(string toEmail, string toName, string code);
-    void EnqueuePhoneVerificationCode(string toPhone, string code);
+    // MLACP-489: language = User.PreferredLanguage của người nhận — ba thứ này gửi bất đồng bộ, lúc gửi không có
+    // request nào để đọc Accept-Language.
+    void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language);
+    void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language);
+    void EnqueuePhoneVerificationCode(string toPhone, string code, string language);
 
     // Runs AI moderation scoring for a freshly-created EventModeration row in the background, so a
     // slow/unavailable AI vendor never delays the Publish/CreateLivestream response it's called from.

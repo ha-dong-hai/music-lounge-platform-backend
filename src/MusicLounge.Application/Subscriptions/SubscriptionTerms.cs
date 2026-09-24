@@ -111,6 +111,10 @@ public static class SubscriptionTerms
     public static string DescribeCredit(decimal credit, TimeSpan extra)
         => $"{credit:N0}đ ≈ {extra.TotalDays:0.#} ngày";
 
+    /// <summary>MLACP-489: bản tiếng Anh của <see cref="DescribeCredit"/> — cùng con số, cùng cách làm tròn.</summary>
+    public static string DescribeCreditEn(decimal credit, TimeSpan extra)
+        => $"{credit:N0} VND ≈ {extra.TotalDays:0.#} days";
+
     /// <summary>
     /// Mỗi lúc chỉ một lệnh gia hạn / đổi gói chờ thanh toán: bấm hai lần không được thành hai lần gia hạn.
     /// Lệnh bỏ dở tự huỷ khi CancelAbandonedPaymentsJob đánh dấu thanh toán Failed.

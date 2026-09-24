@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Infrastructure.Settings;
 using MusicLounge.Application.Common;
+using MusicLounge.Domain.ValueObjects;
 
 namespace MusicLounge.Infrastructure.Services;
 
@@ -31,19 +32,31 @@ internal sealed class SmtpEmailService : IEmailService
     }
 
     public async Task SendPasswordResetEmailAsync(
-        string toEmail, string toName, string resetLink, CancellationToken ct = default)
+        string toEmail, string toName, string resetLink, string language, CancellationToken ct = default)
     {
-        var subject = "Đặt lại mật khẩu MusicLounge";
-        var body = $"""
-            Xin chào {toName},
+        // MLACP-489: theo ngôn ngữ lưu trên tài khoản người nhận (email gửi bất đồng bộ, không có request để đọc).
+        var subject = new SongNgu("Đặt lại mật khẩu MusicLounge", "Reset your MusicLounge password").Theo(language);
+        var body = NgonNgu.LaTiengAnh(language)
+            ? $"""
+                Hello {toName},
 
-            Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản MusicLounge của bạn.
-            Nhấn vào link sau để đặt mật khẩu mới (link có hiệu lực trong 30 phút):
+                You (or someone else) just asked to reset the password for your MusicLounge account.
+                Open the link below to set a new password (the link is valid for 30 minutes):
 
-            {resetLink}
+                {resetLink}
 
-            Nếu bạn không yêu cầu điều này, hãy bỏ qua email này — mật khẩu của bạn vẫn an toàn.
-            """;
+                If you did not request this, you can ignore this email — your password is still safe.
+                """
+            : $"""
+                Xin chào {toName},
+
+                Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản MusicLounge của bạn.
+                Nhấn vào link sau để đặt mật khẩu mới (link có hiệu lực trong 30 phút):
+
+                {resetLink}
+
+                Nếu bạn không yêu cầu điều này, hãy bỏ qua email này — mật khẩu của bạn vẫn an toàn.
+                """;
 
         if (string.IsNullOrWhiteSpace(_settings.Host))
         {
@@ -77,18 +90,30 @@ internal sealed class SmtpEmailService : IEmailService
     }
 
     public async Task SendEmailVerificationCodeAsync(
-        string toEmail, string toName, string code, CancellationToken ct = default)
+        string toEmail, string toName, string code, string language, CancellationToken ct = default)
     {
-        var subject = "Xác thực email MusicLounge";
-        var body = $"""
-            Xin chào {toName},
+        // MLACP-489: lúc đăng ký, ngôn ngữ này chính là ngôn ngữ của trang người dùng vừa điền form (xem
+        // RegisterCommandHandler) — nên người đăng ký trên bản tiếng Anh nhận mã bằng tiếng Anh ngay từ thư đầu tiên.
+        var subject = new SongNgu("Xác thực email MusicLounge", "Verify your MusicLounge email").Theo(language);
+        var body = NgonNgu.LaTiengAnh(language)
+            ? $"""
+                Hello {toName},
 
-            Mã xác thực email của bạn là: {code}
+                Your email verification code is: {code}
 
-            Mã có hiệu lực trong 10 phút. Nhập mã này để hoàn tất đăng ký tài khoản MusicLounge.
+                The code is valid for 10 minutes. Enter it to finish creating your MusicLounge account.
 
-            Nếu bạn không thực hiện đăng ký này, hãy bỏ qua email này.
-            """;
+                If you did not sign up, you can ignore this email.
+                """
+            : $"""
+                Xin chào {toName},
+
+                Mã xác thực email của bạn là: {code}
+
+                Mã có hiệu lực trong 10 phút. Nhập mã này để hoàn tất đăng ký tài khoản MusicLounge.
+
+                Nếu bạn không thực hiện đăng ký này, hãy bỏ qua email này.
+                """;
 
         if (string.IsNullOrWhiteSpace(_settings.Host))
         {
@@ -122,18 +147,31 @@ internal sealed class SmtpEmailService : IEmailService
     }
 
     public async Task SendPerformerConfirmationAsync(
-        string toEmail, string toName, string subject, string message, string link,
+        string toEmail, string toName, SongNgu subject, SongNgu message, string link,
         DateTimeOffset expiresAt, CancellationToken ct = default)
     {
+        // MLACP-489: nghệ sĩ KHÔNG có tài khoản (do phòng trà quản lý), nên không có ngôn ngữ ưa thích nào để theo.
+        // Thông lệ khi không biết ngôn ngữ người nhận: gửi cả hai trong một thư, tiếng Việt trước. Liên kết chỉ xuất
+        // hiện MỘT lần, ở giữa — hai liên kết giống hệt nhau trong một thư dễ bị bộ lọc thư rác đánh dấu.
+        var expires = VietnamTime.Format(expiresAt, "HH:mm dd/MM/yyyy");
         var body = $"""
             Xin chào {toName},
 
-            {message}
+            {message.Vi}
+
+            Liên kết chỉ dùng được một lần và hết hạn lúc {expires} (giờ Việt Nam).
+            Bạn không cần tạo tài khoản MusicLounge để trả lời.
 
             {link}
 
-            Liên kết chỉ dùng được một lần và hết hạn lúc {VietnamTime.Format(expiresAt, "HH:mm dd/MM/yyyy")} (giờ Việt Nam).
-            Bạn không cần tạo tài khoản MusicLounge để trả lời.
+            ——— English below ———
+
+            Hello {toName},
+
+            {message.En}
+
+            Use the link above. It works only once and expires at {expires} (Vietnam time).
+            You do not need a MusicLounge account to reply.
             """;
 
         if (string.IsNullOrWhiteSpace(_settings.Host))
@@ -150,7 +188,7 @@ internal sealed class SmtpEmailService : IEmailService
         using var mail = new MailMessage
         {
             From = new MailAddress(_settings.FromAddress, _settings.FromName),
-            Subject = subject,
+            Subject = $"{subject.Vi} / {subject.En}",
             SubjectEncoding = Encoding.UTF8,
             Body = body,
             BodyEncoding = Encoding.UTF8,

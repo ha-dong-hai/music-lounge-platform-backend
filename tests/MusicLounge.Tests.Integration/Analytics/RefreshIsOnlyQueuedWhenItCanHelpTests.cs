@@ -53,9 +53,9 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
         public void EnqueueLivestreamCheckIn(int userId, int showId) { }
         public void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay) { }
         public void EnqueueFcmNotification(int userId, string title, string body, string? referenceType = null, string? referenceId = null) { }
-        public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink) { }
-        public void EnqueueEmailVerificationCode(string toEmail, string toName, string code) { }
-        public void EnqueuePhoneVerificationCode(string toPhone, string code) { }
+        public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language) { }
+        public void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language) { }
+        public void EnqueuePhoneVerificationCode(string toPhone, string code, string language) { }
         public void EnqueueModerationAiScoring(int moderationId) { }
         public void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name) { }
         public void TriggerRecurringJobNow(string recurringJobId) { }
