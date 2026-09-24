@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -112,8 +113,12 @@ internal sealed class StartLivestreamCommandHandler : IRequestHandler<StartLives
             await _notifications.NotifyAsync(
                 userId,
                 NotificationType.EventLive,
-                "Đang phát trực tiếp!",
-                $"\"{show.Name}\" đang livestream ngay bây giờ.",
+                new SongNgu(
+                    "Đang phát trực tiếp!",
+                    "Live now!"),
+                new SongNgu(
+                    $"\"{show.Name}\" đang livestream ngay bây giờ.",
+                    $"\"{show.Name}\" is livestreaming right now."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

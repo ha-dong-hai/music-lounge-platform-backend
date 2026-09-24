@@ -48,6 +48,7 @@ internal sealed class GetMyProfileQueryHandler
             favGenres.Select(g => g.GenreId).ToList(),
             favMoods.Select(m => m.MoodId).ToList(),
             favAtmospheres.Select(a => a.AtmosphereId).ToList(),
-            dislikedGenres.Select(g => g.GenreId).ToList());
+            dislikedGenres.Select(g => g.GenreId).ToList(),
+            user.PreferredLanguage);
     }
 }

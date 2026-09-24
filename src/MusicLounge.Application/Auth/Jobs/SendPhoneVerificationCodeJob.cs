@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common.Interfaces;
 
 namespace MusicLounge.Application.Auth.Jobs;
@@ -18,6 +19,11 @@ public sealed class SendPhoneVerificationCodeJob
         _secretProtector = secretProtector;
     }
 
+    public Task ExecuteAsync(string toPhone, string protectedCode, string language, CancellationToken ct = default)
+        => _smsService.SendPhoneVerificationCodeAsync(
+            toPhone, _secretProtector.Unprotect(protectedCode), language, ct);
+
+    /// <summary>MLACP-489: chữ ký cũ, giữ cho job đã xếp hàng trước lần deploy có ngôn ngữ — xoá sau một lần deploy.</summary>
     public Task ExecuteAsync(string toPhone, string protectedCode, CancellationToken ct = default)
-        => _smsService.SendPhoneVerificationCodeAsync(toPhone, _secretProtector.Unprotect(protectedCode), ct);
+        => ExecuteAsync(toPhone, protectedCode, NgonNgu.Viet, ct);
 }

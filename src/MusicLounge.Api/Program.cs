@@ -227,6 +227,10 @@ try
     builder.Services.AddSignalR();
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    // MLACP-489: ngôn ngữ của request cho tầng Application (danh sách thông báo, ngôn ngữ mặc định khi đăng ký).
+    builder.Services.AddScoped<
+        MusicLounge.Application.Common.Interfaces.IRequestLanguage,
+        MusicLounge.Api.Localization.HttpRequestLanguage>();
 
     builder.Services.AddCors(opt =>
     {

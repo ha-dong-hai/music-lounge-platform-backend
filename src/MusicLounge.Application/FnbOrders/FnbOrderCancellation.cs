@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using System.Linq.Expressions;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -25,13 +26,14 @@ public static class FnbOrderCancellation
     /// <param name="scope">Đơn nào thuộc diện, ví dụ mọi đơn gắn với một buổi diễn.</param>
     /// <param name="servedToo">Có huỷ cả đơn đã phục vụ nhưng chưa đóng không. Huỷ buổi diễn giữ đúng như MLACP-380 đã
     /// ship: có. Chuyển online: không — món đã mang ra là hàng đã giao, phòng trà vẫn thu tiền được.</param>
-    /// <param name="why">Cụm lý do viết thường, ghép sau "vì" trong thông báo cho khách, ví dụ "buổi diễn bị huỷ".</param>
+    /// <param name="why">Cụm lý do viết thường, ghép sau "vì"/"because" trong thông báo cho khách, ví dụ "buổi diễn bị
+    /// huỷ". MLACP-489: song ngữ; bản tiếng Việt còn được viết hoa chữ đầu làm lý do của yêu cầu hoàn tiền.</param>
     /// <param name="prepaidOnly">MLACP-393: chỉ huỷ đơn khách đã trả trước qua cổng thanh toán. Đơn chưa trả thì không
     /// có tiền của khách nằm trên nền tảng để bảo vệ, và nhân viên vẫn tự đóng được đơn.</param>
     /// <returns>Số đơn đã huỷ.</returns>
     public static async Task<int> CancelOpenOrdersAsync(
         IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock,
-        Expression<Func<FnbOrder, bool>> scope, bool servedToo, string why, CancellationToken ct,
+        Expression<Func<FnbOrder, bool>> scope, bool servedToo, SongNgu why, CancellationToken ct,
         bool prepaidOnly = false)
     {
         var orderRepo = uow.Repository<FnbOrder, int>();
@@ -41,7 +43,7 @@ public static class FnbOrderCancellation
         var itemRepo = uow.Repository<OrderItem, int>();
         var paymentRepo = uow.Repository<Payment, int>();
         var refundRepo = uow.Repository<RefundRequest, int>();
-        var reason = char.ToUpperInvariant(why[0]) + why[1..];
+        var reason = char.ToUpperInvariant(why.Vi[0]) + why.Vi[1..];
         var affected = 0;
 
         foreach (var order in orders)
@@ -97,12 +99,20 @@ public static class FnbOrderCancellation
             if (current.AudienceUserId is { } audienceUserId)
             {
                 var (title, body) = refundAmount is { } amount
-                    ? ("Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
-                       $"Đơn #{current.Id} của bạn đã bị hủy vì {why}. Chúng tôi đã tự động " +
-                       $"tạo yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần " +
-                       "làm gì thêm và sẽ được báo khi yêu cầu được xử lý.")
-                    : ("Đơn F&B đã bị hủy",
-                       $"Đơn #{current.Id} của bạn đã bị hủy vì {why}.");
+                    ? (new SongNgu(
+                           "Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
+                           "Food & drink order cancelled — you will be refunded"),
+                       new SongNgu(
+                           $"Đơn #{current.Id} của bạn đã bị hủy vì {why.Vi}. Chúng tôi đã tự động " +
+                           $"tạo yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần " +
+                           "làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
+                           $"Your order #{current.Id} has been cancelled because {why.En}. We have automatically " +
+                           $"created a 100% refund request ({amount:N0} VND) to your original payment method — you do " +
+                           "not need to do anything, and we will notify you when it is processed."))
+                    : (new SongNgu("Đơn F&B đã bị hủy", "Food & drink order cancelled"),
+                       new SongNgu(
+                           $"Đơn #{current.Id} của bạn đã bị hủy vì {why.Vi}.",
+                           $"Your order #{current.Id} has been cancelled because {why.En}."));
 
                 await notifications.NotifyAsync(
                     audienceUserId, NotificationType.FnbOrderUpdate, title, body,

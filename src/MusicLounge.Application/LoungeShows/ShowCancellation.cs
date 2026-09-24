@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Tickets;
@@ -21,7 +22,10 @@ public static class ShowCancellation
     /// Lý do cho người mua khi nền tảng huỷ vì phòng trà bị khoá — trung tính như
     /// <see cref="Common.VenueLifecycle.TradingPausedForBuyers"/>: lý do khoá là chuyện giữa phòng trà với nền tảng.
     /// </summary>
-    public const string VenueStoppedTrading = "phòng trà ngừng hoạt động trên nền tảng";
+    // MLACP-489: SongNgu thay cho const string — cụm này ghép vào thông báo gửi khán giả và chủ phòng trà.
+    public static readonly SongNgu VenueStoppedTrading = new(
+        "phòng trà ngừng hoạt động trên nền tảng",
+        "the music lounge stopped operating on the platform");
 
     /// <param name="WalkInTickets">Vé bán tại quầy (không có tài khoản): nền tảng không báo được người mua.</param>
     /// <param name="FnbOrders">MLACP-380: đơn F&amp;B gắn với buổi diễn đã bị huỷ theo (không tính đơn đã đóng —
@@ -39,22 +43,25 @@ public static class ShowCancellation
     /// xử lý ở một trong ba đường đó cùng lúc.</param>
     /// <param name="why">Null khi chính chủ phòng trà huỷ — nội dung báo giữ nguyên như trước.</param>
     public static async Task<Outcome> CancelAsync(
-        IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show, string? why,
+        IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show, SongNgu? why,
         CancellationToken ct)
     {
         show.Status = LoungeShowStatus.Cancelled;
         uow.Repository<LoungeShow, int>().Update(show);
 
-        var because = why is null ? "" : $" vì {why}";
+        var because = why is null ? SongNgu.Rong : new SongNgu($" vì {why.Vi}", $" because {why.En}");
+        // Cụm "buổi diễn bị huỷ…" dùng chung cho người mua gốc của vé đã chuyển nhượng và cho đơn F&B đi kèm.
+        var showCancelled = new SongNgu($"buổi diễn bị huỷ{because.Vi}", $"the show was cancelled{because.En}");
 
-        var ticketOutcome = await CancelTicketsAsync(uow, notifications, show, because, ct);
-        var fnbOrders = await CancelFnbOrdersAsync(uow, notifications, @lock, show, because, ct);
+        var ticketOutcome = await CancelTicketsAsync(uow, notifications, show, because, showCancelled, ct);
+        var fnbOrders = await CancelFnbOrdersAsync(uow, notifications, @lock, show, showCancelled, ct);
 
         return ticketOutcome with { FnbOrders = fnbOrders };
     }
 
     private static async Task<Outcome> CancelTicketsAsync(
-        IUnitOfWork uow, INotificationService notifications, LoungeShow show, string because, CancellationToken ct)
+        IUnitOfWork uow, INotificationService notifications, LoungeShow show, SongNgu because, SongNgu showCancelled,
+        CancellationToken ct)
     {
         var ticketRepo = uow.Repository<Ticket, Guid>();
         var confirmedTickets = await ticketRepo.FindAsync(
@@ -77,13 +84,13 @@ public static class ShowCancellation
             if (ticket.PaymentId is null) continue;
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(notifications, ticket, payers,
-                NotificationType.EventCancelled, show.Name, show.Id, $"buổi diễn bị huỷ{because}", ct);
+                NotificationType.EventCancelled, show.Name, show.Id, showCancelled, ct);
 
             refundRepo.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId.Value,
                 RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
-                Reason = $"Event bị hủy{because} — hoàn 100% tiền vé",
+                Reason = $"Event bị hủy{because.Vi} — hoàn 100% tiền vé",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
                 Status = RefundRequestStatus.Pending
@@ -93,9 +100,15 @@ public static class ShowCancellation
                 await notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
-                    "Event đã bị hủy",
-                    $"\"{show.Name}\" đã bị hủy{because}. Vé của bạn đã được hủy và tự động tạo yêu cầu " +
-                    "hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                    new SongNgu(
+                        "Buổi hòa nhạc đã bị hủy",
+                        "Concert cancelled"),
+                    new SongNgu(
+                        $"\"{show.Name}\" đã bị hủy{because.Vi}. Vé của bạn đã được hủy và tự động tạo yêu cầu " +
+                        "hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                        $"\"{show.Name}\" has been cancelled{because.En}. Your ticket has been cancelled and a 100% refund " +
+                        "request has been created automatically." +
+                        (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -111,8 +124,8 @@ public static class ShowCancellation
     /// (MLACP-390 tách ra để đường chuyển sang online dùng lại).
     /// </summary>
     private static Task<int> CancelFnbOrdersAsync(
-        IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show, string because,
-        CancellationToken ct)
+        IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show,
+        SongNgu showCancelled, CancellationToken ct)
         => FnbOrderCancellation.CancelOpenOrdersAsync(
-            uow, notifications, @lock, o => o.ShowId == show.Id, servedToo: true, $"buổi diễn bị huỷ{because}", ct);
+            uow, notifications, @lock, o => o.ShowId == show.Id, servedToo: true, showCancelled, ct);
 }

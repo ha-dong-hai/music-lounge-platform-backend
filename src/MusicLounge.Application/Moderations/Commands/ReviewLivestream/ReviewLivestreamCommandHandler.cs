@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -70,10 +71,16 @@ internal sealed class ReviewLivestreamCommandHandler : IRequestHandler<ReviewLiv
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.ModerationResult,
-                decision == ModerationDecision.Approved ? "Livestream đã được duyệt" : "Livestream bị từ chối",
-                decision == ModerationDecision.Approved
-                    ? $"Livestream cho \"{show!.Name}\" đã được duyệt, có thể bắt đầu phát sóng."
-                    : $"Livestream cho \"{show!.Name}\" bị từ chối. Lý do: {request.ReviewNote ?? "không có ghi chú"}.",
+                new SongNgu(
+                    decision == ModerationDecision.Approved ? "Livestream đã được duyệt" : "Livestream bị từ chối",
+                    decision == ModerationDecision.Approved ? "Livestream approved" : "Livestream rejected"),
+                new SongNgu(
+                    decision == ModerationDecision.Approved
+                        ? $"Livestream cho \"{show!.Name}\" đã được duyệt, có thể bắt đầu phát sóng."
+                        : $"Livestream cho \"{show!.Name}\" bị từ chối. Lý do: {request.ReviewNote ?? "không có ghi chú"}.",
+                    decision == ModerationDecision.Approved
+                        ? $"The livestream for \"{show!.Name}\" has been approved and can start broadcasting."
+                        : $"The livestream for \"{show!.Name}\" was rejected. Reason: {request.ReviewNote ?? "no note"}."),
                 referenceType: "livestream",
                 // MLACP-460: mã BUỔI HÒA NHẠC, không phải mã buổi phát. Frontend bấm vào thông báo là mở trang buổi hòa
                 // nhạc — đường dẫn đó nhận mã show. Trước đây trả mã livestream nên hoặc mở nhầm buổi khác (hai mã trùng

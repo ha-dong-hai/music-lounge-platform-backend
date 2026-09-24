@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -29,23 +30,44 @@ public static class PerformerConfirmations
 {
     public const int LinkValidHours = 72;
 
+    // MLACP-489: Subject/Message song ngữ — nghệ sĩ không có tài khoản nên không có ngôn ngữ ưa thích, thư gửi cả hai.
     public sealed record Invitation(
         PerformerConfirmationPurpose Purpose, int? BankAccountId, string? BankAccountFingerprint,
-        int? DonationId, string Subject, string Message);
+        int? DonationId, SongNgu Subject, SongNgu Message);
 
-    public static Invitation ForBankAccount(BankAccount account, string plainAccountNumber) => new(
-        PerformerConfirmationPurpose.BankAccount, account.Id, FingerprintOf(account), null,
-        "Xác nhận tài khoản nhận tiền của bạn trên MusicLounge",
-        $"Tài khoản {account.BankName} số {MaskAccountNumber(plainAccountNumber)}, chủ tài khoản " +
-        $"{account.AccountHolder}, vừa được đăng ký để nhận tiền donate của bạn trên MusicLounge. Hãy mở " +
-        "liên kết để xác nhận đây là tài khoản của bạn — hoặc báo cho chúng tôi nếu không phải.");
+    public static Invitation ForBankAccount(BankAccount account, string plainAccountNumber)
+    {
+        var masked = MaskAccountNumber(plainAccountNumber);
+        return new(
+            PerformerConfirmationPurpose.BankAccount, account.Id, FingerprintOf(account), null,
+            new SongNgu(
+                "Xác nhận tài khoản nhận tiền của bạn trên MusicLounge",
+                "Confirm your payout account on MusicLounge"),
+            new SongNgu(
+                $"Tài khoản {account.BankName} số {masked}, chủ tài khoản " +
+                $"{account.AccountHolder}, vừa được đăng ký để nhận tiền donate của bạn trên MusicLounge. Hãy mở " +
+                "liên kết để xác nhận đây là tài khoản của bạn — hoặc báo cho chúng tôi nếu không phải.",
+                $"The {account.BankName} account number {masked}, held by {account.AccountHolder}, was just " +
+                "registered to receive your donations on MusicLounge. Open the link to confirm this is your " +
+                "account — or tell us if it is not."));
+    }
 
-    public static Invitation ForDonationReceipt(int donationId, decimal amount, string paymentRef) => new(
-        PerformerConfirmationPurpose.DonationReceipt, null, null, donationId,
-        "Xác nhận bạn đã nhận tiền donate trên MusicLounge",
-        $"Phòng trà báo đã chuyển {amount.ToString("#,0", CultureInfo.InvariantCulture)}đ tiền donate vào tài " +
-        $"khoản của bạn (mã chuyển khoản {paymentRef}). Hãy mở liên kết để xác nhận đã nhận — hoặc báo nếu " +
-        "bạn chưa nhận được.");
+    public static Invitation ForDonationReceipt(int donationId, decimal amount, string paymentRef)
+    {
+        var money = amount.ToString("#,0", CultureInfo.InvariantCulture);
+        return new(
+            PerformerConfirmationPurpose.DonationReceipt, null, null, donationId,
+            new SongNgu(
+                "Xác nhận bạn đã nhận tiền donate trên MusicLounge",
+                "Confirm you received a donation on MusicLounge"),
+            new SongNgu(
+                $"Phòng trà báo đã chuyển {money}đ tiền donate vào tài " +
+                $"khoản của bạn (mã chuyển khoản {paymentRef}). Hãy mở liên kết để xác nhận đã nhận — hoặc báo nếu " +
+                "bạn chưa nhận được.",
+                $"The music lounge reports that it transferred {money} VND in donations to your account " +
+                $"(transfer reference {paymentRef}). Open the link to confirm you received it — or tell us if " +
+                "you did not."));
+    }
 
     public static string HashToken(string token)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))).ToLowerInvariant();

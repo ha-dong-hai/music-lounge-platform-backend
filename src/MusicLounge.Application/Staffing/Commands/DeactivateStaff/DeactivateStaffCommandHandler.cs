@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Constants;
@@ -71,10 +72,16 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.VenueStaffChanged,
-                "Quản trị viên đã gỡ một nhân viên khỏi phòng trà của bạn",
-                $"Quản trị viên đã gỡ {staffName} khỏi danh sách nhân viên của " +
-                $"\"{lounge.Name}\" — tài khoản này không còn soát vé hay bán tại quầy cho phòng trà. Nếu bạn cần biết lý " +
-                "do, hãy liên hệ bộ phận hỗ trợ.",
+                new SongNgu(
+                    "Quản trị viên đã gỡ một nhân viên khỏi phòng trà của bạn",
+                    "An Admin removed a staff member from your music lounge"),
+                new SongNgu(
+                    $"Quản trị viên đã gỡ {staffName} khỏi danh sách nhân viên của " +
+                    $"\"{lounge.Name}\" — tài khoản này không còn soát vé hay bán tại quầy cho phòng trà. Nếu bạn cần biết lý " +
+                    "do, hãy liên hệ bộ phận hỗ trợ.",
+                    $"An Admin removed {staffName} from the staff of " +
+                    $"\"{lounge.Name}\" — this account can no longer check tickets or sell at the box office for your music lounge. " +
+                    "If you need to know why, please contact support."),
                 referenceType: "lounge",
                 referenceId: lounge.Id.ToString(),
                 ct: ct);

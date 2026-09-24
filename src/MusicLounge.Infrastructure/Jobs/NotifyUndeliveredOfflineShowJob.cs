@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using MusicLounge.Domain.ValueObjects;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -131,11 +132,17 @@ public sealed class NotifyUndeliveredOfflineShowJob
         await _notifications.NotifyAsync(
             ownerId.Value,
             NotificationType.ShowDeliveryUnconfirmed,
-            "Chưa xác nhận được buổi diễn đã diễn ra",
-            $"\"{show.Name}\" chưa từng được bấm Bắt đầu nên hệ thống không có gì để xác nhận buổi " +
-            "diễn đã diễn ra. Khoản quyết toán đang được giữ lại. Nếu buổi diễn CÓ diễn ra, hãy " +
-            "liên hệ quản trị viên để được đối chiếu và giải ngân. Nếu không, người mua vé sẽ được " +
-            "hoàn 100% tiền vé.",
+            new SongNgu(
+                "Chưa xác nhận được buổi diễn đã diễn ra",
+                "Could not confirm the show took place"),
+            new SongNgu(
+                $"\"{show.Name}\" chưa từng được bấm Bắt đầu nên hệ thống không có gì để xác nhận buổi " +
+                "diễn đã diễn ra. Khoản quyết toán đang được giữ lại. Nếu buổi diễn CÓ diễn ra, hãy " +
+                "liên hệ quản trị viên để được đối chiếu và giải ngân. Nếu không, người mua vé sẽ được " +
+                "hoàn 100% tiền vé.",
+                $"\"{show.Name}\" was never started, so the system has nothing to confirm that the show took place. " +
+                "The settlement is being held. If the show DID take place, please contact an Admin to reconcile and release " +
+                "the payout. If not, ticket buyers will be refunded 100%."),
             referenceType: "show",
             referenceId: show.Id.ToString(),
             ct: ct);
@@ -152,10 +159,15 @@ public sealed class NotifyUndeliveredOfflineShowJob
         await _notifications.NotifyAsync(
             buyerId,
             NotificationType.ShowDeliveryUnconfirmed,
-            "Chúng tôi chưa xác nhận được buổi diễn đã diễn ra",
-            $"Hệ thống chưa ghi nhận được xác nhận rằng \"{show.Name}\" đã diễn ra. Nếu bạn đã tham " +
-            "dự, bạn không cần làm gì cả. Nếu buổi diễn không diễn ra, bạn có thể yêu cầu hoàn 100% " +
-            "tiền vé ngay trong phần vé của bạn.",
+            new SongNgu(
+                "Chúng tôi chưa xác nhận được buổi diễn đã diễn ra",
+                "We could not confirm the show took place"),
+            new SongNgu(
+                $"Hệ thống chưa ghi nhận được xác nhận rằng \"{show.Name}\" đã diễn ra. Nếu bạn đã tham " +
+                "dự, bạn không cần làm gì cả. Nếu buổi diễn không diễn ra, bạn có thể yêu cầu hoàn 100% " +
+                "tiền vé ngay trong phần vé của bạn.",
+                $"We have no confirmation that \"{show.Name}\" took place. If you attended, you do not need to do " +
+                "anything. If the show did not take place, you can request a 100% refund from your tickets."),
             referenceType: "show",
             referenceId: show.Id.ToString(),
             ct: ct);

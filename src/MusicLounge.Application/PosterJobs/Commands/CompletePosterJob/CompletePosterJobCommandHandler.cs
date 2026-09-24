@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -76,8 +77,12 @@ internal sealed class CompletePosterJobCommandHandler : IRequestHandler<Complete
         await _notifications.NotifyAsync(
             job.OwnerId,
             NotificationType.PosterGenerationResult,
-            "Poster đã tạo xong",
-            $"Poster cho buổi hòa nhạc \"{show.Name}\" đã được tạo xong.",
+            new SongNgu(
+                "Poster đã tạo xong",
+                "Your poster is ready"),
+            new SongNgu(
+                $"Poster cho buổi hòa nhạc \"{show.Name}\" đã được tạo xong.",
+                $"The poster for the concert \"{show.Name}\" has been created."),
             NotificationReferenceTypes.Show,
             show.Id.ToString(),
             ct);

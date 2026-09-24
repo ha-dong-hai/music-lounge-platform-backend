@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using MusicLounge.Domain.ValueObjects;
+using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -151,9 +152,14 @@ public sealed class AutoApproveOverdueRefundsJob
             await notifications.NotifyAsync(
                 adminId,
                 NotificationType.RefundSlaBreached,
-                "Đã tự động duyệt hoàn tiền",
-                $"Yêu cầu hoàn tiền #{refundId} đã được hệ thống tự duyệt vì chờ quá {slaHours}h cam " +
-                $"kết và thêm {graceHours}h ân hạn mà chưa ai xử lý.",
+                new SongNgu(
+                    "Đã tự động duyệt hoàn tiền",
+                    "Refund approved automatically"),
+                new SongNgu(
+                    $"Yêu cầu hoàn tiền #{refundId} đã được hệ thống tự duyệt vì chờ quá {slaHours}h cam " +
+                    $"kết và thêm {graceHours}h ân hạn mà chưa ai xử lý.",
+                    $"Refund request #{refundId} was approved automatically because it waited longer than the committed " +
+                    $"{slaHours}h plus a {graceHours}h grace period without being handled."),
                 referenceType: "refund_request",
                 referenceId: refundId.ToString(),
                 ct: ct);

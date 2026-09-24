@@ -43,26 +43,26 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
             f => f.SendAsync(userId, title, body, data, CancellationToken.None));
     }
 
-    public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink)
+    public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language)
     {
         var protectedLink = _secretProtector.Protect(resetLink);
         BackgroundJob.Enqueue<SendPasswordResetEmailJob>(
-            j => j.ExecuteAsync(toEmail, toName, protectedLink, CancellationToken.None));
+            j => j.ExecuteAsync(toEmail, toName, protectedLink, language, CancellationToken.None));
     }
 
-    public void EnqueueEmailVerificationCode(string toEmail, string toName, string code)
+    public void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language)
     {
         var protectedCode = _secretProtector.Protect(code);
         BackgroundJob.Enqueue<SendEmailVerificationCodeJob>(
-            j => j.ExecuteAsync(toEmail, toName, protectedCode, CancellationToken.None));
+            j => j.ExecuteAsync(toEmail, toName, protectedCode, language, CancellationToken.None));
     }
 
-    public void EnqueuePhoneVerificationCode(string toPhone, string code)
+    public void EnqueuePhoneVerificationCode(string toPhone, string code, string language)
     {
         var protectedCode = _secretProtector.Protect(code);
         // MLACP-426: qua lop boc co gioi han thu lai — xem PhoneVerificationSmsJob.
         BackgroundJob.Enqueue<PhoneVerificationSmsJob>(
-            j => j.ExecuteAsync(toPhone, protectedCode, CancellationToken.None));
+            j => j.ExecuteAsync(toPhone, protectedCode, language, CancellationToken.None));
     }
 
     public void EnqueueModerationAiScoring(int moderationId)

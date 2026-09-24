@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -41,15 +42,21 @@ public sealed class RefundSlaBreachAlertJob
     /// va thong bao da tu duyet dung chung RefundSlaBreached + "refund_request" (de frontend mo dung
     /// trang yeu cau hoan), nen khoa do se de loai nay nuot mat loai kia.
     /// </summary>
+    // MLACP-489: bản tiếng Việt của tiêu đề này là KHOÁ CHỐNG GỬI TRÙNG — job so cột Notification.Title (luôn lưu
+    // tiếng Việt) với nó. Đổi chữ tiếng Việt thì mọi cảnh báo cũ không còn khớp và Admin bị báo lại. Chỉ sửa bản En.
     private const string OverdueTitle = "Quá hạn xử lý hoàn tiền";
+    private const string OverdueTitleEn = "Refund handling overdue";
 
     // MLACP-387: tieu de dung de chong gui trung canh bao han VNPay (moi Admin mot lan cho moi loai).
     private const string WindowClosingTitle = "Sắp hết hạn hoàn tiền qua VNPay";
     private const string WindowExpiredTitle = "Hết hạn hoàn tiền qua VNPay";
+    private const string WindowClosingTitleEn = "VNPay refund window closing soon";
+    private const string WindowExpiredTitleEn = "VNPay refund window expired";
 
     // MLACP-387: nhac nguoi mua khai tai khoan nhan hoan, lap lai sau moi so ngay nay cho toi khi ho khai.
     private const int PayoutReminderDays = 3;
     private const string PayoutRequestTitle = "Cần tài khoản ngân hàng để hoàn tiền cho bạn";
+    private const string PayoutRequestTitleEn = "We need a bank account to refund you";
 
     private readonly ApplicationDbContext _ctx;
     private readonly ISystemConfigService _config;
@@ -128,11 +135,16 @@ public sealed class RefundSlaBreachAlertJob
             await _notifications.NotifyAsync(
                 buyerId,
                 NotificationType.RefundUpdate,
-                PayoutRequestTitle,
-                $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ): giao dịch gốc đã quá thời hạn VNPay nhận " +
-                "lệnh hoàn về phương thức bạn đã thanh toán. Để nhận lại tiền, hãy khai tài khoản ngân hàng nhận hoàn và " +
-                "xác nhận đồng ý nhận bằng chuyển khoản trong mục Yêu cầu hoàn tiền. Chúng tôi chỉ chuyển khoản khi có " +
-                "sự đồng ý của bạn.",
+                new SongNgu(PayoutRequestTitle, PayoutRequestTitleEn),
+                new SongNgu(
+                    $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ): giao dịch gốc đã quá thời hạn VNPay nhận " +
+                    "lệnh hoàn về phương thức bạn đã thanh toán. Để nhận lại tiền, hãy khai tài khoản ngân hàng nhận hoàn và " +
+                    "xác nhận đồng ý nhận bằng chuyển khoản trong mục Yêu cầu hoàn tiền. Chúng tôi chỉ chuyển khoản khi có " +
+                    "sự đồng ý của bạn.",
+                    $"Refund request #{refund.Id} ({refund.AmountRequested:N0} VND): the original payment is past VNPay's " +
+                    "window for refunding to the method you paid with. To get your money back, please provide a bank account " +
+                    "for the refund and confirm that you agree to receive it by bank transfer under Refund requests. We only " +
+                    "make the transfer once you agree."),
                 referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
                 ct: ct);
@@ -184,11 +196,16 @@ public sealed class RefundSlaBreachAlertJob
                 await _notifications.NotifyAsync(
                     adminId,
                     NotificationType.RefundSlaBreached,
-                    OverdueTitle,
-                    $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ) đã quá hạn " +
-                    $"{hoursOverdue}h so với cam kết {slaHours}h. Người mua đang chờ tiền về. Nếu vẫn " +
-                    $"chưa được xử lý khi đã quá hạn thêm {graceHours}h, hệ thống sẽ tự duyệt theo đúng " +
-                    "số tiền đã yêu cầu — muốn từ chối thì phải xử lý trước mốc đó.",
+                    new SongNgu(OverdueTitle, OverdueTitleEn),
+                    new SongNgu(
+                        $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ) đã quá hạn " +
+                        $"{hoursOverdue}h so với cam kết {slaHours}h. Người mua đang chờ tiền về. Nếu vẫn " +
+                        $"chưa được xử lý khi đã quá hạn thêm {graceHours}h, hệ thống sẽ tự duyệt theo đúng " +
+                        "số tiền đã yêu cầu — muốn từ chối thì phải xử lý trước mốc đó.",
+                        $"Refund request #{refund.Id} ({refund.AmountRequested:N0} VND) is {hoursOverdue}h past the " +
+                        $"committed {slaHours}h. The buyer is waiting for the money. If it is still not handled " +
+                        $"{graceHours}h after that, the system will approve it automatically for the amount requested — " +
+                        "to reject it, you must act before then."),
                     referenceType: "refund_request",
                     referenceId: refund.Id.ToString(),
                     ct: ct);
@@ -217,14 +234,25 @@ public sealed class RefundSlaBreachAlertJob
             var expired = deadline < now;
             var daysLeft = Math.Max(0, (int)(deadline - now).TotalDays);
             var title = expired ? WindowExpiredTitle : WindowClosingTitle;
+            var titleSongNgu = new SongNgu(title, expired ? WindowExpiredTitleEn : WindowClosingTitleEn);
             var body = expired
-                ? $"Yêu cầu hoàn tiền #{refund.Id} đã quá {windowDays} ngày kể từ giao dịch — VNPay không còn nhận lệnh " +
-                  "hoàn. " + (refund.PayoutConsentAt is not null
-                      ? "Người mua đã đồng ý và khai tài khoản nhận — chuyển khoản rồi duyệt yêu cầu kèm mã chuyển khoản."
-                      : "Hệ thống đang nhắc người mua khai tài khoản nhận hoàn; chỉ chuyển khoản khi họ đã đồng ý (Luật " +
-                        "BVQLNTD 2023, Điều 38 khoản 4).")
-                : $"Yêu cầu hoàn tiền #{refund.Id} chỉ còn {daysLeft} ngày trước khi VNPay ngừng nhận lệnh hoàn. Duyệt " +
-                  "trước mốc đó để tiền về đúng phương thức người mua đã thanh toán.";
+                ? new SongNgu(
+                    $"Yêu cầu hoàn tiền #{refund.Id} đã quá {windowDays} ngày kể từ giao dịch — VNPay không còn nhận lệnh " +
+                    "hoàn. " + (refund.PayoutConsentAt is not null
+                        ? "Người mua đã đồng ý và khai tài khoản nhận — chuyển khoản rồi duyệt yêu cầu kèm mã chuyển khoản."
+                        : "Hệ thống đang nhắc người mua khai tài khoản nhận hoàn; chỉ chuyển khoản khi họ đã đồng ý (Luật " +
+                          "BVQLNTD 2023, Điều 38 khoản 4)."),
+                    $"Refund request #{refund.Id} is more than {windowDays} days past the transaction — VNPay no longer " +
+                    "accepts refund orders. " + (refund.PayoutConsentAt is not null
+                        ? "The buyer has agreed and provided a receiving account — make the transfer, then approve the " +
+                          "request with the transfer reference."
+                        : "The system is reminding the buyer to provide a receiving account; only transfer once they " +
+                          "have agreed (Consumer Protection Law 2023, Article 38(4))."))
+                : new SongNgu(
+                    $"Yêu cầu hoàn tiền #{refund.Id} chỉ còn {daysLeft} ngày trước khi VNPay ngừng nhận lệnh hoàn. Duyệt " +
+                    "trước mốc đó để tiền về đúng phương thức người mua đã thanh toán.",
+                    $"Refund request #{refund.Id} has only {daysLeft} day(s) left before VNPay stops accepting refund " +
+                    "orders. Approve it before then so the money goes back to the method the buyer paid with.");
 
             var sent = false;
             foreach (var adminId in admins)
@@ -233,7 +261,7 @@ public sealed class RefundSlaBreachAlertJob
                 await _notifications.NotifyAsync(
                     adminId,
                     NotificationType.RefundSlaBreached,
-                    title,
+                    titleSongNgu,
                     body,
                     referenceType: "refund_request",
                     referenceId: refund.Id.ToString(),
@@ -302,18 +330,27 @@ public sealed class RefundSlaBreachAlertJob
             if (ownerId is int owner)
                 notified |= await NotifyOnceAsync(
                     owner, NotificationType.RefundOwedByVenue, refund.Id,
-                    "Chưa xác nhận trả tiền mặt cho khách",
-                    $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ) đã được duyệt quá {slaHours} giờ mà phòng trà " +
-                    "chưa xác nhận đã trả tiền mặt cho khách. Khách vẫn đang chờ.",
+                    new SongNgu("Chưa xác nhận trả tiền mặt cho khách", "Cash refund not yet confirmed"),
+                    new SongNgu(
+                        $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ) đã được duyệt quá {slaHours} giờ mà phòng trà " +
+                        "chưa xác nhận đã trả tiền mặt cho khách. Khách vẫn đang chờ.",
+                        $"Refund request #{refund.Id} ({amount:N0} VND) was approved more than {slaHours} hours ago, but " +
+                        "your music lounge has not confirmed paying the cash back to the guest. The guest is still waiting."),
                     ct);
 
             foreach (var adminId in admins)
                 notified |= await NotifyOnceAsync(
                     adminId, NotificationType.RefundSlaBreached, refund.Id,
-                    "Phòng trà chưa trả tiền mặt hoàn cho khách",
-                    $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ, vé bán tại quầy) đã được duyệt quá " +
-                    $"{slaHours} giờ mà phòng trà chưa xác nhận đã trả. Nền tảng không giữ khoản này nên " +
-                    "không tự hoàn thay được — cần liên hệ phòng trà.",
+                    new SongNgu(
+                        "Phòng trà chưa trả tiền mặt hoàn cho khách",
+                        "A music lounge has not paid a cash refund to a guest"),
+                    new SongNgu(
+                        $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ, vé bán tại quầy) đã được duyệt quá " +
+                        $"{slaHours} giờ mà phòng trà chưa xác nhận đã trả. Nền tảng không giữ khoản này nên " +
+                        "không tự hoàn thay được — cần liên hệ phòng trà.",
+                        $"Refund request #{refund.Id} ({amount:N0} VND, box-office ticket) was approved more than " +
+                        $"{slaHours} hours ago, but the music lounge has not confirmed paying it. The platform does not hold " +
+                        "this amount, so it cannot refund on the venue's behalf — please contact the music lounge."),
                     ct);
         }
 
@@ -321,7 +358,7 @@ public sealed class RefundSlaBreachAlertJob
     }
 
     private async Task<bool> NotifyOnceAsync(
-        int userId, NotificationType type, int refundId, string title, string body, CancellationToken ct)
+        int userId, NotificationType type, int refundId, SongNgu title, SongNgu body, CancellationToken ct)
     {
         var already = await _ctx.Notifications.AnyAsync(
             n => n.UserId == userId && n.Type == type

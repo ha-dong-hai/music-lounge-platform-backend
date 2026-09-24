@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Notifications;
@@ -48,9 +49,14 @@ internal sealed class FailPosterJobCommandHandler : IRequestHandler<FailPosterJo
         await _notifications.NotifyAsync(
             job.OwnerId,
             NotificationType.PosterGenerationResult,
-            "Chưa tạo được poster",
-            "Hệ thống chưa tạo được poster cho buổi hòa nhạc của bạn. Bạn không bị trừ lượt poster nào — " +
-            "vui lòng thử lại, hoặc tự tải poster của bạn lên.",
+            new SongNgu(
+                "Chưa tạo được poster",
+                "Poster could not be created"),
+            new SongNgu(
+                "Hệ thống chưa tạo được poster cho buổi hòa nhạc của bạn. Bạn không bị trừ lượt poster nào — " +
+                "vui lòng thử lại, hoặc tự tải poster của bạn lên.",
+                "We could not create a poster for your concert. None of your poster credits were used — " +
+                "please try again, or upload your own poster."),
             NotificationReferenceTypes.Show,
             job.ShowId.ToString(),
             ct);

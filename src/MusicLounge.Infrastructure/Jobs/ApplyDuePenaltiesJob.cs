@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MusicLounge.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Common;
@@ -121,13 +122,24 @@ public sealed class ApplyDuePenaltiesJob
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.PenaltyIssued,
-                penalty.PenaltyType == PenaltyType.Suspension ? "Phòng trà đã bị tạm khoá" : "Phòng trà đã bị khoá vĩnh viễn",
-                $"\"{lounge.Name}\" hiện đã ở trạng thái {lounge.Status} theo phạt #{penalty.Id}." +
-                (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
-                    ? " Gói dịch vụ đã dừng; phí gói không được hoàn khi phòng trà bị khoá vĩnh viễn do vi phạm. " +
-                      "Nếu lệnh khoá được huỷ, gói được kích hoạt lại với đúng số ngày còn lại."
-                    : "") +
-                DescribeCancelled(penalty.PenaltyType, cancelled) + DescribeVenueFnb(venueFnbOrders),
+                new SongNgu(
+                    penalty.PenaltyType == PenaltyType.Suspension ? "Phòng trà đã bị tạm khoá" : "Phòng trà đã bị khoá vĩnh viễn",
+                    penalty.PenaltyType == PenaltyType.Suspension
+                        ? "Your music lounge has been suspended"
+                        : "Your music lounge has been permanently banned"),
+                new SongNgu(
+                    $"\"{lounge.Name}\" hiện đã ở trạng thái {lounge.Status} theo phạt #{penalty.Id}." +
+                    (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
+                        ? " Gói dịch vụ đã dừng; phí gói không được hoàn khi phòng trà bị khoá vĩnh viễn do vi phạm. " +
+                          "Nếu lệnh khoá được huỷ, gói được kích hoạt lại với đúng số ngày còn lại."
+                        : "") +
+                    DescribeCancelled(penalty.PenaltyType, cancelled) + DescribeVenueFnb(venueFnbOrders),
+                    $"\"{lounge.Name}\" is now {lounge.Status} under penalty #{penalty.Id}." +
+                    (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
+                        ? " Your subscription has stopped; subscription fees are not refunded when a music lounge is permanently " +
+                          "banned for a violation. If the ban is lifted, the subscription is reactivated with exactly the days remaining."
+                        : "") +
+                    DescribeCancelledEn(penalty.PenaltyType, cancelled) + DescribeVenueFnbEn(venueFnbOrders)),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);
@@ -212,6 +224,13 @@ public sealed class ApplyDuePenaltiesJob
             : $" {cancelledOrders} đơn F&B khách đã trả trước mà chưa phục vụ đã bị huỷ, kèm hoàn 100% cho khách; " +
               "đơn chưa trả hoặc đã phục vụ vẫn giữ để phòng trà tự xử lý.";
 
+    /// <summary>MLACP-489: bản tiếng Anh của <see cref="DescribeVenueFnb"/> — cùng điều kiện, sửa một bên thì sửa cả hai.</summary>
+    private static string DescribeVenueFnbEn(int cancelledOrders)
+        => cancelledOrders == 0
+            ? ""
+            : $" {cancelledOrders} prepaid food & drink order(s) that had not been served were cancelled with a 100% " +
+              "refund to the guest; unpaid or already-served orders are kept for your music lounge to handle.";
+
     /// <summary>Câu báo chủ phòng trà — vé bán tại quầy không có tài khoản, chỉ phòng trà liên hệ được người mua.</summary>
     private static string DescribeCancelled(PenaltyType type, ShowCancellation.Outcome cancelled)
     {
@@ -225,6 +244,21 @@ public sealed class ApplyDuePenaltiesJob
         // MLACP-380: don F&B chua dong gan voi cac show tren cung bi huy theo.
         if (cancelled.FnbOrders > 0)
             text += $" {cancelled.FnbOrders} đơn F&B chưa đóng cũng bị huỷ theo, kèm hoàn 100% cho phần đã trả trước.";
+        return text;
+    }
+
+    /// <summary>MLACP-489: bản tiếng Anh của <see cref="DescribeCancelled"/> — cùng các nhánh, sửa một bên thì sửa cả hai.</summary>
+    private static string DescribeCancelledEn(PenaltyType type, ShowCancellation.Outcome cancelled)
+    {
+        if (cancelled.Shows == 0) return "";
+        var text = $" {cancelled.Shows} " +
+                   (type == PenaltyType.Ban ? "upcoming show(s)" : "show(s) falling within the suspension") +
+                   " were cancelled and 100% refund requests were created automatically for the buyers.";
+        if (cancelled.WalkInTickets > 0)
+            text += $" {cancelled.WalkInTickets} box-office ticket(s) have no account for the platform to notify — " +
+                    "your music lounge must refund the cash when the guest gets in touch and confirm the payout in the system.";
+        if (cancelled.FnbOrders > 0)
+            text += $" {cancelled.FnbOrders} open food & drink order(s) were also cancelled, with a 100% refund of any prepaid amount.";
         return text;
     }
 }

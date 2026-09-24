@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Constants;
@@ -95,13 +96,22 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
             await _notifications.NotifyAsync(
                 holding.Key,
                 NotificationType.EventRescheduled,
-                "Lịch diễn đã thay đổi",
-                $"\"{show.Name}\" đã đổi lịch từ {VietnamTime.Format(oldStart, "HH:mm dd/MM/yyyy")} sang " +
-                $"{VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}. " +
-                TicketRefundPolicy.DescribeFullRefundWindow(refundUntil) +
-                (holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers))
-                    ? TicketRefundRecipients.TransferredHolderCancelNote
-                    : ""),
+                new SongNgu(
+                    "Lịch diễn đã thay đổi",
+                    "Show time changed"),
+                new SongNgu(
+                    $"\"{show.Name}\" đã đổi lịch từ {VietnamTime.Format(oldStart, "HH:mm dd/MM/yyyy")} sang " +
+                    $"{VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}. " +
+                    TicketRefundPolicy.DescribeFullRefundWindow(refundUntil) +
+                    (holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers))
+                        ? TicketRefundRecipients.TransferredHolderCancelNote
+                        : ""),
+                    $"\"{show.Name}\" has been rescheduled from {VietnamTime.Format(oldStart, "HH:mm dd/MM/yyyy")} to " +
+                    $"{VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}. " +
+                    TicketRefundPolicy.DescribeFullRefundWindowEn(refundUntil) +
+                    (holding.Any(t => TicketRefundRecipients.WasTransferred(t, payers))
+                        ? TicketRefundRecipients.TransferredHolderCancelNoteEn
+                        : "")),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

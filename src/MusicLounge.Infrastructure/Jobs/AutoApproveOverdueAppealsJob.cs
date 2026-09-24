@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MusicLounge.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Hangfire;
 using MusicLounge.Application.Common;
@@ -102,10 +103,18 @@ public sealed class AutoApproveOverdueAppealsJob
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.AppealResolved,
-                "Kháng cáo tự động được chấp thuận",
-                $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong thời hạn SLA — kháng cáo được " +
-                $"tự động chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
-                (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}."),
+                new SongNgu(
+                    "Kháng cáo tự động được chấp thuận",
+                    "Appeal automatically accepted"),
+                new SongNgu(
+                    $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong thời hạn SLA — kháng cáo được " +
+                    $"tự động chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
+                    (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}."),
+                    $"The Admin did not handle the appeal against penalty #{current.Id} within the SLA — the appeal has been " +
+                    $"accepted automatically. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd() +
+                    (restoredPlan is null
+                        ? ""
+                        : $" Your subscription has been reactivated and expires on {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")),
                 referenceType: "venue_penalty",
                 referenceId: current.Id.ToString(),
                 ct: ct);

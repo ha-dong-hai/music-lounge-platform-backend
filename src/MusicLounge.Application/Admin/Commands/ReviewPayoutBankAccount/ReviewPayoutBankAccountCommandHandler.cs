@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Settlements;
@@ -80,12 +81,20 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
         await _notifications.NotifyAsync(
             owner.Id,
             NotificationType.KycReviewResult,
-            request.Approve ? "Tài khoản nhận tiền đã được xác minh" : "Tài khoản nhận tiền chưa được xác minh",
-            request.Approve
-                ? $"Tài khoản {account.BankName} của \"{lounge.Name}\" đã được xác minh. Các khoản quyết toán đang giữ sẽ " +
-                  "được chuyển ở lần giải ngân kế tiếp."
-                : $"Tài khoản {account.BankName} của \"{lounge.Name}\" chưa được chấp nhận. Lý do: {request.Note} " +
-                  "Hãy cập nhật tài khoản rồi chờ xác minh lại.",
+            new SongNgu(
+                request.Approve ? "Tài khoản nhận tiền đã được xác minh" : "Tài khoản nhận tiền chưa được xác minh",
+                request.Approve ? "Payout account verified" : "Payout account not verified"),
+            new SongNgu(
+                request.Approve
+                    ? $"Tài khoản {account.BankName} của \"{lounge.Name}\" đã được xác minh. Các khoản quyết toán đang giữ sẽ " +
+                      "được chuyển ở lần giải ngân kế tiếp."
+                    : $"Tài khoản {account.BankName} của \"{lounge.Name}\" chưa được chấp nhận. Lý do: {request.Note} " +
+                      "Hãy cập nhật tài khoản rồi chờ xác minh lại.",
+                request.Approve
+                    ? $"The {account.BankName} account of \"{lounge.Name}\" has been verified. Settlements on hold will be " +
+                      "paid out in the next payout run."
+                    : $"The {account.BankName} account of \"{lounge.Name}\" was not accepted. Reason: {request.Note} " +
+                      "Please update the account and wait for it to be verified again."),
             referenceType: "bank_account",
             referenceId: account.Id.ToString(),
             ct: ct);

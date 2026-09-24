@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -84,7 +85,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                     return VnPayIpnOutcome.ConfirmedTooLate;
 
                 await PaymentIncident.RecordConfirmedTooLateAsync(
-                    _uow, _notifications, _logger, "gói đăng ký", txnRef, result.Amount,
+                    _uow, _notifications, _logger, new SongNgu("gói đăng ký", "a subscription"), txnRef, result.Amount,
                     "payment", payment.Id.ToString(), ct);
                 return VnPayIpnOutcome.ConfirmedTooLate;
             }
@@ -146,7 +147,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             .FirstOrDefault();
         if (currentPlan is not null && purchase != SubscriptionPurchase.Subscribe)
         {
-            string summary;
+            SongNgu summary;
             if (purchase == SubscriptionPurchase.Renew && currentPlan.PackageId == package.Id)
             {
                 summary = ExtendPlan(currentPlan, package, payment, now);
@@ -174,7 +175,9 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             await _notifications.NotifyAsync(
                 ownerId,
                 NotificationType.SubscriptionUpdated,
-                purchase == SubscriptionPurchase.Renew ? "Gói dịch vụ đã được gia hạn" : "Đã đổi gói dịch vụ",
+                purchase == SubscriptionPurchase.Renew
+                    ? new SongNgu("Gói dịch vụ đã được gia hạn", "Subscription renewed")
+                    : new SongNgu("Đã đổi gói dịch vụ", "Subscription changed"),
                 summary,
                 referenceType: "payment",
                 referenceId: payment.Id.ToString(),
@@ -232,9 +235,15 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             await _notifications.NotifyAsync(
                 ownerId,
                 NotificationType.DuplicatePaymentDetected,
-                "Phát hiện thanh toán trùng",
-                $"Bạn vừa thanh toán {payment.GrossAmount:N0}đ cho gói subscription trong khi đã có gói đang hoạt động. " +
-                "Khoản này sẽ được xem xét hoàn lại — yêu cầu hoàn tiền đã được tạo tự động và sẽ được xử lý theo đúng thời hạn cam kết.",
+                new SongNgu(
+                    "Phát hiện thanh toán trùng",
+                    "Duplicate payment detected"),
+                new SongNgu(
+                    $"Bạn vừa thanh toán {payment.GrossAmount:N0}đ cho gói subscription trong khi đã có gói đang hoạt động. " +
+                    "Khoản này sẽ được xem xét hoàn lại — yêu cầu hoàn tiền đã được tạo tự động và sẽ được xử lý theo đúng thời hạn cam kết.",
+                    $"You just paid {payment.GrossAmount:N0} VND for a subscription while you already have an active one. " +
+                    "This amount will be reviewed for a refund — a refund request has been created automatically and will be " +
+                    "processed within the committed time."),
                 referenceType: "payment", referenceId: payment.Id.ToString(), ct: ct);
             await _uow.SaveChangesAsync(ct);
 
@@ -288,19 +297,22 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
     }
 
     /// <summary>MLACP-371: gia hạn — cộng một kỳ nối vào hạn hiện tại (không mất ngày nào còn lại), bỏ trạng thái đã huỷ.</summary>
-    private static string ExtendPlan(OwnerSubscription plan, SubscriptionPackage package, Payment payment, DateTimeOffset now)
+    private static SongNgu ExtendPlan(OwnerSubscription plan, SubscriptionPackage package, Payment payment, DateTimeOffset now)
     {
         plan.ExpiresAt = SubscriptionTerms.CycleEnd(package.BillingCycle, plan.ExpiresAt > now ? plan.ExpiresAt : now);
         plan.AmountPaid = (plan.AmountPaid ?? package.Price) + payment.GrossAmount;
         plan.CancelledAt = null;
-        return $"Gói \"{package.Name}\" đã được gia hạn, dùng tới {VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy")}.";
+        var until = VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy");
+        return new SongNgu(
+            $"Gói \"{package.Name}\" đã được gia hạn, dùng tới {until}.",
+            $"The \"{package.Name}\" plan has been renewed and is valid until {until}.");
     }
 
     /// <summary>
     /// MLACP-371: đổi gói — gói mới có hiệu lực ngay; phần giá trị còn lại của gói cũ được quy thành thời gian ở gói
     /// mới theo giá gói mới (không hoàn tiền mặt).
     /// </summary>
-    private async Task<string> ChangePlanAsync(
+    private async Task<SongNgu> ChangePlanAsync(
         OwnerSubscription current, SubscriptionPackage newPackage, Payment payment, int ownerId,
         DateTimeOffset now, CancellationToken ct)
     {
@@ -331,9 +343,12 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         };
         _uow.Repository<OwnerSubscription, int>().Add(plan);
 
-        return $"Đã chuyển sang gói \"{newPackage.Name}\". Phần còn lại của gói cũ " +
-               $"({SubscriptionTerms.DescribeCredit(credit, extra)}) đã được cộng vào — gói mới dùng tới " +
-               $"{VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy")}.";
+        var until = VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy");
+        return new SongNgu(
+            $"Đã chuyển sang gói \"{newPackage.Name}\". Phần còn lại của gói cũ " +
+            $"({SubscriptionTerms.DescribeCredit(credit, extra)}) đã được cộng vào — gói mới dùng tới {until}.",
+            $"You have switched to the \"{newPackage.Name}\" plan. What was left of your previous plan " +
+            $"({SubscriptionTerms.DescribeCreditEn(credit, extra)}) has been added — the new plan is valid until {until}.");
     }
 
     /// <summary>
@@ -358,6 +373,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         _uow.Repository<Payment, int>().Update(payment);
 
         var why = penalized == LoungeStatus.Locked ? "bị khoá vĩnh viễn" : "bị tạm khoá";
+        var whyEn = penalized == LoungeStatus.Locked ? "permanently banned" : "suspended";
 
         var refund = new RefundRequest
         {
@@ -373,10 +389,16 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         await _notifications.NotifyAsync(
             ownerId,
             NotificationType.RefundUpdate,
-            "Gói dịch vụ chưa được kích hoạt — bạn sẽ được hoàn tiền",
-            $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) đã bị trừ tiền, nhưng phòng trà của bạn " +
-            $"đang {why} nên gói không được kích hoạt, gia hạn hay đổi. Chúng tôi đã tự động tạo yêu cầu hoàn 100% " +
-            "khoản này — bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
+            new SongNgu(
+                "Gói dịch vụ chưa được kích hoạt — bạn sẽ được hoàn tiền",
+                "Subscription not activated — you will be refunded"),
+            new SongNgu(
+                $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) đã bị trừ tiền, nhưng phòng trà của bạn " +
+                $"đang {why} nên gói không được kích hoạt, gia hạn hay đổi. Chúng tôi đã tự động tạo yêu cầu hoàn 100% " +
+                "khoản này — bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
+                $"A payment of {payment.GrossAmount:N0} VND (reference {result.TransactionId}) was charged, but your music " +
+                $"lounge is {whyEn}, so the subscription was not activated, renewed or changed. We have automatically created " +
+                "a request to refund 100% of this amount — you do not need to do anything, and we will notify you when it is processed."),
             referenceType: "payment",
             referenceId: payment.Id.ToString(),
             ct: ct);
@@ -390,7 +412,11 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             penalized, payment.Id, txnRef, ownerId, payment.GrossAmount, now);
 
         await PaymentIncident.RecordConfirmedTooLateAsync(
-            _uow, _notifications, _logger, "gói dịch vụ của phòng trà đang bị khoá/tạm khoá", txnRef, result.Amount,
+            _uow, _notifications, _logger,
+            new SongNgu(
+                "gói dịch vụ của phòng trà đang bị khoá/tạm khoá",
+                "a subscription for a music lounge that is locked or suspended"),
+            txnRef, result.Amount,
             "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;

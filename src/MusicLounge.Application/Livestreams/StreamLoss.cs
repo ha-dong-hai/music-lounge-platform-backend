@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -43,7 +44,7 @@ public static class StreamLoss
 {
     public static async Task<StreamLossOutcome> ApplyToShowAsync(
         IUnitOfWork uow, ISystemConfigService config, INotificationService notifications,
-        LoungeShow show, string why, DateTimeOffset now, CancellationToken ct)
+        LoungeShow show, SongNgu why, DateTimeOffset now, CancellationToken ct)
     {
         if (LoungeShowLifecycle.IsTerminal(show.Status))
             return StreamLossOutcome.AlreadyTerminal;
@@ -64,9 +65,14 @@ public static class StreamLoss
             await notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.LivestreamCutShort,
-                "Livestream đã dừng — buổi diễn tại phòng vẫn mở",
-                $"Livestream của \"{show.Name}\" đã dừng ({why}). Buổi diễn tại phòng vẫn đang mở để " +
-                "khán giả tới muộn check-in được — hãy bấm \"Kết thúc buổi diễn\" khi buổi diễn xong.",
+                new SongNgu(
+                    "Livestream đã dừng — buổi diễn tại phòng vẫn mở",
+                    "Livestream stopped — the in-venue show is still open"),
+                new SongNgu(
+                    $"Livestream của \"{show.Name}\" đã dừng ({why.Vi}). Buổi diễn tại phòng vẫn đang mở để " +
+                    "khán giả tới muộn check-in được — hãy bấm \"Kết thúc buổi diễn\" khi buổi diễn xong.",
+                    $"The livestream of \"{show.Name}\" has stopped ({why.En}). The in-venue show is still open so that " +
+                    "late guests can check in — press \"End show\" when the show is over."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);

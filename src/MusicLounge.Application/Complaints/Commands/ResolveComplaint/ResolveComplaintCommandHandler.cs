@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Tickets;
@@ -90,12 +91,20 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
             await _notifications.NotifyAsync(
                 complainantId,
                 NotificationType.ComplaintUpdate,
-                "Cập nhật khiếu nại",
-                newStatus == ComplaintStatus.Resolved
-                    ? "Khiếu nại của bạn đã được xử lý."
-                    : newStatus == ComplaintStatus.Rejected
-                        ? "Khiếu nại của bạn đã bị từ chối."
-                        : "Khiếu nại của bạn đang được xem xét.",
+                new SongNgu(
+                    "Cập nhật khiếu nại",
+                    "Complaint update"),
+                new SongNgu(
+                    newStatus == ComplaintStatus.Resolved
+                        ? "Khiếu nại của bạn đã được xử lý."
+                        : newStatus == ComplaintStatus.Rejected
+                            ? "Khiếu nại của bạn đã bị từ chối."
+                            : "Khiếu nại của bạn đang được xem xét.",
+                    newStatus == ComplaintStatus.Resolved
+                        ? "Your complaint has been resolved."
+                        : newStatus == ComplaintStatus.Rejected
+                            ? "Your complaint has been rejected."
+                            : "Your complaint is being reviewed."),
                 referenceType: "complaint",
                 referenceId: complaint.Id.ToString(),
                 ct: ct);
@@ -156,7 +165,8 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
             if (ticket.PaymentId is null) continue;
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                NotificationType.EventCancelled, show.Name, show.Id, "nội dung vi phạm bị gỡ", ct);
+                NotificationType.EventCancelled, show.Name, show.Id,
+                new SongNgu("nội dung vi phạm bị gỡ", "content removed for a violation"), ct);
 
             refundRepo.Add(new RefundRequest
             {
@@ -172,9 +182,15 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
-                    "Event đã bị gỡ bỏ",
-                    $"\"{show.Name}\" đã bị gỡ bỏ do vi phạm nội dung. Vé của bạn đã được hủy và tự động " +
-                    "tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                    new SongNgu(
+                        "Buổi hòa nhạc đã bị gỡ bỏ",
+                        "Concert removed"),
+                    new SongNgu(
+                        $"\"{show.Name}\" đã bị gỡ bỏ do vi phạm nội dung. Vé của bạn đã được hủy và tự động " +
+                        "tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                        $"\"{show.Name}\" has been removed for violating content rules. Your ticket has been cancelled and a " +
+                        "100% refund request has been created automatically." +
+                        (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -216,8 +232,12 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         await _notifications.NotifyAsync(
             lounge.OwnerId,
             NotificationType.PenaltyIssued,
-            "Phòng trà bị cảnh cáo",
-            $"\"{lounge.Name}\" nhận cảnh cáo theo khiếu nại #{complaint.Id}: {complaint.Description}",
+            new SongNgu(
+                "Phòng trà bị cảnh cáo",
+                "Your music lounge has received a warning"),
+            new SongNgu(
+                $"\"{lounge.Name}\" nhận cảnh cáo theo khiếu nại #{complaint.Id}: {complaint.Description}",
+                $"\"{lounge.Name}\" received a warning following complaint #{complaint.Id}: {complaint.Description}"),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
             ct: ct);
@@ -306,7 +326,8 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
             ticketRepo.Update(ticket);
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                NotificationType.RefundUpdate, showName, complaint.TargetId, $"xử lý khiếu nại #{complaint.Id}", ct);
+                NotificationType.RefundUpdate, showName, complaint.TargetId,
+                new SongNgu($"xử lý khiếu nại #{complaint.Id}", $"resolving complaint #{complaint.Id}"), ct);
 
             refundRepo.Add(new RefundRequest
             {
@@ -324,8 +345,12 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
             await _notifications.NotifyAsync(
                 complainantId,
                 NotificationType.ComplaintUpdate,
-                "Tiền hoàn về người mua vé ban đầu",
-                $"Khiếu nại #{complaint.Id} được xử lý bằng hoàn tiền.{TicketRefundRecipients.TransferredHolderNote}",
+                new SongNgu(
+                    "Tiền hoàn về người mua vé ban đầu",
+                    "Refund goes to the original ticket buyer"),
+                new SongNgu(
+                    $"Khiếu nại #{complaint.Id} được xử lý bằng hoàn tiền.{TicketRefundRecipients.TransferredHolderNote}",
+                    $"Complaint #{complaint.Id} was resolved with a refund.{TicketRefundRecipients.TransferredHolderNoteEn}"),
                 referenceType: "complaint",
                 referenceId: complaint.Id.ToString(),
                 ct: ct);

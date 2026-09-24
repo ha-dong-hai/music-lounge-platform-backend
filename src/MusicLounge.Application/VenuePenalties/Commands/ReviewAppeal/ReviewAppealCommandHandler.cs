@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using MusicLounge.Domain.ValueObjects;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -101,11 +102,20 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         await _notifications.NotifyAsync(
             lounge.OwnerId,
             NotificationType.AppealResolved,
-            decision == PenaltyStatus.Overturned ? "Kháng cáo được chấp thuận" : "Kháng cáo bị từ chối",
-            decision == PenaltyStatus.Overturned
-                ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
-                  (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")
-                : $"Kháng cáo của bạn cho phạt #{penalty.Id} bị từ chối. {request.ReviewNote ?? ""}".Trim(),
+            new SongNgu(
+                decision == PenaltyStatus.Overturned ? "Kháng cáo được chấp thuận" : "Kháng cáo bị từ chối",
+                decision == PenaltyStatus.Overturned ? "Appeal accepted" : "Appeal rejected"),
+            new SongNgu(
+                decision == PenaltyStatus.Overturned
+                    ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
+                      (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")
+                    : $"Kháng cáo của bạn cho phạt #{penalty.Id} bị từ chối. {request.ReviewNote ?? ""}".Trim(),
+                decision == PenaltyStatus.Overturned
+                    ? $"Your appeal against penalty #{penalty.Id} has been accepted. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd() +
+                      (restoredPlan is null
+                          ? ""
+                          : $" Your subscription has been reactivated and expires on {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")
+                    : $"Your appeal against penalty #{penalty.Id} was rejected. {request.ReviewNote ?? ""}".Trim()),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
             ct: ct);

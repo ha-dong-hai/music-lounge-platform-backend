@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Enums;
@@ -75,11 +76,18 @@ internal sealed class ReviewVenueCommandHandler : IRequestHandler<ReviewVenueCom
         await _notifications.NotifyAsync(
             lounge.OwnerId,
             NotificationType.VenueReviewResult,
-            approved ? "Phòng trà đã được duyệt" : "Hồ sơ phòng trà bị từ chối",
-            approved
-                ? $"\"{lounge.Name}\" đã được duyệt. Bạn có thể bắt đầu tạo và nộp duyệt buổi diễn."
-                : $"\"{lounge.Name}\" chưa được duyệt. Lý do: {request.ReviewNote} " +
-                  "Bạn có thể chỉnh sửa hồ sơ và liên hệ Admin để được xem xét lại.",
+            new SongNgu(
+                approved ? "Phòng trà đã được duyệt" : "Hồ sơ phòng trà bị từ chối",
+                approved ? "Your music lounge has been approved" : "Your music lounge application was rejected"),
+            new SongNgu(
+                approved
+                    ? $"\"{lounge.Name}\" đã được duyệt. Bạn có thể bắt đầu tạo và nộp duyệt buổi diễn."
+                    : $"\"{lounge.Name}\" chưa được duyệt. Lý do: {request.ReviewNote} " +
+                      "Bạn có thể chỉnh sửa hồ sơ và liên hệ Admin để được xem xét lại.",
+                approved
+                    ? $"\"{lounge.Name}\" has been approved. You can now create shows and submit them for review."
+                    : $"\"{lounge.Name}\" was not approved. Reason: {request.ReviewNote} " +
+                      "You can edit your profile and contact an Admin to have it reviewed again."),
             referenceType: "lounge",
             referenceId: lounge.Id.ToString(),
             ct: ct);

@@ -6,7 +6,7 @@ namespace MusicLounge.Api.Localization;
 /// MLACP-487. Từ điển thông điệp tiếng Việt → tiếng Anh, tra ở cửa ra duy nhất
 /// (<c>GlobalExceptionHandler</c>).
 ///
-/// <para><b>TỆP NÀY ĐƯỢC SINH BẰNG MÁY</b> từ <c>J:/MVP/ML_FE/dich-1..4.json</c> bởi
+/// <para><b>TỆP NÀY ĐƯỢC SINH BẰNG MÁY</b> từ <c>J:/MVP/ML_FE/dich-1..5.json</c> bởi
 /// <c>sinh-tu-dien.mjs</c>. Sửa tay ở đây thì lần sinh sau sẽ mất. Kịch bản sinh đối chiếu từng khoá
 /// với danh sách chuỗi trích thẳng từ mã nguồn và TỪ CHỐI ghi tệp nếu có khoá nào không khớp — vì
 /// khoá lệch một dấu cách là bản dịch chết, mà chết IM LẶNG: hệ thống trả nguyên tiếng Việt, trông
@@ -331,6 +331,7 @@ internal static class ThongDiepSongNgu
             ["Nghệ sĩ chưa đăng ký tài khoản ngân hàng mặc định — không thể xác nhận đã thanh toán cho tới khi có tài khoản để ghi nhận."] = "This performer has no default bank account on file — payment cannot be confirmed until there is an account to record it against.",
             ["Nghệ sĩ này đã có trong danh sách biểu diễn của event này."] = "This performer is already in this concert's line-up.",
             ["Nghệ sĩ này không nhận donate."] = "This performer does not accept donations.",
+            ["Ngôn ngữ chỉ nhận một trong hai giá trị: vi hoặc en."] = "Language must be one of two values: vi or en.",
             ["Người dùng này chưa khai báo hồ sơ thuế nào để duyệt."] = "This user has not submitted any tax profile for review.",
             ["Người dùng này chưa nộp CCCD/CMND nào để duyệt."] = "This user has not submitted any ID card for review.",
             ["Người khiếu nại không có vé nào còn hiệu lực (và có giao dịch thanh toán) cho show này, nên không có gì để hoàn."] = "The complainant holds no valid, paid-for ticket to this concert, so there is nothing to refund.",

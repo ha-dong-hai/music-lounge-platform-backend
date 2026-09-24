@@ -58,7 +58,7 @@ internal sealed class RequestPhoneVerificationCommandHandler
         userRepo.Update(user);
         await _uow.SaveChangesAsync(ct);
 
-        _backgroundJobs.EnqueuePhoneVerificationCode(user.Phone, code);
+        _backgroundJobs.EnqueuePhoneVerificationCode(user.Phone, code, user.PreferredLanguage);
 
         return Unit.Value;
     }

@@ -16,17 +16,20 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
     private readonly IPasswordHasher _passwordHasher;
     private readonly IBackgroundJobService _backgroundJobs;
     private readonly ISystemConfigService _config;
+    private readonly IRequestLanguage _language;
 
     public RegisterCommandHandler(
         IUnitOfWork uow,
         IPasswordHasher passwordHasher,
         IBackgroundJobService backgroundJobs,
-        ISystemConfigService config)
+        ISystemConfigService config,
+        IRequestLanguage language)
     {
         _uow = uow;
         _passwordHasher = passwordHasher;
         _backgroundJobs = backgroundJobs;
         _config = config;
+        _language = language;
     }
 
     public async Task<RegisterResultDto> Handle(RegisterCommand request, CancellationToken ct)
@@ -56,13 +59,16 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
             // not just that the checkbox existed.
             TermsAcceptedAt = now,
             TermsVersion = termsVersion,
+            // MLACP-489: ngôn ngữ của trang người dùng đang đứng khi đăng ký — không đặt thì người đăng ký trên bản tiếng
+            // Anh vẫn nhận push/email tiếng Việt cho tới khi tự tìm ra cài đặt. Đổi sau bằng PUT /me/language.
+            PreferredLanguage = _language.Current,
             CreatedAt = DateTime.UtcNow
         };
 
         _uow.Repository<User, int>().Add(user);
         await _uow.SaveChangesAsync(ct);
 
-        _backgroundJobs.EnqueueEmailVerificationCode(user.Email, user.FullName, code);
+        _backgroundJobs.EnqueueEmailVerificationCode(user.Email, user.FullName, code, user.PreferredLanguage);
 
         return new RegisterResultDto(user.Email, user.FullName, expiresAt);
     }

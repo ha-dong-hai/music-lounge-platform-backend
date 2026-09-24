@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using MusicLounge.Domain.ValueObjects;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -104,10 +105,16 @@ public sealed class ExpireServedSuspensionsJob
             await _notifications.NotifyAsync(
                 lounge.OwnerId,
                 NotificationType.PenaltyExpired,
-                restored ? "Phòng trà đã được mở khoá" : "Lệnh tạm khoá đã hết hạn",
-                restored
-                    ? $"\"{lounge.Name}\" đã hết hạn tạm khoá theo phạt #{penalty.Id}. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
-                    : $"Lệnh tạm khoá theo phạt #{penalty.Id} đã hết hạn, nhưng \"{lounge.Name}\" chưa được mở khoá. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
+                new SongNgu(
+                    restored ? "Phòng trà đã được mở khoá" : "Lệnh tạm khoá đã hết hạn",
+                    restored ? "Your music lounge has been unlocked" : "Suspension has expired"),
+                new SongNgu(
+                    restored
+                        ? $"\"{lounge.Name}\" đã hết hạn tạm khoá theo phạt #{penalty.Id}. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
+                        : $"Lệnh tạm khoá theo phạt #{penalty.Id} đã hết hạn, nhưng \"{lounge.Name}\" chưa được mở khoá. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
+                    restored
+                        ? $"The suspension of \"{lounge.Name}\" under penalty #{penalty.Id} has ended. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd()
+                        : $"The suspension under penalty #{penalty.Id} has expired, but \"{lounge.Name}\" has not been unlocked yet. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd()),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);

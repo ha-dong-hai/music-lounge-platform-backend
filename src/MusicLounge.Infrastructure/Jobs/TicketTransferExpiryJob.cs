@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -49,14 +50,22 @@ public sealed class TicketTransferExpiryJob
             if (ticket.BuyerId is int senderId)
                 await _notifications.NotifyAsync(
                     senderId, NotificationType.EventReminder,
-                    "Yêu cầu chuyển nhượng vé đã hết hạn",
-                    $"Yêu cầu chuyển nhượng vé của bạn đã hết hạn sau {expiryHours} giờ vì người nhận chưa phản hồi.",
+                    new SongNgu(
+                        "Yêu cầu chuyển nhượng vé đã hết hạn",
+                        "Ticket transfer request expired"),
+                    new SongNgu(
+                        $"Yêu cầu chuyển nhượng vé của bạn đã hết hạn sau {expiryHours} giờ vì người nhận chưa phản hồi.",
+                        $"Your ticket transfer request expired after {expiryHours} hours because the recipient did not respond."),
                     referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
 
             await _notifications.NotifyAsync(
                 recipientId, NotificationType.EventReminder,
-                "Lời mời nhận vé đã hết hạn",
-                $"Lời mời nhận chuyển nhượng vé đã hết hạn vì bạn chưa phản hồi trong {expiryHours} giờ.",
+                new SongNgu(
+                    "Lời mời nhận vé đã hết hạn",
+                    "Ticket invitation expired"),
+                new SongNgu(
+                    $"Lời mời nhận chuyển nhượng vé đã hết hạn vì bạn chưa phản hồi trong {expiryHours} giờ.",
+                    $"The ticket transfer invitation expired because you did not respond within {expiryHours} hours."),
                 referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
         }
 

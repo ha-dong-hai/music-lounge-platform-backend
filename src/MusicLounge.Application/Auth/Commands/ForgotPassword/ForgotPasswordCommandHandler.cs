@@ -49,7 +49,7 @@ internal sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPassw
             await _uow.SaveChangesAsync(ct);
 
             var resetLink = $"{_businessSettings.PasswordResetUrl}?token={Uri.EscapeDataString(rawToken)}";
-            _backgroundJobs.EnqueuePasswordResetEmail(user.Email, user.FullName, resetLink);
+            _backgroundJobs.EnqueuePasswordResetEmail(user.Email, user.FullName, resetLink, user.PreferredLanguage);
         }
 
         return Unit.Value;

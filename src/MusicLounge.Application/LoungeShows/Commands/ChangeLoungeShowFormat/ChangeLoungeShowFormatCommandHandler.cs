@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Tickets;
@@ -80,7 +81,8 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                 if (ticket.PaymentId is null) continue;
 
                 await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                    NotificationType.EventFormatChanged, show.Name, show.Id, "buổi diễn chuyển sang online", ct);
+                    NotificationType.EventFormatChanged, show.Name, show.Id,
+                    new SongNgu("buổi diễn chuyển sang online", "the show moved online"), ct);
 
                 refundRepo.Add(new RefundRequest
                 {
@@ -96,9 +98,15 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                     await _notifications.NotifyAsync(
                         buyerId,
                         NotificationType.EventFormatChanged,
-                        "Event đã chuyển sang hình thức Online",
-                        $"\"{show.Name}\" đã chuyển từ trực tiếp sang online. Vé vật lý của bạn đã được " +
-                        "hủy và tự động tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                        new SongNgu(
+                            "Buổi hòa nhạc đã chuyển sang hình thức online",
+                            "Concert moved online"),
+                        new SongNgu(
+                            $"\"{show.Name}\" đã chuyển từ trực tiếp sang online. Vé vật lý của bạn đã được " +
+                            "hủy và tự động tạo yêu cầu hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                            $"\"{show.Name}\" has moved from in-person to online. Your physical ticket has been " +
+                            "cancelled and a 100% refund request has been created automatically." +
+                            (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
                         referenceType: "show",
                         referenceId: show.Id.ToString(),
                         ct: ct);
@@ -109,7 +117,8 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
         // hoan 100%. Mon da mang ra (Served) la hang da giao, phong tra van thu. Cung thu tu khoa voi ShowCancellation:
         // show-status-change (dang giu o tren) roi moi toi fnb-order:{id}.
         await FnbOrderCancellation.CancelOpenOrdersAsync(
-            _uow, _notifications, _lock, o => o.ShowId == show.Id, servedToo: false, "buổi diễn chuyển sang online", ct);
+            _uow, _notifications, _lock, o => o.ShowId == show.Id, servedToo: false,
+            new SongNgu("buổi diễn chuyển sang online", "the show moved online"), ct);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;

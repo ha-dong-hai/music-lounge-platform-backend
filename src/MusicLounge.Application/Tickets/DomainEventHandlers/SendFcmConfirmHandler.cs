@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Tickets.Events;
@@ -19,8 +20,12 @@ internal sealed class SendFcmConfirmHandler : INotificationHandler<TicketPayment
         return _notifications.NotifyAsync(
             notification.UserId,
             NotificationType.TicketConfirmed,
-            "Đặt vé thành công!",
-            $"Bạn đã đặt {notification.TicketIds.Length} vé thành công. Kiểm tra mục Vé của tôi để xem chi tiết.",
+            new SongNgu(
+                "Đặt vé thành công!",
+                "Booking confirmed!"),
+            new SongNgu(
+                $"Bạn đã đặt {notification.TicketIds.Length} vé thành công. Kiểm tra mục Vé của tôi để xem chi tiết.",
+                $"You have successfully booked {notification.TicketIds.Length} ticket(s). Check My tickets for details."),
             referenceType: "ticket",
             referenceId: notification.TicketIds.FirstOrDefault().ToString(),
             ct: ct);

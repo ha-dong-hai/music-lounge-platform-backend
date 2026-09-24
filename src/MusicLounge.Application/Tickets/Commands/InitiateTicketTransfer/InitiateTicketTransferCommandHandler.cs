@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -72,9 +73,15 @@ internal sealed class InitiateTicketTransferCommandHandler
         await _notifications.NotifyAsync(
             recipient.Id,
             NotificationType.EventReminder,
-            "Bạn nhận được lời mời chuyển nhượng vé",
-            $"Ai đó muốn chuyển vé \"{ticket.Show.Name}\" cho bạn. Vào mục Vé của tôi để chấp nhận hoặc từ chối. " +
-            "Lưu ý: nếu vé được hoàn tiền (ví dụ buổi diễn bị huỷ), tiền luôn hoàn về người đã mua vé ban đầu.",
+            new SongNgu(
+                "Bạn nhận được lời mời chuyển nhượng vé",
+                "You have a ticket transfer invitation"),
+            new SongNgu(
+                $"Ai đó muốn chuyển vé \"{ticket.Show.Name}\" cho bạn. Vào mục Vé của tôi để chấp nhận hoặc từ chối. " +
+                "Lưu ý: nếu vé được hoàn tiền (ví dụ buổi diễn bị huỷ), tiền luôn hoàn về người đã mua vé ban đầu.",
+                $"Someone wants to transfer a ticket for \"{ticket.Show.Name}\" to you. Go to My tickets to accept or decline. " +
+                "Note: if the ticket is refunded (for example, if the show is cancelled), the money always goes back to the " +
+                "original buyer."),
             referenceType: "ticket",
             referenceId: ticket.Id.ToString(),
             ct: ct);

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
@@ -78,7 +79,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
             if (callbackResult.IsSuccess && donation.Status == DonationStatus.Cancelled)
             {
                 await PaymentIncident.RecordConfirmedTooLateAsync(
-                    _uow, _notifications, _logger, "donate", txnRef, callbackResult.Amount,
+                    _uow, _notifications, _logger, new SongNgu("donate", "a donation"), txnRef, callbackResult.Amount,
                     "donation", donation.Id.ToString(), ct);
                 return VnPayIpnOutcome.ConfirmedTooLate;
             }
@@ -228,12 +229,18 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 await _notifications.NotifyAsync(
                     info.OwnerId,
                     NotificationType.DonationReceived,
-                    "Bạn vừa nhận donate!",
-                    // MLACP-361: noi dung phai dung voi dong tien that — truoc day bao chu "xac nhan da
-                    // nhan tien" trong khi nen tang chua chuyen dong nao.
-                    $"Có donate {donation.Gross:N0}đ cho nghệ sĩ. Sau phí nền tảng và thuế, " +
-                    $"{fees.OwnerNet:N0}đ sẽ được chuyển vào tài khoản ngân hàng của phòng trà ở lần giải " +
-                    $"ngân tới. Khi nhận được, hãy xác nhận và chuyển {forPerformer:N0}đ cho nghệ sĩ.",
+                    new SongNgu(
+                        "Bạn vừa nhận donate!",
+                        "You just received a donation!"),
+                    new SongNgu(
+                        // MLACP-361: noi dung phai dung voi dong tien that — truoc day bao chu "xac nhan da
+                        // nhan tien" trong khi nen tang chua chuyen dong nao.
+                        $"Có donate {donation.Gross:N0}đ cho nghệ sĩ. Sau phí nền tảng và thuế, " +
+                        $"{fees.OwnerNet:N0}đ sẽ được chuyển vào tài khoản ngân hàng của phòng trà ở lần giải " +
+                        $"ngân tới. Khi nhận được, hãy xác nhận và chuyển {forPerformer:N0}đ cho nghệ sĩ.",
+                        $"A donation of {donation.Gross:N0} VND was made to a performer. After platform fees and tax, " +
+                        $"{fees.OwnerNet:N0} VND will be transferred to your music lounge's bank account in the next payout. " +
+                        $"Once you receive it, please confirm and transfer {forPerformer:N0} VND to the performer."),
                     referenceType: "donation",
                     referenceId: donation.Id.ToString(),
                     ct: ct);

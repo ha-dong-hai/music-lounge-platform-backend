@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common;
@@ -62,8 +63,12 @@ public sealed class EventReminderJob
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventReminder,
-                    "Sắp đến giờ diễn!",
-                    $"\"{show.Name}\" sẽ bắt đầu lúc {VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}.",
+                    new SongNgu(
+                        "Sắp đến giờ diễn!",
+                        "Showtime is coming up!"),
+                    new SongNgu(
+                        $"\"{show.Name}\" sẽ bắt đầu lúc {VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}.",
+                        $"\"{show.Name}\" starts at {VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy")}."),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);

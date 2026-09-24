@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -63,7 +64,9 @@ public sealed class LivestreamReconnectTimeoutJob
             //
             // MLACP-353: voi show Hybrid, mat stream khong con dong ca buoi — phong that van dien.
             var outcome = await StreamLoss.ApplyToShowAsync(
-                _uow, _config, _notifications, show, "mất kết nối quá thời gian chờ", now, CancellationToken.None);
+                _uow, _config, _notifications, show,
+                new SongNgu("mất kết nối quá thời gian chờ", "the connection was lost for too long"), now,
+                CancellationToken.None);
 
             if (outcome == StreamLossOutcome.AlreadyTerminal)
                 _logger.LogWarning(

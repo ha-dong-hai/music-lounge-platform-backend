@@ -85,6 +85,7 @@ public sealed class EditableFieldsAreReadableTests
         ["Performance"] = ["PerformerSummaryDto"],
         ["AiPreferences"] = ["UserProfileDto"],
         ["MyProfile"] = ["UserProfileDto"],
+        ["MyLanguage"] = ["UserProfileDto"],
         // MLACP-469 mở đường đọc riêng cho Admin: danh mục công khai (CatalogItemDto) cố ý chỉ có
         // (Id, Name) và chỉ trả mục đang bật, nên nó KHÔNG phải đường đọc của lệnh sửa.
         ["EventCategory"] = ["AdminEventCategoryDto"],

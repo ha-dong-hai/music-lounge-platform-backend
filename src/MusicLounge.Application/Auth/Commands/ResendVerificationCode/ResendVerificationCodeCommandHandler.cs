@@ -43,7 +43,7 @@ internal sealed class ResendVerificationCodeCommandHandler : IRequestHandler<Res
             userRepo.Update(user);
             await _uow.SaveChangesAsync(ct);
 
-            _backgroundJobs.EnqueueEmailVerificationCode(user.Email, user.FullName, code);
+            _backgroundJobs.EnqueueEmailVerificationCode(user.Email, user.FullName, code, user.PreferredLanguage);
         }
 
         return Unit.Value;

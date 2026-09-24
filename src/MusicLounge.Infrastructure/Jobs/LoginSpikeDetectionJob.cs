@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Hangfire;
@@ -70,10 +71,16 @@ public sealed class LoginSpikeDetectionJob
                     await _notifications.NotifyAsync(
                         admin.Id,
                         NotificationType.SecurityAlert,
-                        "Cảnh báo bảo mật: nghi ngờ tấn công dò mật khẩu hàng loạt",
-                        $"Phát hiện {group.Count()} lượt đăng nhập thất bại trên {distinctAccounts} tài khoản " +
-                        $"khác nhau từ cùng một địa chỉ IP ({ip}) trong {_settings.LoginSpikeWindowMinutes} phút qua " +
-                        "— có thể là tấn công dò mật khẩu hàng loạt (credential stuffing). Vui lòng kiểm tra.",
+                        new SongNgu(
+                            "Cảnh báo bảo mật: nghi ngờ tấn công dò mật khẩu hàng loạt",
+                            "Security alert: suspected credential stuffing attack"),
+                        new SongNgu(
+                            $"Phát hiện {group.Count()} lượt đăng nhập thất bại trên {distinctAccounts} tài khoản " +
+                            $"khác nhau từ cùng một địa chỉ IP ({ip}) trong {_settings.LoginSpikeWindowMinutes} phút qua " +
+                            "— có thể là tấn công dò mật khẩu hàng loạt (credential stuffing). Vui lòng kiểm tra.",
+                            $"Detected {group.Count()} failed logins across {distinctAccounts} different accounts from the same IP " +
+                            $"address ({ip}) in the last {_settings.LoginSpikeWindowMinutes} minutes — this may be a credential stuffing " +
+                            "attack. Please investigate."),
                         referenceType: "security_ip",
                         referenceId: ip,
                         ct: ct);

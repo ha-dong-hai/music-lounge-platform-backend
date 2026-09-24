@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using MusicLounge.Domain.ValueObjects;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Tickets;
@@ -144,7 +145,8 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             if (ticket.PaymentId is null) continue;
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                NotificationType.EventCancelled, show.Name, show.Id, "buổi diễn không được phát sóng", ct);
+                NotificationType.EventCancelled, show.Name, show.Id,
+                new SongNgu("buổi diễn không được phát sóng", "the show was never broadcast"), ct);
 
             _ctx.RefundRequests.Add(new RefundRequest
             {
@@ -162,10 +164,16 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
-                    "Buổi diễn không được phát sóng",
-                    $"\"{show.Name}\" chưa bao giờ lên sóng nên bạn không xem được gì. Vé của bạn đã " +
-                    "được huỷ và chúng tôi đã tự động tạo yêu cầu hoàn 100% tiền vé — bạn không cần " +
-                    "làm gì thêm." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                    new SongNgu(
+                        "Buổi diễn không được phát sóng",
+                        "The show was never broadcast"),
+                    new SongNgu(
+                        $"\"{show.Name}\" chưa bao giờ lên sóng nên bạn không xem được gì. Vé của bạn đã " +
+                        "được huỷ và chúng tôi đã tự động tạo yêu cầu hoàn 100% tiền vé — bạn không cần " +
+                        "làm gì thêm." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
+                        $"\"{show.Name}\" never went live, so there was nothing for you to watch. Your ticket has been " +
+                        "cancelled and we have automatically created a 100% refund request — you do not need to do anything." +
+                        (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
                     referenceType: "show",
                     referenceId: show.Id.ToString(),
                     ct: ct);
@@ -260,7 +268,8 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
                 : TicketStatus.Cancelled;
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
-                NotificationType.LivestreamCutShort, show.Name, show.Id, "buổi phát sóng bị cắt ngang", ct);
+                NotificationType.LivestreamCutShort, show.Name, show.Id,
+                new SongNgu("buổi phát sóng bị cắt ngang", "the broadcast was cut short"), ct);
 
             _ctx.RefundRequests.Add(new RefundRequest
             {
@@ -285,12 +294,21 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             await _notifications.NotifyAsync(
                 buyerId,
                 NotificationType.LivestreamCutShort,
-                "Buổi phát sóng bị cắt ngang",
-                $"\"{show.Name}\" chỉ phát được {deliveredPct}% thời lượng đã bán. Chúng tôi đã tự " +
-                "động tạo yêu cầu hoàn 100% tiền vé livestream — bạn không cần làm gì thêm. " +
-                "Nếu bạn đã vào xem, bạn vẫn đánh giá được buổi diễn này." +
-                (affected.Any(t => t.BuyerId == buyerId && TicketRefundRecipients.WasTransferred(t, payers))
-                    ? TicketRefundRecipients.TransferredHolderNote : ""),
+                new SongNgu(
+                    "Buổi phát sóng bị cắt ngang",
+                    "The broadcast was cut short"),
+                new SongNgu(
+                    $"\"{show.Name}\" chỉ phát được {deliveredPct}% thời lượng đã bán. Chúng tôi đã tự " +
+                    "động tạo yêu cầu hoàn 100% tiền vé livestream — bạn không cần làm gì thêm. " +
+                    "Nếu bạn đã vào xem, bạn vẫn đánh giá được buổi diễn này." +
+                    (affected.Any(t => t.BuyerId == buyerId && TicketRefundRecipients.WasTransferred(t, payers))
+                        ? TicketRefundRecipients.TransferredHolderNote : ""),
+                    $"\"{show.Name}\" broadcast only {deliveredPct}% of the time that was sold. We have automatically " +
+                    "created a 100% refund request for your livestream ticket — you do not need to do anything. " +
+                    "If you watched, you can still rate this show." +
+                    (affected.Any(t => t.BuyerId == buyerId && TicketRefundRecipients.WasTransferred(t, payers))
+                        ? TicketRefundRecipients.TransferredHolderNoteEn
+                        : "")),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);
@@ -306,10 +324,16 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             await _notifications.NotifyAsync(
                 owner,
                 NotificationType.LivestreamCutShort,
-                "Buổi phát sóng không đủ thời lượng",
-                $"\"{show.Name}\" chỉ phát được {deliveredPct}% thời lượng đã bán, dưới ngưỡng " +
-                $"{thresholdPct}%. {affected.Count} vé livestream đã được tạo yêu cầu hoàn 100%; " +
-                "các khoản này sẽ được trừ khỏi quyết toán của buổi diễn.",
+                new SongNgu(
+                    "Buổi phát sóng không đủ thời lượng",
+                    "Broadcast fell short of its duration"),
+                new SongNgu(
+                    $"\"{show.Name}\" chỉ phát được {deliveredPct}% thời lượng đã bán, dưới ngưỡng " +
+                    $"{thresholdPct}%. {affected.Count} vé livestream đã được tạo yêu cầu hoàn 100%; " +
+                    "các khoản này sẽ được trừ khỏi quyết toán của buổi diễn.",
+                    $"\"{show.Name}\" broadcast only {deliveredPct}% of the time that was sold, below the " +
+                    $"{thresholdPct}% threshold. Refund requests for 100% have been created for {affected.Count} livestream " +
+                    "tickets; these amounts will be deducted from the show's settlement."),
                 referenceType: "show",
                 referenceId: show.Id.ToString(),
                 ct: ct);
@@ -359,6 +383,15 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
               $"{WholePercent(threshold)}%), nên vé không được hoàn tự động"
             : "";
 
+        // MLACP-489: bản tiếng Anh của hai cụm trên — cùng điều kiện, cùng con số.
+        var whatEn = livestream.Status == LivestreamStatus.Terminated
+            ? "was stopped by the platform"
+            : "lost its signal from the music lounge and could not reconnect";
+        var measuredEn = evidence.Verdict == ShowCompletionVerdict.Measured
+            ? $" after broadcasting {WholePercent(evidence.Ratio!.Value)}% of the time that was sold (meeting the " +
+              $"{WholePercent(threshold)}% threshold), so tickets were not refunded automatically"
+            : "";
+
         var told = 0;
 
         foreach (var buyerId in buyerIds.Where(id => !alreadyTold.Contains(id)))
@@ -366,9 +399,14 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             await _notifications.NotifyAsync(
                 buyerId,
                 NotificationType.LivestreamCutShort,
-                "Buổi phát sóng đã dừng giữa chừng",
-                $"\"{show.Name}\" {what}{measured}. Nếu bạn thấy chưa thỏa đáng, hãy gửi khiếu nại " +
-                "về buổi diễn này để Admin xem xét.",
+                new SongNgu(
+                    "Buổi phát sóng đã dừng giữa chừng",
+                    "The broadcast stopped partway through"),
+                new SongNgu(
+                    $"\"{show.Name}\" {what}{measured}. Nếu bạn thấy chưa thỏa đáng, hãy gửi khiếu nại " +
+                    "về buổi diễn này để Admin xem xét.",
+                    $"\"{show.Name}\" {whatEn}{measuredEn}. If you are not satisfied, please file a complaint " +
+                    "about this show for an Admin to review."),
                 referenceType: "show",
                 referenceId: referenceId,
                 ct: ct);

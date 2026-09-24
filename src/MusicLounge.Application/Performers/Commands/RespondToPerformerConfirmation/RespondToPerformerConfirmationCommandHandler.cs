@@ -1,3 +1,4 @@
+using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Donations;
@@ -114,10 +115,16 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
             await _notifications.NotifyAsync(
                 admin.Id,
                 NotificationType.SecurityAlert,
-                "Nghệ sĩ báo tài khoản nhận tiền không phải của họ",
-                $"Nghệ sĩ \"{performer.Name}\" báo tài khoản {account.BankName} {masked} (tài khoản #{account.Id}) " +
-                $"không phải của họ. Tài khoản do người dùng #{performer.CreatedByUserId} nhập." +
-                (note is null ? "" : $" Ghi chú của nghệ sĩ: {note}"),
+                new SongNgu(
+                    "Nghệ sĩ báo tài khoản nhận tiền không phải của họ",
+                    "A performer reports that a payout account is not theirs"),
+                new SongNgu(
+                    $"Nghệ sĩ \"{performer.Name}\" báo tài khoản {account.BankName} {masked} (tài khoản #{account.Id}) " +
+                    $"không phải của họ. Tài khoản do người dùng #{performer.CreatedByUserId} nhập." +
+                    (note is null ? "" : $" Ghi chú của nghệ sĩ: {note}"),
+                    $"Performer \"{performer.Name}\" reports that the account {account.BankName} {masked} (account #{account.Id}) " +
+                    $"is not theirs. The account was entered by user #{performer.CreatedByUserId}." +
+                    (note is null ? "" : $" Performer's note: {note}")),
                 referenceType: "bank_account",
                 referenceId: account.Id.ToString(),
                 ct: ct);
