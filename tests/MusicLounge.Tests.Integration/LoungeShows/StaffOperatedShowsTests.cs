@@ -79,6 +79,36 @@ public sealed class StaffOperatedShowsTests
         ds.Should().BeEmpty("không được phân công phòng trà nào thì không có buổi nào để vận hành");
     }
 
+    /// <summary>
+    /// Đường thứ hai của cùng quy tắc: <c>GET /lounge-shows/mine</c>. MLACP-466 đã cho handler của nó dùng
+    /// <c>OperatedShows</c>, nhưng route vẫn gắn <c>RequireOwner</c> — nhân viên bị chặn 403 TRƯỚC khi tới
+    /// handler, nên nửa sửa đó không bao giờ tới được nhân viên. Bốn test trên chỉ đi đường <c>?mine=true</c>
+    /// nên không thấy. Phát hiện 30/09 khi màn Vận hành đêm diễn của nhân viên báo "không có quyền".
+    /// </summary>
+    [Fact]
+    public async Task NhanVien_ThayBuoiQuaDuongMine_KhongBiChanQuyen()
+    {
+        var show = await BuoiHoaNhacAsync(SeedHelper.LoungeId, LoungeShowStatus.Published);
+        var nhanVien = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
+
+        var res = await nhanVien.GetAsync("/api/v1/lounge-shows/mine?page=1&pageSize=100");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
+            .Select(x => x.GetProperty("id").GetGuid()).Should().Contain(show);
+    }
+
+    [Fact]
+    public async Task KhanGia_VanBiChanODuongMine()
+    {
+        var khanGia = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        var res = await khanGia.GetAsync("/api/v1/lounge-shows/mine");
+
+        res.StatusCode.Should().Be(HttpStatusCode.Forbidden, "mở cho nhân viên không có nghĩa là mở cho mọi người");
+    }
+
     [Fact]
     public async Task ChuPhongTra_VanThayBuoiCuaMinhNhuTruoc()
     {

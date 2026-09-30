@@ -207,10 +207,12 @@ public sealed class LoungeShowsController : ControllerBase
         return Ok(ApiResponse<FilterOptionsDto>.Ok(result));
     }
 
-    /// <summary>Chỉ trả buổi diễn của đúng Owner đang đăng nhập (mọi trạng thái, kể cả Draft) — lọc
-    /// theo trạng thái qua query param `status` nếu có.</summary>
+    /// <summary>Buổi diễn của phòng trà người gọi VẬN HÀNH (mọi trạng thái, kể cả Draft): chủ thấy buổi của mình,
+    /// nhân viên thấy buổi của phòng trà được phân công (OperatedShows, MLACP-466) — lọc theo `status` nếu có.
+    /// RequireVenueOperator chứ không phải RequireOwner: MLACP-466 đã cho handler hiểu vai nhân viên nhưng route
+    /// vẫn chặn nhân viên ở cửa (403), nên nửa sửa đó không bao giờ tới được họ.</summary>
     [HttpGet("mine")]
-    [Authorize(Policy = Policies.RequireOwner)]
+    [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine(
         [FromQuery] LoungeShowStatus? status = null,
