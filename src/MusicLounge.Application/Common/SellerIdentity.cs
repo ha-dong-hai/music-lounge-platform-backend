@@ -45,4 +45,13 @@ public static class SellerIdentity
         _ =>
             "Chủ phòng trà chưa nộp CCCD/CMND để xác minh danh tính người bán."
     };
+
+    /// <summary>
+    /// Che số CCCD/CMND, chỉ để lộ 4 số cuối — đủ để người xem nhận ra đúng hồ sơ, không đủ để lộ số.
+    /// Dùng chung cho hàng đợi duyệt của Admin và màn xem trạng thái của chính chủ.
+    /// </summary>
+    public static string? MaskCardNumber(string? cardNumber)
+        => cardNumber is null || cardNumber.Length < 4
+            ? cardNumber
+            : new string('•', cardNumber.Length - 4) + cardNumber[^4..];
 }

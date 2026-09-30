@@ -17,6 +17,7 @@ using MusicLounge.Application.Users.Commands.VerifyPhone;
 using MusicLounge.Application.Users.DTOs;
 using MusicLounge.Application.Users.Queries.GetMyCitizenCardImage;
 using MusicLounge.Application.Users.Queries.GetMyTaxProfile;
+using MusicLounge.Application.Users.Queries.GetMyCitizenCard;
 using MusicLounge.Application.Users.Queries.GetMyDataExport;
 using MusicLounge.Application.Users.Queries.GetMyEarnings;
 using MusicLounge.Application.Users.Queries.GetMyProfile;
@@ -125,6 +126,18 @@ public sealed class MeController : ControllerBase
     {
         var result = await _sender.Send(new GetMyTaxProfileQuery(), ct);
         return Ok(ApiResponse<TaxProfileDto>.Ok(result));
+    }
+
+    /// <summary>Trạng thái xác minh CCCD/CMND của chính mình: đã nộp chưa, Admin duyệt hay từ chối và vì sao, đã được
+    /// phép bán chưa. Số CCCD chỉ trả 4 số cuối.</summary>
+    [HttpGet("citizen-card")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType<ApiResponse<CitizenCardStatusDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMyCitizenCard(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyCitizenCardQuery(), ct);
+        return Ok(ApiResponse<CitizenCardStatusDto>.Ok(result));
     }
 
     /// <summary>Xem lại ảnh CCCD/CMND đã nộp — chỉ chính chủ. File nằm ngoài wwwroot, không đoán URL truy cập trực tiếp được.</summary>

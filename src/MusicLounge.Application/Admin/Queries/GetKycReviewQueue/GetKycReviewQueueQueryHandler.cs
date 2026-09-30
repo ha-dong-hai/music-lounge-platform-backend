@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -45,7 +46,7 @@ internal sealed class GetKycReviewQueueQueryHandler
                 u.FullName,
                 u.DateOfBirth,
                 u.Email,
-                Mask(Decrypt(u.CitizenCardNumber)),
+                SellerIdentity.MaskCardNumber(Decrypt(u.CitizenCardNumber)),
                 u.CitizenCardSubmittedAt,
                 u.CitizenCardReviewStatus?.ToString(),
                 u.BusinessType?.ToString(),
@@ -66,9 +67,4 @@ internal sealed class GetKycReviewQueueQueryHandler
 
     private string? Decrypt(string? ciphertext)
         => ciphertext is null ? null : _piiEncryption.TryDecrypt(ciphertext);
-
-    private static string? Mask(string? cardNumber)
-        => cardNumber is null || cardNumber.Length < 4
-            ? cardNumber
-            : new string('•', cardNumber.Length - 4) + cardNumber[^4..];
 }
