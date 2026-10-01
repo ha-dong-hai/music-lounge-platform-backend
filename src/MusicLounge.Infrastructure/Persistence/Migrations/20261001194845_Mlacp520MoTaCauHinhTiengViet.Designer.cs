@@ -12,7 +12,7 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261001193548_Mlacp520MoTaCauHinhTiengViet")]
+    [Migration("20261001194845_Mlacp520MoTaCauHinhTiengViet")]
     partial class Mlacp520MoTaCauHinhTiengViet
     {
         /// <inheritdoc />
@@ -1141,13 +1141,6 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<string>("ProviderRef")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("RecordingUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTimeOffset?>("ReplayAvailableUntil")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("RtmpUrl")
                         .HasMaxLength(500)
