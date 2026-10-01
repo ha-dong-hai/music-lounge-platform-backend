@@ -83,7 +83,12 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             // ho). Chuyen ve sang Used de RateShowCommandHandler cho phep danh gia.
             _backgroundJobs.EnqueueLivestreamCheckIn(_currentUser.UserId, livestream.LoungeShowId);
 
-            viewingSessionId = await OpenViewingSessionAsync(request.LivestreamId, now, ct);
+            // MLACP-513: buổi đã ở trạng thái cuối thì không còn gì để xem — không mở phiên, nên cũng không áp giới hạn
+            // thiết bị. Trước đây khán giả có vé tải lại trang sau khi buổi kết thúc bị 422 "đang xem trên 2 thiết bị"
+            // thay vì thấy màn "đã kết thúc" (fe đo bằng Mux thật, M-442). Scheduled vẫn mở phiên: khán giả vào trang trước
+            // giờ phát cần sẵn phiên khi luồng bắt đầu (chưa có sự kiện hub "bắt đầu phát" để client lấy phiên lúc đó).
+            if (livestream.Status is not (LivestreamStatus.Ended or LivestreamStatus.Terminated or LivestreamStatus.Failed))
+                viewingSessionId = await OpenViewingSessionAsync(request.LivestreamId, request.ViewingSessionId, now, ct);
         }
 
         // MLACP-121: cung quyen xem nhu HlsUrl (PPV/mien phi/van hanh venue), CONG THEM het han xem
@@ -117,7 +122,8 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
     // 1 Command riêng vì client cần ViewingSessionId ngay trong response đầu tiên để bắt đầu
     // heartbeat — tách command cho lần mở đầu sẽ buộc client gọi 2 request tuần tự trước khi có thể
     // phát. Các lần giữ phiên sống SAU đó dùng SendLivestreamHeartbeatCommand (Command thật sự).
-    private async Task<string> OpenViewingSessionAsync(int livestreamId, DateTimeOffset now, CancellationToken ct)
+    private async Task<string> OpenViewingSessionAsync(
+        int livestreamId, string? previousSessionId, DateTimeOffset now, CancellationToken ct)
     {
         var ticket = await _livestreamRepo.GetViewerTicketAsync(livestreamId, _currentUser.UserId, ct);
         if (ticket is null)
@@ -136,6 +142,23 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
         // sau khi da vat chat hoa — giong pattern SubscribeToPackageCommandHandler dang dung cho
         // ExpiresAt.
         var sessionsForTicket = await sessionRepo.FindAsync(s => s.TicketId == ticket.Id, ct);
+
+        // MLACP-513: tải lại trang trên CÙNG trình duyệt dùng lại phiên cũ thay vì mở phiên mới. Trước đây mỗi lần gọi là
+        // một phiên mới, phiên cũ còn sống tới hết hạn heartbeat (~90 s) — F5 hai lần là đủ chạm giới hạn 2 thiết bị
+        // (fe đo M-441). Chỉ nhận phiên của ĐÚNG vé này, đúng buổi phát này và còn sống; còn lại coi như chưa có phiên.
+        if (!string.IsNullOrEmpty(previousSessionId))
+        {
+            var cu = sessionsForTicket.FirstOrDefault(s =>
+                s.SessionId == previousSessionId && s.LivestreamId == livestreamId && s.LastHeartbeatAt >= cutoff);
+            if (cu is not null)
+            {
+                cu.LastHeartbeatAt = now;
+                sessionRepo.Update(cu);
+                await _uow.SaveChangesAsync(ct);
+                return cu.SessionId;
+            }
+        }
+
         var activeSessionCount = sessionsForTicket.Count(s => s.LastHeartbeatAt >= cutoff);
         if (activeSessionCount >= maxSessions)
             throw new DomainException(
