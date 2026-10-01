@@ -22,9 +22,10 @@ public sealed class Livestream : Common.AuditableEntity<int>
     public int ViewerCount { get; set; }
     public int PeakViewerCount { get; set; }
     public int TotalViews { get; set; }
+    // MLACP-510: KHONG CON doc/ghi (he thong khong co xem lai). Hai cot con trong DB vi expand–contract: deploy code
+    // nay truoc, roi MLACP-511 moi xoa cot + xoa hai thuoc tinh nay (xoa cot truoc khi deploy se lam code cu dang chay
+    // vo khi EF doc cot da mat).
     public string? RecordingUrl { get; set; }
-    // MLACP-121: set cung luc voi RecordingUrl khi Mux bao asset (ban ghi) da san sang
-    // (video.asset.ready) - null nghia la chua co ban ghi hoac khong gioi han thoi gian xem lai.
     public DateTimeOffset? ReplayAvailableUntil { get; set; }
     public int? TerminatedById { get; set; }
     public string? TerminatedReason { get; set; }

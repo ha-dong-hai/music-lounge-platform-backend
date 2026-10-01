@@ -169,10 +169,10 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                         payment, tickets, showNow, NotIssued.WentOnline, result, txnRef, ct);
 
                 // MLACP-389: buoi dien da KET THUC luc tien ve. Ve cua giao dich nay con Pending nen chua tung soat duoc —
-                // CheckIn doi show Ongoing VA ve Confirmed — nen cap ve bay gio la ban ve cho mot buoi dien da xong. Tru ve
-                // livestream con xem lai duoc ban ghi: nguoi mua van nhan duoc thu minh tra tien (xem ReplayStillDeliverable).
-                if (showNow.Status == LoungeShowStatus.Ended
-                    && !await ReplayStillDeliverableAsync(showNow, tierNow, ct))
+                // CheckIn doi show Ongoing VA ve Confirmed — nen cap ve bay gio la ban ve cho mot buoi dien da xong.
+                // MLACP-510: ap cho CA ve livestream — truoc day ve livestream duoc cap neu con ban ghi xem lai, nhung he
+                // thong khong co xem lai (chu du an chot "bo han" 01/10), nen nguoi mua khong nhan duoc gi -> hoan 100%.
+                if (showNow.Status == LoungeShowStatus.Ended)
                     return await RecordNotIssuedAsync(
                         payment, tickets, showNow, NotIssued.ShowEnded, result, txnRef, ct);
             }
@@ -393,21 +393,6 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             "payment", payment.Id.ToString(), ct, refundRequestId: refund.Id);
 
         return VnPayIpnOutcome.ConfirmedTooLate;
-    }
-
-    /// <summary>
-    /// MLACP-389. Vé livestream của buổi diễn đã kết thúc vẫn giao được giá trị khi người mua xem lại được bản ghi NGAY
-    /// BÂY GIỜ — đúng điều kiện <c>GetLivestreamDetailQueryHandler</c> dùng khi trả link xem lại: có
-    /// <c>RecordingUrl</c> (Mux asset.ready đã về) và chưa quá <c>ReplayAvailableUntil</c>. Bản ghi chưa về thì không
-    /// hứa trước: có buổi không bao giờ có bản ghi, nên hoàn tiền là lựa chọn không để ai trả tiền mà không nhận gì.
-    /// Vé vào cửa thì không.
-    /// </summary>
-    private async Task<bool> ReplayStillDeliverableAsync(LoungeShow show, TicketTier? tier, CancellationToken ct)
-    {
-        if (tier?.AccessType != AccessType.Livestream) return false;
-        var livestream = await _livestreamRepo.GetByShowIdAsync(show.Id, ct);
-        return livestream?.RecordingUrl is not null
-               && (livestream.ReplayAvailableUntil is null || DateTimeOffset.UtcNow <= livestream.ReplayAvailableUntil);
     }
 
     /// <summary>Vì sao vé không được cấp dù VNPay đã thu tiền.</summary>

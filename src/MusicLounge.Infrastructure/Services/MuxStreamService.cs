@@ -28,7 +28,8 @@ public sealed class MuxStreamService : ILivestreamService
         var body = new
         {
             playback_policy = new[] { "public" },
-            new_asset_settings = new { playback_policy = new[] { "public" } },
+            // MLACP-510: KHÔNG gửi new_asset_settings — trường đó bảo Mux ghi lại cả buổi phát thành một Asset (bản ghi
+            // VOD, tính phí lưu trữ). Hệ thống không có xem lại (chủ dự án chốt 16/09, "bỏ hẳn" 01/10).
             passthrough = name
         };
 

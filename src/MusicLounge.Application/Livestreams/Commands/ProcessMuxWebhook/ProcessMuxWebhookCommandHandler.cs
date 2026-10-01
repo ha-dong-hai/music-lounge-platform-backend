@@ -26,11 +26,8 @@ namespace MusicLounge.Application.Livestreams.Commands.ProcessMuxWebhook;
 //     chuyen ve Live (xoa DisconnectedAt, bao khan gia phat song tiep tuc). Neu khong (vd lan connect
 //     dau tien) thi bo qua - khong tu dong Scheduled -> Live, cung triet ly voi .active o duoi.
 //   video.live_stream.warning: chi canh bao chat luong, khong phai mat ket noi - chi log.
-//   video.asset.ready (MLACP-121): Mux tu dong tao 1 Asset (ban ghi VOD) khi live stream duoc tao
-//     voi new_asset_settings (MuxStreamService.CreateStreamAsync da bat san) va stream ket thuc.
-//     Asset nay tra ve live_stream_id (lien ket nguoc ve Livestream.ProviderRef) va playback_ids[] -
-//     dung playback_id public dau tien de dung URL HLS xem lai, luu vao RecordingUrl kem
-//     ReplayAvailableUntil = now + livestream_replay_days (system_config).
+//   video.asset.ready: BO QUA (MLACP-510). Truoc day (MLACP-121) dung de luu ban ghi xem lai — he thong
+//     khong co xem lai, va MuxStreamService khong con xin Mux ghi hinh nen event nay khong con den.
 //   Cac event khac (created/connected/recording/updated/enabled/disabled/deleted): bo qua.
 //
 // So nguoi xem realtime: Mux KHONG tra ve viewer count trong bat ky live-stream webhook nao (xac
@@ -86,9 +83,6 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
             _logger.LogInformation("Mux webhook ignored — missing type/data at {At}", DateTimeOffset.UtcNow);
             return true;
         }
-
-        if (envelope.Type == "video.asset.ready")
-            return await HandleAssetReadyAsync(envelope.Data, ct);
 
         // Voi moi event live_stream.* con lai, data.id chinh la live stream id (khac voi
         // video.asset.ready o tren, noi data.id la asset id — lien ket ve live stream qua
@@ -245,54 +239,6 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
             "Mux idle webhook auto-ended livestream — LivestreamId={LivestreamId} ShowId={ShowId} " +
             "(encoder disconnected without an explicit End call) at {At}",
             livestream.Id, show.Id, now);
-
-        return true;
-    }
-
-    private async Task<bool> HandleAssetReadyAsync(MuxWebhookData data, CancellationToken ct)
-    {
-        var liveStreamId = data.LiveStreamId;
-        if (string.IsNullOrEmpty(liveStreamId))
-        {
-            // Asset khong duoc tao tu live stream (vd upload truc tiep) — khong lien quan gi den
-            // he thong nay, moi Asset cua chung ta deu phai xuat phat tu 1 Livestream.
-            _logger.LogInformation(
-                "Mux asset.ready ignored — no live_stream_id (not created from a livestream) at {At}",
-                DateTimeOffset.UtcNow);
-            return true;
-        }
-
-        var playbackId = data.PlaybackIds?.FirstOrDefault(p => p.Policy == "public")?.Id;
-        if (playbackId is null)
-        {
-            _logger.LogWarning(
-                "Mux asset.ready — no public playback_id for LiveStreamProviderRef={ProviderRef} at {At}",
-                liveStreamId, DateTimeOffset.UtcNow);
-            return true;
-        }
-
-        var livestreams = await _uow.Repository<Livestream, int>()
-            .FindAsync(l => l.ProviderRef == liveStreamId, ct);
-        var livestream = livestreams.FirstOrDefault();
-        if (livestream is null)
-        {
-            _logger.LogInformation(
-                "Mux asset.ready ignored — no Livestream found for ProviderRef={ProviderRef} at {At}",
-                liveStreamId, DateTimeOffset.UtcNow);
-            return true;
-        }
-
-        var replayDays = await _config.GetIntAsync(ConfigKeys.LivestreamReplayDays, 30, ct);
-        var now = DateTimeOffset.UtcNow;
-
-        livestream.RecordingUrl = $"https://stream.mux.com/{playbackId}.m3u8";
-        livestream.ReplayAvailableUntil = now.AddDays(replayDays);
-        _uow.Repository<Livestream, int>().Update(livestream);
-        await _uow.SaveChangesAsync(ct);
-
-        _logger.LogInformation(
-            "Mux asset.ready — recording saved for LivestreamId={LivestreamId} ReplayAvailableUntil={ReplayAvailableUntil} at {At}",
-            livestream.Id, livestream.ReplayAvailableUntil, now);
 
         return true;
     }

@@ -115,10 +115,6 @@ public static class ConfigKeys
     // `AddDays(7)` that happened to match this key's seeded value by coincidence, not by wiring.
     public const string RatingWindowDays = "rating_window_days";
 
-    // MLACP-121: so ngay khan gia co ve duoc xem lai ban ghi livestream sau khi asset san sang
-    // (Mux video.asset.ready). Khong seed san trong migration nao — dung mac dinh tai noi doc.
-    public const string LivestreamReplayDays = "livestream_replay_days";
-
     // Gioi han ve/buoi hoa nhac ap dung cho venue CHUA co goi subscription nao dang hoat dong.
     // Truoc day khong co goi nghia la khong co gioi han — mot nhanh if quen viet chu khong phai mot
     // chinh sach ai do chon. Khong seed san — dung mac dinh tai noi doc.

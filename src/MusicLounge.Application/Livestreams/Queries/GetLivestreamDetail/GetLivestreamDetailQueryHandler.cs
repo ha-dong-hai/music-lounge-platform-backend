@@ -86,12 +86,6 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             viewingSessionId = await OpenViewingSessionAsync(request.LivestreamId, now, ct);
         }
 
-        // MLACP-121: cung quyen xem nhu HlsUrl (PPV/mien phi/van hanh venue), CONG THEM het han xem
-        // lai bi chan — ReplayAvailableUntil null nghia la chua co ban ghi (asset.ready chua toi)
-        // hoac khong gioi han, con lai phai con hieu luc tai thoi diem goi.
-        var replayStillValid = livestream.ReplayAvailableUntil is null || now <= livestream.ReplayAvailableUntil;
-        var recordingUrl = userHasAccess && replayStillValid ? livestream.RecordingUrl : null;
-
         return new LivestreamDetailDto(
             livestream.Id,
             livestream.LoungeShowId,
@@ -103,7 +97,6 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             livestream.EndedAt,
             livestream.TerminatedReason,
             userHasAccess,
-            recordingUrl,
             viewingSessionId,
             livestream.IsFree,
             livestream.ChatEnabled);

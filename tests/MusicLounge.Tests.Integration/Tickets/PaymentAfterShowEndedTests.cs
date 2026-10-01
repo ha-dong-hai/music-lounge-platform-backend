@@ -15,7 +15,7 @@ namespace MusicLounge.Tests.Integration.Tickets;
 /// <summary>
 /// MLACP-389. Tiền VNPay về khi buổi diễn đã kết thúc (mua lúc đang diễn, IPN về muộn — VNPay gọi lại tới ~50 phút).
 /// Vé của giao dịch đó còn Pending nên chưa từng soát được (soát vé đòi show Ongoing và vé Confirmed) — cấp vé lúc này là
-/// bán vé cho một buổi diễn đã xong. Trừ vé livestream còn xem lại được bản ghi. Mỗi bài một phòng trà riêng.
+/// bán vé cho một buổi diễn đã xong — áp cho cả vé livestream (MLACP-510: không có xem lại). Mỗi bài một phòng trà riêng.
 /// </summary>
 [Collection("Integration")]
 public sealed class PaymentAfterShowEndedTests
@@ -146,19 +146,21 @@ public sealed class PaymentAfterShowEndedTests
             .Should().BeTrue();
     }
 
+    // MLACP-510: trước đây vé livestream vẫn được cấp nếu còn bản ghi xem lại. Hệ thống không có xem lại (chủ dự án chốt
+    // "bỏ hẳn" 01/10) — kể cả khi DB còn sót một RecordingUrl cũ, người mua không có gì để xem, nên phải hoàn 100%.
     [Fact]
-    public async Task ALivestreamTicketPaidAfterTheShowEnded_IsStillIssued_WhileTheReplayIsAvailable()
+    public async Task ALivestreamTicketPaidAfterTheShowEnded_IsRefunded_EvenIfAnOldRecordingIsStillStored()
     {
         var (showId, priceId) = await ShowAsync(AccessType.Livestream, (Recording, DateTimeOffset.UtcNow.AddDays(7)));
         var purchase = await StartPaymentAsync(priceId);
         await SetShowStatusAsync(showId, LoungeShowStatus.Ended);
 
-        (await PaidIpnAsync(purchase)).RspCode.Should().Be("00");
+        (await PaidIpnAsync(purchase)).RspCode.Should().Be("02");
 
         var (tickets, refunds) = await StateAsync(purchase.PaymentId);
-        tickets.Should().OnlyContain(t => t.Status == TicketStatus.Confirmed,
-            "the buyer can still watch the recording they paid for");
-        refunds.Should().BeEmpty();
+        tickets.Should().OnlyContain(t => t.Status == TicketStatus.Cancelled,
+            "there is no replay, so a livestream ticket for a finished show delivers nothing");
+        refunds.Should().ContainSingle().Which.RefundPercentage.Should().Be(100m);
     }
 
     [Fact]
