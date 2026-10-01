@@ -136,6 +136,9 @@ internal static class ThongDiepSongNgu
             ["Buổi diễn đã đăng chỉ được thêm hạng vé livestream, và chỉ khi hình thức là online hoặc hybrid — hạng vé vào cửa và giá đã công bố được giữ nguyên như đã hứa với người mua."] = "A published concert may only have livestream ticket tiers added, and only when its format is online or hybrid — door tiers and published prices stay exactly as promised to buyers.",
             ["Buổi diễn đã kết thúc hoặc đã bị huỷ — không còn gì để mở bán."] = "The concert has ended or been cancelled — there is nothing left to put on sale.",
             ["Buổi diễn này không có khán giả tại chỗ (chỉ diễn online hoặc đã bị huỷ) — không nhận order F&B gắn với buổi diễn này."] = "This concert has no audience on site (it is online only, or it was cancelled) — food and drink orders cannot be attached to it.",
+            // MLACP-509: thêm tay — dich-*.json / sinh-tu-dien.mjs chưa có hai câu này.
+            ["Buổi diễn tại chỗ (Offline) không bán vé xem trực tuyến — chỉ buổi online hoặc hybrid mới có hạng vé livestream."] = "An on-site (Offline) concert does not sell livestream tickets — only online or hybrid concerts can have this tier.",
+            ["Buổi diễn trực tuyến (Online) không có chỗ ngồi tại phòng trà — không tạo được hạng vé vào cửa."] = "An online concert has no seats at the lounge — a door ticket tier cannot be created.",
             ["Buổi hòa nhạc này đang có một poster được tạo. Vui lòng đợi kết quả trước khi tạo thêm."] = "A poster is already being generated for this concert. Please wait for it to finish before starting another.",
             ["Category không hợp lệ."] = "Invalid category.",
             ["CategoryId không tồn tại."] = "CategoryId does not exist.",
