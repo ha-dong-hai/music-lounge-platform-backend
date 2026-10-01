@@ -20,6 +20,7 @@ using MusicLounge.Application.Lounges.Commands.SetLoungeAreaLayoutImage;
 using MusicLounge.Application.Lounges.Commands.SetLoungeBusinessLicense;
 using MusicLounge.Application.Lounges.Commands.SetLoungeModel3D;
 using MusicLounge.Application.Lounges.Queries.GetLoungeBusinessLicense;
+using MusicLounge.Application.Lounges.Commands.ClearLoungeImage;
 using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
 using MusicLounge.Application.Lounges.Commands.SetVenueTourScenePosition;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
@@ -250,6 +251,19 @@ public sealed class LoungesController : ControllerBase
         int id, [FromBody] SetLoungeImageRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SetLoungeImageCommand(id, body.ImageUrl), ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-506 — gỡ ảnh đại diện (để trống). Xoá ảnh gallery đang làm đại diện cũng tự chuyển ảnh đại diện
+    /// sang ảnh gallery kế tiếp (hoặc để trống nếu hết ảnh).</summary>
+    [HttpDelete("{id:int}/image")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ClearImage(int id, CancellationToken ct = default)
+    {
+        await _sender.Send(new ClearLoungeImageCommand(id), ct);
         return NoContent();
     }
 
