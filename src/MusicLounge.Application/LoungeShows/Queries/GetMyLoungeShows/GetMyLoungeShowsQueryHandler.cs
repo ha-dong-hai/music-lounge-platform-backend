@@ -29,7 +29,7 @@ internal sealed class GetMyLoungeShowsQueryHandler
 
         // MLACP-466: cung quy tac voi /lounge-shows?mine=true — xem OperatedShows.
         var result = await OperatedShows.QueryAsync(
-            _showRepo, _currentUser, page, pageSize, request.SortBy, request.Status, ct);
+            _showRepo, _currentUser, page, pageSize, request.SortBy, request.Status, format: null, ct);
 
         var items = result.Items.Select(s => s.ToListItemDto()).ToList();
         return new PaginatedResult<LoungeShowListItemDto>(items, result.Page, result.PageSize, result.TotalCount);

@@ -14,10 +14,11 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
         bool includeSoldOut, CancellationToken ct = default);
 
     /// <summary>Shows belonging to the given owner's lounges. Any status (including Draft) when
-    /// <paramref name="status"/> is null; otherwise only that status.</summary>
+    /// <paramref name="status"/> is null; otherwise only that status. <paramref name="format"/> lọc đúng một hình
+    /// thức (Hybrid không tính là Online — khớp cách /search lọc).</summary>
     Task<PaginatedResult<LoungeShow>> GetMineAsync(
         int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
-        LoungeShowStatus? status = null, CancellationToken ct = default);
+        LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default);
 
     /// <summary>
     /// MLACP-466. Mọi buổi hòa nhạc của MỘT phòng trà, mọi trạng thái kể cả bản nháp — cho người VẬN HÀNH phòng trà đó.
@@ -26,7 +27,7 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
     /// </summary>
     Task<PaginatedResult<LoungeShow>> GetForOperatedLoungeAsync(
         int loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
-        LoungeShowStatus? status = null, CancellationToken ct = default);
+        LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams searchParams, CancellationToken ct = default);

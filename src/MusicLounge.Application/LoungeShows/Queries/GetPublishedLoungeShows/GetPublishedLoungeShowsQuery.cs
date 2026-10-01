@@ -10,5 +10,8 @@ public sealed record GetPublishedLoungeShowsQuery(
     int PageSize = 10,
     LoungeShowSortBy SortBy = LoungeShowSortBy.Newest,
     bool IncludeSoldOut = true,
-    bool Mine = false)
+    bool Mine = false,
+    // MLACP-498. Chỉ có nghĩa khi Mine = true (validator chặn trường hợp khác) — danh sách công khai lọc ở /search.
+    LoungeShowStatus? Status = null,
+    LoungeShowFormat? Format = null)
     : IQuery<PaginatedResult<LoungeShowListItemDto>>;
