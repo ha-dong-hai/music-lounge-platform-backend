@@ -47,4 +47,13 @@ internal sealed class FollowRepository : Repository<Follow, int>, IFollowReposit
             .Where(f => f.LoungeId == loungeId)
             .Select(f => f.UserId)
             .ToListAsync(ct);
+
+    public async Task<IReadOnlySet<int>> GetFollowedAmongAsync(
+        int userId, IReadOnlyCollection<int> loungeIds, CancellationToken ct = default)
+        => (await _ctx.Follows
+                .AsNoTracking()
+                .Where(f => f.UserId == userId && loungeIds.Contains(f.LoungeId))
+                .Select(f => f.LoungeId)
+                .ToListAsync(ct))
+            .ToHashSet();
 }

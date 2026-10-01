@@ -7,6 +7,7 @@ using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Follows.Commands.FollowLounge;
 using MusicLounge.Application.Follows.Commands.UnfollowLounge;
 using MusicLounge.Application.Follows.DTOs;
+using MusicLounge.Application.Follows.Queries.GetLoungeFollowStatus;
 using MusicLounge.Application.Follows.Queries.GetMyFollowedLounges;
 
 namespace MusicLounge.Api.Controllers;
@@ -29,6 +30,18 @@ public sealed class FollowsController : ControllerBase
     {
         var result = await _sender.Send(new GetMyFollowedLoungesQuery(page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<FollowedLoungeDto>>.Ok(result));
+    }
+
+    /// <summary>MLACP-503 — người đang đăng nhập có theo dõi các phòng trà này không. Một id cho màn chi tiết, tối đa
+    /// 100 id cho một trang danh sách: <c>?loungeIds=1&amp;loungeIds=2</c>. Phòng trà không tồn tại → isFollowing=false.</summary>
+    [HttpGet("lounges/status")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeFollowStatusDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetFollowStatus([FromQuery] int[] loungeIds, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetLoungeFollowStatusQuery(loungeIds), ct);
+        return Ok(ApiResponse<IReadOnlyList<LoungeFollowStatusDto>>.Ok(result));
     }
 
     /// <summary>Follow 1 phòng trà — dùng làm đầu vào tín hiệu gợi ý AI (FollowedVenueBoost) và để
