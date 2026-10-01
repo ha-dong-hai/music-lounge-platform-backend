@@ -31,9 +31,9 @@ public sealed class PerformersController : ControllerBase
     [ProducesResponseType<ApiResponse<PaginatedResult<PerformerDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
-        CancellationToken ct = default)
+        [FromQuery] bool createdByMe = false, CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetPerformersQuery(search, page, pageSize), ct);
+        var result = await _sender.Send(new GetPerformersQuery(search, page, pageSize, createdByMe), ct);
         return Ok(ApiResponse<PaginatedResult<PerformerDto>>.Ok(result));
     }
 
