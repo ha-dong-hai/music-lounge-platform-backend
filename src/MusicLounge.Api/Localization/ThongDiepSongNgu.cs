@@ -369,7 +369,8 @@ internal static class ThongDiepSongNgu
             ["Phạt tạm khoá cần khai số ngày tạm khoá."] = "A suspension penalty must state how many days the suspension lasts.",
             ["Phiên đăng nhập đã hết hiệu lực, vui lòng đăng nhập lại."] = "Your session has expired; please sign in again.",
             ["Phòng trà chưa đăng ký tài khoản nhận tiền — ghi bút toán chi trả bây giờ sẽ ghi có cho một khoản không lệnh chuyển khoản nào đi theo được."] = "The lounge has no payout account on file — recording a payout entry now would credit an amount that no transfer can follow.",
-            ["Phòng trà đang có buổi diễn, không thể xóa."] = "This lounge has concerts scheduled and cannot be deleted.",
+            // MLACP-507: câu mới thay câu cũ "Phòng trà đang có buổi diễn, không thể xóa." (thêm tay — dich-*.json chưa có).
+            ["Phòng trà vẫn còn buổi diễn (tính cả bản nháp, buổi đã kết thúc hoặc đã huỷ) nên không thể xóa."] = "This lounge still has concerts (including drafts and ended or cancelled ones), so it cannot be deleted.",
             ["Phòng trà này đã được duyệt trước đó."] = "This lounge has already been approved.",
             ["Platform không được vượt quá 20 ký tự."] = "Platform must not exceed 20 characters.",
             ["PriceId không hợp lệ."] = "PriceId is not valid.",
