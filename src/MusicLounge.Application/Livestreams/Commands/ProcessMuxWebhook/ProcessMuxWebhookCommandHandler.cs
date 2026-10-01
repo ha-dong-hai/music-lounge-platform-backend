@@ -238,6 +238,9 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
 
         await _uow.SaveChangesAsync(ct);
 
+        // MLACP-508: đường thứ hai dẫn tới Ended — người xem phải được báo y như khi chủ phòng trà bấm Kết thúc.
+        await _hubService.BroadcastLivestreamEndedAsync(livestream.Id, ct);
+
         _logger.LogWarning(
             "Mux idle webhook auto-ended livestream — LivestreamId={LivestreamId} ShowId={ShowId} " +
             "(encoder disconnected without an explicit End call) at {At}",

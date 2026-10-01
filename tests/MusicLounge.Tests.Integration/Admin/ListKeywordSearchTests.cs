@@ -160,6 +160,17 @@ public sealed class ListKeywordSearchTests
             .Should().Equal([theoTenPhong], "gõ tên phòng trà ra các buổi của phòng trà đó");
     }
 
+    // Gộp với MLACP-498: đường mine=true không có keyword — gửi kèm thì 400 chứ không lặng lẽ bỏ qua.
+    [Fact]
+    public async Task BuoiCuaToi_GuiKemKeyword_400()
+    {
+        var chu = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+
+        var res = await chu.GetAsync("/api/v1/lounge-shows?mine=true&keyword=abc");
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest, await res.Content.ReadAsStringAsync());
+    }
+
     // ---------- GET /lounges ----------
 
     [Fact]

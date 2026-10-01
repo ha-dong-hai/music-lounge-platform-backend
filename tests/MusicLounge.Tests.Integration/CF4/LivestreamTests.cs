@@ -220,6 +220,57 @@ public sealed class LivestreamTests
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    // MLACP-508: người đang xem phải được báo — trước đây không có sự kiện nào, trình phát đứng im tới khi tải lại trang.
+    [Fact]
+    public async Task EndLivestream_BaoNguoiDangXem_LivestreamEnded()
+    {
+        var id = await CreateApprovedAndStartedLivestreamAsync();
+        var hub = (MusicLounge.Tests.Integration.Fakes.RecordingLivestreamHubService)
+            _factory.Services.GetRequiredService<MusicLounge.Application.Common.Interfaces.ILivestreamHubService>();
+
+        await _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId)
+            .PostAsync($"/api/v1/livestreams/{id}/end", null);
+
+        hub.For(id).Select(s => s.Event).Should().Contain("LivestreamEnded");
+    }
+
+    // MLACP-508: encoder rớt mạng đúng lúc cuối buổi (Reconnecting) — chủ phòng trà vẫn phải kết thúc được, thay vì chờ
+    // job đánh Failed cho một buổi đã diễn xong đàng hoàng.
+    [Fact]
+    public async Task EndLivestream_KhiDangKetNoiLai_KetThucDuoc()
+    {
+        var id = await CreateApprovedAndStartedLivestreamAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var ls = await db.Set<MusicLounge.Domain.Entities.Livestream>().SingleAsync(l => l.Id == id);
+            ls.Status = LivestreamStatus.Reconnecting;
+            await db.SaveChangesAsync();
+        }
+
+        var res = await _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId)
+            .PostAsync($"/api/v1/livestreams/{id}/end", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent, await res.Content.ReadAsStringAsync());
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await db.Set<MusicLounge.Domain.Entities.Livestream>().SingleAsync(l => l.Id == id))
+                .Status.Should().Be(LivestreamStatus.Ended);
+        }
+    }
+
+    [Fact]
+    public async Task EndLivestream_ChuaBatDau_VanBiChan422()
+    {
+        var id = await CreateAndApproveLivestreamAsync(); // Scheduled, chưa phát
+
+        var res = await _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId)
+            .PostAsync($"/api/v1/livestreams/{id}/end", null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity, "chỉ nới cho Reconnecting, không mở cho mọi trạng thái");
+    }
+
     // ─── GetDetail / HLS URL access control ───────────────────────────────────
 
     [Fact]

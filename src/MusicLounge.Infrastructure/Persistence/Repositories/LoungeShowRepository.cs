@@ -136,22 +136,31 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
     public async Task<PaginatedResult<LoungeShow>> GetMineAsync(
         int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
-        LoungeShowStatus? status = null, CancellationToken ct = default)
+        LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default)
     {
-        var query = WithDetails().Where(s => s.Lounge.OwnerId == ownerId);
-        if (status.HasValue)
-            query = query.Where(s => s.Status == status.Value);
+        var query = LocChoNguoiVanHanh(WithDetails().Where(s => s.Lounge.OwnerId == ownerId), status, format);
         return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetForOperatedLoungeAsync(
         int loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
-        LoungeShowStatus? status = null, CancellationToken ct = default)
+        LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default)
     {
-        var query = WithDetails().Where(s => s.LoungeId == loungeId);
+        var query = LocChoNguoiVanHanh(WithDetails().Where(s => s.LoungeId == loungeId), status, format);
+        return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
+    }
+
+    // MLACP-498. Một chỗ lọc chung cho hai đường chủ/nhân viên: lọc ở máy chủ TRƯỚC khi phân trang. Trước đây ô chọn
+    // buổi (Vận hành đêm diễn, Phát trực tuyến) tải 100 buổi rồi lọc Published/Online ở trình duyệt — buổi thứ 101 trở
+    // đi không bao giờ hiện ra. Thêm bộ lọc vào một đường mà quên đường kia thì chủ và nhân viên thấy hai danh sách khác.
+    private static IQueryable<LoungeShow> LocChoNguoiVanHanh(
+        IQueryable<LoungeShow> query, LoungeShowStatus? status, LoungeShowFormat? format)
+    {
         if (status.HasValue)
             query = query.Where(s => s.Status == status.Value);
-        return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
+        if (format.HasValue)
+            query = query.Where(s => s.Format == format.Value);
+        return query;
     }
 
     public async Task<PaginatedResult<LoungeShow>> SearchAsync(

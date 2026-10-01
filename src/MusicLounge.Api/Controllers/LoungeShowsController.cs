@@ -57,22 +57,26 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Danh sách buổi diễn công khai (Published/Ongoing), hoặc buổi diễn của chính Owner đang
     /// gọi (mine=true, mọi trạng thái kể cả Draft) — khác /search ở chỗ không có bộ lọc, dùng cho
-    /// trang chủ/"buổi diễn của tôi".</summary>
+    /// trang chủ/"buổi diễn của tôi". Với mine=true (chủ phòng trà hoặc nhân viên — xem OperatedShows) lọc thêm được
+    /// theo <c>status</c> và <c>format</c> (MLACP-498); hai tham số này gửi kèm mine=false thì trả 400.</summary>
     [HttpGet]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetPublished(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
         [FromQuery] bool includeSoldOut = true,
         [FromQuery] bool mine = false,
+        [FromQuery] LoungeShowStatus? status = null,
+        [FromQuery] LoungeShowFormat? format = null,
         [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(
-            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine, keyword), ct);
+            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine, status, format, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 

@@ -60,4 +60,9 @@ public sealed class LivestreamHubService : ILivestreamHubService
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamFailed", new { }, ct);
+
+    public Task BroadcastLivestreamEndedAsync(int livestreamId, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("LivestreamEnded", new { }, ct);
 }

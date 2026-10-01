@@ -93,7 +93,10 @@ public sealed class TicketsController : ControllerBase
 
     /// <summary>Toàn bộ vé đã mua của user đang đăng nhập, sắp xếp theo thời gian mua mới nhất
     /// trước — lọc theo trạng thái qua query param `status` nếu có (Pending/Confirmed/Used/
-    /// Cancelled/Refunded).</summary>
+    /// Cancelled/Refunded). MLACP-499: lọc thêm (tuỳ chọn, kết hợp được) theo `when` (Upcoming/Past — so giờ bắt đầu
+    /// của buổi với hiện tại), `accessType` (Physical/Livestream — đúng giá trị trường accessType trong kết quả) và
+    /// `keyword` (tên buổi, tên phòng trà, hạng vé, mã vé; không phân biệt hoa thường). Lọc trước khi phân trang,
+    /// totalCount đếm theo bộ lọc.</summary>
     [HttpGet("my")]
     [ProducesResponseType<ApiResponse<PaginatedResult<TicketListItemDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -101,9 +104,12 @@ public sealed class TicketsController : ControllerBase
         [FromQuery] TicketStatus? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
+        [FromQuery] AccessType? accessType = null,
+        [FromQuery] TicketTimeFilter? when = null,
+        [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetMyTicketsQuery(status, page, pageSize), ct);
+        var result = await _sender.Send(new GetMyTicketsQuery(status, page, pageSize, accessType, when, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<TicketListItemDto>>.Ok(result));
     }
 

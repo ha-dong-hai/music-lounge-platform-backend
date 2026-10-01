@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
 using MusicLounge.Tests.Integration.Helpers;
 
@@ -126,6 +127,56 @@ public sealed class MyFnbOrdersTests
     {
         (await _factory.CreateClient().GetAsync("/api/v1/fnb-orders/my")).StatusCode
             .Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // MLACP-500. Khán giả mới (để đếm chính xác) có 15 đơn ở phòng trà A rồi 3 đơn ở phòng trà B. Đơn ở B được tạo TRƯỚC,
+    // nên không lọc thì trang 1 (10 đơn mới nhất) chỉ toàn đơn của A — đúng tình huống làm mất nút Trả online.
+    private async Task<(int UserId, List<int> PhongB)> KhachCoDonOHaiPhongTraAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var khach = new User { Email = $"f500-{Guid.NewGuid():N}@test.com", FullName = "Khach 500" };
+        db.Users.Add(khach);
+        await db.SaveChangesAsync();
+
+        List<FnbOrder> Don(int loungeId, int soLuong) => Enumerable.Range(0, soLuong).Select(_ => new FnbOrder
+        {
+            LoungeId = loungeId, AudienceUserId = khach.Id, PaymentMethod = PaymentMethod.Cash, TotalAmount = ItemPrice
+        }).ToList();
+
+        var phongB = Don(SeedHelper.OtherLoungeId, 3);
+        db.AddRange(phongB);
+        await db.SaveChangesAsync();
+        db.AddRange(Don(SeedHelper.LoungeId, 15));
+        await db.SaveChangesAsync();
+        return (khach.Id, phongB.Select(o => o.Id).ToList());
+    }
+
+    [Fact]
+    public async Task LocTheoPhongTra_TraDuDonCuaPhongDoDuBiDonPhongKhacDayKhoiTrang1()
+    {
+        var (userId, phongB) = await KhachCoDonOHaiPhongTraAsync();
+        var khach = _factory.CreateAuthenticatedClient(userId, "Audience");
+
+        var res = await khach.GetAsync($"/api/v1/fnb-orders/my?loungeId={SeedHelper.OtherLoungeId}&pageSize=10");
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var page = (await res.Content.ReadFromJsonAsync<DataResponse<OrderPage>>())!.Data;
+        page.Items.Select(o => o.Id).Should().BeEquivalentTo(phongB);
+        page.TotalCount.Should().Be(3, "totalCount đếm theo phòng trà đã lọc");
+    }
+
+    [Fact]
+    public async Task KhongTruyenLoungeId_TraNhuCu_DonCuaMoiPhongTra()
+    {
+        var (userId, _) = await KhachCoDonOHaiPhongTraAsync();
+        var khach = _factory.CreateAuthenticatedClient(userId, "Audience");
+
+        var page = (await (await khach.GetAsync("/api/v1/fnb-orders/my?pageSize=10"))
+            .Content.ReadFromJsonAsync<DataResponse<OrderPage>>())!.Data;
+
+        page.TotalCount.Should().Be(18);
+        page.Items.Should().HaveCount(10);
     }
 
     [Fact]

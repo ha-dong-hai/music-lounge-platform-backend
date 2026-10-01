@@ -10,4 +10,9 @@ public interface IUserRepository : IRepository<User, int>
     Task<PaginatedResult<UserAdminDto>> SearchAsync(
         string? searchText, UserRole? role, bool? isActive,
         int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>MLACP-505. Một trang hàng đợi xác minh danh tính: người có giấy tờ tuỳ thân HOẶC hồ sơ thuế đang ở
+    /// <paramref name="status"/>, nộp sớm nhất trước. Chỉ nạp đầy đủ những người thuộc trang.</summary>
+    Task<(IReadOnlyList<User> Items, int TotalCount)> GetKycReviewPageAsync(
+        KycReviewStatus status, int page, int pageSize, CancellationToken ct = default);
 }

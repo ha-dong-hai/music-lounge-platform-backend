@@ -23,16 +23,17 @@ internal static class OperatedShows
 {
     public static Task<PaginatedResult<LoungeShow>> QueryAsync(
         ILoungeShowRepository repo, ICurrentUserService currentUser,
-        int page, int pageSize, LoungeShowSortBy sortBy, LoungeShowStatus? status, CancellationToken ct)
+        int page, int pageSize, LoungeShowSortBy sortBy, LoungeShowStatus? status, LoungeShowFormat? format,
+        CancellationToken ct)
     {
         if (currentUser.Role == Roles.Staff)
         {
             // Nhân viên chưa được phân công phòng trà nào thì không có buổi nào để vận hành — trả rỗng, không phải lỗi.
             return currentUser.LoungeId is int loungeId
-                ? repo.GetForOperatedLoungeAsync(loungeId, page, pageSize, sortBy, status, ct)
+                ? repo.GetForOperatedLoungeAsync(loungeId, page, pageSize, sortBy, status, format, ct)
                 : Task.FromResult(new PaginatedResult<LoungeShow>([], page, pageSize, 0));
         }
 
-        return repo.GetMineAsync(currentUser.UserId, page, pageSize, sortBy, status, ct);
+        return repo.GetMineAsync(currentUser.UserId, page, pageSize, sortBy, status, format, ct);
     }
 }

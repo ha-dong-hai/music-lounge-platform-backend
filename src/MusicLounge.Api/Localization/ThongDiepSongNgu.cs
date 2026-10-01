@@ -131,9 +131,16 @@ internal static class ThongDiepSongNgu
             ["Bạn không phải nhân viên hay chủ của phòng trà này."] = "You are neither staff nor the owner of this music lounge.",
             ["BillingCycle phải là 'Monthly', 'Quarterly' hoặc 'Yearly'."] = "BillingCycle must be 'Monthly', 'Quarterly' or 'Yearly'.",
             ["Bình luận không vượt quá 1000 ký tự."] = "The comment must not exceed 1000 characters.",
+            // MLACP-498: thêm tay — dich-*.json / sinh-tu-dien.mjs chưa có câu này, lần sinh lại phải thêm vào dich-5.json.
+            ["Bộ lọc status và format chỉ dùng với mine=true; danh sách công khai hãy lọc qua /lounge-shows/search."] = "The status and format filters only apply with mine=true; filter the public list through /lounge-shows/search.",
+            // MLACP-502 (gộp với 498): thêm tay — dich-*.json chưa có.
+            ["Từ khoá keyword chỉ dùng cho danh sách công khai (mine=false); buổi của tôi hãy lọc bằng status và format."] = "The keyword filter only applies to the public list (mine=false); filter your own concerts with status and format.",
             ["Buổi diễn đã đăng chỉ được thêm hạng vé livestream, và chỉ khi hình thức là online hoặc hybrid — hạng vé vào cửa và giá đã công bố được giữ nguyên như đã hứa với người mua."] = "A published concert may only have livestream ticket tiers added, and only when its format is online or hybrid — door tiers and published prices stay exactly as promised to buyers.",
             ["Buổi diễn đã kết thúc hoặc đã bị huỷ — không còn gì để mở bán."] = "The concert has ended or been cancelled — there is nothing left to put on sale.",
             ["Buổi diễn này không có khán giả tại chỗ (chỉ diễn online hoặc đã bị huỷ) — không nhận order F&B gắn với buổi diễn này."] = "This concert has no audience on site (it is online only, or it was cancelled) — food and drink orders cannot be attached to it.",
+            // MLACP-509: thêm tay — dich-*.json / sinh-tu-dien.mjs chưa có hai câu này.
+            ["Buổi diễn tại chỗ (Offline) không bán vé xem trực tuyến — chỉ buổi online hoặc hybrid mới có hạng vé livestream."] = "An on-site (Offline) concert does not sell livestream tickets — only online or hybrid concerts can have this tier.",
+            ["Buổi diễn trực tuyến (Online) không có chỗ ngồi tại phòng trà — không tạo được hạng vé vào cửa."] = "An online concert has no seats at the lounge — a door ticket tier cannot be created.",
             ["Buổi hòa nhạc này đang có một poster được tạo. Vui lòng đợi kết quả trước khi tạo thêm."] = "A poster is already being generated for this concert. Please wait for it to finish before starting another.",
             ["Category không hợp lệ."] = "Invalid category.",
             ["CategoryId không tồn tại."] = "CategoryId does not exist.",
@@ -304,6 +311,8 @@ internal static class ThongDiepSongNgu
             ["Lý do không được vượt quá 500 ký tự."] = "The reason must not exceed 500 characters.",
             ["Lý do không vượt quá 1000 ký tự."] = "The reason must not exceed 1000 characters.",
             ["Lý do thay đổi quá ngắn, hãy mô tả rõ vì sao cần đổi giá trị này."] = "The reason for the change is too short — please explain clearly why this value needs to change.",
+            // MLACP-504: thêm tay — dich-*.json / sinh-tu-dien.mjs chưa có câu này, lần sinh lại phải thêm vào dich-5.json.
+            ["Lọc theo targetId cần kèm targetType hợp lệ (Show, Livestream, GalleryImage, TourScene...)."] = "Filtering by targetId requires a valid targetType (Show, Livestream, GalleryImage, TourScene...).",
             ["Mã lượt bán này đã dùng cho một lượt bán khác. Hãy tạo lượt bán mới trên máy quầy."] = "This sale reference has already been used for a different sale. Please start a new sale on the box-office device.",
             ["Mã QR không được rỗng."] = "The QR code must not be empty.",
             ["Mã số thuế không được để trống."] = "The tax code must not be empty.",
@@ -365,7 +374,8 @@ internal static class ThongDiepSongNgu
             ["Phạt tạm khoá cần khai số ngày tạm khoá."] = "A suspension penalty must state how many days the suspension lasts.",
             ["Phiên đăng nhập đã hết hiệu lực, vui lòng đăng nhập lại."] = "Your session has expired; please sign in again.",
             ["Phòng trà chưa đăng ký tài khoản nhận tiền — ghi bút toán chi trả bây giờ sẽ ghi có cho một khoản không lệnh chuyển khoản nào đi theo được."] = "The lounge has no payout account on file — recording a payout entry now would credit an amount that no transfer can follow.",
-            ["Phòng trà đang có buổi diễn, không thể xóa."] = "This lounge has concerts scheduled and cannot be deleted.",
+            // MLACP-507: câu mới thay câu cũ "Phòng trà đang có buổi diễn, không thể xóa." (thêm tay — dich-*.json chưa có).
+            ["Phòng trà vẫn còn buổi diễn (tính cả bản nháp, buổi đã kết thúc hoặc đã huỷ) nên không thể xóa."] = "This lounge still has concerts (including drafts and ended or cancelled ones), so it cannot be deleted.",
             ["Phòng trà này đã được duyệt trước đó."] = "This lounge has already been approved.",
             ["Platform không được vượt quá 20 ký tự."] = "Platform must not exceed 20 characters.",
             ["PriceId không hợp lệ."] = "PriceId is not valid.",
