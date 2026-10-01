@@ -13,7 +13,6 @@ public sealed record LivestreamDetailDto(
     DateTimeOffset? EndedAt,
     string? TerminatedReason,
     bool UserHasAccess,
-    // MLACP-510: đã bỏ RecordingUrl — hệ thống không có xem lại.
     // Chỉ có giá trị khi caller là khán giả có vé PPV thật (isGenuineTicketHolder) — client dùng
     // để gọi POST {id}/heartbeat định kỳ giữ phiên sống. Null với Admin/venue-operator/livestream
     // miễn phí (những nhánh không bị giới hạn số phiên đồng thời).
