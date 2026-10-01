@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
@@ -11,35 +12,24 @@ internal sealed class GetKycReviewQueueQueryHandler
     : IRequestHandler<GetKycReviewQueueQuery, PaginatedResult<KycReviewItemDto>>
 {
     private readonly IUnitOfWork _uow;
+    private readonly IUserRepository _users;
     private readonly IPiiEncryptionService _piiEncryption;
 
-    public GetKycReviewQueueQueryHandler(IUnitOfWork uow, IPiiEncryptionService piiEncryption)
+    public GetKycReviewQueueQueryHandler(IUnitOfWork uow, IUserRepository users, IPiiEncryptionService piiEncryption)
     {
         _uow = uow;
+        _users = users;
         _piiEncryption = piiEncryption;
     }
 
     public async Task<PaginatedResult<KycReviewItemDto>> Handle(
         GetKycReviewQueueQuery request, CancellationToken ct)
     {
-        var status = request.Status;
-
         // A user belongs in the queue if EITHER document sits at the requested status — the two are
         // submitted independently, and waiting for both before showing anything would hide a card
-        // that has been ready for review for a week.
-        var candidates = await _uow.Repository<User, int>().FindAsync(
-            u => u.CitizenCardReviewStatus == status || u.TaxProfileReviewStatus == status, ct);
-
-        // Sorted client-side: the SQLite provider used in tests cannot ORDER BY DateTimeOffset, a
-        // limitation this codebase works around the same way everywhere it sorts by one.
-        var ordered = candidates
-            .OrderBy(u => u.CitizenCardSubmittedAt ?? u.TaxProfileSubmittedAt ?? DateTimeOffset.MaxValue)
-            .ToList();
-
-        var pageUsers = ordered
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToList();
+        // that has been ready for review for a week. Lọc, sắp và cắt trang: UserRepository.GetKycReviewPageAsync
+        // (MLACP-505 — chỉ nạp đầy đủ người thuộc trang, không còn nạp cả hàng đợi).
+        var (pageUsers, total) = await _users.GetKycReviewPageAsync(request.Status, request.Page, request.PageSize, ct);
 
         // MLACP-398: duyệt hồ sơ doanh nghiệp cần giấy chứng nhận đăng ký kinh doanh của phòng trà — cho Admin thấy ngay
         // trên danh sách hồ sơ nào đã có, như danh sách duyệt phòng trà đang làm.
@@ -71,7 +61,7 @@ internal sealed class GetKycReviewQueueQueryHandler
                 u.TaxCode is not null && Decrypt(u.TaxCode) is null))
             .ToList();
 
-        return new PaginatedResult<KycReviewItemDto>(page, request.Page, request.PageSize, ordered.Count);
+        return new PaginatedResult<KycReviewItemDto>(page, request.Page, request.PageSize, total);
     }
 
     private string? Decrypt(string? ciphertext)
