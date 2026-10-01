@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using System.ComponentModel.DataAnnotations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -180,7 +181,8 @@ public sealed class LoungesController : ControllerBase
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<UserLookupDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> LookupUserByEmail([FromQuery] string email, CancellationToken ct = default)
+    // MLACP-519: email thật sự bắt buộc — [Required] để hợp đồng Swagger khai đúng (trước đây ghi tuỳ chọn mà thiếu thì 400).
+    public async Task<IActionResult> LookupUserByEmail([FromQuery, Required] string email, CancellationToken ct = default)
     {
         var result = await _sender.Send(new FindUserByEmailQuery(email), ct);
         return Ok(ApiResponse<UserLookupDto>.Ok(result));
