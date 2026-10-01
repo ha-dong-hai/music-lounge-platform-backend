@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
@@ -41,6 +42,17 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
             throw new ForbiddenException("Bạn không có quyền thiết lập giá vé cho event này.");
 
         var accessType = Enum.Parse<AccessType>(request.AccessType, ignoreCase: true);
+
+        // MLACP-509. Loại hạng vé phải hợp với hình thức buổi diễn ở MỌI trạng thái — trước đây chỉ kiểm khi buổi đã đăng
+        // (nhánh MLACP-388 bên dưới), nên lúc Draft tạo được hạng XEM TRỰC TUYẾN cho buổi Offline: đăng lên là khán giả
+        // mua được vé cho một buổi không bao giờ phát (CreateLivestream chặn buổi Offline). Chiều ngược lại cùng lớp lỗi:
+        // hạng VÀO CỬA cho buổi Online — PhysicalAccess đã chặn bán, nhưng hạng vé vẫn sinh ra và hiện trên trang.
+        // Hình thức chỉ đổi được Offline → Online (ChangeLoungeShowFormat, có hoàn tiền vé vào cửa), và sửa hạng vé không
+        // đổi được loại vé, nên chặn ở đây là đủ để không còn hạng vé lệch hình thức mới.
+        if (accessType == AccessType.Livestream && show.Format == LoungeShowFormat.Offline)
+            throw new DomainException("Buổi diễn tại chỗ (Offline) không bán vé xem trực tuyến — chỉ buổi online hoặc hybrid mới có hạng vé livestream.");
+        if (!PhysicalAccess.IsOffered(show, accessType))
+            throw new DomainException("Buổi diễn trực tuyến (Online) không có chỗ ngồi tại phòng trà — không tạo được hạng vé vào cửa.");
 
         // MLACP-388: buoi dien da dang ma phai chuyen sang online (MLACP-383 hoan 100% ve vao cua) truoc day khong the co
         // hang ve livestream — tao hang ve chi chay khi Draft va la duong duy nhat — nen khong ban duoc ve xem online. Nay
