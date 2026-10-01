@@ -52,4 +52,7 @@ public sealed class RecordingLivestreamHubService : ILivestreamHubService
 
     public Task BroadcastLivestreamFailedAsync(int livestreamId, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamFailed", null);
+
+    public Task BroadcastLivestreamEndedAsync(int livestreamId, CancellationToken ct = default)
+        => Record(livestreamId, "LivestreamEnded", null);
 }
