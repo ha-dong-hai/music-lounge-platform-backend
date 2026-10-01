@@ -2,4 +2,4 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Lounges.Commands.SetLoungeAreaLayoutImage;
 
-public sealed record SetLoungeAreaLayoutImageCommand(int LoungeId, string? ImageUrl) : ICommand;
+public sealed record SetLoungeAreaLayoutImageCommand(Guid LoungeId, string? ImageUrl) : ICommand;

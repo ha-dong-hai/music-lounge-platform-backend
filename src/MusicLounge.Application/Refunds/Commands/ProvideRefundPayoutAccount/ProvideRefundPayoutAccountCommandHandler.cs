@@ -40,7 +40,7 @@ internal sealed class ProvideRefundPayoutAccountCommandHandler : IRequestHandler
         // Cung khoa voi ProcessRefundRequest — Admin khong duyet chuyen khoan dung luc nguoi mua dang doi tai khoan.
         await using var _ = await _lock.AcquireAsync($"refund-request:{request.RefundRequestId}", ct);
 
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var refund = await refundRepo.GetByIdAsync(request.RefundRequestId, ct)
             ?? throw new NotFoundException(nameof(RefundRequest), request.RefundRequestId);
 
@@ -50,7 +50,7 @@ internal sealed class ProvideRefundPayoutAccountCommandHandler : IRequestHandler
         if (refund.Status != RefundRequestStatus.Pending)
             throw new ConflictException("Yêu cầu hoàn tiền này đã được xử lý.");
 
-        var payment = await _uow.Repository<Payment, int>().GetByIdAsync(refund.PaymentId, ct)
+        var payment = await _uow.Repository<Payment, Guid>().GetByIdAsync(refund.PaymentId, ct)
             ?? throw new NotFoundException(nameof(Payment), refund.PaymentId);
 
         var now = DateTimeOffset.UtcNow;
@@ -67,7 +67,7 @@ internal sealed class ProvideRefundPayoutAccountCommandHandler : IRequestHandler
         refundRepo.Update(refund);
 
         // Admin la nguoi chuyen khoan — phai biet yeu cau nay da du dieu kien, khong phai tu di soi danh sach.
-        var admins = await _uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin && u.IsActive, ct);
+        var admins = await _uow.Repository<User, Guid>().FindAsync(u => u.Role == UserRole.Admin && u.IsActive, ct);
         foreach (var admin in admins)
             await _notifications.NotifyAsync(
                 admin.Id,

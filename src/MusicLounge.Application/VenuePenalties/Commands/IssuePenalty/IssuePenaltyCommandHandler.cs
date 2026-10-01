@@ -10,7 +10,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.VenuePenalties.Commands.IssuePenalty;
 
-internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyCommand, int>
+internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -29,9 +29,9 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
         _logger = logger;
     }
 
-    public async Task<int> Handle(IssuePenaltyCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(IssuePenaltyCommand request, CancellationToken ct)
     {
-        var loungeRepo = _uow.Repository<MusicLoungeEntity, int>();
+        var loungeRepo = _uow.Repository<MusicLoungeEntity, Guid>();
         var lounge = await loungeRepo.GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
@@ -64,7 +64,7 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
             SuspensionDays = penaltyType == PenaltyType.Suspension ? request.SuspensionDays : null,
             Status = PenaltyStatus.Active
         };
-        _uow.Repository<VenuePenalty, int>().Add(penalty);
+        _uow.Repository<VenuePenalty, Guid>().Add(penalty);
 
         // Warning has no delay and no venue-status/subscription effect (§6.8: "venue vẫn hoạt
         // động, subscription không đổi") — apply it here rather than waiting for the job.

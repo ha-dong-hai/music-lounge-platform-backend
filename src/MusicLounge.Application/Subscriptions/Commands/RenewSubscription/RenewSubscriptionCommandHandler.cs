@@ -37,7 +37,7 @@ internal sealed class RenewSubscriptionCommandHandler
     public async Task<SubscriptionPaymentInitiationDto> Handle(
         RenewSubscriptionCommand request, CancellationToken ct)
     {
-        var ownSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var ownSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == _currentUser.UserId, ct);
         var lastSub = ownSubs.OrderByDescending(s => s.StartedAt).FirstOrDefault()
             ?? throw new DomainException(
@@ -52,7 +52,7 @@ internal sealed class RenewSubscriptionCommandHandler
         // huy truoc — ma huy la mat trang phan con lai. Moi luc chi mot lenh gia han/doi goi cho thanh toan.
         await SubscriptionTerms.EnsureNoPendingChangeAsync(_uow, _currentUser.UserId, ct);
 
-        var package = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(lastSub.PackageId, ct)
+        var package = await _uow.Repository<SubscriptionPackage, Guid>().GetByIdAsync(lastSub.PackageId, ct)
             ?? throw new NotFoundException(nameof(SubscriptionPackage), lastSub.PackageId);
 
         // The package they were on may have been deactivated since — can't silently substitute a
@@ -78,7 +78,7 @@ internal sealed class RenewSubscriptionCommandHandler
             SubscriptionMaxTourScenesSnapshot = package.MaxTourScenes,
             CreatedAt = now
         };
-        _uow.Repository<Payment, int>().Add(payment);
+        _uow.Repository<Payment, Guid>().Add(payment);
         await _uow.SaveChangesAsync(ct);
 
         var paymentUrl = _vnPay.CreatePaymentUrl(new VnPayPaymentRequest(

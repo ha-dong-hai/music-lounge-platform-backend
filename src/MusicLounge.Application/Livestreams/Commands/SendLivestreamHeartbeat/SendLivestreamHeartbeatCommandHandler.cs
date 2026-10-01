@@ -19,7 +19,7 @@ internal sealed class SendLivestreamHeartbeatCommandHandler
 
     public async Task<Unit> Handle(SendLivestreamHeartbeatCommand request, CancellationToken ct)
     {
-        var sessionRepo = _uow.Repository<LivestreamViewingSession, int>();
+        var sessionRepo = _uow.Repository<LivestreamViewingSession, Guid>();
         var matches = await sessionRepo.FindAsync(
             s => s.SessionId == request.SessionId && s.LivestreamId == request.LivestreamId, ct);
         var session = matches.FirstOrDefault()

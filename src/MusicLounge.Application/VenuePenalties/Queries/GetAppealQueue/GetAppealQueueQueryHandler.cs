@@ -29,13 +29,13 @@ internal sealed class GetAppealQueueQueryHandler
         // Ở đây Id không đồng nghĩa với thứ tự kháng nghị (một án phạt cũ có thể vừa được kháng nghị),
         // nên trang được sắp lại theo AppealedAt sau khi lấy về, còn phân trang vẫn ở phía máy chủ.
         var (pageItems, totalCount) = request.Resolved
-            ? await _uow.Repository<VenuePenalty, int>()
+            ? await _uow.Repository<VenuePenalty, Guid>()
                 .GetPagedAsync(p => p.AppealedAt != null && p.ReviewedAt != null, p => p.Id, page, size, ct)
-            : await _uow.Repository<VenuePenalty, int>()
+            : await _uow.Repository<VenuePenalty, Guid>()
                 .GetPagedAsync(p => p.AppealedAt != null && p.ReviewedAt == null, p => p.Id, page, size, ct);
 
         var loungeIds = pageItems.Select(p => p.LoungeId).Distinct().ToList();
-        var loungeNames = (await _uow.Repository<MusicLoungeEntity, int>()
+        var loungeNames = (await _uow.Repository<MusicLoungeEntity, Guid>()
                 .FindAsync(l => loungeIds.Contains(l.Id), ct))
             .ToDictionary(l => l.Id, l => l.Name);
 

@@ -27,7 +27,7 @@ public sealed class ComplaintsController : ControllerBase
     /// Vào hàng đợi Admin (GET pending) với SLA (system_config: complaint_sla_hours).</summary>
     [HttpPost]
     [AllowAnonymous]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create(
@@ -79,7 +79,7 @@ public sealed class ComplaintsController : ControllerBase
     /// <para>Refund hoàn tiền vé của RIÊNG người khiếu nại, show vẫn diễn; TakeDownContent hủy hẳn
     /// show và hoàn 100% cho MỌI người giữ vé; IssueWarning tạo án phạt cho venue; Dismiss là bác
     /// khiếu nại. Mỗi hành động đều có hậu quả thật — không có hành động nào chỉ lưu nhãn.</para></summary>
-    [HttpPost("{id:int}/resolve")]
+    [HttpPost("{id:guid}/resolve")]
     [Authorize(Policy = Policies.RequireAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -88,7 +88,7 @@ public sealed class ComplaintsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Resolve(
-        int id, [FromBody] ResolveComplaintRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] ResolveComplaintRequest body, CancellationToken ct = default)
     {
         await _sender.Send(
             new ResolveComplaintCommand(id, body.Status, body.Resolution, body.ResolvedAction), ct);

@@ -10,5 +10,5 @@ namespace MusicLounge.Application.CustomCriteria.Queries.GetLoungeCustomCriteria
 /// tắt, nên không có tham số này thì tắt xong là tiêu chí biến mất khỏi mọi màn hình và KHÔNG CÒN ĐƯỜNG
 /// NÀO bật lại — cái nút tắt sẽ thành cửa một chiều.</para>
 /// </param>
-public sealed record GetLoungeCustomCriteriaQuery(int LoungeId, bool IncludeInactive = false)
+public sealed record GetLoungeCustomCriteriaQuery(Guid LoungeId, bool IncludeInactive = false)
     : IQuery<IReadOnlyList<CustomCriteriaDto>>;

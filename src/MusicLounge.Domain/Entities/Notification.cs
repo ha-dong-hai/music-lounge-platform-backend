@@ -2,9 +2,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Notification : Common.BaseEntity<int>
+public sealed class Notification : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     public NotificationType Type { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;

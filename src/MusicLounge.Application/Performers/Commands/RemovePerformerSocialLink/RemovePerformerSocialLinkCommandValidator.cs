@@ -6,7 +6,7 @@ public sealed class RemovePerformerSocialLinkCommandValidator : AbstractValidato
 {
     public RemovePerformerSocialLinkCommandValidator()
     {
-        RuleFor(x => x.PerformerId).GreaterThan(0);
-        RuleFor(x => x.LinkId).GreaterThan(0);
+        RuleFor(x => x.PerformerId).NotEmpty();
+        RuleFor(x => x.LinkId).NotEmpty();
     }
 }

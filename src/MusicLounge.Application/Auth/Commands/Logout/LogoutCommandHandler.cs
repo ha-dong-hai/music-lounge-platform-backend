@@ -18,7 +18,7 @@ internal sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit
 
     public async Task<Unit> Handle(LogoutCommand request, CancellationToken ct)
     {
-        var user = await _uow.Repository<User, int>().GetByIdAsync(_currentUser.UserId, ct)
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 
         // Rotating SecurityStamp is the whole mechanism — every access/refresh token already

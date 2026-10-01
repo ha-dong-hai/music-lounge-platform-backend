@@ -34,7 +34,7 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
 
     public async Task<Unit> Handle(ReviewPayoutBankAccountCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<BankAccount, int>();
+        var repo = _uow.Repository<BankAccount, Guid>();
         var account = await repo.GetByIdAsync(request.BankAccountId, ct)
             ?? throw new NotFoundException(nameof(BankAccount), request.BankAccountId);
 
@@ -42,9 +42,9 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
             throw new DomainException(
                 "Tài khoản của nghệ sĩ do chính nghệ sĩ xác nhận qua liên kết gửi email, không duyệt ở đây.");
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(account.OwnerId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(account.OwnerId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), account.OwnerId);
-        var owner = await _uow.Repository<User, int>().GetByIdAsync(lounge.OwnerId, ct)
+        var owner = await _uow.Repository<User, Guid>().GetByIdAsync(lounge.OwnerId, ct)
             ?? throw new NotFoundException(nameof(User), lounge.OwnerId);
 
         if (request.Approve && owner.CitizenCardReviewStatus != KycReviewStatus.Approved)

@@ -6,7 +6,7 @@ public sealed class AddVenueTourSceneCommandValidator : AbstractValidator<AddVen
 {
     public AddVenueTourSceneCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.ImageUrl).NotEmpty().MaximumLength(500);
         RuleFor(x => x.Name).MaximumLength(100);
     }

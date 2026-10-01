@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Lounges.DTOs;
 
 public sealed record LoungeDetailDto(
-    int Id,
+    Guid Id,
     string Name,
     string? PrimaryImageUrl,
     string? Model3DUrl,
@@ -22,12 +22,12 @@ public sealed record LoungeDetailDto(
     // MLACP-307. Them vao cuoi nen khong xe dich truong nao dang co. OwnerId de FE biet nguoi dang
     // xem co phai chu phong tra khong; Status de chinh chu thay duoc ho so cua minh dang cho duyet
     // hay da bi tu choi — truoc day khong co duong nao bao ho dieu do.
-    int OwnerId,
+    Guid OwnerId,
     string Status,
     // MLACP-467 (cùng lớp lỗi với LoungeShowDetailDto.CategoryId): UpdateLoungeCommand nhận
     // AtmosphereId để ghi, nhưng trước đây DTO đọc chỉ trả AtmosphereName. PUT /lounges/{id} ghi
     // đè toàn phần, nên client không đọc lại được Id thì mỗi lần Sửa mà không chọn lại không khí là
     // xoá mất liên kết — và tên hiển thị không đáng tin để dò ngược Id (đổi tên là mất khớp).
-    int? AtmosphereId = null);
+    Guid? AtmosphereId = null);
 
-public sealed record LoungeGalleryImageDto(int Id, string ImageUrl, string? Caption, int OrderIndex);
+public sealed record LoungeGalleryImageDto(Guid Id, string ImageUrl, string? Caption, int OrderIndex);

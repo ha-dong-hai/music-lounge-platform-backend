@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -30,9 +31,9 @@ public sealed class VenueTourSceneQuotaLockTests
 
     public VenueTourSceneQuotaLockTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> TaoPhongTraAsync(int maxTourScenes, bool goiConHan = true)
+    private async Task<Guid> TaoPhongTraAsync(int maxTourScenes, bool goiConHan = true)
     {
-        var id = Interlocked.Increment(ref _freshIdCounter);
+        var id = OrderedGuid.New();
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         db.Users.Add(new User { Id = id, Email = $"khoa-tour-{id}@test.com", FullName = "Chu Phong Tra" });
@@ -57,7 +58,7 @@ public sealed class VenueTourSceneQuotaLockTests
         return id;
     }
 
-    private async Task TaoCanhAsync(int loungeId, int orderIndex)
+    private async Task TaoCanhAsync(Guid loungeId, int orderIndex)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -68,7 +69,7 @@ public sealed class VenueTourSceneQuotaLockTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> TaoLuotPendingAsync(int loungeId)
+    private async Task<Guid> TaoLuotPendingAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -100,7 +101,7 @@ public sealed class VenueTourSceneQuotaLockTests
             => Task.FromResult(AnhMau.Jpeg(4096, 2048));
     }
 
-    private async Task ChayJobGhepThanhCongAsync(int attemptId, int loungeId)
+    private async Task ChayJobGhepThanhCongAsync(Guid attemptId, Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var job = ActivatorUtilities.CreateInstance<StitchVenueTourSceneJob>(scope.ServiceProvider, new GhepThanhCong());
@@ -141,7 +142,7 @@ public sealed class VenueTourSceneQuotaLockTests
         return seen;
     }
 
-    private async Task<(VenueTourStitchAttempt Attempt, List<VenueTourScene> Scenes)> DocAsync(int attemptId, int loungeId)
+    private async Task<(VenueTourStitchAttempt Attempt, List<VenueTourScene> Scenes)> DocAsync(Guid attemptId, Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

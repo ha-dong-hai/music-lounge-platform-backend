@@ -22,5 +22,5 @@ public interface IInferredAiProfileRepository
     /// Chỉ dàn hàng, KHÔNG lưu — theo đúng giao kèo chung của tầng này, lời gọi SaveChangesAsync
     /// của người gọi mới là cái ghi xuống, để việc xoá nằm cùng một giao dịch với phần còn lại.
     /// </summary>
-    Task ForgetAsync(int userId, CancellationToken ct = default);
+    Task ForgetAsync(Guid userId, CancellationToken ct = default);
 }

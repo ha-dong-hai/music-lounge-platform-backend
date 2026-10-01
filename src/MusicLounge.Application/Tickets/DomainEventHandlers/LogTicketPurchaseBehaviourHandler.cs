@@ -20,7 +20,7 @@ internal sealed class LogTicketPurchaseBehaviourHandler : INotificationHandler<T
     {
         // Walk-in sales publish this event with UserId=0 (no buyer account) — nothing to log
         // (mirrors SendFcmConfirmHandler's same guard for the same reason).
-        if (notification.UserId <= 0) return Task.CompletedTask;
+        if (notification.UserId == Guid.Empty) return Task.CompletedTask;
 
         _backgroundJobs.EnqueueLogUserBehaviour(
             notification.UserId, notification.ShowId, BehaviourAction.PurchaseTicket);

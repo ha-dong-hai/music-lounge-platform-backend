@@ -42,5 +42,5 @@ public sealed class TaxonomyAuditTests
         category.CreatedAt.Should().NotBe(default);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

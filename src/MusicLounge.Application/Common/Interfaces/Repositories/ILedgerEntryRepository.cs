@@ -4,7 +4,7 @@ using MusicLounge.Domain.Entities;
 
 namespace MusicLounge.Application.Common.Interfaces.Repositories;
 
-public interface ILedgerEntryRepository : IRepository<LedgerEntry, int>
+public interface ILedgerEntryRepository : IRepository<LedgerEntry, Guid>
 {
     /// <summary>
     /// Per-journal debit/credit totals for journals where they don't match — aggregated in SQL so
@@ -20,7 +20,7 @@ public interface ILedgerEntryRepository : IRepository<LedgerEntry, int>
     /// duy nhất cần thiết thay vì hợp nhất thủ công từ Payment/Donation/Settlement riêng lẻ.
     /// </summary>
     Task<PaginatedResult<OwnerTransactionDto>> GetOwnerHistoryAsync(
-        int ownerId, string? referenceType, DateTimeOffset? from, DateTimeOffset? to,
+        Guid ownerId, string? referenceType, DateTimeOffset? from, DateTimeOffset? to,
         int page, int pageSize, CancellationToken ct = default);
 }
 

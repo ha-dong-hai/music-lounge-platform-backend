@@ -4,7 +4,7 @@ using MusicLounge.Application.Donations.DTOs;
 namespace MusicLounge.Application.Donations.Commands.CreateDonation;
 
 public sealed record CreateDonationCommand(
-    int PerformanceId,
+    Guid PerformanceId,
     decimal Amount,
     bool IsAnonymous,
     string? Message,

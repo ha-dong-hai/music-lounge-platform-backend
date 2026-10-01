@@ -26,10 +26,10 @@ internal sealed class GetTicketSalesTrendQueryHandler
 
     public async Task<TicketSalesTrendDto> Handle(GetTicketSalesTrendQuery request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<Domain.Entities.MusicLounge, int>()
+        var lounge = await _uow.Repository<Domain.Entities.MusicLounge, Guid>()
             .GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.MusicLounge), show.LoungeId);
 
@@ -42,12 +42,12 @@ internal sealed class GetTicketSalesTrendQueryHandler
             t => t.ShowId == request.ShowId
                 && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
 
-        var tiers = await _uow.Repository<TicketTier, int>()
+        var tiers = await _uow.Repository<TicketTier, Guid>()
             .FindAsync(t => t.LoungeShowId == request.ShowId, ct);
         var tierById = tiers.ToDictionary(t => t.Id);
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id);
         decimal TicketAmount(Ticket t) => priceById.TryGetValue(t.PriceId, out var p) ? p.Price : 0m;
 

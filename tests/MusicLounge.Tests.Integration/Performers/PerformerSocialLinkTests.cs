@@ -19,7 +19,7 @@ public sealed class PerformerSocialLinkTests
 
     public PerformerSocialLinkTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreatePerformerAsync(int ownerId, string name)
+    private async Task<Guid> CreatePerformerAsync(Guid ownerId, string name)
     {
         var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
         var res = await client.PostAsJsonAsync("/api/v1/performers", new
@@ -28,7 +28,7 @@ public sealed class PerformerSocialLinkTests
             AvatarUrl = (string?)null,
             Bio = "Test bio",
             Type = "Solo",
-            GenreIds = Array.Empty<int>()
+            GenreIds = Array.Empty<Guid>()
         });
         res.EnsureSuccessStatusCode();
         var body = await res.Content.ReadFromJsonAsync<IdResponse>();
@@ -153,5 +153,5 @@ public sealed class PerformerSocialLinkTests
         deleteRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

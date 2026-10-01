@@ -26,7 +26,7 @@ public sealed class FnbOrdersWhenVenueBannedTests
 
     public FnbOrdersWhenVenueBannedTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int MenuItemId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid MenuItemId);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -53,7 +53,7 @@ public sealed class FnbOrdersWhenVenueBannedTests
         return new Venue(owner.Id, lounge.Id, item.Id);
     }
 
-    private async Task<int> BuyerAsync()
+    private async Task<Guid> BuyerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -65,8 +65,8 @@ public sealed class FnbOrdersWhenVenueBannedTests
 
     /// <summary>Đơn đặt ngoài giờ diễn (ShowId null). <paramref name="prepaid"/>: khách đã trả trước qua VNPay; đơn Paid
     /// thì có Payment tiền mặt đã đóng.</summary>
-    private async Task<(int OrderId, int? PaymentId)> OrderAsync(
-        Venue venue, int buyerId, FnbOrderStatus status, bool prepaid = false)
+    private async Task<(Guid OrderId, Guid? PaymentId)> OrderAsync(
+        Venue venue, Guid buyerId, FnbOrderStatus status, bool prepaid = false)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -115,7 +115,7 @@ public sealed class FnbOrdersWhenVenueBannedTests
                 .ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<(FnbOrder Order, List<RefundRequest> Refunds)> StateAsync(int orderId, int? paymentId)
+    private async Task<(FnbOrder Order, List<RefundRequest> Refunds)> StateAsync(Guid orderId, Guid? paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -126,7 +126,7 @@ public sealed class FnbOrdersWhenVenueBannedTests
         return (order, refunds);
     }
 
-    private async Task<List<Notification>> NoticesAsync(int userId, NotificationType type)
+    private async Task<List<Notification>> NoticesAsync(Guid userId, NotificationType type)
     {
         using var scope = _factory.Services.CreateScope();
         return await Db(scope).Notifications.AsNoTracking()

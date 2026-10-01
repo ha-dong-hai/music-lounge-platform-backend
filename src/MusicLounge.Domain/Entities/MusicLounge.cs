@@ -3,9 +3,9 @@ using MusicLounge.Domain.ValueObjects;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class MusicLounge : Common.AuditableEntity<int>
+public sealed class MusicLounge : Common.AuditableEntity<Guid>
 {
-    public int OwnerId { get; set; }
+    public Guid OwnerId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? PrimaryImageUrl { get; set; }
@@ -14,13 +14,13 @@ public sealed class MusicLounge : Common.AuditableEntity<int>
     // Tour ao 3D: file .glb/.gltf that Owner upload cho khong gian phong tra. Null = dung scene
     // mau dung code (khong can noi dung 3D that de co san chuc nang tu ngay dau).
     public string? Model3DUrl { get; set; }
-    public int? AtmosphereId { get; set; }
+    public Guid? AtmosphereId { get; set; }
     public LoungeStatus Status { get; set; } = LoungeStatus.Pending;
 
     // MLACP-307. Vet cua quyet dinh duyet/tu choi ho so phong tra. Rieng StatusReviewNote la bat
     // buoc khi tu choi: Owner phai biet sua gi de nop lai, "bi tu choi" khong noi len dieu do.
     public DateTimeOffset? StatusReviewedAt { get; set; }
-    public int? StatusReviewedBy { get; set; }
+    public Guid? StatusReviewedBy { get; set; }
     public string? StatusReviewNote { get; set; }
     public decimal ReputationScore { get; set; } = 0m;  // D3: star-rating scale 0–5, thresholds at 3.5 / 4.2
 

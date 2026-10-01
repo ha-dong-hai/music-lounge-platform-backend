@@ -5,8 +5,8 @@ namespace MusicLounge.Application.BankAccounts.Commands.CreateBankAccount;
 
 public sealed record CreateBankAccountCommand(
     BankAccountOwnerType OwnerType,
-    int OwnerId,
+    Guid OwnerId,
     string BankName,
     string AccountNumber,
     string AccountHolder,
-    bool IsDefault) : ICommand<int>;
+    bool IsDefault) : ICommand<Guid>;

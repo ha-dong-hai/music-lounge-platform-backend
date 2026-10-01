@@ -57,7 +57,7 @@ public sealed class PosterJobQueueTests
         return client;
     }
 
-    private static HttpClient ChuPhongTra(WebApplicationFactory<Program> factory, int ownerId, int loungeId)
+    private static HttpClient ChuPhongTra(WebApplicationFactory<Program> factory, Guid ownerId, Guid loungeId)
     {
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderUserId, ownerId.ToString());
@@ -70,7 +70,7 @@ public sealed class PosterJobQueueTests
     /// Chủ phòng trà + phòng trà + gói dịch vụ RIÊNG cho mỗi bài test. Không đụng dữ liệu mẫu dùng chung: hạn mức poster
     /// của chủ phòng trà mẫu là 10 và nhiều test khác đang dựa vào đó.
     /// </summary>
-    private async Task<(int OwnerId, int LoungeId)> ChuPhongTraRiengAsync(int hanMucThang)
+    private async Task<(Guid OwnerId, Guid LoungeId)> ChuPhongTraRiengAsync(int hanMucThang)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -93,7 +93,7 @@ public sealed class PosterJobQueueTests
 
         db.OwnerSubscriptions.Add(new OwnerSubscription
         {
-            OwnerId = owner.Id, PackageId = 1,
+            OwnerId = owner.Id, PackageId = TestId.Of(1),
             StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(29),
             Status = SubscriptionStatus.Active,
@@ -105,7 +105,7 @@ public sealed class PosterJobQueueTests
         return (owner.Id, lounge.Id);
     }
 
-    private async Task<int> TaoBuoiHoaNhacAsync(HttpClient client, int loungeId)
+    private async Task<Guid> TaoBuoiHoaNhacAsync(HttpClient client, Guid loungeId)
     {
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
         {
@@ -115,12 +115,12 @@ public sealed class PosterJobQueueTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created, await res.Content.ReadAsStringAsync());
@@ -142,24 +142,24 @@ public sealed class PosterJobQueueTests
             if (res.StatusCode != HttpStatusCode.OK) return;
 
             using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-            var id = doc.RootElement.GetProperty("data").GetProperty("id").GetInt32();
+            var id = doc.RootElement.GetProperty("data").GetProperty("id").GetGuid();
             await MayTram(factory).PostAsJsonAsync(
                 $"/api/v1/poster-jobs/{id}/fail", new { WorkerId = "may-don-dep", Reason = "don dep hang doi truoc khi test" });
         }
     }
 
-    private static async Task<(int Id, int ShowId, string Prompt)> NhanDonAsync(HttpClient mayTram, string workerId = "may-1")
+    private static async Task<(Guid Id, Guid ShowId, string Prompt)> NhanDonAsync(HttpClient mayTram, string workerId = "may-1")
     {
         var res = await mayTram.PostAsJsonAsync("/api/v1/poster-jobs/claim", new { WorkerId = workerId });
         res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var data = doc.RootElement.GetProperty("data");
-        return (data.GetProperty("id").GetInt32(), data.GetProperty("showId").GetInt32(),
+        return (data.GetProperty("id").GetGuid(), data.GetProperty("showId").GetGuid(),
             data.GetProperty("prompt").GetString()!);
     }
 
     private static async Task<HttpResponseMessage> NopAnhAsync(
-        HttpClient mayTram, int jobId, byte[] anh, string workerId = "may-1")
+        HttpClient mayTram, Guid jobId, byte[] anh, string workerId = "may-1")
     {
         using var form = new MultipartFormDataContent();
         var file = new ByteArrayContent(anh);
@@ -169,7 +169,7 @@ public sealed class PosterJobQueueTests
         return await mayTram.PostAsync($"/api/v1/poster-jobs/{jobId}/result", form);
     }
 
-    private async Task<AiPosterGeneration> DonAsync(int jobId)
+    private async Task<AiPosterGeneration> DonAsync(Guid jobId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -194,9 +194,9 @@ public sealed class PosterJobQueueTests
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var data = doc.RootElement.GetProperty("data");
         data.GetProperty("status").GetString().Should().Be("Queued");
-        data.GetProperty("attemptId").GetInt32().Should().BeGreaterThan(0, "giao diện cần mã đơn để hỏi lại trạng thái");
+        data.GetProperty("attemptId").GetGuid().Should().NotBe(Guid.Empty, "giao diện cần mã đơn để hỏi lại trạng thái");
 
-        var don = await DonAsync(data.GetProperty("attemptId").GetInt32());
+        var don = await DonAsync(data.GetProperty("attemptId").GetGuid());
         don.Status.Should().Be(AiPosterGenerationStatus.Queued);
         don.ShowId.Should().Be(showId);
         don.Provider.Should().Be("flow");
@@ -412,7 +412,7 @@ public sealed class PosterJobQueueTests
         var showId = await TaoBuoiHoaNhacAsync(chu, loungeId);
         await chu.PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/ai-poster", new { });
 
-        int jobId = 0;
+        Guid jobId = Guid.Empty;
         for (var i = 0; i < PosterQueue.MaxAttempts; i++)
         {
             jobId = (await NhanDonAsync(MayTram(factory), $"may-{i}")).Id;
@@ -441,7 +441,7 @@ public sealed class PosterJobQueueTests
         var showId = await TaoBuoiHoaNhacAsync(chu, loungeId);
         var res = await chu.PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/ai-poster", new { });
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-        var jobId = doc.RootElement.GetProperty("data").GetProperty("attemptId").GetInt32();
+        var jobId = doc.RootElement.GetProperty("data").GetProperty("attemptId").GetGuid();
 
         await SuaNgayTaoAsync(jobId, DateTimeOffset.UtcNow - PosterQueue.QueueTimeout - TimeSpan.FromMinutes(1));
         await ChayJobDonDonAsync();
@@ -454,7 +454,7 @@ public sealed class PosterJobQueueTests
 
     // ---------- tiện ích ----------
 
-    private async Task HetHanThueAsync(int jobId)
+    private async Task HetHanThueAsync(Guid jobId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -463,7 +463,7 @@ public sealed class PosterJobQueueTests
         await db.SaveChangesAsync();
     }
 
-    private async Task SuaNgayTaoAsync(int jobId, DateTimeOffset createdAt)
+    private async Task SuaNgayTaoAsync(Guid jobId, DateTimeOffset createdAt)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -479,5 +479,5 @@ public sealed class PosterJobQueueTests
         await job.ExecuteAsync(new Hangfire.JobCancellationToken(false));
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

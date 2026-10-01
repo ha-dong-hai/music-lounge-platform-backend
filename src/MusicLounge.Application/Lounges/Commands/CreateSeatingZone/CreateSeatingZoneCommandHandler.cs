@@ -6,7 +6,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Lounges.Commands.CreateSeatingZone;
 
-internal sealed class CreateSeatingZoneCommandHandler : IRequestHandler<CreateSeatingZoneCommand, int>
+internal sealed class CreateSeatingZoneCommandHandler : IRequestHandler<CreateSeatingZoneCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -17,15 +17,15 @@ internal sealed class CreateSeatingZoneCommandHandler : IRequestHandler<CreateSe
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(CreateSeatingZoneCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateSeatingZoneCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền quản lý khu vực chỗ ngồi cho venue này.");
 
-        var zoneRepo = _uow.Repository<SeatingZone, int>();
+        var zoneRepo = _uow.Repository<SeatingZone, Guid>();
         var existingCount = (await zoneRepo.FindAsync(z => z.LoungeId == request.LoungeId, ct)).Count;
 
         var zone = new SeatingZone

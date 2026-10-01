@@ -14,7 +14,7 @@ public static class VenueTourRules
     /// Khoá theo phòng trà cho mọi đoạn "đếm rồi ghi" của tour (IAsyncKeyedLock, MLACP-396: trong command có
     /// transaction thì giữ tới lúc commit). Không có khoá, hai yêu cầu đồng thời cùng đếm thấy còn chỗ rồi cùng thêm.
     /// </summary>
-    public static string LockKey(int loungeId) => $"venue-tour:{loungeId}";
+    public static string LockKey(Guid loungeId) => $"venue-tour:{loungeId}";
 
     /// <summary>Số cảnh tối đa theo gói đang hiệu lực (snapshot lúc đăng ký — D12). 0 = không có gói hỗ trợ tour.</summary>
     public static int MaxScenes(IEnumerable<OwnerSubscription> subscriptions, DateTimeOffset now)

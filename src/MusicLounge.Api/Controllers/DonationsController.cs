@@ -142,27 +142,27 @@ public sealed class DonationsController : ControllerBase
     }
 
     /// <summary>W21 Chặng 1 — Owner xác nhận đã nhận tiền từ VNPay.</summary>
-    [HttpPost("{id:int}/acknowledge")]
+    [HttpPost("{id:guid}/acknowledge")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Acknowledge(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Acknowledge(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new AcknowledgeDonationCommand(id), ct);
         return NoContent();
     }
 
     /// <summary>W21 Chặng 2 — Owner xác nhận đã chuyển khoản cho nghệ sĩ.</summary>
-    [HttpPost("{id:int}/confirm-paid")]
+    [HttpPost("{id:guid}/confirm-paid")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ConfirmPaid(
-        int id,
+        Guid id,
         [FromBody] ConfirmDonationPaidRequest body,
         CancellationToken ct = default)
     {
@@ -173,13 +173,13 @@ public sealed class DonationsController : ControllerBase
     /// <summary>MLACP-360 — chủ phòng trà, nhân viên đúng phòng trà hoặc Admin gỡ lời nhắn của một
     /// donate khỏi livestream (client đang xem nhận sự kiện <c>DonationMessageHidden</c>). Không hoàn
     /// tiền; lời nhắn gốc vẫn được lưu để đối chiếu.</summary>
-    [HttpPost("{id:int}/hide-message")]
+    [HttpPost("{id:guid}/hide-message")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> HideMessage(int id, CancellationToken ct = default)
+    public async Task<IActionResult> HideMessage(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new HideDonationMessageCommand(id), ct);
         return NoContent();
@@ -196,11 +196,11 @@ public sealed class PerformerDonationsController : ControllerBase
 
     public PerformerDonationsController(ISender sender) => _sender = sender;
 
-    [HttpGet("{performerId:int}/donations")]
+    [HttpGet("{performerId:guid}/donations")]
     [AllowAnonymous]
     [ProducesResponseType<ApiResponse<PaginatedResult<PublicDonationDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPublicHistory(
-        int performerId,
+        Guid performerId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
@@ -211,11 +211,11 @@ public sealed class PerformerDonationsController : ControllerBase
     }
 
     /// <summary>MLACP-365 — tổng hợp sao kê công khai của nghệ sĩ và chính sách donate đang áp dụng.</summary>
-    [HttpGet("{performerId:int}/donations/summary")]
+    [HttpGet("{performerId:guid}/donations/summary")]
     [AllowAnonymous]
     [ProducesResponseType<ApiResponse<PerformerDonationSummaryDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetPublicSummary(int performerId, CancellationToken ct = default)
+    public async Task<IActionResult> GetPublicSummary(Guid performerId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetPerformerDonationSummaryQuery(performerId), ct);
         return Ok(ApiResponse<PerformerDonationSummaryDto>.Ok(result));
@@ -223,7 +223,7 @@ public sealed class PerformerDonationsController : ControllerBase
 }
 
 public sealed record CreateDonationRequest(
-    int PerformanceId,
+    Guid PerformanceId,
     decimal Amount,
     bool IsAnonymous = false,
     string? Message = null,

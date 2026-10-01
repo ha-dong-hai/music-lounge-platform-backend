@@ -7,7 +7,7 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Tickets.Commands.CancelTicket;
 
-internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketCommand, int>
+internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -20,7 +20,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         _lock = @lock;
     }
 
-    public async Task<int> Handle(CancelTicketCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CancelTicketCommand request, CancellationToken ct)
     {
         // Double-click "Hủy vé" is the failure this guards against: without a lock, both requests
         // can read Status == Confirmed before either commits, and both insert a RefundRequest for
@@ -42,7 +42,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         if (ticket.Status == TicketStatus.Pending)
         {
             var pendingPayment = ticket.PaymentId is { } paymentId
-                ? await _uow.Repository<Payment, int>().GetByIdAsync(paymentId, ct)
+                ? await _uow.Repository<Payment, Guid>().GetByIdAsync(paymentId, ct)
                 : null;
             var now = DateTimeOffset.UtcNow;
 
@@ -67,11 +67,11 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
             {
                 pendingPayment.Status = PaymentStatus.Failed;
                 pendingPayment.UpdatedAt = now;
-                _uow.Repository<Payment, int>().Update(pendingPayment);
+                _uow.Repository<Payment, Guid>().Update(pendingPayment);
             }
 
             await _uow.SaveChangesAsync(ct);
-            return 0;
+            return Guid.Empty; // MLACP-515: khong phat sinh yeu cau hoan tien (truoc day la 0)
         }
 
         if (ticket.Status != TicketStatus.Confirmed)
@@ -83,14 +83,14 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         // MLACP-370: tien hoan luon ve dung giao dich goc — tuc ve nguoi da mua. Nguoi nhan chuyen nhuong tu
         // huy thi tien ve the cua nguoi khac. Ticketmaster: nguoi nhan phai "transfer them back to the
         // original purchaser" de nguoi mua goc yeu cau hoan.
-        if (ticket.PaymentId is int paidWith
-            && (await _uow.Repository<Payment, int>().GetByIdAsync(paidWith, ct))?.PayerId is int payer
+        if (ticket.PaymentId is Guid paidWith
+            && (await _uow.Repository<Payment, Guid>().GetByIdAsync(paidWith, ct))?.PayerId is Guid payer
             && payer != _currentUser.UserId)
             throw new DomainException(
                 "Vé này được chuyển nhượng cho bạn — chỉ người đã mua vé mới được hoàn tiền, và tiền luôn hoàn về " +
                 "đúng phương thức họ đã thanh toán. Hãy chuyển vé lại cho người mua ban đầu để họ yêu cầu hoàn.");
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(ticket.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(ticket.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), ticket.ShowId);
 
         // MLACP-338. Day khong phai "huy ve" — day la "khong giao duoc hang", va hai chuyen do khac
@@ -106,7 +106,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
 
         // MLACP-372: phong tra doi lich / doi dia chi sau khi nguoi nay mua — trong cua so rieng, huy duoc va hoan 100%
         // bat ke chinh sach cua buoi dien (nguoi mua sau van theo chinh sach do). Het cua so thi ve chinh sach thuong.
-        var tier = await _uow.Repository<TicketTier, int>().GetByIdAsync(ticket.TierId, ct)
+        var tier = await _uow.Repository<TicketTier, Guid>().GetByIdAsync(ticket.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), ticket.TierId);
         var changedAfterPurchase = !neverDelivered
             && TicketRefundPolicy.FullRefundUntil(show, ticket, tier.AccessType) is DateTimeOffset fullRefundUntil
@@ -153,7 +153,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
         if (ticket.PaymentId is null)
             throw new DomainException("Vé này không có giao dịch thanh toán hợp lệ để hoàn tiền.");
 
-        var price = await _uow.Repository<TicketPrice, int>().GetByIdAsync(ticket.PriceId, ct)
+        var price = await _uow.Repository<TicketPrice, Guid>().GetByIdAsync(ticket.PriceId, ct)
             ?? throw new NotFoundException(nameof(TicketPrice), ticket.PriceId);
 
         ticket.Status = TicketStatus.Cancelled;
@@ -181,7 +181,7 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
             Status = RefundRequestStatus.Pending
         };
 
-        _uow.Repository<RefundRequest, int>().Add(refundRequest);
+        _uow.Repository<RefundRequest, Guid>().Add(refundRequest);
         await _uow.SaveChangesAsync(ct);
 
         return refundRequest.Id;

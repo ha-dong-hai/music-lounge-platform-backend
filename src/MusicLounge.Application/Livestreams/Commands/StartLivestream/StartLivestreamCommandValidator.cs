@@ -7,7 +7,7 @@ public sealed class StartLivestreamCommandValidator : AbstractValidator<StartLiv
     public StartLivestreamCommandValidator()
     {
         RuleFor(x => x.LivestreamId)
-            .GreaterThan(0)
+            .NotEmpty()
             .WithMessage("LivestreamId không hợp lệ.");
     }
 }

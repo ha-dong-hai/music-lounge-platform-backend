@@ -19,19 +19,19 @@ internal sealed class RemoveVenueTourHotspotCommandHandler : IRequestHandler<Rem
 
     public async Task<Unit> Handle(RemoveVenueTourHotspotCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        var hotspotRepo = _uow.Repository<VenueTourHotspot, int>();
+        var hotspotRepo = _uow.Repository<VenueTourHotspot, Guid>();
         var hotspot = await hotspotRepo.GetByIdAsync(request.HotspotId, ct)
             ?? throw new NotFoundException(nameof(VenueTourHotspot), request.HotspotId);
 
         // Generic IRepository never eager-loads navigation properties — look the scene up
         // directly rather than trusting hotspot.Scene to be populated.
-        var scene = await _uow.Repository<VenueTourScene, int>().GetByIdAsync(hotspot.SceneId, ct);
+        var scene = await _uow.Repository<VenueTourScene, Guid>().GetByIdAsync(hotspot.SceneId, ct);
         if (scene is null || scene.LoungeId != request.LoungeId)
             throw new NotFoundException(nameof(VenueTourHotspot), request.HotspotId);
 

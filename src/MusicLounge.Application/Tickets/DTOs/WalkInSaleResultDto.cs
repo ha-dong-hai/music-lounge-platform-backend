@@ -6,7 +6,7 @@ namespace MusicLounge.Application.Tickets.DTOs;
 /// check-in được. TicketIds giữ nguyên cho client cũ.
 /// </param>
 public sealed record WalkInSaleResultDto(
-    int PaymentId,
+    Guid PaymentId,
     decimal Amount,
     Guid[] TicketIds,
     IReadOnlyList<WalkInTicketDto> Tickets);

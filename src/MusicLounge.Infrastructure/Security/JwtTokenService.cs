@@ -15,7 +15,7 @@ internal sealed class JwtTokenService : IJwtTokenService
 
     public JwtTokenService(IOptions<JwtSettings> settings) => _settings = settings.Value;
 
-    public (string Token, DateTimeOffset ExpiresAt) GenerateToken(User user, int? loungeId)
+    public (string Token, DateTimeOffset ExpiresAt) GenerateToken(User user, Guid? loungeId)
     {
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_settings.AccessTokenExpiryMinutes);
 

@@ -22,7 +22,7 @@ namespace MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 // synchronously (so quota/anti-abuse limits are enforced before returning), then enqueues the
 // job and returns the attempt id immediately — the Owner polls GetVenueTourStitchAttemptQuery for
 // the outcome instead of waiting on this request.
-internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<StitchVenueTourSceneCommand, int>
+internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<StitchVenueTourSceneCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -43,9 +43,9 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
         _lock = @lock;
     }
 
-    public async Task<int> Handle(StitchVenueTourSceneCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(StitchVenueTourSceneCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
@@ -56,14 +56,14 @@ internal sealed class StitchVenueTourSceneCommandHandler : IRequestHandler<Stitc
         await using var _ = await _lock.AcquireAsync(VenueTourRules.LockKey(request.LoungeId), ct);
 
         var now = DateTimeOffset.UtcNow;
-        var subscriptions = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var subscriptions = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
-        var existingScenes = await _uow.Repository<VenueTourScene, int>().FindAsync(s => s.LoungeId == request.LoungeId, ct);
+        var existingScenes = await _uow.Repository<VenueTourScene, Guid>().FindAsync(s => s.LoungeId == request.LoungeId, ct);
         // Kiem so bo luc tao luot — job kiem LAI ngay truoc khi tao canh, vi job co the nam cho vai phut.
         if (VenueTourRules.QuotaViolation(existingScenes.Count, VenueTourRules.MaxScenes(subscriptions, now)) is { } loi)
             throw new DomainException(loi);
 
-        var attemptRepo = _uow.Repository<VenueTourStitchAttempt, int>();
+        var attemptRepo = _uow.Repository<VenueTourStitchAttempt, Guid>();
 
         // Anti-abuse: every attempt (success, failure, or now-pending) on THIS lounge counts — a
         // stitch runs on our own server's CPU, unlike the AI vendor calls elsewhere in this

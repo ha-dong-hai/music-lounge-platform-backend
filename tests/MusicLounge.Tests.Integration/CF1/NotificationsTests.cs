@@ -18,7 +18,7 @@ public sealed class NotificationsTests
 
     public NotificationsTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedNotificationAsync(int userId)
+    private async Task<Guid> SeedNotificationAsync(Guid userId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

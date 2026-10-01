@@ -66,7 +66,7 @@ internal sealed class GetRecommenderEvaluationQueryHandler
             t => t.BuyerId != null
                 && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
 
-        var saves = await _uow.Repository<ShowWishlist, int>().FindAsync(_ => true, ct);
+        var saves = await _uow.Repository<ShowWishlist, Guid>().FindAsync(_ => true, ct);
 
         var interactions = tickets
             .Select(t => (UserId: t.BuyerId!.Value, ShowId: t.ShowId, At: t.CreatedAt))
@@ -74,7 +74,7 @@ internal sealed class GetRecommenderEvaluationQueryHandler
             .ToList();
 
         // ── Kho buổi diễn có thể gợi ý ────────────────────────────────────────────────
-        var catalogue = (await _uow.Repository<LoungeShow, int>().FindAsync(
+        var catalogue = (await _uow.Repository<LoungeShow, Guid>().FindAsync(
                 s => s.Status == LoungeShowStatus.Published
                      || s.Status == LoungeShowStatus.Ongoing
                      || s.Status == LoungeShowStatus.Ended, ct))
@@ -165,16 +165,16 @@ internal sealed class GetRecommenderEvaluationQueryHandler
     /// Gu của từng người: sở thích họ tự khai cộng phòng trà đang theo dõi — đúng thứ mô hình
     /// content-based dùng khi phục vụ người dùng thật, nên phép đo đo đúng cái đang chạy.
     /// </summary>
-    private async Task<Dictionary<int, TasteProfile>> BuildTasteProfilesAsync(
-        IReadOnlyList<int> userIds, CancellationToken ct)
+    private async Task<Dictionary<Guid, TasteProfile>> BuildTasteProfilesAsync(
+        IReadOnlyList<Guid> userIds, CancellationToken ct)
     {
-        var genres = await _uow.Repository<UserFavouriteGenre, int>()
+        var genres = await _uow.Repository<UserFavouriteGenre, Guid>()
             .FindAsync(g => userIds.Contains(g.UserId), ct);
-        var moods = await _uow.Repository<UserFavouriteMood, int>()
+        var moods = await _uow.Repository<UserFavouriteMood, Guid>()
             .FindAsync(m => userIds.Contains(m.UserId), ct);
-        var atmospheres = await _uow.Repository<UserFavouriteAtmosphere, int>()
+        var atmospheres = await _uow.Repository<UserFavouriteAtmosphere, Guid>()
             .FindAsync(a => userIds.Contains(a.UserId), ct);
-        var follows = await _uow.Repository<Follow, int>()
+        var follows = await _uow.Repository<Follow, Guid>()
             .FindAsync(f => userIds.Contains(f.UserId), ct);
 
         var genreLookup = genres.ToLookup(g => g.UserId, g => g.GenreId);

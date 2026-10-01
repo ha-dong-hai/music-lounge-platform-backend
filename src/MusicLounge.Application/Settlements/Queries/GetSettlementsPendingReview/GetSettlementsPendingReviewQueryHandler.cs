@@ -26,7 +26,7 @@ internal sealed class GetSettlementsPendingReviewQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        var (parked, total) = await _uow.Repository<Settlement, int>().GetPagedAsync(
+        var (parked, total) = await _uow.Repository<Settlement, Guid>().GetPagedAsync(
             s => s.Status == SettlementStatus.PendingReview, s => s.Id, page, size, ct);
 
         if (parked.Count == 0)
@@ -51,19 +51,19 @@ internal sealed class GetSettlementsPendingReviewQueryHandler
         var showIds = showIdByPayment.Values.Distinct().ToList();
         var shows = showIds.Count == 0
             ? []
-            : await _uow.Repository<LoungeShow, int>().FindAsync(s => showIds.Contains(s.Id), ct);
+            : await _uow.Repository<LoungeShow, Guid>().FindAsync(s => showIds.Contains(s.Id), ct);
         var showById = shows.ToDictionary(s => s.Id);
 
         // Một khoản vừa bị giữ vì thời lượng, vừa có yêu cầu hoàn tiền đang chờ, thì Admin cần biết
         // trước khi bấm chi trả — chi xong rồi mới duyệt hoàn là phải viết bút toán đảo bằng tay.
-        var refunds = await _uow.Repository<RefundRequest, int>()
+        var refunds = await _uow.Repository<RefundRequest, Guid>()
             .FindAsync(r => paymentIds.Contains(r.PaymentId) && r.Status == RefundRequestStatus.Pending, ct);
         var paymentsWithPendingRefund = refunds.Select(r => r.PaymentId).ToHashSet();
 
         var items = parked.Select(s =>
         {
             showIdByPayment.TryGetValue(s.PaymentId, out var showId);
-            var show = showId != 0 && showById.TryGetValue(showId, out var found) ? found : null;
+            var show = showId != Guid.Empty && showById.TryGetValue(showId, out var found) ? found : null;
             var evidence = ShowCompletion.Evaluate(show);
 
             return new SettlementReviewDto(

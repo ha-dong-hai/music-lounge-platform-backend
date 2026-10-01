@@ -34,7 +34,7 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 
     public async Task<RegisterResultDto> Handle(RegisterCommand request, CancellationToken ct)
     {
-        var emailExists = await _uow.Repository<User, int>()
+        var emailExists = await _uow.Repository<User, Guid>()
             .AnyAsync(u => u.Email == request.Email, ct);
         if (emailExists)
             throw new ConflictException("Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.");
@@ -65,7 +65,7 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
             CreatedAt = DateTime.UtcNow
         };
 
-        _uow.Repository<User, int>().Add(user);
+        _uow.Repository<User, Guid>().Add(user);
         await _uow.SaveChangesAsync(ct);
 
         _backgroundJobs.EnqueueEmailVerificationCode(user.Email, user.FullName, code, user.PreferredLanguage);

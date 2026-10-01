@@ -25,7 +25,7 @@ internal sealed class GetPayoutAccountReviewQueueQueryHandler
     {
         // Chỉ tài khoản của phòng trà: lệnh duyệt từ chối tài khoản của nghệ sĩ ("do chính nghệ sĩ xác
         // nhận qua liên kết gửi email"), nên đưa chúng vào hàng đợi chỉ tạo ra những dòng bấm vào là lỗi.
-        var accounts = (await _uow.Repository<BankAccount, int>().FindAsync(
+        var accounts = (await _uow.Repository<BankAccount, Guid>().FindAsync(
                 b => b.OwnerType == BankAccountOwnerType.Lounge && b.IsVerified == request.Verified, ct))
             .OrderBy(b => b.CreatedAt)   // cũ nhất trước, như mọi hàng đợi duyệt khác của hệ thống
             .ToList();
@@ -38,12 +38,12 @@ internal sealed class GetPayoutAccountReviewQueueQueryHandler
         // OwnerId của BankAccount là đa hình (lounge.id hoặc performer.id) nên không có khoá ngoại để
         // Include — nạp phòng trà và chủ phòng trà của đúng trang này, không nạp cả bảng.
         var loungeIds = page.Select(b => b.OwnerId).Distinct().ToList();
-        var lounges = (await _uow.Repository<MusicLoungeEntity, int>().FindAsync(
+        var lounges = (await _uow.Repository<MusicLoungeEntity, Guid>().FindAsync(
                 l => loungeIds.Contains(l.Id), ct))
             .ToDictionary(l => l.Id);
 
         var ownerIds = lounges.Values.Select(l => l.OwnerId).Distinct().ToList();
-        var owners = (await _uow.Repository<User, int>().FindAsync(u => ownerIds.Contains(u.Id), ct))
+        var owners = (await _uow.Repository<User, Guid>().FindAsync(u => ownerIds.Contains(u.Id), ct))
             .ToDictionary(u => u.Id);
 
         var items = new List<PayoutAccountReviewItemDto>(page.Count);
@@ -63,7 +63,7 @@ internal sealed class GetPayoutAccountReviewQueueQueryHandler
                 account.Id,
                 lounge?.Id ?? account.OwnerId,
                 lounge?.Name ?? "(phòng trà không còn tồn tại)",
-                owner?.Id ?? 0,
+                owner?.Id ?? Guid.Empty,
                 owner?.FullName ?? "(không tìm thấy chủ phòng trà)",
                 account.BankName,
                 Mask(soTaiKhoan),

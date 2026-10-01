@@ -119,12 +119,12 @@ public sealed class LivestreamHub : Hub
         await _hubService.BroadcastReactionAsync(livestreamId.Value, reactionType);
     }
 
-    private int? GetLivestreamId()
+    private Guid? GetLivestreamId()
     {
         var value = Context.GetHttpContext()?.Request.Query["livestreamId"].ToString();
-        return int.TryParse(value, out var id) ? id : null;
+        return Guid.TryParse(value, out var id) ? id : null;
     }
 
-    public static string GroupName(int livestreamId) => $"livestream-{livestreamId}";
-    public static string StaffGroupName(int livestreamId) => $"livestream-staff-{livestreamId}";
+    public static string GroupName(Guid livestreamId) => $"livestream-{livestreamId}";
+    public static string StaffGroupName(Guid livestreamId) => $"livestream-staff-{livestreamId}";
 }

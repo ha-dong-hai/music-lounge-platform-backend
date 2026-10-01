@@ -28,7 +28,7 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
 
     public async Task<ExportedFileDto> Handle(ExportOwnerRevenueReportQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -85,7 +85,7 @@ internal sealed class ExportOwnerRevenueReportQueryHandler
         foreach (var e in report.ByEvent)
         {
             sb.AppendLine(Csv(
-                e.ShowId.ToString(CultureInfo.InvariantCulture),
+                e.ShowId.ToString(),
                 e.ShowName,
                 e.ScheduledStart.ToOffset(TimeSpan.FromHours(7)).ToString("yyyy-MM-dd"),
                 e.TicketRevenue.ToString(CultureInfo.InvariantCulture),

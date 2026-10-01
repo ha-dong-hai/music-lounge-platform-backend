@@ -105,7 +105,7 @@ public sealed class CustomCriteriaOptionsShapeTests
     {
         var tao = await TaoAsync("Boolean", null);
         tao.StatusCode.Should().Be(HttpStatusCode.Created);
-        var criteriaId = (await tao.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var criteriaId = (await tao.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var owner = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         var gan = await owner.PostAsJsonAsync(
@@ -118,7 +118,7 @@ public sealed class CustomCriteriaOptionsShapeTests
         var data = root.TryGetProperty("data", out var d) ? d : root;
 
         var mine = data.EnumerateArray()
-            .First(v => v.GetProperty("criteriaId").GetInt32() == criteriaId);
+            .First(v => v.GetProperty("criteriaId").GetGuid() == criteriaId);
 
         mine.GetProperty("value").GetString().Should().Be("true",
             "ô chọn dựng bằng true/false chữ thường sẽ không khớp được dòng ghi \"TRUE\", rồi lần Lưu sau xoá mất giá trị");

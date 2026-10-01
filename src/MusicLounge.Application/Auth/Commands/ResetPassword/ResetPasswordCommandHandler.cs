@@ -19,7 +19,7 @@ internal sealed class ResetPasswordCommandHandler : IRequestHandler<ResetPasswor
     public async Task<Unit> Handle(ResetPasswordCommand request, CancellationToken ct)
     {
         var tokenHash = PasswordResetTokenHasher.Hash(request.Token);
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var users = await userRepo.FindAsync(u => u.PasswordResetTokenHash == tokenHash, ct);
         var user = users.FirstOrDefault();
 

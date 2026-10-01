@@ -21,7 +21,7 @@ public sealed class LoungePrimaryImageRemovalTests
 
     private static string Ma() => Guid.NewGuid().ToString("N")[..10];
 
-    private sealed record PhongTra(int LoungeId, int OwnerId, List<(int Id, string Url)> Anh);
+    private sealed record PhongTra(Guid LoungeId, Guid OwnerId, List<(Guid Id, string Url)> Anh);
 
     // Phòng trà riêng (mỗi chủ một phòng trà) với các ảnh gallery theo thứ tự; ảnh đại diện = ảnh có chỉ số daiDien.
     private async Task<PhongTra> PhongTraCoAnhAsync(int soAnh, int daiDien)
@@ -46,7 +46,7 @@ public sealed class LoungePrimaryImageRemovalTests
         return new PhongTra(lounge.Id, chu.Id, anh.Select(a => (a.Id, a.ImageUrl)).ToList());
     }
 
-    private async Task<string?> AnhDaiDienAsync(int loungeId)
+    private async Task<string?> AnhDaiDienAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

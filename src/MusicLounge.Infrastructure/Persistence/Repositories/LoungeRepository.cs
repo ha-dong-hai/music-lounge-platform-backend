@@ -15,7 +15,7 @@ internal sealed class LoungeRepository : ILoungeRepository
     public LoungeRepository(ApplicationDbContext ctx) => _ctx = ctx;
 
     public async Task<PaginatedResult<LoungeListItemDto>> GetAllAsync(
-        string? city, int? ownerId, bool includeUnapproved, int page, int pageSize,
+        string? city, Guid? ownerId, bool includeUnapproved, int page, int pageSize,
         string? keyword = null, CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -65,7 +65,7 @@ internal sealed class LoungeRepository : ILoungeRepository
         return new PaginatedResult<LoungeListItemDto>(items, page, pageSize, total);
     }
 
-    public async Task<LoungeDetailDto?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<LoungeDetailDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var lounge = await _ctx.Lounges
@@ -132,8 +132,8 @@ internal sealed class LoungeRepository : ILoungeRepository
     /// Batching this as its own simple-predicate query, then filtering/grouping in memory, both
     /// fixes the translation failure and avoids a correlated-subquery-per-row execution shape.
     /// </summary>
-    private async Task<Dictionary<int, int>> GetUpcomingActiveShowCountsAsync(
-        IReadOnlyCollection<int> loungeIds, DateTimeOffset now, CancellationToken ct)
+    private async Task<Dictionary<Guid, int>> GetUpcomingActiveShowCountsAsync(
+        IReadOnlyCollection<Guid> loungeIds, DateTimeOffset now, CancellationToken ct)
     {
         if (loungeIds.Count == 0) return [];
 
@@ -213,7 +213,7 @@ internal sealed class LoungeRepository : ILoungeRepository
         return new PaginatedResult<VenueReviewItemDto>(items, page, pageSize, total);
     }
 
-    public async Task<bool> IsFollowingAsync(int loungeId, int userId, CancellationToken ct = default)
+    public async Task<bool> IsFollowingAsync(Guid loungeId, Guid userId, CancellationToken ct = default)
         => await _ctx.Follows
             .AsNoTracking()
             .AnyAsync(f => f.LoungeId == loungeId && f.UserId == userId, ct);

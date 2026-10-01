@@ -13,7 +13,7 @@ internal sealed class RemoveRatingCommandHandler : IRequestHandler<RemoveRatingC
 
     public async Task<Unit> Handle(RemoveRatingCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<LoungeShowRating, int>();
+        var repo = _uow.Repository<LoungeShowRating, Guid>();
         var rating = await repo.GetByIdAsync(request.RatingId, ct)
             ?? throw new NotFoundException(nameof(LoungeShowRating), request.RatingId);
 

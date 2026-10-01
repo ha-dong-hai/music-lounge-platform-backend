@@ -39,7 +39,7 @@ public sealed class KycReviewQueuePagingTests
         }
 
         // Thuật toán cũ, nguyên văn: lọc → OrderBy (ổn định trên thứ tự DB trả về) → Skip/Take.
-        List<int> kyVong;
+        List<Guid> kyVong;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -55,14 +55,14 @@ public sealed class KycReviewQueuePagingTests
 
         var admin = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         const int coTrang = 7;
-        var thucTe = new List<int>();
+        var thucTe = new List<Guid>();
         for (var trang = 1; (trang - 1) * coTrang < kyVong.Count; trang++)
         {
             var res = await admin.GetAsync($"/api/v1/admin/kyc-reviews?status=Pending&page={trang}&pageSize={coTrang}");
             using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
             var data = doc.RootElement.GetProperty("data");
             data.GetProperty("totalCount").GetInt32().Should().Be(kyVong.Count);
-            thucTe.AddRange(data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("userId").GetInt32()));
+            thucTe.AddRange(data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("userId").GetGuid()));
         }
 
         thucTe.Should().Equal(kyVong, "thứ tự từng trang phải y hệt bản cũ");

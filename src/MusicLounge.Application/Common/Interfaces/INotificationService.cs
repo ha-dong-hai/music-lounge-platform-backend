@@ -12,7 +12,7 @@ namespace MusicLounge.Application.Common.Interfaces;
 public interface INotificationService
 {
     Task NotifyAsync(
-        int userId,
+        Guid userId,
         NotificationType type,
         SongNgu title,
         SongNgu body,

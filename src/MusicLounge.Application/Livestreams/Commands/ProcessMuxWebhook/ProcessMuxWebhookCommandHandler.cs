@@ -116,7 +116,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
 
     private async Task<bool> HandleLiveStreamDisconnectedAsync(string providerRef, CancellationToken ct)
     {
-        var livestreams = await _uow.Repository<Livestream, int>()
+        var livestreams = await _uow.Repository<Livestream, Guid>()
             .FindAsync(l => l.ProviderRef == providerRef, ct);
         var livestream = livestreams.FirstOrDefault();
         if (livestream is null || livestream.Status != LivestreamStatus.Live)
@@ -130,7 +130,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
         var now = DateTimeOffset.UtcNow;
         livestream.Status = LivestreamStatus.Reconnecting;
         livestream.DisconnectedAt = now;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogWarning(
@@ -147,7 +147,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
 
     private async Task<bool> HandleLiveStreamConnectedAsync(string providerRef, CancellationToken ct)
     {
-        var livestreams = await _uow.Repository<Livestream, int>()
+        var livestreams = await _uow.Repository<Livestream, Guid>()
             .FindAsync(l => l.ProviderRef == providerRef, ct);
         var livestream = livestreams.FirstOrDefault();
         if (livestream is null || livestream.Status != LivestreamStatus.Reconnecting)
@@ -160,7 +160,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
 
         livestream.Status = LivestreamStatus.Live;
         livestream.DisconnectedAt = null;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogInformation(
@@ -174,7 +174,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
 
     private async Task<bool> HandleLiveStreamIdleAsync(string providerRef, CancellationToken ct)
     {
-        var livestreams = await _uow.Repository<Livestream, int>()
+        var livestreams = await _uow.Repository<Livestream, Guid>()
             .FindAsync(l => l.ProviderRef == providerRef, ct);
         var livestream = livestreams.FirstOrDefault();
         if (livestream is null)
@@ -198,7 +198,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
             return true;
         }
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct);
         if (show is null)
         {
             _logger.LogWarning(
@@ -212,7 +212,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
         livestream.Status = LivestreamStatus.Ended;
         livestream.EndedAt = now;
         livestream.ViewerCount = 0;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
 
         var ratingWindowDays = await _config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
         // Never resurrect a show the Owner already cancelled (or that already ended by another
@@ -220,7 +220,7 @@ internal sealed class ProcessMuxWebhookCommandHandler : IRequestHandler<ProcessM
         // webhook indefinitely.
         if (LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays))
         {
-            _uow.Repository<LoungeShow, int>().Update(show);
+            _uow.Repository<LoungeShow, Guid>().Update(show);
         }
         else
         {

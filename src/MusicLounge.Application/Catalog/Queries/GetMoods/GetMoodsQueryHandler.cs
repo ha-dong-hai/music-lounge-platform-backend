@@ -7,9 +7,9 @@ namespace MusicLounge.Application.Catalog.Queries.GetMoods;
 
 internal sealed class GetMoodsQueryHandler : IRequestHandler<GetMoodsQuery, List<CatalogItemDto>>
 {
-    private readonly IRepository<Mood, int> _repo;
+    private readonly IRepository<Mood, Guid> _repo;
 
-    public GetMoodsQueryHandler(IRepository<Mood, int> repo) => _repo = repo;
+    public GetMoodsQueryHandler(IRepository<Mood, Guid> repo) => _repo = repo;
 
     public async Task<List<CatalogItemDto>> Handle(GetMoodsQuery request, CancellationToken ct)
     {

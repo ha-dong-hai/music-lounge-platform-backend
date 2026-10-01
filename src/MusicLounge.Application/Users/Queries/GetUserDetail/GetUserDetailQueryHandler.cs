@@ -14,7 +14,7 @@ internal sealed class GetUserDetailQueryHandler : IRequestHandler<GetUserDetailQ
 
     public async Task<UserAdminDto> Handle(GetUserDetailQuery request, CancellationToken ct)
     {
-        var user = await _uow.Repository<User, int>().GetByIdAsync(request.UserId, ct)
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
         return new UserAdminDto(

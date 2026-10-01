@@ -24,7 +24,7 @@ public sealed class PhoneVerificationSmsFlowTests
     public PhoneVerificationSmsFlowTests(ApiFactory factory) => _factory = factory;
 
     /// <summary>Tài khoản dùng riêng — không động vào tài khoản seed dùng chung (xem DataErasureTests).</summary>
-    private async Task<(int Id, string Phone)> TaoNguoiDungCoSoDienThoaiAsync()
+    private async Task<(Guid Id, string Phone)> TaoNguoiDungCoSoDienThoaiAsync()
     {
         var phone = "09" + Random.Shared.Next(10_000_000, 99_999_999);
         using var scope = _factory.Services.CreateScope();

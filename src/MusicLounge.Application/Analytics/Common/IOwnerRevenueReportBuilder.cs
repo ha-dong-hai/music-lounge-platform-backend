@@ -11,5 +11,5 @@ namespace MusicLounge.Application.Analytics.Common;
 public interface IOwnerRevenueReportBuilder
 {
     Task<OwnerRevenueReportDto> BuildAsync(
-        int loungeId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken ct = default);
+        Guid loungeId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken ct = default);
 }

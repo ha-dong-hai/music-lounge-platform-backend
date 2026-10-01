@@ -18,7 +18,7 @@ internal sealed class UpdateMyLanguageCommandHandler : IRequestHandler<UpdateMyL
 
     public async Task<Unit> Handle(UpdateMyLanguageCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 

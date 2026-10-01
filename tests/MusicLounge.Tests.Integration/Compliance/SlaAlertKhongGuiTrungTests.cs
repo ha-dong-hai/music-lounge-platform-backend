@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using FluentAssertions;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +40,7 @@ public sealed class SlaAlertKhongGuiTrungTests
     [Fact]
     public async Task KhieuNaiQuaHan_ChayJobHaiLan_ChiCoMotCanhBao()
     {
-        int complaintId;
+        Guid complaintId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -67,14 +68,14 @@ public sealed class SlaAlertKhongGuiTrungTests
     [Fact]
     public async Task DuyetNoiDungQuaHan_ChayJobHaiLan_ChiCoMotCanhBao()
     {
-        int moderationId;
+        Guid moderationId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var moderation = new EventModeration
             {
                 TargetType = ModerationTargetType.Show,
-                TargetId = Random.Shared.Next(100_000, 999_999),
+                TargetId = OrderedGuid.New(),
                 SlaDeadline = DateTimeOffset.UtcNow.AddHours(-30),
                 CreatedAt = DateTime.UtcNow.AddHours(-60)
             };
@@ -92,7 +93,7 @@ public sealed class SlaAlertKhongGuiTrungTests
     [Fact]
     public async Task BaoCaoViPhamQuaHan_ChayJobHaiLan_ChiCoMotCanhBao()
     {
-        var targetId = Random.Shared.Next(100_000, 999_999);
+        var targetId = Guid.NewGuid();
         await SeedReportAsync(targetId, hoursAgo: 50);
 
         await RunAsync<ContentReportSlaBreachAlertJob>();
@@ -106,7 +107,7 @@ public sealed class SlaAlertKhongGuiTrungTests
     {
         // Cảnh báo theo đích báo cáo chứ không theo từng báo cáo: chống trùng không được biến thành "im lặng vĩnh viễn"
         // cho đích đó. Đợt báo cáo mới sau khi đợt cũ đã xử lý xong vẫn phải được cảnh báo.
-        var targetId = Random.Shared.Next(100_000, 999_999);
+        var targetId = Guid.NewGuid();
         var oldReportId = await SeedReportAsync(targetId, hoursAgo: 200);
         await RunAsync<ContentReportSlaBreachAlertJob>();
 
@@ -129,7 +130,7 @@ public sealed class SlaAlertKhongGuiTrungTests
         (await CountAlertsAsync(NotificationType.ContentReportSlaBreached, $"Show:{targetId}")).Should().Be(2);
     }
 
-    private async Task<int> SeedReportAsync(int targetId, int hoursAgo)
+    private async Task<Guid> SeedReportAsync(Guid targetId, int hoursAgo)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

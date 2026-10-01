@@ -44,7 +44,7 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMyLounge([FromQuery] int loungeId, CancellationToken ct = default)
+    public async Task<IActionResult> GetMyLounge([FromQuery] Guid loungeId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetOwnerAnalyticsQuery(loungeId), ct);
         return Ok(ApiResponse<OwnerAnalyticsDto>.Ok(result));
@@ -73,7 +73,7 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRevenueReport(
-        [FromQuery] int loungeId,
+        [FromQuery] Guid loungeId,
         [FromQuery] DateTimeOffset? from = null,
         [FromQuery] DateTimeOffset? to = null,
         CancellationToken ct = default)
@@ -91,7 +91,7 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ExportRevenueReport(
-        [FromQuery] int loungeId,
+        [FromQuery] Guid loungeId,
         [FromQuery] DateTimeOffset? from = null,
         [FromQuery] DateTimeOffset? to = null,
         CancellationToken ct = default)
@@ -143,13 +143,13 @@ public sealed class AnalyticsController : ControllerBase
 
     /// <summary>Owner — thống kê hiệu suất 1 buổi diễn: lượt xem trang, tỷ lệ chuyển đổi sang mua vé,
     /// check-in thực tế so với vé bán, số người xem live.</summary>
-    [HttpGet("shows/{showId:int}/performance")]
+    [HttpGet("shows/{showId:guid}/performance")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<ShowPerformanceDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetShowPerformance(int showId, CancellationToken ct = default)
+    public async Task<IActionResult> GetShowPerformance(Guid showId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetShowPerformanceQuery(showId), ct);
         return Ok(ApiResponse<ShowPerformanceDto>.Ok(result));
@@ -157,13 +157,13 @@ public sealed class AnalyticsController : ControllerBase
 
     /// <summary>Owner — biểu đồ bán vé theo ngày trong thời gian mở bán của 1 buổi diễn, cùng tỷ lệ
     /// bán theo từng loại vé.</summary>
-    [HttpGet("shows/{showId:int}/ticket-sales-trend")]
+    [HttpGet("shows/{showId:guid}/ticket-sales-trend")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<TicketSalesTrendDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetTicketSalesTrend(int showId, CancellationToken ct = default)
+    public async Task<IActionResult> GetTicketSalesTrend(Guid showId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetTicketSalesTrendQuery(showId), ct);
         return Ok(ApiResponse<TicketSalesTrendDto>.Ok(result));
@@ -177,13 +177,13 @@ public sealed class AnalyticsController : ControllerBase
     /// hoặc status='TooEarly' khi còn quá xa ngày diễn. Hai trường hợp đó KHÔNG có con số, và đó là
     /// câu trả lời đúng — một dự báo dựng trên hai buổi diễn là đoán, và chủ phòng trà tin theo mà
     /// xếp lịch thì thiệt hại là thật. Trường explanation nói rõ dự báo dựa trên cái gì.</summary>
-    [HttpGet("shows/{showId:int}/demand-forecast")]
+    [HttpGet("shows/{showId:guid}/demand-forecast")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<DemandForecastDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetDemandForecast(int showId, CancellationToken ct = default)
+    public async Task<IActionResult> GetDemandForecast(Guid showId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetDemandForecastQuery(showId), ct);
         return Ok(ApiResponse<DemandForecastDto>.Ok(result));
@@ -219,7 +219,7 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetArtistDonationStats(
-        [FromQuery] int loungeId, CancellationToken ct = default)
+        [FromQuery] Guid loungeId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetOwnerArtistDonationStatsQuery(loungeId), ct);
         return Ok(ApiResponse<OwnerArtistDonationReportDto>.Ok(result));
@@ -248,7 +248,7 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetLivestreamHistory(
-        [FromQuery] int loungeId,
+        [FromQuery] Guid loungeId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         CancellationToken ct = default)

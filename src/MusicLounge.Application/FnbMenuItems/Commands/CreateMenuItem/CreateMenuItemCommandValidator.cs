@@ -11,8 +11,8 @@ public sealed class CreateMenuItemCommandValidator : AbstractValidator<CreateMen
     {
         RuleFor(x => x.MenuId)
             .Cascade(CascadeMode.Stop)
-            .GreaterThan(0)
-            .MustAsync(async (menuId, ct) => await uow.Repository<FnbMenu, int>().AnyAsync(m => m.Id == menuId, ct))
+            .NotEmpty()
+            .MustAsync(async (menuId, ct) => await uow.Repository<FnbMenu, Guid>().AnyAsync(m => m.Id == menuId, ct))
             .WithMessage("MenuId không tồn tại.");
         // 50, not 100 — matches FnbMenuItemConfiguration's actual HasMaxLength(50); a validator
         // more permissive than the DB column just delays the same error to a DbUpdateException

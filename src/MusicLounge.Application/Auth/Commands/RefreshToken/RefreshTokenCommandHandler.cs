@@ -25,11 +25,11 @@ internal sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenC
         if (principal is null)
             throw new UnauthorizedException("Refresh token không hợp lệ hoặc đã hết hạn.");
 
-        if (!int.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId) ||
+        if (!Guid.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId) ||
             !Guid.TryParse(principal.FindFirst("sec_stamp")?.Value, out var tokenStamp))
             throw new UnauthorizedException("Refresh token không hợp lệ hoặc đã hết hạn.");
 
-        var user = await _uow.Repository<User, int>().GetByIdAsync(userId, ct);
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(userId, ct);
 
         // Same comparison as ActiveUserBehavior: a refresh token issued before logout carries the
         // OLD SecurityStamp, so this catches a revoked session even though the JWT itself is still

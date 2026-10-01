@@ -10,7 +10,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Livestreams.Commands.CreateLivestream;
 
-internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLivestreamCommand, int>
+internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLivestreamCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ILivestreamRepository _livestreamRepo;
@@ -38,17 +38,17 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
         _backgroundJobs = backgroundJobs;
     }
 
-    public async Task<int> Handle(CreateLivestreamCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateLivestreamCommand request, CancellationToken ct)
     {
         // Without this, two concurrent calls for the same show both pass the "existing is null"
         // check before either commits, and both create a Livestream (+ matching EventModeration)
         // row for the same show — a real double-broadcast-setup, not just a duplicate DB row.
         await using var _ = await _lock.AcquireAsync($"create-livestream:{request.ShowId}", ct);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền tạo livestream cho venue này.");
@@ -81,7 +81,7 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
             ChatEnabled = request.ChatEnabled
         };
 
-        _uow.Repository<Livestream, int>().Add(livestream);
+        _uow.Repository<Livestream, Guid>().Add(livestream);
         await _uow.SaveChangesAsync(ct);
 
         // Create moderation record for Admin to review before going live (W08). SLA (NĐ 147/2024)
@@ -94,7 +94,7 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
             TargetId = livestream.Id,
             SlaDeadline = moderationCreatedAt.AddHours(slaHours)
         };
-        _uow.Repository<EventModeration, int>().Add(moderation);
+        _uow.Repository<EventModeration, Guid>().Add(moderation);
         await _uow.SaveChangesAsync(ct);
 
         _backgroundJobs.EnqueueModerationAiScoring(moderation.Id);

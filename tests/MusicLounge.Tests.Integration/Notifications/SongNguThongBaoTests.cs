@@ -40,7 +40,7 @@ public sealed class SongNguThongBaoTests
         public void OnCreated(CreatedContext filterContext) { }
     }
 
-    private async Task<int> TaoNguoiDungAsync(string ngonNgu)
+    private async Task<Guid> TaoNguoiDungAsync(string ngonNgu)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -57,7 +57,7 @@ public sealed class SongNguThongBaoTests
         return user.Id;
     }
 
-    private async Task<int> TaoThongBaoAsync(int userId, string? titleEn, string? bodyEn)
+    private async Task<Guid> TaoThongBaoAsync(Guid userId, string? titleEn, string? bodyEn)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -133,7 +133,7 @@ public sealed class SongNguThongBaoTests
                 new SongNgu("Đặt vé thành công!", "Booking confirmed!"),
                 new SongNgu("Bạn đã đặt 2 vé thành công.", "You have successfully booked 2 tickets."));
 
-            var push = ghi.Jobs.Where(j => j.Type == typeof(IFcmService) && (int)j.Args[0]! == nguoiNhan).ToList();
+            var push = ghi.Jobs.Where(j => j.Type == typeof(IFcmService) && (Guid)j.Args[0]! == nguoiNhan).ToList();
             push.Should().ContainSingle("mỗi thông báo đúng một lần đẩy push");
             ((string)push[0].Args[1]!).Should().Be(phaiCo).And.NotBe(khongDuocCo);
         }

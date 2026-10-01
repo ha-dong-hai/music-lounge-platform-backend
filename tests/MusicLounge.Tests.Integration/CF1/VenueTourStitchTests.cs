@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -43,9 +44,9 @@ public sealed class VenueTourStitchTests
 
     public VenueTourStitchTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int OwnerId, int LoungeId)> CreateOwnerWithLoungeAsync(int maxTourScenes = 5)
+    private async Task<(Guid OwnerId, Guid LoungeId)> CreateOwnerWithLoungeAsync(int maxTourScenes = 5)
     {
-        var id = Interlocked.Increment(ref _freshIdCounter);
+        var id = OrderedGuid.New();
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -98,7 +99,7 @@ public sealed class VenueTourStitchTests
         return body!.Data.Url;
     }
 
-    private async Task RunJobAsync(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
+    private async Task RunJobAsync(Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
     {
         using var scope = _factory.Services.CreateScope();
         var job = scope.ServiceProvider.GetRequiredService<StitchVenueTourSceneJob>();
@@ -267,7 +268,7 @@ public sealed class VenueTourStitchTests
         body.Should().Contain("giới hạn");
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
     private sealed record UploadResponse(bool Success, UploadedUrl Data);
     private sealed record UploadedUrl(string Url);
 }

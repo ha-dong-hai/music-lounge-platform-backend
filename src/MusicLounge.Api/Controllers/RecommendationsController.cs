@@ -37,8 +37,8 @@ public sealed class RecommendationsController : ControllerBase
     [ProducesResponseType<ApiResponse<IReadOnlyList<RecommendedLoungeShowDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRecommended(
         [FromQuery] int limit = 10,
-        [FromQuery] int[]? recentShowIds = null,
-        [FromQuery] int[]? genreIds = null,
+        [FromQuery] Guid[]? recentShowIds = null,
+        [FromQuery] Guid[]? genreIds = null,
         [FromQuery] string? city = null,
         CancellationToken ct = default)
     {

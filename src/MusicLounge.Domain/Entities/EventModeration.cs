@@ -6,17 +6,17 @@ namespace MusicLounge.Domain.Entities;
 // entry, e.g. submitting a show/livestream/gallery-image/tour-scene for review), not covered by
 // any existing field. AdminId/ReviewedAt already cover "who/when reviewed" (the AuditableEntity
 // UpdatedBy/UpdatedAt equivalent), so those stay as the domain-specific fields they already are.
-public sealed class EventModeration : Common.AuditableEntity<int>
+public sealed class EventModeration : Common.AuditableEntity<Guid>
 {
     public ModerationTargetType TargetType { get; set; }
-    public int TargetId { get; set; }
+    public Guid TargetId { get; set; }
 
     public float? AiScore { get; set; }
     public ModerationRiskLevel? RiskLevel { get; set; }
     public string? FlagReason { get; set; }
     public AiModerationRecommendation? AiRecommendation { get; set; }
 
-    public int? AdminId { get; set; }
+    public Guid? AdminId { get; set; }
     public ModerationDecision? AdminDecision { get; set; }
     public string? ReviewNote { get; set; }
 

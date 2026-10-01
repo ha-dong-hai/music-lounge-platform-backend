@@ -14,7 +14,7 @@ internal sealed class GetPerformerByIdQueryHandler : IRequestHandler<GetPerforme
 
     public async Task<PerformerDto> Handle(GetPerformerByIdQuery request, CancellationToken ct)
     {
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(request.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
         var dtos = await PerformerDtoMapper.MapAsync(_uow, [performer], ct);

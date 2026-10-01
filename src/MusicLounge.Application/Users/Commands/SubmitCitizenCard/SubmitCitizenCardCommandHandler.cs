@@ -28,7 +28,7 @@ internal sealed class SubmitCitizenCardCommandHandler : IRequestHandler<SubmitCi
 
     public async Task<Unit> Handle(SubmitCitizenCardCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
 
         // CitizenCardNumber is encrypted at rest (non-deterministic), so uniqueness/lookup has to
         // go through this deterministic hash instead of comparing the encrypted column directly.

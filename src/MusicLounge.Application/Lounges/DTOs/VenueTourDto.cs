@@ -1,16 +1,16 @@
 namespace MusicLounge.Application.Lounges.DTOs;
 
 public sealed record VenueTourHotspotDto(
-    int Id,
+    Guid Id,
     string Type,
     double Yaw,
     double Pitch,
     string? Label,
-    int? TargetSceneId,
+    Guid? TargetSceneId,
     string? InfoText);
 
 public sealed record VenueTourSceneDto(
-    int Id,
+    Guid Id,
     string ImageUrl,
     string? Name,
     int OrderIndex,
@@ -19,7 +19,7 @@ public sealed record VenueTourSceneDto(
     IReadOnlyList<VenueTourHotspotDto> Hotspots);
 
 public sealed record VenueTourDto(
-    int LoungeId,
+    Guid LoungeId,
     // Same floor-plan image SeatingZone.Layout2D already draws zone rectangles on — reused as the
     // background for each scene's PositionX/PositionY marker, rather than a second image field.
     string? FloorPlanImageUrl,
@@ -29,7 +29,7 @@ public sealed record VenueTourDto(
 // background - see StitchVenueTourSceneCommandHandler). ResultSceneId is only set once Status is
 // "Succeeded"; ErrorMessage only once Status is "Failed".
 public sealed record VenueTourStitchAttemptDto(
-    int Id,
+    Guid Id,
     string Status,
-    int? ResultSceneId,
+    Guid? ResultSceneId,
     string? ErrorMessage);

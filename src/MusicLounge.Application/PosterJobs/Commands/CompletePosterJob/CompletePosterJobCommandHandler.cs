@@ -31,7 +31,7 @@ internal sealed class CompletePosterJobCommandHandler : IRequestHandler<Complete
 
     public async Task<Unit> Handle(CompletePosterJobCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<AiPosterGeneration, int>();
+        var repo = _uow.Repository<AiPosterGeneration, Guid>();
         var job = await repo.GetByIdAsync(request.JobId, ct)
             ?? throw new NotFoundException(nameof(AiPosterGeneration), request.JobId);
 
@@ -63,7 +63,7 @@ internal sealed class CompletePosterJobCommandHandler : IRequestHandler<Complete
         job.LeaseExpiresAt = null;
         repo.Update(job);
 
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(job.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), job.ShowId);
         show.PosterUrl = imageUrl;

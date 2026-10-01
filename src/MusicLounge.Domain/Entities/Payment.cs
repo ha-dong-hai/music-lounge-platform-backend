@@ -2,10 +2,10 @@
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Payment : Common.BaseEntity<int>
+public sealed class Payment : Common.BaseEntity<Guid>
 {
     public string OrderId { get; set; } = string.Empty;     // vnp_TxnRef — unique
-    public int? PayerId { get; set; }                        // FK→users SET NULL (BVDLCN 2025)
+    public Guid? PayerId { get; set; }                        // FK→users SET NULL (BVDLCN 2025)
     public decimal GrossAmount { get; set; }                 // buyer-facing amount
     public decimal GatewayFee { get; set; }                  // VNPay processing fee
     public decimal PlatformFee { get; set; }                 // platform commission

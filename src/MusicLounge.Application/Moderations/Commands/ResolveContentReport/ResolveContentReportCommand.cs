@@ -4,7 +4,7 @@ namespace MusicLounge.Application.Moderations.Commands.ResolveContentReport;
 
 public sealed record ResolveContentReportCommand(
     string TargetType,
-    int TargetId,
+    Guid TargetId,
     string Action,
     string? Note
 ) : ICommand;

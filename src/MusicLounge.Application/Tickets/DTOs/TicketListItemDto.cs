@@ -4,7 +4,7 @@ namespace MusicLounge.Application.Tickets.DTOs;
 
 public sealed record TicketListItemDto(
     Guid Id,
-    int ShowId,
+    Guid ShowId,
     string ShowName,
     string LoungeName,
     string LoungeCity,

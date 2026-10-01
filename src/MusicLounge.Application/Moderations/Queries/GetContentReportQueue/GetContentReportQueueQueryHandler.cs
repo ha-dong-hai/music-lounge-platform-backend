@@ -26,7 +26,7 @@ internal sealed class GetContentReportQueueQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 100);
 
-        var openReports = await _uow.Repository<ContentReport, int>()
+        var openReports = await _uow.Repository<ContentReport, Guid>()
             .FindAsync(r => r.Status == ContentReportStatus.Open, ct);
 
         // Nhieu report cung tro toi 1 (TargetType, TargetId) -> gop lai thanh 1 dong hang doi, so
@@ -67,12 +67,12 @@ internal sealed class GetContentReportQueueQueryHandler
     }
 
     /// <summary>MLACP-456: mỗi nội dung bị báo cáo trả kèm buổi hòa nhạc nó thuộc về, để hàng đợi mở được ngữ cảnh.</summary>
-    private sealed record MucTieu(string TomTat, int? ShowId);
+    private sealed record MucTieu(string TomTat, Guid? ShowId);
 
-    private async Task<Dictionary<(ReportTargetType, int), MucTieu>> ResolveTargetSummariesAsync(
-        IEnumerable<(ReportTargetType TargetType, int TargetId)> targets, CancellationToken ct)
+    private async Task<Dictionary<(ReportTargetType, Guid), MucTieu>> ResolveTargetSummariesAsync(
+        IEnumerable<(ReportTargetType TargetType, Guid TargetId)> targets, CancellationToken ct)
     {
-        var result = new Dictionary<(ReportTargetType, int), MucTieu>();
+        var result = new Dictionary<(ReportTargetType, Guid), MucTieu>();
 
         var showIds = targets.Where(t => t.TargetType == ReportTargetType.Show).Select(t => t.TargetId).ToList();
         var livestreamIds = targets.Where(t => t.TargetType == ReportTargetType.Livestream).Select(t => t.TargetId).ToList();
@@ -80,16 +80,16 @@ internal sealed class GetContentReportQueueQueryHandler
 
         if (showIds.Count > 0)
         {
-            var shows = await _uow.Repository<LoungeShow, int>().FindAsync(s => showIds.Contains(s.Id), ct);
+            var shows = await _uow.Repository<LoungeShow, Guid>().FindAsync(s => showIds.Contains(s.Id), ct);
             foreach (var s in shows) result[(ReportTargetType.Show, s.Id)] = new MucTieu(s.Name, s.Id);
         }
 
         if (livestreamIds.Count > 0)
         {
-            var livestreams = await _uow.Repository<Livestream, int>().FindAsync(l => livestreamIds.Contains(l.Id), ct);
+            var livestreams = await _uow.Repository<Livestream, Guid>().FindAsync(l => livestreamIds.Contains(l.Id), ct);
             var showIdsForLivestreams = livestreams.Select(l => l.LoungeShowId).Distinct().ToList();
             var relatedShows = showIdsForLivestreams.Count > 0
-                ? await _uow.Repository<LoungeShow, int>().FindAsync(s => showIdsForLivestreams.Contains(s.Id), ct)
+                ? await _uow.Repository<LoungeShow, Guid>().FindAsync(s => showIdsForLivestreams.Contains(s.Id), ct)
                 : [];
             var showNameById = relatedShows.ToDictionary(s => s.Id, s => s.Name);
             foreach (var l in livestreams)
@@ -99,7 +99,7 @@ internal sealed class GetContentReportQueueQueryHandler
 
         if (ratingIds.Count > 0)
         {
-            var ratings = await _uow.Repository<LoungeShowRating, int>().FindAsync(r => ratingIds.Contains(r.Id), ct);
+            var ratings = await _uow.Repository<LoungeShowRating, Guid>().FindAsync(r => ratingIds.Contains(r.Id), ct);
             foreach (var r in ratings)
                 result[(ReportTargetType.Rating, r.Id)] = new MucTieu(
                     string.IsNullOrWhiteSpace(r.Comment) ? $"Đánh giá {r.Score}★" : r.Comment, r.LoungeShowId);
@@ -110,18 +110,18 @@ internal sealed class GetContentReportQueueQueryHandler
         var chatIds = targets.Where(t => t.TargetType == ReportTargetType.ChatMessage).Select(t => t.TargetId).ToList();
         if (chatIds.Count > 0)
         {
-            var messages = await _uow.Repository<LivestreamChatMessage, int>()
+            var messages = await _uow.Repository<LivestreamChatMessage, Guid>()
                 .FindAsync(m => chatIds.Contains(m.Id), ct);
 
             var senderIds = messages.Select(m => m.UserId).Distinct().ToList();
             var senderNameById = senderIds.Count > 0
-                ? (await _uow.Repository<User, int>().FindAsync(u => senderIds.Contains(u.Id), ct))
+                ? (await _uow.Repository<User, Guid>().FindAsync(u => senderIds.Contains(u.Id), ct))
                     .ToDictionary(u => u.Id, u => u.FullName)
                 : [];
 
             var streamIds = messages.Select(m => m.LivestreamId).Distinct().ToList();
             var showIdByStream = streamIds.Count > 0
-                ? (await _uow.Repository<Livestream, int>().FindAsync(l => streamIds.Contains(l.Id), ct))
+                ? (await _uow.Repository<Livestream, Guid>().FindAsync(l => streamIds.Contains(l.Id), ct))
                     .ToDictionary(l => l.Id, l => l.LoungeShowId)
                 : [];
 

@@ -7,7 +7,7 @@ public sealed class SellWalkInTicketCommandValidator : AbstractValidator<SellWal
 {
     public SellWalkInTicketCommandValidator(ISystemConfigService config)
     {
-        RuleFor(x => x.PriceId).GreaterThan(0);
+        RuleFor(x => x.PriceId).NotEmpty();
 
         RuleFor(x => x.Quantity)
             .GreaterThan(0)

@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class LoungeShowMood : Common.BaseEntity<int>
+public sealed class LoungeShowMood : Common.BaseEntity<Guid>
 {
-    public int LoungeShowId { get; set; }
-    public int MoodId { get; set; }
+    public Guid LoungeShowId { get; set; }
+    public Guid MoodId { get; set; }
 
     public LoungeShow LoungeShow { get; set; } = null!;
     public Mood Mood { get; set; } = null!;

@@ -5,9 +5,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common.Interfaces.Repositories;
 
-public interface ILoungeShowRepository : IRepository<LoungeShow, int>
+public interface ILoungeShowRepository : IRepository<LoungeShow, Guid>
 {
-    Task<LoungeShow?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
+    Task<LoungeShow?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>Danh sách công khai. MLACP-502: <paramref name="keyword"/> (đã chuẩn hoá) khớp tên buổi hoặc tên phòng trà.</summary>
     Task<PaginatedResult<LoungeShow>> GetPublishedAsync(
@@ -18,7 +18,7 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
     /// <paramref name="status"/> is null; otherwise only that status. <paramref name="format"/> lọc đúng một hình
     /// thức (Hybrid không tính là Online — khớp cách /search lọc).</summary>
     Task<PaginatedResult<LoungeShow>> GetMineAsync(
-        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
+        Guid ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
         LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default);
 
     /// <summary>
@@ -27,18 +27,18 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
     /// hành cần thấy đủ để làm việc, kể cả khi phòng trà đang bị xử lý.
     /// </summary>
     Task<PaginatedResult<LoungeShow>> GetForOperatedLoungeAsync(
-        int loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
+        Guid loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
         LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> SearchAsync(
         LoungeShowSearchParams searchParams, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> GetByPerformerAsync(
-        int performerId, bool includeEnded,
+        Guid performerId, bool includeEnded,
         int page, int pageSize, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> GetByLoungeAsync(
-        int loungeId, int page, int pageSize, CancellationToken ct = default);
+        Guid loungeId, int page, int pageSize, CancellationToken ct = default);
 
     /// <summary>
     /// Thẻ phân loại (thể loại/tâm trạng/không gian) của một tập buổi diễn, đủ để so với gu người
@@ -46,7 +46,7 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
     /// thông thường không dùng tới chúng, và nạp kèm sẽ bắt mọi endpoint danh sách gánh thêm join.
     /// </summary>
     Task<IReadOnlyList<ShowTags>> GetShowTagsAsync(
-        IReadOnlyCollection<int> showIds, CancellationToken ct = default);
+        IReadOnlyCollection<Guid> showIds, CancellationToken ct = default);
 
     /// <summary>
     /// Buổi diễn mới được đăng gần đây nhất, bất kể đã có ai quan tâm hay chưa.
@@ -68,37 +68,37 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
     Task<IReadOnlyList<string>> GetDistinctCitiesAsync(CancellationToken ct = default);
 
     /// <summary>Single JOIN query: returns OwnerId of the lounge hosting the given show, or null if not found.</summary>
-    Task<int?> GetLoungeOwnerIdAsync(int showId, CancellationToken ct = default);
+    Task<Guid?> GetLoungeOwnerIdAsync(Guid showId, CancellationToken ct = default);
 
-    Task<IReadOnlySet<int>> GetWishlistedShowIdsAsync(
-        int userId, CancellationToken ct = default);
+    Task<IReadOnlySet<Guid>> GetWishlistedShowIdsAsync(
+        Guid userId, CancellationToken ct = default);
 
     Task<PaginatedResult<LoungeShow>> GetWishlistByUserAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default);
+        Guid userId, int page, int pageSize, CancellationToken ct = default);
 
     Task<IReadOnlyList<LoungeShow>> GetRecommendedByIdsAsync(
-        IReadOnlyList<int> showIds, CancellationToken ct = default);
+        IReadOnlyList<Guid> showIds, CancellationToken ct = default);
 
     /// <summary>Shows "tương tự" trang chi tiết (MLACP-134): cùng phòng trà HOẶC chung ít nhất 1 thể
     /// loại nhạc với <paramref name="showId"/>, loại trừ chính show đó, chỉ Published/Ongoing. Ưu
     /// tiên show khớp CẢ hai tiêu chí trước, còn lại theo ngày diễn gần nhất.</summary>
     Task<IReadOnlyList<LoungeShow>> GetSimilarAsync(
-        int showId, int loungeId, IReadOnlyList<int> genreIds, int limit, CancellationToken ct = default);
+        Guid showId, Guid loungeId, IReadOnlyList<Guid> genreIds, int limit, CancellationToken ct = default);
 
     /// <summary>
     /// Returns sold (Confirmed+Pending) ticket count plus active hold quantity per priceId.
     /// </summary>
-    Task<IReadOnlyDictionary<int, int>> GetSoldAndHeldCountsByPriceAsync(
-        IReadOnlyList<int> priceIds, CancellationToken ct = default);
+    Task<IReadOnlyDictionary<Guid, int>> GetSoldAndHeldCountsByPriceAsync(
+        IReadOnlyList<Guid> priceIds, CancellationToken ct = default);
 }
 
 public sealed record LoungeShowSearchParams(
     string? Keyword,
-    int[]? GenreIds,
-    int[]? MoodIds,
-    int[]? AtmosphereIds,
-    int? PerformerId,
-    int? LoungeId,
+    Guid[]? GenreIds,
+    Guid[]? MoodIds,
+    Guid[]? AtmosphereIds,
+    Guid? PerformerId,
+    Guid? LoungeId,
     string? City,
     string? District,
     string? Ward,
@@ -113,4 +113,4 @@ public sealed record LoungeShowSearchParams(
     int PageSize,
     LoungeShowSortBy SortBy);
 
-public sealed record LoungeShowSuggestionItem(int Id, string Name, string? CoverImageUrl);
+public sealed record LoungeShowSuggestionItem(Guid Id, string Name, string? CoverImageUrl);

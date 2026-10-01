@@ -18,13 +18,13 @@ internal sealed class UnfollowLoungeCommandHandler : IRequestHandler<UnfollowLou
 
     public async Task<Unit> Handle(UnfollowLoungeCommand request, CancellationToken ct)
     {
-        var matches = await _uow.Repository<Follow, int>()
+        var matches = await _uow.Repository<Follow, Guid>()
             .FindAsync(f => f.UserId == _currentUser.UserId && f.LoungeId == request.LoungeId, ct);
 
         var follow = matches.FirstOrDefault()
             ?? throw new NotFoundException("Follow", request.LoungeId);
 
-        _uow.Repository<Follow, int>().Remove(follow);
+        _uow.Repository<Follow, Guid>().Remove(follow);
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
     }

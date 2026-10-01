@@ -6,11 +6,11 @@ internal sealed class SetEventCustomValuesCommandValidator : AbstractValidator<S
 {
     public SetEventCustomValuesCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
 
         RuleForEach(x => x.Values).ChildRules(v =>
         {
-            v.RuleFor(x => x.CriteriaId).GreaterThan(0);
+            v.RuleFor(x => x.CriteriaId).NotEmpty();
             v.RuleFor(x => x.Value).NotEmpty().MaximumLength(1000);
         });
     }

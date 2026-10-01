@@ -6,6 +6,6 @@ public sealed class FollowLoungeCommandValidator : AbstractValidator<FollowLoung
 {
     public FollowLoungeCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0).WithMessage("LoungeId không hợp lệ.");
+        RuleFor(x => x.LoungeId).NotEmpty().WithMessage("LoungeId không hợp lệ.");
     }
 }

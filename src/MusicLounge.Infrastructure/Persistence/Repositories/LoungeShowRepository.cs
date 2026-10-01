@@ -9,7 +9,7 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoungeShowRepository
+internal sealed class LoungeShowRepository : Repository<LoungeShow, Guid>, ILoungeShowRepository
 {
     private readonly ApplicationDbContext _ctx;
 
@@ -27,7 +27,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .Include(s => s.Performances).ThenInclude(p => p.Performer)
             .Include(s => s.TicketTiers).ThenInclude(t => t.Prices);
 
-    public async Task<LoungeShow?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
+    public async Task<LoungeShow?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default)
         // Moods/Atmospheres/Lounge.Atmosphere/Ratings.User chi can cho trang chi tiet 1 show —
         // khong them vao WithDetails() dung chung, tranh cac danh sach (Search/GetPublished/...)
         // phai ganh them join khong dung toi.
@@ -93,7 +93,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     /// Khi số đợt bán lên tới hàng nghìn, đường nâng cấp là thu hẹp trước theo tập buổi diễn đang xét, hoặc chuyển hẳn
     /// sang một câu SQL viết tay chỉ chạy trên SQL Server kèm test tích hợp chạy trên SQL Server thật.
     /// </summary>
-    private async Task<HashSet<int>> MaBuoiDienHetVeAsync(DateTimeOffset now, CancellationToken ct)
+    private async Task<HashSet<Guid>> MaBuoiDienHetVeAsync(DateTimeOffset now, CancellationToken ct)
     {
         // Lấy MỌI mức giá đã duyệt, kể cả mức không đặt giới hạn số vé (Quota null). Bỏ chúng ra khỏi đây là sai: một
         // buổi có mức "hạng thường" đã hết và mức "đứng xem" không giới hạn thì vẫn còn vé để bán.
@@ -135,7 +135,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetMineAsync(
-        int ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
+        Guid ownerId, int page, int pageSize, LoungeShowSortBy sortBy,
         LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default)
     {
         var query = LocChoNguoiVanHanh(WithDetails().Where(s => s.Lounge.OwnerId == ownerId), status, format);
@@ -143,7 +143,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetForOperatedLoungeAsync(
-        int loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
+        Guid loungeId, int page, int pageSize, LoungeShowSortBy sortBy,
         LoungeShowStatus? status = null, LoungeShowFormat? format = null, CancellationToken ct = default)
     {
         var query = LocChoNguoiVanHanh(WithDetails().Where(s => s.LoungeId == loungeId), status, format);
@@ -256,7 +256,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetByPerformerAsync(
-        int performerId, bool includeEnded, int page, int pageSize, CancellationToken ct = default)
+        Guid performerId, bool includeEnded, int page, int pageSize, CancellationToken ct = default)
     {
         var query = WithDetails()
             .Where(s => s.Performances.Any(p => p.PerformerId == performerId)
@@ -284,7 +284,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetByLoungeAsync(
-        int loungeId, int page, int pageSize, CancellationToken ct = default)
+        Guid loungeId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = WithDetails()
             .Where(s => s.LoungeId == loungeId && s.Status != LoungeShowStatus.Draft)
@@ -312,7 +312,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     /// một trong những tín hiệu mạnh nhất — người ta chỉ lưu thứ mình định quay lại.
     /// </summary>
     public async Task<IReadOnlyList<ShowTags>> GetShowTagsAsync(
-        IReadOnlyCollection<int> showIds, CancellationToken ct = default)
+        IReadOnlyCollection<Guid> showIds, CancellationToken ct = default)
     {
         if (showIds.Count == 0) return [];
 
@@ -438,9 +438,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .Select(b => new { b.LoungeShowId, b.UserId, b.Action, b.CreatedAt })
             .ToListAsync(ct);
 
-        var eventsByShow = new Dictionary<int, List<TrendingEvent>>();
+        var eventsByShow = new Dictionary<Guid, List<TrendingEvent>>();
 
-        void Add(int showId, TrendingEvent e)
+        void Add(Guid showId, TrendingEvent e)
         {
             if (!eventsByShow.TryGetValue(showId, out var list))
                 eventsByShow[showId] = list = [];
@@ -479,14 +479,14 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<IReadOnlyList<LoungeShow>> GetRecommendedByIdsAsync(
-        IReadOnlyList<int> showIds, CancellationToken ct = default)
+        IReadOnlyList<Guid> showIds, CancellationToken ct = default)
         => await WithDetails()
             .Where(s => showIds.Contains(s.Id)
                 && (s.Status == LoungeShowStatus.Published || s.Status == LoungeShowStatus.Ongoing))
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<LoungeShow>> GetSimilarAsync(
-        int showId, int loungeId, IReadOnlyList<int> genreIds, int limit, CancellationToken ct = default)
+        Guid showId, Guid loungeId, IReadOnlyList<Guid> genreIds, int limit, CancellationToken ct = default)
     {
         var query = WithDetails()
             .Where(s => s.Id != showId
@@ -538,8 +538,8 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlySet<int>> GetWishlistedShowIdsAsync(
-        int userId, CancellationToken ct = default)
+    public async Task<IReadOnlySet<Guid>> GetWishlistedShowIdsAsync(
+        Guid userId, CancellationToken ct = default)
     {
         var ids = await _ctx.Wishlists
             .AsNoTracking()
@@ -551,7 +551,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
     }
 
     public async Task<PaginatedResult<LoungeShow>> GetWishlistByUserAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default)
+        Guid userId, int page, int pageSize, CancellationToken ct = default)
     {
         // Include() cannot follow a Select() that projects through a navigation
         // (w => w.LoungeShow) — EF Core loses track of the root entity type.
@@ -585,17 +585,17 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         return new PaginatedResult<LoungeShow>(items, page, pageSize, total);
     }
 
-    public async Task<int?> GetLoungeOwnerIdAsync(int showId, CancellationToken ct = default)
+    public async Task<Guid?> GetLoungeOwnerIdAsync(Guid showId, CancellationToken ct = default)
         => await _ctx.LoungeShows
             .AsNoTracking()
             .Where(s => s.Id == showId)
-            .Select(s => (int?)s.Lounge.OwnerId)
+            .Select(s => (Guid?)s.Lounge.OwnerId)
             .FirstOrDefaultAsync(ct);
 
-    public async Task<IReadOnlyDictionary<int, int>> GetSoldAndHeldCountsByPriceAsync(
-        IReadOnlyList<int> priceIds, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<Guid, int>> GetSoldAndHeldCountsByPriceAsync(
+        IReadOnlyList<Guid> priceIds, CancellationToken ct = default)
     {
-        if (priceIds.Count == 0) return new Dictionary<int, int>();
+        if (priceIds.Count == 0) return new Dictionary<Guid, int>();
 
         var ticketCounts = await _ctx.Tickets
             .AsNoTracking()

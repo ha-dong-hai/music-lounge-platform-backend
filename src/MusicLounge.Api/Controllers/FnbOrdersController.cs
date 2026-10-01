@@ -33,7 +33,7 @@ public sealed class FnbOrdersController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -42,7 +42,7 @@ public sealed class FnbOrdersController : ControllerBase
     {
         var id = await _sender.Send(command, ct);
         return CreatedAtAction(nameof(GetByLounge), new { loungeId = command.LoungeId, version = "1.0" },
-            ApiResponse<int>.Ok(id));
+            ApiResponse<Guid>.Ok(id));
     }
 
     /// <summary>Khán giả — đơn F&amp;B của chính mình, mới nhất trước (MLACP-357). Mỗi đơn có
@@ -53,7 +53,7 @@ public sealed class FnbOrdersController : ControllerBase
     [ProducesResponseType<ApiResponse<PaginatedResult<FnbOrderDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetMine(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] int? loungeId = null,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? loungeId = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetMyFnbOrdersQuery(page, pageSize, loungeId), ct);
@@ -66,7 +66,7 @@ public sealed class FnbOrdersController : ControllerBase
     [ProducesResponseType<ApiResponse<PaginatedResult<FnbOrderDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetByLounge(
-        [FromQuery] int loungeId, [FromQuery] string? status = null,
+        [FromQuery] Guid loungeId, [FromQuery] string? status = null,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetFnbOrdersQuery(loungeId, status, page, pageSize), ct);
@@ -75,26 +75,26 @@ public sealed class FnbOrdersController : ControllerBase
 
     /// <summary>Staff cập nhật trạng thái đơn: Pending → Preparing → Served → Paid (tuần tự),
     /// hoặc Cancelled (huỷ ngang, chỉ khi chưa Paid).</summary>
-    [HttpPut("{id:int}/status")]
+    [HttpPut("{id:guid}/status")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateStatus(
-        int id, [FromBody] UpdateFnbOrderStatusRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateFnbOrderStatusRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateFnbOrderStatusCommand(id, body.Status), ct);
         return NoContent();
     }
 
     /// <summary>Khán giả — khởi tạo thanh toán online qua VNPay cho đơn F&B của chính mình.</summary>
-    [HttpPost("{id:int}/pay")]
+    [HttpPost("{id:guid}/pay")]
     [ProducesResponseType<ApiResponse<FnbOrderPaymentInitiationDto>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> InitiatePayment(int id, CancellationToken ct = default)
+    public async Task<IActionResult> InitiatePayment(Guid id, CancellationToken ct = default)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
         var result = await _sender.Send(new InitiateFnbOrderPaymentCommand(id, ip), ct);

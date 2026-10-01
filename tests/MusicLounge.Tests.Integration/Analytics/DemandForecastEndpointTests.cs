@@ -34,13 +34,13 @@ public sealed class DemandForecastEndpointTests
     private sealed record Envelope<T>(bool Success, T Data);
 
     private sealed record Forecast(
-        int ShowId, string Status, string Explanation, int DaysUntilShow,
+        Guid ShowId, string Status, string Explanation, int DaysUntilShow,
         int TicketsSoldSoFar, int? ProjectedFinalSales, int? ProjectedLow, int? ProjectedHigh,
         decimal? ExpectedPaceFraction, decimal VenueHistoryWeight,
         int VenueReferenceShows, int PlatformReferenceShows,
         int? Capacity, decimal? ProjectedSellThroughRate);
 
-    private async Task<int> VenueAsync()
+    private async Task<Guid> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -65,8 +65,8 @@ public sealed class DemandForecastEndpointTests
     /// Thời điểm bán ra của toàn bộ vé. Đây là biến quyết định của cả bộ test: nhịp bán được đo
     /// bằng chính mốc này so với giờ diễn.
     /// </param>
-    private async Task<int> ShowWithTicketsAsync(
-        int loungeId, LoungeShowStatus status, DateTimeOffset scheduledStart,
+    private async Task<Guid> ShowWithTicketsAsync(
+        Guid loungeId, LoungeShowStatus status, DateTimeOffset scheduledStart,
         int ticketCount, DateTimeOffset ticketsCreatedAt, int? capacity = 200)
     {
         using var scope = _factory.Services.CreateScope();
@@ -124,10 +124,10 @@ public sealed class DemandForecastEndpointTests
         return show.Id;
     }
 
-    private async Task<Forecast> ForecastAsync(int showId, int loungeId)
+    private async Task<Forecast> ForecastAsync(Guid showId, Guid loungeId)
     {
         // MLACP-377: VenueAsync() gio tao mot chu MOI cho moi phong tra — tra dung chu tu DB.
-        int ownerId;
+        Guid ownerId;
         using (var scope = _factory.Services.CreateScope())
             ownerId = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
                 .Lounges.AsNoTracking().Single(l => l.Id == loungeId).OwnerId;
@@ -143,7 +143,7 @@ public sealed class DemandForecastEndpointTests
     /// chính chúng. Với buổi đang xét còn 10 ngày, nhịp bán riêng của phòng trà này bằng 1.0:
     /// "tới mốc này thì lịch sử cho thấy đã bán hết".
     /// </summary>
-    private async Task<(int TargetShowId, int LoungeId)> SeedVenueWithFastSellingHistoryAsync(
+    private async Task<(Guid TargetShowId, Guid LoungeId)> SeedVenueWithFastSellingHistoryAsync(
         int targetTicketCount)
     {
         var loungeId = await VenueAsync();

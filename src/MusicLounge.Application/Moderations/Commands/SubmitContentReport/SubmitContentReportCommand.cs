@@ -4,6 +4,6 @@ namespace MusicLounge.Application.Moderations.Commands.SubmitContentReport;
 
 public sealed record SubmitContentReportCommand(
     string TargetType,
-    int TargetId,
+    Guid TargetId,
     string Reason
-) : ICommand<int>;
+) : ICommand<Guid>;

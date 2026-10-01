@@ -11,12 +11,12 @@ public interface ITicketRepository : IRepository<Ticket, Guid>
     Task<Ticket?> GetByIdWithDetailsAsync(Guid ticketId, CancellationToken ct = default);
     Task<Ticket?> GetByIdWithDetailsTrackedAsync(Guid ticketId, CancellationToken ct = default);
     Task<PaginatedResult<Ticket>> GetByBuyerAsync(
-        int userId, int page, int pageSize, Tickets.MyTicketFilter filter, CancellationToken ct = default);
-    Task<PaginatedResult<Ticket>> GetByShowAsync(int showId, int page, int pageSize, CancellationToken ct = default);
-    Task<IReadOnlyList<Ticket>> GetIncomingTransfersAsync(int recipientUserId, CancellationToken ct = default);
-    Task<int> CountConfirmedByPriceAsync(int priceId, CancellationToken ct = default);
-    Task<int> CountActiveHoldsByPriceAsync(int priceId, CancellationToken ct = default);
-    Task<int> CountConfirmedByShowAsync(int showId, CancellationToken ct = default);
+        Guid userId, int page, int pageSize, Tickets.MyTicketFilter filter, CancellationToken ct = default);
+    Task<PaginatedResult<Ticket>> GetByShowAsync(Guid showId, int page, int pageSize, CancellationToken ct = default);
+    Task<IReadOnlyList<Ticket>> GetIncomingTransfersAsync(Guid recipientUserId, CancellationToken ct = default);
+    Task<int> CountConfirmedByPriceAsync(Guid priceId, CancellationToken ct = default);
+    Task<int> CountActiveHoldsByPriceAsync(Guid priceId, CancellationToken ct = default);
+    Task<int> CountConfirmedByShowAsync(Guid showId, CancellationToken ct = default);
     void AddPhysicalDetail(PhysicalTicketDetail detail);
 
     /// <summary>
@@ -27,17 +27,17 @@ public interface ITicketRepository : IRepository<Ticket, Guid>
     /// callers needing a single price still pass a one-element list, so there is exactly one
     /// implementation of this query for both single-price and whole-show use.
     /// </summary>
-    Task<IReadOnlyDictionary<int, int>> GetReservedQuantitiesByPriceIdsAsync(
-        IReadOnlyCollection<int> priceIds, CancellationToken ct = default);
+    Task<IReadOnlyDictionary<Guid, int>> GetReservedQuantitiesByPriceIdsAsync(
+        IReadOnlyCollection<Guid> priceIds, CancellationToken ct = default);
 
     /// <summary>Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price under a tier.</summary>
-    Task<int> GetReservedQuantityByTierAsync(int tierId, CancellationToken ct = default);
+    Task<int> GetReservedQuantityByTierAsync(Guid tierId, CancellationToken ct = default);
 
     /// <summary>Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price of the given access type under a show.</summary>
-    Task<int> GetReservedQuantityByShowAndAccessTypeAsync(int showId, AccessType accessType, CancellationToken ct = default);
+    Task<int> GetReservedQuantityByShowAndAccessTypeAsync(Guid showId, AccessType accessType, CancellationToken ct = default);
 
     /// <summary>Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price under a show, regardless of tier/access type — used for the whole-show subscription ticket cap (D14), which applies across physical and online tiers combined.</summary>
-    Task<int> GetReservedQuantityByShowAsync(int showId, CancellationToken ct = default);
+    Task<int> GetReservedQuantityByShowAsync(Guid showId, CancellationToken ct = default);
 
     /// <summary>
     /// Sum of <see cref="GetReservedQuantitiesByPriceIdsAsync"/> across every price of every tier
@@ -48,7 +48,7 @@ public interface ITicketRepository : IRepository<Ticket, Guid>
     /// overselling it. Scoped to one show (not the zone's lifetime across every show ever held
     /// there) because a venue-level zone is reused night to night — SeatingZone.
     /// </summary>
-    Task<int> GetReservedQuantityByZoneAsync(int showId, int zoneId, CancellationToken ct = default);
+    Task<int> GetReservedQuantityByZoneAsync(Guid showId, Guid zoneId, CancellationToken ct = default);
 
     /// <summary>
     /// Atomically sets the pending-transfer fields only if no transfer is already pending on this
@@ -59,5 +59,5 @@ public interface ITicketRepository : IRepository<Ticket, Guid>
     /// time this executed — caller should surface that as a conflict, not swallow it.
     /// </summary>
     Task<bool> TryInitiateTransferAsync(
-        Guid ticketId, int recipientUserId, DateTimeOffset initiatedAt, CancellationToken ct = default);
+        Guid ticketId, Guid recipientUserId, DateTimeOffset initiatedAt, CancellationToken ct = default);
 }

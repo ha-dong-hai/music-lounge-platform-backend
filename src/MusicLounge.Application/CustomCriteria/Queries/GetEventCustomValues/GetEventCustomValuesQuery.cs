@@ -14,7 +14,7 @@ namespace MusicLounge.Application.CustomCriteria.Queries.GetEventCustomValues;
 /// <para>Trả kèm định nghĩa của tiêu chí (tên, kiểu dữ liệu, danh sách lựa chọn) để màn hình dựng được ô
 /// nhập đúng kiểu mà không phải gọi thêm một lượt <c>GET /custom-criteria?loungeId=</c> rồi tự ghép.</para>
 /// </summary>
-public sealed record GetEventCustomValuesQuery(int ShowId)
+public sealed record GetEventCustomValuesQuery(Guid ShowId)
     : IQuery<IReadOnlyList<EventCustomValueDto>>;
 
 /// <param name="Value">Giá trị đang lưu, dạng JSON đúng như lệnh ghi nhận vào.</param>
@@ -43,7 +43,7 @@ public sealed record GetEventCustomValuesQuery(int ShowId)
 /// bỏ qua — bỏ qua rồi lưu lại là xoá mất giá trị cũ.
 /// </param>
 public sealed record EventCustomValueDto(
-    int CriteriaId,
+    Guid CriteriaId,
     string Name,
     string Key,
     CustomCriteriaDataType DataType,

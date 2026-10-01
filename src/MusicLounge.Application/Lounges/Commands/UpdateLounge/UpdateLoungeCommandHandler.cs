@@ -34,7 +34,7 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
 
     public async Task<Unit> Handle(UpdateLoungeCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<MusicLoungeEntity, int>();
+        var repo = _uow.Repository<MusicLoungeEntity, Guid>();
         var lounge = await repo.GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
@@ -110,7 +110,7 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         MusicLoungeEntity lounge, string oldFullAddress, CancellationToken ct)
     {
         var now = DateTimeOffset.UtcNow;
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
 
         // Lọc trạng thái phía server, so thời gian phía client — provider SQLite trong test không dịch
         // được phép so enum kèm DateTimeOffset trong cùng một truy vấn.
@@ -179,7 +179,7 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         double? oldLongitude, bool nameChanged, bool addressChanged, bool pinMoved, int ticketHoldersTold,
         CancellationToken ct)
     {
-        var admins = await _uow.Repository<User, int>().FindAsync(
+        var admins = await _uow.Repository<User, Guid>().FindAsync(
             u => u.Role == UserRole.Admin && u.IsActive && u.Id != _currentUser.UserId, ct);
         if (admins.Count == 0) return;
 

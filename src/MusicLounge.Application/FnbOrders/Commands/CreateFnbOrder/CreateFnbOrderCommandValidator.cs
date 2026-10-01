@@ -17,20 +17,20 @@ public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnb
     {
         RuleFor(x => x.LoungeId)
             .Cascade(CascadeMode.Stop)
-            .GreaterThan(0)
+            .NotEmpty()
             .MustAsync(async (loungeId, ct) =>
-                await uow.Repository<MusicLoungeEntity, int>().AnyAsync(l => l.Id == loungeId, ct))
+                await uow.Repository<MusicLoungeEntity, Guid>().AnyAsync(l => l.Id == loungeId, ct))
             .WithMessage("LoungeId không tồn tại.");
 
         RuleFor(x => x.ZoneId)
             .MustAsync(async (zoneId, ct) =>
-                await uow.Repository<SeatingZone, int>().AnyAsync(z => z.Id == zoneId!.Value, ct))
+                await uow.Repository<SeatingZone, Guid>().AnyAsync(z => z.Id == zoneId!.Value, ct))
             .When(x => x.ZoneId.HasValue)
             .WithMessage("ZoneId không tồn tại.");
 
         RuleFor(x => x.ShowId)
             .MustAsync(async (showId, ct) =>
-                await uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == showId!.Value, ct))
+                await uow.Repository<LoungeShow, Guid>().AnyAsync(s => s.Id == showId!.Value, ct))
             .When(x => x.ShowId.HasValue)
             .WithMessage("ShowId không tồn tại.");
 
@@ -42,7 +42,7 @@ public sealed class CreateFnbOrderCommandValidator : AbstractValidator<CreateFnb
 
         RuleForEach(x => x.Items).ChildRules(i =>
         {
-            i.RuleFor(x => x.MenuItemId).GreaterThan(0);
+            i.RuleFor(x => x.MenuItemId).NotEmpty();
             i.RuleFor(x => x.Quantity).GreaterThan(0);
         });
     }

@@ -18,13 +18,13 @@ namespace MusicLounge.Infrastructure.Services;
 /// </summary>
 internal sealed class ShowBookingLock : IShowBookingLock
 {
-    private static readonly ConcurrentDictionary<int, SemaphoreSlim> Locks = new();
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> Locks = new();
 
     private readonly TransactionLockScope _scope;
 
     public ShowBookingLock(TransactionLockScope scope) => _scope = scope;
 
-    public async Task<IAsyncDisposable> AcquireAsync(int showId, CancellationToken ct = default)
+    public async Task<IAsyncDisposable> AcquireAsync(Guid showId, CancellationToken ct = default)
     {
         var scopedKey = "show-booking:" + showId;
         if (_scope.Holds(scopedKey)) return TransactionLockScope.AlreadyHeld;

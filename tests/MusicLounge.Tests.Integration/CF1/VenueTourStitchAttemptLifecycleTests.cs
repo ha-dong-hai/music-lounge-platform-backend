@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using System.Net;
 using System.Net.Http.Json;
 using System.Reflection;
@@ -31,9 +32,9 @@ public sealed class VenueTourStitchAttemptLifecycleTests
 
     public VenueTourStitchAttemptLifecycleTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> TaoPhongTraCoGoiAsync()
+    private async Task<Guid> TaoPhongTraCoGoiAsync()
     {
-        var id = Interlocked.Increment(ref _freshIdCounter);
+        var id = OrderedGuid.New();
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         db.Users.Add(new User { Id = id, Email = $"vong-doi-ghep-{id}@test.com", FullName = "Chu Phong Tra" });
@@ -57,7 +58,7 @@ public sealed class VenueTourStitchAttemptLifecycleTests
         return id;
     }
 
-    private async Task<int> TaoLuotAsync(int loungeId, VenueTourStitchStatus status, bool failedBySystem = false,
+    private async Task<Guid> TaoLuotAsync(Guid loungeId, VenueTourStitchStatus status, bool failedBySystem = false,
         DateTimeOffset? createdAt = null)
     {
         using var scope = _factory.Services.CreateScope();
@@ -72,7 +73,7 @@ public sealed class VenueTourStitchAttemptLifecycleTests
         return attempt.Id;
     }
 
-    private async Task<VenueTourStitchAttempt> DocLuotAsync(int attemptId)
+    private async Task<VenueTourStitchAttempt> DocLuotAsync(Guid attemptId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -86,7 +87,7 @@ public sealed class VenueTourStitchAttemptLifecycleTests
         public Task<byte[]> StitchAsync(IReadOnlyList<string> imageUrls, CancellationToken ct = default) => throw loi;
     }
 
-    private async Task ChayJobAsync(int attemptId, int loungeId, IPanoramaStitchingService? stitcher = null)
+    private async Task ChayJobAsync(Guid attemptId, Guid loungeId, IPanoramaStitchingService? stitcher = null)
     {
         using var scope = _factory.Services.CreateScope();
         var job = stitcher is null

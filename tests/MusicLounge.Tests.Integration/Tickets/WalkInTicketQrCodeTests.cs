@@ -27,7 +27,7 @@ public sealed class WalkInTicketQrCodeTests
 
     /// <summary>Buổi diễn tại chỗ đang diễn ở phòng trà seed, có một đợt bán còn mở tại quầy. Tạo riêng cho từng test để
     /// không đổi trạng thái của các buổi diễn seed dùng chung.</summary>
-    private async Task<(int TierId, int PriceId)> SeedOngoingShowWithCounterPriceAsync()
+    private async Task<(Guid TierId, Guid PriceId)> SeedOngoingShowWithCounterPriceAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -64,7 +64,7 @@ public sealed class WalkInTicketQrCodeTests
         return (tier.Id, price.Id);
     }
 
-    private async Task<List<(Guid TicketId, string QrCode)>> SellAtCounterAsync(int priceId, int quantity)
+    private async Task<List<(Guid TicketId, string QrCode)>> SellAtCounterAsync(Guid priceId, int quantity)
     {
         var res = await VenueStaff().PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = priceId, Quantity = quantity });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -143,15 +143,15 @@ public sealed class WalkInTicketQrCodeTests
 
     // ── MLACP-410: quầy mất phản hồi rồi bấm bán lại không được thành bán trùng ──────────────────────────────
 
-    private static async Task<(int PaymentId, List<string> QrCodes)> ReadSaleAsync(HttpResponseMessage res)
+    private static async Task<(Guid PaymentId, List<string> QrCodes)> ReadSaleAsync(HttpResponseMessage res)
     {
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var data = doc.RootElement.GetProperty("data");
-        return (data.GetProperty("paymentId").GetInt32(),
+        return (data.GetProperty("paymentId").GetGuid(),
             data.GetProperty("tickets").EnumerateArray().Select(t => t.GetProperty("qrCode").GetString()!).ToList());
     }
 
-    private async Task<int> TicketsSoldForPriceAsync(int priceId)
+    private async Task<int> TicketsSoldForPriceAsync(Guid priceId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

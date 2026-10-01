@@ -11,7 +11,7 @@ internal sealed class ResolveContentReportCommandValidator : AbstractValidator<R
             .Must(t => Enum.TryParse<ReportTargetType>(t, true, out _))
             .WithMessage($"TargetType phải là một trong: {string.Join(", ", Enum.GetNames<ReportTargetType>())}.");
 
-        RuleFor(x => x.TargetId).GreaterThan(0);
+        RuleFor(x => x.TargetId).NotEmpty();
 
         RuleFor(x => x.Action)
             .Must(a => a.Equals("Removed", StringComparison.OrdinalIgnoreCase)

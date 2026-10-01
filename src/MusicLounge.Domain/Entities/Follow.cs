@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Follow : Common.BaseEntity<int>
+public sealed class Follow : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int LoungeId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid LoungeId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
     public User User { get; set; } = null!;

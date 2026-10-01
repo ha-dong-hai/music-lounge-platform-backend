@@ -37,11 +37,11 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         // vien va IPN co the cung doc "chua tra" roi cung ghi nhan mot khoan thu.
         await using var _ = await _lock.AcquireAsync(FnbOrderPayments.LockKey(request.OrderId), ct);
 
-        var orderRepo = _uow.Repository<FnbOrder, int>();
+        var orderRepo = _uow.Repository<FnbOrder, Guid>();
         var order = await orderRepo.GetByIdAsync(request.OrderId, ct)
             ?? throw new NotFoundException(nameof(FnbOrder), request.OrderId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(order.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), order.LoungeId);
         if (!VenueOperatorAccess.CanOperate(_currentUser, order.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền cập nhật order F&B của venue này.");
@@ -69,7 +69,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
             if (isPaid)
             {
                 var referenceId = order.Id.ToString();
-                toRefund = (await _uow.Repository<Payment, int>().FindAsync(
+                toRefund = (await _uow.Repository<Payment, Guid>().FindAsync(
                         p => p.ReferenceType == FnbOrderPayments.ReferenceType
                              && p.ReferenceId == referenceId
                              && p.Status == PaymentStatus.Confirmed
@@ -89,7 +89,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
             order.Status = FnbOrderStatus.Cancelled;
             orderRepo.Update(order);
 
-            var itemRepo = _uow.Repository<OrderItem, int>();
+            var itemRepo = _uow.Repository<OrderItem, Guid>();
             var items = await itemRepo.FindAsync(i => i.FnbOrderId == order.Id, ct);
             foreach (var item in items)
             {
@@ -99,7 +99,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
             if (toRefund is not null)
             {
-                _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+                _uow.Repository<RefundRequest, Guid>().Add(new RefundRequest
                 {
                     PaymentId = toRefund.Id,
                     RequestedBy = order.AudienceUserId ?? toRefund.PayerId,
@@ -146,7 +146,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
             // Khoi nay chi chay khi THU TIEN MAT that — don da tra online thi buoc Paid chi la dong
             // don, khong co khoan thu nao de ghi.
-            _uow.Repository<Payment, int>().Add(new Payment
+            _uow.Repository<Payment, Guid>().Add(new Payment
             {
                 OrderId = $"FNB-{now:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..40],
                 PayerId = order.AudienceUserId,

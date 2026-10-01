@@ -23,7 +23,7 @@ public sealed class LoungeAddressWithoutDistrictTests
 
     public LoungeAddressWithoutDistrictTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> FreshOwnerAsync()
+    private async Task<Guid> FreshOwnerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -33,7 +33,7 @@ public sealed class LoungeAddressWithoutDistrictTests
         return owner.Id;
     }
 
-    private async Task<int> ApprovedVenueWithDistrictAsync(int ownerId)
+    private async Task<Guid> ApprovedVenueWithDistrictAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -52,7 +52,7 @@ public sealed class LoungeAddressWithoutDistrictTests
         return lounge.Id;
     }
 
-    private static async Task<JsonElement> DetailAsync(HttpClient client, int loungeId)
+    private static async Task<JsonElement> DetailAsync(HttpClient client, Guid loungeId)
     {
         var res = await client.GetAsync($"/api/v1/lounges/{loungeId}");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -69,7 +69,7 @@ public sealed class LoungeAddressWithoutDistrictTests
         {
             Name = $"Phòng trà {Guid.NewGuid():N}"[..20],
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "36 Nguyễn Thị Nghĩa",
             Ward = "Phường Bến Thành",
             City = "TP. Hồ Chí Minh",
@@ -79,7 +79,7 @@ public sealed class LoungeAddressWithoutDistrictTests
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
         using var created = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-        var detail = await DetailAsync(owner, created.RootElement.GetProperty("data").GetInt32());
+        var detail = await DetailAsync(owner, created.RootElement.GetProperty("data").GetGuid());
         detail.GetProperty("district").GetString().Should().BeEmpty();
         detail.GetProperty("fullAddress").GetString().Should().Be("36 Nguyễn Thị Nghĩa, Phường Bến Thành, TP. Hồ Chí Minh");
     }
@@ -95,7 +95,7 @@ public sealed class LoungeAddressWithoutDistrictTests
         {
             Name = "Phòng trà Sương Mai",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "142 Trần Quang Khải",
             Ward = "Phường Tân Định",
             District = (string?)null,
@@ -121,7 +121,7 @@ public sealed class LoungeAddressWithoutDistrictTests
         {
             Name = "Phòng trà Sương Mai",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "142 Trần Quang Khải",
             Ward = "Phường Tân Định",
             City = "TP. Hồ Chí Minh",
@@ -144,7 +144,7 @@ public sealed class LoungeAddressWithoutDistrictTests
         {
             Name = "Phòng trà Sương Mai",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "25 Tú Xương",
             Ward = "Phường 7",
             District = "Quận 3",

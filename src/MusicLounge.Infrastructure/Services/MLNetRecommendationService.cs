@@ -37,20 +37,20 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     private static readonly JsonSerializerOptions CaseInsensitive = new() { PropertyNameCaseInsensitive = true };
 
     private readonly ApplicationDbContext _ctx;
-    private readonly IRepository<UserBehaviourLog, int> _logRepo;
-    private readonly IRepository<UserFavouriteGenre, int> _genreRepo;
-    private readonly IRepository<UserFavouriteMood, int> _moodRepo;
-    private readonly IRepository<UserFavouriteAtmosphere, int> _atmosphereRepo;
-    private readonly IRepository<Follow, int> _followRepo;
+    private readonly IRepository<UserBehaviourLog, Guid> _logRepo;
+    private readonly IRepository<UserFavouriteGenre, Guid> _genreRepo;
+    private readonly IRepository<UserFavouriteMood, Guid> _moodRepo;
+    private readonly IRepository<UserFavouriteAtmosphere, Guid> _atmosphereRepo;
+    private readonly IRepository<Follow, Guid> _followRepo;
     private readonly ILoungeShowRepository _showRepo;
-    private readonly IRepository<AiRecommendation, int> _recRepo;
+    private readonly IRepository<AiRecommendation, Guid> _recRepo;
     private readonly IAiTextGenerationService _textGen;
     private readonly IUnitOfWork _uow;
 
     private bool _collabTrainingAttempted;
     private PredictionEngine<CfRow, CfPrediction>? _collabEngine;
-    private HashSet<int> _trainedUserIds = [];
-    private HashSet<int> _trainedShowIds = [];
+    private HashSet<Guid> _trainedUserIds = [];
+    private HashSet<Guid> _trainedShowIds = [];
 
     /// <summary>
     /// Số buổi diễn mới đăng được thêm vào tập ứng viên, ngoài nhóm đang được quan tâm nhất. Cùng
@@ -97,13 +97,13 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
 
     public MLNetRecommendationService(
         ApplicationDbContext ctx,
-        IRepository<UserBehaviourLog, int> logRepo,
-        IRepository<UserFavouriteGenre, int> genreRepo,
-        IRepository<UserFavouriteMood, int> moodRepo,
-        IRepository<UserFavouriteAtmosphere, int> atmosphereRepo,
-        IRepository<Follow, int> followRepo,
+        IRepository<UserBehaviourLog, Guid> logRepo,
+        IRepository<UserFavouriteGenre, Guid> genreRepo,
+        IRepository<UserFavouriteMood, Guid> moodRepo,
+        IRepository<UserFavouriteAtmosphere, Guid> atmosphereRepo,
+        IRepository<Follow, Guid> followRepo,
         ILoungeShowRepository showRepo,
-        IRepository<AiRecommendation, int> recRepo,
+        IRepository<AiRecommendation, Guid> recRepo,
         IAiTextGenerationService textGen,
         IUnitOfWork uow)
     {
@@ -119,7 +119,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         _uow = uow;
     }
 
-    public async Task TriggerRecommendationRefreshAsync(int userId, CancellationToken ct = default)
+    public async Task TriggerRecommendationRefreshAsync(Guid userId, CancellationToken ct = default)
     {
         var behaviourLogs = await _logRepo.FindAsync(l => l.UserId == userId, ct);
         var favouriteGenres = await _genreRepo.FindAsync(g => g.UserId == userId, ct);
@@ -150,11 +150,11 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     }
 
     private async Task<IReadOnlyList<AiRecommendation>> ComputeContentBasedAsync(
-        int userId,
+        Guid userId,
         IReadOnlyList<UserFavouriteGenre> favouriteGenres,
         IReadOnlyList<UserFavouriteMood> favouriteMoods,
         IReadOnlyList<UserFavouriteAtmosphere> favouriteAtmospheres,
-        IReadOnlySet<int> followedLoungeIds,
+        IReadOnlySet<Guid> followedLoungeIds,
         CancellationToken ct)
     {
         var shows = await GetCandidateShowsAsync(ct);
@@ -193,11 +193,11 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     }
 
     private async Task<IReadOnlyList<AiRecommendation>> ComputeHybridAsync(
-        int userId,
+        Guid userId,
         IReadOnlyList<UserFavouriteGenre> favouriteGenres,
         IReadOnlyList<UserFavouriteMood> favouriteMoods,
         IReadOnlyList<UserFavouriteAtmosphere> favouriteAtmospheres,
-        IReadOnlySet<int> followedLoungeIds,
+        IReadOnlySet<Guid> followedLoungeIds,
         CancellationToken ct)
     {
         var shows = await GetCandidateShowsAsync(ct);
@@ -250,8 +250,8 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     // not something the recommendation feature depends on to function).
     private async Task EnrichTopReasonsWithAiAsync(
         IReadOnlyList<AiRecommendation> recommendations,
-        IReadOnlyDictionary<int, Domain.Entities.LoungeShow> showById,
-        IReadOnlySet<int> followedLoungeIds,
+        IReadOnlyDictionary<Guid, Domain.Entities.LoungeShow> showById,
+        IReadOnlySet<Guid> followedLoungeIds,
         CancellationToken ct)
     {
         var top = recommendations.Take(TopReasonsToEnrichWithAi).ToList();
@@ -306,10 +306,10 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         }
     }
 
-    private sealed record AiReasonItem(int ShowId, string? Reason);
+    private sealed record AiReasonItem(Guid ShowId, string? Reason);
 
     // content_score = genre*0.4 + mood*0.4 + atmosphere*0.2 — moi chieu la Jaccard(so thich user, tag cua show).
-    private async Task<Dictionary<int, float>> ComputeContentScoresAsync(
+    private async Task<Dictionary<Guid, float>> ComputeContentScoresAsync(
         IReadOnlyList<Domain.Entities.LoungeShow> shows,
         IReadOnlyList<UserFavouriteGenre> favouriteGenres,
         IReadOnlyList<UserFavouriteMood> favouriteMoods,
@@ -332,7 +332,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         var userMoodIds = favouriteMoods.Select(m => m.MoodId).ToHashSet();
         var userAtmosphereIds = favouriteAtmospheres.Select(a => a.AtmosphereId).ToHashSet();
 
-        var result = new Dictionary<int, float>();
+        var result = new Dictionary<Guid, float>();
         foreach (var show in shows)
         {
             var showGenreIds = show.Genres.Select(g => g.GenreId).ToHashSet();
@@ -343,7 +343,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
             // (khach chua dang nhap, va nguoi dung chua bat dong y AI) dung dung cong thuc nay, va
             // hai ban cai dat rieng thi som muon cho ra hai ket qua khac nhau cho cung mot nguoi.
             result[show.Id] = TasteMatcher.ContentScore(
-                new TasteProfile(userGenreIds, userMoodIds, userAtmosphereIds, new HashSet<int>()),
+                new TasteProfile(userGenreIds, userMoodIds, userAtmosphereIds, new HashSet<Guid>()),
                 new ShowTags(show.Id, show.LoungeId, showGenreIds, showMoodIds, showAtmosphereIds));
         }
 
@@ -353,8 +353,8 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     // custom_score = Sum(match(event_custom_values, user_custom_preferences) * weight).
     // "match" = so sanh gia tri JSON dang chuoi (khong suy dien them logic fuzzy-match theo DataType
     // vi tai lieu khong mo ta chi tiet hon).
-    private async Task<Dictionary<int, float>> ComputeCustomScoresAsync(
-        int userId, IReadOnlyList<int> showIds, CancellationToken ct)
+    private async Task<Dictionary<Guid, float>> ComputeCustomScoresAsync(
+        Guid userId, IReadOnlyList<Guid> showIds, CancellationToken ct)
     {
         var result = showIds.ToDictionary(id => id, _ => 0f);
 
@@ -388,12 +388,12 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     // bien the ALS (alternating least squares) chuyen dung cho ma tran rating thua (sparse) —
     // dung API tieu chuan cua ML.NET (MapValueToKey + Recommendation().Trainers.MatrixFactorization)
     // thay vi tu code ALS tay, vi day la implementation da duoc kiem chung va toi uu san.
-    private async Task<Dictionary<int, float>> ComputeCollabScoresAsync(
-        int userId, IReadOnlyList<int> showIds, CancellationToken ct)
+    private async Task<Dictionary<Guid, float>> ComputeCollabScoresAsync(
+        Guid userId, IReadOnlyList<Guid> showIds, CancellationToken ct)
     {
         await EnsureCollabModelTrainedAsync(ct);
 
-        var result = new Dictionary<int, float>();
+        var result = new Dictionary<Guid, float>();
 
         // Chua du du lieu de train, hoac user/show nay chua tung xuat hien trong ma tran train ->
         // collab_score = 0 (khong phai loi, chi la "chua co du lieu hanh vi de goi y kieu nay").
@@ -411,7 +411,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
                 continue;
             }
 
-            var prediction = _collabEngine.Predict(new CfRow { UserId = (uint)userId, ShowId = (uint)showId });
+            var prediction = _collabEngine.Predict(new CfRow { UserId = userId.ToString("N"), ShowId = showId.ToString("N") });
             // Diem MF thô không bị chặn trong [0,1] — clamp để cộng bằng đơn vị với content/custom score.
             result[showId] = Math.Clamp(prediction.Score, 0f, 1f);
         }
@@ -424,17 +424,22 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         if (_collabTrainingAttempted) return;
         _collabTrainingAttempted = true;
 
-        var rows = await _ctx.Set<UserEventScore>()
+        // MLACP-515: khoá là GUID nên không ép sang uint được nữa. Đưa GUID dạng chuỗi vào — MapValueToKey bên dưới tự dựng
+        // ánh xạ giá trị -> chỉ số liên tiếp mà Matrix Factorization cần, và mô hình giữ đúng ánh xạ đó cho lúc dự đoán.
+        var diem = await _ctx.Set<UserEventScore>()
             .Where(s => s.Score > 0)
-            .Select(s => new CfRow { UserId = (uint)s.UserId, ShowId = (uint)s.ShowId, Label = (float)s.Score })
+            .Select(s => new { s.UserId, s.ShowId, s.Score })
             .ToListAsync(ct);
+        var rows = diem
+            .Select(s => new CfRow { UserId = s.UserId.ToString("N"), ShowId = s.ShowId.ToString("N"), Label = (float)s.Score })
+            .ToList();
 
         // Dataset qua nho de Matrix Factorization hoc duoc gi co y nghia (can it nhat vai chuc
         // rating trai deu tren nhieu user/show) — bo qua CF, chi dung content+custom score.
         if (rows.Count < 10) return;
 
-        _trainedUserIds = rows.Select(r => (int)r.UserId).ToHashSet();
-        _trainedShowIds = rows.Select(r => (int)r.ShowId).ToHashSet();
+        _trainedUserIds = diem.Select(r => r.UserId).ToHashSet();
+        _trainedShowIds = diem.Select(r => r.ShowId).ToHashSet();
 
         var mlContext = new MLContext(seed: 0);
         var dataView = mlContext.Data.LoadFromEnumerable(rows);
@@ -459,7 +464,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
     }
 
     private async Task PersistRecommendationsAsync(
-        int userId, IReadOnlyList<AiRecommendation> recommendations, CancellationToken ct)
+        Guid userId, IReadOnlyList<AiRecommendation> recommendations, CancellationToken ct)
     {
         var existing = await _recRepo.FindAsync(r => r.UserId == userId, ct);
         foreach (var old in existing)
@@ -475,8 +480,8 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
 // Model input/output rieng cho ML.NET pipeline — khong phai domain entity.
 internal sealed class CfRow
 {
-    public uint UserId { get; set; }
-    public uint ShowId { get; set; }
+    public string UserId { get; set; } = string.Empty;   // GUID dạng chuỗi (MLACP-515)
+    public string ShowId { get; set; } = string.Empty;
     public float Label { get; set; }
 }
 

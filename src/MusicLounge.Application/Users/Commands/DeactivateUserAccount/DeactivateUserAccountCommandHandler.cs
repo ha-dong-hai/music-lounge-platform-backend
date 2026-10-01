@@ -29,7 +29,7 @@ internal sealed class DeactivateUserAccountCommandHandler : IRequestHandler<Deac
         if (request.UserId == _currentUser.UserId)
             throw new DomainException("Không thể tự khoá tài khoản của chính mình.");
 
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 

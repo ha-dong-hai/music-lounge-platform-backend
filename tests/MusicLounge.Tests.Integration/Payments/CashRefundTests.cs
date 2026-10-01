@@ -40,7 +40,7 @@ public sealed class CashRefundTests
     /// <c>Cash</c> tái hiện vé bán tại quầy: không <c>TransactionId</c>, không bút toán, không
     /// settlement — đúng như <c>SellWalkInTicket</c> tạo ra.
     /// </param>
-    private async Task<(int PaymentId, int RefundId)> PurchaseWithRefundRequestAsync(
+    private async Task<(Guid PaymentId, Guid RefundId)> PurchaseWithRefundRequestAsync(
         PaymentMethod method, decimal gross = 200_000m)
     {
         using var scope = _factory.Services.CreateScope();
@@ -97,7 +97,7 @@ public sealed class CashRefundTests
     }
 
     private Task<HttpResponseMessage> ProcessAsync(
-        int refundId, string decision, decimal? amount, string? note = null)
+        Guid refundId, string decision, decimal? amount, string? note = null)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
             .PostAsJsonAsync($"/api/v1/admin/refund-requests/{refundId}/process",
                 new { Decision = decision, ApprovedAmount = amount, ResolutionNote = note });

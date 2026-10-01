@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class TicketHold : Common.BaseEntity<int>
+public sealed class TicketHold : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int PriceId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid PriceId { get; set; }
     public int Quantity { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
     public bool IsReleased { get; set; } = false;

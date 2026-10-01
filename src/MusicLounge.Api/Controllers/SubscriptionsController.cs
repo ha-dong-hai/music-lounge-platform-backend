@@ -46,24 +46,24 @@ public sealed class SubscriptionsController : ControllerBase
 
     [HttpPost("packages")]
     [Authorize(Policy = Policies.RequireAdmin)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreatePackage(
         [FromBody] CreateSubscriptionPackageCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return CreatedAtAction(nameof(GetPackages), new { version = "1.0" }, ApiResponse<int>.Ok(id));
+        return CreatedAtAction(nameof(GetPackages), new { version = "1.0" }, ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("packages/{id:int}")]
+    [HttpPut("packages/{id:guid}")]
     [Authorize(Policy = Policies.RequireAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdatePackage(
-        int id, [FromBody] UpdateSubscriptionPackageRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateSubscriptionPackageRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateSubscriptionPackageCommand(
             id, body.Description, body.Price, body.MaxTicketsPerEvent, body.HasAiPoster,
@@ -182,6 +182,6 @@ public sealed record UpdateSubscriptionPackageRequest(
     string? Description, decimal Price, int MaxTicketsPerEvent, bool HasAiPoster,
     int MaxAiPostersPerMonth, int MaxTourScenes, bool IsActive);
 
-public sealed record SubscribeToPackageRequest(int PackageId);
+public sealed record SubscribeToPackageRequest(Guid PackageId);
 
-public sealed record ChangeSubscriptionPackageRequest(int PackageId);
+public sealed record ChangeSubscriptionPackageRequest(Guid PackageId);

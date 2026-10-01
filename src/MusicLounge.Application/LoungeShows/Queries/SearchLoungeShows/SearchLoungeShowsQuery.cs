@@ -18,9 +18,9 @@ namespace MusicLounge.Application.LoungeShows.Queries.SearchLoungeShows;
 // dong tren Azure deu rong. Chu du an da chot bo o loc quan ben frontend. Ward/PerformerId/LoungeId
 // van chua co task nao yeu cau expose.
 public sealed record SearchLoungeShowsQuery(
-    int[]? GenreIds,
-    int[]? MoodIds,
-    int[]? AtmosphereIds,
+    Guid[]? GenreIds,
+    Guid[]? MoodIds,
+    Guid[]? AtmosphereIds,
     string? Keyword,
     LoungeShowFormat? Format,
     DateTimeOffset? DateFrom,

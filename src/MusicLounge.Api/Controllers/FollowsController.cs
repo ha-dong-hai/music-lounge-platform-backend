@@ -38,7 +38,7 @@ public sealed class FollowsController : ControllerBase
     [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeFollowStatusDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFollowStatus([FromQuery] int[] loungeIds, CancellationToken ct = default)
+    public async Task<IActionResult> GetFollowStatus([FromQuery] Guid[] loungeIds, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetLoungeFollowStatusQuery(loungeIds), ct);
         return Ok(ApiResponse<IReadOnlyList<LoungeFollowStatusDto>>.Ok(result));
@@ -46,20 +46,20 @@ public sealed class FollowsController : ControllerBase
 
     /// <summary>Follow 1 phòng trà — dùng làm đầu vào tín hiệu gợi ý AI (FollowedVenueBoost) và để
     /// nhận thông báo khi venue có buổi diễn mới. 409 nếu đã follow trước đó (không follow trùng).</summary>
-    [HttpPost("lounges/{loungeId:int}")]
+    [HttpPost("lounges/{loungeId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Follow(int loungeId, CancellationToken ct = default)
+    public async Task<IActionResult> Follow(Guid loungeId, CancellationToken ct = default)
     {
         await _sender.Send(new FollowLoungeCommand(loungeId), ct);
         return NoContent();
     }
 
-    [HttpDelete("lounges/{loungeId:int}")]
+    [HttpDelete("lounges/{loungeId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Unfollow(int loungeId, CancellationToken ct = default)
+    public async Task<IActionResult> Unfollow(Guid loungeId, CancellationToken ct = default)
     {
         await _sender.Send(new UnfollowLoungeCommand(loungeId), ct);
         return NoContent();

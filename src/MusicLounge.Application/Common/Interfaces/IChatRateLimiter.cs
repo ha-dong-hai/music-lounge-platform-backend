@@ -8,5 +8,5 @@ namespace MusicLounge.Application.Common.Interfaces;
 public interface IChatRateLimiter
 {
     /// <summary>Returns true if the user may send now, false if they must wait.</summary>
-    bool TryAcquire(int userId);
+    bool TryAcquire(Guid userId);
 }

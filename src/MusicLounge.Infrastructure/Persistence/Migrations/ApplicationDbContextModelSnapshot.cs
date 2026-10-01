@@ -24,14 +24,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Account", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("OwnerType")
                         .IsRequired()
@@ -53,11 +51,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.AiPosterGeneration", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AttemptCount")
                         .HasColumnType("int");
@@ -83,8 +79,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LeaseExpiresAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Prompt")
                         .IsRequired()
@@ -95,8 +91,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("ShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -116,11 +112,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.AiRecommendation", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Algorithm")
                         .IsRequired()
@@ -145,16 +139,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<float>("FinalScore")
                         .HasColumnType("real");
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -170,11 +164,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.BankAccount", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccountHolder")
                         .IsRequired()
@@ -194,8 +186,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDefault")
                         .ValueGeneratedOnAdd()
@@ -207,8 +199,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("OwnerType")
                         .IsRequired()
@@ -218,8 +210,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -232,22 +224,20 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Complaint", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AdminId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AdminId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("ComplainantUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ComplainantUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ContactPhone")
                         .HasMaxLength(20)
@@ -288,8 +278,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("TargetId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TargetType")
                         .IsRequired()
@@ -313,11 +303,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.ContentReport", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -327,8 +315,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("ReporterId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ReporterId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ResolutionNote")
                         .HasMaxLength(1000)
@@ -337,16 +325,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ResolvedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("ResolvedByAdminId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ResolvedByAdminId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("TargetId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TargetType")
                         .IsRequired()
@@ -366,17 +354,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.CustomCriteria", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DataType")
                         .IsRequired()
@@ -393,8 +379,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -408,8 +394,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -421,11 +407,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.DeviceToken", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -442,8 +426,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -457,17 +441,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Donation", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("AutoConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("BankAccountId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("BankAccountId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -476,8 +458,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("DonorUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("DonorUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("GatewayRef")
                         .HasMaxLength(255)
@@ -501,8 +483,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("MessageHiddenAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("MessageHiddenByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("MessageHiddenByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Net")
                         .HasColumnType("decimal(15,2)");
@@ -524,8 +506,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int>("PerformanceId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PerformanceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("PerformerShareRateSnapshot")
                         .HasPrecision(5, 4)
@@ -553,14 +535,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.DonationEvent", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<int?>("ActorUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("Amount")
                         .HasPrecision(15, 2)
@@ -570,8 +550,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("DonationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("DonationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("EventType")
                         .IsRequired()
@@ -617,17 +597,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.EventCategory", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -646,8 +624,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -659,28 +637,28 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
+                            Id = new Guid("00000000-0001-8dcd-8fac-000000000001"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
                             Name = "Đêm nhạc thường"
                         },
                         new
                         {
-                            Id = 2,
+                            Id = new Guid("00000000-0002-8dcd-8fac-000000000002"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
                             Name = "Mini Show"
                         },
                         new
                         {
-                            Id = 3,
+                            Id = new Guid("00000000-0003-8dcd-8fac-000000000003"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
                             Name = "Sự kiện riêng"
                         },
                         new
                         {
-                            Id = 4,
+                            Id = new Guid("00000000-0004-8dcd-8fac-000000000004"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
                             Name = "Họp báo"
@@ -689,29 +667,27 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.EventCustomValue", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CriteriaId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CriteriaId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("ShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -730,18 +706,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.EventModeration", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AdminDecision")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int?>("AdminId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AdminId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AiRecommendation")
                         .HasMaxLength(30)
@@ -753,8 +727,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("FlagReason")
                         .HasMaxLength(1000)
@@ -774,8 +748,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("SlaDeadline")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("TargetId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TargetType")
                         .IsRequired()
@@ -785,8 +759,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -801,17 +775,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.FnbMenu", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -827,8 +799,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -838,8 +810,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -850,11 +822,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.FnbMenuItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -864,8 +834,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -885,8 +855,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("MenuId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MenuId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -900,8 +870,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -912,23 +882,21 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.FnbOrder", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AudienceUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AudienceUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
@@ -939,11 +907,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int?>("ShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ShowId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("StaffId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("StaffId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -963,11 +931,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("ZoneId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ZoneId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -986,20 +954,18 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Follow", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1013,17 +979,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.KnownAdminSnapshot", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("FirstDetectedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1035,14 +999,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LedgerEntry", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
@@ -1063,8 +1025,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
-                    b.Property<int?>("PaymentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ReferenceId")
                         .IsRequired()
@@ -1091,11 +1053,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Livestream", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("ChatEnabled")
                         .ValueGeneratedOnAdd()
@@ -1105,8 +1065,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("DisconnectedAt")
                         .HasColumnType("datetimeoffset");
@@ -1123,8 +1083,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("PeakViewerCount")
                         .ValueGeneratedOnAdd()
@@ -1162,8 +1122,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int?>("TerminatedById")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("TerminatedById")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TerminatedReason")
                         .HasMaxLength(1000)
@@ -1177,8 +1137,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ViewerCount")
                         .HasColumnType("int");
@@ -1195,19 +1155,17 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LivestreamChatMessage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsRemoved")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("LivestreamId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LivestreamId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Message")
                         .IsRequired()
@@ -1221,8 +1179,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1248,8 +1206,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LastAccessedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("LivestreamId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LivestreamId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("TicketId");
 
@@ -1264,17 +1222,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LivestreamViewingSession", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("LastHeartbeatAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("LivestreamId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LivestreamId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SessionId")
                         .IsRequired()
@@ -1301,11 +1257,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoginFailureLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1330,11 +1284,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoginSpikeAlertState", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("IpAddress")
                         .IsRequired()
@@ -1354,11 +1306,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeGalleryImage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Caption")
                         .HasMaxLength(255)
@@ -1369,8 +1319,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int");
@@ -1384,11 +1334,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeImage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Caption")
                         .HasMaxLength(255)
@@ -1409,8 +1357,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("UploadedAt")
                         .HasColumnType("datetimeoffset");
@@ -1426,20 +1374,18 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeMute", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1453,11 +1399,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeShow", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("ActualEnd")
                         .HasColumnType("datetimeoffset");
@@ -1473,8 +1417,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<int?>("CancellationDeadlineHours")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CoverImageUrl")
                         .HasMaxLength(500)
@@ -1483,8 +1427,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1503,15 +1447,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LegalApprovalConfirmedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("LegalApprovalConfirmedByAdminId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("LegalApprovalConfirmedByAdminId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LegalApprovalReference")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1569,8 +1513,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("VcpmcRoyaltyReference")
                         .HasMaxLength(500)
@@ -1594,17 +1538,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeShowAtmosphere", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("AtmosphereId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("AtmosphereId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1618,17 +1560,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeShowGenre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("GenreId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("GenreId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1642,17 +1582,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeShowMood", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MoodId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MoodId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1666,11 +1604,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeShowRating", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
@@ -1679,16 +1615,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsRemoved")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RemovedReason")
                         .HasMaxLength(500)
@@ -1700,11 +1636,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1719,34 +1655,32 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.LoungeStaff", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("AssignedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("AssignedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid>("AssignedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("DeactivatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("DeactivatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("DeactivatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1765,17 +1699,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Mood", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1785,8 +1717,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1798,37 +1730,37 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
+                            Id = new Guid("00000000-0001-8f66-84f7-000000000001"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Hoài niệm"
                         },
                         new
                         {
-                            Id = 2,
+                            Id = new Guid("00000000-0002-8f66-84f7-000000000002"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Tiền chiến"
                         },
                         new
                         {
-                            Id = 3,
+                            Id = new Guid("00000000-0003-8f66-84f7-000000000003"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Lãng mạn"
                         },
                         new
                         {
-                            Id = 4,
+                            Id = new Guid("00000000-0004-8f66-84f7-000000000004"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Chill"
                         },
                         new
                         {
-                            Id = 5,
+                            Id = new Guid("00000000-0005-8f66-84f7-000000000005"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Sôi động"
                         },
                         new
                         {
-                            Id = 6,
+                            Id = new Guid("00000000-0006-8f66-84f7-000000000006"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Nhẹ nhàng"
                         });
@@ -1836,17 +1768,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.MusicGenre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1860,8 +1790,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1873,55 +1803,55 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
+                            Id = new Guid("00000000-0001-81b5-8b05-000000000001"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Jazz",
                             NameEn = "Jazz"
                         },
                         new
                         {
-                            Id = 2,
+                            Id = new Guid("00000000-0002-81b5-8b05-000000000002"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Acoustic",
                             NameEn = "Acoustic"
                         },
                         new
                         {
-                            Id = 3,
+                            Id = new Guid("00000000-0003-81b5-8b05-000000000003"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Ballad",
                             NameEn = "Ballad"
                         },
                         new
                         {
-                            Id = 4,
+                            Id = new Guid("00000000-0004-81b5-8b05-000000000004"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Bolero",
                             NameEn = "Bolero"
                         },
                         new
                         {
-                            Id = 5,
+                            Id = new Guid("00000000-0005-81b5-8b05-000000000005"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Pop",
                             NameEn = "Pop"
                         },
                         new
                         {
-                            Id = 6,
+                            Id = new Guid("00000000-0006-81b5-8b05-000000000006"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Trữ tình"
                         },
                         new
                         {
-                            Id = 7,
+                            Id = new Guid("00000000-0007-81b5-8b05-000000000007"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "R&B",
                             NameEn = "R&B"
                         },
                         new
                         {
-                            Id = 8,
+                            Id = new Guid("00000000-0008-81b5-8b05-000000000008"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Cổ điển",
                             NameEn = "Classical"
@@ -1930,18 +1860,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.MusicLounge", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AreaLayoutImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("AtmosphereId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AtmosphereId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BusinessLicenseUrl")
                         .HasMaxLength(500)
@@ -1950,8 +1878,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
@@ -1966,8 +1894,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PrimaryImageUrl")
                         .HasMaxLength(500)
@@ -1992,14 +1920,14 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("StatusReviewedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("StatusReviewedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("StatusReviewedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2015,11 +1943,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Notification", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Body")
                         .IsRequired()
@@ -2063,8 +1989,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2075,11 +2001,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.OrderItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("Cancelled")
                         .ValueGeneratedOnAdd()
@@ -2089,14 +2013,14 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("FnbOrderId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FnbOrderId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MenuItemId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MenuItemId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Note")
                         .HasMaxLength(255)
@@ -2112,8 +2036,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2126,11 +2050,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.OwnerSubscription", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("AmountPaid")
                         .HasPrecision(18, 2)
@@ -2154,11 +2076,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<int>("MaxTourScenesSnapshot")
                         .HasColumnType("int");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PackageId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PackageId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("datetimeoffset");
@@ -2183,11 +2105,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Payment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -2227,8 +2147,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("PaidAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("PayerId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PayerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("PersonalIncomeTaxWithheld")
                         .ValueGeneratedOnAdd()
@@ -2308,25 +2228,23 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Performance", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("AcceptsDonation")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int");
 
-                    b.Property<int>("PerformerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PerformerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -2350,11 +2268,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Performer", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
@@ -2371,11 +2287,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("DataConsentAt")
                         .HasColumnType("datetimeoffset");
@@ -2393,8 +2309,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2405,18 +2321,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.PerformerConfirmation", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BankAccountFingerprint")
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.Property<int?>("BankAccountId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("BankAccountId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("ConsentGivenAt")
                         .HasColumnType("datetimeoffset");
@@ -2424,8 +2338,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("DonationId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("DonationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("datetimeoffset");
@@ -2438,8 +2352,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("PerformerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PerformerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Purpose")
                         .IsRequired()
@@ -2475,17 +2389,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.PerformerGenre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("GenreId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("GenreId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PerformerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PerformerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2499,24 +2411,22 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.PerformerSocialLink", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DisplayName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int>("PerformerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PerformerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Platform")
                         .IsRequired()
@@ -2526,8 +2436,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -2550,15 +2460,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("CheckedInAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("CheckedInByStaffId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CheckedInByStaffId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SeatInfo")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("SoldByStaffId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("SoldByStaffId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("TicketId");
 
@@ -2571,11 +2481,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.RefundRequest", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("AmountApproved")
                         .HasPrecision(18, 2)
@@ -2591,11 +2499,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PaymentId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PayoutAccountHolder")
                         .HasMaxLength(100)
@@ -2615,8 +2523,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("PayoutConsentAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("ProcessedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ProcessedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -2627,8 +2535,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
 
-                    b.Property<int?>("RequestedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("RequestedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ResolutionNote")
                         .HasMaxLength(500)
@@ -2645,8 +2553,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2661,11 +2569,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.SeatingZone", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
@@ -2673,8 +2579,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -2718,8 +2624,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(9)
                         .HasColumnType("nvarchar(9)");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2729,8 +2635,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2741,14 +2647,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.Settlement", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("BankAccountId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("BankAccountId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -2765,11 +2669,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasPrecision(15, 2)
                         .HasColumnType("decimal(15,2)");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PaymentId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PaymentReference")
                         .HasMaxLength(200)
@@ -2814,20 +2718,18 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.ShowWishlist", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2841,11 +2743,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.SubscriptionPackage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BillingCycle")
                         .IsRequired()
@@ -2855,8 +2755,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -2893,8 +2793,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2903,11 +2803,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.SystemConfig", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConfigKey")
                         .IsRequired()
@@ -2931,8 +2829,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -2946,7 +2844,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 2,
+                            Id = new Guid("00000000-0002-8276-802b-000000000002"),
                             ConfigKey = "platform_commission_rate",
                             ConfigValue = "0.05",
                             DataType = "Decimal",
@@ -2955,7 +2853,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 3,
+                            Id = new Guid("00000000-0003-8276-802b-000000000003"),
                             ConfigKey = "tax_rate",
                             ConfigValue = "0.05",
                             DataType = "Decimal",
@@ -2964,7 +2862,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 32,
+                            Id = new Guid("00000000-0020-8276-802b-000000000020"),
                             ConfigKey = "personal_income_tax_rate",
                             ConfigValue = "0",
                             DataType = "Decimal",
@@ -2973,7 +2871,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 4,
+                            Id = new Guid("00000000-0004-8276-802b-000000000004"),
                             ConfigKey = "settlement_partial_hours_after_show",
                             ConfigValue = "48",
                             DataType = "Integer",
@@ -2982,7 +2880,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 5,
+                            Id = new Guid("00000000-0005-8276-802b-000000000005"),
                             ConfigKey = "settlement_final_days_after_show",
                             ConfigValue = "14",
                             DataType = "Integer",
@@ -2991,7 +2889,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 6,
+                            Id = new Guid("00000000-0006-8276-802b-000000000006"),
                             ConfigKey = "settlement_completion_threshold_pct",
                             ConfigValue = "0.70",
                             DataType = "Decimal",
@@ -3000,7 +2898,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 7,
+                            Id = new Guid("00000000-0007-8276-802b-000000000007"),
                             ConfigKey = "settlement_tier_new_pre_rate",
                             ConfigValue = "0.50",
                             DataType = "Decimal",
@@ -3009,7 +2907,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 8,
+                            Id = new Guid("00000000-0008-8276-802b-000000000008"),
                             ConfigKey = "settlement_tier_standard_pre_rate",
                             ConfigValue = "0.70",
                             DataType = "Decimal",
@@ -3018,7 +2916,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 9,
+                            Id = new Guid("00000000-0009-8276-802b-000000000009"),
                             ConfigKey = "settlement_tier_premium_pre_rate",
                             ConfigValue = "0.80",
                             DataType = "Decimal",
@@ -3027,7 +2925,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 10,
+                            Id = new Guid("00000000-000a-8276-802b-00000000000a"),
                             ConfigKey = "settlement_tier_standard_min_score",
                             ConfigValue = "3.5",
                             DataType = "Decimal",
@@ -3036,7 +2934,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 11,
+                            Id = new Guid("00000000-000b-8276-802b-00000000000b"),
                             ConfigKey = "settlement_tier_premium_min_score",
                             ConfigValue = "4.2",
                             DataType = "Decimal",
@@ -3045,7 +2943,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 12,
+                            Id = new Guid("00000000-000c-8276-802b-00000000000c"),
                             ConfigKey = "settlement_tier_premium_min_shows",
                             ConfigValue = "10",
                             DataType = "Integer",
@@ -3054,7 +2952,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 15,
+                            Id = new Guid("00000000-000f-8276-802b-00000000000f"),
                             ConfigKey = "moderation_sla_hours",
                             ConfigValue = "24",
                             DataType = "Integer",
@@ -3063,7 +2961,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 16,
+                            Id = new Guid("00000000-0010-8276-802b-000000000010"),
                             ConfigKey = "ticket_hold_minutes",
                             ConfigValue = "15",
                             DataType = "Integer",
@@ -3072,7 +2970,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 17,
+                            Id = new Guid("00000000-0011-8276-802b-000000000011"),
                             ConfigKey = "donation_hold_days",
                             ConfigValue = "7",
                             DataType = "Integer",
@@ -3081,7 +2979,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 21,
+                            Id = new Guid("00000000-0015-8276-802b-000000000015"),
                             ConfigKey = "donation_performer_share_rate",
                             ConfigValue = "0.88",
                             DataType = "Decimal",
@@ -3090,7 +2988,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 18,
+                            Id = new Guid("00000000-0012-8276-802b-000000000012"),
                             ConfigKey = "rating_window_days",
                             ConfigValue = "7",
                             DataType = "Integer",
@@ -3099,7 +2997,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 19,
+                            Id = new Guid("00000000-0013-8276-802b-000000000013"),
                             ConfigKey = "appeal_sla_hours",
                             ConfigValue = "48",
                             DataType = "Integer",
@@ -3108,7 +3006,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 20,
+                            Id = new Guid("00000000-0014-8276-802b-000000000014"),
                             ConfigKey = "appeal_auto_approve",
                             ConfigValue = "true",
                             DataType = "Boolean",
@@ -3117,7 +3015,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 22,
+                            Id = new Guid("00000000-0016-8276-802b-000000000016"),
                             ConfigKey = "complaint_sla_hours",
                             ConfigValue = "72",
                             DataType = "Integer",
@@ -3126,7 +3024,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 23,
+                            Id = new Guid("00000000-0017-8276-802b-000000000017"),
                             ConfigKey = "current_terms_version",
                             ConfigValue = "v0-placeholder-pending-legal-review",
                             DataType = "String",
@@ -3135,7 +3033,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 24,
+                            Id = new Guid("00000000-0018-8276-802b-000000000018"),
                             ConfigKey = "publish_min_business_days_lead_time",
                             ConfigValue = "7",
                             DataType = "Integer",
@@ -3144,7 +3042,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 25,
+                            Id = new Guid("00000000-0019-8276-802b-000000000019"),
                             ConfigKey = "penalty_suspension_notice_hours",
                             ConfigValue = "24",
                             DataType = "Integer",
@@ -3153,7 +3051,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 26,
+                            Id = new Guid("00000000-001a-8276-802b-00000000001a"),
                             ConfigKey = "penalty_ban_notice_days",
                             ConfigValue = "7",
                             DataType = "Integer",
@@ -3162,7 +3060,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 27,
+                            Id = new Guid("00000000-001b-8276-802b-00000000001b"),
                             ConfigKey = "ticket_hold_max_quantity",
                             ConfigValue = "10",
                             DataType = "Integer",
@@ -3171,7 +3069,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 28,
+                            Id = new Guid("00000000-001c-8276-802b-00000000001c"),
                             ConfigKey = "walkin_ticket_max_quantity",
                             ConfigValue = "20",
                             DataType = "Integer",
@@ -3180,7 +3078,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 29,
+                            Id = new Guid("00000000-001d-8276-802b-00000000001d"),
                             ConfigKey = "donation_max_amount",
                             ConfigValue = "50000000",
                             DataType = "Decimal",
@@ -3189,7 +3087,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 30,
+                            Id = new Guid("00000000-001e-8276-802b-00000000001e"),
                             ConfigKey = "ticket_transfer_expiry_hours",
                             ConfigValue = "48",
                             DataType = "Integer",
@@ -3198,7 +3096,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 31,
+                            Id = new Guid("00000000-001f-8276-802b-00000000001f"),
                             ConfigKey = "ai_poster_max_attempts_per_show",
                             ConfigValue = "5",
                             DataType = "Integer",
@@ -3207,7 +3105,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 33,
+                            Id = new Guid("00000000-0021-8276-802b-000000000021"),
                             ConfigKey = "ticket_last_entry_minutes",
                             ConfigValue = "60",
                             DataType = "Integer",
@@ -3216,7 +3114,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 34,
+                            Id = new Guid("00000000-0022-8276-802b-000000000022"),
                             ConfigKey = "venue_changeover_minutes",
                             ConfigValue = "30",
                             DataType = "Integer",
@@ -3225,7 +3123,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 35,
+                            Id = new Guid("00000000-0023-8276-802b-000000000023"),
                             ConfigKey = "donation_message_blocked_words",
                             ConfigValue = "[]",
                             DataType = "Json",
@@ -3236,17 +3134,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.SystemConfigHistory", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("ChangedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("ChangedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ChangedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConfigKey")
                         .IsRequired()
@@ -3286,23 +3182,23 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("NEWSEQUENTIALID()");
 
-                    b.Property<int?>("BuyerId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("BuyerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("PaymentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("PendingTransferInitiatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("PendingTransferToUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PendingTransferToUserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PriceId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PriceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PurchaseChannel")
                         .IsRequired()
@@ -3313,16 +3209,16 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.Property<int>("ShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("TierId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TierId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3347,11 +3243,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.TicketHold", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -3364,8 +3258,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("PriceId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PriceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -3373,8 +3267,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ReleasedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3389,11 +3283,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.TicketPrice", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -3427,8 +3319,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("SaleStart")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("TierId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TierId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3439,11 +3331,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.TicketTier", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccessType")
                         .IsRequired()
@@ -3453,15 +3343,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3474,11 +3364,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("ZoneId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ZoneId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3491,11 +3381,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("AiConsent")
                         .ValueGeneratedOnAdd()
@@ -3544,8 +3432,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("CitizenCardReviewedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("CitizenCardReviewedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CitizenCardReviewedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("CitizenCardSubmittedAt")
                         .HasColumnType("datetimeoffset");
@@ -3557,8 +3445,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("DataErasedAt")
                         .HasColumnType("datetimeoffset");
@@ -3668,8 +3556,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("TaxProfileVerifiedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TaxProfileVerifiedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("TaxProfileVerifiedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("TermsAcceptedAt")
                         .HasColumnType("datetimeoffset");
@@ -3681,8 +3569,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3706,11 +3594,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserBehaviourLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Action")
                         .IsRequired()
@@ -3723,15 +3609,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<int?>("DurationSeconds")
                         .HasColumnType("int");
 
-                    b.Property<int>("LoungeShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Metadata")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3746,14 +3632,12 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserCustomPreference", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CriteriaId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CriteriaId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -3763,8 +3647,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -3789,17 +3673,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserDislikedGenre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("GenreId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("GenreId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3813,11 +3695,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserEventScore", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("ShowId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ShowId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Breakdown")
                         .HasMaxLength(1000)
@@ -3839,17 +3721,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserFavouriteAtmosphere", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("AtmosphereId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("AtmosphereId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3863,17 +3743,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserFavouriteGenre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("GenreId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("GenreId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3887,17 +3765,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.UserFavouriteMood", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("MoodId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MoodId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3911,17 +3787,15 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.VenueAtmosphere", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3931,8 +3805,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -3944,31 +3818,31 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
+                            Id = new Guid("00000000-0001-8fcf-8056-000000000001"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Ấm cúng"
                         },
                         new
                         {
-                            Id = 2,
+                            Id = new Guid("00000000-0002-8fcf-8056-000000000002"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Sang trọng"
                         },
                         new
                         {
-                            Id = 3,
+                            Id = new Guid("00000000-0003-8fcf-8056-000000000003"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Mộc mạc"
                         },
                         new
                         {
-                            Id = 4,
+                            Id = new Guid("00000000-0004-8fcf-8056-000000000004"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Nghệ thuật"
                         },
                         new
                         {
-                            Id = 5,
+                            Id = new Guid("00000000-0005-8fcf-8056-000000000005"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Hiện đại"
                         });
@@ -3976,11 +3850,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.VenuePenalty", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("AppealDeadline")
                         .HasColumnType("datetimeoffset");
@@ -3999,8 +3871,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("AppliedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("CompensatedSubscriptionId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CompensatedSubscriptionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CompensationNote")
                         .HasMaxLength(500)
@@ -4016,11 +3888,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("IssuedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("IssuedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid>("IssuedBy")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PenaltyType")
                         .IsRequired()
@@ -4035,8 +3907,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ReviewedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("ReviewedBy")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -4069,11 +3941,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourHotspot", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InfoText")
                         .HasMaxLength(2000)
@@ -4086,11 +3956,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<double>("Pitch")
                         .HasColumnType("float");
 
-                    b.Property<int>("SceneId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("SceneId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("TargetSceneId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("TargetSceneId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -4111,19 +3981,17 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourScene", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .HasMaxLength(100)
@@ -4147,11 +4015,9 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.VenueTourStitchAttempt", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -4163,11 +4029,11 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Property<bool>("FailedBySystem")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LoungeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("ResultSceneId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ResultSceneId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -4714,8 +4580,8 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
 
                     b.OwnsOne("MusicLounge.Domain.ValueObjects.VenueAddress", "Address", b1 =>
                         {
-                            b1.Property<int>("MusicLoungeId")
-                                .HasColumnType("int");
+                            b1.Property<Guid>("MusicLoungeId")
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("City")
                                 .IsRequired()

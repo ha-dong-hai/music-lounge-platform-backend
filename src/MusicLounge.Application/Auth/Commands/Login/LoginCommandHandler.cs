@@ -47,7 +47,7 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
 
     public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken ct)
     {
-        var users = await _uow.Repository<User, int>()
+        var users = await _uow.Repository<User, Guid>()
             .FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault();
 
@@ -88,7 +88,7 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthRe
             // counter above, which only ever sees ONE account and can't detect the same source IP
             // failing across MANY different accounts (credential stuffing). LoginCommand is already
             // INoTransactionCommand, so this commits immediately regardless of the throw below.
-            _uow.Repository<LoginFailureLog, int>().Add(new LoginFailureLog
+            _uow.Repository<LoginFailureLog, Guid>().Add(new LoginFailureLog
             {
                 Email = request.Email,
                 IpAddress = request.IpAddress,

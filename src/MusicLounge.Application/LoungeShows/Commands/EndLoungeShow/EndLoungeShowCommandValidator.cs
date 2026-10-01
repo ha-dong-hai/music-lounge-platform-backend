@@ -6,6 +6,6 @@ public sealed class EndLoungeShowCommandValidator : AbstractValidator<EndLoungeS
 {
     public EndLoungeShowCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
     }
 }

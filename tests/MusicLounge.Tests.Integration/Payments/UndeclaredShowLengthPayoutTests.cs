@@ -25,7 +25,7 @@ public sealed class UndeclaredShowLengthPayoutTests
 
     public UndeclaredShowLengthPayoutTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedDueFinalTrancheAsync(
+    private async Task<Guid> SeedDueFinalTrancheAsync(
         int? declaredLengthHours, bool started, int ranHours = 2, int startedHoursAgo = 10)
     {
         using var scope = _factory.Services.CreateScope();
@@ -80,7 +80,7 @@ public sealed class UndeclaredShowLengthPayoutTests
 
         var payoutAccountId = await db.Set<BankAccount>()
             .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId && a.IsDefault)
-            .Select(a => (int?)a.Id)
+            .Select(a => (Guid?)a.Id)
             .FirstAsync();
 
         var settlement = new Settlement
@@ -103,7 +103,7 @@ public sealed class UndeclaredShowLengthPayoutTests
         return settlement.Id;
     }
 
-    private async Task<SettlementStatus> RunReleaseAsync(int settlementId)
+    private async Task<SettlementStatus> RunReleaseAsync(Guid settlementId)
     {
         using (var scope = _factory.Services.CreateScope())
         {

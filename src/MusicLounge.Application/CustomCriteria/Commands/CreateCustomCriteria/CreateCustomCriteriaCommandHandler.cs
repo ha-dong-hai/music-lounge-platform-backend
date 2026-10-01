@@ -8,7 +8,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.CustomCriteria.Commands.CreateCustomCriteria;
 
-internal sealed class CreateCustomCriteriaCommandHandler : IRequestHandler<CreateCustomCriteriaCommand, int>
+internal sealed class CreateCustomCriteriaCommandHandler : IRequestHandler<CreateCustomCriteriaCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -19,15 +19,15 @@ internal sealed class CreateCustomCriteriaCommandHandler : IRequestHandler<Creat
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(CreateCustomCriteriaCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateCustomCriteriaCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền tạo tiêu chí cho venue này.");
 
-        var repo = _uow.Repository<CustomCriteriaEntity, int>();
+        var repo = _uow.Repository<CustomCriteriaEntity, Guid>();
         var keyExists = await repo.AnyAsync(
             c => c.LoungeId == request.LoungeId && c.Key == request.Key, ct);
         if (keyExists)

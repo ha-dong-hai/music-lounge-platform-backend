@@ -10,6 +10,6 @@ public sealed class GetBankAccountsQueryValidator : AbstractValidator<GetBankAcc
 {
     public GetBankAccountsQueryValidator()
     {
-        RuleFor(x => x.OwnerId).GreaterThan(0).WithMessage("OwnerId không hợp lệ.");
+        RuleFor(x => x.OwnerId).NotEmpty().WithMessage("OwnerId không hợp lệ.");
     }
 }

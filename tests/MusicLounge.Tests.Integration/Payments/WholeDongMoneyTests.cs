@@ -114,7 +114,7 @@ public sealed class WholeDongMoneyTests
         // Khác donate, đường hoàn tiền KHÔNG có chốt đối chiếu số tiền nào — số lẻ không bị chặn
         // lại mà ghi vào sổ cái một con số khác với số VNPay thật sự hoàn.
         var errors = await ErrorsAsync(new ProcessRefundRequestCommand(
-            1, "Approved", 50_000.999m, "127.0.0.1"));
+            TestId.Of(1), "Approved", 50_000.999m, "127.0.0.1"));
 
         errors.Should().Contain(MoneyAmount.NotWholeDongMessage);
     }
@@ -125,7 +125,7 @@ public sealed class WholeDongMoneyTests
         // Bỏ trống nghĩa là "hoàn đúng số đã yêu cầu" — chốt này chỉ nói về hình dạng của số khi đã
         // có số, không được biến việc bỏ trống thành lỗi.
         var errors = await ErrorsAsync(new ProcessRefundRequestCommand(
-            1, "Approved", null, "127.0.0.1"));
+            TestId.Of(1), "Approved", null, "127.0.0.1"));
 
         errors.Should().NotContain(MoneyAmount.NotWholeDongMessage);
     }
@@ -137,10 +137,10 @@ public sealed class WholeDongMoneyTests
     {
         // Năm cửa còn lại không gây lệch với VNPay (tiền được đọc lại từ database trước khi thanh
         // toán) nhưng vẫn lưu được những mức giá không ai trả được. Chặn ở nguồn.
-        await Check(new CreateMenuItemCommand(1, "Food", "Mon", null, 55_000.5m, null, 0), "tạo món");
-        await Check(new UpdateMenuItemCommand(1, "Food", "Mon", null, 55_000.5m, null, true, 0), "sửa món");
+        await Check(new CreateMenuItemCommand(TestId.Of(1), "Food", "Mon", null, 55_000.5m, null, 0), "tạo món");
+        await Check(new UpdateMenuItemCommand(TestId.Of(1), "Food", "Mon", null, 55_000.5m, null, true, 0), "sửa món");
         await Check(new CreateSubscriptionPackageCommand("Goi", null, 199_000.5m, "Monthly", 10, false, 0, 0), "tạo gói");
-        await Check(new UpdateSubscriptionPackageCommand(1, null, 199_000.5m, 10, false, 0, 0, true), "sửa gói");
+        await Check(new UpdateSubscriptionPackageCommand(TestId.Of(1), null, 199_000.5m, 10, false, 0, 0, true), "sửa gói");
         await Check(new CreateTicketTierCommand(
             SeedHelper.ShowId, "Hang thuong", null, "Livestream", null, 100,
             new[]

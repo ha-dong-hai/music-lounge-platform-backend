@@ -29,7 +29,7 @@ internal sealed class ClaimPosterJobCommandHandler : IRequestHandler<ClaimPoster
     {
         await using var _ = await _lock.AcquireAsync("poster-job-claim", ct);
 
-        var repo = _uow.Repository<AiPosterGeneration, int>();
+        var repo = _uow.Repository<AiPosterGeneration, Guid>();
         var dangCho = await repo.FindAsync(g => g.Status == AiPosterGenerationStatus.Queued, ct);
 
         // Cũ nhất trước: ai bấm trước được phục vụ trước. Sắp xếp ở phía ứng dụng vì hàng đợi này nhỏ (mỗi buổi hòa nhạc

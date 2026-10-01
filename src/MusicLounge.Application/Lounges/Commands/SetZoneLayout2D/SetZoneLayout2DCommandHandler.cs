@@ -19,11 +19,11 @@ internal sealed class SetZoneLayout2DCommandHandler : IRequestHandler<SetZoneLay
 
     public async Task<Unit> Handle(SetZoneLayout2DCommand request, CancellationToken ct)
     {
-        var zoneRepo = _uow.Repository<SeatingZone, int>();
+        var zoneRepo = _uow.Repository<SeatingZone, Guid>();
         var zone = await zoneRepo.GetByIdAsync(request.ZoneId, ct)
             ?? throw new NotFoundException(nameof(SeatingZone), request.ZoneId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(zone.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(zone.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), zone.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")

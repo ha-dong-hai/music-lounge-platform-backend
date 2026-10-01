@@ -52,7 +52,7 @@ internal sealed class GetShowSeatingMapQueryHandler : IRequestHandler<GetShowSea
             return new SeatingMapDto(show.Lounge.AreaLayoutImageUrl, []);
 
         var zoneIds = tiersByZone.Keys.ToList();
-        var zones = await _uow.Repository<SeatingZone, int>()
+        var zones = await _uow.Repository<SeatingZone, Guid>()
             .FindAsync(z => zoneIds.Contains(z.Id), ct);
         var zonesById = zones.ToDictionary(z => z.Id);
 

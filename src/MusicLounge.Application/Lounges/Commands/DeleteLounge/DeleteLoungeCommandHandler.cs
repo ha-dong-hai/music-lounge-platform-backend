@@ -19,7 +19,7 @@ internal sealed class DeleteLoungeCommandHandler : IRequestHandler<DeleteLoungeC
 
     public async Task<Unit> Handle(DeleteLoungeCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<MusicLoungeEntity, int>();
+        var repo = _uow.Repository<MusicLoungeEntity, Guid>();
         var lounge = await repo.GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
@@ -34,7 +34,7 @@ internal sealed class DeleteLoungeCommandHandler : IRequestHandler<DeleteLoungeC
         // không hiện ở danh sách công khai — nên người xoá (kể cả Admin) phải dò từng id mới biết vì sao. Giờ trả kèm
         // danh sách buổi đang chặn (mã, tên, trạng thái) ở errors.blockingShows. Người gọi tới được đây đã qua kiểm quyền
         // chủ phòng trà/Admin ở trên, nên không lộ bản nháp cho người ngoài.
-        var dangChan = (await _uow.Repository<LoungeShow, int>()
+        var dangChan = (await _uow.Repository<LoungeShow, Guid>()
                 .FindAsync(s => s.LoungeId == request.LoungeId, ct))
             .OrderBy(s => s.Id)
             .Select(s => new { s.Id, s.Name, Status = s.Status.ToString() })

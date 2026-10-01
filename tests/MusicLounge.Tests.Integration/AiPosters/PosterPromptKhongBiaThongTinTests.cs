@@ -39,18 +39,18 @@ public sealed class PosterPromptKhongBiaThongTinTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
         // Bản đầu của phép kiểm này KHÔNG kiểm bước tạo buổi diễn: nó thiếu hai trường bắt buộc, tạo hỏng, rồi phép
         // kiểm báo "không có dòng nhật ký" — đúng triệu chứng của lỗi khác hẳn. Kiểm ngay tại chỗ hỏng.
         tao.EnsureSuccessStatusCode();
-        var showId = (await tao.Content.ReadFromJsonAsync<Bao<int>>())!.Data;
+        var showId = (await tao.Content.ReadFromJsonAsync<Bao<Guid>>())!.Data;
 
         // Môi trường kiểm thử không cấu hình nhà cung cấp nào, nên lượt này THẤT BẠI — nhưng handler vẫn ghi lại đúng
         // lời nhắc đã dựng, và đó chính là thứ cần soi. Không phải gọi ra ngoài lần nào.

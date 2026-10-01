@@ -20,11 +20,11 @@ internal sealed class UpdateCustomCriteriaCommandHandler : IRequestHandler<Updat
 
     public async Task<Unit> Handle(UpdateCustomCriteriaCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<CustomCriteriaEntity, int>();
+        var repo = _uow.Repository<CustomCriteriaEntity, Guid>();
         var criteria = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(CustomCriteriaEntity), request.Id);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(criteria.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(criteria.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), criteria.LoungeId);
 
         // Cùng luật quyền với lệnh tạo và lệnh gắn giá trị: tiêu chí riêng là cách phòng trà tự phân loại

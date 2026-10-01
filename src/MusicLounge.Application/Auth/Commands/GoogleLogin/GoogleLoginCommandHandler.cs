@@ -33,7 +33,7 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
     {
         var googleInfo = await _googleTokenVerifier.VerifyAsync(request.IdToken, ct);
 
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
 
         var byGoogleId = await userRepo.FindAsync(u => u.GoogleId == googleInfo.GoogleId, ct);
         var user = byGoogleId.FirstOrDefault();

@@ -31,7 +31,7 @@ public sealed class CancelHoldAndJobTriggerTests
     private HttpClient Buyer() => _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<int> HoldOneAsync(HttpClient client)
+    private async Task<Guid> HoldOneAsync(HttpClient client)
     {
         var res = await client.PostAsJsonAsync("/api/v1/tickets/holds",
             new { PriceId = SeedHelper.TicketPriceId, Quantity = 1 });
@@ -147,5 +147,5 @@ public sealed class CancelHoldAndJobTriggerTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
 }

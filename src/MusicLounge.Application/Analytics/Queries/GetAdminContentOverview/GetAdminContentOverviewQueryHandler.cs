@@ -22,10 +22,10 @@ internal sealed class GetAdminContentOverviewQueryHandler
     public async Task<AdminContentOverviewDto> Handle(
         GetAdminContentOverviewQuery request, CancellationToken ct)
     {
-        var pendingEventsCount = await _uow.Repository<LoungeShow, int>().CountAsync(
+        var pendingEventsCount = await _uow.Repository<LoungeShow, Guid>().CountAsync(
             s => s.Status == LoungeShowStatus.Pending, ct);
 
-        var unresolvedComplaintsCount = await _uow.Repository<Complaint, int>().CountAsync(
+        var unresolvedComplaintsCount = await _uow.Repository<Complaint, Guid>().CountAsync(
             c => c.Status == ComplaintStatus.Open || c.Status == ComplaintStatus.Investigating, ct);
 
         // "Vi phạm trong tháng" reads as the current calendar month (VN local) — a fixed
@@ -37,11 +37,11 @@ internal sealed class GetAdminContentOverviewQueryHandler
 
         // Filter by equality server-side, then narrow to the date range client-side — same
         // SQLite-translation caution documented throughout this codebase's other handlers.
-        var penaltiesThisMonth = await _uow.Repository<VenuePenalty, int>().FindAsync(
+        var penaltiesThisMonth = await _uow.Repository<VenuePenalty, Guid>().FindAsync(
             p => p.IssuedAt >= monthStart, ct);
         var violationsThisMonthCount = penaltiesThisMonth.Count(p => p.IssuedAt <= monthEnd);
 
-        var lounges = await _uow.Repository<MusicLoungeEntity, int>().FindAsync(_ => true, ct);
+        var lounges = await _uow.Repository<MusicLoungeEntity, Guid>().FindAsync(_ => true, ct);
         var topVenuesByReputation = lounges
             .OrderByDescending(l => l.ReputationScore)
             .Take(TopVenuesCount)

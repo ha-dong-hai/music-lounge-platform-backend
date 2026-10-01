@@ -64,7 +64,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
         // held before the row is even looked up.
         await using var _ = await _lock.AcquireAsync($"vnpay-donation:{txnRef}", ct);
 
-        var donations = await _uow.Repository<Donation, int>()
+        var donations = await _uow.Repository<Donation, Guid>()
             .FindAsync(d => d.GatewayRef == txnRef, ct);
 
         var donation = donations.FirstOrDefault();
@@ -113,9 +113,9 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 donation.Id, callbackResult.ResponseCode);
         }
 
-        _uow.Repository<Donation, int>().Update(donation);
+        _uow.Repository<Donation, Guid>().Update(donation);
 
-        int? announceOnShowId = null;
+        Guid? announceOnShowId = null;
         if (callbackResult.IsSuccess)
         {
             var ownership = await _donationRepo.GetOwnershipInfoAsync(donation.Id, ct);
@@ -159,7 +159,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
                     await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
                 donation.PerformerShareRateSnapshot = performerShareRate;
 
-                _uow.Repository<Donation, int>().Update(donation);
+                _uow.Repository<Donation, Guid>().Update(donation);
 
                 // MLACP-361: mot Payment cho donate, dung khuon ve va F&B. Truoc day donate khong co
                 // ban ghi thanh toan nao — nen khong co gi de khoan quyet toan tro vao, va ma giao dich
@@ -184,7 +184,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
                     PaidAt = now,
                     CreatedAt = now
                 };
-                _uow.Repository<Payment, int>().Add(payment);
+                _uow.Repository<Payment, Guid>().Add(payment);
                 // Can Id that de but toan va khoan quyet toan tro vao — van trong transaction cua lenh.
                 await _uow.SaveChangesAsync(ct);
 
@@ -212,8 +212,8 @@ internal sealed class ProcessDonationPaymentCommandHandler
                             Description: $"Giữ hộ chủ phòng trà #{info.OwnerId} — donate #{donation.Id}, chờ quyết toán")
                     ], ct);
 
-                var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(info.LoungeShowId, ct);
-                await DonationPayouts.ScheduleAsync(_uow, payment, info.OwnerId, show?.LoungeId ?? 0, now, ct);
+                var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(info.LoungeShowId, ct);
+                await DonationPayouts.ScheduleAsync(_uow, payment, info.OwnerId, show?.LoungeId ?? Guid.Empty, now, ct);
 
                 // MLACP-363: buoc dau cua nhat ky bang chung. Ma giao dich VNPay la bang chung doi soat
                 // voi cong thanh toan; nguoi thuc hien la cong (null), khong phai ai trong he thong.
@@ -253,7 +253,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
 
         await _uow.SaveChangesAsync(ct);
 
-        if (announceOnShowId is int showId)
+        if (announceOnShowId is Guid showId)
             await AnnounceOnLivestreamAsync(donation, showId, ct);
 
         return callbackResult.IsSuccess ? VnPayIpnOutcome.Confirmed : VnPayIpnOutcome.RecordedAsFailed;
@@ -269,7 +269,7 @@ internal sealed class ProcessDonationPaymentCommandHandler
     /// khi handler tra ve). Loi phat song chi duoc ghi log: mot canh bao khong hien len thi dang
     /// tiec, con de no lam hong giao dich thi nguoi donate mat tien ma khong co ban ghi.</para>
     /// </summary>
-    private async Task AnnounceOnLivestreamAsync(Donation donation, int loungeShowId, CancellationToken ct)
+    private async Task AnnounceOnLivestreamAsync(Donation donation, Guid loungeShowId, CancellationToken ct)
     {
         try
         {
@@ -294,11 +294,11 @@ internal sealed class ProcessDonationPaymentCommandHandler
     /// MLACP-451: nghệ sĩ nhận lượt donate (Donation → Performance → Performer). Chỉ gọi từ trong khối try của
     /// <see cref="AnnounceOnLivestreamAsync"/>, nên tra lỗi thì thông báo không phát nhưng giao dịch không bị ảnh hưởng.
     /// </summary>
-    private async Task<string?> PerformerNameAsync(int performanceId, CancellationToken ct)
+    private async Task<string?> PerformerNameAsync(Guid performanceId, CancellationToken ct)
     {
-        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(performanceId, ct);
+        var performance = await _uow.Repository<Performance, Guid>().GetByIdAsync(performanceId, ct);
         if (performance is null) return null;
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(performance.PerformerId, ct);
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(performance.PerformerId, ct);
         return performer?.Name;
     }
 }

@@ -27,11 +27,11 @@ public sealed class NotificationLinkTargetTests
 
     public NotificationLinkTargetTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 
-    private async Task<(int ShowId, int LivestreamId)> BuoiPhatChoDuyetAsync()
+    private async Task<(Guid ShowId, Guid LivestreamId)> BuoiPhatChoDuyetAsync()
     {
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -81,9 +81,9 @@ public sealed class NotificationLinkTargetTests
     }
 
     [Theory]
-    [InlineData("Livestream:12", "Livestream", 12)]
-    [InlineData("Show:7", "Show", 7)]
-    public async Task MaThamChieuGhep_DuocTachSanChoFrontend(string maGhep, string loaiMongDoi, int maMongDoi)
+    [InlineData("Livestream:0000000c-0000-8000-8000-00000000000c", "Livestream", "0000000c-0000-8000-8000-00000000000c")]
+    [InlineData("Show:00000007-0000-8000-8000-000000000007", "Show", "00000007-0000-8000-8000-000000000007")]
+    public async Task MaThamChieuGhep_DuocTachSanChoFrontend(string maGhep, string loaiMongDoi, string maMongDoi)
     {
         var id = await ThongBaoAsync("content_report_target", maGhep);
 
@@ -92,7 +92,7 @@ public sealed class NotificationLinkTargetTests
         dto.GetProperty("referenceId").GetString().Should().Be(maGhep,
             "chuỗi ghép là khoá chống gửi trùng của job cảnh báo — không được đổi");
         dto.GetProperty("referenceTargetType").GetString().Should().Be(loaiMongDoi);
-        dto.GetProperty("referenceTargetId").GetInt32().Should().Be(maMongDoi);
+        dto.GetProperty("referenceTargetId").GetGuid().Should().Be(Guid.Parse(maMongDoi)); // MLACP-515: mã trong chuỗi ghép là GUID
     }
 
     [Theory]
@@ -112,7 +112,7 @@ public sealed class NotificationLinkTargetTests
 
     // ---------- tiện ích ----------
 
-    private async Task<int> ThongBaoAsync(string referenceType, string referenceId)
+    private async Task<Guid> ThongBaoAsync(string referenceType, string referenceId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -132,7 +132,7 @@ public sealed class NotificationLinkTargetTests
         return thongBao.Id;
     }
 
-    private async Task<JsonElement> DocThongBaoAsync(int id)
+    private async Task<JsonElement> DocThongBaoAsync(Guid id)
     {
         var admin = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await admin.GetAsync("/api/v1/notifications?page=1&pageSize=100");
@@ -140,7 +140,7 @@ public sealed class NotificationLinkTargetTests
 
         var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         return doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Single(x => x.GetProperty("id").GetInt32() == id)
+            .Single(x => x.GetProperty("id").GetGuid() == id)
             .Clone();
     }
 }

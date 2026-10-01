@@ -152,7 +152,7 @@ public sealed class AdminUserManagementTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
-    private async Task<int> CreateUserWithRoleAsync(UserRole role, bool isActive = true)
+    private async Task<Guid> CreateUserWithRoleAsync(UserRole role, bool isActive = true)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -177,6 +177,6 @@ public sealed class AdminUserManagementTests
     private sealed record UserDetailResponse(bool Success, UserAdminItem Data);
 
     private sealed record UserAdminItem(
-        int Id, string Email, string FullName, string? Phone, string? AvatarUrl,
+        Guid Id, string Email, string FullName, string? Phone, string? AvatarUrl,
         string Role, bool IsActive, bool IsEmailVerified, DateTime CreatedAt);
 }

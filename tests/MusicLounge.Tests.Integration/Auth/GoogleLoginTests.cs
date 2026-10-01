@@ -25,7 +25,7 @@ public sealed class GoogleLoginTests
     public async Task Google_StaffUser_ReturnsLoungeIdInResponseBody()
     {
         var email = $"staff-google-{Guid.NewGuid():N}@test.com";
-        int userId;
+        Guid userId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -61,6 +61,6 @@ public sealed class GoogleLoginTests
     private sealed record AuthResponse(bool Success, AuthResultData Data);
 
     private sealed record AuthResultData(
-        string Token, DateTimeOffset ExpiresAt, int UserId, string Email, string FullName,
-        string Role, int? LoungeId);
+        string Token, DateTimeOffset ExpiresAt, Guid UserId, string Email, string FullName,
+        string Role, Guid? LoungeId);
 }

@@ -39,17 +39,17 @@ internal sealed class GeneratePosterCommandHandler
 
     public async Task<PosterGenerationResultDto> Handle(GeneratePosterCommand request, CancellationToken ct)
     {
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         if (lounge.OwnerId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền tạo poster cho show này.");
 
         var now = DateTimeOffset.UtcNow;
-        var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var activeSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
         var activeSub = activeSubs.Where(s => s.ExpiresAt > now).OrderByDescending(s => s.StartedAt).FirstOrDefault();
 
@@ -57,7 +57,7 @@ internal sealed class GeneratePosterCommandHandler
             throw new DomainException(
                 "Gói subscription hiện tại của bạn không bao gồm tính năng tạo poster AI.");
 
-        var genRepo = _uow.Repository<AiPosterGeneration, int>();
+        var genRepo = _uow.Repository<AiPosterGeneration, Guid>();
 
         // MLACP-419: chi dem lan TAO DUOC POSTER. Truoc day dem ca lan that bai, nen khi nha cung cap hong hoac chua
         // cau hinh (dung tinh trang Azure 16/09), chu phong tra bam 5 lan la khoa vinh vien tinh nang cho buoi dien do —
@@ -169,10 +169,10 @@ internal sealed class GeneratePosterCommandHandler
     /// lượt hạn mức Google thật, và người dùng bấm lại thường vì họ tưởng lần trước chưa ăn chứ không phải muốn hai poster.
     /// </summary>
     private async Task<PosterGenerationResultDto> QueueJobAsync(
-        LoungeShow show, int ownerId, string prompt, int monthlyQuota, int usedThisMonth,
+        LoungeShow show, Guid ownerId, string prompt, int monthlyQuota, int usedThisMonth,
         DateTimeOffset now, CancellationToken ct)
     {
-        var genRepo = _uow.Repository<AiPosterGeneration, int>();
+        var genRepo = _uow.Repository<AiPosterGeneration, Guid>();
 
         var dangCho = await genRepo.AnyAsync(
             g => g.ShowId == show.Id
@@ -208,24 +208,24 @@ internal sealed class GeneratePosterCommandHandler
         // Repository<T,TKey>), so a Genre/Mood/Atmosphere nav on these join rows would always come
         // back null — look up the linked ids first, then resolve names in a second query, same
         // pattern PerformerDtoMapper already uses for the same reason.
-        var genreIds = (await _uow.Repository<LoungeShowGenre, int>().FindAsync(
+        var genreIds = (await _uow.Repository<LoungeShowGenre, Guid>().FindAsync(
             g => g.LoungeShowId == show.Id, ct)).Select(g => g.GenreId).ToList();
-        var moodIds = (await _uow.Repository<LoungeShowMood, int>().FindAsync(
+        var moodIds = (await _uow.Repository<LoungeShowMood, Guid>().FindAsync(
             m => m.LoungeShowId == show.Id, ct)).Select(m => m.MoodId).ToList();
-        var atmosphereIds = (await _uow.Repository<LoungeShowAtmosphere, int>().FindAsync(
+        var atmosphereIds = (await _uow.Repository<LoungeShowAtmosphere, Guid>().FindAsync(
             a => a.LoungeShowId == show.Id, ct)).Select(a => a.AtmosphereId).ToList();
 
         var genreNames = genreIds.Count == 0
             ? []
-            : (await _uow.Repository<MusicGenre, int>().FindAsync(g => genreIds.Contains(g.Id), ct))
+            : (await _uow.Repository<MusicGenre, Guid>().FindAsync(g => genreIds.Contains(g.Id), ct))
                 .Select(g => g.Name);
         var moodNames = moodIds.Count == 0
             ? []
-            : (await _uow.Repository<Mood, int>().FindAsync(m => moodIds.Contains(m.Id), ct))
+            : (await _uow.Repository<Mood, Guid>().FindAsync(m => moodIds.Contains(m.Id), ct))
                 .Select(m => m.Name);
         var atmosphereNames = atmosphereIds.Count == 0
             ? []
-            : (await _uow.Repository<VenueAtmosphere, int>().FindAsync(a => atmosphereIds.Contains(a.Id), ct))
+            : (await _uow.Repository<VenueAtmosphere, Guid>().FindAsync(a => atmosphereIds.Contains(a.Id), ct))
                 .Select(a => a.Name);
 
         var tags = genreNames.Concat(moodNames).Concat(atmosphereNames).ToList();

@@ -11,9 +11,9 @@ public sealed class CreateDonationCommandValidator : AbstractValidator<CreateDon
     {
         RuleFor(x => x.PerformanceId)
             .Cascade(CascadeMode.Stop)
-            .GreaterThan(0).WithMessage("PerformanceId không hợp lệ.")
+            .NotEmpty().WithMessage("PerformanceId không hợp lệ.")
             .MustAsync(async (performanceId, ct) =>
-                await uow.Repository<Performance, int>().AnyAsync(p => p.Id == performanceId, ct))
+                await uow.Repository<Performance, Guid>().AnyAsync(p => p.Id == performanceId, ct))
             .WithMessage("PerformanceId không tồn tại.");
 
         RuleFor(x => x.Amount)

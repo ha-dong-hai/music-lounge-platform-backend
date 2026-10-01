@@ -21,9 +21,9 @@ internal static class FnbOrderDtoBuilder
         if (orders.Count == 0) return [];
 
         var orderIds = orders.Select(o => o.Id).ToList();
-        var items = await uow.Repository<OrderItem, int>().FindAsync(i => orderIds.Contains(i.FnbOrderId), ct);
+        var items = await uow.Repository<OrderItem, Guid>().FindAsync(i => orderIds.Contains(i.FnbOrderId), ct);
         var menuItemIds = items.Select(i => i.MenuItemId).Distinct().ToList();
-        var menuItems = await uow.Repository<FnbMenuItem, int>().FindAsync(m => menuItemIds.Contains(m.Id), ct);
+        var menuItems = await uow.Repository<FnbMenuItem, Guid>().FindAsync(m => menuItemIds.Contains(m.Id), ct);
         var menuItemsById = menuItems.ToDictionary(m => m.Id);
         var itemsByOrder = items.ToLookup(i => i.FnbOrderId);
 

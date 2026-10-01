@@ -21,13 +21,13 @@ internal sealed class GetVenueTourStitchAttemptQueryHandler
 
     public async Task<VenueTourStitchAttemptDto> Handle(GetVenueTourStitchAttemptQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền xem venue này.");
 
-        var attempt = await _uow.Repository<VenueTourStitchAttempt, int>().GetByIdAsync(request.AttemptId, ct);
+        var attempt = await _uow.Repository<VenueTourStitchAttempt, Guid>().GetByIdAsync(request.AttemptId, ct);
         if (attempt is null || attempt.LoungeId != request.LoungeId)
             throw new NotFoundException(nameof(VenueTourStitchAttempt), request.AttemptId);
 

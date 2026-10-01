@@ -6,6 +6,6 @@ public sealed class DeleteMenuItemCommandValidator : AbstractValidator<DeleteMen
 {
     public DeleteMenuItemCommandValidator()
     {
-        RuleFor(x => x.MenuItemId).GreaterThan(0).WithMessage("MenuItemId không hợp lệ.");
+        RuleFor(x => x.MenuItemId).NotEmpty().WithMessage("MenuItemId không hợp lệ.");
     }
 }

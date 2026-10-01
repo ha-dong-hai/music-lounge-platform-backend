@@ -49,7 +49,7 @@ public sealed class DataEncryptedWithALostKeyTests
 
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<(int OwnerId, int LoungeId)> VenueAsync(bool cardApproved = true)
+    private async Task<(Guid OwnerId, Guid LoungeId)> VenueAsync(bool cardApproved = true)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -73,7 +73,7 @@ public sealed class DataEncryptedWithALostKeyTests
         return (owner.Id, lounge.Id);
     }
 
-    private async Task<int> LoungeAccountAsync(int loungeId, string ciphertext, bool isDefault, bool verified)
+    private async Task<Guid> LoungeAccountAsync(Guid loungeId, string ciphertext, bool isDefault, bool verified)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -102,8 +102,8 @@ public sealed class DataEncryptedWithALostKeyTests
         res.StatusCode.Should().Be(HttpStatusCode.OK, "one unreadable row must not take the whole list down with a 500");
         using var json = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var items = json.RootElement.GetProperty("data").EnumerateArray().ToList();
-        var lostItem = items.Single(i => i.GetProperty("id").GetInt32() == lost);
-        var readableItem = items.Single(i => i.GetProperty("id").GetInt32() == readable);
+        var lostItem = items.Single(i => i.GetProperty("id").GetGuid() == lost);
+        var readableItem = items.Single(i => i.GetProperty("id").GetGuid() == readable);
         lostItem.GetProperty("accountNumber").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
         lostItem.GetProperty("accountNumberUnreadable").GetBoolean().Should().BeTrue();
         readableItem.GetProperty("accountNumber").GetString().Should().Be("0123456789");
@@ -157,7 +157,7 @@ public sealed class DataEncryptedWithALostKeyTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         using var json = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var item = json.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Single(i => i.GetProperty("userId").GetInt32() == ownerId);
+            .Single(i => i.GetProperty("userId").GetGuid() == ownerId);
         item.GetProperty("citizenCardNumberUnreadable").GetBoolean().Should().BeTrue();
         item.GetProperty("taxCodeUnreadable").GetBoolean().Should().BeTrue();
     }
@@ -179,7 +179,7 @@ public sealed class DataEncryptedWithALostKeyTests
             .SingleAsync(a => a.Id == accountId)).IsVerified.Should().BeFalse();
     }
 
-    private async Task<(int OwnerId, int SettlementId)> DuePayoutIntoAnUnreadableAccountAsync(bool accountVerified)
+    private async Task<(Guid OwnerId, Guid SettlementId)> DuePayoutIntoAnUnreadableAccountAsync(bool accountVerified)
     {
         var (ownerId, loungeId) = await VenueAsync();
         var accountId = await LoungeAccountAsync(loungeId, UnderALostKey("9876543210"), isDefault: true, verified: accountVerified);
@@ -226,7 +226,7 @@ public sealed class DataEncryptedWithALostKeyTests
         await scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>().ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<(SettlementStatus Status, List<Notification> OwnerNotices, int AdminNotices)> AfterReleaseAsync(int ownerId, int settlementId)
+    private async Task<(SettlementStatus Status, List<Notification> OwnerNotices, int AdminNotices)> AfterReleaseAsync(Guid ownerId, Guid settlementId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -267,7 +267,7 @@ public sealed class DataEncryptedWithALostKeyTests
 
     // ── Liên kết xác nhận của nghệ sĩ ────────────────────────────────────────
 
-    private async Task<(int AccountId, string Token)> PerformerAccountNowUnreadableAsync(bool keepFingerprintInStep)
+    private async Task<(Guid AccountId, string Token)> PerformerAccountNowUnreadableAsync(bool keepFingerprintInStep)
     {
         var (ownerId, _) = await VenueAsync();
         var owner = _factory.CreateAuthenticatedClient(ownerId, "Owner");
@@ -275,17 +275,17 @@ public sealed class DataEncryptedWithALostKeyTests
         var performerRes = await owner.PostAsJsonAsync("/api/v1/performers", new
         {
             Name = $"Artist-{Guid.NewGuid():N}"[..20], AvatarUrl = (string?)null, Bio = (string?)null,
-            Type = "Solo", GenreIds = Array.Empty<int>(), ContactEmail = email
+            Type = "Solo", GenreIds = Array.Empty<Guid>(), ContactEmail = email
         });
         performerRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var performerId = (await performerRes.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        var performerId = (await performerRes.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
         var accountRes = await owner.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
             OwnerType = "Performer", OwnerId = performerId, BankName = "Vietcombank",
             AccountNumber = "0999888777", AccountHolder = "NGUYEN VAN NGHE SI", IsDefault = true
         });
         accountRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var accountId = (await accountRes.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        var accountId = (await accountRes.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
         var token = LatestTokenSentTo(email);
 
         using var scope = _factory.Services.CreateScope();

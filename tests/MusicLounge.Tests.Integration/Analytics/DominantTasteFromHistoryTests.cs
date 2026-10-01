@@ -41,9 +41,9 @@ public sealed class DominantTasteFromHistoryTests
     public DominantTasteFromHistoryTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name);
+    private sealed record Rec(Guid Id, string Name);
 
-    private async Task<(int LoungeId, string City)> VenueAsync()
+    private async Task<(Guid LoungeId, string City)> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -65,7 +65,7 @@ public sealed class DominantTasteFromHistoryTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, int genreId, double daysFromNow)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, Guid genreId, double daysFromNow)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -89,7 +89,7 @@ public sealed class DominantTasteFromHistoryTests
     }
 
     /// <summary>Tài khoản chưa từng khai sở thích — điều kiện để đường suy gu từ lịch sử chạy.</summary>
-    private async Task<int> AccountWithNoDeclaredTasteAsync()
+    private async Task<Guid> AccountWithNoDeclaredTasteAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -108,7 +108,7 @@ public sealed class DominantTasteFromHistoryTests
         return user.Id;
     }
 
-    private async Task SaveToWishlistAsync(int userId, int showId, int minutesAgo)
+    private async Task SaveToWishlistAsync(Guid userId, Guid showId, int minutesAgo)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -121,7 +121,7 @@ public sealed class DominantTasteFromHistoryTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(int userId, string city, int limit)
+    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(Guid userId, string city, int limit)
     {
         var res = await _factory.CreateAuthenticatedClient(userId, "Audience")
             .GetAsync($"/api/v1/recommendations?city={city}&limit={limit}");

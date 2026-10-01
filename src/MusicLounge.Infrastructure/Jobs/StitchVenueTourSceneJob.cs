@@ -48,7 +48,7 @@ public sealed class StitchVenueTourSceneJob
     }
 
     public async Task ExecuteAsync(
-        int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name,
+        Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name,
         IJobCancellationToken cancellationToken)
     {
         var ct = cancellationToken.ShutdownToken;
@@ -73,7 +73,7 @@ public sealed class StitchVenueTourSceneJob
     }
 
     private async Task GhepAsync(
-        VenueTourStitchAttempt attempt, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name,
+        VenueTourStitchAttempt attempt, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name,
         CancellationToken ct)
     {
         byte[] imageBytes;
@@ -186,7 +186,7 @@ public sealed class StitchVenueTourSceneJob
     /// chi dong khi con Pending: loi xay ra SAU khi da ghi Succeeded (vd luc ghi ban ghi kiem duyet) thi canh da tao
     /// that, khong duoc bao that bai. Tu than no loi thi chi ghi log — ExpireStuckStitchAttemptsJob se don sau.
     /// </summary>
-    private async Task DanhDauThatBaiDoHeThongAsync(int attemptId)
+    private async Task DanhDauThatBaiDoHeThongAsync(Guid attemptId)
     {
         try
         {

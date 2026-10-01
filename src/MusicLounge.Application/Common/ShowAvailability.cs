@@ -54,7 +54,7 @@ public static class ShowAvailability
     /// <c>TicketPrice.Sold</c> từng tồn tại nhưng không bao giờ được ghi; đã gỡ hẳn ở MLACP-441.)
     /// </param>
     public static ShowSaleState StateOf(
-        LoungeShow show, IReadOnlyDictionary<int, int> takenByPriceId,
+        LoungeShow show, IReadOnlyDictionary<Guid, int> takenByPriceId,
         DateTimeOffset now, int lastEntryMinutes)
     {
         var prices = show.TicketTiers

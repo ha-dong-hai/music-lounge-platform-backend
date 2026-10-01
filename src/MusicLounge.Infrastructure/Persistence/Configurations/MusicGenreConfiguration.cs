@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicLounge.Domain.Entities;
@@ -16,14 +17,14 @@ internal sealed class MusicGenreConfiguration : IEntityTypeConfiguration<MusicGe
 
         // MLACP-14: danh mục thể loại nhạc mặc định cho form tạo buổi diễn.
         b.HasData(
-            new MusicGenre { Id = 1, Name = "Jazz", NameEn = "Jazz" },
-            new MusicGenre { Id = 2, Name = "Acoustic", NameEn = "Acoustic" },
-            new MusicGenre { Id = 3, Name = "Ballad", NameEn = "Ballad" },
-            new MusicGenre { Id = 4, Name = "Bolero", NameEn = "Bolero" },
-            new MusicGenre { Id = 5, Name = "Pop", NameEn = "Pop" },
-            new MusicGenre { Id = 6, Name = "Trữ tình" },
-            new MusicGenre { Id = 7, Name = "R&B", NameEn = "R&B" },
-            new MusicGenre { Id = 8, Name = "Cổ điển", NameEn = "Classical" }
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 1), Name = "Jazz", NameEn = "Jazz" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 2), Name = "Acoustic", NameEn = "Acoustic" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 3), Name = "Ballad", NameEn = "Ballad" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 4), Name = "Bolero", NameEn = "Bolero" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 5), Name = "Pop", NameEn = "Pop" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 6), Name = "Trữ tình" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 7), Name = "R&B", NameEn = "R&B" },
+            new MusicGenre { Id = OrderedGuid.FromLegacy("music_genres", 8), Name = "Cổ điển", NameEn = "Classical" }
         );
     }
 }

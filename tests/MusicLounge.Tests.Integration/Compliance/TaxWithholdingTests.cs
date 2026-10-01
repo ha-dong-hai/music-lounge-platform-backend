@@ -50,7 +50,7 @@ public sealed class TaxWithholdingTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> SeedSellablePriceAsync(decimal price)
+    private async Task<Guid> SeedSellablePriceAsync(decimal price)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -88,7 +88,7 @@ public sealed class TaxWithholdingTests
         return ticketPrice.Id;
     }
 
-    private async Task<(int PaymentId, Guid TicketId)> BuyOneTicketAsync(int priceId)
+    private async Task<(Guid PaymentId, Guid TicketId)> BuyOneTicketAsync(Guid priceId)
     {
         var buyer = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
 
@@ -116,7 +116,7 @@ public sealed class TaxWithholdingTests
 
     /// <summary>Amount credited to a given ledger account by the journal for this payment.</summary>
     private static async Task<decimal> CreditedToAsync(
-        ApplicationDbContext db, int paymentId, AccountType accountType, string referenceType)
+        ApplicationDbContext db, Guid paymentId, AccountType accountType, string referenceType)
     {
         var accountIds = await db.Set<Account>()
             .Where(a => a.OwnerType == accountType)
@@ -300,7 +300,7 @@ public sealed class TaxWithholdingTests
             var buyer = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
             var cancel = await buyer.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
             cancel.StatusCode.Should().Be(HttpStatusCode.OK);
-            var refundId = (await cancel.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+            var refundId = (await cancel.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
             var admin = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
             var process = await admin.PostAsJsonAsync(
@@ -454,9 +454,9 @@ public sealed class TaxWithholdingTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
     private sealed record PurchaseData(
-        int PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
+        Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
     private sealed record TaxProfile(
         string? BusinessType, string? TaxCode, DateTimeOffset? SubmittedAt, DateTimeOffset? VerifiedAt,
         bool WithholdingApplies, decimal VatRate, decimal PersonalIncomeTaxRate, string Explanation);

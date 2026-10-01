@@ -10,6 +10,6 @@ public sealed class GetMenuItemsQueryValidator : AbstractValidator<GetMenuItemsQ
 {
     public GetMenuItemsQueryValidator()
     {
-        RuleFor(x => x.MenuId).GreaterThan(0).WithMessage("MenuId không hợp lệ.");
+        RuleFor(x => x.MenuId).NotEmpty().WithMessage("MenuId không hợp lệ.");
     }
 }

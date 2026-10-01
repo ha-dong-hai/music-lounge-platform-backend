@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MusicLounge.Application.Analytics.Common;
+using MusicLounge.Tests.Integration.Helpers;
 
 namespace MusicLounge.Tests.Integration.Analytics;
 
@@ -18,22 +19,35 @@ public sealed class RecommenderEvaluationTests
 {
     /// <summary>Người dùng <paramref name="userId"/> thật sự đã chọn <paramref name="heldOut"/>,
     /// trộn giữa các lựa chọn nhiễu.</summary>
+    // MLACP-515: khoá giờ là GUID. Test giữ số nhỏ cho dễ đọc, đổi sang GUID ở ranh giới bằng TestId.Of — công thức đó giữ
+    // đúng thứ tự (11 < 12 vẫn đúng sau khi đổi) nên ý nghĩa từng phép thử không đổi.
+    private static Guid G(int n) => TestId.Of(n);
+
     private static EvaluationCase Case(int userId, int heldOut, params int[] negatives)
-        => new(userId, heldOut, [.. negatives, heldOut]);
+        => new(G(userId), G(heldOut), [.. negatives.Select(G), G(heldOut)]);
+
+    private static Dictionary<Guid, int> Counts(Dictionary<int, int> counts)
+        => counts.ToDictionary(kv => G(kv.Key), kv => kv.Value);
 
     /// <summary>Mô hình hoàn hảo: luôn đặt đáp án lên đầu.</summary>
-    private static Func<int, IReadOnlyList<int>, IReadOnlyList<int>> Oracle(
+    private static Func<Guid, IReadOnlyList<Guid>, IReadOnlyList<Guid>> Oracle(
         IReadOnlyDictionary<int, int> answerByUser)
-        => (userId, candidates) => candidates
-            .OrderByDescending(id => id == answerByUser[userId])
+    {
+        var dapAn = answerByUser.ToDictionary(kv => G(kv.Key), kv => G(kv.Value));
+        return (userId, candidates) => candidates
+            .OrderByDescending(id => id == dapAn[userId])
             .ToList();
+    }
 
     /// <summary>Mô hình tệ nhất có thể: luôn đẩy đáp án xuống cuối.</summary>
-    private static Func<int, IReadOnlyList<int>, IReadOnlyList<int>> Adversary(
+    private static Func<Guid, IReadOnlyList<Guid>, IReadOnlyList<Guid>> Adversary(
         IReadOnlyDictionary<int, int> answerByUser)
-        => (userId, candidates) => candidates
-            .OrderBy(id => id == answerByUser[userId])
+    {
+        var dapAn = answerByUser.ToDictionary(kv => G(kv.Key), kv => G(kv.Value));
+        return (userId, candidates) => candidates
+            .OrderBy(id => id == dapAn[userId])
             .ToList();
+    }
 
     // ---------- phép đo có phân biệt được tốt với tệ không ----------
 
@@ -86,9 +100,9 @@ public sealed class RecommenderEvaluationTests
     {
         var counts = new Dictionary<int, int> { [10] = 1, [11] = 50, [12] = 5 };
 
-        var ranked = RecommenderEvaluation.PopularityRanker(counts)(1, [10, 11, 12]);
+        var ranked = RecommenderEvaluation.PopularityRanker(Counts(counts))(G(1), [G(10), G(11), G(12)]);
 
-        ranked.Should().ContainInOrder(11, 12, 10);
+        ranked.Should().ContainInOrder(G(11), G(12), G(10));
     }
 
     [Fact]
@@ -98,7 +112,7 @@ public sealed class RecommenderEvaluationTests
         // một thứ, nhưng hoàn toàn mù với người có gu riêng. Con số HR@K của nó phải được đọc kèm
         // độ phủ kho, nếu không sẽ dẫn tới kết luận sai là "cá nhân hoá không cần thiết".
         var counts = new Dictionary<int, int> { [99] = 1000 };
-        var ranker = RecommenderEvaluation.PopularityRanker(counts);
+        var ranker = RecommenderEvaluation.PopularityRanker(Counts(counts));
 
         var mainstream = RecommenderEvaluation.Evaluate(
             "pop", [Case(1, 99, 1, 2, 3)], ranker, k: 1, catalogueSize: 100);
@@ -120,7 +134,7 @@ public sealed class RecommenderEvaluationTests
         List<EvaluationCase> cases = [Case(1, 99, 1, 2), Case(2, 99, 3, 4)];
 
         var result = RecommenderEvaluation.Evaluate(
-            "pop", cases, RecommenderEvaluation.PopularityRanker(counts), k: 1, catalogueSize: 100);
+            "pop", cases, RecommenderEvaluation.PopularityRanker(Counts(counts)), k: 1, catalogueSize: 100);
 
         result.CatalogueCoverage.Should().Be(0.01, "chỉ đúng 1 trong 100 buổi diễn từng được đề xuất");
     }
@@ -144,8 +158,8 @@ public sealed class RecommenderEvaluationTests
     {
         // Con số đưa vào báo cáo mà mỗi lần chạy lại ra một kiểu thì không ai kiểm chứng được, và
         // hai lần đo cũng không so được với nhau.
-        List<int> catalogue = [.. Enumerable.Range(1, 200)];
-        var seen = new HashSet<int> { 1, 2, 3 };
+        List<Guid> catalogue = [.. Enumerable.Range(1, 200).Select(G)];
+        var seen = new HashSet<Guid> { G(1), G(2), G(3) };
 
         var first = RecommenderEvaluation.SampleNegatives(catalogue, seen, 20, new Random(42));
         var second = RecommenderEvaluation.SampleNegatives(catalogue, seen, 20, new Random(42));
@@ -158,8 +172,8 @@ public sealed class RecommenderEvaluationTests
     {
         // Trộn vào một buổi diễn người ta đã từng chọn thì bài kiểm tra có hai đáp án đúng, và điểm
         // số trở nên vô nghĩa.
-        List<int> catalogue = [.. Enumerable.Range(1, 50)];
-        var seen = new HashSet<int> { 5, 10, 15, 20 };
+        List<Guid> catalogue = [.. Enumerable.Range(1, 50).Select(G)];
+        var seen = new HashSet<Guid> { G(5), G(10), G(15), G(20) };
 
         var sample = RecommenderEvaluation.SampleNegatives(catalogue, seen, 30, new Random(7));
 
@@ -172,9 +186,9 @@ public sealed class RecommenderEvaluationTests
     {
         // Kho nhỏ là tình trạng thật của nền tảng này. Không được ném lỗi, chỉ trả về ít hơn — và
         // đường gọi tự quyết định như vậy có đủ để kiểm tra hay không.
-        List<int> catalogue = [1, 2, 3, 4, 5];
+        List<Guid> catalogue = [G(1), G(2), G(3), G(4), G(5)];
 
-        RecommenderEvaluation.SampleNegatives(catalogue, new HashSet<int> { 1 }, 99, new Random(1))
+        RecommenderEvaluation.SampleNegatives(catalogue, new HashSet<Guid> { G(1) }, 99, new Random(1))
             .Should().HaveCount(4);
     }
 

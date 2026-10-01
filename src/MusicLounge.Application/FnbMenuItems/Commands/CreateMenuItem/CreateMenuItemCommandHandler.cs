@@ -7,7 +7,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.FnbMenuItems.Commands.CreateMenuItem;
 
-internal sealed class CreateMenuItemCommandHandler : IRequestHandler<CreateMenuItemCommand, int>
+internal sealed class CreateMenuItemCommandHandler : IRequestHandler<CreateMenuItemCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -18,12 +18,12 @@ internal sealed class CreateMenuItemCommandHandler : IRequestHandler<CreateMenuI
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(CreateMenuItemCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateMenuItemCommand request, CancellationToken ct)
     {
-        var menu = await _uow.Repository<FnbMenu, int>().GetByIdAsync(request.MenuId, ct)
+        var menu = await _uow.Repository<FnbMenu, Guid>().GetByIdAsync(request.MenuId, ct)
             ?? throw new NotFoundException(nameof(FnbMenu), request.MenuId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(menu.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(menu.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), menu.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -40,7 +40,7 @@ internal sealed class CreateMenuItemCommandHandler : IRequestHandler<CreateMenuI
             DisplayOrder = request.DisplayOrder
         };
 
-        _uow.Repository<FnbMenuItem, int>().Add(item);
+        _uow.Repository<FnbMenuItem, Guid>().Add(item);
         await _uow.SaveChangesAsync(ct);
 
         return item.Id;

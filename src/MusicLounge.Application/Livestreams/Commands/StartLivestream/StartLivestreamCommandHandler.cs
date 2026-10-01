@@ -37,7 +37,7 @@ internal sealed class StartLivestreamCommandHandler : IRequestHandler<StartLives
 
     public async Task<Unit> Handle(StartLivestreamCommand request, CancellationToken ct)
     {
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
 
         if (livestream.Status != LivestreamStatus.Scheduled)
@@ -51,10 +51,10 @@ internal sealed class StartLivestreamCommandHandler : IRequestHandler<StartLives
             throw new DomainException("Livestream chưa được Admin duyệt. Không thể phát sóng.");
 
         // D6: Staff chỉ được start livestream của venue được phân công (lounge_id từ JWT)
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), livestream.LoungeShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền phát livestream của venue này.");
@@ -74,11 +74,11 @@ internal sealed class StartLivestreamCommandHandler : IRequestHandler<StartLives
 
         livestream.Status = LivestreamStatus.Live;
         livestream.StartedAt = DateTimeOffset.UtcNow;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
 
         show.Status = LoungeShowStatus.Ongoing;
         show.ActualStart = DateTimeOffset.UtcNow;
-        _uow.Repository<LoungeShow, int>().Update(show);
+        _uow.Repository<LoungeShow, Guid>().Update(show);
 
         await _uow.SaveChangesAsync(ct);
 

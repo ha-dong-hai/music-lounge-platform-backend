@@ -39,11 +39,11 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
         // row and a duplicate cancellation notification per buyer.
         await using var _ = await _lock.AcquireAsync($"show-status-change:{request.ShowId}", ct);
 
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -67,10 +67,10 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
         if (physicalTickets.Count > 0)
         {
             var priceIds = physicalTickets.Select(t => t.PriceId).Distinct().ToList();
-            var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+            var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
             var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
-            var refundRepo = _uow.Repository<RefundRequest, int>();
+            var refundRepo = _uow.Repository<RefundRequest, Guid>();
             var payers = await TicketRefundRecipients.PayersAsync(_uow, physicalTickets, ct);
 
             foreach (var ticket in physicalTickets)
@@ -94,7 +94,7 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
                     Status = RefundRequestStatus.Pending
                 });
 
-                if (ticket.BuyerId is int buyerId)
+                if (ticket.BuyerId is Guid buyerId)
                     await _notifications.NotifyAsync(
                         buyerId,
                         NotificationType.EventFormatChanged,

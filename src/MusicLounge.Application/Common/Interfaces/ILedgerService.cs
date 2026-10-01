@@ -10,14 +10,14 @@ public interface ILedgerService
         string journalId,
         string referenceType,
         string referenceId,
-        int? paymentId,
+        Guid? paymentId,
         IReadOnlyList<LedgerLine> lines,
         CancellationToken ct = default);
 }
 
 public sealed record LedgerLine(
     AccountType OwnerType,
-    int? OwnerId,
+    Guid? OwnerId,
     decimal Amount,
     bool IsDebit,
     string? Description = null);

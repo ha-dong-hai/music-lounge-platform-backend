@@ -183,7 +183,7 @@ public sealed class ApplyDuePenaltiesJob
             // Cung khoa voi CancelLoungeShow / ChangeLoungeShowFormat: chu phong tra huy cung luc thi khong thanh hai
             // lan hoan cho cung mot ve.
             await using var _ = await _lock.AcquireAsync($"show-status-change:{showId}", ct);
-            var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(showId, ct);
+            var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(showId, ct);
             if (show is null || show.Status != LoungeShowStatus.Published) continue;
 
             total += await ShowCancellation.CancelAsync(

@@ -31,10 +31,10 @@ public sealed class PaymentAfterShowCancelledTests
     public PaymentAfterShowCancelledTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record PurchaseData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
-    private sealed record Venue(int OwnerId, int LoungeId, int ShowId, int PriceId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid ShowId, Guid PriceId);
 
     private async Task<Venue> VenueAsync()
     {
@@ -89,7 +89,7 @@ public sealed class PaymentAfterShowCancelledTests
     }
 
     /// <summary>Giữ chỗ + bấm thanh toán: Payment Pending, vé Pending, link VNPay đã mở.</summary>
-    private async Task<PurchaseData> StartPaymentAsync(int priceId)
+    private async Task<PurchaseData> StartPaymentAsync(Guid priceId)
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
 
@@ -174,7 +174,7 @@ public sealed class PaymentAfterShowCancelledTests
         await CancelShowAsOwnerAsync(venue);
         await PaidIpnAsync(purchase, NewTransactionNo());
 
-        int refundId;
+        Guid refundId;
         using (var scope = _factory.Services.CreateScope())
             refundId = (await Db(scope).RefundRequests.AsNoTracking()
                 .SingleAsync(r => r.PaymentId == purchase.PaymentId)).Id;

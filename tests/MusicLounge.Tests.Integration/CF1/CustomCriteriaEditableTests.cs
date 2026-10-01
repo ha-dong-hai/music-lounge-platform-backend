@@ -29,7 +29,7 @@ public sealed class CustomCriteriaEditableTests
 
     private HttpClient Owner() => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-    private async Task<int> TaoTieuChiAsync(string name)
+    private async Task<Guid> TaoTieuChiAsync(string name)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -52,14 +52,14 @@ public sealed class CustomCriteriaEditableTests
         return root.TryGetProperty("data", out var d) ? d : root;
     }
 
-    private async Task<JsonElement?> TimTrongDanhSachAsync(int id, bool includeInactive)
+    private async Task<JsonElement?> TimTrongDanhSachAsync(Guid id, bool includeInactive)
     {
         var res = await Owner().GetAsync(
             $"/api/v1/custom-criteria?loungeId={SeedHelper.LoungeId}&includeInactive={includeInactive}");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
         foreach (var c in Data(await res.Content.ReadAsStringAsync()).EnumerateArray())
-            if (c.GetProperty("id").GetInt32() == id) return c;
+            if (c.GetProperty("id").GetGuid() == id) return c;
         return null;
     }
 
@@ -130,7 +130,7 @@ public sealed class CustomCriteriaEditableTests
 
         var res = await owner.GetAsync($"/api/v1/custom-criteria/shows/{SeedHelper.ShowId}/values");
         var dong = Data(await res.Content.ReadAsStringAsync()).EnumerateArray()
-            .FirstOrDefault(v => v.GetProperty("criteriaId").GetInt32() == id);
+            .FirstOrDefault(v => v.GetProperty("criteriaId").GetGuid() == id);
 
         dong.ValueKind.Should().NotBe(JsonValueKind.Undefined, "giá trị đã gắn phải còn nguyên sau khi tắt");
         dong.GetProperty("value").GetString().Should().Be("Acoustic");

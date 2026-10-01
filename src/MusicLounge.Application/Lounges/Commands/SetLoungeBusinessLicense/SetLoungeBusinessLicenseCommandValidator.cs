@@ -7,7 +7,7 @@ public sealed class SetLoungeBusinessLicenseCommandValidator
 {
     public SetLoungeBusinessLicenseCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.DocumentUrl).NotEmpty().MaximumLength(500);
     }
 }

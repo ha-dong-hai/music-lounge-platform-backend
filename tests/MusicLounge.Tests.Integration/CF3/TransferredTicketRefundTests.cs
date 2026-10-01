@@ -31,9 +31,9 @@ public sealed class TransferredTicketRefundTests
 
     public TransferredTicketRefundTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record People(int OriginalId, string OriginalEmail, int HolderId);
+    private sealed record People(Guid OriginalId, string OriginalEmail, Guid HolderId);
 
-    private sealed record Seeded(int ShowId, Guid TicketId, int PaymentId, People People);
+    private sealed record Seeded(Guid ShowId, Guid TicketId, Guid PaymentId, People People);
 
     private async Task<People> SeedPeopleAsync()
     {
@@ -112,14 +112,14 @@ public sealed class TransferredTicketRefundTests
     private HttpClient Owner => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
     private HttpClient Admin => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<RefundRequest> RefundForAsync(int paymentId)
+    private async Task<RefundRequest> RefundForAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
             .RefundRequests.AsNoTracking().SingleAsync(r => r.PaymentId == paymentId);
     }
 
-    private async Task<List<Notification>> NoticesToAsync(int userId)
+    private async Task<List<Notification>> NoticesToAsync(Guid userId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
@@ -289,7 +289,7 @@ public sealed class TransferredTicketRefundTests
 
     // ─── Dựng dữ liệu phụ ─────────────────────────────────────────────────────
 
-    private async Task<int> SeedShowComplaintAsync(int showId, int complainantId)
+    private async Task<Guid> SeedShowComplaintAsync(Guid showId, Guid complainantId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -304,7 +304,7 @@ public sealed class TransferredTicketRefundTests
         return complaint.Id;
     }
 
-    private async Task AddLivestreamAsync(int showId, LivestreamStatus status, DateTimeOffset? startedAt, DateTimeOffset? endedAt)
+    private async Task AddLivestreamAsync(Guid showId, LivestreamStatus status, DateTimeOffset? startedAt, DateTimeOffset? endedAt)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

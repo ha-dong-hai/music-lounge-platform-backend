@@ -4,10 +4,10 @@ using MusicLounge.Domain.Entities;
 
 namespace MusicLounge.Application.Common.Interfaces.Repositories;
 
-public interface IComplaintRepository : IRepository<Complaint, int>
+public interface IComplaintRepository : IRepository<Complaint, Guid>
 {
     Task<PaginatedResult<ComplaintDto>> GetMyComplaintsAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default);
+        Guid userId, int page, int pageSize, CancellationToken ct = default);
 
     Task<PaginatedResult<ComplaintDto>> GetPendingAsync(
         int page, int pageSize, CancellationToken ct = default);

@@ -34,7 +34,7 @@ public sealed class VenueIdentityChangeTests
 
     public VenueIdentityChangeTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int LoungeId, string Name, int OwnerId);
+    private sealed record Venue(Guid LoungeId, string Name, Guid OwnerId);
 
     private async Task<Venue> CreateVenueAsync()
     {
@@ -60,8 +60,8 @@ public sealed class VenueIdentityChangeTests
         return new Venue(lounge.Id, lounge.Name, freshOwner.Id);
     }
 
-    private async Task<int> CreateShowAsync(
-        int loungeId,
+    private async Task<Guid> CreateShowAsync(
+        Guid loungeId,
         LoungeShowFormat format = LoungeShowFormat.Offline,
         LoungeShowStatus status = LoungeShowStatus.Published,
         int startsInHours = 24 * 10,
@@ -89,8 +89,8 @@ public sealed class VenueIdentityChangeTests
         return show.Id;
     }
 
-    private async Task<(Guid TicketId, int PaymentId)> AddTicketAsync(
-        int showId, int buyerId, AccessType accessType = AccessType.Physical,
+    private async Task<(Guid TicketId, Guid PaymentId)> AddTicketAsync(
+        Guid showId, Guid buyerId, AccessType accessType = AccessType.Physical,
         TicketStatus status = TicketStatus.Confirmed)
     {
         using var scope = _factory.Services.CreateScope();
@@ -153,7 +153,7 @@ public sealed class VenueIdentityChangeTests
             {
                 Name = name ?? venue.Name,
                 Description = (string?)null,
-                AtmosphereId = (int?)null,
+                AtmosphereId = (Guid?)null,
                 Street = street,
                 Ward = "Bến Nghé",
                 District = "1",
@@ -162,7 +162,7 @@ public sealed class VenueIdentityChangeTests
                 Longitude = longitude
             });
 
-    private async Task<List<Notification>> NoticesAsync(NotificationType type, string referenceType, int referenceId)
+    private async Task<List<Notification>> NoticesAsync(NotificationType type, string referenceType, Guid referenceId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -171,7 +171,7 @@ public sealed class VenueIdentityChangeTests
             .ToListAsync();
     }
 
-    private async Task<LoungeShow> ShowAsync(int showId)
+    private async Task<LoungeShow> ShowAsync(Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

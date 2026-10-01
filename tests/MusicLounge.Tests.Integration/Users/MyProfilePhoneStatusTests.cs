@@ -26,7 +26,7 @@ public sealed class MyProfilePhoneStatusTests
     public MyProfilePhoneStatusTests(ApiFactory factory) => _factory = factory;
 
     /// <summary>Tài khoản dùng riêng — không động vào tài khoản seed dùng chung.</summary>
-    private async Task<int> TaoNguoiDungAsync(string? phone)
+    private async Task<Guid> TaoNguoiDungAsync(string? phone)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -3,7 +3,7 @@
 namespace MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 
 public sealed record PerformanceInput(
-    int? PerformerId,
+    Guid? PerformerId,
     string? PerformerName,
     string Role,
     int OrderIndex,
@@ -11,19 +11,19 @@ public sealed record PerformanceInput(
     bool AcceptsDonation);
 
 public sealed record CreateLoungeShowCommand(
-    int LoungeId,
+    Guid LoungeId,
     string Name,
     string Description,
     string Format,
     DateTimeOffset ScheduledStart,
     DateTimeOffset? ScheduledEnd,
     DateTimeOffset? TicketSaleClosesAt,
-    int? CategoryId,
+    Guid? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota,
-    IReadOnlyList<int> GenreIds,
-    IReadOnlyList<int> MoodIds,
-    IReadOnlyList<int> AtmosphereIds,
+    IReadOnlyList<Guid> GenreIds,
+    IReadOnlyList<Guid> MoodIds,
+    IReadOnlyList<Guid> AtmosphereIds,
     IReadOnlyList<PerformanceInput> Performances,
     // MLACP-288. The three D13 policy columns, finally settable. All optional: omitting them keeps
     // the platform default every existing show already runs on — cancellable, 100% refund, no
@@ -32,4 +32,4 @@ public sealed record CreateLoungeShowCommand(
     bool? CancellationAllowed = null,
     decimal? RefundPercentage = null,
     int? CancellationDeadlineHours = null
-) : ICommand<int>;
+) : ICommand<Guid>;

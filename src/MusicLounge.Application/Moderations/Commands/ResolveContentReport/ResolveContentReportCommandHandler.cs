@@ -55,7 +55,7 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
 
         await using var _ = await _lock.AcquireAsync($"content-report:{targetType}:{request.TargetId}", ct);
 
-        var reportRepo = _uow.Repository<ContentReport, int>();
+        var reportRepo = _uow.Repository<ContentReport, Guid>();
         var openReports = await reportRepo.FindAsync(
             r => r.TargetType == targetType && r.TargetId == request.TargetId
                 && r.Status == ContentReportStatus.Open, ct);
@@ -88,7 +88,7 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         return Unit.Value;
     }
 
-    private async Task TakeDownAsync(ReportTargetType targetType, int targetId, string? note, CancellationToken ct)
+    private async Task TakeDownAsync(ReportTargetType targetType, Guid targetId, string? note, CancellationToken ct)
     {
         switch (targetType)
         {
@@ -111,9 +111,9 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
     // goi qua ISender.Send vi handler nay da chay trong transaction cua ResolveContentReportCommand
     // (TransactionBehavior), goi nested se BeginTransactionAsync lan 2 tren cung 1 connection va
     // loi ("connection is already in a transaction"), giong ResolveComplaintCommandHandler.
-    private async Task TakeDownShowAsync(int showId, CancellationToken ct)
+    private async Task TakeDownShowAsync(Guid showId, CancellationToken ct)
     {
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(showId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), showId);
 
@@ -134,10 +134,10 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         if (confirmedTickets.Count == 0) return;
 
         var priceIds = confirmedTickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var payers = await TicketRefundRecipients.PayersAsync(_uow, confirmedTickets, ct);
 
         foreach (var ticket in confirmedTickets)
@@ -161,7 +161,7 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
                 Status = RefundRequestStatus.Pending
             });
 
-            if (ticket.BuyerId is int buyerId)
+            if (ticket.BuyerId is Guid buyerId)
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
@@ -183,9 +183,9 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
     // Mirrors TerminateLivestreamCommandHandler. Gioi han da biet (cong bo trong PR/Jira): chi go
     // duoc khi livestream dang Live — livestream da Ended thi khong co gi de "dung ngay" nua, Admin
     // chon Dismissed cho truong hop do (vd can go replay sau khi da ket thuc la pham vi khac).
-    private async Task TakeDownLivestreamAsync(int livestreamId, string? note, CancellationToken ct)
+    private async Task TakeDownLivestreamAsync(Guid livestreamId, string? note, CancellationToken ct)
     {
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(livestreamId, ct)
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(livestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), livestreamId);
 
         if (livestream.Status != LivestreamStatus.Live)
@@ -209,9 +209,9 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         livestream.EndedAt = now;
         livestream.TerminatedById = _currentUser.UserId;
         livestream.TerminatedReason = reason;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct);
         if (show is not null)
         {
             // MLACP-353: truoc day dat Ended thang — la duong duy nhat trong bon duong ket thuc stream
@@ -230,9 +230,9 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
     /// đánh giá, đồng thời báo cho người ĐANG xem để tin nhắn biến mất ngay — người vào xem sau thì đã bị lọc khỏi lịch
     /// sử chat. Thiếu một trong hai thì việc gỡ chỉ có hiệu lực với một nửa khán giả.
     /// </summary>
-    private async Task TakeDownChatMessageAsync(int chatMessageId, string? note, CancellationToken ct)
+    private async Task TakeDownChatMessageAsync(Guid chatMessageId, string? note, CancellationToken ct)
     {
-        var repo = _uow.Repository<LivestreamChatMessage, int>();
+        var repo = _uow.Repository<LivestreamChatMessage, Guid>();
         var message = await repo.GetByIdAsync(chatMessageId, ct)
             ?? throw new NotFoundException(nameof(LivestreamChatMessage), chatMessageId);
 
@@ -258,9 +258,9 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
     }
 
     // Mirrors RemoveRatingCommandHandler.
-    private async Task TakeDownRatingAsync(int ratingId, string? note, CancellationToken ct)
+    private async Task TakeDownRatingAsync(Guid ratingId, string? note, CancellationToken ct)
     {
-        var repo = _uow.Repository<LoungeShowRating, int>();
+        var repo = _uow.Repository<LoungeShowRating, Guid>();
         var rating = await repo.GetByIdAsync(ratingId, ct)
             ?? throw new NotFoundException(nameof(LoungeShowRating), ratingId);
 

@@ -152,7 +152,7 @@ public sealed class LoginSpikeDetectionJobTests
     public async Task ExecuteAsync_PrunesFailureLogsOlderThanRetention()
     {
         var ip = $"10.4.{Random.Shared.Next(1, 254)}.{Random.Shared.Next(1, 254)}";
-        var staleId = 0;
+        var staleId = TestId.Of(0);
 
         using (var scope = _factory.Services.CreateScope())
         {

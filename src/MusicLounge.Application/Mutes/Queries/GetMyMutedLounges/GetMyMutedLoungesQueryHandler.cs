@@ -8,13 +8,13 @@ namespace MusicLounge.Application.Mutes.Queries.GetMyMutedLounges;
 internal sealed class GetMyMutedLoungesQueryHandler
     : IQueryHandler<GetMyMutedLoungesQuery, IReadOnlyList<MutedLoungeDto>>
 {
-    private readonly IRepository<LoungeMute, int> _muteRepo;
-    private readonly IRepository<Domain.Entities.MusicLounge, int> _loungeRepo;
+    private readonly IRepository<LoungeMute, Guid> _muteRepo;
+    private readonly IRepository<Domain.Entities.MusicLounge, Guid> _loungeRepo;
     private readonly ICurrentUserService _currentUser;
 
     public GetMyMutedLoungesQueryHandler(
-        IRepository<LoungeMute, int> muteRepo,
-        IRepository<Domain.Entities.MusicLounge, int> loungeRepo,
+        IRepository<LoungeMute, Guid> muteRepo,
+        IRepository<Domain.Entities.MusicLounge, Guid> loungeRepo,
         ICurrentUserService currentUser)
     {
         _muteRepo = muteRepo;

@@ -34,15 +34,15 @@ public sealed class SubscriptionChangeTests
 
     private sealed record Wrapped<T>(T Data);
 
-    private sealed record Initiation(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record Initiation(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
 
     private sealed record ChangeInitiation(
-        int PaymentId, string OrderId, decimal Amount, string PaymentUrl,
+        Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl,
         decimal CreditValue, decimal CreditDays, DateTimeOffset EstimatedExpiresAt);
 
-    private HttpClient Owner(int ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
+    private HttpClient Owner(Guid ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
-    private async Task<int> FreshOwnerAsync()
+    private async Task<Guid> FreshOwnerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -52,7 +52,7 @@ public sealed class SubscriptionChangeTests
         return owner.Id;
     }
 
-    private async Task<int> PackageAsync(decimal price)
+    private async Task<Guid> PackageAsync(decimal price)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             "/api/v1/subscriptions/packages", new
@@ -61,7 +61,7 @@ public sealed class SubscriptionChangeTests
                 BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = false, MaxAiPostersPerMonth = 0
             });
         res.EnsureSuccessStatusCode();
-        return (await res.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
     }
 
     // vnpay-return trả 302 về trang của người mua — như SubscriptionTests, không đi theo chuyển hướng; hiệu lực của
@@ -71,7 +71,7 @@ public sealed class SubscriptionChangeTests
                 $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={orderId}&vnp_ResponseCode=00&vnp_Amount={(long)(amount * 100)}"))
             .StatusCode.Should().Be(HttpStatusCode.Redirect);
 
-    private async Task<int> SubscribedOwnerAsync(int packageId, decimal price)
+    private async Task<Guid> SubscribedOwnerAsync(Guid packageId, decimal price)
     {
         var ownerId = await FreshOwnerAsync();
         var res = await Owner(ownerId).PostAsJsonAsync("/api/v1/subscriptions/subscribe", new { PackageId = packageId });
@@ -80,14 +80,14 @@ public sealed class SubscriptionChangeTests
         return ownerId;
     }
 
-    private async Task<List<OwnerSubscription>> PlansAsync(int ownerId)
+    private async Task<List<OwnerSubscription>> PlansAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
             .OwnerSubscriptions.AsNoTracking().Where(s => s.OwnerId == ownerId).ToListAsync();
     }
 
-    private async Task<decimal?> AmountPaidAsync(int subscriptionId)
+    private async Task<decimal?> AmountPaidAsync(Guid subscriptionId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -96,7 +96,7 @@ public sealed class SubscriptionChangeTests
     }
 
     /// <summary>Đẩy gói về đúng giữa kỳ: đã dùng 15 ngày, còn 15 ngày.</summary>
-    private async Task PutPlanHalfwayAsync(int ownerId, bool forgetAmountPaid = false)
+    private async Task PutPlanHalfwayAsync(Guid ownerId, bool forgetAmountPaid = false)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -108,7 +108,7 @@ public sealed class SubscriptionChangeTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<bool> AnyRefundRequestedByAsync(int ownerId)
+    private async Task<bool> AnyRefundRequestedByAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()

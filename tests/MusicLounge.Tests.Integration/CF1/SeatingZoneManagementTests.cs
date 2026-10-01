@@ -21,7 +21,7 @@ public sealed class SeatingZoneManagementTests
 
     public SeatingZoneManagementTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreateZoneAsync(int capacity = 20)
+    private async Task<Guid> CreateZoneAsync(int capacity = 20)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -120,7 +120,7 @@ public sealed class SeatingZoneManagementTests
 
         var listRes = await client.GetAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/zones?activeOnly=true");
         var listBody = await listRes.Content.ReadAsStringAsync();
-        listBody.Should().NotContain($"\"id\":{zoneId}");
+        listBody.Should().NotContain($"\"id\":\"{zoneId}\"");
     }
 
     [Fact]
@@ -134,5 +134,5 @@ public sealed class SeatingZoneManagementTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

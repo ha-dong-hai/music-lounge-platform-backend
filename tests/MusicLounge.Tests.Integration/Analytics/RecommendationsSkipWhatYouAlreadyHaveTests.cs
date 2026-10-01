@@ -30,9 +30,9 @@ public sealed class RecommendationsSkipWhatYouAlreadyHaveTests
     public RecommendationsSkipWhatYouAlreadyHaveTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name);
+    private sealed record Rec(Guid Id, string Name);
 
-    private async Task<(int LoungeId, string City)> VenueInItsOwnCityAsync()
+    private async Task<(Guid LoungeId, string City)> VenueInItsOwnCityAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -54,7 +54,7 @@ public sealed class RecommendationsSkipWhatYouAlreadyHaveTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -78,7 +78,7 @@ public sealed class RecommendationsSkipWhatYouAlreadyHaveTests
         return show.Id;
     }
 
-    private async Task<int> ListenerWhoLikesGenreOneAsync()
+    private async Task<Guid> ListenerWhoLikesGenreOneAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -100,7 +100,7 @@ public sealed class RecommendationsSkipWhatYouAlreadyHaveTests
         return user.Id;
     }
 
-    private async Task BuyTicketAsync(int userId, int showId)
+    private async Task BuyTicketAsync(Guid userId, Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -139,7 +139,7 @@ public sealed class RecommendationsSkipWhatYouAlreadyHaveTests
         await db.SaveChangesAsync();
     }
 
-    private async Task SaveToWishlistAsync(int userId, int showId)
+    private async Task SaveToWishlistAsync(Guid userId, Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -150,7 +150,7 @@ public sealed class RecommendationsSkipWhatYouAlreadyHaveTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(int userId, string city)
+    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(Guid userId, string city)
     {
         var res = await _factory.CreateAuthenticatedClient(userId, "Audience")
             .GetAsync($"/api/v1/recommendations?city={city}&limit=50");

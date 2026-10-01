@@ -6,6 +6,6 @@ public sealed class GetOwnerLivestreamHistoryQueryValidator : AbstractValidator<
 {
     public GetOwnerLivestreamHistoryQueryValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
     }
 }

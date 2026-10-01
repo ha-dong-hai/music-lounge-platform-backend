@@ -24,7 +24,7 @@ public sealed class ContentReportSlaBreachAlertJobTests
     [Fact]
     public async Task ExecuteAsync_ReportOverdueBeyondSlaHours_PersistsAdminNotification()
     {
-        var targetId = Random.Shared.Next(100_000, 999_999);
+        var targetId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
         using (var scope = _factory.Services.CreateScope())
@@ -61,7 +61,7 @@ public sealed class ContentReportSlaBreachAlertJobTests
     [Fact]
     public async Task ExecuteAsync_ReportWithinSlaHours_DoesNotAlert()
     {
-        var targetId = Random.Shared.Next(100_000, 999_999);
+        var targetId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
         using (var scope = _factory.Services.CreateScope())

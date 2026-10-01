@@ -126,7 +126,7 @@ public sealed class RefundSlaBreachAlertJob
         {
             var p = payments[refund.PaymentId];
             if (!RefundGatewayWindow.IsClosed(p.Method, p.PaidAt ?? p.CreatedAt, windowDays, now)) continue;
-            if (refund.PayoutConsentAt is not null || refund.RequestedBy is not int buyerId) continue;
+            if (refund.PayoutConsentAt is not null || refund.RequestedBy is not Guid buyerId) continue;
             if (refund.PayoutAccountRequestedAt is { } askedAt && askedAt.AddDays(PayoutReminderDays) > now) continue;
 
             var tracked = await _ctx.RefundRequests.FirstAsync(r => r.Id == refund.Id, ct);
@@ -322,12 +322,12 @@ public sealed class RefundSlaBreachAlertJob
         {
             var ownerId = await _ctx.Tickets
                 .Where(t => t.PaymentId == refund.PaymentId)
-                .Select(t => (int?)t.Show.Lounge.OwnerId)
+                .Select(t => (Guid?)t.Show.Lounge.OwnerId)
                 .FirstOrDefaultAsync(ct);
 
             var amount = refund.AmountApproved ?? refund.AmountRequested;
 
-            if (ownerId is int owner)
+            if (ownerId is Guid owner)
                 notified |= await NotifyOnceAsync(
                     owner, NotificationType.RefundOwedByVenue, refund.Id,
                     new SongNgu("Chưa xác nhận trả tiền mặt cho khách", "Cash refund not yet confirmed"),
@@ -358,7 +358,7 @@ public sealed class RefundSlaBreachAlertJob
     }
 
     private async Task<bool> NotifyOnceAsync(
-        int userId, NotificationType type, int refundId, SongNgu title, SongNgu body, CancellationToken ct)
+        Guid userId, NotificationType type, Guid refundId, SongNgu title, SongNgu body, CancellationToken ct)
     {
         var already = await _ctx.Notifications.AnyAsync(
             n => n.UserId == userId && n.Type == type

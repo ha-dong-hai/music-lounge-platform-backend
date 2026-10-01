@@ -2,9 +2,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class TicketPrice : Common.BaseEntity<int>
+public sealed class TicketPrice : Common.BaseEntity<Guid>
 {
-    public int TierId { get; set; }
+    public Guid TierId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public decimal Price { get; set; }

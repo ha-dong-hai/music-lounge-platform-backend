@@ -53,7 +53,7 @@ internal sealed class InitiateTicketTransferCommandHandler
         if (ticket.LivestreamDetail?.FirstAccessedAt is not null)
             throw new DomainException("Vé đã được dùng để xem livestream, không thể chuyển nhượng.");
 
-        var recipients = await _uow.Repository<User, int>()
+        var recipients = await _uow.Repository<User, Guid>()
             .FindAsync(u => u.Email == request.RecipientEmail, ct);
         var recipient = recipients.FirstOrDefault()
             ?? throw new NotFoundException("Người nhận (theo email)", request.RecipientEmail);

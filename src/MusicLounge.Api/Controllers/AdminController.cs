@@ -88,10 +88,10 @@ public sealed class AdminController : ControllerBase
     /// xác nhận, nền tảng chuyển cho phòng trà, phòng trà xác nhận, báo đã chuyển cho nghệ sĩ…), ai làm,
     /// lúc nào, mã giao dịch, bản băm file chứng từ, và kết quả kiểm chuỗi băm tính lại ngay lúc xuất.
     /// Dùng khi có tranh chấp.</summary>
-    [HttpGet("donations/{id:int}/evidence")]
+    [HttpGet("donations/{id:guid}/evidence")]
     [ProducesResponseType<ApiResponse<DonationEvidenceDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DonationEvidence(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DonationEvidence(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetDonationEvidenceQuery(id), ct);
         return Ok(ApiResponse<DonationEvidenceDto>.Ok(result));
@@ -115,31 +115,31 @@ public sealed class AdminController : ControllerBase
     }
 
     [HttpPost("genres")]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateGenre(
         [FromBody] CreateMusicGenreCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return Ok(ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("genres/{id:int}")]
+    [HttpPut("genres/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateGenre(
-        int id, [FromBody] UpdateMusicGenreRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateMusicGenreRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateMusicGenreCommand(id, body.Name, body.NameEn), ct);
         return NoContent();
     }
 
-    [HttpDelete("genres/{id:int}")]
+    [HttpDelete("genres/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> DeleteGenre(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteGenre(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteMusicGenreCommand(id), ct);
         return NoContent();
@@ -148,31 +148,31 @@ public sealed class AdminController : ControllerBase
     // ---- Dòng nhạc/cảm xúc ----
 
     [HttpPost("moods")]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateMood(
         [FromBody] CreateMoodCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return Ok(ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("moods/{id:int}")]
+    [HttpPut("moods/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateMood(
-        int id, [FromBody] UpdateMoodRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateMoodRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateMoodCommand(id, body.Name), ct);
         return NoContent();
     }
 
-    [HttpDelete("moods/{id:int}")]
+    [HttpDelete("moods/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> DeleteMood(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteMood(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteMoodCommand(id), ct);
         return NoContent();
@@ -181,31 +181,31 @@ public sealed class AdminController : ControllerBase
     // ---- Phong cách không gian ----
 
     [HttpPost("atmospheres")]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateAtmosphere(
         [FromBody] CreateVenueAtmosphereCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return Ok(ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("atmospheres/{id:int}")]
+    [HttpPut("atmospheres/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAtmosphere(
-        int id, [FromBody] UpdateVenueAtmosphereRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateVenueAtmosphereRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateVenueAtmosphereCommand(id, body.Name), ct);
         return NoContent();
     }
 
-    [HttpDelete("atmospheres/{id:int}")]
+    [HttpDelete("atmospheres/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> DeleteAtmosphere(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteAtmosphere(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteVenueAtmosphereCommand(id), ct);
         return NoContent();
@@ -229,32 +229,32 @@ public sealed class AdminController : ControllerBase
     }
 
     [HttpPost("event-categories")]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateEventCategory(
         [FromBody] CreateEventCategoryCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Ok(ApiResponse<int>.Ok(id));
+        return Ok(ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("event-categories/{id:int}")]
+    [HttpPut("event-categories/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateEventCategory(
-        int id, [FromBody] UpdateEventCategoryRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateEventCategoryRequest body, CancellationToken ct = default)
     {
         await _sender.Send(
             new UpdateEventCategoryCommand(id, body.Name, body.Description, body.IsActive), ct);
         return NoContent();
     }
 
-    [HttpDelete("event-categories/{id:int}")]
+    [HttpDelete("event-categories/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> DeleteEventCategory(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteEventCategory(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteEventCategoryCommand(id), ct);
         return NoContent();
@@ -278,13 +278,13 @@ public sealed class AdminController : ControllerBase
     /// <summary>Duyệt (Approved → Published) hoặc từ chối (Rejected → về lại Draft để Owner sửa và
     /// nộp lại) một event đang chờ duyệt (Pending). Chỉ xử lý được 1 lần — duyệt lại event đã có
     /// quyết định trả về 409.</summary>
-    [HttpPost("shows/{id:int}/review")]
+    [HttpPost("shows/{id:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ReviewShow(
-        int id, [FromBody] ReviewShowRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] ReviewShowRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new ReviewShowCommand(id, body.Decision, body.ReviewNote), ct);
         return NoContent();
@@ -315,14 +315,14 @@ public sealed class AdminController : ControllerBase
     /// là trạng thái do án phạt quản, gỡ chúng ở đây sẽ thành đường vòng bỏ qua luồng khiếu nại.
     /// Đây là bước quyết định một địa điểm có được bán vé hay không — trước MLACP-307 không có bước
     /// này, nên phòng trà chưa ai xác minh vẫn thu tiền vé thật.</summary>
-    [HttpPost("venues/{id:int}/review")]
+    [HttpPost("venues/{id:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReviewVenue(
-        int id, [FromBody] ReviewVenueRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] ReviewVenueRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new ReviewVenueCommand(id, body.Decision, body.ReviewNote), ct);
         return NoContent();
@@ -346,7 +346,7 @@ public sealed class AdminController : ControllerBase
     /// tổng đã hoàn = GrossAmount. Chỉ xử lý được 1 lần (409 nếu đã xử lý). LƯU Ý: VNPay mặc định
     /// khóa chức năng hoàn tiền trên tài khoản sandbox — cần liên hệ VNPay để mở trước khi gọi được
     /// thành công, không phụ thuộc vào code đúng hay sai (503 nếu VNPay từ chối/lỗi).</summary>
-    [HttpPost("refund-requests/{id:int}/process")]
+    [HttpPost("refund-requests/{id:guid}/process")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -354,7 +354,7 @@ public sealed class AdminController : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> ProcessRefundRequest(
-        int id, [FromBody] ProcessRefundRequestBody body, CancellationToken ct = default)
+        Guid id, [FromBody] ProcessRefundRequestBody body, CancellationToken ct = default)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
         await _sender.Send(
@@ -387,14 +387,14 @@ public sealed class AdminController : ControllerBase
     ///
     /// LƯU Ý: quyết định này KHÔNG tự tạo hoàn tiền cho người mua vé — việc đó đi qua luồng hoàn
     /// tiền riêng.</summary>
-    [HttpPost("settlements/{id:int}/review")]
+    [HttpPost("settlements/{id:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReviewSettlement(
-        int id, [FromBody] ReviewSettlementBody body, CancellationToken ct = default)
+        Guid id, [FromBody] ReviewSettlementBody body, CancellationToken ct = default)
     {
         await _sender.Send(new ReviewSettlementCommand(id, body.Decision, body.Note), ct);
         return NoContent();
@@ -405,12 +405,12 @@ public sealed class AdminController : ControllerBase
     /// <summary>Gỡ 1 đánh giá vi phạm nội quy — không xoá cứng, chỉ đánh dấu IsRemoved kèm lý do nên
     /// vẫn còn trong hệ thống để đối soát, nhưng bị GetShowRatingsQueryHandler lọc khỏi trang sự
     /// kiện công khai. Chỉ xử lý được 1 lần (409 nếu đã gỡ trước đó).</summary>
-    [HttpPost("ratings/{id:int}/remove")]
+    [HttpPost("ratings/{id:guid}/remove")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RemoveRating(
-        int id, [FromBody] RemoveRatingRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] RemoveRatingRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new RemoveRatingCommand(id, body.Reason), ct);
         return NoContent();
@@ -432,21 +432,21 @@ public sealed class AdminController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<UserAdminDto>>.Ok(result));
     }
 
-    [HttpGet("users/{id:int}")]
+    [HttpGet("users/{id:guid}")]
     [ProducesResponseType<ApiResponse<UserAdminDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserDetail(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetUserDetail(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetUserDetailQuery(id), ct);
         return Ok(ApiResponse<UserAdminDto>.Ok(result));
     }
 
     /// <summary>Admin xem ảnh CCCD/CMND của user để xác thực danh tính — file nằm ngoài wwwroot, không đoán URL được.</summary>
-    [HttpGet("users/{id:int}/citizen-card/{side}")]
+    [HttpGet("users/{id:guid}/citizen-card/{side}")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserCitizenCardImage(int id, string side, CancellationToken ct = default)
+    public async Task<IActionResult> GetUserCitizenCardImage(Guid id, string side, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetCitizenCardImageQuery(id, side), ct);
         return File(result.Content, result.ContentType);
@@ -521,13 +521,13 @@ public sealed class AdminController : ControllerBase
     /// <summary>Duyệt hoặc từ chối một hồ sơ. Từ chối bắt buộc nêu lý do, và người nộp được thông
     /// báo kết quả. Duyệt hồ sơ thuế của một doanh nghiệp là thứ dừng khấu trừ thuế cho họ — khai
     /// báo suông không làm được điều đó (NĐ 117/2025, xem MLACP-289).</summary>
-    [HttpPost("kyc-reviews/{id:int}/{document}")]
+    [HttpPost("kyc-reviews/{id:guid}/{document}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReviewKycDocument(
-        int id, KycDocument document, [FromBody] ReviewKycDocumentBody body,
+        Guid id, KycDocument document, [FromBody] ReviewKycDocumentBody body,
         CancellationToken ct = default)
     {
         await _sender.Send(new ReviewKycDocumentCommand(id, document, body.Approve, body.Note), ct);
@@ -558,31 +558,31 @@ public sealed class AdminController : ControllerBase
     /// <summary>MLACP-395: xác minh hoặc từ chối tài khoản nhận tiền quyết toán của một phòng trà. Chỉ xác minh được khi
     /// chủ phòng trà đã được duyệt CCCD/CMND (422 nếu chưa); từ chối bắt buộc nêu lý do (400). Giải ngân chỉ chuyển vào
     /// tài khoản đã xác minh.</summary>
-    [HttpPost("bank-accounts/{id:int}/review")]
+    [HttpPost("bank-accounts/{id:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReviewPayoutBankAccount(
-        int id, [FromBody] ReviewKycDocumentBody body, CancellationToken ct = default)
+        Guid id, [FromBody] ReviewKycDocumentBody body, CancellationToken ct = default)
     {
         await _sender.Send(new ReviewPayoutBankAccountCommand(id, body.Approve, body.Note), ct);
         return NoContent();
     }
 
-    [HttpPost("users/{id:int}/deactivate")]
+    [HttpPost("users/{id:guid}/deactivate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeactivateUserAccount(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeactivateUserAccount(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeactivateUserAccountCommand(id), ct);
         return NoContent();
     }
 
-    [HttpPost("users/{id:int}/reactivate")]
+    [HttpPost("users/{id:guid}/reactivate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ReactivateUserAccount(int id, CancellationToken ct = default)
+    public async Task<IActionResult> ReactivateUserAccount(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new ReactivateUserAccountCommand(id), ct);
         return NoContent();

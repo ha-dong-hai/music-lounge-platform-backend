@@ -24,14 +24,14 @@ internal sealed class DeleteTicketTierCommandHandler : IRequestHandler<DeleteTic
 
     public async Task<Unit> Handle(DeleteTicketTierCommand request, CancellationToken ct)
     {
-        var tierRepo = _uow.Repository<TicketTier, int>();
+        var tierRepo = _uow.Repository<TicketTier, Guid>();
         var tier = await tierRepo.GetByIdAsync(request.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), request.TierId);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(tier.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(tier.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), tier.LoungeShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)

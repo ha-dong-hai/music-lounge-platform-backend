@@ -23,7 +23,7 @@ public sealed class LoungeFollowStatusTests
     private static string Ma() => Guid.NewGuid().ToString("N")[..10];
 
     // Người dùng mới theo dõi 60 phòng trà (theo thứ tự tạo) + 1 phòng trà không theo dõi.
-    private async Task<(int UserId, List<int> DangTheoDoi, int KhongTheoDoi)> NguoiTheoDoi60PhongAsync()
+    private async Task<(Guid UserId, List<Guid> DangTheoDoi, Guid KhongTheoDoi)> NguoiTheoDoi60PhongAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -43,14 +43,14 @@ public sealed class LoungeFollowStatusTests
         return (nguoi.Id, phong.Take(60).Select(l => l.Id).ToList(), phong[60].Id);
     }
 
-    private static async Task<Dictionary<int, bool>> HoiAsync(HttpClient client, IEnumerable<int> ids)
+    private static async Task<Dictionary<Guid, bool>> HoiAsync(HttpClient client, IEnumerable<Guid> ids)
     {
         var res = await client.GetAsync("/api/v1/follows/lounges/status?" + string.Join("&", ids.Select(i => $"loungeIds={i}")));
         var body = await res.Content.ReadAsStringAsync();
         res.StatusCode.Should().Be(HttpStatusCode.OK, body);
         using var doc = JsonDocument.Parse(body);
         return doc.RootElement.GetProperty("data").EnumerateArray()
-            .ToDictionary(x => x.GetProperty("loungeId").GetInt32(), x => x.GetProperty("isFollowing").GetBoolean());
+            .ToDictionary(x => x.GetProperty("loungeId").GetGuid(), x => x.GetProperty("isFollowing").GetBoolean());
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public sealed class LoungeFollowStatusTests
 
         var kq = await HoiAsync(client, [dangTheoDoi[59]]);
 
-        kq.Should().Equal(new Dictionary<int, bool> { [dangTheoDoi[59]] = true });
+        kq.Should().Equal(new Dictionary<Guid, bool> { [dangTheoDoi[59]] = true });
     }
 
     [Fact]
@@ -70,12 +70,12 @@ public sealed class LoungeFollowStatusTests
         var (userId, dangTheoDoi, khongTheoDoi) = await NguoiTheoDoi60PhongAsync();
         var client = _factory.CreateAuthenticatedClient(userId, "Audience");
 
-        var kq = await HoiAsync(client, dangTheoDoi.Append(khongTheoDoi).Append(999_999));
+        var kq = await HoiAsync(client, dangTheoDoi.Append(khongTheoDoi).Append(TestId.Of(999_999)));
 
         kq.Should().HaveCount(62);
         kq.Where(p => dangTheoDoi.Contains(p.Key)).Should().OnlyContain(p => p.Value);
         kq[khongTheoDoi].Should().BeFalse();
-        kq[999_999].Should().BeFalse("phòng trà không tồn tại: false, không 404 — không để dò id");
+        kq[TestId.Of(999_999)].Should().BeFalse("phòng trà không tồn tại: false, không 404 — không để dò id");
     }
 
     [Fact]

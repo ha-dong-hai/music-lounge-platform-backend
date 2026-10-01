@@ -19,8 +19,9 @@ public sealed class SetShowPosterTests
 
     public SetShowPosterTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreateShowAsync(int ownerId = SeedHelper.OwnerId)
+    private async Task<Guid> CreateShowAsync(Guid? ownerIdOrDefault = null)
     {
+        var ownerId = ownerIdOrDefault ?? SeedHelper.OwnerId;
         var client = _factory.CreateAuthenticatedClient(ownerId, "Owner", SeedHelper.LoungeId);
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
         {
@@ -30,12 +31,12 @@ public sealed class SetShowPosterTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
         res.EnsureSuccessStatusCode();
@@ -99,5 +100,5 @@ public sealed class SetShowPosterTests
         reloaded.PosterByAi.Should().BeFalse();
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

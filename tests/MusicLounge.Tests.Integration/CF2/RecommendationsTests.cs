@@ -22,7 +22,7 @@ public sealed class RecommendationsTests
     [Fact]
     public async Task GetRecommended_UserWithoutAiConsent_FallsBackToTrendingSuccessfully()
     {
-        // SeedHelper.AudienceId has ai_consent = false (BVDLCN 2025 default) and ShowId=1 is
+        // SeedHelper.AudienceId has ai_consent = false (BVDLCN 2025 default) and ShowId=TestId.Of(1) is
         // seeded Published/Ongoing — this exercises the trending-fallback path end-to-end.
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
 

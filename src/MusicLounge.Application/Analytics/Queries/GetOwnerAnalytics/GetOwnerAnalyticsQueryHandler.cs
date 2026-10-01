@@ -24,13 +24,13 @@ internal sealed class GetOwnerAnalyticsQueryHandler
 
     public async Task<OwnerAnalyticsDto> Handle(GetOwnerAnalyticsQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem thống kê của venue này.");
 
-        var shows = await _uow.Repository<LoungeShow, int>()
+        var shows = await _uow.Repository<LoungeShow, Guid>()
             .FindAsync(s => s.LoungeId == request.LoungeId, ct);
         var showIds = shows.Select(s => s.Id).ToHashSet();
         var now = DateTimeOffset.UtcNow;
@@ -39,11 +39,11 @@ internal sealed class GetOwnerAnalyticsQueryHandler
             .FindAsync(t => showIds.Contains(t.ShowId) && t.Status == TicketStatus.Confirmed, ct);
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>()
+        var prices = await _uow.Repository<TicketPrice, Guid>()
             .FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id);
 
-        var tiers = await _uow.Repository<TicketTier, int>()
+        var tiers = await _uow.Repository<TicketTier, Guid>()
             .FindAsync(t => showIds.Contains(t.LoungeShowId), ct);
         var tierById = tiers.ToDictionary(t => t.Id);
         var tiersByShow = tiers.ToLookup(t => t.LoungeShowId);
@@ -53,13 +53,13 @@ internal sealed class GetOwnerAnalyticsQueryHandler
 
         var ticketsByShow = tickets.ToLookup(t => t.ShowId);
 
-        var ratings = await _uow.Repository<LoungeShowRating, int>()
+        var ratings = await _uow.Repository<LoungeShowRating, Guid>()
             .FindAsync(r => showIds.Contains(r.LoungeShowId) && !r.IsRemoved, ct);
         var ratingsByShow = ratings.ToLookup(r => r.LoungeShowId);
 
         // MLACP-349: dem theo "da tra tien" (FnbOrderPayments), khong theo buoc cuoi cua bep — don tra
         // truoc qua VNPay la doanh thu that tu luc IPN xac nhan.
-        var loungeFnbOrders = await _uow.Repository<FnbOrder, int>()
+        var loungeFnbOrders = await _uow.Repository<FnbOrder, Guid>()
             .FindAsync(o => o.LoungeId == request.LoungeId && o.Status != FnbOrderStatus.Cancelled, ct);
         var paidFnbOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(
             _uow, loungeFnbOrders.Select(o => o.Id).ToList(), ct);
@@ -67,10 +67,10 @@ internal sealed class GetOwnerAnalyticsQueryHandler
             .Where(o => FnbOrderPayments.IsPaid(o, paidFnbOrderIds.Contains(o.Id)))
             .ToList();
 
-        var performances = await _uow.Repository<Performance, int>()
+        var performances = await _uow.Repository<Performance, Guid>()
             .FindAsync(p => showIds.Contains(p.LoungeShowId), ct);
         var performerIds = performances.Select(p => p.PerformerId).Distinct().ToList();
-        var performers = await _uow.Repository<Performer, int>().FindAsync(p => performerIds.Contains(p.Id), ct);
+        var performers = await _uow.Repository<Performer, Guid>().FindAsync(p => performerIds.Contains(p.Id), ct);
         var performerById = performers.ToDictionary(p => p.Id);
         var mainPerformerByShow = performances
             .Where(p => p.Role == PerformerRole.Main)
@@ -78,7 +78,7 @@ internal sealed class GetOwnerAnalyticsQueryHandler
             .ToDictionary(g => g.Key, g => performerById.TryGetValue(g.First().PerformerId, out var pf) ? pf.Name : null);
 
         var performanceIds = performances.Select(p => p.Id).ToHashSet();
-        var pendingPayoutDonations = (await _uow.Repository<Donation, int>()
+        var pendingPayoutDonations = (await _uow.Repository<Donation, Guid>()
             .FindAsync(d => performanceIds.Contains(d.PerformanceId) && d.Status == DonationStatus.OwnerReceived, ct))
             .ToList();
 

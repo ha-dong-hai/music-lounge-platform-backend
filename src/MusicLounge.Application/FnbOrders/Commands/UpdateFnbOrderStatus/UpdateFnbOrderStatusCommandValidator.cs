@@ -8,7 +8,7 @@ public sealed class UpdateFnbOrderStatusCommandValidator : AbstractValidator<Upd
 
     public UpdateFnbOrderStatusCommandValidator()
     {
-        RuleFor(x => x.OrderId).GreaterThan(0);
+        RuleFor(x => x.OrderId).NotEmpty();
         RuleFor(x => x.Status)
             .Must(s => ValidStatuses.Contains(s, StringComparer.OrdinalIgnoreCase))
             .WithMessage("Status phải là 'Pending', 'Preparing', 'Served', 'Paid' hoặc 'Cancelled'.");

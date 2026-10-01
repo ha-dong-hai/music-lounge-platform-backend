@@ -36,13 +36,13 @@ public static class FnbOrderCancellation
         Expression<Func<FnbOrder, bool>> scope, bool servedToo, SongNgu why, CancellationToken ct,
         bool prepaidOnly = false)
     {
-        var orderRepo = uow.Repository<FnbOrder, int>();
+        var orderRepo = uow.Repository<FnbOrder, Guid>();
         var orders = (await orderRepo.FindAsync(scope, ct)).Where(o => IsOpen(o.Status, servedToo)).ToList();
         if (orders.Count == 0) return 0;
 
-        var itemRepo = uow.Repository<OrderItem, int>();
-        var paymentRepo = uow.Repository<Payment, int>();
-        var refundRepo = uow.Repository<RefundRequest, int>();
+        var itemRepo = uow.Repository<OrderItem, Guid>();
+        var paymentRepo = uow.Repository<Payment, Guid>();
+        var refundRepo = uow.Repository<RefundRequest, Guid>();
         var reason = char.ToUpperInvariant(why.Vi[0]) + why.Vi[1..];
         var affected = 0;
 

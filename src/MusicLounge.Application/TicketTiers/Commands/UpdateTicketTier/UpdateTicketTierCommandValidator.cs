@@ -6,7 +6,7 @@ public sealed class UpdateTicketTierCommandValidator : AbstractValidator<UpdateT
 {
     public UpdateTicketTierCommandValidator()
     {
-        RuleFor(x => x.TierId).GreaterThan(0);
+        RuleFor(x => x.TierId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.TotalCapacity)
             .GreaterThan(0)

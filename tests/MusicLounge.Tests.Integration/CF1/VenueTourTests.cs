@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
@@ -29,9 +30,9 @@ public sealed class VenueTourTests
     public VenueTourTests(ApiFactory factory) => _factory = factory;
 
     /// <summary>Fresh Owner + Lounge + an Active subscription granting maxTourScenes.</summary>
-    private async Task<(int OwnerId, int LoungeId)> CreateOwnerWithLoungeAsync(int maxTourScenes = 5)
+    private async Task<(Guid OwnerId, Guid LoungeId)> CreateOwnerWithLoungeAsync(int maxTourScenes = 5)
     {
-        var id = Interlocked.Increment(ref _freshIdCounter);
+        var id = OrderedGuid.New();
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -75,7 +76,7 @@ public sealed class VenueTourTests
         return body!.Data.Url;
     }
 
-    private async Task<int> AddSceneAsync(HttpClient ownerClient, int loungeId, string? name = null)
+    private async Task<Guid> AddSceneAsync(HttpClient ownerClient, Guid loungeId, string? name = null)
     {
         var imageUrl = await UploadRealImageAsync(ownerClient);
         var res = await ownerClient.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes", new
@@ -205,7 +206,7 @@ public sealed class VenueTourTests
         await AssertNoScenesAsync(loungeId);
     }
 
-    private async Task AssertNoScenesAsync(int loungeId)
+    private async Task AssertNoScenesAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -249,7 +250,7 @@ public sealed class VenueTourTests
     [Fact]
     public async Task AddTourScene_NoActiveSubscription_Returns422()
     {
-        var id = Interlocked.Increment(ref _freshIdCounter);
+        var id = OrderedGuid.New();
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -292,7 +293,7 @@ public sealed class VenueTourTests
             $"/api/v1/lounges/{loungeId}/tour/scenes/{scene1}/hotspots", new
             {
                 Type = "Info", Yaw = -90.0, Pitch = 10.0, Label = "Quầy bar",
-                TargetSceneId = (int?)null, InfoText = "Quầy bar phục vụ 18h-24h"
+                TargetSceneId = (Guid?)null, InfoText = "Quầy bar phục vụ 18h-24h"
             });
 
         var anonClient = _factory.CreateClient();
@@ -316,7 +317,7 @@ public sealed class VenueTourTests
             $"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", new
             {
                 Type = "Navigate", Yaw = 0.0, Pitch = 0.0, Label = (string?)null,
-                TargetSceneId = (int?)null, InfoText = (string?)null
+                TargetSceneId = (Guid?)null, InfoText = (string?)null
             });
 
         res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -379,7 +380,7 @@ public sealed class VenueTourTests
             $"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", new
             {
                 Type = "Info", Yaw = 0.0, Pitch = 0.0, Label = (string?)null,
-                TargetSceneId = (int?)null, InfoText = "Test info"
+                TargetSceneId = (Guid?)null, InfoText = "Test info"
             });
         var hotspotId = (await hotspotRes.Content.ReadFromJsonAsync<IdResponse>())!.Data;
 
@@ -439,7 +440,7 @@ public sealed class VenueTourTests
         scene.PositionY.Should().BeNull();
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
     private sealed record UploadResponse(bool Success, UploadedUrl Data);
     private sealed record UploadedUrl(string Url);
 }

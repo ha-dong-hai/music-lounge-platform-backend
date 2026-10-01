@@ -12,7 +12,7 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
 
     public CreateLoungeShowCommandValidator(IUnitOfWork uow)
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(4000);
 
@@ -40,7 +40,7 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
 
         RuleForEach(x => x.Performances).ChildRules(p =>
         {
-            p.RuleFor(x => x.PerformerId).GreaterThan(0).When(x => x.PerformerId.HasValue);
+            p.RuleFor(x => x.PerformerId).NotEmpty().When(x => x.PerformerId.HasValue);
             p.RuleFor(x => x.PerformerName).MaximumLength(255).When(x => x.PerformerName is not null);
             p.RuleFor(x => x)
                 .Must(x => x.PerformerId.HasValue || !string.IsNullOrWhiteSpace(x.PerformerName))
@@ -56,22 +56,22 @@ public sealed class CreateLoungeShowCommandValidator : AbstractValidator<CreateL
         // GlobalExceptionHandler bat DbUpdateException chung chung — khong ro field nao sai.
         RuleFor(x => x.CategoryId)
             .MustAsync(async (id, ct) =>
-                await uow.Repository<EventCategory, int>().AnyAsync(c => c.Id == id!.Value, ct))
+                await uow.Repository<EventCategory, Guid>().AnyAsync(c => c.Id == id!.Value, ct))
             .When(x => x.CategoryId.HasValue)
             .WithMessage("CategoryId không tồn tại.");
 
         RuleForEach(x => x.GenreIds)
-            .MustAsync(async (id, ct) => await uow.Repository<MusicGenre, int>().AnyAsync(g => g.Id == id, ct))
+            .MustAsync(async (id, ct) => await uow.Repository<MusicGenre, Guid>().AnyAsync(g => g.Id == id, ct))
             .WithMessage("GenreId không tồn tại.");
 
         // MLACP-43 DONE WHEN: phan loai AI phai du ca 3 (the loai nhac, dong nhac, khong gian) -
         // ban local master chi co GenreIds, thieu Mood/Atmosphere.
         RuleForEach(x => x.MoodIds)
-            .MustAsync(async (id, ct) => await uow.Repository<Mood, int>().AnyAsync(m => m.Id == id, ct))
+            .MustAsync(async (id, ct) => await uow.Repository<Mood, Guid>().AnyAsync(m => m.Id == id, ct))
             .WithMessage("MoodId không tồn tại.");
 
         RuleForEach(x => x.AtmosphereIds)
-            .MustAsync(async (id, ct) => await uow.Repository<VenueAtmosphere, int>().AnyAsync(a => a.Id == id, ct))
+            .MustAsync(async (id, ct) => await uow.Repository<VenueAtmosphere, Guid>().AnyAsync(a => a.Id == id, ct))
             .WithMessage("AtmosphereId không tồn tại.");
 
         // A negative quota isn't rejected anywhere downstream — HoldTicket/SellWalkInTicket only

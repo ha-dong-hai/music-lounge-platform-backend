@@ -26,7 +26,7 @@ internal sealed class SetLoungeModel3DCommandHandler : IRequestHandler<SetLounge
 
     public async Task<Unit> Handle(SetLoungeModel3DCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<MusicLoungeEntity, int>();
+        var repo = _uow.Repository<MusicLoungeEntity, Guid>();
         var lounge = await repo.GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 

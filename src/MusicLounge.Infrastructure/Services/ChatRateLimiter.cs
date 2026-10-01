@@ -12,9 +12,9 @@ namespace MusicLounge.Infrastructure.Services;
 internal sealed class ChatRateLimiter : IChatRateLimiter
 {
     private static readonly TimeSpan MinInterval = TimeSpan.FromSeconds(2);
-    private readonly ConcurrentDictionary<int, DateTimeOffset> _lastSentAt = new();
+    private readonly ConcurrentDictionary<Guid, DateTimeOffset> _lastSentAt = new();
 
-    public bool TryAcquire(int userId)
+    public bool TryAcquire(Guid userId)
     {
         var now = DateTimeOffset.UtcNow;
         var recorded = _lastSentAt.AddOrUpdate(

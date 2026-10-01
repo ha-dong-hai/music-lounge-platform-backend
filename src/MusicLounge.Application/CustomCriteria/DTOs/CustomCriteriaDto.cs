@@ -3,8 +3,8 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.CustomCriteria.DTOs;
 
 public sealed record CustomCriteriaDto(
-    int Id,
-    int LoungeId,
+    Guid Id,
+    Guid LoungeId,
     string Name,
     string Key,
     CustomCriteriaDataType DataType,

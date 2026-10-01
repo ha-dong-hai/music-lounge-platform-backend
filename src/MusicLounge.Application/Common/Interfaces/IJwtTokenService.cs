@@ -5,7 +5,7 @@ namespace MusicLounge.Application.Common.Interfaces;
 
 public interface IJwtTokenService
 {
-    (string Token, DateTimeOffset ExpiresAt) GenerateToken(User user, int? loungeId);
+    (string Token, DateTimeOffset ExpiresAt) GenerateToken(User user, Guid? loungeId);
 
     (string Token, DateTimeOffset ExpiresAt) GenerateRefreshToken(User user);
 

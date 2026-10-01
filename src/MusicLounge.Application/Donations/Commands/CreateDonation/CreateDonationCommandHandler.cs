@@ -35,10 +35,10 @@ internal sealed class CreateDonationCommandHandler
 
     public async Task<DonationInitiationDto> Handle(CreateDonationCommand request, CancellationToken ct)
     {
-        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(request.PerformanceId, ct)
+        var performance = await _uow.Repository<Performance, Guid>().GetByIdAsync(request.PerformanceId, ct)
             ?? throw new NotFoundException(nameof(Performance), request.PerformanceId);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(performance.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), performance.LoungeShowId);
 
         if (show.Status != LoungeShowStatus.Ongoing)
@@ -59,7 +59,7 @@ internal sealed class CreateDonationCommandHandler
         string? displayName = null;
         if (!request.IsAnonymous)
         {
-            var donor = await _uow.Repository<User, int>().GetByIdAsync(_currentUser.UserId, ct);
+            var donor = await _uow.Repository<User, Guid>().GetByIdAsync(_currentUser.UserId, ct);
             displayName = donor?.FullName;
         }
 
@@ -96,7 +96,7 @@ internal sealed class CreateDonationCommandHandler
             CreatedAt = DateTimeOffset.UtcNow
         };
 
-        _uow.Repository<Donation, int>().Add(donation);
+        _uow.Repository<Donation, Guid>().Add(donation);
         await _uow.SaveChangesAsync(ct);
 
         var paymentUrl = _vnPay.CreatePaymentUrl(new VnPayPaymentRequest(

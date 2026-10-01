@@ -25,7 +25,7 @@ public sealed class FnbMenusController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType<ApiResponse<IReadOnlyList<FnbMenuDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByLounge(
-        [FromQuery] int loungeId, [FromQuery] bool activeOnly = true, CancellationToken ct = default)
+        [FromQuery] Guid loungeId, [FromQuery] bool activeOnly = true, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetFnbMenusQuery(loungeId, activeOnly), ct);
         return Ok(ApiResponse<IReadOnlyList<FnbMenuDto>>.Ok(result));
@@ -33,7 +33,7 @@ public sealed class FnbMenusController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create(
@@ -41,29 +41,29 @@ public sealed class FnbMenusController : ControllerBase
     {
         var id = await _sender.Send(command, ct);
         return CreatedAtAction(nameof(GetByLounge), new { loungeId = command.LoungeId, version = "1.0" },
-            ApiResponse<int>.Ok(id));
+            ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
-        int id, [FromBody] UpdateFnbMenuRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateFnbMenuRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateFnbMenuCommand(
             id, body.Name, body.Description, body.IsActive, body.DisplayOrder), ct);
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteFnbMenuCommand(id), ct);
         return NoContent();

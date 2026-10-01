@@ -3,7 +3,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Notifications.DTOs;
 
 public sealed record NotificationDto(
-    int Id,
+    Guid Id,
     NotificationType Type,
     string Title,
     string Body,
@@ -28,20 +28,20 @@ public sealed record NotificationDto(
     public string? ReferenceTargetType => Tach()?.Loai;
 
     /// <summary>Mã của đối tượng bị báo cáo. <c>null</c> cùng điều kiện với <see cref="ReferenceTargetType"/>.</summary>
-    public int? ReferenceTargetId => Tach()?.Ma;
+    public Guid? ReferenceTargetId => Tach()?.Ma;
 
     /// <summary>
     /// Cắt <c>"Loai:Ma"</c>. Cố ý CHẶT: phần sau dấu hai chấm không phải số nguyên thì trả <c>null</c> chứ không đưa ra
     /// một mảnh chuỗi mà frontend sẽ đem đi ghép URL.
     /// </summary>
-    private (string Loai, int Ma)? Tach()
+    private (string Loai, Guid Ma)? Tach()
     {
         if (string.IsNullOrEmpty(ReferenceId)) return null;
 
         var viTri = ReferenceId.IndexOf(':');
         if (viTri <= 0 || viTri == ReferenceId.Length - 1) return null;
 
-        return int.TryParse(ReferenceId[(viTri + 1)..], out var ma)
+        return Guid.TryParse(ReferenceId[(viTri + 1)..], out var ma)
             ? (ReferenceId[..viTri], ma)
             : null;
     }

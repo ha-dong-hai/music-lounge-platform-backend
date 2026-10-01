@@ -190,7 +190,7 @@ try
                 {
                     var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
                     var stampClaim = context.Principal?.FindFirstValue("sec_stamp");
-                    if (!int.TryParse(userIdClaim, out var userId) || string.IsNullOrEmpty(stampClaim))
+                    if (!Guid.TryParse(userIdClaim, out var userId) || string.IsNullOrEmpty(stampClaim))
                     {
                         context.Fail("Token không hợp lệ.");
                         return;

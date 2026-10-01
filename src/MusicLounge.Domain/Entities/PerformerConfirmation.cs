@@ -8,17 +8,17 @@ namespace MusicLounge.Domain.Entities;
 ///
 /// <para>Chỉ lưu bản băm của token, không lưu token: lộ bảng này cũng không dùng lại được liên kết.</para>
 /// </summary>
-public sealed class PerformerConfirmation : Common.BaseEntity<int>
+public sealed class PerformerConfirmation : Common.BaseEntity<Guid>
 {
-    public int PerformerId { get; set; }
+    public Guid PerformerId { get; set; }
     public PerformerConfirmationPurpose Purpose { get; set; }
 
-    public int? BankAccountId { get; set; }
+    public Guid? BankAccountId { get; set; }
     // Dấu vân tay thông tin tài khoản lúc gửi liên kết — tài khoản bị sửa sau đó thì liên kết cũ
     // không xác nhận được thông tin mới mà nghệ sĩ chưa từng thấy.
     public string? BankAccountFingerprint { get; set; }
 
-    public int? DonationId { get; set; }
+    public Guid? DonationId { get; set; }
 
     public string TokenHash { get; set; } = string.Empty;
     public string SentToEmail { get; set; } = string.Empty;

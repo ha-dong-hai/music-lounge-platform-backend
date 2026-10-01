@@ -42,7 +42,7 @@ public sealed class ReviewQueuesAreListableTests
     [Fact]
     public async Task HangDoiTaiKhoanNhanTien_TraVeTaiKhoanChuaXacMinh_VaCheSoTaiKhoan()
     {
-        int accountId;
+        Guid accountId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -67,11 +67,11 @@ public sealed class ReviewQueuesAreListableTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var items = Items(Data(await res.Content.ReadAsStringAsync()));
-        var mine = items.EnumerateArray().FirstOrDefault(i => i.GetProperty("id").GetInt32() == accountId);
+        var mine = items.EnumerateArray().FirstOrDefault(i => i.GetProperty("id").GetGuid() == accountId);
         mine.ValueKind.Should().NotBe(JsonValueKind.Undefined,
             "tài khoản chưa xác minh phải nằm trong hàng đợi, nếu không Admin không có {id} để gọi lệnh duyệt");
 
-        mine.GetProperty("loungeId").GetInt32().Should().Be(SeedHelper.LoungeId);
+        mine.GetProperty("loungeId").GetGuid().Should().Be(SeedHelper.LoungeId);
         mine.GetProperty("accountHolder").GetString().Should().Be("Nguyen Van Cho Duyet");
 
         // Che số tài khoản: quyết định xác minh dựa vào TÊN chủ tài khoản, không cần số đầy đủ nằm lại
@@ -92,7 +92,7 @@ public sealed class ReviewQueuesAreListableTests
     {
         // Lệnh duyệt từ chối tài khoản của nghệ sĩ ("do chính nghệ sĩ xác nhận qua liên kết gửi email"),
         // nên liệt kê ra đây chỉ tạo những dòng mà bấm vào là lỗi.
-        int performerAccountId;
+        Guid performerAccountId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -116,7 +116,7 @@ public sealed class ReviewQueuesAreListableTests
         var res = await admin.GetAsync("/api/v1/admin/bank-accounts?pageSize=50");
         var items = Items(Data(await res.Content.ReadAsStringAsync()));
 
-        items.EnumerateArray().Select(i => i.GetProperty("id").GetInt32())
+        items.EnumerateArray().Select(i => i.GetProperty("id").GetGuid())
             .Should().NotContain(performerAccountId,
                 "tài khoản của nghệ sĩ không duyệt ở đây; đưa vào hàng đợi là mời Admin bấm để nhận lỗi");
     }
@@ -132,7 +132,7 @@ public sealed class ReviewQueuesAreListableTests
     [Fact]
     public async Task HangDoiKhangNghi_TraVeKhangNghiChuaXuLy_VaKhongTraCaiDaXuLy()
     {
-        int dangCho, daXuLy;
+        Guid dangCho, daXuLy;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -178,7 +178,7 @@ public sealed class ReviewQueuesAreListableTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var ids = Items(Data(await res.Content.ReadAsStringAsync()))
-            .EnumerateArray().Select(i => i.GetProperty("id").GetInt32()).ToList();
+            .EnumerateArray().Select(i => i.GetProperty("id").GetGuid()).ToList();
 
         ids.Should().Contain(dangCho,
             "kháng nghị chưa có quyết định phải nằm trong hàng đợi, nếu không Admin không biết để xử lý");
@@ -187,7 +187,7 @@ public sealed class ReviewQueuesAreListableTests
         // Tra lại phần đã xử lý khi cần: cùng endpoint, đổi tham số.
         var resolved = await admin.GetAsync("/api/v1/venue-penalties/appeals?resolved=true&pageSize=50");
         var resolvedIds = Items(Data(await resolved.Content.ReadAsStringAsync()))
-            .EnumerateArray().Select(i => i.GetProperty("id").GetInt32()).ToList();
+            .EnumerateArray().Select(i => i.GetProperty("id").GetGuid()).ToList();
         resolvedIds.Should().Contain(daXuLy);
         resolvedIds.Should().NotContain(dangCho);
     }

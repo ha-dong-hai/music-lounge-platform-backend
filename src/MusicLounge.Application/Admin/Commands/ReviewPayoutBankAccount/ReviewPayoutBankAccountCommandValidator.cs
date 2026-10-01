@@ -6,7 +6,7 @@ public sealed class ReviewPayoutBankAccountCommandValidator : AbstractValidator<
 {
     public ReviewPayoutBankAccountCommandValidator()
     {
-        RuleFor(x => x.BankAccountId).GreaterThan(0);
+        RuleFor(x => x.BankAccountId).NotEmpty();
 
         RuleFor(x => x.Note)
             .NotEmpty()

@@ -14,7 +14,7 @@ internal sealed class CreateCustomCriteriaCommandValidator : AbstractValidator<C
 
     public CreateCustomCriteriaCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
 
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
 

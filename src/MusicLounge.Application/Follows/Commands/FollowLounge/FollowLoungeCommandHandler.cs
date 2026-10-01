@@ -18,19 +18,19 @@ internal sealed class FollowLoungeCommandHandler : IRequestHandler<FollowLoungeC
 
     public async Task<Unit> Handle(FollowLoungeCommand request, CancellationToken ct)
     {
-        var loungeExists = await _uow.Repository<MusicLounge.Domain.Entities.MusicLounge, int>()
+        var loungeExists = await _uow.Repository<MusicLounge.Domain.Entities.MusicLounge, Guid>()
             .AnyAsync(l => l.Id == request.LoungeId, ct);
 
         if (!loungeExists)
             throw new NotFoundException("Lounge", request.LoungeId);
 
-        var alreadyFollowing = await _uow.Repository<Follow, int>()
+        var alreadyFollowing = await _uow.Repository<Follow, Guid>()
             .AnyAsync(f => f.UserId == _currentUser.UserId && f.LoungeId == request.LoungeId, ct);
 
         if (alreadyFollowing)
             throw new ConflictException("Bạn đã theo dõi phòng trà này.");
 
-        _uow.Repository<Follow, int>().Add(new Follow
+        _uow.Repository<Follow, Guid>().Add(new Follow
         {
             UserId = _currentUser.UserId,
             LoungeId = request.LoungeId,

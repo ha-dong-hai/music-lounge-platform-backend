@@ -6,6 +6,6 @@ public sealed class CancelLoungeShowCommandValidator : AbstractValidator<CancelL
 {
     public CancelLoungeShowCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
     }
 }

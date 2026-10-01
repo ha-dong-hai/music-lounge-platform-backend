@@ -25,7 +25,7 @@ public sealed class AutoApproveOverdueRefundsTests
 
     public AutoApproveOverdueRefundsTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedPendingRefundAsync(
+    private async Task<Guid> SeedPendingRefundAsync(
         int createdHoursAgo,
         PaymentMethod method = PaymentMethod.Gateway,
         int paidDaysAgo = 5)
@@ -102,14 +102,14 @@ public sealed class AutoApproveOverdueRefundsTests
         await job.ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<RefundRequest> RefundAsync(int refundId)
+    private async Task<RefundRequest> RefundAsync(Guid refundId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.RefundRequests.AsNoTracking().SingleAsync(r => r.Id == refundId);
     }
 
-    private async Task<int> CountAsync(int userId, NotificationType type, string referenceType, int refundId,
+    private async Task<int> CountAsync(Guid userId, NotificationType type, string referenceType, Guid refundId,
         string? title = null)
     {
         using var scope = _factory.Services.CreateScope();

@@ -41,9 +41,9 @@ public sealed class RecommendWhatCanBeBoughtTests
     public RecommendWhatCanBeBoughtTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name);
+    private sealed record Rec(Guid Id, string Name);
 
-    private async Task<(int LoungeId, string City)> VenueAsync()
+    private async Task<(Guid LoungeId, string City)> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -65,7 +65,7 @@ public sealed class RecommendWhatCanBeBoughtTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, double daysFromNow)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, double daysFromNow)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -91,7 +91,7 @@ public sealed class RecommendWhatCanBeBoughtTests
     /// <param name="quota">Số vé mở bán. Đặt bằng số vé đã bán để dựng tình huống hết vé.</param>
     /// <param name="sold">Số vé đã ở trạng thái Confirmed.</param>
     private async Task PriceAsync(
-        int showId, int quota, int sold = 0,
+        Guid showId, int quota, int sold = 0,
         double saleStartDaysFromNow = -7, double? saleEndDaysFromNow = 30)
     {
         using var scope = _factory.Services.CreateScope();
@@ -132,7 +132,7 @@ public sealed class RecommendWhatCanBeBoughtTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> ListenerAsync()
+    private async Task<Guid> ListenerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -153,7 +153,7 @@ public sealed class RecommendWhatCanBeBoughtTests
         return user.Id;
     }
 
-    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(int userId, string city)
+    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(Guid userId, string city)
     {
         var res = await _factory.CreateAuthenticatedClient(userId, "Audience")
             .GetAsync($"/api/v1/recommendations?city={city}&limit=50");

@@ -23,7 +23,7 @@ public sealed class OperatorShowInfoTests
     private HttpClient Chu() => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<int> TaoBuoiHoaNhacAsync()
+    private async Task<Guid> TaoBuoiHoaNhacAsync()
     {
         var res = await Chu().PostAsJsonAsync("/api/v1/lounge-shows", new
         {
@@ -33,20 +33,20 @@ public sealed class OperatorShowInfoTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "Ca sĩ kiểm thử", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "Ca sĩ kiểm thử", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         res.EnsureSuccessStatusCode();
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-        var showId = doc.RootElement.GetProperty("data").GetInt32();
+        var showId = doc.RootElement.GetProperty("data").GetGuid();
 
         (await Chu().PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval",
             new { LegalApprovalReference = "SoVHTT-TEST-0450" })).EnsureSuccessStatusCode();
@@ -54,7 +54,7 @@ public sealed class OperatorShowInfoTests
         (await Chu().PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId, Name = "Thường", Description = (string?)null, AccessType = "Physical",
-            ZoneId = (int?)null, TotalCapacity = 100,
+            ZoneId = (Guid?)null, TotalCapacity = 100,
             Prices = new[]
             {
                 new
@@ -68,14 +68,14 @@ public sealed class OperatorShowInfoTests
         return showId;
     }
 
-    private async Task GuiDuyetAsync(int showId)
+    private async Task GuiDuyetAsync(Guid showId)
         => (await Chu().PostAsync($"/api/v1/lounge-shows/{showId}/submit", null)).EnsureSuccessStatusCode();
 
-    private async Task DuyetAsync(int showId, string decision, string note)
+    private async Task DuyetAsync(Guid showId, string decision, string note)
         => (await Admin().PostAsJsonAsync($"/api/v1/moderations/shows/{showId}/review",
             new { Decision = decision, ReviewNote = note })).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-    private static async Task<JsonElement> DocChiTietAsync(HttpClient client, int showId)
+    private static async Task<JsonElement> DocChiTietAsync(HttpClient client, Guid showId)
     {
         var res = await client.GetAsync($"/api/v1/lounge-shows/{showId}");
         res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());

@@ -119,7 +119,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             await RefundLivestreamTicketsAsync(showId, now, ct);
     }
 
-    private async Task RefundLivestreamTicketsAsync(int showId, DateTimeOffset now, CancellationToken ct)
+    private async Task RefundLivestreamTicketsAsync(Guid showId, DateTimeOffset now, CancellationToken ct)
     {
         var show = await _ctx.LoungeShows.FirstOrDefaultAsync(s => s.Id == showId, ct);
         if (show is null) return;
@@ -160,7 +160,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
             });
             created++;
 
-            if (ticket.BuyerId is int buyerId)
+            if (ticket.BuyerId is Guid buyerId)
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
@@ -188,7 +188,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
     }
 
     /// <summary>MLACP-370: người đã trả tiền của từng thanh toán — tiền hoàn về họ, không về người giữ vé.</summary>
-    private async Task<IReadOnlyDictionary<int, int?>> PayersAsync(IEnumerable<Ticket> tickets, CancellationToken ct)
+    private async Task<IReadOnlyDictionary<Guid, Guid?>> PayersAsync(IEnumerable<Ticket> tickets, CancellationToken ct)
     {
         var ids = tickets.Where(t => t.PaymentId is not null).Select(t => t.PaymentId!.Value).Distinct().ToList();
         return await _ctx.Payments.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id, p => p.PayerId, ct);
@@ -316,10 +316,10 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
 
         var ownerId = await _ctx.Lounges
             .Where(l => l.Id == show.LoungeId)
-            .Select(l => (int?)l.OwnerId)
+            .Select(l => (Guid?)l.OwnerId)
             .FirstOrDefaultAsync(ct);
 
-        if (ownerId is int owner)
+        if (ownerId is Guid owner)
         {
             await _notifications.NotifyAsync(
                 owner,
@@ -439,7 +439,7 @@ public sealed class RefundUndeliveredLivestreamTicketsJob
         return tickets.Where(t => livestreamTierIds.Contains(t.TierId)).ToList();
     }
 
-    private Task<Dictionary<int, decimal>> PriceByIdAsync(List<Ticket> tickets, CancellationToken ct)
+    private Task<Dictionary<Guid, decimal>> PriceByIdAsync(List<Ticket> tickets, CancellationToken ct)
     {
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
         return _ctx.TicketPrices

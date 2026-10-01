@@ -29,14 +29,14 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
 
     private sealed record Wrapped<T>(T Data);
     private sealed record IpnBody(string RspCode, string Message);
-    private sealed record Paid(int PaymentId, string OrderId, decimal Amount);
+    private sealed record Paid(Guid PaymentId, string OrderId, decimal Amount);
 
-    private HttpClient Owner(int ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
+    private HttpClient Owner(Guid ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     /// <summary>Chủ mới + phòng trà đang hoạt động bình thường (lúc bắt đầu trả tiền, chốt MLACP-376 cho qua).</summary>
-    private async Task<(int OwnerId, int LoungeId)> OwnerWithVenueAsync()
+    private async Task<(Guid OwnerId, Guid LoungeId)> OwnerWithVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -53,7 +53,7 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
         return (owner.Id, lounge.Id);
     }
 
-    private async Task SetVenueStatusAsync(int loungeId, LoungeStatus status)
+    private async Task SetVenueStatusAsync(Guid loungeId, LoungeStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -61,7 +61,7 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> PackageAsync(decimal price = 300_000m)
+    private async Task<Guid> PackageAsync(decimal price = 300_000m)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             "/api/v1/subscriptions/packages", new
@@ -70,10 +70,10 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
                 BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = false, MaxAiPostersPerMonth = 0
             });
         res.EnsureSuccessStatusCode();
-        return (await res.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
     }
 
-    private async Task<OwnerSubscription> SeedActivePlanAsync(int ownerId, int packageId)
+    private async Task<OwnerSubscription> SeedActivePlanAsync(Guid ownerId, Guid packageId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -228,7 +228,7 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
         await SetVenueStatusAsync(loungeId, LoungeStatus.Locked);
         await PaidIpnAsync(paid, NewTransactionNo());
 
-        int refundId;
+        Guid refundId;
         using (var scope = _factory.Services.CreateScope())
             refundId = (await Db(scope).RefundRequests.AsNoTracking().SingleAsync(r => r.PaymentId == paid.PaymentId)).Id;
 

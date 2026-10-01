@@ -35,12 +35,12 @@ public sealed class LivestreamsController : ControllerBase
     /// — không lộ URL phát). Quyền xem dựa trên tài khoản đăng nhập và vé, KHÔNG dựa trên
     /// `LivestreamDetail.AccessToken` (GET /tickets/{id}) — trường đó hiện chỉ được sinh ra và trả
     /// về, chưa có chỗ nào dùng nó để kiểm quyền (MLACP-356).</summary>
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [Authorize(Policy = Policies.RequireAuthenticated)]
     [ProducesResponseType<ApiResponse<LivestreamDetailDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDetail(
-        int id, [FromQuery] string? viewingSessionId = null, CancellationToken ct = default)
+        Guid id, [FromQuery] string? viewingSessionId = null, CancellationToken ct = default)
     {
         // MLACP-513: viewingSessionId = phiên trình duyệt này nhận lần trước — gửi lại khi tải lại trang để không bị tính
         // thành thiết bị mới.
@@ -53,7 +53,7 @@ public sealed class LivestreamsController : ControllerBase
     /// (Mux/Agora/Cloudflare); lấy lại stream key sau này qua GET /{id}/credentials.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireVenueOperator)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -62,19 +62,19 @@ public sealed class LivestreamsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateLivestreamCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return Created($"api/v1/livestreams/{id}", ApiResponse<int>.Ok(id));
+        return Created($"api/v1/livestreams/{id}", ApiResponse<Guid>.Ok(id));
     }
 
     /// <summary>Owner/Staff bắt đầu phát sóng — yêu cầu Admin đã duyệt livestream (W08) và show đã
     /// khai báo tác quyền VCPMC (D19); ghi nhận thời điểm bắt đầu, đồng bộ show sang Ongoing, và
     /// thông báo tới người đã mua vé/theo dõi venue.</summary>
-    [HttpPost("{id:int}/start")]
+    [HttpPost("{id:guid}/start")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Start(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Start(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new StartLivestreamCommand(id), ct);
         return NoContent();
@@ -82,26 +82,26 @@ public sealed class LivestreamsController : ControllerBase
 
     /// <summary>Owner/Staff kết thúc phát sóng — ghi nhận thời điểm kết thúc, đồng bộ show sang
     /// Ended và mở cửa sổ đánh giá (§6.13).</summary>
-    [HttpPost("{id:int}/end")]
+    [HttpPost("{id:guid}/end")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> End(int id, CancellationToken ct = default)
+    public async Task<IActionResult> End(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new EndLivestreamCommand(id), ct);
         return NoContent();
     }
 
     /// <summary>Staff/Admin của venue xem RTMP URL + Stream Key để cắm OBS. Không lộ ra viewer.</summary>
-    [HttpGet("{id:int}/credentials")]
+    [HttpGet("{id:guid}/credentials")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType<ApiResponse<LivestreamCredentialsDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCredentials(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetCredentials(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetLivestreamCredentialsQuery(id), ct);
         return Ok(ApiResponse<LivestreamCredentialsDto>.Ok(result));
@@ -111,13 +111,13 @@ public sealed class LivestreamsController : ControllerBase
     /// nội dung đã trôi qua; tin nhắn mới trong lúc đang xem đến qua kênh realtime của
     /// LivestreamHub (SignalR), không qua endpoint này. Cùng quy tắc quyền xem như GetDetail: stream
     /// miễn phí cho mọi khán giả đã đăng nhập, stream PPV chỉ cho người có vé.</summary>
-    [HttpGet("{id:int}/chat")]
+    [HttpGet("{id:guid}/chat")]
     [Authorize(Policy = Policies.RequireAuthenticated)]
     [ProducesResponseType<ApiResponse<PaginatedResult<ChatMessageDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetChatHistory(
-        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
+        Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetChatHistoryQuery(id, page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<ChatMessageDto>>.Ok(result));
@@ -126,13 +126,13 @@ public sealed class LivestreamsController : ControllerBase
     /// <summary>Khán giả có vé PPV giữ phiên xem sống — gọi định kỳ (đề xuất 30s/lần) bằng
     /// ViewingSessionId nhận từ GET {id} lần đầu. Phiên không heartbeat quá timeout tự động không
     /// còn tính là "đang hoạt động" (không cần gọi endpoint nào để đóng phiên).</summary>
-    [HttpPost("{id:int}/heartbeat")]
+    [HttpPost("{id:guid}/heartbeat")]
     [Authorize(Policy = Policies.RequireAuthenticated)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Heartbeat(
-        int id, [FromBody] LivestreamHeartbeatRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] LivestreamHeartbeatRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SendLivestreamHeartbeatCommand(id, body.SessionId), ct);
         return NoContent();
@@ -140,13 +140,13 @@ public sealed class LivestreamsController : ControllerBase
 
     /// <summary>Owner/Staff bật/tắt chat cho livestream — có hiệu lực ngay: mọi tin nhắn gửi qua
     /// LivestreamHub sau lệnh này đều được kiểm tra lại giá trị mới nhất, không có độ trễ cache.</summary>
-    [HttpPost("{id:int}/chat-enabled")]
+    [HttpPost("{id:guid}/chat-enabled")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetChatEnabled(
-        int id, [FromBody] SetChatEnabledRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] SetChatEnabledRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SetChatEnabledCommand(id, body.Enabled), ct);
         return NoContent();
@@ -178,13 +178,13 @@ public sealed class LivestreamsController : ControllerBase
     /// trạng thái cuối, Start/End không còn nhận vào từ đây nên stream không thể tiếp tục. Đồng bộ
     /// show sang Ended. Thông báo mọi viewer đang kết nối qua LivestreamHub để client ngừng gọi lại
     /// HLS endpoint.</summary>
-    [HttpPost("{id:int}/terminate")]
+    [HttpPost("{id:guid}/terminate")]
     [Authorize(Policy = Policies.RequireAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Terminate(
-        int id, [FromBody] TerminateLivestreamRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] TerminateLivestreamRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new TerminateLivestreamCommand(id, body.Reason), ct);
         return NoContent();

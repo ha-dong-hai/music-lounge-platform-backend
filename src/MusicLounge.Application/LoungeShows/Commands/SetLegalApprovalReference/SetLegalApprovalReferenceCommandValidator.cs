@@ -6,7 +6,7 @@ public sealed class SetLegalApprovalReferenceCommandValidator : AbstractValidato
 {
     public SetLegalApprovalReferenceCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.LegalApprovalReference).NotEmpty().MaximumLength(500);
     }
 }

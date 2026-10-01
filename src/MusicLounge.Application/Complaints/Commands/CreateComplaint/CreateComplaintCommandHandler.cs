@@ -55,7 +55,7 @@ internal sealed class CreateComplaintCommandHandler
             SlaDeadline = now.AddHours(slaHours)
         };
 
-        _uow.Repository<Complaint, int>().Add(complaint);
+        _uow.Repository<Complaint, Guid>().Add(complaint);
         await _uow.SaveChangesAsync(ct);
         return new ComplaintCreatedDto(complaint.Id, lookupReference);
     }

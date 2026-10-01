@@ -6,8 +6,8 @@ public sealed class SetVenueTourScenePositionCommandValidator : AbstractValidato
 {
     public SetVenueTourScenePositionCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
-        RuleFor(x => x.SceneId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
+        RuleFor(x => x.SceneId).NotEmpty();
 
         // X/Y cùng null = xóa marker (chưa đặt vị trí trên bản đồ). Không cho thiếu 1 trong 2 khi
         // đặt vị trí thật, tránh lưu dữ liệu nửa-viên — cùng quy ước với SetZoneLayout3D.

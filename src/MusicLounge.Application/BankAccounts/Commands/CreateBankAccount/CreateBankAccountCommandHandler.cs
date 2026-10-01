@@ -9,7 +9,7 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.BankAccounts.Commands.CreateBankAccount;
 
-internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBankAccountCommand, int>
+internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBankAccountCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -30,12 +30,12 @@ internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBa
         _piiEncryption = piiEncryption;
     }
 
-    public async Task<int> Handle(CreateBankAccountCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateBankAccountCommand request, CancellationToken ct)
     {
         await BankAccountAccess.EnsureCanManageAsync(
             _uow, _currentUser, request.OwnerType, request.OwnerId, ct);
 
-        var repo = _uow.Repository<BankAccount, int>();
+        var repo = _uow.Repository<BankAccount, Guid>();
 
         if (request.IsDefault)
         {
@@ -73,7 +73,7 @@ internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBa
 
         // MLACP-364: tai khoan cua nghe si do nguoi khac nhap thay — moi chinh nghe si xac nhan.
         if (account.OwnerType == BankAccountOwnerType.Performer
-            && await _uow.Repository<Performer, int>().GetByIdAsync(account.OwnerId, ct) is { } performer
+            && await _uow.Repository<Performer, Guid>().GetByIdAsync(account.OwnerId, ct) is { } performer
             && await PerformerConfirmations.InviteAsync(_uow, _email, _settings, _logger, performer,
                 PerformerConfirmations.ForBankAccount(account, request.AccountNumber), ct))
             await _uow.SaveChangesAsync(ct);

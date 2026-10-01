@@ -32,7 +32,7 @@ public sealed class VnPayReconciliationTests
 
     public VnPayReconciliationTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int PaymentId, string TxnRef, Guid TicketId)> StalePendingPurchaseAsync(
+    private async Task<(Guid PaymentId, string TxnRef, Guid TicketId)> StalePendingPurchaseAsync(
         PaymentMethod method = PaymentMethod.Gateway)
     {
         using var scope = _factory.Services.CreateScope();
@@ -79,7 +79,7 @@ public sealed class VnPayReconciliationTests
     }
 
     private async Task<(PaymentStatus Payment, TicketStatus Ticket)> StateAsync(
-        int paymentId, Guid ticketId)
+        Guid paymentId, Guid ticketId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -87,7 +87,7 @@ public sealed class VnPayReconciliationTests
                 (await db.Tickets.FindAsync(ticketId))!.Status);
     }
 
-    private async Task<int> AlertCountAsync(int paymentId)
+    private async Task<int> AlertCountAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

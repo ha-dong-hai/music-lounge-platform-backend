@@ -45,10 +45,10 @@ public sealed record GetPayoutAccountReviewQueueQuery(
 /// để đối chiếu tên.
 /// </param>
 public sealed record PayoutAccountReviewItemDto(
-    int Id,
-    int LoungeId,
+    Guid Id,
+    Guid LoungeId,
     string LoungeName,
-    int OwnerUserId,
+    Guid OwnerUserId,
     string OwnerName,
     string BankName,
     string AccountNumberMasked,

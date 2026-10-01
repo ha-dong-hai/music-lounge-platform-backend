@@ -31,18 +31,18 @@ internal sealed class GetOwnerLivestreamHistoryQueryHandler
     public async Task<PaginatedResult<LivestreamHistoryItemDto>> Handle(
         GetOwnerLivestreamHistoryQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem lịch sử livestream của venue này.");
 
-        var shows = await _uow.Repository<LoungeShow, int>()
+        var shows = await _uow.Repository<LoungeShow, Guid>()
             .FindAsync(s => s.LoungeId == request.LoungeId, ct);
         var showIds = shows.Select(s => s.Id).ToHashSet();
         var showById = shows.ToDictionary(s => s.Id);
 
-        var allLivestreams = await _uow.Repository<Livestream, int>()
+        var allLivestreams = await _uow.Repository<Livestream, Guid>()
             .FindAsync(l => showIds.Contains(l.LoungeShowId), ct);
         var livestreams = allLivestreams
             .Where(l => TerminalStatuses.Contains(l.Status))
@@ -54,14 +54,14 @@ internal sealed class GetOwnerLivestreamHistoryQueryHandler
             t => relevantShowIds.Contains(t.ShowId)
                 && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
         var tierIds = allTickets.Select(t => t.TierId).Distinct().ToList();
-        var livestreamTierIds = (await _uow.Repository<TicketTier, int>()
+        var livestreamTierIds = (await _uow.Repository<TicketTier, Guid>()
                 .FindAsync(t => tierIds.Contains(t.Id) && t.AccessType == AccessType.Livestream, ct))
             .Select(t => t.Id)
             .ToHashSet();
         var ppvTickets = allTickets.Where(t => livestreamTierIds.Contains(t.TierId)).ToList();
 
         var priceIds = ppvTickets.Select(t => t.PriceId).Distinct().ToList();
-        var priceById = (await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct))
+        var priceById = (await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct))
             .ToDictionary(p => p.Id, p => p.Price);
         var ppvRevenueByShow = ppvTickets
             .ToLookup(t => t.ShowId)
@@ -69,12 +69,12 @@ internal sealed class GetOwnerLivestreamHistoryQueryHandler
 
         // ---- Tong donate trong phien: cung dinh nghia da dung o OwnerRevenueReportBuilder/
         // GetOwnerArtistDonationStatsQueryHandler (da thu tien qua VNPay, bat ke da tra nghe si hay chua) ----
-        var performances = await _uow.Repository<Performance, int>()
+        var performances = await _uow.Repository<Performance, Guid>()
             .FindAsync(p => relevantShowIds.Contains(p.LoungeShowId), ct);
         var performanceIds = performances.Select(p => p.Id).ToHashSet();
         var showIdByPerformance = performances.ToDictionary(p => p.Id, p => p.LoungeShowId);
 
-        var donations = await _uow.Repository<Donation, int>().FindAsync(
+        var donations = await _uow.Repository<Donation, Guid>().FindAsync(
             d => performanceIds.Contains(d.PerformanceId) && d.PaymentConfirmedAt != null, ct);
         var donationByShow = donations
             .Where(d => showIdByPerformance.ContainsKey(d.PerformanceId))

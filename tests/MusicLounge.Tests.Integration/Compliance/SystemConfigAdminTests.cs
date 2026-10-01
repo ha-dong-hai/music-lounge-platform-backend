@@ -163,6 +163,6 @@ public sealed class SystemConfigAdminTests
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record HistoryRow(
-        long Id, string ConfigKey, string? OldValue, string NewValue, string Note,
-        DateTimeOffset ChangedAt, int ChangedBy, string? ChangedByName);
+        Guid Id, string ConfigKey, string? OldValue, string NewValue, string Note,
+        DateTimeOffset ChangedAt, Guid ChangedBy, string? ChangedByName);
 }

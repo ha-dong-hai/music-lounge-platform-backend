@@ -6,7 +6,7 @@ public sealed class GeneratePosterCommandValidator : AbstractValidator<GenerateP
 {
     public GeneratePosterCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.StyleHint).MaximumLength(500);
     }
 }

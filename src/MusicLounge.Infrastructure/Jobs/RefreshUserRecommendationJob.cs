@@ -18,6 +18,6 @@ public sealed class RefreshUserRecommendationJob
     public RefreshUserRecommendationJob(IAIRecommendationService aiService) => _aiService = aiService;
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public Task ExecuteAsync(int userId, IJobCancellationToken cancellationToken)
+    public Task ExecuteAsync(Guid userId, IJobCancellationToken cancellationToken)
         => _aiService.TriggerRecommendationRefreshAsync(userId, cancellationToken.ShutdownToken);
 }

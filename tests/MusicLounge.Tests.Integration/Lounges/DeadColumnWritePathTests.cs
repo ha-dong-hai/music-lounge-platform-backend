@@ -54,14 +54,14 @@ public sealed class DeadColumnWritePathTests
         return (await res.Content.ReadFromJsonAsync<Envelope<UploadResponse>>())!.Data.Url;
     }
 
-    private async Task<MusicLounge.Domain.Entities.MusicLounge> ReadLoungeAsync(int loungeId)
+    private async Task<MusicLounge.Domain.Entities.MusicLounge> ReadLoungeAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.Set<MusicLounge.Domain.Entities.MusicLounge>().SingleAsync(l => l.Id == loungeId);
     }
 
-    private async Task<int> SeedShowAsync(LoungeShowFormat format, LoungeShowStatus status)
+    private async Task<Guid> SeedShowAsync(LoungeShowFormat format, LoungeShowStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -167,7 +167,7 @@ public sealed class DeadColumnWritePathTests
             if (items.GetArrayLength() == 0) break;
 
             foreach (var item in items.EnumerateArray())
-                if (item.GetProperty("id").GetInt32() == SeedHelper.LoungeId)
+                if (item.GetProperty("id").GetGuid() == SeedHelper.LoungeId)
                 {
                     seeded = item.Clone();
                     break;
@@ -283,5 +283,5 @@ public sealed class DeadColumnWritePathTests
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
     private sealed record UploadResponse(string Url);
-    private sealed record ShowDetail(int Id, string Name, string PlaybackMode);
+    private sealed record ShowDetail(Guid Id, string Name, string PlaybackMode);
 }

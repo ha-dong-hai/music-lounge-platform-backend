@@ -62,38 +62,38 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// </summary>
     private const int NewShowPoolSize = 20;
 
-    private readonly IRepository<AiRecommendation, int> _recRepo;
-    private readonly IRepository<User, int> _userRepo;
-    private readonly IRepository<UserFavouriteGenre, int> _genreRepo;
-    private readonly IRepository<UserFavouriteMood, int> _moodRepo;
-    private readonly IRepository<UserFavouriteAtmosphere, int> _atmosphereRepo;
-    private readonly IRepository<Follow, int> _followRepo;
+    private readonly IRepository<AiRecommendation, Guid> _recRepo;
+    private readonly IRepository<User, Guid> _userRepo;
+    private readonly IRepository<UserFavouriteGenre, Guid> _genreRepo;
+    private readonly IRepository<UserFavouriteMood, Guid> _moodRepo;
+    private readonly IRepository<UserFavouriteAtmosphere, Guid> _atmosphereRepo;
+    private readonly IRepository<Follow, Guid> _followRepo;
     private readonly ILoungeShowRepository _showRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IBackgroundJobService _jobs;
     private readonly IRepository<Ticket, Guid> _ticketRepo;
-    private readonly IRepository<ShowWishlist, int> _wishlistRepo;
+    private readonly IRepository<ShowWishlist, Guid> _wishlistRepo;
     private readonly ISystemConfigService _config;
-    private readonly IRepository<UserBehaviourLog, int> _logRepo;
-    private readonly IRepository<LoungeMute, int> _muteRepo;
-    private readonly IRepository<UserDislikedGenre, int> _dislikedRepo;
+    private readonly IRepository<UserBehaviourLog, Guid> _logRepo;
+    private readonly IRepository<LoungeMute, Guid> _muteRepo;
+    private readonly IRepository<UserDislikedGenre, Guid> _dislikedRepo;
 
     public GetRecommendedLoungeShowsQueryHandler(
-        IRepository<AiRecommendation, int> recRepo,
-        IRepository<User, int> userRepo,
-        IRepository<UserFavouriteGenre, int> genreRepo,
-        IRepository<UserFavouriteMood, int> moodRepo,
-        IRepository<UserFavouriteAtmosphere, int> atmosphereRepo,
-        IRepository<Follow, int> followRepo,
+        IRepository<AiRecommendation, Guid> recRepo,
+        IRepository<User, Guid> userRepo,
+        IRepository<UserFavouriteGenre, Guid> genreRepo,
+        IRepository<UserFavouriteMood, Guid> moodRepo,
+        IRepository<UserFavouriteAtmosphere, Guid> atmosphereRepo,
+        IRepository<Follow, Guid> followRepo,
         ILoungeShowRepository showRepo,
         ICurrentUserService currentUser,
         IBackgroundJobService jobs,
         IRepository<Ticket, Guid> ticketRepo,
-        IRepository<ShowWishlist, int> wishlistRepo,
+        IRepository<ShowWishlist, Guid> wishlistRepo,
         ISystemConfigService config,
-        IRepository<UserBehaviourLog, int> logRepo,
-        IRepository<LoungeMute, int> muteRepo,
-        IRepository<UserDislikedGenre, int> dislikedRepo)
+        IRepository<UserBehaviourLog, Guid> logRepo,
+        IRepository<LoungeMute, Guid> muteRepo,
+        IRepository<UserDislikedGenre, Guid> dislikedRepo)
     {
         _recRepo = recRepo;
         _userRepo = userRepo;
@@ -199,8 +199,8 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         GetRecommendedLoungeShowsQuery request, int limit, CancellationToken ct)
     {
         var genreIds = (request.GenreIds ?? []).ToHashSet();
-        var moodIds = new HashSet<int>();
-        var atmosphereIds = new HashSet<int>();
+        var moodIds = new HashSet<Guid>();
+        var atmosphereIds = new HashSet<Guid>();
 
         var recent = (request.RecentShowIds ?? []).Distinct().Take(MaxGuestContextShows).ToList();
         if (recent.Count > 0)
@@ -213,7 +213,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             // hiểu. Thứ tự do phía giao diện gửi lên được coi là mới nhất trước; nếu không đúng thì
             // hậu quả chỉ là cửa sổ gần đây bị chọn khác đi, không phải kết quả sai.
             var inferred = TasteInference.FromShows(
-                await TagsInOrderAsync(recent, ct), new HashSet<int>());
+                await TagsInOrderAsync(recent, ct), new HashSet<Guid>());
 
             // Thể loại khách tự bấm chọn là thứ họ NÓI RA, nên luôn được giữ nguyên — cùng nguyên
             // tắc "tự khai thắng suy đoán" đã áp cho người đã đăng nhập ở MLACP-321.
@@ -222,7 +222,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             atmosphereIds.UnionWith(inferred.AtmosphereIds);
         }
 
-        var taste = new TasteProfile(genreIds, moodIds, atmosphereIds, new HashSet<int>());
+        var taste = new TasteProfile(genreIds, moodIds, atmosphereIds, new HashSet<Guid>());
 
         // Khách vãng lai không có gì để loại trừ: hệ thống không biết họ là ai, nên cũng không
         // biết họ đã mua vé buổi nào — và không được đi tìm hiểu.
@@ -231,7 +231,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             reasonWhenMatched: recent.Count > 0
                 ? "Giống những buổi diễn bạn vừa xem"
                 : "Hợp với thể loại bạn đang tìm",
-            alreadyHas: new HashSet<int>(),
+            alreadyHas: new HashSet<Guid>(),
             ct);
     }
 
@@ -256,14 +256,14 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// <see cref="TasteInference"/> về lý do không lấy hợp của toàn bộ lịch sử.
     /// </param>
     private async Task<TasteProfile> TasteFromOwnHistoryAsync(
-        IReadOnlyList<int> ownShowIdsNewestFirst, CancellationToken ct)
+        IReadOnlyList<Guid> ownShowIdsNewestFirst, CancellationToken ct)
     {
         var follows = await _followRepo.FindAsync(f => f.UserId == _currentUser.UserId, ct);
         var followedLoungeIds = follows.Select(f => f.LoungeId).ToHashSet();
 
         if (ownShowIdsNewestFirst.Count == 0)
             return new TasteProfile(
-                new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), followedLoungeIds);
+                new HashSet<Guid>(), new HashSet<Guid>(), new HashSet<Guid>(), followedLoungeIds);
 
         return TasteInference.FromShows(
             await TagsInOrderAsync(ownShowIdsNewestFirst, ct), followedLoungeIds);
@@ -274,7 +274,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// vấn trả về không theo thứ tự, mà ở đây thứ tự chính là thông tin về độ gần đây.
     /// </summary>
     private async Task<List<ShowTags>> TagsInOrderAsync(
-        IReadOnlyList<int> showIdsInOrder, CancellationToken ct)
+        IReadOnlyList<Guid> showIdsInOrder, CancellationToken ct)
     {
         var window = showIdsInOrder.Take(TasteInference.RecencyWindow).ToList();
         var tagsByShow = (await _showRepo.GetShowTagsAsync(window, ct)).ToDictionary(t => t.ShowId);
@@ -310,13 +310,13 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// được ít nhất hai suất để danh sách ngắn không bị siết quá tay.
     /// </summary>
     private static List<T> CapPerVenue<T>(
-        IReadOnlyList<T> ordered, int limit, Func<T, int> venueId)
+        IReadOnlyList<T> ordered, int limit, Func<T, Guid> venueId)
     {
         var cap = Math.Max(2, limit / 3);
 
         var kept = new List<T>();
         var overflow = new List<T>();
-        var takenByVenue = new Dictionary<int, int>();
+        var takenByVenue = new Dictionary<Guid, int>();
 
         foreach (var item in ordered)
         {
@@ -368,7 +368,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// Sắp ở phía client vì cùng một giới hạn của provider SQLite dùng trong test đã ghi khắp
     /// codebase này: không <c>ORDER BY</c> được cột <c>DateTimeOffset</c>.
     /// </summary>
-    private async Task<List<int>> OwnHistoryAsync(CancellationToken ct)
+    private async Task<List<Guid>> OwnHistoryAsync(CancellationToken ct)
     {
         var userId = _currentUser.UserId;
 
@@ -391,7 +391,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// Sở thích người dùng tự khai ở bước onboarding, cộng phòng trà họ đang theo dõi. Cố ý KHÔNG
     /// đọc nhật ký hành vi: đó là phần cần sự đồng ý, và nó đã được dùng ở đường tính sẵn.
     /// </summary>
-    private async Task<TasteProfile> DeclaredTasteAsync(int userId, CancellationToken ct)
+    private async Task<TasteProfile> DeclaredTasteAsync(Guid userId, CancellationToken ct)
     {
         var genres = await _genreRepo.FindAsync(g => g.UserId == userId, ct);
         var moods = await _moodRepo.FindAsync(m => m.UserId == userId, ct);
@@ -412,9 +412,9 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// </summary>
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> RankByTasteAsync(
         TasteProfile taste, string? city, int limit, string reasonWhenMatched,
-        IReadOnlySet<int> alreadyHas, CancellationToken ct)
+        IReadOnlySet<Guid> alreadyHas, CancellationToken ct)
         => await FinaliseAsync(
-            await ScoreCandidatesAsync(taste, city, limit, reasonWhenMatched, new HashSet<int>(), ct),
+            await ScoreCandidatesAsync(taste, city, limit, reasonWhenMatched, new HashSet<Guid>(), ct),
             limit, alreadyHas, ct);
 
     /// <summary>
@@ -427,7 +427,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// đường nào để họ làm gì với nó nữa.
     /// </summary>
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> FinaliseAsync(
-        IReadOnlyList<Scored> ranked, int limit, IReadOnlySet<int> alreadyHas, CancellationToken ct)
+        IReadOnlyList<Scored> ranked, int limit, IReadOnlySet<Guid> alreadyHas, CancellationToken ct)
     {
         // MLACP-330. Thứ người dùng nói thẳng là không quan tâm thì CẮT HẲN, không đẩy xuống cuối.
         //
@@ -461,7 +461,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     ///
     /// Khách vãng lai không có gì để đọc — họ không có hồ sơ, và không được tạo một cái sau lưng họ.
     /// </summary>
-    private async Task<HashSet<int>> NotInterestedAsync(
+    private async Task<HashSet<Guid>> NotInterestedAsync(
         IReadOnlyList<LoungeShow> shows, CancellationToken ct)
     {
         if (!_currentUser.IsAuthenticated || shows.Count == 0) return [];
@@ -504,7 +504,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// buổi vừa đăng chưa kịp cấu hình hạng vé cũng không bị coi là đóng. Xem
     /// <see cref="ShowAvailability"/> về lý do phân biệt.
     /// </summary>
-    private async Task<HashSet<int>> ClosedForSaleAsync(
+    private async Task<HashSet<Guid>> ClosedForSaleAsync(
         IReadOnlyList<LoungeShow> shows, CancellationToken ct)
     {
         var priceIds = shows
@@ -534,7 +534,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     /// </param>
     private async Task<List<Scored>> ScoreCandidatesAsync(
         TasteProfile taste, string? city, int limit, string reasonWhenMatched,
-        IReadOnlySet<int> exclude, CancellationToken ct)
+        IReadOnlySet<Guid> exclude, CancellationToken ct)
     {
         var candidates = await _showRepo.GetTrendingAsync(
             taste.KnowsNothing ? limit + exclude.Count : CandidatePoolSize, city, ct);
@@ -616,7 +616,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
     private async Task<IReadOnlyList<RecommendedLoungeShowDto>> FromCacheAsync(
         IReadOnlyList<AiRecommendation> cached, string? city, int limit,
         TasteProfile taste, string reasonWhenMatched,
-        IReadOnlySet<int> alreadyHas, CancellationToken ct)
+        IReadOnlySet<Guid> alreadyHas, CancellationToken ct)
     {
         var now = DateTimeOffset.UtcNow;
         var recByShowId = cached.ToDictionary(r => r.LoungeShowId);

@@ -6,7 +6,7 @@ namespace MusicLounge.Application.Donations.DTOs;
 /// <see cref="PublicDonationStatement"/>.
 /// </summary>
 public sealed record PublicDonationDto(
-    int Id,
+    Guid Id,
     string ShowName,
     string VenueName,
     DateTimeOffset ShowDate,

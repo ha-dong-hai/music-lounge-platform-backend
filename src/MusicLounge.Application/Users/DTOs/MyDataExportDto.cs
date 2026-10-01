@@ -10,19 +10,19 @@ public sealed record MyDataExportDto(
     IReadOnlyList<ExportedDonation> Donations,
     IReadOnlyList<ExportedRating> Ratings,
     IReadOnlyList<ExportedComplaint> Complaints,
-    IReadOnlyList<int> FollowedLoungeIds,
-    IReadOnlyList<int> WishlistedShowIds);
+    IReadOnlyList<Guid> FollowedLoungeIds,
+    IReadOnlyList<Guid> WishlistedShowIds);
 
 public sealed record ExportedProfile(
-    int Id, string Email, string FullName, string? Phone, DateTimeOffset CreatedAt);
+    Guid Id, string Email, string FullName, string? Phone, DateTimeOffset CreatedAt);
 
 public sealed record ExportedTicket(
-    Guid Id, int ShowId, string Status, DateTimeOffset CreatedAt);
+    Guid Id, Guid ShowId, string Status, DateTimeOffset CreatedAt);
 
 public sealed record ExportedDonation(
-    int Id, decimal Gross, string Status, DateTimeOffset CreatedAt);
+    Guid Id, decimal Gross, string Status, DateTimeOffset CreatedAt);
 
-public sealed record ExportedRating(int ShowId, int Score, string? Comment, DateTimeOffset CreatedAt);
+public sealed record ExportedRating(Guid ShowId, int Score, string? Comment, DateTimeOffset CreatedAt);
 
 public sealed record ExportedComplaint(
-    int Id, string Category, string Status, DateTimeOffset CreatedAt);
+    Guid Id, string Category, string Status, DateTimeOffset CreatedAt);

@@ -33,7 +33,7 @@ public sealed class CheckedInSeatStillTakenTests
     /// Buổi hòa nhạc ĐANG DIỄN, còn hơn 60 phút nữa mới kết thúc (nên quầy vẫn được bán theo BR-31), với một đợt bán
     /// đúng <paramref name="soVe"/> vé.
     /// </summary>
-    private async Task<int> BuoiDienDangDienAsync(int soVe)
+    private async Task<Guid> BuoiDienDangDienAsync(int soVe)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -71,7 +71,7 @@ public sealed class CheckedInSeatStillTakenTests
         return price.Id;
     }
 
-    private async Task<HttpResponseMessage> BanTaiQuayAsync(int priceId, int soLuong = 1)
+    private async Task<HttpResponseMessage> BanTaiQuayAsync(Guid priceId, int soLuong = 1)
         => await NhanVien().PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = priceId, Quantity = soLuong });
 
     private static async Task<IReadOnlyList<string>> MaQrAsync(HttpResponseMessage res)

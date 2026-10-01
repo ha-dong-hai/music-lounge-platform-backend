@@ -31,10 +31,10 @@ public sealed class SingleVnPayIpnUrlTests
     public SingleVnPayIpnUrlTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record PurchaseData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
-    private sealed record FnbPaymentInit(int OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
-    private sealed record DonationInit(int DonationId, string OrderId);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record FnbPaymentInit(Guid OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
+    private sealed record DonationInit(Guid DonationId, string OrderId);
     private sealed record IpnBody(string RspCode, string Message);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -50,7 +50,7 @@ public sealed class SingleVnPayIpnUrlTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!;
     }
 
-    private async Task<(int OwnerId, int LoungeId)> VenueAsync()
+    private async Task<(Guid OwnerId, Guid LoungeId)> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -70,7 +70,7 @@ public sealed class SingleVnPayIpnUrlTests
     /// <summary>Đơn F&amp;B ở phòng trà mẫu, khách bấm trả online: có một Payment Pending mã <c>FNB-…</c>.</summary>
     private async Task<FnbPaymentInit> PendingFnbPaymentAsync()
     {
-        int menuItemId;
+        Guid menuItemId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = Db(scope);
@@ -86,12 +86,12 @@ public sealed class SingleVnPayIpnUrlTests
         var audience = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var orderRes = await audience.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
-            LoungeId = SeedHelper.LoungeId, ShowId = (int?)null, ZoneId = (int?)null, TableNote = "Bàn 394",
+            LoungeId = SeedHelper.LoungeId, ShowId = (Guid?)null, ZoneId = (Guid?)null, TableNote = "Bàn 394",
             PaymentMethod = "Cash", Note = (string?)null,
             Items = new[] { new { MenuItemId = menuItemId, Quantity = 2, Note = (string?)null } }
         });
         orderRes.StatusCode.Should().Be(HttpStatusCode.Created, await orderRes.Content.ReadAsStringAsync());
-        var orderId = (await orderRes.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var orderId = (await orderRes.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
         var payRes = await audience.PostAsync($"/api/v1/fnb-orders/{orderId}/pay", null);
         payRes.StatusCode.Should().Be(HttpStatusCode.Created, await payRes.Content.ReadAsStringAsync());
         return (await payRes.Content.ReadFromJsonAsync<Envelope<FnbPaymentInit>>())!.Data;
@@ -101,7 +101,7 @@ public sealed class SingleVnPayIpnUrlTests
     public async Task ATicketPayment_IsConfirmedThroughTheSharedIpnUrl()
     {
         var (_, loungeId) = await VenueAsync();
-        int priceId;
+        Guid priceId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = Db(scope);
@@ -169,7 +169,7 @@ public sealed class SingleVnPayIpnUrlTests
                 BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = false, MaxAiPostersPerMonth = 0
             });
         pkgRes.EnsureSuccessStatusCode();
-        var packageId = (await pkgRes.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var packageId = (await pkgRes.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var subscribe = await _factory.CreateAuthenticatedClient(ownerId, "Owner")
             .PostAsJsonAsync("/api/v1/subscriptions/subscribe", new { PackageId = packageId });
@@ -194,7 +194,7 @@ public sealed class SingleVnPayIpnUrlTests
     public async Task ADonation_IsConfirmedThroughTheSharedIpnUrl()
     {
         var (ownerId, loungeId) = await VenueAsync();
-        int performanceId;
+        Guid performanceId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = Db(scope);

@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.Analytics.DTOs;
 
 public sealed record LivestreamHistoryItemDto(
-    int LivestreamId,
-    int ShowId,
+    Guid LivestreamId,
+    Guid ShowId,
     string ShowName,
     DateTimeOffset? StartedAt,
     DateTimeOffset? EndedAt,

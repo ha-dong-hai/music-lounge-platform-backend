@@ -6,7 +6,7 @@ public sealed class ChangeLoungeShowFormatCommandValidator : AbstractValidator<C
 {
     public ChangeLoungeShowFormatCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.NewFormat).IsInEnum();
     }
 }

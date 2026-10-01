@@ -45,7 +45,7 @@ internal sealed class ReviewTicketTierCommandHandler : IRequestHandler<ReviewTic
         // Cung ly do voi ReviewShowCommandHandler: hai Admin duyet cung luc thi mot quyet dinh ghi de mat quyet dinh kia.
         await using var _ = await _lock.AcquireAsync($"moderation:tier:{request.TierId}", ct);
 
-        var tier = await _uow.Repository<TicketTier, int>().GetByIdAsync(request.TierId, ct)
+        var tier = await _uow.Repository<TicketTier, Guid>().GetByIdAsync(request.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), request.TierId);
 
         var moderation = await _moderationRepo.GetByTargetAsync(ModerationTargetType.TicketTier, request.TierId, ct)
@@ -54,7 +54,7 @@ internal sealed class ReviewTicketTierCommandHandler : IRequestHandler<ReviewTic
         if (moderation.AdminDecision is not null)
             throw new ConflictException("Hạng vé này đã được duyệt trước đó.");
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(tier.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(tier.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), tier.LoungeShowId);
 
         // Buoi dien da ket thuc hoac bi huy thi mo ban la ban mot thu khong con.
@@ -70,7 +70,7 @@ internal sealed class ReviewTicketTierCommandHandler : IRequestHandler<ReviewTic
 
         if (decision == ModerationDecision.Approved)
         {
-            var priceRepo = _uow.Repository<TicketPrice, int>();
+            var priceRepo = _uow.Repository<TicketPrice, Guid>();
             var prices = await priceRepo.FindAsync(p => p.TierId == tier.Id, ct);
             foreach (var price in prices)
             {
@@ -79,7 +79,7 @@ internal sealed class ReviewTicketTierCommandHandler : IRequestHandler<ReviewTic
             }
         }
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct);
         if (lounge is not null)
             await _notifications.NotifyAsync(
                 lounge.OwnerId,

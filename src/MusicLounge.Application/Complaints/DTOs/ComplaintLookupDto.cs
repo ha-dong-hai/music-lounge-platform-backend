@@ -8,7 +8,7 @@ namespace MusicLounge.Application.Complaints.DTOs;
 /// — mã tra cứu là thứ duy nhất chứng minh quyền xem, nên nó chỉ nên mở đúng chừng đó.
 /// </summary>
 public sealed record ComplaintLookupDto(
-    int Id,
+    Guid Id,
     string TargetType,
     ComplaintCategory Category,
     ComplaintStatus Status,

@@ -39,7 +39,7 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
 
     public async Task<Unit> Handle(ReviewSettlementCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<Settlement, int>();
+        var repo = _uow.Repository<Settlement, Guid>();
         var settlement = await repo.GetByIdAsync(request.SettlementId, ct)
             ?? throw new NotFoundException(nameof(Settlement), request.SettlementId);
 
@@ -91,7 +91,7 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
                 "Phòng trà chưa đăng ký tài khoản nhận tiền — ghi bút toán chi trả bây giờ sẽ ghi có " +
                 "cho một khoản không lệnh chuyển khoản nào đi theo được.");
 
-        var hasPendingRefund = await _uow.Repository<RefundRequest, int>().AnyAsync(
+        var hasPendingRefund = await _uow.Repository<RefundRequest, Guid>().AnyAsync(
             r => r.PaymentId == settlement.PaymentId && r.Status == RefundRequestStatus.Pending, ct);
         if (hasPendingRefund)
             throw new DomainException(

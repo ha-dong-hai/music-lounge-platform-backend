@@ -44,7 +44,7 @@ internal sealed class ActiveUserBehavior<TRequest, TResponse> : IPipelineBehavio
     {
         if (_currentUser.IsAuthenticated)
         {
-            var user = await _uow.Repository<User, int>().GetByIdAsync(_currentUser.UserId, ct);
+            var user = await _uow.Repository<User, Guid>().GetByIdAsync(_currentUser.UserId, ct);
             if (user is null || !user.IsActive)
                 throw new UnauthorizedException("Tài khoản đã bị khóa hoặc không còn tồn tại.");
 
@@ -53,7 +53,7 @@ internal sealed class ActiveUserBehavior<TRequest, TResponse> : IPipelineBehavio
 
             if (_currentUser.Role == Roles.Staff && _currentUser.LoungeId is { } loungeId)
             {
-                var stillActiveStaff = await _uow.Repository<LoungeStaff, int>().AnyAsync(
+                var stillActiveStaff = await _uow.Repository<LoungeStaff, Guid>().AnyAsync(
                     s => s.UserId == _currentUser.UserId && s.LoungeId == loungeId && s.IsActive, ct);
                 if (!stillActiveStaff)
                     throw new UnauthorizedException("Bạn không còn là nhân viên của venue này.");

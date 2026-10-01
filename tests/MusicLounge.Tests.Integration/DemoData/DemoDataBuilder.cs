@@ -194,7 +194,7 @@ internal sealed class DemoDataBuilder
     }
 
     /// <summary>Mỗi buổi một hạng vé và một mức giá, đủ để gắn vé thật vào.</summary>
-    private async Task<Dictionary<int, (int TierId, int PriceId)>> CreateTicketingAsync(
+    private async Task<Dictionary<Guid, (Guid TierId, Guid PriceId)>> CreateTicketingAsync(
         IReadOnlyList<LoungeShow> shows, DateTimeOffset now, CancellationToken ct)
     {
         var tiers = shows.Select(s => new TicketTier
@@ -287,7 +287,7 @@ internal sealed class DemoDataBuilder
     /// </summary>
     private void CreateInteractions(
         IReadOnlyList<User> users, IReadOnlyList<LoungeShow> shows,
-        IReadOnlyDictionary<int, (int TierId, int PriceId)> ticketing,
+        IReadOnlyDictionary<Guid, (Guid TierId, Guid PriceId)> ticketing,
         int clusters, DateTimeOffset now)
     {
         for (var i = 0; i < Personas.Length; i++)

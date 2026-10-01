@@ -20,13 +20,13 @@ internal sealed class ReorderLoungeGalleryImagesCommandHandler
 
     public async Task<Unit> Handle(ReorderLoungeGalleryImagesCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        var imageRepo = _uow.Repository<LoungeGalleryImage, int>();
+        var imageRepo = _uow.Repository<LoungeGalleryImage, Guid>();
         var images = await imageRepo.FindAsync(g => g.LoungeId == request.LoungeId, ct);
 
         // OrderedImageIds phai la hoan vi day du cua anh hien co - khong cho thieu/du/lac sang

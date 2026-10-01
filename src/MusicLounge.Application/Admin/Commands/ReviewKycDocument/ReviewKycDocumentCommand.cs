@@ -14,7 +14,7 @@ public enum KycDocument
 /// its own tells them to guess. Optional on an approval.
 /// </param>
 public sealed record ReviewKycDocumentCommand(
-    int UserId,
+    Guid UserId,
     KycDocument Document,
     bool Approve,
     string? Note) : ICommand;

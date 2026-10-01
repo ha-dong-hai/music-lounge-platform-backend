@@ -21,8 +21,8 @@ public static class ShowScheduleConflict
     public static async Task EnsureVenueIsFreeAsync(
         IUnitOfWork uow,
         ISystemConfigService config,
-        int loungeId,
-        int? excludeShowId,
+        Guid loungeId,
+        Guid? excludeShowId,
         DateTimeOffset start,
         DateTimeOffset? end,
         CancellationToken ct)
@@ -40,7 +40,7 @@ public static class ShowScheduleConflict
         // enum là đúng cái tổ hợp không dịch được sang SQLite — provider mà bộ test đang chạy —
         // và đây là lớp lỗi đã có tiền lệ trong codebase này. Tập lấy về nhỏ: buổi diễn đã qua
         // chuyển sang Ended/Cancelled nên rơi khỏi danh sách giữ chỗ.
-        var committed = await uow.Repository<LoungeShow, int>().FindAsync(
+        var committed = await uow.Repository<LoungeShow, Guid>().FindAsync(
             s => s.LoungeId == loungeId && ShowSchedule.OccupiesTheVenue.Contains(s.Status), ct);
 
         var clash = committed.FirstOrDefault(s =>

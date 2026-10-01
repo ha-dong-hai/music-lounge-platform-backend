@@ -31,10 +31,10 @@ internal sealed class GetShowOrdersQueryHandler
     public async Task<PaginatedResult<ShowOrderDto>> Handle(
         GetShowOrdersQuery request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         // Danh sách này có tên và email người mua, nên quyền phải kiểm ở đây chứ không chỉ dựa vào

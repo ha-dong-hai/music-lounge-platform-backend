@@ -36,7 +36,7 @@ internal sealed class GetAiRecommendationPerformanceQueryHandler
         // "Duoc goi y" = it xuat hien it nhat 1 lan trong AiRecommendation trong ky — tinh theo cap
         // (UserId, LoungeShowId) DUY NHAT, vi 1 cap co the duoc goi y lai nhieu lan qua cac chu ky
         // lam moi cache (MLACP-132) trong cung 1 ky bao cao.
-        var allRecs = await _uow.Repository<AiRecommendation, int>()
+        var allRecs = await _uow.Repository<AiRecommendation, Guid>()
             .FindAsync(r => r.CreatedAt >= from, ct);
         var recs = allRecs.Where(r => r.CreatedAt <= to).ToList();
 
@@ -56,7 +56,7 @@ internal sealed class GetAiRecommendationPerformanceQueryHandler
         // Chi lay du lieu hanh vi cho dung tap user/show lien quan, loc theo tung cap + cua so thoi
         // gian (tu luc duoc goi y toi luc het han goi y) o phia client — ket hop 2 dieu kien (thanh
         // vien tap + khoang thoi gian rieng tung dong) khong dich duoc thanh 1 truy van SQLite don.
-        var candidateLogs = await _uow.Repository<UserBehaviourLog, int>().FindAsync(
+        var candidateLogs = await _uow.Repository<UserBehaviourLog, Guid>().FindAsync(
             l => userIds.Contains(l.UserId) && showIds.Contains(l.LoungeShowId)
                 && (l.Action == BehaviourAction.ViewEvent
                     || l.Action == BehaviourAction.ClickTicket

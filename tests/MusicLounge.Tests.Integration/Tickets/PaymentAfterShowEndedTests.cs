@@ -25,8 +25,8 @@ public sealed class PaymentAfterShowEndedTests
     public PaymentAfterShowEndedTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record PurchaseData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -37,7 +37,7 @@ public sealed class PaymentAfterShowEndedTests
     /// <param name="livestream">null = buổi diễn trực tiếp, không livestream. Có giá trị = buổi diễn có một livestream đã
     /// phát xong, với bản ghi (null = Mux chưa báo asset.ready) và hạn xem lại; hình thức là Online khi bán vé livestream,
     /// Hybrid khi bán vé vào cửa.</param>
-    private async Task<(int ShowId, int PriceId)> ShowAsync(
+    private async Task<(Guid ShowId, Guid PriceId)> ShowAsync(
         AccessType access, (string? RecordingUrl, DateTimeOffset? ReplayUntil)? livestream)
     {
         using var scope = _factory.Services.CreateScope();
@@ -87,7 +87,7 @@ public sealed class PaymentAfterShowEndedTests
         return (show.Id, price.Id);
     }
 
-    private async Task<PurchaseData> StartPaymentAsync(int priceId)
+    private async Task<PurchaseData> StartPaymentAsync(Guid priceId)
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var hold = await client.PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = priceId, Quantity = 1 });
@@ -98,7 +98,7 @@ public sealed class PaymentAfterShowEndedTests
         return (await purchase.Content.ReadFromJsonAsync<Envelope<PurchaseData>>())!.Data;
     }
 
-    private async Task SetShowStatusAsync(int showId, LoungeShowStatus status)
+    private async Task SetShowStatusAsync(Guid showId, LoungeShowStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -117,7 +117,7 @@ public sealed class PaymentAfterShowEndedTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!;
     }
 
-    private async Task<(List<Ticket> Tickets, List<RefundRequest> Refunds)> StateAsync(int paymentId)
+    private async Task<(List<Ticket> Tickets, List<RefundRequest> Refunds)> StateAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);

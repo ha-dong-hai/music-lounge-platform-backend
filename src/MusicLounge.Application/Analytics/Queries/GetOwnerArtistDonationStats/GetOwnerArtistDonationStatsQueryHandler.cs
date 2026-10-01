@@ -23,17 +23,17 @@ internal sealed class GetOwnerArtistDonationStatsQueryHandler
     public async Task<OwnerArtistDonationReportDto> Handle(
         GetOwnerArtistDonationStatsQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem thống kê donate của venue này.");
 
-        var shows = await _uow.Repository<LoungeShow, int>()
+        var shows = await _uow.Repository<LoungeShow, Guid>()
             .FindAsync(s => s.LoungeId == request.LoungeId, ct);
         var showIds = shows.Select(s => s.Id).ToHashSet();
 
-        var performances = await _uow.Repository<Performance, int>()
+        var performances = await _uow.Repository<Performance, Guid>()
             .FindAsync(p => showIds.Contains(p.LoungeShowId), ct);
         var performanceIds = performances.Select(p => p.Id).ToHashSet();
         var performerIdByPerformance = performances.ToDictionary(p => p.Id, p => p.PerformerId);
@@ -43,11 +43,11 @@ internal sealed class GetOwnerArtistDonationStatsQueryHandler
         // chuyển cho nghệ sĩ (chặng 2) hay chưa — cùng định nghĩa "donate nhận" đã dùng ở
         // GetOwnerRevenueReportQueryHandler (MLACP-162), tránh 2 báo cáo cho ra 2 con số khác nhau
         // cho cùng 1 khái niệm.
-        var donations = await _uow.Repository<Donation, int>().FindAsync(
+        var donations = await _uow.Repository<Donation, Guid>().FindAsync(
             d => performanceIds.Contains(d.PerformanceId) && d.PaymentConfirmedAt != null, ct);
 
         var performerIds = performances.Select(p => p.PerformerId).Distinct().ToList();
-        var performers = await _uow.Repository<Performer, int>()
+        var performers = await _uow.Repository<Performer, Guid>()
             .FindAsync(p => performerIds.Contains(p.Id), ct);
         var performerById = performers.ToDictionary(p => p.Id);
 

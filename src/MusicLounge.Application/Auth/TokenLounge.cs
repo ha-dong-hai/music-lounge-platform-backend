@@ -21,17 +21,17 @@ namespace MusicLounge.Application.Auth;
 /// </summary>
 public static class TokenLounge
 {
-    public static async Task<int?> ResolveAsync(IUnitOfWork uow, User user, CancellationToken ct)
+    public static async Task<Guid?> ResolveAsync(IUnitOfWork uow, User user, CancellationToken ct)
     {
         switch (user.Role)
         {
             case UserRole.Staff:
-                var assignments = await uow.Repository<LoungeStaff, int>()
+                var assignments = await uow.Repository<LoungeStaff, Guid>()
                     .FindAsync(s => s.UserId == user.Id && s.IsActive, ct);
                 return assignments.FirstOrDefault()?.LoungeId;
 
             case UserRole.Owner:
-                var owned = await uow.Repository<MusicLoungeEntity, int>()
+                var owned = await uow.Repository<MusicLoungeEntity, Guid>()
                     .FindAsync(l => l.OwnerId == user.Id, ct);
                 return owned.FirstOrDefault()?.Id;
 

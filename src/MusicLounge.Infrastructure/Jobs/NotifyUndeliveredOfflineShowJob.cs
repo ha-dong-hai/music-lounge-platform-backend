@@ -97,7 +97,7 @@ public sealed class NotifyUndeliveredOfflineShowJob
     /// Chỉ người mua vé <see cref="AccessType.Physical"/>. Vé livestream của cùng buổi diễn (show
     /// <c>Hybrid</c>) đã được hoàn tự động ở MLACP-340 vì ở đó bằng chứng kết luận được.
     /// </summary>
-    private async Task<List<int>> PhysicalTicketBuyersAsync(int showId, CancellationToken ct)
+    private async Task<List<Guid>> PhysicalTicketBuyersAsync(Guid showId, CancellationToken ct)
     {
         var tickets = await _ctx.Tickets
             .Where(t => t.ShowId == showId && t.Status == TicketStatus.Confirmed && t.BuyerId != null)
@@ -123,7 +123,7 @@ public sealed class NotifyUndeliveredOfflineShowJob
     {
         var ownerId = await _ctx.Lounges
             .Where(l => l.Id == show.LoungeId)
-            .Select(l => (int?)l.OwnerId)
+            .Select(l => (Guid?)l.OwnerId)
             .FirstOrDefaultAsync(ct);
         if (ownerId is null) return false;
 
@@ -150,7 +150,7 @@ public sealed class NotifyUndeliveredOfflineShowJob
         return true;
     }
 
-    private async Task<bool> NotifyBuyerAsync(LoungeShow show, int buyerId, CancellationToken ct)
+    private async Task<bool> NotifyBuyerAsync(LoungeShow show, Guid buyerId, CancellationToken ct)
     {
         if (await AlreadyToldAsync(buyerId, show.Id, ct)) return false;
 
@@ -179,7 +179,7 @@ public sealed class NotifyUndeliveredOfflineShowJob
     /// Chống trùng bằng chính dòng thông báo đã gửi, không thêm cột cờ mới — đúng cách
     /// <c>EventReminderJob</c> làm. Lọc theo người nhận nên chặng một và chặng hai không đụng nhau.
     /// </summary>
-    private Task<bool> AlreadyToldAsync(int userId, int showId, CancellationToken ct)
+    private Task<bool> AlreadyToldAsync(Guid userId, Guid showId, CancellationToken ct)
         => _ctx.Notifications.AnyAsync(
             n => n.UserId == userId
                  && n.Type == NotificationType.ShowDeliveryUnconfirmed

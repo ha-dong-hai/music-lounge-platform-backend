@@ -32,7 +32,7 @@ public sealed class ChatMessageReportTests
     private RecordingLivestreamHubService Hub =>
         (RecordingLivestreamHubService)_factory.Services.GetRequiredService<ILivestreamHubService>();
 
-    private sealed record Seeded(int LivestreamId, int ViPhamId, int BinhThuongId);
+    private sealed record Seeded(Guid LivestreamId, Guid ViPhamId, Guid BinhThuongId);
 
     /// <summary>Một livestream đang phát với hai tin nhắn: một cái sẽ bị báo cáo, một cái phải còn nguyên.</summary>
     private async Task<Seeded> SeedChatAsync()
@@ -82,21 +82,21 @@ public sealed class ChatMessageReportTests
         return new Seeded(livestream.Id, viPham.Id, binhThuong.Id);
     }
 
-    private async Task<HttpResponseMessage> BaoCaoAsync(int chatMessageId)
+    private async Task<HttpResponseMessage> BaoCaoAsync(Guid chatMessageId)
         => await KhanGia().PostAsJsonAsync("/api/v1/content-reports",
             new { TargetType = "ChatMessage", TargetId = chatMessageId, Reason = "Lời lẽ xúc phạm người khác" });
 
-    private async Task<HttpResponseMessage> GoAsync(int chatMessageId, string note = "Gỡ theo báo cáo vi phạm")
+    private async Task<HttpResponseMessage> GoAsync(Guid chatMessageId, string note = "Gỡ theo báo cáo vi phạm")
         => await Admin().PostAsJsonAsync("/api/v1/content-reports/resolve",
             new { TargetType = "ChatMessage", TargetId = chatMessageId, Action = "Removed", Note = note });
 
-    private async Task<List<int>> LichSuChatAsync(int livestreamId)
+    private async Task<List<Guid>> LichSuChatAsync(Guid livestreamId)
     {
         var res = await KhanGia().GetAsync($"/api/v1/livestreams/{livestreamId}/chat?page=1&pageSize=50");
         res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         return doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Select(x => x.GetProperty("messageId").GetInt32()).ToList();
+            .Select(x => x.GetProperty("messageId").GetGuid()).ToList();
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public sealed class ChatMessageReportTests
 
         Hub.For(seeded.LivestreamId)
             .Where(s => s.Event == "ChatMessageHidden")
-            .Select(s => (int)s.Payload!)
+            .Select(s => (Guid)s.Payload!)
             .Should().ContainSingle().Which.Should().Be(seeded.ViPhamId);
     }
 
@@ -154,7 +154,7 @@ public sealed class ChatMessageReportTests
         var seeded = await SeedChatAsync();
         await BaoCaoAsync(seeded.ViPhamId);
 
-        int showId;
+        Guid showId;
         string tenNguoiGui;
         using (var scope = _factory.Services.CreateScope())
         {
@@ -168,22 +168,22 @@ public sealed class ChatMessageReportTests
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var dong = doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
             .Single(x => x.GetProperty("targetType").GetString() == "ChatMessage"
-                         && x.GetProperty("targetId").GetInt32() == seeded.ViPhamId);
+                         && x.GetProperty("targetId").GetGuid() == seeded.ViPhamId);
 
         dong.GetProperty("targetSummary").GetString()
             .Should().Contain("Tin nhắn vi phạm", "Admin phải đọc được chính nội dung bị báo cáo")
             .And.Contain(tenNguoiGui, "kèm người gửi");
-        dong.GetProperty("showId").GetInt32().Should().Be(showId, "để mở được ngữ cảnh buổi hòa nhạc");
+        dong.GetProperty("showId").GetGuid().Should().Be(showId, "để mở được ngữ cảnh buổi hòa nhạc");
     }
 
     [Fact]
     public async Task BaoCaoTinNhanKhongTonTai_Tra404_BangTiengViet()
     {
-        var res = await BaoCaoAsync(999_999_999);
+        var res = await BaoCaoAsync(TestId.Of(999_999));
 
         res.StatusCode.Should().Be(HttpStatusCode.NotFound);
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         doc.RootElement.GetProperty("message").GetString()
-            .Should().Be("Không tìm thấy tin nhắn chat (mã 999999999).");
+            .Should().Be($"Không tìm thấy tin nhắn chat (mã {TestId.Of(999_999)}).");
     }
 }

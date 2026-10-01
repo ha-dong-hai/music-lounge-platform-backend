@@ -6,5 +6,5 @@ public sealed record FilterOptionsDto(
     IReadOnlyList<AtmosphereDto> Atmospheres,
     IReadOnlyList<string> Cities);
 
-public sealed record MoodDto(int Id, string Name);
-public sealed record AtmosphereDto(int Id, string Name);
+public sealed record MoodDto(Guid Id, string Name);
+public sealed record AtmosphereDto(Guid Id, string Name);

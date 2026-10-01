@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Subscriptions.DTOs;
 
 public sealed record SubscriptionPackageDto(
-    int Id,
+    Guid Id,
     string Name,
     string? Description,
     decimal Price,

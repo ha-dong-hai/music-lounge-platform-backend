@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class ShowWishlist : Common.BaseEntity<int>
+public sealed class ShowWishlist : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int LoungeShowId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid LoungeShowId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
     public User User { get; set; } = null!;

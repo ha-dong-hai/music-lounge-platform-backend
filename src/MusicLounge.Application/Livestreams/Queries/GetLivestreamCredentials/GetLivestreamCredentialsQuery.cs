@@ -3,4 +3,4 @@ using MusicLounge.Application.Livestreams.DTOs;
 
 namespace MusicLounge.Application.Livestreams.Queries.GetLivestreamCredentials;
 
-public sealed record GetLivestreamCredentialsQuery(int LivestreamId) : IQuery<LivestreamCredentialsDto>;
+public sealed record GetLivestreamCredentialsQuery(Guid LivestreamId) : IQuery<LivestreamCredentialsDto>;

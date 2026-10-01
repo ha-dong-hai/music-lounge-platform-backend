@@ -2,13 +2,13 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class VenuePenalty : Common.BaseEntity<int>
+public sealed class VenuePenalty : Common.BaseEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public PenaltyType PenaltyType { get; set; }
     public string Reason { get; set; } = string.Empty;
     public string? EvidenceRef { get; set; }
-    public int IssuedBy { get; set; }
+    public Guid IssuedBy { get; set; }
     public DateTimeOffset IssuedAt { get; set; }
     public DateTimeOffset EffectiveAt { get; set; }
     public int? SuspensionDays { get; set; }
@@ -23,7 +23,7 @@ public sealed class VenuePenalty : Common.BaseEntity<int>
     public DateTimeOffset? AppealedAt { get; set; }
     public string? AppealReason { get; set; }
     public string? AppealResult { get; set; }   // "Overturned" / "Upheld" — nullable until resolved
-    public int? ReviewedBy { get; set; }
+    public Guid? ReviewedBy { get; set; }
     public DateTimeOffset? ReviewedAt { get; set; }
     public string? CompensationNote { get; set; }
 
@@ -32,7 +32,7 @@ public sealed class VenuePenalty : Common.BaseEntity<int>
     // vao mot goi dang Active khac). Ghi lai DUNG khoang thoi gian duoc cap — khong doan vi tri — de tinh gia
     // tri con lai khi doi goi (SubscriptionTerms.RemainingValue) khong tinh nham ngay mien phi la ngay da tra
     // tien, du chu co gia han sau do lam ngay mien phi khong con nam cuoi cung.
-    public int? CompensatedSubscriptionId { get; set; }
+    public Guid? CompensatedSubscriptionId { get; set; }
     public DateTimeOffset? SubscriptionCompensationFrom { get; set; }
     public decimal? SubscriptionCompensationDays { get; set; }
 

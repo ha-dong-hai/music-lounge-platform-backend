@@ -19,13 +19,13 @@ internal sealed class UnmuteLoungeCommandHandler : ICommandHandler<UnmuteLoungeC
 
     public async Task<Unit> Handle(UnmuteLoungeCommand request, CancellationToken ct)
     {
-        var matches = await _uow.Repository<LoungeMute, int>()
+        var matches = await _uow.Repository<LoungeMute, Guid>()
             .FindAsync(m => m.UserId == _currentUser.UserId && m.LoungeId == request.LoungeId, ct);
 
         var mute = matches.FirstOrDefault()
             ?? throw new NotFoundException("LoungeMute", request.LoungeId);
 
-        _uow.Repository<LoungeMute, int>().Remove(mute);
+        _uow.Repository<LoungeMute, Guid>().Remove(mute);
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
     }

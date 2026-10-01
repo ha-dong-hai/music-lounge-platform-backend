@@ -14,7 +14,7 @@ public sealed class CheckInLivestreamViewerJob
 
     public CheckInLivestreamViewerJob(IUnitOfWork uow) => _uow = uow;
 
-    public async Task ExecuteAsync(int userId, int showId)
+    public async Task ExecuteAsync(Guid userId, Guid showId)
     {
         var tickets = await _uow.Repository<Ticket, Guid>().FindAsync(t =>
             t.ShowId == showId

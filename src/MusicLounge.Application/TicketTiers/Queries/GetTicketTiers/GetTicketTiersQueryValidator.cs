@@ -10,6 +10,6 @@ public sealed class GetTicketTiersQueryValidator : AbstractValidator<GetTicketTi
 {
     public GetTicketTiersQueryValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0).WithMessage("ShowId không hợp lệ.");
+        RuleFor(x => x.ShowId).NotEmpty().WithMessage("ShowId không hợp lệ.");
     }
 }

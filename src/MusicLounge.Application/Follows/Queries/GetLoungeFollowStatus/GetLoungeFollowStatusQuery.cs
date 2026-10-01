@@ -3,5 +3,5 @@ using MusicLounge.Application.Follows.DTOs;
 
 namespace MusicLounge.Application.Follows.Queries.GetLoungeFollowStatus;
 
-public sealed record GetLoungeFollowStatusQuery(IReadOnlyList<int> LoungeIds)
+public sealed record GetLoungeFollowStatusQuery(IReadOnlyList<Guid> LoungeIds)
     : IQuery<IReadOnlyList<LoungeFollowStatusDto>>;

@@ -60,7 +60,7 @@ internal sealed class CancelTicketTransferCommandHandler : IRequestHandler<Cance
                     $"Yêu cầu chuyển vé \"{ticket.Show.Name}\" cho bạn đã bị người gửi hủy.",
                     $"The sender cancelled the transfer of a ticket for \"{ticket.Show.Name}\" to you."),
                 referenceType: "ticket", referenceId: ticket.Id.ToString(), ct: ct);
-        else if (ticket.BuyerId is int senderId)
+        else if (ticket.BuyerId is Guid senderId)
             await _notifications.NotifyAsync(
                 senderId, NotificationType.EventReminder,
                 new SongNgu(

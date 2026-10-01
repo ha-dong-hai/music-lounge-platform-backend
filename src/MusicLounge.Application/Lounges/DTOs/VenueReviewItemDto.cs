@@ -8,10 +8,10 @@ namespace MusicLounge.Application.Lounges.DTOs;
 /// </param>
 /// <param name="ReviewNote">Ghi chú của lần xét trước — có giá trị khi lọc danh sách đã bị từ chối.</param>
 public sealed record VenueReviewItemDto(
-    int LoungeId,
+    Guid LoungeId,
     string Name,
     string Status,
-    int OwnerId,
+    Guid OwnerId,
     string OwnerName,
     string OwnerEmail,
     string? OwnerPhone,

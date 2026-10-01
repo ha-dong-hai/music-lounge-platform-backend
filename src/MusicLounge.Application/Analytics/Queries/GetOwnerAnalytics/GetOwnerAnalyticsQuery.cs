@@ -3,4 +3,4 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Analytics.Queries.GetOwnerAnalytics;
 
-public sealed record GetOwnerAnalyticsQuery(int LoungeId) : IQuery<OwnerAnalyticsDto>;
+public sealed record GetOwnerAnalyticsQuery(Guid LoungeId) : IQuery<OwnerAnalyticsDto>;

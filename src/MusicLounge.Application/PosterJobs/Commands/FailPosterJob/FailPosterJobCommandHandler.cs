@@ -31,7 +31,7 @@ internal sealed class FailPosterJobCommandHandler : IRequestHandler<FailPosterJo
 
     public async Task<Unit> Handle(FailPosterJobCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<AiPosterGeneration, int>();
+        var repo = _uow.Repository<AiPosterGeneration, Guid>();
         var job = await repo.GetByIdAsync(request.JobId, ct)
             ?? throw new NotFoundException(nameof(AiPosterGeneration), request.JobId);
 

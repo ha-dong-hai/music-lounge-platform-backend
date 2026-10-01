@@ -11,6 +11,6 @@ namespace MusicLounge.Application.Settlements.Commands.ReviewSettlement;
 /// </param>
 /// <param name="Note">Lý do, bắt buộc. Đây là quyết định về tiền nên phải để lại dấu vết.</param>
 public sealed record ReviewSettlementCommand(
-    int SettlementId,
+    Guid SettlementId,
     string Decision,
     string Note) : ICommand;

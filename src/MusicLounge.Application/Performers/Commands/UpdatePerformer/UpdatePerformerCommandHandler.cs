@@ -22,7 +22,7 @@ internal sealed class UpdatePerformerCommandHandler : IRequestHandler<UpdatePerf
 
     public async Task<Unit> Handle(UpdatePerformerCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<Performer, int>();
+        var repo = _uow.Repository<Performer, Guid>();
         var performer = await repo.GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
@@ -42,7 +42,7 @@ internal sealed class UpdatePerformerCommandHandler : IRequestHandler<UpdatePerf
         // DELETE for an old (PerformerId, GenreId) pair commits before an INSERT for the same pair
         // within a single SaveChangesAsync, which can transiently violate PerformerGenreConfiguration's
         // unique index on that pair even when the net result (same genre kept) is a no-op change.
-        var genreRepo = _uow.Repository<PerformerGenre, int>();
+        var genreRepo = _uow.Repository<PerformerGenre, Guid>();
         var existingGenres = await genreRepo.FindAsync(g => g.PerformerId == performer.Id, ct);
         if (existingGenres.Count > 0)
         {

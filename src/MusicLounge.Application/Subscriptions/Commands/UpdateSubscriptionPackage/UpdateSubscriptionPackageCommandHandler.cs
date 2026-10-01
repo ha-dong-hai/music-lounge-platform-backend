@@ -18,11 +18,11 @@ internal sealed class UpdateSubscriptionPackageCommandHandler
 
     public async Task<Unit> Handle(UpdateSubscriptionPackageCommand request, CancellationToken ct)
     {
-        var packageRepo = _uow.Repository<SubscriptionPackage, int>();
+        var packageRepo = _uow.Repository<SubscriptionPackage, Guid>();
         var package = await packageRepo.GetByIdAsync(request.PackageId, ct)
             ?? throw new NotFoundException(nameof(SubscriptionPackage), request.PackageId);
 
-        var hasActiveSubscribers = await _uow.Repository<OwnerSubscription, int>().AnyAsync(
+        var hasActiveSubscribers = await _uow.Repository<OwnerSubscription, Guid>().AnyAsync(
             s => s.PackageId == request.PackageId && s.Status == SubscriptionStatus.Active, ct);
 
         if (hasActiveSubscribers)

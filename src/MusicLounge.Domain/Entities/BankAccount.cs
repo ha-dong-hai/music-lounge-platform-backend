@@ -6,10 +6,10 @@ namespace MusicLounge.Domain.Entities;
 // ApplicationDbContext.SaveChangesAsync) — this is the payout-destination record for real money
 // (settlement/donation), so knowing who added/changed an account number matters more here than on
 // most reference-data entities.
-public sealed class BankAccount : Common.AuditableEntity<int>
+public sealed class BankAccount : Common.AuditableEntity<Guid>
 {
     public BankAccountOwnerType OwnerType { get; set; }
-    public int OwnerId { get; set; }    // polymorphic: lounge.id or performer.id — no FK
+    public Guid OwnerId { get; set; }    // polymorphic: lounge.id or performer.id — no FK
     public string BankName { get; set; } = string.Empty;
     public string AccountNumber { get; set; } = string.Empty;
     public string AccountHolder { get; set; } = string.Empty;

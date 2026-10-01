@@ -26,7 +26,7 @@ public sealed class GuestComplaintLookupTests
 
     public GuestComplaintLookupTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedShowAsync()
+    private async Task<Guid> SeedShowAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -45,7 +45,7 @@ public sealed class GuestComplaintLookupTests
         return show.Id;
     }
 
-    private async Task<Envelope<Created>> FileAsGuestAsync(int showId)
+    private async Task<Envelope<Created>> FileAsGuestAsync(Guid showId)
     {
         var guest = _factory.CreateClient();   // no token — this is the whole point
         var res = await guest.PostAsJsonAsync("/api/v1/complaints", new
@@ -130,9 +130,9 @@ public sealed class GuestComplaintLookupTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Created(int Id, string? LookupReference);
+    private sealed record Created(Guid Id, string? LookupReference);
     private sealed record LookupResult(
-        int Id, string TargetType, string Category, string Status,
+        Guid Id, string TargetType, string Category, string Status,
         string? Resolution, string? ResolvedAction,
         DateTimeOffset CreatedAt, DateTimeOffset? ResolvedAt, DateTimeOffset? SlaDeadline);
 }

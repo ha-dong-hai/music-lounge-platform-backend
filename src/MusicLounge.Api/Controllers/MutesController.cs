@@ -45,21 +45,21 @@ public sealed class MutesController : ControllerBase
     }
 
     /// <summary>Tắt tiếng một phòng trà. Nếu đang theo dõi thì việc theo dõi được gỡ luôn.</summary>
-    [HttpPost("lounges/{loungeId:int}")]
+    [HttpPost("lounges/{loungeId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Mute(int loungeId, CancellationToken ct = default)
+    public async Task<IActionResult> Mute(Guid loungeId, CancellationToken ct = default)
     {
         await _sender.Send(new MuteLoungeCommand(loungeId), ct);
         return NoContent();
     }
 
     /// <summary>Bỏ tắt tiếng.</summary>
-    [HttpDelete("lounges/{loungeId:int}")]
+    [HttpDelete("lounges/{loungeId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Unmute(int loungeId, CancellationToken ct = default)
+    public async Task<IActionResult> Unmute(Guid loungeId, CancellationToken ct = default)
     {
         await _sender.Send(new UnmuteLoungeCommand(loungeId), ct);
         return NoContent();

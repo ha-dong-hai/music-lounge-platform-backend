@@ -19,7 +19,7 @@ internal sealed class DeactivateMyAccountCommandHandler : IRequestHandler<Deacti
 
     public async Task<Unit> Handle(DeactivateMyAccountCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 

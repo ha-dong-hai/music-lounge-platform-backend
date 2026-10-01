@@ -34,19 +34,19 @@ public sealed class DonationEvidenceLogTests
 
     public DonationEvidenceLogTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int PerformanceId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid PerformanceId);
 
-    private sealed record InitData(int DonationId, string OrderId);
+    private sealed record InitData(Guid DonationId, string OrderId);
 
     private sealed record Wrapped<T>(T Data);
 
     private sealed record UploadData(string Url);
 
     private sealed record EventItem(
-        int Sequence, string EventType, int? ActorUserId, decimal? Amount, string? Reference,
+        int Sequence, string EventType, Guid? ActorUserId, decimal? Amount, string? Reference,
         string? EvidenceUrl, string? EvidenceSha256, string Hash);
 
-    private sealed record Evidence(int DonationId, bool ChainIntact, int? FirstBrokenSequence, List<EventItem> Events);
+    private sealed record Evidence(Guid DonationId, bool ChainIntact, int? FirstBrokenSequence, List<EventItem> Events);
 
     private async Task<Venue> SeedVenueAsync()
     {
@@ -98,7 +98,7 @@ public sealed class DonationEvidenceLogTests
 
     private HttpClient OwnerOf(Venue venue) => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId);
 
-    private async Task<int> DonateAndConfirmAsync(int performanceId)
+    private async Task<Guid> DonateAndConfirmAsync(Guid performanceId)
     {
         var audience = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await audience.PostAsJsonAsync("/api/v1/donations", new
@@ -141,7 +141,7 @@ public sealed class DonationEvidenceLogTests
     }
 
     /// <summary>Đi hết vòng đời: VNPay → giải ngân → xác nhận → báo đã chuyển (kèm chứng từ) → gỡ lời nhắn.</summary>
-    private async Task<int> RunLifecycleAsync(Venue venue, string evidenceUrl)
+    private async Task<Guid> RunLifecycleAsync(Venue venue, string evidenceUrl)
     {
         var donationId = await DonateAndConfirmAsync(venue.PerformanceId);
         await RunReleaseJobAsync();
@@ -157,7 +157,7 @@ public sealed class DonationEvidenceLogTests
         return donationId;
     }
 
-    private async Task<Evidence> EvidenceOfAsync(int donationId)
+    private async Task<Evidence> EvidenceOfAsync(Guid donationId)
     {
         var admin = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await admin.GetAsync($"/api/v1/admin/donations/{donationId}/evidence");

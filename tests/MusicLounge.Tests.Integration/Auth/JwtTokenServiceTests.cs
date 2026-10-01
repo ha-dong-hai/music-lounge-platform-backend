@@ -1,3 +1,4 @@
+using MusicLounge.Tests.Integration.Helpers;
 using System.IdentityModel.Tokens.Jwt;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
@@ -36,7 +37,7 @@ public sealed class JwtTokenServiceTests
     {
         var user = new User
         {
-            Id = 42,
+            Id = TestId.Of(42),
             Email = "stamp@test.com",
             Role = UserRole.Audience,
             SecurityStamp = Guid.NewGuid()
@@ -53,8 +54,8 @@ public sealed class JwtTokenServiceTests
     [Fact]
     public void GenerateToken_DifferentUsers_ProduceDifferentSecurityStamps()
     {
-        var userA = new User { Id = 1, Email = "a@test.com", Role = UserRole.Audience, SecurityStamp = Guid.NewGuid() };
-        var userB = new User { Id = 2, Email = "b@test.com", Role = UserRole.Audience, SecurityStamp = Guid.NewGuid() };
+        var userA = new User { Id = TestId.Of(1), Email = "a@test.com", Role = UserRole.Audience, SecurityStamp = Guid.NewGuid() };
+        var userB = new User { Id = TestId.Of(2), Email = "b@test.com", Role = UserRole.Audience, SecurityStamp = Guid.NewGuid() };
         var service = CreateService();
 
         var (tokenA, _) = service.GenerateToken(userA, null);

@@ -28,7 +28,7 @@ public sealed class FnbVenueGateTests
     public FnbVenueGateTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record Venue(int LoungeId, int OwnerId, int MenuItemId);
+    private sealed record Venue(Guid LoungeId, Guid OwnerId, Guid MenuItemId);
 
     private async Task<Venue> CreateVenueAsync()
     {
@@ -69,7 +69,7 @@ public sealed class FnbVenueGateTests
         return new Venue(lounge.Id, owner.Id, item.Id);
     }
 
-    private async Task SetVenueStatusAsync(int loungeId, LoungeStatus status)
+    private async Task SetVenueStatusAsync(Guid loungeId, LoungeStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -78,20 +78,20 @@ public sealed class FnbVenueGateTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> CreateOrderAsync(Venue venue, HttpClient client)
+    private async Task<Guid> CreateOrderAsync(Venue venue, HttpClient client)
     {
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = venue.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = venue.MenuItemId, Quantity = 1, Note = (string?)null } }
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
     }
 
     // ── Tạo đơn ──────────────────────────────────────────────────────────────
@@ -108,8 +108,8 @@ public sealed class FnbVenueGateTests
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = venue.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,
@@ -130,8 +130,8 @@ public sealed class FnbVenueGateTests
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = venue.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,
@@ -155,8 +155,8 @@ public sealed class FnbVenueGateTests
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = venue.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,

@@ -14,15 +14,15 @@ public sealed record SystemConfigDto(
     string? Description,
     bool IsMoneyRate,
     DateTimeOffset UpdatedAt,
-    int? UpdatedBy,
+    Guid? UpdatedBy,
     string? UpdatedByName);
 
 public sealed record SystemConfigHistoryDto(
-    long Id,
+    Guid Id,
     string ConfigKey,
     string? OldValue,
     string NewValue,
     string Note,
     DateTimeOffset ChangedAt,
-    int ChangedBy,
+    Guid ChangedBy,
     string? ChangedByName);

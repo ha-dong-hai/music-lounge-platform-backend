@@ -49,7 +49,7 @@ public sealed class VietnamTimeInMessagesTests
         text.Should().NotContain(Utc(moment, format), "giờ UTC chậm 7 tiếng so với đồng hồ người đọc");
     }
 
-    private async Task<(int OwnerId, int LoungeId)> FreshOwnerAndLoungeAsync()
+    private async Task<(Guid OwnerId, Guid LoungeId)> FreshOwnerAndLoungeAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -70,7 +70,7 @@ public sealed class VietnamTimeInMessagesTests
         return (owner.Id, lounge.Id);
     }
 
-    private async Task<int> SeedPublishedShowWithBuyerAsync(DateTimeOffset start)
+    private async Task<Guid> SeedPublishedShowWithBuyerAsync(DateTimeOffset start)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -126,7 +126,7 @@ public sealed class VietnamTimeInMessagesTests
     public async Task AppealNotice_TellsAdminTheDeadline_InVietnamTime()
     {
         var (ownerId, loungeId) = await FreshOwnerAndLoungeAsync();
-        int penaltyId;
+        Guid penaltyId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -167,7 +167,7 @@ public sealed class VietnamTimeInMessagesTests
             ? t
             : new DateTimeOffset(t.UtcDateTime.Date.AddHours(17.5), TimeSpan.Zero);
 
-        int ownerId, subId;
+        Guid ownerId, subId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -221,9 +221,9 @@ public sealed class VietnamTimeInMessagesTests
             LoungeId = SeedHelper.LoungeId, Name = $"VnTimePolicy-{Guid.NewGuid():N}",
             Description = "Integration test show", Format = "Offline",
             ScheduledStart = start, ScheduledEnd = start.AddHours(3),
-            TicketSaleClosesAt = (DateTimeOffset?)null, CategoryId = (int?)null,
+            TicketSaleClosesAt = (DateTimeOffset?)null, CategoryId = (Guid?)null,
             OfflineQuota = (int?)null, OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(), MoodIds = Array.Empty<Guid>(), AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>(),
             CancellationAllowed = (bool?)true, RefundPercentage = (decimal?)null, CancellationDeadlineHours = (int?)24
         });
@@ -239,7 +239,7 @@ public sealed class VietnamTimeInMessagesTests
     {
         // 20:00 UTC là 03:00 sáng hôm sau ở Việt Nam — ngày thanh toán in theo hai múi giờ khác nhau.
         var paidAt = new DateTimeOffset(DateTime.UtcNow.Date.AddDays(-100).AddHours(20), TimeSpan.Zero);
-        int refundId;
+        Guid refundId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

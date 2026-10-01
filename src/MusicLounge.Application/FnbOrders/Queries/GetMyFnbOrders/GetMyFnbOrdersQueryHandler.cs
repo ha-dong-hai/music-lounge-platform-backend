@@ -38,7 +38,7 @@ internal sealed class GetMyFnbOrdersQueryHandler
         // tự lọc phòng đang ngồi — vừa gọi món ở phòng khác là đơn CHƯA TRẢ của phòng này rơi khỏi trang, nút Trả online
         // biến mất. Phòng trà không tồn tại hay không có đơn thì đơn giản là danh sách rỗng, không phải lỗi.
         var loungeId = request.LoungeId;
-        var (pageItems, total) = await _uow.Repository<FnbOrder, int>().GetPagedAsync(
+        var (pageItems, total) = await _uow.Repository<FnbOrder, Guid>().GetPagedAsync(
             o => o.AudienceUserId == userId && (loungeId == null || o.LoungeId == loungeId), o => o.Id, page, pageSize, ct);
 
         var dtos = await FnbOrderDtoBuilder.BuildAsync(_uow, pageItems, ct);

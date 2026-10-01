@@ -16,11 +16,11 @@ internal sealed class GetSystemConfigsQueryHandler
     public async Task<IReadOnlyList<SystemConfigDto>> Handle(
         GetSystemConfigsQuery request, CancellationToken ct)
     {
-        var configs = await _uow.Repository<SystemConfig, int>().FindAsync(c => c.Id > 0, ct);
+        var configs = await _uow.Repository<SystemConfig, Guid>().FindAsync(c => c.Id != Guid.Empty, ct);
 
         var editorIds = configs.Where(c => c.UpdatedBy.HasValue).Select(c => c.UpdatedBy!.Value).Distinct().ToList();
         var editors = editorIds.Count > 0
-            ? (await _uow.Repository<User, int>().FindAsync(u => editorIds.Contains(u.Id), ct))
+            ? (await _uow.Repository<User, Guid>().FindAsync(u => editorIds.Contains(u.Id), ct))
                 .ToDictionary(u => u.Id, u => u.FullName)
             : [];
 

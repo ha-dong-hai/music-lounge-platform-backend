@@ -42,7 +42,7 @@ public sealed class ShowNeverStartedPayoutTests
     /// <param name="actualStart">
     /// <c>null</c> tái hiện buổi diễn bị job tự đóng mà chưa từng bắt đầu.
     /// </param>
-    private async Task<int> DueSettlementAsync(
+    private async Task<Guid> DueSettlementAsync(
         SettlementReleaseType releaseType,
         DateTimeOffset? actualStart,
         DateTimeOffset? actualEnd,
@@ -96,7 +96,7 @@ public sealed class ShowNeverStartedPayoutTests
 
         var payoutAccountId = await db.Set<BankAccount>()
             .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
-            .Select(a => (int?)a.Id)
+            .Select(a => (Guid?)a.Id)
             .FirstAsync();
 
         var settlement = new Settlement
@@ -126,7 +126,7 @@ public sealed class ShowNeverStartedPayoutTests
         await job.ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<SettlementStatus> StatusAsync(int settlementId)
+    private async Task<SettlementStatus> StatusAsync(Guid settlementId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -237,7 +237,7 @@ public sealed class ShowNeverStartedPayoutTests
         // Phần còn đúng của nguyên tắc cũ nằm ở đây: khi thật sự không xác định được buổi diễn nào
         // đứng sau giao dịch, vẫn phải giải ngân. Chặn mọi khoản chi chỉ vì thiếu dữ liệu sẽ giam
         // tiền của tất cả những phòng trà làm ăn tử tế.
-        int settlementId;
+        Guid settlementId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -259,7 +259,7 @@ public sealed class ShowNeverStartedPayoutTests
 
             var payoutAccountId = await db.Set<BankAccount>()
                 .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
-                .Select(a => (int?)a.Id)
+                .Select(a => (Guid?)a.Id)
                 .FirstAsync();
 
             var settlement = new Settlement

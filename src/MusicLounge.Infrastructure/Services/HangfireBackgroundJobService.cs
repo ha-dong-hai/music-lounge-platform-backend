@@ -16,24 +16,24 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     public HangfireBackgroundJobService(ISecretProtector secretProtector)
         => _secretProtector = secretProtector;
 
-    public void EnqueueLogUserBehaviour(int userId, int showId, BehaviourAction action)
+    public void EnqueueLogUserBehaviour(Guid userId, Guid showId, BehaviourAction action)
         => BackgroundJob.Enqueue<LogUserBehaviourJob>(
             j => j.ExecuteAsync(userId, showId, action));
 
-    public void EnqueueRecommendationRefresh(int userId)
+    public void EnqueueRecommendationRefresh(Guid userId)
         => BackgroundJob.Enqueue<RefreshUserRecommendationJob>(
             j => j.ExecuteAsync(userId, JobCancellationToken.Null));
 
-    public void EnqueueLivestreamCheckIn(int userId, int showId)
+    public void EnqueueLivestreamCheckIn(Guid userId, Guid showId)
         => BackgroundJob.Enqueue<CheckInLivestreamViewerJob>(
             j => j.ExecuteAsync(userId, showId));
 
-    public void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay)
+    public void EnqueueLivestreamReconnectTimeout(Guid livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay)
         => BackgroundJob.Schedule<LivestreamReconnectTimeoutJob>(
             j => j.ExecuteAsync(livestreamId, disconnectedAt), delay);
 
     public void EnqueueFcmNotification(
-        int userId, string title, string body, string? referenceType = null, string? referenceId = null)
+        Guid userId, string title, string body, string? referenceType = null, string? referenceId = null)
     {
         var data = new Dictionary<string, string>();
         if (referenceType is not null) data["referenceType"] = referenceType;
@@ -65,11 +65,11 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
             j => j.ExecuteAsync(toPhone, protectedCode, language, CancellationToken.None));
     }
 
-    public void EnqueueModerationAiScoring(int moderationId)
+    public void EnqueueModerationAiScoring(Guid moderationId)
         => BackgroundJob.Enqueue<ScoreModerationWithAiJob>(
             j => j.ExecuteAsync(moderationId, JobCancellationToken.Null));
 
-    public void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
+    public void EnqueueStitchVenueTourScene(Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
         => BackgroundJob.Enqueue<StitchVenueTourSceneJob>(
             j => j.ExecuteAsync(attemptId, loungeId, sourceImageUrls, name, JobCancellationToken.Null));
 

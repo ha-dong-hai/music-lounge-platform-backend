@@ -33,13 +33,13 @@ internal sealed class GetAudienceEngagementStatsQueryHandler
             to = request.To ?? monthStart.AddMonths(1).AddTicks(-1);
         }
 
-        var follows = await _uow.Repository<Follow, int>().FindAsync(f => f.CreatedAt >= from, ct);
+        var follows = await _uow.Repository<Follow, Guid>().FindAsync(f => f.CreatedAt >= from, ct);
         var newFollows = follows.Count(f => f.CreatedAt <= to);
 
-        var wishlists = await _uow.Repository<ShowWishlist, int>().FindAsync(w => w.CreatedAt >= from, ct);
+        var wishlists = await _uow.Repository<ShowWishlist, Guid>().FindAsync(w => w.CreatedAt >= from, ct);
         var newWishlists = wishlists.Count(w => w.CreatedAt <= to);
 
-        var ratings = await _uow.Repository<LoungeShowRating, int>()
+        var ratings = await _uow.Repository<LoungeShowRating, Guid>()
             .FindAsync(r => !r.IsRemoved && r.CreatedAt >= from, ct);
         var newRatings = ratings.Count(r => r.CreatedAt <= to);
 

@@ -8,5 +8,5 @@ namespace MusicLounge.Application.LoungeShows.Queries.GetLoungeShowsByPerformer;
 /// những gì. Mặc định chỉ trả buổi sắp diễn vì đó là việc khán giả tới đây để làm.
 /// </param>
 public sealed record GetLoungeShowsByPerformerQuery(
-    int PerformerId, bool IncludeEnded = false, int Page = 1, int PageSize = 10)
+    Guid PerformerId, bool IncludeEnded = false, int Page = 1, int PageSize = 10)
     : IQuery<PerformerDetailDto>;

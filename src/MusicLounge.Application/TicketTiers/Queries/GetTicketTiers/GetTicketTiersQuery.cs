@@ -3,4 +3,4 @@ using MusicLounge.Application.LoungeShows.DTOs;
 
 namespace MusicLounge.Application.TicketTiers.Queries.GetTicketTiers;
 
-public sealed record GetTicketTiersQuery(int ShowId) : IQuery<IReadOnlyList<TicketTierSummaryDto>>;
+public sealed record GetTicketTiersQuery(Guid ShowId) : IQuery<IReadOnlyList<TicketTierSummaryDto>>;

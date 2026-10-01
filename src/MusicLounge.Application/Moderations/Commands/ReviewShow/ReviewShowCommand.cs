@@ -3,7 +3,7 @@ using MusicLounge.Application.Common.Abstractions;
 namespace MusicLounge.Application.Moderations.Commands.ReviewShow;
 
 public sealed record ReviewShowCommand(
-    int ShowId,
+    Guid ShowId,
     string Decision,
     string? ReviewNote
 ) : ICommand;

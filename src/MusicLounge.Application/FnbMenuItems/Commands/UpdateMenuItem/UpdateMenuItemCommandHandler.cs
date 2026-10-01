@@ -20,14 +20,14 @@ internal sealed class UpdateMenuItemCommandHandler : IRequestHandler<UpdateMenuI
 
     public async Task<Unit> Handle(UpdateMenuItemCommand request, CancellationToken ct)
     {
-        var itemRepo = _uow.Repository<FnbMenuItem, int>();
+        var itemRepo = _uow.Repository<FnbMenuItem, Guid>();
         var item = await itemRepo.GetByIdAsync(request.MenuItemId, ct)
             ?? throw new NotFoundException(nameof(FnbMenuItem), request.MenuItemId);
 
-        var menu = await _uow.Repository<FnbMenu, int>().GetByIdAsync(item.MenuId, ct)
+        var menu = await _uow.Repository<FnbMenu, Guid>().GetByIdAsync(item.MenuId, ct)
             ?? throw new NotFoundException(nameof(FnbMenu), item.MenuId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(menu.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(menu.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), menu.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)

@@ -7,7 +7,7 @@ public sealed class UpdatePerformanceCommandValidator : AbstractValidator<Update
 {
     public UpdatePerformanceCommandValidator()
     {
-        RuleFor(x => x.PerformanceId).GreaterThan(0);
+        RuleFor(x => x.PerformanceId).NotEmpty();
         RuleFor(x => x.Role)
             .Must(r => Enum.TryParse<PerformerRole>(r, ignoreCase: true, out _))
             .WithMessage($"Role phải là một trong: {string.Join(", ", Enum.GetNames<PerformerRole>())}.");

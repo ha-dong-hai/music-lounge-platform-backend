@@ -33,9 +33,9 @@ public sealed class FnbSettlementTests
     public FnbSettlementTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record PaymentInit(int OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
+    private sealed record PaymentInit(Guid OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
-    private sealed record RecentSettlement(int Id, decimal NetAmount, string Status);
+    private sealed record RecentSettlement(Guid Id, decimal NetAmount, string Status);
     private sealed record Earnings(List<RecentSettlement> RecentSettlements);
     private sealed record RevenueReportSlice(decimal TotalSettlementReceived);
 
@@ -43,9 +43,9 @@ public sealed class FnbSettlementTests
     private HttpClient Staff() => _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
     private HttpClient Owner() => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
 
-    private async Task<int> CreateOrderAsync()
+    private async Task<Guid> CreateOrderAsync()
     {
-        int menuItemId;
+        Guid menuItemId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -68,18 +68,18 @@ public sealed class FnbSettlementTests
         var res = await Audience().PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = "Bàn C2",
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = menuItemId, Quantity, Note = (string?)null } }
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
     }
 
-    private async Task<string> InitiateAsync(int orderId)
+    private async Task<string> InitiateAsync(Guid orderId)
     {
         var res = await Audience().PostAsync($"/api/v1/fnb-orders/{orderId}/pay", null);
         res.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -96,13 +96,13 @@ public sealed class FnbSettlementTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!.RspCode;
     }
 
-    private async Task StaffSetAsync(int orderId, string status)
+    private async Task StaffSetAsync(Guid orderId, string status)
     {
         var res = await Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status });
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
-    private async Task<List<Payment>> PaymentsAsync(int orderId)
+    private async Task<List<Payment>> PaymentsAsync(Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -111,7 +111,7 @@ public sealed class FnbSettlementTests
             .ToListAsync();
     }
 
-    private async Task<List<Settlement>> SettlementsAsync(int orderId)
+    private async Task<List<Settlement>> SettlementsAsync(Guid orderId)
     {
         var paymentIds = (await PaymentsAsync(orderId)).Select(p => p.Id).ToList();
         using var scope = _factory.Services.CreateScope();
@@ -119,7 +119,7 @@ public sealed class FnbSettlementTests
         return await db.Settlements.AsNoTracking().Where(s => paymentIds.Contains(s.PaymentId)).ToListAsync();
     }
 
-    private async Task<List<(AccountType Type, int? OwnerId, decimal Amount, bool IsDebit)>> PurchaseLinesAsync(int orderId)
+    private async Task<List<(AccountType Type, Guid? OwnerId, decimal Amount, bool IsDebit)>> PurchaseLinesAsync(Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -130,7 +130,7 @@ public sealed class FnbSettlementTests
         return rows.Select(r => (r.OwnerType, r.OwnerId, r.Amount, r.IsDebit)).ToList();
     }
 
-    private async Task<int> PaidAndServedAsync()
+    private async Task<Guid> PaidAndServedAsync()
     {
         var orderId = await CreateOrderAsync();
         (await IpnAsync(await InitiateAsync(orderId))).Should().Be("00");
@@ -139,7 +139,7 @@ public sealed class FnbSettlementTests
         return orderId;
     }
 
-    private async Task ReleaseDueAsync(int settlementId)
+    private async Task ReleaseDueAsync(Guid settlementId)
     {
         using (var scope = _factory.Services.CreateScope())
         {

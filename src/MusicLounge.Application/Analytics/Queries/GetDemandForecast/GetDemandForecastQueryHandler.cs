@@ -38,11 +38,11 @@ internal sealed class GetDemandForecastQueryHandler
 
     public async Task<DemandForecastDto> Handle(GetDemandForecastQuery request, CancellationToken ct)
     {
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -98,9 +98,9 @@ internal sealed class GetDemandForecastQueryHandler
     /// ORDER BY được cột DateTimeOffset — cùng lớp vấn đề đã xử ở MLACP-306.
     /// </summary>
     private async Task<IReadOnlyList<LoungeShow>> CompletedShowsAsync(
-        int? loungeId, int excludeShowId, CancellationToken ct)
+        Guid? loungeId, Guid excludeShowId, CancellationToken ct)
     {
-        var shows = await _uow.Repository<LoungeShow, int>().FindAsync(
+        var shows = await _uow.Repository<LoungeShow, Guid>().FindAsync(
             s => s.Status == LoungeShowStatus.Ended
                 && s.Id != excludeShowId
                 && (loungeId == null || s.LoungeId == loungeId), ct);
@@ -132,7 +132,7 @@ internal sealed class GetDemandForecastQueryHandler
     /// Vé "đã bán" là Confirmed hoặc Used — đúng định nghĩa GetTicketSalesTrend đang dùng. Hai màn
     /// hình nói về cùng một buổi diễn mà đếm khác nhau thì không màn hình nào còn đáng tin.
     /// </summary>
-    private async Task<int> CountSoldAsync(int showId, DateTimeOffset? createdBefore, CancellationToken ct)
+    private async Task<int> CountSoldAsync(Guid showId, DateTimeOffset? createdBefore, CancellationToken ct)
     {
         var tickets = await _uow.Repository<Ticket, Guid>().FindAsync(
             t => t.ShowId == showId
@@ -145,9 +145,9 @@ internal sealed class GetDemandForecastQueryHandler
             : tickets.Count;
     }
 
-    private async Task<int?> CapacityAsync(int showId, CancellationToken ct)
+    private async Task<int?> CapacityAsync(Guid showId, CancellationToken ct)
     {
-        var tiers = await _uow.Repository<TicketTier, int>()
+        var tiers = await _uow.Repository<TicketTier, Guid>()
             .FindAsync(t => t.LoungeShowId == showId, ct);
 
         // Chỉ cộng được khi MỌI hạng vé đều khai sức chứa. Thiếu một hạng thì tổng đó nhỏ hơn sức

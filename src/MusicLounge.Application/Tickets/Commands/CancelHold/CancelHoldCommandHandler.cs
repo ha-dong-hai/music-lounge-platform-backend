@@ -31,7 +31,7 @@ internal sealed class CancelHoldCommandHandler : IRequestHandler<CancelHoldComma
         // đang dở, thay vì một trong hai thất bại sạch sẽ trước.
         await using var _ = await _lock.AcquireAsync($"purchase-hold:{request.HoldId}", ct);
 
-        var holdRepo = _uow.Repository<TicketHold, int>();
+        var holdRepo = _uow.Repository<TicketHold, Guid>();
         var hold = await holdRepo.GetByIdAsync(request.HoldId, ct)
             ?? throw new NotFoundException(nameof(TicketHold), request.HoldId);
 

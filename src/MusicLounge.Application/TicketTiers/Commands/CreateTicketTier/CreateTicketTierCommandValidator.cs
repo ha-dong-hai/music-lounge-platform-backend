@@ -12,14 +12,14 @@ public sealed class CreateTicketTierCommandValidator : AbstractValidator<CreateT
 
     public CreateTicketTierCommandValidator(IUnitOfWork uow)
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
 
         // Sai ZoneId truoc day roi xuong tan luc SaveChangesAsync moi vi pham FK, GlobalExceptionHandler
         // bat DbUpdateException chung chung — khong ro field nao sai.
         RuleFor(x => x.ZoneId)
             .MustAsync(async (id, ct) =>
-                await uow.Repository<SeatingZone, int>().AnyAsync(z => z.Id == id!.Value, ct))
+                await uow.Repository<SeatingZone, Guid>().AnyAsync(z => z.Id == id!.Value, ct))
             .When(x => x.ZoneId.HasValue)
             .WithMessage("ZoneId không tồn tại.");
 

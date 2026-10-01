@@ -13,7 +13,7 @@ internal sealed class UpdateMusicGenreCommandHandler : IRequestHandler<UpdateMus
 
     public async Task<Unit> Handle(UpdateMusicGenreCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<MusicGenre, int>();
+        var repo = _uow.Repository<MusicGenre, Guid>();
         var genre = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(MusicGenre), request.Id);
 

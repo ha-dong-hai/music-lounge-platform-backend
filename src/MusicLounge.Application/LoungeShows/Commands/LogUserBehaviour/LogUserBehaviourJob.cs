@@ -14,17 +14,17 @@ public sealed class LogUserBehaviourJob
     private const decimal PurchaseSignal = 1.0m;
     private const decimal DefaultWeight = 0.5m;
 
-    private readonly IRepository<UserBehaviourLog, int> _logRepo;
-    private readonly IRepository<User, int> _userRepo;
-    private readonly IRepository<EventCustomValue, int> _eventValueRepo;
-    private readonly IRepository<UserCustomPreference, int> _preferenceRepo;
+    private readonly IRepository<UserBehaviourLog, Guid> _logRepo;
+    private readonly IRepository<User, Guid> _userRepo;
+    private readonly IRepository<EventCustomValue, Guid> _eventValueRepo;
+    private readonly IRepository<UserCustomPreference, Guid> _preferenceRepo;
     private readonly IUnitOfWork _uow;
 
     public LogUserBehaviourJob(
-        IRepository<UserBehaviourLog, int> logRepo,
-        IRepository<User, int> userRepo,
-        IRepository<EventCustomValue, int> eventValueRepo,
-        IRepository<UserCustomPreference, int> preferenceRepo,
+        IRepository<UserBehaviourLog, Guid> logRepo,
+        IRepository<User, Guid> userRepo,
+        IRepository<EventCustomValue, Guid> eventValueRepo,
+        IRepository<UserCustomPreference, Guid> preferenceRepo,
         IUnitOfWork uow)
     {
         _logRepo = logRepo;
@@ -34,7 +34,7 @@ public sealed class LogUserBehaviourJob
         _uow = uow;
     }
 
-    public async Task ExecuteAsync(int userId, int showId, BehaviourAction action)
+    public async Task ExecuteAsync(Guid userId, Guid showId, BehaviourAction action)
     {
         var user = await _userRepo.GetByIdAsync(userId);
         if (user is null || !user.AiConsent) return;
@@ -57,7 +57,7 @@ public sealed class LogUserBehaviourJob
         await _uow.SaveChangesAsync();
     }
 
-    private async Task UpdateCustomPreferenceWeightsAsync(int userId, int showId)
+    private async Task UpdateCustomPreferenceWeightsAsync(Guid userId, Guid showId)
     {
         var eventValues = await _eventValueRepo.FindAsync(v => v.ShowId == showId);
         if (eventValues.Count == 0) return;

@@ -23,7 +23,7 @@ internal sealed class GetMyCitizenCardImageQueryHandler
 
     public async Task<CitizenCardImageDto> Handle(GetMyCitizenCardImageQuery request, CancellationToken ct)
     {
-        var user = await _uow.Repository<User, int>().GetByIdAsync(_currentUser.UserId, ct)
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 
         var privateRef = request.Side.Equals("front", StringComparison.OrdinalIgnoreCase)

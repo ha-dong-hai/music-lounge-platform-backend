@@ -41,19 +41,19 @@ internal sealed class SellWalkInTicketCommandHandler
 
     public async Task<WalkInSaleResultDto> Handle(SellWalkInTicketCommand request, CancellationToken ct)
     {
-        var priceRepo = _uow.Repository<TicketPrice, int>();
+        var priceRepo = _uow.Repository<TicketPrice, Guid>();
         var price = await priceRepo.GetByIdAsync(request.PriceId, ct)
             ?? throw new NotFoundException(nameof(TicketPrice), request.PriceId);
 
-        var tierRepo = _uow.Repository<TicketTier, int>();
+        var tierRepo = _uow.Repository<TicketTier, Guid>();
         var tier = await tierRepo.GetByIdAsync(price.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), price.TierId);
 
-        var showRepoGeneric = _uow.Repository<LoungeShow, int>();
+        var showRepoGeneric = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepoGeneric.GetByIdAsync(tier.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), tier.LoungeShowId);
 
-        var loungeOwnerId = await _showRepo.GetLoungeOwnerIdAsync(tier.LoungeShowId, ct) ?? 0;
+        var loungeOwnerId = await _showRepo.GetLoungeOwnerIdAsync(tier.LoungeShowId, ct) ?? Guid.Empty;
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, loungeOwnerId))
             throw new ForbiddenException("Bạn không có quyền bán vé tại quầy cho venue này.");
 
@@ -127,7 +127,7 @@ internal sealed class SellWalkInTicketCommandHandler
                 PaidAt = now,
                 CreatedAt = now
             };
-            _uow.Repository<Payment, int>().Add(payment);
+            _uow.Repository<Payment, Guid>().Add(payment);
             await _uow.SaveChangesAsync(ct);
 
             var tickets = Enumerable.Range(0, request.Quantity).Select(_ => new Ticket
@@ -158,7 +158,7 @@ internal sealed class SellWalkInTicketCommandHandler
 
             await _publisher.Publish(new TicketPaymentConfirmed(
                 PaymentId: payment.Id,
-                UserId: 0,
+                UserId: Guid.Empty,
                 OwnerId: loungeOwnerId,
                 TicketIds: tickets.Select(t => t.Id).ToArray(),
                 LivestreamId: null,
@@ -175,7 +175,7 @@ internal sealed class SellWalkInTicketCommandHandler
         if (idempotencyKey is null)
             return null;
 
-        var payment = (await _uow.Repository<Payment, int>().FindAsync(p => p.IdempotencyKey == idempotencyKey, ct))
+        var payment = (await _uow.Repository<Payment, Guid>().FindAsync(p => p.IdempotencyKey == idempotencyKey, ct))
             .SingleOrDefault();
         if (payment is null)
             return null;
@@ -192,7 +192,7 @@ internal sealed class SellWalkInTicketCommandHandler
     }
 
     private async Task ValidateQuotaAsync(
-        TicketPrice price, TicketTier tier, LoungeShow show, int quantity, int loungeOwnerId, CancellationToken ct)
+        TicketPrice price, TicketTier tier, LoungeShow show, int quantity, Guid loungeOwnerId, CancellationToken ct)
     {
         if (price.Quota.HasValue)
         {
@@ -212,7 +212,7 @@ internal sealed class SellWalkInTicketCommandHandler
         // chịu chung giới hạn vật lý của khu vực, không chỉ đường mua online mới bị chặn.
         if (tier.ZoneId.HasValue)
         {
-            var zone = await _uow.Repository<SeatingZone, int>().GetByIdAsync(tier.ZoneId.Value, ct);
+            var zone = await _uow.Repository<SeatingZone, Guid>().GetByIdAsync(tier.ZoneId.Value, ct);
             if (zone is not null)
             {
                 var zoneReserved = await _ticketRepo.GetReservedQuantityByZoneAsync(show.Id, tier.ZoneId.Value, ct);
@@ -231,7 +231,7 @@ internal sealed class SellWalkInTicketCommandHandler
 
         // D14: cùng giới hạn subscription như HoldTicketCommandHandler — walk-in cũng đổi vé/tiền
         // thật nên phải chịu cùng giới hạn, không chỉ đường mua online mới bị chặn.
-        var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var activeSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == loungeOwnerId && s.Status == SubscriptionStatus.Active, ct);
         // Cung mot cap voi duong mua online — ban tai quay khong duoc la loi thoat khoi gioi han.
         var freeTierCap = await _config.GetIntAsync(

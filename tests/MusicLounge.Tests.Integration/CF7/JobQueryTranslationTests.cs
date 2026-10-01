@@ -28,7 +28,7 @@ public sealed class JobQueryTranslationTests
     public async Task CancelAbandonedPaymentsJob_RunsWithoutThrowing_AndCancelsStalePendingPayment()
     {
         Guid ticketId;
-        int paymentId;
+        Guid paymentId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -70,7 +70,7 @@ public sealed class JobQueryTranslationTests
     [Fact]
     public async Task ExpireStuckDonationsJob_RunsWithoutThrowing_AndCancelsStaleDonation()
     {
-        int donationId;
+        Guid donationId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -100,7 +100,7 @@ public sealed class JobQueryTranslationTests
     [Fact]
     public async Task ExpireSubscriptionsJob_RunsWithoutThrowing_AndExpiresPastDueSubscription()
     {
-        int subId;
+        Guid subId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -183,7 +183,7 @@ public sealed class JobQueryTranslationTests
     [Fact]
     public async Task AutoConfirmDonationsJob_RunsWithoutThrowing_AndAutoConfirmsOverdueDonation()
     {
-        int donationId;
+        Guid donationId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -216,7 +216,7 @@ public sealed class JobQueryTranslationTests
     [Fact]
     public async Task DonationOverdueCheckJob_RunsWithoutThrowing_AndRemindsOwnerOfOverdueDonation()
     {
-        int donationId;
+        Guid donationId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

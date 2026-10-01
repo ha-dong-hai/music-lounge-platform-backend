@@ -10,7 +10,7 @@ namespace MusicLounge.Application.Common.Services;
 internal sealed class LedgerService : ILedgerService
 {
     private readonly IUnitOfWork _uow;
-    private readonly Dictionary<(AccountType, int?), Account> _accountCache = [];
+    private readonly Dictionary<(AccountType, Guid?), Account> _accountCache = [];
 
     public LedgerService(IUnitOfWork uow) => _uow = uow;
 
@@ -18,7 +18,7 @@ internal sealed class LedgerService : ILedgerService
         string journalId,
         string referenceType,
         string referenceId,
-        int? paymentId,
+        Guid? paymentId,
         IReadOnlyList<LedgerLine> lines,
         CancellationToken ct = default)
     {
@@ -28,7 +28,7 @@ internal sealed class LedgerService : ILedgerService
             throw new DomainException(
                 $"Journal {journalId} không cân: tổng debit ({debit}) phải bằng tổng credit ({credit}).");
 
-        var entryRepo = _uow.Repository<LedgerEntry, int>();
+        var entryRepo = _uow.Repository<LedgerEntry, Guid>();
         var now = DateTimeOffset.UtcNow;
 
         foreach (var line in lines)
@@ -49,12 +49,12 @@ internal sealed class LedgerService : ILedgerService
         }
     }
 
-    private async Task<Account> GetOrCreateAccountAsync(AccountType ownerType, int? ownerId, CancellationToken ct)
+    private async Task<Account> GetOrCreateAccountAsync(AccountType ownerType, Guid? ownerId, CancellationToken ct)
     {
         if (_accountCache.TryGetValue((ownerType, ownerId), out var cached))
             return cached;
 
-        var repo = _uow.Repository<Account, int>();
+        var repo = _uow.Repository<Account, Guid>();
         var account = (await repo.FindAsync(a => a.OwnerType == ownerType && a.OwnerId == ownerId, ct))
             .FirstOrDefault();
 

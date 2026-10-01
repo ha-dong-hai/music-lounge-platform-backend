@@ -34,7 +34,7 @@ public sealed class TaxonomyDeleteGuardTests
 
     public TaxonomyDeleteGuardTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> LonelyGenreAsync()
+    private async Task<Guid> LonelyGenreAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -44,7 +44,7 @@ public sealed class TaxonomyDeleteGuardTests
         return genre.Id;
     }
 
-    private async Task<int> ListenerAsync()
+    private async Task<Guid> ListenerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -62,7 +62,7 @@ public sealed class TaxonomyDeleteGuardTests
         return user.Id;
     }
 
-    private Task<HttpResponseMessage> DeleteGenreAsync(int genreId)
+    private Task<HttpResponseMessage> DeleteGenreAsync(Guid genreId)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
             .DeleteAsync($"/api/v1/admin/genres/{genreId}");
 

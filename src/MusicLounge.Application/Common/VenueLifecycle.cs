@@ -56,8 +56,8 @@ public static class VenueLifecycle
     /// đình chỉ hay khoá vĩnh viễn thì bị ẩn khỏi danh sách — nhưng ai có đường dẫn tới buổi diễn vẫn
     /// giữ chỗ, trả tiền và donate được.</para>
     /// </summary>
-    public static async Task<LoungeStatus?> StatusOfAsync(IUnitOfWork uow, int loungeId, CancellationToken ct)
-        => (await uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(loungeId, ct))?.Status;
+    public static async Task<LoungeStatus?> StatusOfAsync(IUnitOfWork uow, Guid loungeId, CancellationToken ct)
+        => (await uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(loungeId, ct))?.Status;
 
     /// <summary>
     /// Phòng trà có được hiện ra cho người ngoài hay không. Trùng với <see cref="CanOperate"/> hôm

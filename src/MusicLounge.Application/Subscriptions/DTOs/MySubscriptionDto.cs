@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.Subscriptions.DTOs;
 
 public sealed record MySubscriptionDto(
-    int Id,
-    int PackageId,
+    Guid Id,
+    Guid PackageId,
     string PackageName,
     DateTimeOffset StartedAt,
     DateTimeOffset ExpiresAt,

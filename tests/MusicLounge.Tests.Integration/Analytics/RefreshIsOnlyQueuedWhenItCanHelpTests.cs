@@ -45,19 +45,19 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
     /// <summary>Ghi lại đúng một điều: đã đặt lịch tính lại gợi ý cho ai, bao nhiêu lần.</summary>
     private sealed class RecordingJobService : IBackgroundJobService
     {
-        public List<int> RefreshesQueued { get; } = [];
+        public List<Guid> RefreshesQueued { get; } = [];
 
-        public void EnqueueRecommendationRefresh(int userId) => RefreshesQueued.Add(userId);
+        public void EnqueueRecommendationRefresh(Guid userId) => RefreshesQueued.Add(userId);
 
-        public void EnqueueLogUserBehaviour(int userId, int showId, BehaviourAction action) { }
-        public void EnqueueLivestreamCheckIn(int userId, int showId) { }
-        public void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay) { }
-        public void EnqueueFcmNotification(int userId, string title, string body, string? referenceType = null, string? referenceId = null) { }
+        public void EnqueueLogUserBehaviour(Guid userId, Guid showId, BehaviourAction action) { }
+        public void EnqueueLivestreamCheckIn(Guid userId, Guid showId) { }
+        public void EnqueueLivestreamReconnectTimeout(Guid livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay) { }
+        public void EnqueueFcmNotification(Guid userId, string title, string body, string? referenceType = null, string? referenceId = null) { }
         public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language) { }
         public void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language) { }
         public void EnqueuePhoneVerificationCode(string toPhone, string code, string language) { }
-        public void EnqueueModerationAiScoring(int moderationId) { }
-        public void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name) { }
+        public void EnqueueModerationAiScoring(Guid moderationId) { }
+        public void EnqueueStitchVenueTourScene(Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name) { }
         public void TriggerRecurringJobNow(string recurringJobId) { }
         public IReadOnlyList<string> GetRecurringJobIds() => [];
     }
@@ -66,7 +66,7 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
     /// Gọi endpoint gợi ý <paramref name="times"/> lần và trả về số lần handler đặt lịch tính lại
     /// cho đúng người đó.
     /// </summary>
-    private async Task<int> RefreshesQueuedByAsync(int userId, int times = 1)
+    private async Task<int> RefreshesQueuedByAsync(Guid userId, int times = 1)
     {
         var recorder = new RecordingJobService();
 
@@ -92,7 +92,7 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
         return recorder.RefreshesQueued.Count(id => id == userId);
     }
 
-    private async Task<int> ConsentingUserAsync(bool declaresTaste)
+    private async Task<Guid> ConsentingUserAsync(bool declaresTaste)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

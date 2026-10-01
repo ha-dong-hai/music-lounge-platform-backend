@@ -3,9 +3,9 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Complaints.DTOs;
 
 public sealed record ComplaintDto(
-    int Id,
+    Guid Id,
     string TargetType,
-    int TargetId,
+    Guid TargetId,
     ComplaintCategory Category,
     string Description,
     string? EvidenceUrls,

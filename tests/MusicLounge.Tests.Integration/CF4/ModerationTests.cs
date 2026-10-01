@@ -24,9 +24,9 @@ public sealed class ModerationTests
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
-    private async Task<int> CreateFreshShowAsync()
+    private async Task<Guid> CreateFreshShowAsync()
     {
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -46,7 +46,7 @@ public sealed class ModerationTests
         return showId;
     }
 
-    private async Task<int> CreateLivestreamAsync()
+    private async Task<Guid> CreateLivestreamAsync()
     {
         var showId = await CreateFreshShowAsync();
         var client = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
@@ -154,5 +154,5 @@ public sealed class ModerationTests
         res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

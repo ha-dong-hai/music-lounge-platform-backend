@@ -3,9 +3,9 @@ namespace MusicLounge.Domain.Entities;
 // D1: Venue-level zones — reused across multiple shows
 // AuditableEntity (CreatedAt/UpdatedAt/CreatedBy/UpdatedBy, auto-stamped by
 // ApplicationDbContext.SaveChangesAsync) — ai tạo/sửa 1 khu vực chỗ ngồi cần biết được.
-public sealed class SeatingZone : Common.AuditableEntity<int>
+public sealed class SeatingZone : Common.AuditableEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public string Name { get; set; } = string.Empty;    // VIP / Standard / Bar Area
     public int Capacity { get; set; }
     public string? Description { get; set; }

@@ -32,8 +32,8 @@ public static class PerformerConfirmations
 
     // MLACP-489: Subject/Message song ngữ — nghệ sĩ không có tài khoản nên không có ngôn ngữ ưa thích, thư gửi cả hai.
     public sealed record Invitation(
-        PerformerConfirmationPurpose Purpose, int? BankAccountId, string? BankAccountFingerprint,
-        int? DonationId, SongNgu Subject, SongNgu Message);
+        PerformerConfirmationPurpose Purpose, Guid? BankAccountId, string? BankAccountFingerprint,
+        Guid? DonationId, SongNgu Subject, SongNgu Message);
 
     public static Invitation ForBankAccount(BankAccount account, string plainAccountNumber)
     {
@@ -52,7 +52,7 @@ public static class PerformerConfirmations
                 "account — or tell us if it is not."));
     }
 
-    public static Invitation ForDonationReceipt(int donationId, decimal amount, string paymentRef)
+    public static Invitation ForDonationReceipt(Guid donationId, decimal amount, string paymentRef)
     {
         var money = amount.ToString("#,0", CultureInfo.InvariantCulture);
         return new(
@@ -91,7 +91,7 @@ public static class PerformerConfirmations
         if (string.IsNullOrWhiteSpace(token))
             throw new NotFoundException(nameof(PerformerConfirmation), "token");
         var hash = HashToken(token);
-        return (await uow.Repository<PerformerConfirmation, int>().FindAsync(c => c.TokenHash == hash, ct))
+        return (await uow.Repository<PerformerConfirmation, Guid>().FindAsync(c => c.TokenHash == hash, ct))
             .FirstOrDefault()
             ?? throw new NotFoundException(nameof(PerformerConfirmation), "token");
     }
@@ -121,7 +121,7 @@ public static class PerformerConfirmations
             CreatedAt = now,
             ExpiresAt = now.AddHours(LinkValidHours)
         };
-        uow.Repository<PerformerConfirmation, int>().Add(confirmation);
+        uow.Repository<PerformerConfirmation, Guid>().Add(confirmation);
 
         if (string.IsNullOrWhiteSpace(settings.PerformerConfirmationUrl))
         {

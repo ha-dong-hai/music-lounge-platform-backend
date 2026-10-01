@@ -28,7 +28,7 @@ internal sealed class GetMyRefundRequestsQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        var mine = await _uow.Repository<RefundRequest, int>()
+        var mine = await _uow.Repository<RefundRequest, Guid>()
             .FindAsync(r => r.RequestedBy == _currentUser.UserId, ct);
 
         // Cung mot nguon voi RefundSlaBreachAlertJob — cai canh bao Admin va cai hua voi nguoi mua
@@ -37,7 +37,7 @@ internal sealed class GetMyRefundRequestsQueryHandler
 
         // MLACP-387: nguoi mua phai thay yeu cau nao dang cho ho khai tai khoan nhan hoan.
         var paymentIds = mine.Select(r => r.PaymentId).Distinct().ToList();
-        var payments = (await _uow.Repository<Payment, int>().FindAsync(p => paymentIds.Contains(p.Id), ct))
+        var payments = (await _uow.Repository<Payment, Guid>().FindAsync(p => paymentIds.Contains(p.Id), ct))
             .ToDictionary(p => p.Id);
         var windowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
         var now = DateTimeOffset.UtcNow;

@@ -2,13 +2,13 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Performer : Common.AuditableEntity<int>
+public sealed class Performer : Common.AuditableEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
     public string? Bio { get; set; }
     public PerformerType Type { get; set; } = PerformerType.Solo;
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     // MLACP-364: noi gui lien ket de nghe si tu xac nhan (nghe si khong co tai khoan dang nhap).
     public string? ContactEmail { get; set; }

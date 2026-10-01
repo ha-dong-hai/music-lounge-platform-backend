@@ -44,11 +44,11 @@ public sealed class NotificationsController : ControllerBase
         return Ok(ApiResponse<int>.Ok(count));
     }
 
-    [HttpPost("{id:int}/read")]
+    [HttpPost("{id:guid}/read")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> MarkRead(int id, CancellationToken ct = default)
+    public async Task<IActionResult> MarkRead(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new MarkNotificationReadCommand(id), ct);
         return NoContent();

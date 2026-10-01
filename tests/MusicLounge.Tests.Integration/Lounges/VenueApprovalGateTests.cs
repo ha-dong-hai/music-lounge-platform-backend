@@ -35,7 +35,7 @@ public sealed class VenueApprovalGateTests
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
     private HttpClient Anonymous() => _factory.CreateClient();
 
-    private async Task<(int LoungeId, int OwnerId, string Name)> SeedVenueAsync(
+    private async Task<(Guid LoungeId, Guid OwnerId, string Name)> SeedVenueAsync(
         LoungeStatus status, string? businessLicenseUrl = null, string city = "HCM")
     {
         using var scope = _factory.Services.CreateScope();
@@ -73,7 +73,7 @@ public sealed class VenueApprovalGateTests
         return (lounge.Id, owner.Id, name);
     }
 
-    private async Task<int> SeedDraftShowAsync(int loungeId)
+    private async Task<Guid> SeedDraftShowAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -92,7 +92,7 @@ public sealed class VenueApprovalGateTests
         return show.Id;
     }
 
-    private async Task<LoungeStatus> StatusOfAsync(int loungeId)
+    private async Task<LoungeStatus> StatusOfAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -379,5 +379,5 @@ public sealed class VenueApprovalGateTests
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
     private sealed record QueueItem(
-        int LoungeId, string Name, string Status, string OwnerEmail, bool HasBusinessLicense);
+        Guid LoungeId, string Name, string Status, string OwnerEmail, bool HasBusinessLicense);
 }

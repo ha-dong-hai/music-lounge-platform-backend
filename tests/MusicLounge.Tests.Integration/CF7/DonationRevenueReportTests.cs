@@ -36,7 +36,7 @@ public sealed class DonationRevenueReportTests
     private sealed record Wrapped<T>(T Data);
 
     private sealed record EventSlice(
-        int ShowId, decimal DonationRevenue, decimal TotalRevenue, decimal DonationCollectedForPerformers);
+        Guid ShowId, decimal DonationRevenue, decimal TotalRevenue, decimal DonationCollectedForPerformers);
 
     private sealed record MonthSlice(decimal DonationRevenue, decimal DonationCollectedForPerformers);
 
@@ -47,7 +47,7 @@ public sealed class DonationRevenueReportTests
         List<EventSlice> ByEvent,
         List<MonthSlice> ByMonth);
 
-    private async Task<(int OwnerId, int LoungeId, int ShowId, decimal ForPerformers, decimal OwnerShare)> SeedAsync()
+    private async Task<(Guid OwnerId, Guid LoungeId, Guid ShowId, decimal ForPerformers, decimal OwnerShare)> SeedAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

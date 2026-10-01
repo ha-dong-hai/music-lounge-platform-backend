@@ -15,7 +15,7 @@ internal sealed class SendFcmConfirmHandler : INotificationHandler<TicketPayment
     public Task Handle(TicketPaymentConfirmed notification, CancellationToken ct)
     {
         // Walk-in sales publish this event with UserId=0 (no buyer account) — nothing to notify.
-        if (notification.UserId <= 0) return Task.CompletedTask;
+        if (notification.UserId == Guid.Empty) return Task.CompletedTask;
 
         return _notifications.NotifyAsync(
             notification.UserId,

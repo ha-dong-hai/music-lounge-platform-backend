@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class LivestreamChatMessage : Common.BaseEntity<int>
+public sealed class LivestreamChatMessage : Common.BaseEntity<Guid>
 {
-    public int LivestreamId { get; set; }
-    public int UserId { get; set; }
+    public Guid LivestreamId { get; set; }
+    public Guid UserId { get; set; }
     public string Message { get; set; } = string.Empty;
     public DateTimeOffset SentAt { get; set; }
 

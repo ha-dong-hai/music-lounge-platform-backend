@@ -55,19 +55,19 @@ public sealed class RefundPolicyWritePathTests
             ScheduledStart = start,
             ScheduledEnd = start.AddHours(3),
             TicketSaleClosesAt = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = (int?)null,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>(),
             CancellationAllowed = cancellationAllowed,
             RefundPercentage = refundPercentage,
             CancellationDeadlineHours = cancellationDeadlineHours
         };
 
-    private async Task<RefundPolicy> ReadPublishedPolicyAsync(HttpClient client, int showId)
+    private async Task<RefundPolicy> ReadPublishedPolicyAsync(HttpClient client, Guid showId)
     {
         var res = await client.GetAsync($"/api/v1/lounge-shows/{showId}");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -83,7 +83,7 @@ public sealed class RefundPolicyWritePathTests
         var create = await client.PostAsJsonAsync("/api/v1/lounge-shows",
             CreateBody(cancellationAllowed: true, refundPercentage: 70m, cancellationDeadlineHours: 72));
         create.StatusCode.Should().Be(HttpStatusCode.Created);
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var policy = await ReadPublishedPolicyAsync(client, showId);
 
@@ -104,7 +104,7 @@ public sealed class RefundPolicyWritePathTests
 
         var create = await client.PostAsJsonAsync("/api/v1/lounge-shows", CreateBody());
         create.StatusCode.Should().Be(HttpStatusCode.Created);
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var policy = await ReadPublishedPolicyAsync(client, showId);
 
@@ -120,11 +120,11 @@ public sealed class RefundPolicyWritePathTests
 
         var create = await client.PostAsJsonAsync("/api/v1/lounge-shows",
             CreateBody(cancellationAllowed: true, refundPercentage: 40m));
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         // Take the show live and give it something to sell. Done directly rather than through
         // publish + moderation because the subject here is the policy, not the approval workflow.
-        int priceId;
+        Guid priceId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -190,7 +190,7 @@ public sealed class RefundPolicyWritePathTests
         var create = await client.PostAsJsonAsync("/api/v1/lounge-shows",
             CreateBody(cancellationAllowed: false));
         create.StatusCode.Should().Be(HttpStatusCode.Created);
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var policy = await ReadPublishedPolicyAsync(client, showId);
 
@@ -234,7 +234,7 @@ public sealed class RefundPolicyWritePathTests
 
         var create = await client.PostAsJsonAsync("/api/v1/lounge-shows",
             CreateBody(cancellationAllowed: true, refundPercentage: 100m));
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         using (var scope = _factory.Services.CreateScope())
         {
@@ -250,7 +250,7 @@ public sealed class RefundPolicyWritePathTests
             ScheduledStart = DateTimeOffset.UtcNow.AddDays(30),
             ScheduledEnd = (DateTimeOffset?)null,
             TicketSaleClosesAt = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = (int?)null,
             OnlineQuota = (int?)null,
             CancellationAllowed = false
@@ -275,7 +275,7 @@ public sealed class RefundPolicyWritePathTests
         // made impossible — rewriting the owner's policy for every later buyer, who saw the new date before paying.
         // Earlier buyers now get their own 100% window instead (ChangedAfterSaleRefundTests pins it, including when
         // this very deadline can no longer be met); the owner's policy stays what the owner chose.
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -347,11 +347,11 @@ public sealed class RefundPolicyWritePathTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record ShowDetail(int Id, string Name, RefundPolicy? RefundPolicy);
+    private sealed record ShowDetail(Guid Id, string Name, RefundPolicy? RefundPolicy);
     private sealed record RefundPolicy(
         bool CancellationAllowed, decimal RefundPercentage, DateTimeOffset? CancelBefore,
         int? DeadlineHoursBeforeStart, bool AlwaysFullRefundIfVenueCancels, string Summary);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
     private sealed record PurchaseData(
-        int PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
+        Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
 }

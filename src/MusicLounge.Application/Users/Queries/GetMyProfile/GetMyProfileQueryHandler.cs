@@ -10,19 +10,19 @@ namespace MusicLounge.Application.Users.Queries.GetMyProfile;
 internal sealed class GetMyProfileQueryHandler
     : IRequestHandler<GetMyProfileQuery, UserProfileDto>
 {
-    private readonly IRepository<User, int> _userRepo;
-    private readonly IRepository<UserFavouriteGenre, int> _favGenreRepo;
-    private readonly IRepository<UserFavouriteMood, int> _favMoodRepo;
-    private readonly IRepository<UserFavouriteAtmosphere, int> _favAtmosphereRepo;
-    private readonly IRepository<UserDislikedGenre, int> _dislikedGenreRepo;
+    private readonly IRepository<User, Guid> _userRepo;
+    private readonly IRepository<UserFavouriteGenre, Guid> _favGenreRepo;
+    private readonly IRepository<UserFavouriteMood, Guid> _favMoodRepo;
+    private readonly IRepository<UserFavouriteAtmosphere, Guid> _favAtmosphereRepo;
+    private readonly IRepository<UserDislikedGenre, Guid> _dislikedGenreRepo;
     private readonly ICurrentUserService _currentUser;
 
     public GetMyProfileQueryHandler(
-        IRepository<User, int> userRepo,
-        IRepository<UserFavouriteGenre, int> favGenreRepo,
-        IRepository<UserFavouriteMood, int> favMoodRepo,
-        IRepository<UserFavouriteAtmosphere, int> favAtmosphereRepo,
-        IRepository<UserDislikedGenre, int> dislikedGenreRepo,
+        IRepository<User, Guid> userRepo,
+        IRepository<UserFavouriteGenre, Guid> favGenreRepo,
+        IRepository<UserFavouriteMood, Guid> favMoodRepo,
+        IRepository<UserFavouriteAtmosphere, Guid> favAtmosphereRepo,
+        IRepository<UserDislikedGenre, Guid> dislikedGenreRepo,
         ICurrentUserService currentUser)
     {
         _userRepo = userRepo;

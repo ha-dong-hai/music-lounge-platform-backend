@@ -6,7 +6,7 @@ internal sealed class PurchaseTicketCommandValidator : AbstractValidator<Purchas
 {
     public PurchaseTicketCommandValidator()
     {
-        RuleFor(x => x.HoldId).GreaterThan(0).WithMessage("HoldId không hợp lệ.");
+        RuleFor(x => x.HoldId).NotEmpty().WithMessage("HoldId không hợp lệ.");
         RuleFor(x => x.ClientIpAddress).NotEmpty().WithMessage("Địa chỉ IP không được rỗng.");
     }
 }

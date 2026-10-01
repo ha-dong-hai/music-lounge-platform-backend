@@ -4,9 +4,9 @@ namespace MusicLounge.Domain.Entities;
 // stop in the walkthrough, analogous to one "room" in a Louvre/HCMC-Museum-style virtual tour.
 // Deliberately separate from Model3DUrl on MusicLounge (a single .glb/.gltf 3D model file for a
 // generic code-built scene) — different content pipeline entirely, not a replacement for it.
-public sealed class VenueTourScene : Common.BaseEntity<int>
+public sealed class VenueTourScene : Common.BaseEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     public string? Name { get; set; }
     public int OrderIndex { get; set; }

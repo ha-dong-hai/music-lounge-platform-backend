@@ -22,7 +22,7 @@ public sealed class ModerationAiScoringTests
 
     public ModerationAiScoringTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreateAndSubmitShowAsync()
+    private async Task<Guid> CreateAndSubmitShowAsync()
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
@@ -33,15 +33,15 @@ public sealed class ModerationAiScoringTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         res.EnsureSuccessStatusCode();
@@ -57,7 +57,7 @@ public sealed class ModerationAiScoringTests
             Name = "Standard",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (int?)null,
+            ZoneId = (Guid?)null,
             TotalCapacity = 50,
             Prices = new[]
             {
@@ -80,7 +80,7 @@ public sealed class ModerationAiScoringTests
     {
         var showId = await CreateAndSubmitShowAsync();
 
-        int moderationId;
+        Guid moderationId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -104,5 +104,5 @@ public sealed class ModerationAiScoringTests
         reloaded.AiRecommendation.Should().BeNull();
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

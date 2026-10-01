@@ -11,9 +11,9 @@ namespace MusicLounge.Application.Users.Commands.UpdateAiPreferences;
 /// từ tín hiệu tích cực thì không bao giờ sửa được một suy đoán sai.
 /// </param>
 public sealed record UpdateAiPreferencesCommand(
-    IReadOnlyList<int> GenreIds,
-    IReadOnlyList<int> MoodIds,
-    IReadOnlyList<int> AtmosphereIds,
+    IReadOnlyList<Guid> GenreIds,
+    IReadOnlyList<Guid> MoodIds,
+    IReadOnlyList<Guid> AtmosphereIds,
     bool EnableAiConsent,
-    IReadOnlyList<int>? DislikedGenreIds = null
+    IReadOnlyList<Guid>? DislikedGenreIds = null
 ) : ICommand;

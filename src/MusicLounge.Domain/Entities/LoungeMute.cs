@@ -11,10 +11,10 @@ namespace MusicLounge.Domain.Entities;
 /// đẩy tới người dùng. Người dùng vẫn tìm ra được nếu họ tự đi tìm — cắt cả đường tìm kiếm là quyết
 /// hộ họ một chuyện họ chưa hề yêu cầu.
 /// </summary>
-public sealed class LoungeMute : Common.BaseEntity<int>
+public sealed class LoungeMute : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int LoungeId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid LoungeId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
     public User User { get; set; } = null!;

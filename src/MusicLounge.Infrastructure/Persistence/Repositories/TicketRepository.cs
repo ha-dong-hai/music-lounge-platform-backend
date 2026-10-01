@@ -44,7 +44,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
             .FirstOrDefaultAsync(t => t.Id == ticketId, ct);
 
     public async Task<IReadOnlyList<Ticket>> GetIncomingTransfersAsync(
-        int recipientUserId, CancellationToken ct = default)
+        Guid recipientUserId, CancellationToken ct = default)
     {
         // Unbounded in principle, but each row requires a distinct sender to have deliberately
         // initiated a transfer to this exact recipient — realistically single digits, not the
@@ -70,7 +70,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
             .FirstOrDefaultAsync(t => t.QrCode == qrCode, ct);
 
     public async Task<PaginatedResult<Ticket>> GetByBuyerAsync(
-        int userId, int page, int pageSize, MyTicketFilter filter, CancellationToken ct = default)
+        Guid userId, int page, int pageSize, MyTicketFilter filter, CancellationToken ct = default)
     {
         var query = WithDetails()
             .Where(t => t.BuyerId == userId);
@@ -118,7 +118,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
     }
 
     public async Task<PaginatedResult<Ticket>> GetByShowAsync(
-        int showId, int page, int pageSize, CancellationToken ct = default)
+        Guid showId, int page, int pageSize, CancellationToken ct = default)
     {
         // Xem ghi chú ở GetByBuyerAsync về việc sắp xếp phía client.
         var all = await WithDetails()
@@ -135,23 +135,23 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
         return new PaginatedResult<Ticket>(items, page, pageSize, all.Count);
     }
 
-    public Task<int> CountConfirmedByPriceAsync(int priceId, CancellationToken ct = default)
+    public Task<int> CountConfirmedByPriceAsync(Guid priceId, CancellationToken ct = default)
         => _ctx.Tickets.CountAsync(
             t => t.PriceId == priceId && TicketOccupancy.ChiemCho.Contains(t.Status), ct);
 
-    public Task<int> CountActiveHoldsByPriceAsync(int priceId, CancellationToken ct = default)
+    public Task<int> CountActiveHoldsByPriceAsync(Guid priceId, CancellationToken ct = default)
         => _ctx.TicketHolds.CountAsync(
             h => h.PriceId == priceId && h.ExpiresAt > DateTimeOffset.UtcNow, ct);
 
-    public Task<int> CountConfirmedByShowAsync(int showId, CancellationToken ct = default)
+    public Task<int> CountConfirmedByShowAsync(Guid showId, CancellationToken ct = default)
         => _ctx.Tickets.CountAsync(
             t => t.ShowId == showId && TicketOccupancy.ChiemCho.Contains(t.Status), ct);
 
     public void AddPhysicalDetail(PhysicalTicketDetail detail)
         => _ctx.PhysicalTicketDetails.Add(detail);
 
-    public async Task<IReadOnlyDictionary<int, int>> GetReservedQuantitiesByPriceIdsAsync(
-        IReadOnlyCollection<int> priceIds, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<Guid, int>> GetReservedQuantitiesByPriceIdsAsync(
+        IReadOnlyCollection<Guid> priceIds, CancellationToken ct = default)
     {
         var result = priceIds.ToDictionary(id => id, _ => 0);
         if (priceIds.Count == 0) return result;
@@ -182,7 +182,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
         return result;
     }
 
-    public async Task<int> GetReservedQuantityByTierAsync(int tierId, CancellationToken ct = default)
+    public async Task<int> GetReservedQuantityByTierAsync(Guid tierId, CancellationToken ct = default)
     {
         var priceIds = await _ctx.TicketPrices
             .Where(p => p.TierId == tierId)
@@ -195,7 +195,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
     }
 
     public async Task<int> GetReservedQuantityByShowAndAccessTypeAsync(
-        int showId, AccessType accessType, CancellationToken ct = default)
+        Guid showId, AccessType accessType, CancellationToken ct = default)
     {
         var priceIds = await _ctx.TicketPrices
             .Where(p => p.Tier.LoungeShowId == showId && p.Tier.AccessType == accessType)
@@ -207,7 +207,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
         return reserved.Values.Sum();
     }
 
-    public async Task<int> GetReservedQuantityByShowAsync(int showId, CancellationToken ct = default)
+    public async Task<int> GetReservedQuantityByShowAsync(Guid showId, CancellationToken ct = default)
     {
         var priceIds = await _ctx.TicketPrices
             .Where(p => p.Tier.LoungeShowId == showId)
@@ -220,7 +220,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
     }
 
     public async Task<int> GetReservedQuantityByZoneAsync(
-        int showId, int zoneId, CancellationToken ct = default)
+        Guid showId, Guid zoneId, CancellationToken ct = default)
     {
         var priceIds = await _ctx.TicketPrices
             .Where(p => p.Tier.LoungeShowId == showId && p.Tier.ZoneId == zoneId)
@@ -233,7 +233,7 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
     }
 
     public async Task<bool> TryInitiateTransferAsync(
-        Guid ticketId, int recipientUserId, DateTimeOffset initiatedAt, CancellationToken ct = default)
+        Guid ticketId, Guid recipientUserId, DateTimeOffset initiatedAt, CancellationToken ct = default)
     {
         var affected = await _ctx.Tickets
             .Where(t => t.Id == ticketId && t.PendingTransferToUserId == null)

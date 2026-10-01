@@ -8,7 +8,7 @@ public sealed class AcknowledgeDonationCommandValidator
     public AcknowledgeDonationCommandValidator()
     {
         RuleFor(x => x.DonationId)
-            .GreaterThan(0)
+            .NotEmpty()
             .WithMessage("DonationId không hợp lệ.");
     }
 }

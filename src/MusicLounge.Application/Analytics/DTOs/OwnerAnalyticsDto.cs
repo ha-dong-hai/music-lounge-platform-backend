@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Analytics.DTOs;
 
 public sealed record TopShowDto(
-    int ShowId,
+    Guid ShowId,
     string Name,
     DateTimeOffset ScheduledStart,
     string? MainPerformerName,

@@ -96,12 +96,12 @@ public sealed class OwnerGoldenPathTests
         // ── 4. Create venue ────────────────────────────────────────────────────────────
         var loungeRes = await ownerClient.PostAsJsonAsync("/api/v1/lounges", new
         {
-            Name = "Golden Path Lounge", Description = "E2E", AtmosphereId = (int?)null,
+            Name = "Golden Path Lounge", Description = "E2E", AtmosphereId = (Guid?)null,
             Street = "1 Golden St", Ward = "Ward 1", District = "District 1", City = "HCM",
             Latitude = (double?)null, Longitude = (double?)null
         });
         loungeRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var loungeId = (await loungeRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var loungeId = (await loungeRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         // ── 4b. Admin duyệt hồ sơ phòng trà (BR-01, MLACP-307) ────────────────────────
         // Bước này mới, và nó phải nằm đúng ở đây: phòng trà vừa tạo ở trạng thái Pending, mà
@@ -139,7 +139,7 @@ public sealed class OwnerGoldenPathTests
             BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = true, MaxAiPostersPerMonth = 10
         });
         packageRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var packageId = (await packageRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var packageId = (await packageRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var subscribeRes = await ownerClient.PostAsJsonAsync(
             "/api/v1/subscriptions/subscribe", new { PackageId = packageId });
@@ -160,22 +160,22 @@ public sealed class OwnerGoldenPathTests
         {
             LoungeId = loungeId, Name = "Golden Path Show", Description = "E2E show",
             Format = "Offline", ScheduledStart = DateTimeOffset.UtcNow.AddDays(14),
-            ScheduledEnd = (DateTimeOffset?)null, CategoryId = (int?)null,
+            ScheduledEnd = (DateTimeOffset?)null, CategoryId = (Guid?)null,
             OfflineQuota = 100, OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(), MoodIds = Array.Empty<Guid>(), AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "Golden Path Performer", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "Golden Path Performer", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         showRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var showId = (await showRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var showId = (await showRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         // ── 7. Add a ticket tier (required before publish) ─────────────────────────────
         var tierRes = await ownerClient.PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId, Name = "Standard", Description = (string?)null, AccessType = "Physical",
-            ZoneId = (int?)null, TotalCapacity = 100,
+            ZoneId = (Guid?)null, TotalCapacity = 100,
             Prices = new[]
             {
                 new
@@ -217,7 +217,7 @@ public sealed class OwnerGoldenPathTests
 
         var beforeApprovalListing = await anon.GetAsync("/api/v1/lounge-shows?pageSize=100");
         (await beforeApprovalListing.Content.ReadAsStringAsync())
-            .Should().NotContain($"\"id\":{showId}", "Pending show must NOT be visible on the public homepage feed yet");
+            .Should().NotContain($"\"id\":\"{showId}\"", "Pending show must NOT be visible on the public homepage feed yet");
 
         // ── 10. Admin approves (Pending → Published) ───────────────────────────────────
         var reviewRes = await adminClient.PostAsJsonAsync(
@@ -229,13 +229,13 @@ public sealed class OwnerGoldenPathTests
         //        chain exists to prove ─────────────────────────────────────────────────────
         var afterApprovalListing = await anon.GetAsync("/api/v1/lounge-shows?pageSize=100");
         (await afterApprovalListing.Content.ReadAsStringAsync())
-            .Should().Contain($"\"id\":{showId}", "Published show must be visible on the public homepage feed");
+            .Should().Contain($"\"id\":\"{showId}\"", "Published show must be visible on the public homepage feed");
 
         // ── 12. Assign staff to the new venue — a fresh user, not SeedHelper.AudienceId:
         //        that shared seeded user must stay Audience-with-no-active-assignment for OTHER
         //        CF1 tests (EventManagementTests.AssignStaff_UserAlreadyActiveAtAnotherVenue_Returns409
         //        relies on it), same isolation rule VenuePenaltyTests documents for itself ──────
-        int staffUserId;
+        Guid staffUserId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -276,16 +276,16 @@ public sealed class OwnerGoldenPathTests
         soldTicket.ShowId.Should().Be(showId);
     }
 
-    private static int ExtractFirstPriceId(string tierListJson)
+    private static Guid ExtractFirstPriceId(string tierListJson)
     {
         using var doc = System.Text.Json.JsonDocument.Parse(tierListJson);
         var prices = doc.RootElement.GetProperty("data")[0].GetProperty("prices");
-        return prices[0].GetProperty("id").GetInt32();
+        return prices[0].GetProperty("id").GetGuid();
     }
 
     private sealed record AuthResponse(bool Success, AuthResultData Data);
-    private sealed record AuthResultData(string Token, DateTimeOffset ExpiresAt, int UserId, string Email, string FullName, string Role);
+    private sealed record AuthResultData(string Token, DateTimeOffset ExpiresAt, Guid UserId, string Email, string FullName, string Role);
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record SubscriptionInitiationData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record SubscriptionInitiationData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record SubscriptionInitiationResponse(bool Success, SubscriptionInitiationData Data);
 }

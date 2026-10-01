@@ -33,19 +33,19 @@ public sealed class DonationPayoutDeadlineTests
 
     public DonationPayoutDeadlineTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int PerformanceId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid PerformanceId);
 
-    private sealed record InitData(int DonationId, string OrderId);
+    private sealed record InitData(Guid DonationId, string OrderId);
 
     private sealed record Wrapped<T>(T Data);
 
     private sealed record Page<T>(List<T> Items);
 
     private sealed record PendingItem(
-        int Id, DateTimeOffset? PaymentConfirmedAt, DateTimeOffset? AutoConfirmDeadline,
+        Guid Id, DateTimeOffset? PaymentConfirmedAt, DateTimeOffset? AutoConfirmDeadline,
         DateTimeOffset? PayoutReceivedAt, DateTimeOffset? PayoutDueAt);
 
-    private sealed record HistoryItem(int Id, string PayoutStatus, DateTimeOffset? PayoutDueAt);
+    private sealed record HistoryItem(Guid Id, string PayoutStatus, DateTimeOffset? PayoutDueAt);
 
     private sealed record History(Page<HistoryItem> Items);
 
@@ -102,7 +102,7 @@ public sealed class DonationPayoutDeadlineTests
         return new Venue(owner.Id, lounge.Id, performance.Id);
     }
 
-    private async Task<int> DonateAndConfirmAsync(int performanceId)
+    private async Task<Guid> DonateAndConfirmAsync(Guid performanceId)
     {
         var audience = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await audience.PostAsJsonAsync("/api/v1/donations", new
@@ -124,7 +124,7 @@ public sealed class DonationPayoutDeadlineTests
     /// (null: chưa chuyển), cùng trạng thái và các mốc của donate.
     /// </summary>
     private async Task ArrangeAsync(
-        int donationId, DateTimeOffset? releasedAt, DonationStatus status,
+        Guid donationId, DateTimeOffset? releasedAt, DonationStatus status,
         DateTimeOffset? ownerAckAt, DateTimeOffset? paymentConfirmedAt = null)
     {
         using var scope = _factory.Services.CreateScope();
@@ -167,7 +167,7 @@ public sealed class DonationPayoutDeadlineTests
             .ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<(bool Reminded, bool Warned)> OutcomeAsync(Venue venue, int donationId)
+    private async Task<(bool Reminded, bool Warned)> OutcomeAsync(Venue venue, Guid donationId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -274,7 +274,7 @@ public sealed class DonationPayoutDeadlineTests
         await ArrangeAsync(late, DaysAgo(hold + 1), DonationStatus.OwnerReceived, DaysAgo(hold));
 
         var audience = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
-        Task<HttpResponseMessage> ComplainAsync(int donationId) => audience.PostAsJsonAsync("/api/v1/complaints", new
+        Task<HttpResponseMessage> ComplainAsync(Guid donationId) => audience.PostAsJsonAsync("/api/v1/complaints", new
         {
             TargetType = "donation", TargetId = donationId, Category = "DonationNotPaid",
             Description = "Nghệ sĩ báo chưa nhận được tiền donate", EvidenceUrls = (string?)null,

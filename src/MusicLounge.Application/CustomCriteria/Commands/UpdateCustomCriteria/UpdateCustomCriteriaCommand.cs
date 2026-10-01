@@ -26,4 +26,4 @@ namespace MusicLounge.Application.CustomCriteria.Commands.UpdateCustomCriteria;
 /// <para>Không có lệnh XOÁ. Tiêu chí đã bị xoá hẳn sẽ bỏ lại giá trị mồ côi ở các buổi diễn và ở sở thích
 /// người dùng; tắt đi giữ nguyên lịch sử mà vẫn đạt mục đích "không dùng nữa".</para>
 /// </summary>
-public sealed record UpdateCustomCriteriaCommand(int Id, string Name, bool IsActive) : ICommand;
+public sealed record UpdateCustomCriteriaCommand(Guid Id, string Name, bool IsActive) : ICommand;

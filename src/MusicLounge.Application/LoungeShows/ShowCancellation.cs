@@ -47,7 +47,7 @@ public static class ShowCancellation
         CancellationToken ct)
     {
         show.Status = LoungeShowStatus.Cancelled;
-        uow.Repository<LoungeShow, int>().Update(show);
+        uow.Repository<LoungeShow, Guid>().Update(show);
 
         var because = why is null ? SongNgu.Rong : new SongNgu($" vì {why.Vi}", $" because {why.En}");
         // Cụm "buổi diễn bị huỷ…" dùng chung cho người mua gốc của vé đã chuyển nhượng và cho đơn F&B đi kèm.
@@ -70,10 +70,10 @@ public static class ShowCancellation
             return new Outcome(1, 0);
 
         var priceIds = confirmedTickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
-        var refundRepo = uow.Repository<RefundRequest, int>();
+        var refundRepo = uow.Repository<RefundRequest, Guid>();
         var payers = await TicketRefundRecipients.PayersAsync(uow, confirmedTickets, ct);
 
         foreach (var ticket in confirmedTickets)
@@ -96,7 +96,7 @@ public static class ShowCancellation
                 Status = RefundRequestStatus.Pending
             });
 
-            if (ticket.BuyerId is int buyerId)
+            if (ticket.BuyerId is Guid buyerId)
                 await notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,

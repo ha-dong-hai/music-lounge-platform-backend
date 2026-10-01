@@ -29,9 +29,9 @@ public sealed class TrendingRankingTests
     public TrendingRankingTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record ShowItem(int Id, string Name);
+    private sealed record ShowItem(Guid Id, string Name);
 
-    private async Task<(int LoungeId, string City)> VenueInItsOwnCityAsync()
+    private async Task<(Guid LoungeId, string City)> VenueInItsOwnCityAsync()
     {
         var city = $"City-{Guid.NewGuid():N}"[..20];
         using var scope = _factory.Services.CreateScope();
@@ -53,7 +53,7 @@ public sealed class TrendingRankingTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, double daysFromNow = 10,
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, double daysFromNow = 10,
         LoungeShowStatus status = LoungeShowStatus.Published)
     {
         using var scope = _factory.Services.CreateScope();
@@ -75,7 +75,7 @@ public sealed class TrendingRankingTests
     }
 
     /// <summary>Tạo <paramref name="people"/> người dùng khác nhau cùng thực hiện một hành động.</summary>
-    private async Task BehaviourAsync(int showId, BehaviourAction action, int people, double hoursAgo = 2)
+    private async Task BehaviourAsync(Guid showId, BehaviourAction action, int people, double hoursAgo = 2)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -104,7 +104,7 @@ public sealed class TrendingRankingTests
         await db.SaveChangesAsync();
     }
 
-    private async Task WishlistAsync(int showId, int people, double hoursAgo = 2)
+    private async Task WishlistAsync(Guid showId, int people, double hoursAgo = 2)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -137,7 +137,7 @@ public sealed class TrendingRankingTests
     /// bảng xếp hạng, và cũng là tín hiệu duy nhất không phụ thuộc vào việc người dùng có bật
     /// AiConsent hay không.
     /// </summary>
-    private async Task SellTicketsAsync(int showId, int count, double hoursAgo = 2)
+    private async Task SellTicketsAsync(Guid showId, int count, double hoursAgo = 2)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

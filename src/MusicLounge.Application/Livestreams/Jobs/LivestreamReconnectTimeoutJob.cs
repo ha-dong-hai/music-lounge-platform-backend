@@ -34,9 +34,9 @@ public sealed class LivestreamReconnectTimeoutJob
         _logger = logger;
     }
 
-    public async Task ExecuteAsync(int livestreamId, DateTimeOffset disconnectedAt)
+    public async Task ExecuteAsync(Guid livestreamId, DateTimeOffset disconnectedAt)
     {
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(livestreamId);
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(livestreamId);
         if (livestream is null) return;
 
         if (livestream.Status != LivestreamStatus.Reconnecting || livestream.DisconnectedAt != disconnectedAt)
@@ -52,9 +52,9 @@ public sealed class LivestreamReconnectTimeoutJob
         livestream.Status = LivestreamStatus.Failed;
         livestream.EndedAt = now;
         livestream.ViewerCount = 0;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId);
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId);
         if (show is not null)
         {
             // This is the most likely of the four paths to hit a cancelled show: CancelLoungeShow

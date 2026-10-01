@@ -33,18 +33,18 @@ public sealed class FnbOnlinePaymentTests
     public FnbOnlinePaymentTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record PaymentInit(int OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
+    private sealed record PaymentInit(Guid OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
-    private sealed record OrderView(int Id, string Status, bool IsPaid, DateTimeOffset? OnlinePaymentLiveUntil);
+    private sealed record OrderView(Guid Id, string Status, bool IsPaid, DateTimeOffset? OnlinePaymentLiveUntil);
     private sealed record OrderPage(List<OrderView> Items);
     private sealed record OwnerAnalyticsSlice(decimal FnbRevenue);
     private sealed record RevenueReportSlice(decimal TotalFnbRevenue);
 
     // ── Dựng dữ liệu qua đúng các endpoint thật ─────────────────────────────
 
-    private async Task<int> CreateOrderAsync()
+    private async Task<Guid> CreateOrderAsync()
     {
-        int menuItemId;
+        Guid menuItemId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -68,22 +68,22 @@ public sealed class FnbOnlinePaymentTests
         var res = await Audience().PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = "Bàn A1",
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = menuItemId, Quantity, Note = (string?)null } }
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
     }
 
     private HttpClient Audience() => _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
     private HttpClient Staff() => _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
     private HttpClient Owner() => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
 
-    private async Task<string> InitiateAsync(int orderId)
+    private async Task<string> InitiateAsync(Guid orderId)
     {
         var res = await Audience().PostAsync($"/api/v1/fnb-orders/{orderId}/pay", null);
         res.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -99,19 +99,19 @@ public sealed class FnbOnlinePaymentTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!.RspCode;
     }
 
-    private Task<HttpResponseMessage> StaffSetAsync(int orderId, string status)
+    private Task<HttpResponseMessage> StaffSetAsync(Guid orderId, string status)
         => Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status });
 
     private static string NewTransactionNo() => $"T{Guid.NewGuid():N}"[..14];
 
-    private async Task<FnbOrder> OrderAsync(int orderId)
+    private async Task<FnbOrder> OrderAsync(Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.FnbOrders.AsNoTracking().SingleAsync(o => o.Id == orderId);
     }
 
-    private async Task<List<Payment>> PaymentsAsync(int orderId)
+    private async Task<List<Payment>> PaymentsAsync(Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -130,7 +130,7 @@ public sealed class FnbOnlinePaymentTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<OrderView> OrderViewAsync(int orderId)
+    private async Task<OrderView> OrderViewAsync(Guid orderId)
     {
         var res = await Owner().GetAsync($"/api/v1/fnb-orders?loungeId={SeedHelper.LoungeId}&pageSize=100");
         res.StatusCode.Should().Be(HttpStatusCode.OK);

@@ -17,7 +17,7 @@ public sealed class PerformerTests
 
     public PerformerTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreatePerformerAsync(int ownerId, string name, params int[] genreIds)
+    private async Task<Guid> CreatePerformerAsync(Guid ownerId, string name, params Guid[] genreIds)
     {
         var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
         var res = await client.PostAsJsonAsync("/api/v1/performers", new
@@ -44,7 +44,7 @@ public sealed class PerformerTests
             AvatarUrl = (string?)null,
             Bio = (string?)null,
             Type = "Band",
-            GenreIds = Array.Empty<int>()
+            GenreIds = Array.Empty<Guid>()
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -61,7 +61,7 @@ public sealed class PerformerTests
             AvatarUrl = (string?)null,
             Bio = (string?)null,
             Type = "Solo",
-            GenreIds = Array.Empty<int>()
+            GenreIds = Array.Empty<Guid>()
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -91,7 +91,7 @@ public sealed class PerformerTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().Contain("\"genreIds\":[1]");
+        body.Should().Contain($"\"genreIds\":[\"{SeedHelper.GenreId1}\"]");
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public sealed class PerformerTests
 
         var detail = await client.GetAsync($"/api/v1/performers/{performerId}");
         var body = await detail.Content.ReadAsStringAsync();
-        body.Should().Contain("Updated Name").And.Contain("\"genreIds\":[2]");
+        body.Should().Contain("Updated Name").And.Contain($"\"genreIds\":[\"{SeedHelper.GenreId2}\"]");
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public sealed class PerformerTests
             AvatarUrl = (string?)null,
             Bio = (string?)null,
             Type = "Solo",
-            GenreIds = Array.Empty<int>()
+            GenreIds = Array.Empty<Guid>()
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -146,11 +146,11 @@ public sealed class PerformerTests
             AvatarUrl = (string?)null,
             Bio = (string?)null,
             Type = "Solo",
-            GenreIds = Array.Empty<int>()
+            GenreIds = Array.Empty<Guid>()
         });
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

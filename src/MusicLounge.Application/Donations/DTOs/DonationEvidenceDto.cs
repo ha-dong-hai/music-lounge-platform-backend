@@ -5,7 +5,7 @@ public sealed record DonationEventDto(
     int Sequence,
     string EventType,
     DateTimeOffset OccurredAt,
-    int? ActorUserId,
+    Guid? ActorUserId,
     decimal? Amount,
     string? Reference,
     string? EvidenceUrl,
@@ -17,7 +17,7 @@ public sealed record DonationEventDto(
 /// <param name="ChainIntact">False nếu có dòng bị sửa, bị xoá hoặc bị chèn sau khi ghi.</param>
 /// <param name="FirstBrokenSequence">Dòng đầu tiên không khớp chuỗi băm.</param>
 public sealed record DonationEvidenceDto(
-    int DonationId,
+    Guid DonationId,
     bool ChainIntact,
     int? FirstBrokenSequence,
     IReadOnlyList<DonationEventDto> Events);

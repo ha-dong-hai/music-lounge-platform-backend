@@ -55,7 +55,7 @@ internal sealed class AcceptTicketTransferCommandHandler : IRequestHandler<Accep
 
         _ticketRepo.Update(ticket);
 
-        if (previousBuyerId is int prevId)
+        if (previousBuyerId is Guid prevId)
             await _notifications.NotifyAsync(
                 prevId,
                 NotificationType.EventReminder,

@@ -21,7 +21,7 @@ public sealed class RefundProcessingTests
     public RefundProcessingTests(ApiFactory factory) => _factory = factory;
 
     /// <summary>Confirmed ticket + Payment (with realistic fee split) + Pending RefundRequest.</summary>
-    private async Task<(int RefundRequestId, int PaymentId)> SeedPendingRefundRequestAsync(
+    private async Task<(Guid RefundRequestId, Guid PaymentId)> SeedPendingRefundRequestAsync(
         decimal gross = 100_000m, decimal platformFee = 5_000m, decimal tax = 5_000m)
     {
         using var scope = _factory.Services.CreateScope();
@@ -233,7 +233,7 @@ public sealed class RefundProcessingTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().NotContain($"\"id\":{refundId}", "must only return the caller's own refund requests");
+        body.Should().NotContain($"\"id\":\"{refundId}\"", "must only return the caller's own refund requests");
     }
 
     [Fact]

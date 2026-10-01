@@ -3,4 +3,4 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Analytics.Queries.GetOwnerArtistDonationStats;
 
-public sealed record GetOwnerArtistDonationStatsQuery(int LoungeId) : IQuery<OwnerArtistDonationReportDto>;
+public sealed record GetOwnerArtistDonationStatsQuery(Guid LoungeId) : IQuery<OwnerArtistDonationReportDto>;

@@ -13,7 +13,7 @@ internal sealed class UpdateEventCategoryCommandHandler : IRequestHandler<Update
 
     public async Task<Unit> Handle(UpdateEventCategoryCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<EventCategory, int>();
+        var repo = _uow.Repository<EventCategory, Guid>();
         var category = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(EventCategory), request.Id);
 

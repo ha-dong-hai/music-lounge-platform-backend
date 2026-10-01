@@ -31,17 +31,17 @@ internal sealed class GetTicketTiersQueryHandler
         GetTicketTiersQuery request, CancellationToken ct)
     {
         // BR-31: can chinh buoi dien de biet moc dong ban mac dinh cua cac dot khong dat moc rieng.
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
         var lastEntryMinutes = await _config.GetIntAsync(
             ConfigKeys.TicketLastEntryMinutes, TicketSaleWindow.DefaultLastEntryMinutes, ct);
         var lastEntry = TicketSaleWindow.LastEntry(show, lastEntryMinutes);
 
-        var tiers = await _uow.Repository<TicketTier, int>()
+        var tiers = await _uow.Repository<TicketTier, Guid>()
             .FindAsync(t => t.LoungeShowId == request.ShowId, ct);
 
         var tierIds = tiers.Select(t => t.Id).ToList();
-        var prices = await _uow.Repository<TicketPrice, int>()
+        var prices = await _uow.Repository<TicketPrice, Guid>()
             .FindAsync(p => tierIds.Contains(p.TierId), ct);
         var pricesByTier = prices.ToLookup(p => p.TierId);
 

@@ -33,7 +33,7 @@ public sealed class VenuePenaltyTests
 
     public VenuePenaltyTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int OwnerId, int LoungeId, int SubscriptionId)> CreateFreshOwnerLoungeSubscriptionAsync(
+    private async Task<(Guid OwnerId, Guid LoungeId, Guid SubscriptionId)> CreateFreshOwnerLoungeSubscriptionAsync(
         decimal subscriptionPrice = 500_000m)
     {
         using var scope = _factory.Services.CreateScope();
@@ -74,8 +74,8 @@ public sealed class VenuePenaltyTests
         return (owner.Id, lounge.Id, subscription.Id);
     }
 
-    private async Task<int> SeedPenaltyAsync(
-        int loungeId, PenaltyType type, DateTimeOffset effectiveAt,
+    private async Task<Guid> SeedPenaltyAsync(
+        Guid loungeId, PenaltyType type, DateTimeOffset effectiveAt,
         PenaltyStatus status = PenaltyStatus.Active, int? suspensionDays = null,
         DateTimeOffset? appealDeadline = null)
     {
@@ -447,7 +447,7 @@ public sealed class VenuePenaltyTests
     public async Task PublishLoungeShow_WhenVenueSuspended_Returns422()
     {
         var (ownerId, loungeId, _) = await CreateFreshOwnerLoungeSubscriptionAsync();
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -494,7 +494,7 @@ public sealed class VenuePenaltyTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().Contain($"\"id\":{penaltyId}");
+        body.Should().Contain($"\"id\":\"{penaltyId}\"");
     }
 
     [Fact]
@@ -508,7 +508,7 @@ public sealed class VenuePenaltyTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().NotContain($"\"id\":{penaltyId}", "must only return penalties against the caller's own lounges");
+        body.Should().NotContain($"\"id\":\"{penaltyId}\"", "must only return penalties against the caller's own lounges");
     }
 
     [Fact]

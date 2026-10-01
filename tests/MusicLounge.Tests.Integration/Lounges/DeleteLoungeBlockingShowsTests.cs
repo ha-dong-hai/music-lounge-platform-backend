@@ -22,7 +22,7 @@ public sealed class DeleteLoungeBlockingShowsTests
 
     private static string Ma() => Guid.NewGuid().ToString("N")[..10];
 
-    private async Task<(int LoungeId, int OwnerId, List<int> ShowIds)> PhongTraCoBuoiAsync(params LoungeShowStatus[] trangThai)
+    private async Task<(Guid LoungeId, Guid OwnerId, List<Guid> ShowIds)> PhongTraCoBuoiAsync(params LoungeShowStatus[] trangThai)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -44,7 +44,7 @@ public sealed class DeleteLoungeBlockingShowsTests
         return (lounge.Id, lounge.OwnerId, shows.Select(s => s.Id).ToList());
     }
 
-    private static async Task<(HttpStatusCode Status, JsonElement Body)> XoaAsync(HttpClient client, int loungeId, string? ngonNgu = null)
+    private static async Task<(HttpStatusCode Status, JsonElement Body)> XoaAsync(HttpClient client, Guid loungeId, string? ngonNgu = null)
     {
         var req = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/lounges/{loungeId}");
         if (ngonNgu is not null) req.Headers.TryAddWithoutValidation("Accept-Language", ngonNgu);
@@ -63,7 +63,7 @@ public sealed class DeleteLoungeBlockingShowsTests
         status.Should().Be(HttpStatusCode.Conflict);
         body.GetProperty("message").GetString().Should().Contain("bản nháp");
         var chan = body.GetProperty("errors").GetProperty("blockingShows").EnumerateArray()
-            .Select(x => (x.GetProperty("id").GetInt32(), x.GetProperty("status").GetString())).ToList();
+            .Select(x => (x.GetProperty("id").GetGuid(), x.GetProperty("status").GetString())).ToList();
         chan.Should().Equal((showIds[0], "Draft"), (showIds[1], "Draft"), (showIds[2], "Ended"));
     }
 
@@ -78,7 +78,7 @@ public sealed class DeleteLoungeBlockingShowsTests
         status.Should().Be(HttpStatusCode.Conflict);
         body.GetProperty("message").GetString().Should().StartWith("This lounge still has concerts",
             "câu giữ cố định để còn tra được bản dịch — chi tiết nằm ở errors chứ không nội suy vào câu");
-        body.GetProperty("errors").GetProperty("blockingShows")[0].GetProperty("id").GetInt32().Should().Be(showIds[0]);
+        body.GetProperty("errors").GetProperty("blockingShows")[0].GetProperty("id").GetGuid().Should().Be(showIds[0]);
     }
 
     [Fact]

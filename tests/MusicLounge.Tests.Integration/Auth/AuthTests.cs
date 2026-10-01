@@ -859,7 +859,7 @@ public sealed class AuthTests
     private sealed record AuthResponse(bool Success, AuthResultData Data);
 
     private sealed record AuthResultData(
-        string Token, DateTimeOffset ExpiresAt, int UserId, string Email, string FullName, string Role,
+        string Token, DateTimeOffset ExpiresAt, Guid UserId, string Email, string FullName, string Role,
         string? RefreshToken = null, DateTimeOffset? RefreshTokenExpiresAt = null);
 
     private sealed record RegisterResponse(bool Success, RegisterResultData Data);

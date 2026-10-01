@@ -3,9 +3,9 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Refunds.DTOs;
 
 public sealed record RefundRequestDto(
-    int Id,
-    int PaymentId,
-    int? RequestedBy,
+    Guid Id,
+    Guid PaymentId,
+    Guid? RequestedBy,
     string Reason,
     decimal AmountRequested,
     decimal? AmountApproved,

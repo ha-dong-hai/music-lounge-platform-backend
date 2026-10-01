@@ -6,7 +6,7 @@ internal sealed class ProvideRefundPayoutAccountCommandValidator : AbstractValid
 {
     public ProvideRefundPayoutAccountCommandValidator()
     {
-        RuleFor(x => x.RefundRequestId).GreaterThan(0);
+        RuleFor(x => x.RefundRequestId).NotEmpty();
 
         RuleFor(x => x.BankName)
             .NotEmpty().WithMessage("Cần tên ngân hàng nhận hoàn.")

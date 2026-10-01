@@ -24,7 +24,7 @@ public sealed class AutoEndStaleShowsTests
 
     public AutoEndStaleShowsTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedShowAsync(
+    private async Task<Guid> SeedShowAsync(
         LoungeShowStatus status, DateTimeOffset scheduledStart, DateTimeOffset? scheduledEnd)
     {
         using var scope = _factory.Services.CreateScope();

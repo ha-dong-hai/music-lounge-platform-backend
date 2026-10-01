@@ -24,7 +24,7 @@ public sealed class PhoneVerificationTests
     private static string HashCode(string code)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code)));
 
-    private async Task SetPhoneAsync(int userId, string? phone, bool verified = false)
+    private async Task SetPhoneAsync(Guid userId, string? phone, bool verified = false)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -36,7 +36,7 @@ public sealed class PhoneVerificationTests
         await db.SaveChangesAsync();
     }
 
-    private async Task SeedPendingCodeAsync(int userId, string code)
+    private async Task SeedPendingCodeAsync(Guid userId, string code)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

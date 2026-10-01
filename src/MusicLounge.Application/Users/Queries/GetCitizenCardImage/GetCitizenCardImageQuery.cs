@@ -3,4 +3,4 @@ using MusicLounge.Application.Users.DTOs;
 
 namespace MusicLounge.Application.Users.Queries.GetCitizenCardImage;
 
-public sealed record GetCitizenCardImageQuery(int TargetUserId, string Side) : IQuery<CitizenCardImageDto>;
+public sealed record GetCitizenCardImageQuery(Guid TargetUserId, string Side) : IQuery<CitizenCardImageDto>;

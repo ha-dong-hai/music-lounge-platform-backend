@@ -20,9 +20,9 @@ namespace MusicLounge.Application.Settlements;
 public static class PayeeVerification
 {
     public static async Task<PayoutBlocker?> BlockerAsync(
-        IUnitOfWork uow, IPiiEncryptionService pii, int ownerId, int bankAccountId, CancellationToken ct)
+        IUnitOfWork uow, IPiiEncryptionService pii, Guid ownerId, Guid bankAccountId, CancellationToken ct)
     {
-        var owner = await uow.Repository<User, int>().GetByIdAsync(ownerId, ct);
+        var owner = await uow.Repository<User, Guid>().GetByIdAsync(ownerId, ct);
         PayoutBlocker? identity = owner?.CitizenCardReviewStatus switch
         {
             KycReviewStatus.Approved => null,
@@ -32,7 +32,7 @@ public static class PayeeVerification
         };
         if (identity is not null) return identity;
 
-        var account = await uow.Repository<BankAccount, int>().GetByIdAsync(bankAccountId, ct);
+        var account = await uow.Repository<BankAccount, Guid>().GetByIdAsync(bankAccountId, ct);
         // MLACP-401. Số tài khoản không còn giải mã được (khoá mã hoá cũ đã mất) thì không chuyển tiền vào đó. Kiểm TRƯỚC bước
         // xác minh: chỉ chủ phòng trà nhập lại được số, nên việc gỡ chặn không được giao cho Admin.
         if (account is not null && pii.TryDecrypt(account.AccountNumber) is null)

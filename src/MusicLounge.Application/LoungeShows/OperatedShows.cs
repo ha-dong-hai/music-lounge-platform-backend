@@ -29,7 +29,7 @@ internal static class OperatedShows
         if (currentUser.Role == Roles.Staff)
         {
             // Nhân viên chưa được phân công phòng trà nào thì không có buổi nào để vận hành — trả rỗng, không phải lỗi.
-            return currentUser.LoungeId is int loungeId
+            return currentUser.LoungeId is Guid loungeId
                 ? repo.GetForOperatedLoungeAsync(loungeId, page, pageSize, sortBy, status, format, ct)
                 : Task.FromResult(new PaginatedResult<LoungeShow>([], page, pageSize, 0));
         }

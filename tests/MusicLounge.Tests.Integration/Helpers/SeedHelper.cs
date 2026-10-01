@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MusicLounge.Application.Common.Interfaces;
@@ -19,12 +20,12 @@ namespace MusicLounge.Tests.Integration.Helpers;
 /// </summary>
 public static class SeedHelper
 {
-    public const int AdminId = 1;
-    public const int StaffId = 2;
-    public const int OwnerId = 3;
-    public const int AudienceId = 4;
-    public const int OtherOwnerId = 5;
-    public const int OtherVenueStaffId = 6;   // real Staff assignment at OtherLoungeId — for "wrong venue" tests
+    public static readonly Guid AdminId = OrderedGuid.FromLegacy("users", 1);
+    public static readonly Guid StaffId = OrderedGuid.FromLegacy("users", 2);
+    public static readonly Guid OwnerId = OrderedGuid.FromLegacy("users", 3);
+    public static readonly Guid AudienceId = OrderedGuid.FromLegacy("users", 4);
+    public static readonly Guid OtherOwnerId = OrderedGuid.FromLegacy("users", 5);
+    public static readonly Guid OtherVenueStaffId = OrderedGuid.FromLegacy("users", 6);   // real Staff assignment at OtherLoungeId — for "wrong venue" tests
 
     // MLACP-308 (CF1). Mot phong tra khong chay duoc hai buoi dien chong gio nhau, va tu gio he
     // thong cham dieu do that. Gan nhu moi test tao buoi dien qua API deu dung chung venue
@@ -46,22 +47,22 @@ public static class SeedHelper
         => DateTimeOffset.UtcNow.AddDays(14)
             .AddHours(System.Threading.Interlocked.Increment(ref _showSlot) * 5);
 
-    public const int LoungeId = 1;
-    public const int OtherLoungeId = 2;       // a different venue than LoungeId, staffed by OtherVenueStaffId
-    public const int ShowId = 1;           // Livestream format, Ongoing
-    public const int CancelledShowId = 2;
-    public const int OfflineShowId = 3;
+    public static readonly Guid LoungeId = OrderedGuid.FromLegacy("music_lounges", 1);
+    public static readonly Guid OtherLoungeId = OrderedGuid.FromLegacy("music_lounges", 2);       // a different venue than LoungeId, staffed by OtherVenueStaffId
+    public static readonly Guid ShowId = OrderedGuid.FromLegacy("lounge_shows", 1);           // Livestream format, Ongoing
+    public static readonly Guid CancelledShowId = OrderedGuid.FromLegacy("lounge_shows", 2);
+    public static readonly Guid OfflineShowId = OrderedGuid.FromLegacy("lounge_shows", 3);
 
-    public const int PerformerId = 1;
-    public const int PerformanceId = 1;
+    public static readonly Guid PerformerId = OrderedGuid.FromLegacy("performers", 1);
+    public static readonly Guid PerformanceId = OrderedGuid.FromLegacy("performances", 1);
 
-    public const int GenreId1 = 1;
-    public const int GenreId2 = 2;
-    public const int MoodId1 = 1;
-    public const int AtmosphereId1 = 1;
+    public static readonly Guid GenreId1 = OrderedGuid.FromLegacy("music_genres", 1);
+    public static readonly Guid GenreId2 = OrderedGuid.FromLegacy("music_genres", 2);
+    public static readonly Guid MoodId1 = OrderedGuid.FromLegacy("moods", 1);
+    public static readonly Guid AtmosphereId1 = OrderedGuid.FromLegacy("venue_atmospheres", 1);
 
-    public const int TicketTierId = 1;
-    public const int TicketPriceId = 1;
+    public static readonly Guid TicketTierId = OrderedGuid.FromLegacy("ticket_tiers", 1);
+    public static readonly Guid TicketPriceId = OrderedGuid.FromLegacy("ticket_prices", 1);
     public static readonly Guid AudienceTicketId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
     public static async Task SeedAsync(IServiceProvider services)
@@ -190,14 +191,14 @@ public static class SeedHelper
         // D14: Owner/OtherOwner can luon co goi subscription Active de tao event (CreateLoungeShow gate)
         db.SubscriptionPackages.Add(new SubscriptionPackage
         {
-            Id = 1, Name = "Test Package", Price = 500_000m,
+            Id = TestId.Of(1), Name = "Test Package", Price = 500_000m,
             BillingCycle = SubscriptionBillingCycle.Monthly,
             MaxTicketsPerEvent = 1000, HasAiPoster = true, MaxAiPostersPerMonth = 10, MaxTourScenes = 5, IsActive = true
         });
         db.OwnerSubscriptions.AddRange(
             new OwnerSubscription
             {
-                Id = 1, OwnerId = OwnerId, PackageId = 1,
+                Id = TestId.Of(1), OwnerId = OwnerId, PackageId = TestId.Of(1),
                 StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(29),
                 Status = SubscriptionStatus.Active,
@@ -206,7 +207,7 @@ public static class SeedHelper
             },
             new OwnerSubscription
             {
-                Id = 2, OwnerId = OtherOwnerId, PackageId = 1,
+                Id = TestId.Of(2), OwnerId = OtherOwnerId, PackageId = TestId.Of(1),
                 StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(29),
                 Status = SubscriptionStatus.Active,

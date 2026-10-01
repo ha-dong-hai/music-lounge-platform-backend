@@ -65,7 +65,7 @@ public sealed class AdminRoleDriftDetectionJobTests
     [Fact]
     public async Task ExecuteAsync_NewAdminAppears_AlertsExistingAdminsAndUpdatesBaseline()
     {
-        int newAdminId;
+        Guid newAdminId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

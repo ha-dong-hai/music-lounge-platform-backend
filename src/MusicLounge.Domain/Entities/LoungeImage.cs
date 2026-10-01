@@ -1,8 +1,8 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class LoungeImage : Common.BaseEntity<int>
+public sealed class LoungeImage : Common.BaseEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     public string? Caption { get; set; }
     public int DisplayOrder { get; set; } = 0;

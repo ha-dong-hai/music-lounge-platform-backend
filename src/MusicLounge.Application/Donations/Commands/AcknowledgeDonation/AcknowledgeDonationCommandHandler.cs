@@ -33,7 +33,7 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
         // avoids any overlap between the two status writes.
         await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
 
-        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
+        var donation = await _uow.Repository<Donation, Guid>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
         if (donation.Status == DonationStatus.Cancelled)
@@ -62,7 +62,7 @@ internal sealed class AcknowledgeDonationCommandHandler : IRequestHandler<Acknow
 
         donation.Status = DonationStatus.OwnerReceived;
         donation.OwnerAckAt = DateTimeOffset.UtcNow;
-        _uow.Repository<Donation, int>().Update(donation);
+        _uow.Repository<Donation, Guid>().Update(donation);
         // MLACP-363: bang chung hai chieu — nen tang ghi da chuyen, phong tra ghi da nhan.
         await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.VenueAcknowledged,
             _currentUser.UserId, detail: "Phòng trà xác nhận đã nhận tiền.", ct: ct);

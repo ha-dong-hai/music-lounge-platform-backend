@@ -30,10 +30,14 @@ public sealed class ComplaintRefundActionTests
 
     public ComplaintRefundActionTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int ComplaintId, int ShowId, int PaymentId)> SeedShowComplaintWithTicketAsync(
-        int? complainantId = SeedHelper.AudienceId,
-        TicketStatus ticketStatus = TicketStatus.Confirmed)
+    private async Task<(Guid ComplaintId, Guid ShowId, Guid PaymentId)> SeedShowComplaintWithTicketAsync(
+        Guid? complainantIdOrDefault = null,
+        TicketStatus ticketStatus = TicketStatus.Confirmed,
+        bool guest = false)
     {
+        // MLACP-515: Guid không làm giá trị mặc định được, nên "khách vãng lai (không tài khoản)" là cờ guest riêng —
+        // truyền null vào complainantIdOrDefault nghĩa là "dùng khán giả seed", KHÔNG phải khách vãng lai.
+        Guid? complainantId = guest ? null : complainantIdOrDefault ?? SeedHelper.AudienceId;
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -149,7 +153,7 @@ public sealed class ComplaintRefundActionTests
     [Fact]
     public async Task ResolveWithRefund_ForGuestComplainant_IsRefusedRatherThanSilentlyDoingNothing()
     {
-        var (complaintId, _, paymentId) = await SeedShowComplaintWithTicketAsync(complainantId: null);
+        var (complaintId, _, paymentId) = await SeedShowComplaintWithTicketAsync(guest: true);
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
         var res = await adminClient.PostAsJsonAsync(

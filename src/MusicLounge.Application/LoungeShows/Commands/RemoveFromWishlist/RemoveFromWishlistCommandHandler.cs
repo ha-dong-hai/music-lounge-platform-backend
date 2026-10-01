@@ -8,12 +8,12 @@ namespace MusicLounge.Application.LoungeShows.Commands.RemoveFromWishlist;
 
 internal sealed class RemoveFromWishlistCommandHandler : IRequestHandler<RemoveFromWishlistCommand, Unit>
 {
-    private readonly IRepository<ShowWishlist, int> _wishlistRepo;
+    private readonly IRepository<ShowWishlist, Guid> _wishlistRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IUnitOfWork _uow;
 
     public RemoveFromWishlistCommandHandler(
-        IRepository<ShowWishlist, int> wishlistRepo,
+        IRepository<ShowWishlist, Guid> wishlistRepo,
         ICurrentUserService currentUser,
         IUnitOfWork uow)
     {

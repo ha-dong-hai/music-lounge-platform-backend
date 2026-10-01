@@ -36,7 +36,7 @@ public sealed class ScheduleConflictTests
 
     // MLACP-377: 1 chu 1 phong tra gio la rang buoc that o DB — moi VenueAsync() tao mot chu MOI rieng, nen tra
     // dung chu cua DUNG phong tra dang xet thay vi mot SeedHelper.OwnerId co dinh.
-    private HttpClient Owner(int loungeId)
+    private HttpClient Owner(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var ownerId = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
@@ -48,7 +48,7 @@ public sealed class ScheduleConflictTests
     /// Phòng trà riêng, một chủ mới cho mỗi lần gọi (MLACP-377: 1 chủ 1 phòng trà), kèm gói subscription
     /// đang chạy (tạo buổi diễn đòi có gói) và tài khoản nhận tiền mặc định (nộp duyệt đòi có).
     /// </summary>
-    private async Task<int> VenueAsync()
+    private async Task<Guid> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -61,7 +61,7 @@ public sealed class ScheduleConflictTests
 
         db.OwnerSubscriptions.Add(new OwnerSubscription
         {
-            OwnerId = freshOwner.Id, PackageId = 1, StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            OwnerId = freshOwner.Id, PackageId = TestId.Of(1), StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(29), Status = SubscriptionStatus.Active,
             MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10,
             MaxTourScenesSnapshot = 5
@@ -94,8 +94,8 @@ public sealed class ScheduleConflictTests
     }
 
     /// <summary>Đặt sẵn một buổi diễn đang giữ chỗ, ghi thẳng vào DB để kiểm soát chính xác khung giờ.</summary>
-    private async Task<int> OccupyAsync(
-        int loungeId, DateTimeOffset start, DateTimeOffset? end,
+    private async Task<Guid> OccupyAsync(
+        Guid loungeId, DateTimeOffset start, DateTimeOffset? end,
         LoungeShowStatus status = LoungeShowStatus.Published, string name = "Buổi diễn đã có")
     {
         using var scope = _factory.Services.CreateScope();
@@ -116,7 +116,7 @@ public sealed class ScheduleConflictTests
     }
 
     private Task<HttpResponseMessage> CreateAsync(
-        int loungeId, DateTimeOffset start, DateTimeOffset? end)
+        Guid loungeId, DateTimeOffset start, DateTimeOffset? end)
         => Owner(loungeId).PostAsJsonAsync("/api/v1/lounge-shows", new
         {
             LoungeId = loungeId,
@@ -125,17 +125,17 @@ public sealed class ScheduleConflictTests
             Format = "Offline",
             ScheduledStart = start,
             ScheduledEnd = end,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
                 new
                 {
-                    PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main",
+                    PerformerId = (Guid?)null, PerformerName = "DJ Test", Role = "Main",
                     OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true
                 }
             }
@@ -286,7 +286,7 @@ public sealed class ScheduleConflictTests
         var free = Base();
         var create = await CreateAsync(loungeId, free, free.AddHours(2));
         create.StatusCode.Should().Be(HttpStatusCode.Created);
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var res = await Owner(loungeId).PutAsJsonAsync($"/api/v1/lounge-shows/{showId}", new
         {
@@ -294,7 +294,7 @@ public sealed class ScheduleConflictTests
             Description = "Integration test show",
             ScheduledStart = taken.AddHours(1),
             ScheduledEnd = taken.AddHours(2),
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null
         });
@@ -309,7 +309,7 @@ public sealed class ScheduleConflictTests
         var loungeId = await VenueAsync();
         var start = Base();
         var create = await CreateAsync(loungeId, start, start.AddHours(2));
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var res = await Owner(loungeId).PutAsJsonAsync($"/api/v1/lounge-shows/{showId}", new
         {
@@ -317,7 +317,7 @@ public sealed class ScheduleConflictTests
             Description = "Integration test show",
             ScheduledStart = start,
             ScheduledEnd = start.AddHours(2),
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 120,
             OnlineQuota = (int?)null
         });
@@ -337,7 +337,7 @@ public sealed class ScheduleConflictTests
 
         var create = await CreateAsync(loungeId, start, start.AddHours(2));
         create.StatusCode.Should().Be(HttpStatusCode.Created, "lúc tạo thì khung giờ còn trống");
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         await OccupyAsync(loungeId, start, start.AddHours(2), name: "Buổi diễn chen ngang");
 
@@ -356,7 +356,7 @@ public sealed class ScheduleConflictTests
         var loungeId = await VenueAsync();
         var start = Base();
         var create = await CreateAsync(loungeId, start, start.AddHours(2));
-        var showId = (await create.Content.ReadFromJsonAsync<Envelope<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<Envelope<Guid>>())!.Data;
 
         var res = await Owner(loungeId).PostAsync($"/api/v1/lounge-shows/{showId}/submit", null);
 

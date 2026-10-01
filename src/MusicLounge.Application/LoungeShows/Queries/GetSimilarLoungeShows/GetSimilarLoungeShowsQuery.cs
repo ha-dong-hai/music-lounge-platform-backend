@@ -3,4 +3,4 @@ using MusicLounge.Application.LoungeShows.DTOs;
 
 namespace MusicLounge.Application.LoungeShows.Queries.GetSimilarLoungeShows;
 
-public sealed record GetSimilarLoungeShowsQuery(int ShowId) : IQuery<IReadOnlyList<LoungeShowListItemDto>>;
+public sealed record GetSimilarLoungeShowsQuery(Guid ShowId) : IQuery<IReadOnlyList<LoungeShowListItemDto>>;

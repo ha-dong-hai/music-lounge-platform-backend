@@ -3,7 +3,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.LoungeShows.DTOs;
 
 public sealed record LoungeShowDetailDto(
-    int Id,
+    Guid Id,
     string Name,
     string Description,
     string? CoverImageUrl,
@@ -12,7 +12,7 @@ public sealed record LoungeShowDetailDto(
     LoungeShowFormat Format,
     LoungeShowStatus Status,
     bool IsOngoing,
-    int? LivestreamId,
+    Guid? LivestreamId,
     LoungeSummaryDto Lounge,
     IReadOnlyList<PerformerSummaryDto> Performers,
     IReadOnlyList<TicketTierSummaryDto> TicketTiers,
@@ -37,7 +37,7 @@ public sealed record LoungeShowDetailDto(
     // gửi lại được thứ nó ĐỌC được. Ba trường dưới đây trước đây không DTO đọc nào trả (hai số vé chỉ có ở danh sách),
     // nên mỗi lần chủ phòng trà bấm Sửa mà không chọn lại danh mục là danh mục bị xoá âm thầm. Mọi trường của lệnh sửa
     // đều phải đọc được ở đây — test EditableShowFieldsAreReadableTests quét để thêm trường mới mà quên đường đọc thì đỏ.
-    int? CategoryId,
+    Guid? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota,
     // MLACP-450: chi tra cho nguoi van hanh phong tra (chu, nhan vien duoc phan cong, Admin — dung

@@ -19,7 +19,7 @@ public sealed class MyTicketsFilterTests
 
     public MyTicketsFilterTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record BoVe(int BuyerId, List<Guid> SapPhysical, List<Guid> SapLivestream,
+    private sealed record BoVe(Guid BuyerId, List<Guid> SapPhysical, List<Guid> SapLivestream,
         List<Guid> DaPhysical, List<Guid> DaLivestream, string TenBuoiDaDien)
     {
         public List<Guid> DaDien => DaPhysical.Concat(DaLivestream).ToList();
@@ -70,7 +70,7 @@ public sealed class MyTicketsFilterTests
         Status = LoungeShowStatus.Published, ScheduledStart = batDau, ScheduledEnd = batDau.AddHours(2)
     };
 
-    private async Task<(List<Guid> Ids, int Total)> GoiAsync(int buyerId, string query)
+    private async Task<(List<Guid> Ids, int Total)> GoiAsync(Guid buyerId, string query)
     {
         var client = _factory.CreateAuthenticatedClient(buyerId, "Audience");
         var res = await client.GetAsync($"/api/v1/tickets/my?{query}");

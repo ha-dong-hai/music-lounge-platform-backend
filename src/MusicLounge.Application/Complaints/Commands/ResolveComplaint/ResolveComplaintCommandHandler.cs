@@ -36,7 +36,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
 
     public async Task<Unit> Handle(ResolveComplaintCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<Complaint, int>();
+        var repo = _uow.Repository<Complaint, Guid>();
         var complaint = await repo.GetByIdAsync(request.ComplaintId, ct)
             ?? throw new NotFoundException(nameof(Complaint), request.ComplaintId);
 
@@ -86,7 +86,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
 
         repo.Update(complaint);
 
-        if (complaint.ComplainantUserId is int complainantId)
+        if (complaint.ComplainantUserId is Guid complainantId)
         {
             await _notifications.NotifyAsync(
                 complainantId,
@@ -125,11 +125,11 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
     // TransactionBehavior's transaction for ResolveComplaintCommand, and a nested Send would try to
     // BeginTransactionAsync a second time on the same connection ("connection is already in a
     // transaction"). Keep this in sync with CancelLoungeShowCommandHandler if that logic changes.
-    private async Task TakeDownShowAsync(int showId, CancellationToken ct)
+    private async Task TakeDownShowAsync(Guid showId, CancellationToken ct)
     {
         await using var _ = await _lock.AcquireAsync($"show-status-change:{showId}", ct);
 
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(showId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), showId);
 
@@ -151,10 +151,10 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         if (confirmedTickets.Count == 0) return;
 
         var priceIds = confirmedTickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var payers = await TicketRefundRecipients.PayersAsync(_uow, confirmedTickets, ct);
 
         foreach (var ticket in confirmedTickets)
@@ -178,7 +178,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 Status = RefundRequestStatus.Pending
             });
 
-            if (ticket.BuyerId is int buyerId)
+            if (ticket.BuyerId is Guid buyerId)
                 await _notifications.NotifyAsync(
                     buyerId,
                     NotificationType.EventCancelled,
@@ -205,7 +205,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
             ?? throw new DomainException(
                 "Không thể xác định venue để xử phạt từ khiếu nại này (TargetType không liên kết được tới 1 venue cụ thể).");
 
-        var loungeRepo = _uow.Repository<MusicLoungeEntity, int>();
+        var loungeRepo = _uow.Repository<MusicLoungeEntity, Guid>();
         var lounge = await loungeRepo.GetByIdAsync(loungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), loungeId);
 
@@ -220,7 +220,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
             EffectiveAt = now,
             Status = PenaltyStatus.Active
         };
-        _uow.Repository<VenuePenalty, int>().Add(penalty);
+        _uow.Repository<VenuePenalty, Guid>().Add(penalty);
 
         // MLACP-367: cung quy tac voi IssuePenalty — canh cao khong duoc mo khoa mot phong tra dang bi khoa.
         if (PenaltyLifecycle.StatusAfterImposing(lounge.Status, PenaltyType.Warning) is { } warnedStatus)
@@ -281,7 +281,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 "Muốn hủy show và hoàn 100% cho mọi khán giả thì dùng \"TakeDownContent\". " +
                 "Với khiếu nại donate chưa trả nghệ sĩ, dùng \"IssueWarning\" để xử phạt venue.");
 
-        if (complaint.ComplainantUserId is not int complainantId)
+        if (complaint.ComplainantUserId is not Guid complainantId)
             throw new DomainException(
                 "Khiếu nại này do khách vãng lai gửi (không có tài khoản), nên không xác định được " +
                 "vé của ai để hoàn. Hãy liên hệ người khiếu nại theo số điện thoại đã cung cấp.");
@@ -301,11 +301,11 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 "Người khiếu nại không có vé nào còn hiệu lực (và có giao dịch thanh toán) cho show này, " +
                 "nên không có gì để hoàn.");
 
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var payers = await TicketRefundRecipients.PayersAsync(_uow, refundable, ct);
-        var showName = (await _uow.Repository<LoungeShow, int>().GetByIdAsync(complaint.TargetId, ct))?.Name ?? "";
+        var showName = (await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(complaint.TargetId, ct))?.Name ?? "";
         var priceIds = refundable.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id, p => p.Price);
 
         foreach (var ticket in refundable)
@@ -356,25 +356,25 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 ct: ct);
     }
 
-    private async Task<int?> ResolveLoungeIdAsync(Complaint complaint, CancellationToken ct) =>
+    private async Task<Guid?> ResolveLoungeIdAsync(Complaint complaint, CancellationToken ct) =>
         complaint.TargetType switch
         {
             "venue" => complaint.TargetId,
-            "show" => (await _uow.Repository<LoungeShow, int>().GetByIdAsync(complaint.TargetId, ct))?.LoungeId,
+            "show" => (await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(complaint.TargetId, ct))?.LoungeId,
             "livestream" => (await _livestreamRepo.GetByIdAsync(complaint.TargetId, ct)) is { } livestream
-                ? (await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct))?.LoungeId
+                ? (await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct))?.LoungeId
                 : null,
             "donation" => await ResolveLoungeIdFromDonationAsync(complaint.TargetId, ct),
             _ => null
         };
 
-    private async Task<int?> ResolveLoungeIdFromDonationAsync(int donationId, CancellationToken ct)
+    private async Task<Guid?> ResolveLoungeIdFromDonationAsync(Guid donationId, CancellationToken ct)
     {
-        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(donationId, ct);
+        var donation = await _uow.Repository<Donation, Guid>().GetByIdAsync(donationId, ct);
         if (donation is null) return null;
-        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(donation.PerformanceId, ct);
+        var performance = await _uow.Repository<Performance, Guid>().GetByIdAsync(donation.PerformanceId, ct);
         if (performance is null) return null;
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct);
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(performance.LoungeShowId, ct);
         return show?.LoungeId;
     }
 }

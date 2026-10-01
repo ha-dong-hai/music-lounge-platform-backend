@@ -67,7 +67,7 @@ public sealed class PaymentLandingPageTests
 
     // ── Đi qua HTTP thật ────────────────────────────────────────────────────
 
-    private sealed record InitData(int DonationId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record InitData(Guid DonationId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record InitResponse(bool Success, InitData Data);
 
     [Fact]

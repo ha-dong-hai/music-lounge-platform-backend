@@ -17,15 +17,15 @@ internal sealed class GetVenueTourQueryHandler : IRequestHandler<GetVenueTourQue
 
     public async Task<VenueTourDto> Handle(GetVenueTourQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
-        var scenes = await _uow.Repository<VenueTourScene, int>().FindAsync(s => s.LoungeId == request.LoungeId, ct);
+        var scenes = await _uow.Repository<VenueTourScene, Guid>().FindAsync(s => s.LoungeId == request.LoungeId, ct);
         var sceneIds = scenes.Select(s => s.Id).ToHashSet();
 
         // Generic IRepository never eager-loads navigation properties — fetch all hotspots for
         // this lounge's scenes in one round trip, then group in memory instead of N+1-ing per scene.
-        var allHotspots = await _uow.Repository<VenueTourHotspot, int>()
+        var allHotspots = await _uow.Repository<VenueTourHotspot, Guid>()
             .FindAsync(h => sceneIds.Contains(h.SceneId), ct);
         var hotspotsBySceneId = allHotspots.GroupBy(h => h.SceneId)
             .ToDictionary(g => g.Key, g => g.ToList());

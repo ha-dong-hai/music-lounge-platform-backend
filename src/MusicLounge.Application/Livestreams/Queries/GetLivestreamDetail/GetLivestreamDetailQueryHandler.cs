@@ -45,7 +45,7 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
         var isGenuineTicketHolder = false;
         if (!userHasAccess)
         {
-            var lounge = await _uow.Repository<MusicLoungeEntity, int>()
+            var lounge = await _uow.Repository<MusicLoungeEntity, Guid>()
                 .GetByIdAsync(livestream.LoungeShow.LoungeId, ct);
             var isVenueOperator = lounge is not null
                 && VenueOperatorAccess.CanOperate(_currentUser, livestream.LoungeShow.LoungeId, lounge.OwnerId);
@@ -116,7 +116,7 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
     // heartbeat — tách command cho lần mở đầu sẽ buộc client gọi 2 request tuần tự trước khi có thể
     // phát. Các lần giữ phiên sống SAU đó dùng SendLivestreamHeartbeatCommand (Command thật sự).
     private async Task<string> OpenViewingSessionAsync(
-        int livestreamId, string? previousSessionId, DateTimeOffset now, CancellationToken ct)
+        Guid livestreamId, string? previousSessionId, DateTimeOffset now, CancellationToken ct)
     {
         var ticket = await _livestreamRepo.GetViewerTicketAsync(livestreamId, _currentUser.UserId, ct);
         if (ticket is null)
@@ -128,7 +128,7 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
             ConfigKeys.LivestreamHeartbeatTimeoutSeconds, 90, ct);
         var cutoff = now.AddSeconds(-timeoutSeconds);
 
-        var sessionRepo = _uow.Repository<LivestreamViewingSession, int>();
+        var sessionRepo = _uow.Repository<LivestreamViewingSession, Guid>();
         // So sanh DateTimeOffset khong dich duoc sang SQL tren SQLite test provider (confirmed
         // thuc nghiem — cung nhom loi da ghi nhan o SumAsync/GetChatMessagesAsync trong file khac).
         // Loc theo TicketId (dich duoc) qua FindAsync, roi so sanh LastHeartbeatAt >= cutoff o C#

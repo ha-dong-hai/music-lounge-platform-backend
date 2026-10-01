@@ -8,14 +8,14 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class DonationRepository : Repository<Donation, int>, IDonationRepository
+internal sealed class DonationRepository : Repository<Donation, Guid>, IDonationRepository
 {
     private readonly ApplicationDbContext _ctx;
 
     public DonationRepository(ApplicationDbContext ctx) : base(ctx) => _ctx = ctx;
 
-    public async Task<(int OwnerId, int LoungeShowId, int PerformerId)?> GetOwnershipInfoAsync(
-        int donationId, CancellationToken ct = default)
+    public async Task<(Guid OwnerId, Guid LoungeShowId, Guid PerformerId)?> GetOwnershipInfoAsync(
+        Guid donationId, CancellationToken ct = default)
     {
         var row = await _ctx.Donations
             .AsNoTracking()
@@ -33,7 +33,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<PaginatedResult<PendingDonationDto>> GetPendingForOwnerAsync(
-        int ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default)
+        Guid ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.Donations
             .AsNoTracking()
@@ -65,7 +65,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<PaginatedResult<PendingDonationDto>> GetOwnerReceivedAwaitingPayoutAsync(
-        int ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default)
+        Guid ownerId, decimal fallbackPerformerShareRate, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.Donations
             .AsNoTracking()
@@ -107,7 +107,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<PaginatedResult<MyDonationDto>> GetMyDonationsAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default)
+        Guid userId, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.Donations
             .AsNoTracking()
@@ -135,7 +135,7 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<PaginatedResult<PublicDonationRow>> GetPublicHistoryByPerformerAsync(
-        int performerId, int page, int pageSize, CancellationToken ct = default)
+        Guid performerId, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = PublicByPerformer(performerId);
 
@@ -151,12 +151,12 @@ internal sealed class DonationRepository : Repository<Donation, int>, IDonationR
     }
 
     public async Task<IReadOnlyList<PublicDonationRow>> ListPublicByPerformerAsync(
-        int performerId, CancellationToken ct = default)
+        Guid performerId, CancellationToken ct = default)
         => await ToPublicRows(PublicByPerformer(performerId).OrderByDescending(d => d.Id)).ToListAsync(ct);
 
     // MLACP-365: tinh ca donate nen tang dang giu (PendingOwnerAck) — tien da thu that, truoc day khong
     // hien tren trang cong khai cho toi khi chu phong tra bam "da nhan".
-    private IQueryable<Donation> PublicByPerformer(int performerId)
+    private IQueryable<Donation> PublicByPerformer(Guid performerId)
         => _ctx.Donations
             .AsNoTracking()
             .Where(d => d.Performance.PerformerId == performerId

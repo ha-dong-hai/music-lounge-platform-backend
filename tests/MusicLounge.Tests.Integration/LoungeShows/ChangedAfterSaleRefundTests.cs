@@ -37,7 +37,7 @@ public sealed class ChangedAfterSaleRefundTests
 
     public ChangedAfterSaleRefundTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int LoungeId, string Name, int OwnerId);
+    private sealed record Venue(Guid LoungeId, string Name, Guid OwnerId);
 
     private static DateTimeOffset Earlier => DateTimeOffset.UtcNow.AddDays(-1);
 
@@ -65,7 +65,7 @@ public sealed class ChangedAfterSaleRefundTests
         return new Venue(lounge.Id, lounge.Name, freshOwner.Id);
     }
 
-    private async Task<int> UserAsync()
+    private async Task<Guid> UserAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -75,7 +75,7 @@ public sealed class ChangedAfterSaleRefundTests
         return user.Id;
     }
 
-    private async Task<int> ShowAsync(
+    private async Task<Guid> ShowAsync(
         Venue venue, DateTimeOffset start, bool cancellationAllowed, decimal? refundPercentage = null,
         int? deadlineHours = null, LoungeShowFormat format = LoungeShowFormat.Offline,
         DateTimeOffset? rescheduledAt = null)
@@ -103,8 +103,8 @@ public sealed class ChangedAfterSaleRefundTests
         return show.Id;
     }
 
-    private async Task<(Guid TicketId, int PaymentId)> TicketAsync(
-        int showId, int holderId, DateTimeOffset boughtAt, int? payerId = null,
+    private async Task<(Guid TicketId, Guid PaymentId)> TicketAsync(
+        Guid showId, Guid holderId, DateTimeOffset boughtAt, Guid? payerId = null,
         AccessType access = AccessType.Physical)
     {
         using var scope = _factory.Services.CreateScope();
@@ -158,7 +158,7 @@ public sealed class ChangedAfterSaleRefundTests
         return (ticket.Id, payment.Id);
     }
 
-    private Task<HttpResponseMessage> RescheduleAsync(Venue venue, int showId, DateTimeOffset newStart)
+    private Task<HttpResponseMessage> RescheduleAsync(Venue venue, Guid showId, DateTimeOffset newStart)
         => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner")
             .PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/reschedule", new { NewScheduledStart = newStart });
 
@@ -168,7 +168,7 @@ public sealed class ChangedAfterSaleRefundTests
             {
                 Name = venue.Name,
                 Description = (string?)null,
-                AtmosphereId = (int?)null,
+                AtmosphereId = (Guid?)null,
                 Street = NewStreet,
                 Ward = "Bến Nghé",
                 District = "1",
@@ -177,17 +177,17 @@ public sealed class ChangedAfterSaleRefundTests
                 Longitude = 106.7009
             });
 
-    private Task<HttpResponseMessage> CancelAsync(Guid ticketId, int userId)
+    private Task<HttpResponseMessage> CancelAsync(Guid ticketId, Guid userId)
         => _factory.CreateAuthenticatedClient(userId, "Audience").PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
 
-    private async Task<RefundRequest> RefundAsync(int paymentId)
+    private async Task<RefundRequest> RefundAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().RefundRequests.AsNoTracking()
             .SingleAsync(r => r.PaymentId == paymentId);
     }
 
-    private async Task<string> NoticeAsync(int userId, NotificationType type, int showId)
+    private async Task<string> NoticeAsync(Guid userId, NotificationType type, Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         return (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()

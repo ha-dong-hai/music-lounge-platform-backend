@@ -5,7 +5,7 @@ namespace MusicLounge.Application.Mutes.DTOs;
 /// quản lý để xem lại và bỏ tắt tiếng, không phải màn hình khám phá cần ảnh bìa.
 /// </summary>
 public sealed record MutedLoungeDto(
-    int Id,
+    Guid Id,
     string Name,
     string District,
     string City,

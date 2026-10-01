@@ -13,5 +13,5 @@ public sealed record DonationAlertDto(
     string DonorName,
     decimal Amount,
     string? Message,
-    int DonationId,
+    Guid DonationId,
     string? PerformerName = null);

@@ -2,14 +2,14 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class TicketTier : Common.AuditableEntity<int>
+public sealed class TicketTier : Common.AuditableEntity<Guid>
 {
-    public int LoungeShowId { get; set; }
+    public Guid LoungeShowId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public AccessType AccessType { get; set; }
     public int? TotalCapacity { get; set; }
-    public int? ZoneId { get; set; }   // D1: null = online (no physical zone)
+    public Guid? ZoneId { get; set; }   // D1: null = online (no physical zone)
 
     public LoungeShow LoungeShow { get; set; } = null!;
     public SeatingZone? Zone { get; set; }

@@ -47,7 +47,7 @@ internal sealed class GetPublishedLoungeShowsQueryHandler
 
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)
-            : (IReadOnlySet<int>)new HashSet<int>();
+            : (IReadOnlySet<Guid>)new HashSet<Guid>();
 
         var items = result.Items
             .Select(s => s.ToListItemDto(wishlisted))

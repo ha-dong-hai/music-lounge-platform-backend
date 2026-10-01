@@ -3,7 +3,7 @@ using MusicLounge.Application.Common.Abstractions;
 namespace MusicLounge.Application.FnbMenus.Commands.UpdateFnbMenu;
 
 public sealed record UpdateFnbMenuCommand(
-    int MenuId,
+    Guid MenuId,
     string Name,
     string? Description,
     bool IsActive,

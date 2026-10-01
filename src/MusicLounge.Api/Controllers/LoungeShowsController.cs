@@ -90,9 +90,9 @@ public sealed class LoungeShowsController : ControllerBase
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Search(
-        [FromQuery] int[]? genreIds,
-        [FromQuery] int[]? moodIds,
-        [FromQuery] int[]? atmosphereIds,
+        [FromQuery] Guid[]? genreIds,
+        [FromQuery] Guid[]? moodIds,
+        [FromQuery] Guid[]? atmosphereIds,
         [FromQuery] string? keyword,
         [FromQuery] LoungeShowFormat? format,
         [FromQuery] DateTimeOffset? dateFrom,
@@ -148,7 +148,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// mặc định của nền tảng (cho hủy, hoàn 100%, không hạn chót).</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -156,18 +156,18 @@ public sealed class LoungeShowsController : ControllerBase
         [FromBody] CreateLoungeShowCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return CreatedAtAction(nameof(GetDetail), new { id }, ApiResponse<int>.Ok(id));
+        return CreatedAtAction(nameof(GetDetail), new { id }, ApiResponse<Guid>.Ok(id));
     }
 
     /// <summary>Các buổi hòa nhạc của một phòng trà — công khai, cho trang giới thiệu venue mà
     /// khán giả xem trước khi mua vé. Khác `GET mine` bên dưới, vốn là danh sách riêng của chủ venue
     /// đang đăng nhập và gồm cả bản nháp.</summary>
-    [HttpGet("by-lounge/{loungeId:int}")]
+    [HttpGet("by-lounge/{loungeId:guid}")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<PaginatedResult<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByLounge(
-        int loungeId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10,
+        Guid loungeId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetLoungeShowsByLoungeQuery(loungeId, page, pageSize), ct);
@@ -176,13 +176,13 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Trang nghệ sĩ: thông tin nghệ sĩ kèm các buổi hòa nhạc họ tham gia. Mặc định chỉ
     /// trả buổi sắp diễn — đặt `includeEnded=true` để xem cả buổi đã diễn.</summary>
-    [HttpGet("by-performer/{performerId:int}")]
+    [HttpGet("by-performer/{performerId:guid}")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<PerformerDetailDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByPerformer(
-        int performerId, [FromQuery] bool includeEnded = false,
+        Guid performerId, [FromQuery] bool includeEnded = false,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken ct = default)
     {
         var result = await _sender.Send(
@@ -219,12 +219,12 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Sự kiện đang Draft chỉ Owner/Staff của đúng venue (hoặc Admin) xem được — người
     /// khác nhận 404 (không lộ sự tồn tại của bản nháp). Sự kiện đã publish thì công khai.</summary>
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<LoungeShowDetailDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetDetail(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetDetail(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetLoungeShowDetailQuery(id), ct);
         return Ok(ApiResponse<LoungeShowDetailDto>.Ok(result));
@@ -233,12 +233,12 @@ public sealed class LoungeShowsController : ControllerBase
     /// <summary>Bản đồ khu vực chỗ ngồi cho 1 show — chỉ gồm zone có ít nhất 1 hạng vé trong show
     /// này (không phải toàn bộ zone của venue), kèm số chỗ còn trống/khoảng giá live-computed.
     /// Draft ẩn giống GetDetail (404 với người ngoài, kể cả Owner venue khác).</summary>
-    [HttpGet("{id:int}/seating-map")]
+    [HttpGet("{id:guid}/seating-map")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<SeatingMapDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSeatingMap(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetSeatingMap(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetShowSeatingMapQuery(id), ct);
         return Ok(ApiResponse<SeatingMapDto>.Ok(result));
@@ -247,12 +247,12 @@ public sealed class LoungeShowsController : ControllerBase
     /// <summary>Tối đa 6 buổi diễn "tương tự" cho trang chi tiết — cùng phòng trà HOẶC chung ít nhất 1
     /// thể loại nhạc với buổi diễn đang xem, luôn loại trừ chính buổi diễn đó, chỉ show Published/
     /// Ongoing. Ưu tiên show khớp cả 2 tiêu chí trước, còn lại theo ngày diễn gần nhất.</summary>
-    [HttpGet("{id:int}/similar")]
+    [HttpGet("{id:guid}/similar")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeShowListItemDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSimilar(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetSimilar(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetSimilarLoungeShowsQuery(id), ct);
         return Ok(ApiResponse<IReadOnlyList<LoungeShowListItemDto>>.Ok(result));
@@ -262,12 +262,12 @@ public sealed class LoungeShowsController : ControllerBase
     /// và breakdown theo từng mức giá — đếm trực tiếp trên bảng Ticket tại thời điểm gọi (không
     /// dùng field đếm sẵn nào) nên luôn phản ánh đúng thời điểm hiện tại. Chỉ Owner của venue (hoặc
     /// Admin) xem được (403 nếu khác).</summary>
-    [HttpGet("{id:int}/ticket-stats")]
+    [HttpGet("{id:guid}/ticket-stats")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<ShowTicketStatsDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetTicketStats(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetTicketStats(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetShowTicketStatsQuery(id), ct);
         return Ok(ApiResponse<ShowTicketStatsDto>.Ok(result));
@@ -279,7 +279,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// mọi trường khác của PUT này: bỏ trống là trả về mặc định (cho hủy, hoàn 100%, không hạn chót),
     /// không phải giữ nguyên giá trị cũ. Vì chỉ sửa được khi còn Draft nên chưa có vé nào bán theo
     /// chính sách bị ghi đè.</summary>
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -287,7 +287,7 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Update(
-        int id, [FromBody] UpdateLoungeShowRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateLoungeShowRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateLoungeShowCommand(
             id, body.Name, body.Description, body.ScheduledStart, body.ScheduledEnd,
@@ -300,7 +300,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// trong không gian 3D). Giá trị này đã được trả ra trong chi tiết buổi diễn để client biết dựng
     /// trình phát nào, nhưng trước đây không có đường nào đặt nên mọi buổi diễn nằm im ở mặc định.
     /// Chỉ buổi diễn Online hoặc Hybrid mới đặt được ThreeD.</summary>
-    [HttpPut("{id:int}/playback-mode")]
+    [HttpPut("{id:guid}/playback-mode")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -308,7 +308,7 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> SetPlaybackMode(
-        int id, [FromBody] SetPlaybackModeRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] SetPlaybackModeRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SetPlaybackModeCommand(id, body.PlaybackMode), ct);
         return NoContent();
@@ -317,13 +317,13 @@ public sealed class LoungeShowsController : ControllerBase
     /// <summary>Danh sách người đã mua vé buổi hòa nhạc này, để chủ phòng trà đối soát và đón
     /// khách — chỉ chủ venue đó hoặc Admin (403 nếu khác), vì danh sách có tên và email người mua.
     /// Khác `GET {id}/ticket-stats` vốn chỉ trả con số tổng.</summary>
-    [HttpGet("{id:int}/orders")]
+    [HttpGet("{id:guid}/orders")]
     [Authorize]
     [ProducesResponseType<ApiResponse<PaginatedResult<ShowOrderDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrders(
-        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
+        Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetShowOrdersQuery(id, page, pageSize), ct);
         return Ok(ApiResponse<PaginatedResult<ShowOrderDto>>.Ok(result));
@@ -331,14 +331,14 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>D18 (NĐ 144/2020 Điều 10): Owner khai báo số văn bản/liên kết "văn bản chấp thuận
     /// tổ chức biểu diễn" trước khi nộp duyệt — chỉ sửa được khi event còn Draft.</summary>
-    [HttpPut("{id:int}/legal-approval")]
+    [HttpPut("{id:guid}/legal-approval")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetLegalApprovalReference(
-        int id, [FromBody] SetLegalApprovalReferenceRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] SetLegalApprovalReferenceRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SetLegalApprovalReferenceCommand(id, body.LegalApprovalReference), ct);
         return NoContent();
@@ -348,7 +348,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// nước, phải nộp trước 7 ngày làm việc lúc nộp duyệt), hợp đồng li-xăng VCPMC là thỏa thuận
     /// dân sự nên có thể khai báo bất kỳ lúc nào trước khi show Ongoing/Ended/Cancelled — bắt buộc
     /// phải có trước khi bắt đầu show (xem StartLoungeShow).</summary>
-    [HttpPut("{id:int}/vcpmc-royalty")]
+    [HttpPut("{id:guid}/vcpmc-royalty")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -356,7 +356,7 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> SetVcpmcRoyaltyReference(
-        int id, [FromBody] SetVcpmcRoyaltyReferenceRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] SetVcpmcRoyaltyReferenceRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SetVcpmcRoyaltyReferenceCommand(id, body.VcpmcRoyaltyReference), ct);
         return NoContent();
@@ -370,7 +370,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// endpoint này trả <b>202</b> với <c>status = "Queued"</c> và <c>attemptId</c> thay vì ảnh; giao diện hỏi lại trạng
     /// thái qua lịch sử tạo poster, và chủ phòng trà nhận thông báo khi xong. Chế độ gọi thẳng vẫn trả 200 kèm ảnh như
     /// trước.</para></summary>
-    [HttpPost("{id:int}/ai-poster")]
+    [HttpPost("{id:guid}/ai-poster")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<PosterGenerationResultDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiResponse<PosterGenerationResultDto>>(StatusCodes.Status202Accepted)]
@@ -380,7 +380,7 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GeneratePoster(
-        int id, [FromBody] GeneratePosterRequest? body, CancellationToken ct = default)
+        Guid id, [FromBody] GeneratePosterRequest? body, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GeneratePosterCommand(id, body?.StyleHint), ct);
         var envelope = ApiResponse<PosterGenerationResultDto>.Ok(result);
@@ -393,14 +393,14 @@ public sealed class LoungeShowsController : ControllerBase
     /// <summary>Đối chứng thủ công của tạo poster AI — Owner tự tải poster riêng thay vì dùng AI
     /// (hoặc không có gói subscription hỗ trợ tính năng này). Ghi đè và bỏ cờ PosterByAi nếu trước
     /// đó đã có poster do AI tạo.</summary>
-    [HttpPut("{id:int}/poster")]
+    [HttpPut("{id:guid}/poster")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetPoster(
-        int id, [FromBody] SetShowPosterRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] SetShowPosterRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SetShowPosterCommand(id, body.ImageUrl), ct);
         return NoContent();
@@ -408,12 +408,12 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Lịch sử các lần tạo poster AI của show — Owner tự tra được lần nào thành công, lần
     /// nào thất bại và vì sao, xác nhận lần thất bại không bị trừ hạn mức.</summary>
-    [HttpGet("{id:int}/ai-poster/history")]
+    [HttpGet("{id:guid}/ai-poster/history")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetPosterGenerationHistory(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetPosterGenerationHistory(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetPosterGenerationHistoryQuery(id), ct);
         return Ok(ApiResponse<IReadOnlyList<PosterGenerationAttemptDto>>.Ok(result));
@@ -421,13 +421,13 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Xóa thật (hard delete) — chỉ áp dụng cho buổi diễn còn ở trạng thái Draft (422 nếu
     /// khác); buổi diễn đã publish/đang diễn ra phải dùng huỷ (Cancel), không xóa được nữa.</summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteLoungeShowCommand(id), ct);
         return NoContent();
@@ -437,13 +437,13 @@ public sealed class LoungeShowsController : ControllerBase
     /// ≥1 hạng vé, ≥1 nghệ sĩ trong line-up, văn bản chấp thuận biểu diễn (NĐ 144/2020 Điều 10), và
     /// nộp trước tối thiểu N ngày làm việc so với ngày diễn — thiếu bất kỳ điều kiện nào trả về lỗi
     /// nêu rõ (422).</summary>
-    [HttpPost("{id:int}/submit")]
+    [HttpPost("{id:guid}/submit")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Submit(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Submit(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new PublishLoungeShowCommand(id), ct);
         return NoContent();
@@ -451,63 +451,63 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Hủy buổi diễn đã đăng — vé đã Confirmed được hủy kèm tạo yêu cầu hoàn 100% tiền
     /// (RefundRequest) và thông báo tới từng người mua.</summary>
-    [HttpPost("{id:int}/cancel")]
+    [HttpPost("{id:guid}/cancel")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Cancel(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new CancelLoungeShowCommand(id), ct);
         return NoContent();
     }
 
-    [HttpPost("{id:int}/reschedule")]
+    [HttpPost("{id:guid}/reschedule")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Reschedule(
-        int id, [FromBody] RescheduleLoungeShowRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] RescheduleLoungeShowRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new RescheduleLoungeShowCommand(id, body.NewScheduledStart), ct);
         return NoContent();
     }
 
-    [HttpPost("{id:int}/start")]
+    [HttpPost("{id:guid}/start")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Start(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Start(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new StartLoungeShowCommand(id), ct);
         return NoContent();
     }
 
-    [HttpPost("{id:int}/end")]
+    [HttpPost("{id:guid}/end")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> End(int id, CancellationToken ct = default)
+    public async Task<IActionResult> End(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new EndLoungeShowCommand(id), ct);
         return NoContent();
     }
 
-    [HttpPut("{id:int}/format")]
+    [HttpPut("{id:guid}/format")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ChangeFormat(
-        int id, [FromBody] ChangeLoungeShowFormatRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] ChangeLoungeShowFormatRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new ChangeLoungeShowFormatCommand(id, body.NewFormat), ct);
         return NoContent();
@@ -515,26 +515,26 @@ public sealed class LoungeShowsController : ControllerBase
 
     /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — chỉ khi buổi diễn còn Draft (422 nếu khác).
     /// Trả 409 nếu nghệ sĩ này đã có trong line-up của đúng buổi diễn này.</summary>
-    [HttpPost("{id:int}/performances")]
+    [HttpPost("{id:guid}/performances")]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> AddPerformance(
-        int id, [FromBody] AddPerformanceRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] AddPerformanceRequest body, CancellationToken ct = default)
     {
         var performanceId = await _sender.Send(new AddPerformanceCommand(
             id, body.PerformerId, body.PerformerName, body.Role,
             body.OrderIndex, body.SetTime, body.AcceptsDonation), ct);
-        return CreatedAtAction(nameof(GetDetail), new { id, version = "1.0" }, ApiResponse<int>.Ok(performanceId));
+        return CreatedAtAction(nameof(GetDetail), new { id, version = "1.0" }, ApiResponse<Guid>.Ok(performanceId));
     }
 
     /// <summary>Sửa vai trò/thứ tự/giờ diễn/bật-tắt nhận donate của 1 nghệ sĩ trong line-up — chỉ
     /// khi buổi diễn còn Draft (422 nếu khác). Đổi sang nghệ sĩ khác: xóa rồi thêm lại.</summary>
-    [HttpPut("{id:int}/performances/{performanceId:int}")]
+    [HttpPut("{id:guid}/performances/{performanceId:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -542,7 +542,7 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> UpdatePerformance(
-        int id, int performanceId, [FromBody] UpdatePerformanceRequest body, CancellationToken ct = default)
+        Guid id, Guid performanceId, [FromBody] UpdatePerformanceRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdatePerformanceCommand(
             performanceId, body.Role, body.OrderIndex, body.SetTime, body.AcceptsDonation), ct);
@@ -550,13 +550,13 @@ public sealed class LoungeShowsController : ControllerBase
     }
 
     /// <summary>Xóa 1 nghệ sĩ khỏi danh sách biểu diễn — chỉ khi buổi diễn còn Draft (422 nếu khác).</summary>
-    [HttpDelete("{id:int}/performances/{performanceId:int}")]
+    [HttpDelete("{id:guid}/performances/{performanceId:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> DeletePerformance(int id, int performanceId, CancellationToken ct = default)
+    public async Task<IActionResult> DeletePerformance(Guid id, Guid performanceId, CancellationToken ct = default)
     {
         await _sender.Send(new DeletePerformanceCommand(performanceId), ct);
         return NoContent();
@@ -566,7 +566,7 @@ public sealed class LoungeShowsController : ControllerBase
     /// thúc (§6.13). Bắt buộc đã "check-in" thật (vé vào cửa đã quét QR, hoặc vé xem livestream đã
     /// từng thực sự nhận được URL phát — xem RateShowCommandHandler), không chỉ cần có vé Confirmed.
     /// Mỗi người chỉ đánh giá được 1 lần cho 1 show (409 nếu đã đánh giá).</summary>
-    [HttpPost("{id:int}/rate")]
+    [HttpPost("{id:guid}/rate")]
     [Authorize(Policy = Policies.RequireAuthenticated)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -574,7 +574,7 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Rate(
-        int id, [FromBody] RateShowRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] RateShowRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new RateShowCommand(id, body.Score, body.Comment), ct);
         return NoContent();
@@ -584,13 +584,13 @@ public sealed class LoungeShowsController : ControllerBase
     /// tính trên toàn bộ đánh giá còn hiệu lực, danh sách nhận xét phân trang sắp mới nhất lên
     /// trước. Đánh giá đã bị Admin gỡ (IsRemoved) không tính vào điểm trung bình/phân bố và không
     /// xuất hiện trong danh sách.</summary>
-    [HttpGet("{id:int}/ratings")]
+    [HttpGet("{id:guid}/ratings")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<ShowRatingsDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRatings(
-        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+        Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetShowRatingsQuery(id, page, pageSize), ct);
         return Ok(ApiResponse<ShowRatingsDto>.Ok(result));
@@ -607,7 +607,7 @@ public sealed record UpdateLoungeShowRequest(
     DateTimeOffset ScheduledStart,
     DateTimeOffset? ScheduledEnd,
     DateTimeOffset? TicketSaleClosesAt,
-    int? CategoryId,
+    Guid? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota,
     bool? CancellationAllowed = null,
@@ -615,7 +615,7 @@ public sealed record UpdateLoungeShowRequest(
     int? CancellationDeadlineHours = null);
 
 public sealed record AddPerformanceRequest(
-    int? PerformerId,
+    Guid? PerformerId,
     string? PerformerName,
     string Role,
     int OrderIndex,

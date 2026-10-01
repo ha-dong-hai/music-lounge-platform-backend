@@ -8,7 +8,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.LoungeShows.Commands.AddPerformance;
 
-internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerformanceCommand, int>
+internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerformanceCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -19,12 +19,12 @@ internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerforma
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(AddPerformanceCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(AddPerformanceCommand request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -33,8 +33,8 @@ internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerforma
         if (show.Status != LoungeShowStatus.Draft)
             throw new DomainException("Chỉ có thể sửa danh sách biểu diễn khi event còn ở trạng thái Draft.");
 
-        var performerRepo = _uow.Repository<Performer, int>();
-        int performerId;
+        var performerRepo = _uow.Repository<Performer, Guid>();
+        Guid performerId;
         if (request.PerformerId.HasValue)
         {
             var performer = await performerRepo.GetByIdAsync(request.PerformerId.Value, ct)
@@ -57,7 +57,7 @@ internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerforma
         // DONE WHEN: cung 1 nghe si khong duoc them 2 lan vao cung 1 event. DB co unique index
         // (LoungeShowId, PerformerId) lam luoi an toan cuoi, nhung check truoc o day de tra loi
         // 409 ro rang thay vi de DbUpdateException chung chung roi xuong 500.
-        var alreadyInLineup = await _uow.Repository<Performance, int>()
+        var alreadyInLineup = await _uow.Repository<Performance, Guid>()
             .AnyAsync(p => p.LoungeShowId == request.ShowId && p.PerformerId == performerId, ct);
         if (alreadyInLineup)
             throw new ConflictException("Nghệ sĩ này đã có trong danh sách biểu diễn của event này.");
@@ -72,7 +72,7 @@ internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerforma
             SetTime = request.SetTime,
             AcceptsDonation = request.AcceptsDonation
         };
-        _uow.Repository<Performance, int>().Add(performance);
+        _uow.Repository<Performance, Guid>().Add(performance);
         await _uow.SaveChangesAsync(ct);
 
         return performance.Id;

@@ -6,7 +6,7 @@ namespace MusicLounge.Application.Donations.DTOs;
 /// cũ) không được cộng vào — <see cref="DonationsWithHiddenAmount"/> cho biết có bao nhiêu khoản như vậy.
 /// </summary>
 public sealed record PerformerDonationSummaryDto(
-    int PerformerId,
+    Guid PerformerId,
     string PerformerName,
     int DonationCount,
     int DonationsWithHiddenAmount,

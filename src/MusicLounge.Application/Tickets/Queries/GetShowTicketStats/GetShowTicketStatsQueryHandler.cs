@@ -21,10 +21,10 @@ internal sealed class GetShowTicketStatsQueryHandler
 
     public async Task<ShowTicketStatsDto> Handle(GetShowTicketStatsQuery request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<Domain.Entities.MusicLounge, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<Domain.Entities.MusicLounge, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.MusicLounge), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
@@ -39,11 +39,11 @@ internal sealed class GetShowTicketStatsQueryHandler
                 && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id);
 
         var tierIds = prices.Select(p => p.TierId).Distinct().ToList();
-        var tiers = await _uow.Repository<TicketTier, int>().FindAsync(t => tierIds.Contains(t.Id), ct);
+        var tiers = await _uow.Repository<TicketTier, Guid>().FindAsync(t => tierIds.Contains(t.Id), ct);
         var tierById = tiers.ToDictionary(t => t.Id);
 
         var byPrice = tickets

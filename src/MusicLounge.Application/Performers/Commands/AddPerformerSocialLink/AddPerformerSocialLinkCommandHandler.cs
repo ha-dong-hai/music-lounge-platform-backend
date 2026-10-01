@@ -10,7 +10,7 @@ namespace MusicLounge.Application.Performers.Commands.AddPerformerSocialLink;
 // rather than creating a duplicate (matches the unique index on (PerformerId, Platform) and the
 // natural UX of "set your Spotify link" being a single field, not a list to manage).
 // §6.12 edit rights apply here too — only the performer's creator or Admin may add/change links.
-internal sealed class AddPerformerSocialLinkCommandHandler : IRequestHandler<AddPerformerSocialLinkCommand, int>
+internal sealed class AddPerformerSocialLinkCommandHandler : IRequestHandler<AddPerformerSocialLinkCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -21,16 +21,16 @@ internal sealed class AddPerformerSocialLinkCommandHandler : IRequestHandler<Add
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(AddPerformerSocialLinkCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(AddPerformerSocialLinkCommand request, CancellationToken ct)
     {
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(request.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
         if (performer.CreatedByUserId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Chỉ người tạo hồ sơ nghệ sĩ này hoặc Admin mới có quyền sửa.");
 
         var platform = Enum.Parse<SocialPlatform>(request.Platform, ignoreCase: true);
-        var linkRepo = _uow.Repository<PerformerSocialLink, int>();
+        var linkRepo = _uow.Repository<PerformerSocialLink, Guid>();
 
         var existing = (await linkRepo.FindAsync(
             l => l.PerformerId == request.PerformerId && l.Platform == platform, ct)).FirstOrDefault();

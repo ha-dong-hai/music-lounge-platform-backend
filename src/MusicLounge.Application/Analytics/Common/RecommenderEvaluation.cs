@@ -8,9 +8,9 @@ namespace MusicLounge.Application.Analytics.Common;
 /// tập này; câu hỏi là nó có đẩy được buổi đúng lên đầu không.
 /// </param>
 public sealed record EvaluationCase(
-    int UserId,
-    int HeldOutShowId,
-    IReadOnlyList<int> CandidateShowIds);
+    Guid UserId,
+    Guid HeldOutShowId,
+    IReadOnlyList<Guid> CandidateShowIds);
 
 /// <param name="HitRateAtK">
 /// Tỉ lệ trường hợp mà buổi diễn bị giấu lọt vào top K. Đây là thước đo chính: nó trả lời đúng câu
@@ -72,12 +72,12 @@ public static class RecommenderEvaluation
     public static ModelEvaluation Evaluate(
         string model,
         IReadOnlyList<EvaluationCase> cases,
-        Func<int, IReadOnlyList<int>, IReadOnlyList<int>> rank,
+        Func<Guid, IReadOnlyList<Guid>, IReadOnlyList<Guid>> rank,
         int k,
         int catalogueSize)
     {
         var hits = 0;
-        var recommendedAtLeastOnce = new HashSet<int>();
+        var recommendedAtLeastOnce = new HashSet<Guid>();
 
         foreach (var c in cases)
         {
@@ -100,8 +100,8 @@ public static class RecommenderEvaluation
     /// Xếp hạng theo độ phổ biến: baseline để so. Nhiều người chọn hơn thì lên trước; hoà thì theo
     /// id để kết quả lặp lại được giữa các lần chạy.
     /// </summary>
-    public static Func<int, IReadOnlyList<int>, IReadOnlyList<int>> PopularityRanker(
-        IReadOnlyDictionary<int, int> interactionCountByShow)
+    public static Func<Guid, IReadOnlyList<Guid>, IReadOnlyList<Guid>> PopularityRanker(
+        IReadOnlyDictionary<Guid, int> interactionCountByShow)
         => (_, candidates) => candidates
             .OrderByDescending(id => interactionCountByShow.GetValueOrDefault(id))
             .ThenBy(id => id)
@@ -111,9 +111,9 @@ public static class RecommenderEvaluation
     /// Xếp hạng theo mức hợp gu người nghe — chính công thức đang phục vụ người dùng thật qua
     /// <see cref="TasteMatcher"/>. Hoà thì theo id, cùng lý do như trên.
     /// </summary>
-    public static Func<int, IReadOnlyList<int>, IReadOnlyList<int>> TasteRanker(
-        IReadOnlyDictionary<int, TasteProfile> tasteByUser,
-        IReadOnlyDictionary<int, ShowTags> tagsByShow)
+    public static Func<Guid, IReadOnlyList<Guid>, IReadOnlyList<Guid>> TasteRanker(
+        IReadOnlyDictionary<Guid, TasteProfile> tasteByUser,
+        IReadOnlyDictionary<Guid, ShowTags> tagsByShow)
         => (userId, candidates) =>
         {
             if (!tasteByUser.TryGetValue(userId, out var taste))
@@ -133,9 +133,9 @@ public static class RecommenderEvaluation
     /// Dùng bộ sinh ngẫu nhiên có hạt giống cố định: con số đưa vào báo cáo mà mỗi lần chạy lại ra
     /// một kiểu thì không ai kiểm chứng được, và cũng không so được hai lần đo với nhau.
     /// </summary>
-    public static List<int> SampleNegatives(
-        IReadOnlyList<int> catalogue,
-        IReadOnlySet<int> alreadySeen,
+    public static List<Guid> SampleNegatives(
+        IReadOnlyList<Guid> catalogue,
+        IReadOnlySet<Guid> alreadySeen,
         int count,
         Random random)
     {

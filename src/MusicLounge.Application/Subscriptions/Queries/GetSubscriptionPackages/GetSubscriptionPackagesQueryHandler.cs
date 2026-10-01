@@ -28,8 +28,8 @@ internal sealed class GetSubscriptionPackagesQueryHandler
         var activeOnly = request.ActiveOnly || _currentUser.Role != Roles.Admin;
 
         var packages = activeOnly
-            ? await _uow.Repository<SubscriptionPackage, int>().FindAsync(p => p.IsActive, ct)
-            : await _uow.Repository<SubscriptionPackage, int>().GetAllAsync(ct);
+            ? await _uow.Repository<SubscriptionPackage, Guid>().FindAsync(p => p.IsActive, ct)
+            : await _uow.Repository<SubscriptionPackage, Guid>().GetAllAsync(ct);
 
         return packages
             .OrderBy(p => p.Price)

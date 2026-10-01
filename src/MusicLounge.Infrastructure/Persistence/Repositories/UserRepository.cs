@@ -8,7 +8,7 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class UserRepository : Repository<User, int>, IUserRepository
+internal sealed class UserRepository : Repository<User, Guid>, IUserRepository
 {
     private readonly ApplicationDbContext _ctx;
 

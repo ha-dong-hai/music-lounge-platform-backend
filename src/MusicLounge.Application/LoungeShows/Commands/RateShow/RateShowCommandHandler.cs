@@ -19,7 +19,7 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
 
     public async Task<Unit> Handle(RateShowCommand request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
         if (show.Status != LoungeShowStatus.Ended)
@@ -49,12 +49,12 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
         if (!hasCheckedIn)
             throw new ForbiddenException("Bạn cần check-in (vào cửa hoặc xem livestream) để đánh giá show này.");
 
-        var alreadyRated = await _uow.Repository<LoungeShowRating, int>()
+        var alreadyRated = await _uow.Repository<LoungeShowRating, Guid>()
             .AnyAsync(r => r.LoungeShowId == request.ShowId && r.UserId == _currentUser.UserId, ct);
         if (alreadyRated)
             throw new ConflictException("Bạn đã đánh giá show này rồi.");
 
-        _uow.Repository<LoungeShowRating, int>().Add(new LoungeShowRating
+        _uow.Repository<LoungeShowRating, Guid>().Add(new LoungeShowRating
         {
             UserId = _currentUser.UserId,
             LoungeShowId = request.ShowId,

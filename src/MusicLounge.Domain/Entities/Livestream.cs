@@ -2,9 +2,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Livestream : Common.AuditableEntity<int>
+public sealed class Livestream : Common.AuditableEntity<Guid>
 {
-    public int LoungeShowId { get; set; }
+    public Guid LoungeShowId { get; set; }
     public string? Provider { get; set; }
     public string? ProviderRef { get; set; }
     public string? RtmpUrl { get; set; }
@@ -27,7 +27,7 @@ public sealed class Livestream : Common.AuditableEntity<int>
     // vo khi EF doc cot da mat).
     public string? RecordingUrl { get; set; }
     public DateTimeOffset? ReplayAvailableUntil { get; set; }
-    public int? TerminatedById { get; set; }
+    public Guid? TerminatedById { get; set; }
     public string? TerminatedReason { get; set; }
 
     public LoungeShow LoungeShow { get; set; } = null!;

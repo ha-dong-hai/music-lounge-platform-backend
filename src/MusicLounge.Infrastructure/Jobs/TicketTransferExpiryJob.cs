@@ -47,7 +47,7 @@ public sealed class TicketTransferExpiryJob
             ticket.PendingTransferToUserId = null;
             ticket.PendingTransferInitiatedAt = null;
 
-            if (ticket.BuyerId is int senderId)
+            if (ticket.BuyerId is Guid senderId)
                 await _notifications.NotifyAsync(
                     senderId, NotificationType.EventReminder,
                     new SongNgu(

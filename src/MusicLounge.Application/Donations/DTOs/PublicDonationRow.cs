@@ -7,7 +7,7 @@ namespace MusicLounge.Application.Donations.DTOs;
 /// <see cref="PublicDonationStatement"/> quyết định trường nào được công khai và công khai thế nào.
 /// </summary>
 public sealed record PublicDonationRow(
-    int Id,
+    Guid Id,
     string ShowName,
     string VenueName,
     DateTimeOffset ShowDate,

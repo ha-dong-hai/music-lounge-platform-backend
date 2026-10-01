@@ -7,7 +7,7 @@ public sealed class StitchVenueTourSceneCommandValidator : AbstractValidator<Sti
 {
     public StitchVenueTourSceneCommandValidator(IFileStorageService fileStorage)
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.Name).MaximumLength(100);
 
         RuleFor(x => x.SourceImageUrls)

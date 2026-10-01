@@ -7,8 +7,8 @@ public sealed class AddVenueTourHotspotCommandValidator : AbstractValidator<AddV
 {
     public AddVenueTourHotspotCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
-        RuleFor(x => x.SceneId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
+        RuleFor(x => x.SceneId).NotEmpty();
         RuleFor(x => x.Type)
             .Must(t => Enum.TryParse<VenueTourHotspotType>(t, ignoreCase: true, out _))
             .WithMessage("Type phải là 'Navigate' hoặc 'Info'.");

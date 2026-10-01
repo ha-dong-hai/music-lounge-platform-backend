@@ -45,9 +45,9 @@ public sealed class ConsentingUsersGetTheSameRulesTests
     public ConsentingUsersGetTheSameRulesTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name, string LoungeCity);
+    private sealed record Rec(Guid Id, string Name, string LoungeCity);
 
-    private async Task<(int LoungeId, string City)> VenueAsync()
+    private async Task<(Guid LoungeId, string City)> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -69,7 +69,7 @@ public sealed class ConsentingUsersGetTheSameRulesTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, int? genreId, double daysFromNow)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, Guid? genreId, double daysFromNow)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -96,7 +96,7 @@ public sealed class ConsentingUsersGetTheSameRulesTests
     }
 
     /// <summary>Người đã bấm đồng ý cho phân tích hành vi — nhóm mà cả ba lỗi này nhắm vào.</summary>
-    private async Task<int> ConsentingUserAsync(int? favouriteGenreId = null)
+    private async Task<Guid> ConsentingUserAsync(Guid? favouriteGenreId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -125,7 +125,7 @@ public sealed class ConsentingUsersGetTheSameRulesTests
     /// Ghi thẳng một dòng kết quả đã tính sẵn còn hạn. Đây chính là thứ job nền sinh ra, nên viết
     /// thẳng vào cho phép kiểm đúng nhánh cache mà không phải chạy cả đường ống ML.
     /// </summary>
-    private async Task CacheAsync(int userId, int showId, float score)
+    private async Task CacheAsync(Guid userId, Guid showId, float score)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -145,7 +145,7 @@ public sealed class ConsentingUsersGetTheSameRulesTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(int userId, string? city, int limit = 10)
+    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(Guid userId, string? city, int limit = 10)
     {
         var query = city is null ? $"limit={limit}" : $"city={city}&limit={limit}";
         var res = await _factory.CreateAuthenticatedClient(userId, "Audience")
@@ -302,7 +302,7 @@ public sealed class ConsentingUsersGetTheSameRulesTests
         }
     }
 
-    private async Task BulkShowsAsync(int loungeId, int count, int genreId, int firstDayOffset)
+    private async Task BulkShowsAsync(Guid loungeId, int count, Guid genreId, int firstDayOffset)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

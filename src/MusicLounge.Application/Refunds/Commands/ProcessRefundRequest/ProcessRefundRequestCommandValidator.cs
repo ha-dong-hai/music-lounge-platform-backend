@@ -7,7 +7,7 @@ internal sealed class ProcessRefundRequestCommandValidator : AbstractValidator<P
 {
     public ProcessRefundRequestCommandValidator()
     {
-        RuleFor(x => x.RefundRequestId).GreaterThan(0);
+        RuleFor(x => x.RefundRequestId).NotEmpty();
 
         RuleFor(x => x.Decision)
             .Must(d => d is "Approved" or "Rejected")

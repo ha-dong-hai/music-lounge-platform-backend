@@ -6,14 +6,14 @@ public sealed record DailyTicketSalesDto(
     decimal Revenue);
 
 public sealed record TicketTierSalesDto(
-    int TierId,
+    Guid TierId,
     string TierName,
     int TicketsSold,
     int? Capacity,
     decimal? SellThroughRate);
 
 public sealed record TicketSalesTrendDto(
-    int ShowId,
+    Guid ShowId,
     string ShowName,
     int TotalTicketsSold,
     decimal TotalRevenue,

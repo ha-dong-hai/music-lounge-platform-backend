@@ -3,7 +3,7 @@ using MusicLounge.Application.Common.Models;
 namespace MusicLounge.Application.Donations.DTOs;
 
 public sealed record OwnerDonationHistoryItemDto(
-    int Id,
+    Guid Id,
     string PerformerName,
     string ShowName,
     decimal Gross,

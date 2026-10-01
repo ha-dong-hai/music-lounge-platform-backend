@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.FnbMenus.DTOs;
 
 public sealed record FnbMenuDto(
-    int Id,
-    int LoungeId,
+    Guid Id,
+    Guid LoungeId,
     string Name,
     string? Description,
     bool IsActive,

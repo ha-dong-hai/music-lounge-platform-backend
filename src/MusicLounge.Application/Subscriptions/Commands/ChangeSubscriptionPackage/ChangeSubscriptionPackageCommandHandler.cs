@@ -31,7 +31,7 @@ internal sealed class ChangeSubscriptionPackageCommandHandler
 
     public async Task<SubscriptionChangeInitiationDto> Handle(ChangeSubscriptionPackageCommand request, CancellationToken ct)
     {
-        var package = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(request.PackageId, ct)
+        var package = await _uow.Repository<SubscriptionPackage, Guid>().GetByIdAsync(request.PackageId, ct)
             ?? throw new NotFoundException(nameof(SubscriptionPackage), request.PackageId);
         if (!package.IsActive)
             throw new DomainException("Gói này hiện không mở đăng ký.");
@@ -40,7 +40,7 @@ internal sealed class ChangeSubscriptionPackageCommandHandler
         await SubscriptionVenueGate.EnsureNotPenalizedAsync(_uow, _currentUser.UserId, ct);
 
         var now = DateTimeOffset.UtcNow;
-        var current = (await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var current = (await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
                 s => s.OwnerId == _currentUser.UserId && s.Status == SubscriptionStatus.Active, ct))
             .FirstOrDefault(s => s.ExpiresAt > now)
             ?? throw new DomainException("Bạn chưa có gói đang hoạt động — hãy đăng ký một gói trước.");
@@ -50,9 +50,9 @@ internal sealed class ChangeSubscriptionPackageCommandHandler
 
         await SubscriptionTerms.EnsureNoPendingChangeAsync(_uow, _currentUser.UserId, ct);
 
-        var oldPackage = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(current.PackageId, ct);
+        var oldPackage = await _uow.Repository<SubscriptionPackage, Guid>().GetByIdAsync(current.PackageId, ct);
         // MLACP-375: loai ngay duoc bu mien phi (tam khoa oan / khoa duoc go) khoi gia tri quy doi.
-        var compensations = await _uow.Repository<VenuePenalty, int>().FindAsync(
+        var compensations = await _uow.Repository<VenuePenalty, Guid>().FindAsync(
             p => p.CompensatedSubscriptionId == current.Id, ct);
         var credit = SubscriptionTerms.RemainingValue(current, oldPackage?.Price ?? 0m, now, compensations);
         var cycleEnd = SubscriptionTerms.CycleEnd(package.BillingCycle, now);
@@ -73,7 +73,7 @@ internal sealed class ChangeSubscriptionPackageCommandHandler
             SubscriptionMaxTourScenesSnapshot = package.MaxTourScenes,
             CreatedAt = now
         };
-        _uow.Repository<Payment, int>().Add(payment);
+        _uow.Repository<Payment, Guid>().Add(payment);
         await _uow.SaveChangesAsync(ct);
 
         var paymentUrl = _vnPay.CreatePaymentUrl(new VnPayPaymentRequest(

@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class EventCustomValue : Common.AuditableEntity<int>
+public sealed class EventCustomValue : Common.AuditableEntity<Guid>
 {
-    public int ShowId { get; set; }
-    public int CriteriaId { get; set; }
+    public Guid ShowId { get; set; }
+    public Guid CriteriaId { get; set; }
     public string Value { get; set; } = string.Empty;  // JSON value
 
     public LoungeShow Show { get; set; } = null!;
