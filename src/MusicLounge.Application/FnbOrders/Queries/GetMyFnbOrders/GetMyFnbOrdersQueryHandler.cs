@@ -34,8 +34,12 @@ internal sealed class GetMyFnbOrdersQueryHandler
 
         // Sắp theo Id giảm dần (mới nhất trước) — cùng lý do GetFnbOrdersQueryHandler: provider SQLite
         // không dịch được ORDER BY trên cột DateTimeOffset, còn Id tự tăng đã đúng thứ tự tạo.
+        // MLACP-500: lọc phòng trà TRƯỚC khi cắt trang. Trước đây trang gọi món lấy 10 đơn gần nhất của MỌI phòng trà rồi
+        // tự lọc phòng đang ngồi — vừa gọi món ở phòng khác là đơn CHƯA TRẢ của phòng này rơi khỏi trang, nút Trả online
+        // biến mất. Phòng trà không tồn tại hay không có đơn thì đơn giản là danh sách rỗng, không phải lỗi.
+        var loungeId = request.LoungeId;
         var (pageItems, total) = await _uow.Repository<FnbOrder, int>().GetPagedAsync(
-            o => o.AudienceUserId == userId, o => o.Id, page, pageSize, ct);
+            o => o.AudienceUserId == userId && (loungeId == null || o.LoungeId == loungeId), o => o.Id, page, pageSize, ct);
 
         var dtos = await FnbOrderDtoBuilder.BuildAsync(_uow, pageItems, ct);
         return new PaginatedResult<FnbOrderDto>(dtos, page, pageSize, total);
