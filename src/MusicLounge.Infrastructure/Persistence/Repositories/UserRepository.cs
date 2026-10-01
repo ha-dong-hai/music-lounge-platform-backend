@@ -46,4 +46,39 @@ internal sealed class UserRepository : Repository<User, int>, IUserRepository
 
         return new PaginatedResult<UserAdminDto>(items, page, pageSize, total);
     }
+
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetKycReviewPageAsync(
+        KycReviewStatus status, int page, int pageSize, CancellationToken ct = default)
+    {
+        // MLACP-505. Trước đây handler nạp ĐẦY ĐỦ mọi người trong hàng đợi (kèm số CCCD, mã số thuế đã mã hoá) rồi mới
+        // cắt trang trong bộ nhớ. Giờ hai bước:
+        //   1) chỉ lấy KHOÁ SẮP XẾP (Id + hai mốc nộp) của cả hàng đợi — vài chục byte mỗi người;
+        //   2) sắp, cắt trang trên khoá, rồi chỉ nạp đầy đủ những người thuộc trang.
+        //
+        // TRẦN ĐÃ BIẾT: bước sắp vẫn chạy trong bộ nhớ trên tập khoá, vì provider SQLite dùng trong test không ORDER BY
+        // được DateTimeOffset (cùng lý do mọi chỗ sắp theo thời gian khác trong repo). Đường nâng cấp: khi test chạy trên
+        // SQL Server (Testcontainers) thì đưa OrderBy/Skip/Take vào câu truy vấn ở bước 1, bỏ bước sắp trong bộ nhớ.
+        //
+        // Thứ tự giữ y như bản cũ: nộp sớm nhất trước, chưa có mốc nộp thì xuống cuối; trùng mốc thì theo Id — bản cũ
+        // dựa vào OrderBy ổn định trên thứ tự DB trả về (theo khoá chính), ThenBy(Id) nói điều đó ra thành luật.
+        var keys = await _ctx.Users.AsNoTracking()
+            .Where(u => u.CitizenCardReviewStatus == status || u.TaxProfileReviewStatus == status)
+            .Select(u => new { u.Id, u.CitizenCardSubmittedAt, u.TaxProfileSubmittedAt })
+            .ToListAsync(ct);
+
+        var pageIds = keys
+            .OrderBy(k => k.CitizenCardSubmittedAt ?? k.TaxProfileSubmittedAt ?? DateTimeOffset.MaxValue)
+            .ThenBy(k => k.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(k => k.Id)
+            .ToList();
+
+        var users = await _ctx.Users.AsNoTracking()
+            .Where(u => pageIds.Contains(u.Id))
+            .ToListAsync(ct);
+        var byId = users.ToDictionary(u => u.Id);
+
+        return (pageIds.Select(id => byId[id]).ToList(), keys.Count);
+    }
 }
