@@ -48,14 +48,15 @@ public sealed class FnbOrdersController : ControllerBase
     /// <summary>Khán giả — đơn F&amp;B của chính mình, mới nhất trước (MLACP-357). Mỗi đơn có
     /// `Status` (bếp đã làm tới đâu) tách khỏi `IsPaid` (đã trả tiền chưa), và `OnlinePaymentLiveUntil`
     /// nếu đang có một link VNPay còn trả được. Đơn nhân viên tạo hộ khách vãng lai không có trong
-    /// danh sách của ai.</summary>
+    /// danh sách của ai. `loungeId` (tuỳ chọn, MLACP-500): chỉ đơn ở phòng trà đó.</summary>
     [HttpGet("my")]
     [ProducesResponseType<ApiResponse<PaginatedResult<FnbOrderDto>>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetMine(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] int? loungeId = null,
+        CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetMyFnbOrdersQuery(page, pageSize), ct);
+        var result = await _sender.Send(new GetMyFnbOrdersQuery(page, pageSize, loungeId), ct);
         return Ok(ApiResponse<PaginatedResult<FnbOrderDto>>.Ok(result));
     }
 
