@@ -15,6 +15,7 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
     private readonly ILivestreamServiceFactory _factory;
     private readonly ICurrentUserService _currentUser;
     private readonly ISystemConfigService _config;
+    private readonly ILivestreamHubService _hub;
     private readonly ILogger<EndLivestreamCommandHandler> _logger;
 
     public EndLivestreamCommandHandler(
@@ -22,12 +23,14 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
         ILivestreamServiceFactory factory,
         ICurrentUserService currentUser,
         ISystemConfigService config,
+        ILivestreamHubService hub,
         ILogger<EndLivestreamCommandHandler> logger)
     {
         _uow = uow;
         _factory = factory;
         _currentUser = currentUser;
         _config = config;
+        _hub = hub;
         _logger = logger;
     }
 
@@ -36,7 +39,10 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
         var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
 
-        if (livestream.Status != LivestreamStatus.Live)
+        // MLACP-508: Reconnecting cũng kết thúc được. Trước đây chỉ nhận Live — encoder rớt mạng đúng lúc cuối buổi thì
+        // chủ phòng trà không bấm Kết thúc được, phải chờ LivestreamReconnectTimeoutJob đánh Failed: buổi diễn đã xong
+        // đàng hoàng lại bị ghi là sự cố.
+        if (livestream.Status is not (LivestreamStatus.Live or LivestreamStatus.Reconnecting))
             throw new DomainException($"Không thể kết thúc livestream ở trạng thái '{livestream.Status}'.");
 
         // D6: Staff chỉ được end livestream của venue được phân công (lounge_id từ JWT)
@@ -62,6 +68,9 @@ internal sealed class EndLivestreamCommandHandler : IRequestHandler<EndLivestrea
         _uow.Repository<LoungeShow, int>().Update(show);
 
         await _uow.SaveChangesAsync(ct);
+
+        // MLACP-508: báo người đang xem. Trước đây không có sự kiện nào — trình phát đứng im tới khi họ tự tải lại trang.
+        await _hub.BroadcastLivestreamEndedAsync(livestream.Id, ct);
 
         // Best-effort cleanup — always use the provider that created this stream
         if (livestream.ProviderRef is not null)

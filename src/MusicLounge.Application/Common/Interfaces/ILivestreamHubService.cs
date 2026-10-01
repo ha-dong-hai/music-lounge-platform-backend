@@ -21,4 +21,8 @@ public interface ILivestreamHubService
     Task BroadcastLivestreamReconnectingAsync(int livestreamId, CancellationToken ct = default);
     Task BroadcastLivestreamReconnectedAsync(int livestreamId, CancellationToken ct = default);
     Task BroadcastLivestreamFailedAsync(int livestreamId, CancellationToken ct = default);
+
+    /// <summary>MLACP-508: buổi phát đã KẾT THÚC bình thường (chủ phòng trà bấm Kết thúc, hoặc encoder ngừng hẳn) —
+    /// người đang xem chuyển sang màn "đã kết thúc" thay vì trình phát đứng im tới khi tải lại trang. Không có xem lại.</summary>
+    Task BroadcastLivestreamEndedAsync(int livestreamId, CancellationToken ct = default);
 }
