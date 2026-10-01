@@ -25,5 +25,7 @@ internal static class SearchLoungeShowsQueryExtensions
             IncludeEnded: false,
             Page: q.Page,
             PageSize: q.PageSize,
-            SortBy: q.SortBy);
+            SortBy: q.SortBy,
+            ProvinceCode: q.ProvinceCode,
+            WardCode: q.WardCode);
 }

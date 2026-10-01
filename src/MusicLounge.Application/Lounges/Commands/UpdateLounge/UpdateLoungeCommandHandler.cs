@@ -21,11 +21,13 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notifications;
     private readonly ILogger<UpdateLoungeCommandHandler> _logger;
+    private readonly IAdministrativeUnitCatalog _catalog;
 
     public UpdateLoungeCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, INotificationService notifications,
-        ILogger<UpdateLoungeCommandHandler> logger)
+        ILogger<UpdateLoungeCommandHandler> logger, IAdministrativeUnitCatalog catalog)
     {
+        _catalog = catalog;
         _uow = uow;
         _currentUser = currentUser;
         _notifications = notifications;
@@ -44,16 +46,9 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         var oldName = lounge.Name;
         var oldAddress = lounge.Address;
 
-        var newAddress = new VenueAddress
-        {
-            Street = request.Street,
-            Ward = request.Ward,
-            // MLACP-403: PUT thay cả địa chỉ — null nghĩa là không có quận, không phải giữ quận cũ.
-            District = request.District ?? string.Empty,
-            City = request.City,
-            Latitude = request.Latitude,
-            Longitude = request.Longitude
-        };
+        // MLACP-403: PUT thay cả địa chỉ — null nghĩa là không có quận, không phải giữ quận cũ.
+        // MLACP-521: có mã tỉnh/xã thì tên lấy từ danh mục, quận để trống (không còn cấp huyện).
+        var newAddress = _catalog.BuildLoungeAddress(request);
 
         // MLACP-352. Truoc day ten va dia chi bi ghi de lang le: khong bao ai, khong luu vet. So sanh
         // tung truong, bo qua hoa/thuong va khoang trang thua — luu lai y nguyen khong phai la "doi".
@@ -61,7 +56,9 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         var addressChanged = !SameText(oldAddress.Street, newAddress.Street)
                              || !SameText(oldAddress.Ward, newAddress.Ward)
                              || !SameText(oldAddress.District, newAddress.District)
-                             || !SameText(oldAddress.City, newAddress.City);
+                             || !SameText(oldAddress.City, newAddress.City)
+                             || oldAddress.ProvinceCode != newAddress.ProvinceCode
+                             || oldAddress.WardCode != newAddress.WardCode;
         var pinMoved = oldAddress.Latitude != newAddress.Latitude
                        || oldAddress.Longitude != newAddress.Longitude;
 

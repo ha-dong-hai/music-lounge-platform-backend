@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Application.Catalog.DTOs;
 using MusicLounge.Application.Catalog.Queries.GetEventCategories;
+using MusicLounge.Application.Catalog.Queries.GetProvinces;
+using MusicLounge.Application.Catalog.Queries.GetWardsOfProvince;
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Catalog.Queries.GetMoods;
 using MusicLounge.Application.Catalog.Queries.GetMusicGenres;
 using MusicLounge.Application.Catalog.Queries.GetVenueAtmospheres;
@@ -54,5 +57,24 @@ public sealed class CatalogController : ControllerBase
     {
         var result = await _sender.Send(new GetEventCategoriesQuery(), ct);
         return Ok(ApiResponse<List<CatalogItemDto>>.Ok(result));
+    }
+
+    /// <summary>MLACP-521: 34 tỉnh/thành phố từ 01/7/2025 (QĐ 19/2025/QĐ-TTg). Mã là mã chính thức của Cục Thống kê.</summary>
+    [HttpGet("provinces")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<AdministrativeProvince>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProvinces(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetProvincesQuery(), ct);
+        return Ok(ApiResponse<IReadOnlyList<AdministrativeProvince>>.Ok(result));
+    }
+
+    /// <summary>MLACP-521: phường/xã của một tỉnh — không còn cấp quận/huyện ở giữa.</summary>
+    [HttpGet("provinces/{provinceCode}/wards")]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<AdministrativeWard>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetWards(string provinceCode, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetWardsOfProvinceQuery(provinceCode), ct);
+        return Ok(ApiResponse<IReadOnlyList<AdministrativeWard>>.Ok(result));
     }
 }

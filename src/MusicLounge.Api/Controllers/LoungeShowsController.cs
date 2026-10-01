@@ -104,12 +104,14 @@ public sealed class LoungeShowsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
+        [FromQuery] string? provinceCode = null,
+        [FromQuery] string? wardCode = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(new SearchLoungeShowsQuery(
             genreIds, moodIds, atmosphereIds, keyword, format, dateFrom, dateTo,
             city, minPrice, maxPrice, includeSoldOut,
-            page, pageSize, sortBy), ct);
+            page, pageSize, sortBy, provinceCode, wardCode), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 

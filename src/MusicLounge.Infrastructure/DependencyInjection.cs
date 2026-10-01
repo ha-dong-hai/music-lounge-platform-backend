@@ -53,6 +53,9 @@ public static class DependencyInjection
         // MLACP-420: bang kiem cau hinh — thieu cai dat nao, hau qua ra sao.
         services.AddSingleton<IConfigurationAudit, Configuration.ConfigurationAudit>();
 
+        // MLACP-521: danh muc hanh chinh 2 cap (QD 19/2025) — nap mot lan, dung chung.
+        services.AddSingleton<IAdministrativeUnitCatalog, AdministrativeUnits.EmbeddedAdministrativeUnitCatalog>();
+
         // DbContext
         // MLACP-415: Azure SQL reset ket noi vai lan moi ngay ("an error occurred during the login process ... Connection
         // reset by peer" trong log 14-15/09). Khong bat retry thi moi lan nhu vay la mot loi 500 that su cho nguoi dung.

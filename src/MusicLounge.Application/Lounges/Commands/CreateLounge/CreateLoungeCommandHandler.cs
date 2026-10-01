@@ -10,11 +10,13 @@ internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeC
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAdministrativeUnitCatalog _catalog;
 
-    public CreateLoungeCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public CreateLoungeCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser, IAdministrativeUnitCatalog catalog)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _catalog = catalog;
     }
 
     public async Task<int> Handle(CreateLoungeCommand request, CancellationToken ct)
@@ -35,15 +37,8 @@ internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeC
             Name = request.Name,
             Description = request.Description,
             AtmosphereId = request.AtmosphereId,
-            Address = new VenueAddress
-            {
-                Street = request.Street,
-                Ward = request.Ward,
-                District = request.District ?? string.Empty,
-                City = request.City,
-                Latitude = request.Latitude,
-                Longitude = request.Longitude
-            }
+            // MLACP-521: có mã tỉnh/xã thì tên lấy từ danh mục; không có thì giữ chữ như trước.
+            Address = _catalog.BuildLoungeAddress(request)
         };
 
         _uow.Repository<MusicLoungeEntity, int>().Add(lounge);
