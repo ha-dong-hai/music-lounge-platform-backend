@@ -29,10 +29,20 @@ internal sealed class DeleteLoungeCommandHandler : IRequestHandler<DeleteLoungeC
         // DONE WHEN: "Xoa phong tra thanh cong khi khong co su kien" - chan xoa neu con bat ky
         // LoungeShow nao (moi trang thai, khong chi show dang "hoat dong") de tranh mat lich su
         // du lieu cua show da ket thuc/huy.
-        var hasAnyShow = await _uow.Repository<LoungeShow, int>()
-            .AnyAsync(s => s.LoungeId == request.LoungeId, ct);
-        if (hasAnyShow)
-            throw new ConflictException("Phòng trà đang có buổi diễn, không thể xóa.");
+        //
+        // MLACP-507 (M-405 mục 3): câu 409 cũ chỉ nói "đang có buổi diễn", trong khi thứ chặn thường là BẢN NHÁP — loại
+        // không hiện ở danh sách công khai — nên người xoá (kể cả Admin) phải dò từng id mới biết vì sao. Giờ trả kèm
+        // danh sách buổi đang chặn (mã, tên, trạng thái) ở errors.blockingShows. Người gọi tới được đây đã qua kiểm quyền
+        // chủ phòng trà/Admin ở trên, nên không lộ bản nháp cho người ngoài.
+        var dangChan = (await _uow.Repository<LoungeShow, int>()
+                .FindAsync(s => s.LoungeId == request.LoungeId, ct))
+            .OrderBy(s => s.Id)
+            .Select(s => new { s.Id, s.Name, Status = s.Status.ToString() })
+            .ToList();
+        if (dangChan.Count > 0)
+            throw new ConflictException(
+                "Phòng trà vẫn còn buổi diễn (tính cả bản nháp, buổi đã kết thúc hoặc đã huỷ) nên không thể xóa.",
+                new { blockingShows = dangChan });
 
         repo.Remove(lounge);
         await _uow.SaveChangesAsync(ct);

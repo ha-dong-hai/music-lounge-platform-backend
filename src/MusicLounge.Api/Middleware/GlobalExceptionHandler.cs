@@ -26,7 +26,7 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
             NotFoundException e      => (StatusCodes.Status404NotFound,           e.Message,  (object?)null),
             UnauthorizedException e  => (StatusCodes.Status401Unauthorized,        e.Message,  null),
             ForbiddenException e     => (StatusCodes.Status403Forbidden,           e.Message,  null),
-            ConflictException e      => (StatusCodes.Status409Conflict,            e.Message,  null),
+            ConflictException e      => (StatusCodes.Status409Conflict,            e.Message,  e.Details),
             DomainException e        => (StatusCodes.Status422UnprocessableEntity, e.Message,  null),
             ValidationException e    => (StatusCodes.Status400BadRequest,          ValidationException.ThongBaoChung, (object?)e.Errors),
             ExternalServiceException e => (StatusCodes.Status503ServiceUnavailable, e.Message, null),
