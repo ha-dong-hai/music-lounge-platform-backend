@@ -9,5 +9,12 @@ namespace MusicLounge.Application.Tickets.Queries.GetMyTickets;
 // Confirmed/Used/Cancelled/Refunded) thay vi tao rieng 1 nhom 3 gia tri "hieu luc/da dung/da huy" —
 // giu dung 1 nguon su that voi trang thai ve that, giong cach GetMyLoungeShowsQuery da lam voi
 // LoungeShowStatus.
-public sealed record GetMyTicketsQuery(TicketStatus? Status = null, int Page = 1, int PageSize = 10)
+// MLACP-499: AccessType/When/Keyword them sau, cung tuy chon — goi cu chi status/page/pageSize tra y nhu truoc.
+public sealed record GetMyTicketsQuery(
+    TicketStatus? Status = null,
+    int Page = 1,
+    int PageSize = 10,
+    AccessType? AccessType = null,
+    TicketTimeFilter? When = null,
+    string? Keyword = null)
     : IQuery<PaginatedResult<TicketListItemDto>>;
