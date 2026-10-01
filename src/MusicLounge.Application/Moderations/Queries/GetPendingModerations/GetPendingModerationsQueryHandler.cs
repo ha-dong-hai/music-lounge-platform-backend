@@ -25,6 +25,6 @@ internal sealed class GetPendingModerationsQueryHandler
             Enum.TryParse<ModerationTargetType>(request.TargetType, true, out var parsed))
             targetType = parsed;
 
-        return await _repo.GetPendingAsync(targetType, page, size, ct);
+        return await _repo.GetPendingAsync(targetType, request.TargetId, page, size, ct);
     }
 }

@@ -8,7 +8,7 @@ namespace MusicLounge.Application.Common.Interfaces.Repositories;
 public interface IEventModerationRepository : IRepository<EventModeration, int>
 {
     Task<PaginatedResult<EventModerationDto>> GetPendingAsync(
-        ModerationTargetType? targetType, int page, int pageSize, CancellationToken ct = default);
+        ModerationTargetType? targetType, int? targetId, int page, int pageSize, CancellationToken ct = default);
 
     /// <summary>Show đang Pending kèm tín hiệu AI moderation (score/risk/flag) — dùng cho danh sách
     /// Admin duyệt event, khác GetPendingAsync ở chỗ có sẵn tên show/phòng trà/ngày diễn thay vì
