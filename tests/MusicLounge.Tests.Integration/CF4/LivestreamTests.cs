@@ -493,6 +493,62 @@ public sealed class LivestreamTests
             "a 3rd device opening HlsUrl while 2 sessions are still within the heartbeat timeout must be blocked");
     }
 
+    // MLACP-513 (fe M-441): tải lại trang trên CÙNG trình duyệt gửi lại phiên cũ — không được tính thành thiết bị mới.
+    [Fact]
+    public async Task GetDetail_TaiLaiTrangGuiPhienCu_DungLaiPhien_KhongChamGioiHan()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        var phien = JsonDocument.Parse(await (await client.GetAsync($"/api/v1/livestreams/{id}")).Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data").GetProperty("viewingSessionId").GetString();
+
+        for (var i = 0; i < 5; i++)
+        {
+            var res = await client.GetAsync($"/api/v1/livestreams/{id}?viewingSessionId={phien}");
+            var body = await res.Content.ReadAsStringAsync();
+            res.StatusCode.Should().Be(HttpStatusCode.OK, body);
+            JsonDocument.Parse(body).RootElement.GetProperty("data").GetProperty("viewingSessionId").GetString()
+                .Should().Be(phien, "cùng trình duyệt tải lại thì giữ đúng phiên đó");
+        }
+    }
+
+    [Fact]
+    public async Task GetDetail_PhienKhongPhaiCuaVeNay_VanTinhLaThietBiMoi()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        await client.GetAsync($"/api/v1/livestreams/{id}");
+        await client.GetAsync($"/api/v1/livestreams/{id}");
+
+        var res = await client.GetAsync($"/api/v1/livestreams/{id}?viewingSessionId=phien-bia-ra");
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity, "gửi một mã phiên lạ không được lách giới hạn thiết bị");
+    }
+
+    // MLACP-513 (fe M-442, đo bằng Mux thật): buổi đã kết thúc thì không mở phiên — khán giả tải lại trang thấy màn "đã
+    // kết thúc" chứ không bị 422 "đang xem trên 2 thiết bị".
+    [Fact]
+    public async Task GetDetail_BuoiDaKetThuc_KhongMoPhien_KhongBi422()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+        await client.GetAsync($"/api/v1/livestreams/{id}");
+        await client.GetAsync($"/api/v1/livestreams/{id}");
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await db.Set<MusicLounge.Domain.Entities.Livestream>().SingleAsync(l => l.Id == id)).Status = LivestreamStatus.Ended;
+            await db.SaveChangesAsync();
+        }
+
+        var res = await client.GetAsync($"/api/v1/livestreams/{id}");
+        var body = await res.Content.ReadAsStringAsync();
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK, body);
+        JsonDocument.Parse(body).RootElement.GetProperty("data").GetProperty("viewingSessionId").ValueKind
+            .Should().Be(JsonValueKind.Null);
+    }
+
     [Fact]
     public async Task GetDetail_AfterFirstSessionExpires_AllowsNewSessionEvenAtCap()
     {

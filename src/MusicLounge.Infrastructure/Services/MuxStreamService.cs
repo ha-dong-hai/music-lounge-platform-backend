@@ -72,15 +72,26 @@ public sealed class MuxStreamService : ILivestreamService
     public async Task DeleteStreamAsync(string providerRef, CancellationToken ct = default)
     {
         var http = _httpFactory.CreateClient("mux");
-
-        using var request = new HttpRequestMessage(HttpMethod.Delete,
-            $"https://api.mux.com/video/v1/live-streams/{providerRef}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", GetCredentials());
+        var url = $"https://api.mux.com/video/v1/live-streams/{providerRef}";
 
         try
         {
-            var response = await http.SendAsync(request, ct);
-            response.EnsureSuccessStatusCode();
+            // MLACP-512: TẮT trước rồi mới XOÁ. Mux trả 400 khi xoá một luồng còn 'active' (encoder/OBS vẫn đẩy tín hiệu) —
+            // đo bằng Mux thật 01/10 (fe M-441/M-442). Ba nơi gọi hàm này (Kết thúc, Admin cắt sóng, xử lý báo cáo nội
+            // dung) đều xoá kiểu best-effort chỉ ghi log, nên luồng còn active cứ thế chạy tiếp và bị Mux TÍNH TIỀN mà không
+            // ai biết. Tắt (disable) ngắt encoder và đưa luồng về 'disabled'; sau đó xoá trả 204. Sửa ở đây là sửa cho cả
+            // ba nơi gọi. 404 khi tắt nghĩa là luồng đã không còn — không còn gì tính tiền, coi như xong.
+            using (var disable = new HttpRequestMessage(HttpMethod.Put, $"{url}/disable"))
+            {
+                disable.Headers.Authorization = new AuthenticationHeaderValue("Basic", GetCredentials());
+                var response = await http.SendAsync(disable, ct);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return;
+                response.EnsureSuccessStatusCode();
+            }
+
+            using var delete = new HttpRequestMessage(HttpMethod.Delete, url);
+            delete.Headers.Authorization = new AuthenticationHeaderValue("Basic", GetCredentials());
+            (await http.SendAsync(delete, ct)).EnsureSuccessStatusCode();
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
