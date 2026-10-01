@@ -49,17 +49,19 @@ internal sealed class GetRecommenderEvaluationQueryHandler
     {
         var k = Math.Clamp(request.K, 1, 50);
 
+        // MLACP-520 (M-449): hai đoạn này hiện nguyên văn ở Admin > Tổng quan — viết bằng lời thường, thuật ngữ
+        // kỹ thuật chỉ để trong ngoặc cho ai cần tra.
         const string method =
-            "Leave-one-out: giấu đi tương tác gần nhất của mỗi người dùng, trộn nó với 99 buổi diễn " +
-            "họ chưa từng chạm, rồi đo xem mô hình có đẩy được buổi đúng vào top K không (HR@K). " +
-            "So với baseline 'gợi ý buổi diễn nhiều người chọn nhất'.";
+            "Cách đo: với mỗi người dùng, giấu đi lần tương tác gần nhất, trộn buổi diễn đó với 99 buổi " +
+            "họ chưa từng xem, rồi kiểm tra mô hình có xếp được buổi bị giấu vào K vị trí đầu không " +
+            "(tỉ lệ trúng HR@K, kiểu đo leave-one-out). Mốc so sánh: 'gợi ý những buổi nhiều người chọn nhất'.";
 
         const string caveat =
-            "Đánh giá offline thiên lệch theo độ phổ biến: một buổi diễn có nhiều tương tác một phần " +
-            "vì chính hệ thống đã đẩy nó ra cho nhiều người xem. Baseline phổ biến vì thế được lợi " +
-            "một cách giả tạo, nên việc mô hình cá nhân hoá chỉ ngang ngửa nó chưa chắc là thất bại — " +
-            "hãy đọc kèm độ phủ kho. Đây cũng không thay thế được thước đo online (CTR/chuyển đổi), " +
-            "vốn mới là thứ nói lên hiệu quả thật với người dùng.";
+            "Phép đo trên dữ liệu cũ thiên vị buổi diễn phổ biến: một buổi có nhiều tương tác một phần là " +
+            "vì chính hệ thống đã gợi ý nó cho nhiều người. Mốc 'nhiều người chọn nhất' vì thế được lợi " +
+            "một cách giả tạo, nên mô hình cá nhân hoá chỉ ngang ngửa mốc này chưa chắc là kém — hãy " +
+            "xem kèm độ phủ kho. Con số này cũng không thay được số đo trên người dùng thật (tỉ lệ bấm " +
+            "vào gợi ý CTR, tỉ lệ mua vé), vốn mới cho biết gợi ý có thật sự hiệu quả.";
 
         // ── Lịch sử tương tác ─────────────────────────────────────────────────────────
         var tickets = await _uow.Repository<Ticket, Guid>().FindAsync(
