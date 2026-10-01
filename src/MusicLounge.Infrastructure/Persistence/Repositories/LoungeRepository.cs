@@ -16,7 +16,7 @@ internal sealed class LoungeRepository : ILoungeRepository
 
     public async Task<PaginatedResult<LoungeListItemDto>> GetAllAsync(
         string? city, int? ownerId, bool includeUnapproved, int page, int pageSize,
-        CancellationToken ct = default)
+        string? keyword = null, CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var query = _ctx.Lounges.AsNoTracking();
@@ -33,6 +33,10 @@ internal sealed class LoungeRepository : ILoungeRepository
 
         if (ownerId.HasValue)
             query = query.Where(l => l.OwnerId == ownerId.Value);
+
+        // MLACP-502: trước đây trang Phòng trà tải tới 500 phòng trà để tự tìm ở trình duyệt.
+        if (keyword is not null)
+            query = query.Where(l => l.Name.ToLower().Contains(keyword));
 
         var total = await query.CountAsync(ct);
         var pageLounges = await query
@@ -154,9 +158,18 @@ internal sealed class LoungeRepository : ILoungeRepository
     /// là hồ sơ cần xử trước.
     /// </summary>
     public async Task<PaginatedResult<VenueReviewItemDto>> GetReviewQueueAsync(
-        LoungeStatus status, int page, int pageSize, CancellationToken ct = default)
+        LoungeStatus? status, string? keyword, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = _ctx.Lounges.AsNoTracking().Where(l => l.Status == status);
+        var query = _ctx.Lounges.AsNoTracking();
+        if (status.HasValue)
+            query = query.Where(l => l.Status == status.Value);
+        if (keyword is not null)
+            query = query.Where(l => l.Name.ToLower().Contains(keyword)
+                                  || l.Owner.FullName.ToLower().Contains(keyword)
+                                  || l.Address.Street.ToLower().Contains(keyword)
+                                  || (l.Address.Ward != null && l.Address.Ward.ToLower().Contains(keyword))
+                                  || (l.Address.District != null && l.Address.District.ToLower().Contains(keyword))
+                                  || l.Address.City.ToLower().Contains(keyword));
 
         var total = await query.CountAsync(ct);
         var rows = await query

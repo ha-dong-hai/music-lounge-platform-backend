@@ -19,4 +19,5 @@ namespace MusicLounge.Application.Complaints.Queries.GetComplaintHistory;
 public sealed record GetComplaintHistoryQuery(
     string[]? Status,
     int Page = 1,
-    int PageSize = 20) : IQuery<PaginatedResult<ComplaintDto>>;
+    int PageSize = 20,
+    string? Keyword = null) : IQuery<PaginatedResult<ComplaintDto>>;

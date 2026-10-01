@@ -9,9 +9,10 @@ public interface ILoungeShowRepository : IRepository<LoungeShow, int>
 {
     Task<LoungeShow?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
 
+    /// <summary>Danh sách công khai. MLACP-502: <paramref name="keyword"/> (đã chuẩn hoá) khớp tên buổi hoặc tên phòng trà.</summary>
     Task<PaginatedResult<LoungeShow>> GetPublishedAsync(
         int page, int pageSize, LoungeShowSortBy sortBy,
-        bool includeSoldOut, CancellationToken ct = default);
+        bool includeSoldOut, string? keyword = null, CancellationToken ct = default);
 
     /// <summary>Shows belonging to the given owner's lounges. Any status (including Draft) when
     /// <paramref name="status"/> is null; otherwise only that status.</summary>

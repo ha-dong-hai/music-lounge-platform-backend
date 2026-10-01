@@ -41,7 +41,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
 
     public async Task<PaginatedResult<LoungeShow>> GetPublishedAsync(
         int page, int pageSize, LoungeShowSortBy sortBy,
-        bool includeSoldOut, CancellationToken ct = default)
+        bool includeSoldOut, string? keyword = null, CancellationToken ct = default)
     {
         var query = WithDetails()
             .Where(s => s.Status == LoungeShowStatus.Published
@@ -54,6 +54,11 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
             var hetVe = await MaBuoiDienHetVeAsync(DateTimeOffset.UtcNow, ct);
             query = query.Where(s => !hetVe.Contains(s.Id));
         }
+
+        // MLACP-502: trang "Tất cả buổi diễn" của Admin gọi đường này và trước đây chỉ tìm được trong trang đang xem.
+        // Khác /search (tên + mô tả): ở đây khớp tên buổi và TÊN PHÒNG TRÀ — thứ người duyệt hay gõ nhất.
+        if (keyword is not null)
+            query = query.Where(s => s.Name.ToLower().Contains(keyword) || s.Lounge.Name.ToLower().Contains(keyword));
 
         return await SortAndPaginateAsync(query, sortBy, page, pageSize, ct);
     }

@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
@@ -41,7 +42,7 @@ internal sealed class GetPublishedLoungeShowsQueryHandler
         else
         {
             result = await _showRepo.GetPublishedAsync(
-                page, pageSize, request.SortBy, request.IncludeSoldOut, ct);
+                page, pageSize, request.SortBy, request.IncludeSoldOut, SearchKeyword.Normalize(request.Keyword), ct);
         }
 
         var wishlisted = _currentUser.IsAuthenticated

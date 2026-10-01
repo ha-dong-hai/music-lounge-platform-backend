@@ -68,10 +68,11 @@ public sealed class LoungeShowsController : ControllerBase
         [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
         [FromQuery] bool includeSoldOut = true,
         [FromQuery] bool mine = false,
+        [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(
-            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine), ct);
+            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 

@@ -10,5 +10,7 @@ public sealed record GetPublishedLoungeShowsQuery(
     int PageSize = 10,
     LoungeShowSortBy SortBy = LoungeShowSortBy.Newest,
     bool IncludeSoldOut = true,
-    bool Mine = false)
+    bool Mine = false,
+    // MLACP-502: chỉ áp cho danh sách công khai (Mine = false).
+    string? Keyword = null)
     : IQuery<PaginatedResult<LoungeShowListItemDto>>;

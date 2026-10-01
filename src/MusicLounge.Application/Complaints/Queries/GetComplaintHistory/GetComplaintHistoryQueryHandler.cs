@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
@@ -42,7 +43,7 @@ internal sealed class GetComplaintHistoryQueryHandler
             if (!statuses.Contains(trangThai)) statuses.Add(trangThai);
         }
 
-        var result = await _repo.GetHistoryAsync(statuses, page, size, ct);
+        var result = await _repo.GetHistoryAsync(statuses, SearchKeyword.Normalize(request.Keyword), page, size, ct);
 
         // MLACP-462: GHI LẠI AI ĐÃ XEM. Khiếu nại chứa mô tả sự việc và SỐ ĐIỆN THOẠI của người khiếu nại, kể cả khách
         // không có tài khoản. Hàng đợi chỉ trả việc chưa xử lý nên lượng dữ liệu cá nhân đọc được có giới hạn tự nhiên;
