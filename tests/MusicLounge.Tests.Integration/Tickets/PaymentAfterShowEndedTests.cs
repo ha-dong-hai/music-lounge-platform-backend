@@ -31,14 +31,10 @@ public sealed class PaymentAfterShowEndedTests
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    private const string Recording = "https://stream.mux.com/replay389.m3u8";
-
     /// <param name="access">Loại vé đem bán.</param>
-    /// <param name="livestream">null = buổi diễn trực tiếp, không livestream. Có giá trị = buổi diễn có một livestream đã
-    /// phát xong, với bản ghi (null = Mux chưa báo asset.ready) và hạn xem lại; hình thức là Online khi bán vé livestream,
-    /// Hybrid khi bán vé vào cửa.</param>
-    private async Task<(int ShowId, int PriceId)> ShowAsync(
-        AccessType access, (string? RecordingUrl, DateTimeOffset? ReplayUntil)? livestream)
+    /// <param name="withLivestream">false = buổi diễn tại chỗ, không livestream. true = buổi diễn có một livestream đã
+    /// phát xong; hình thức là Online khi bán vé livestream, Hybrid khi bán vé vào cửa.</param>
+    private async Task<(int ShowId, int PriceId)> ShowAsync(AccessType access, bool withLivestream)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -55,19 +51,18 @@ public sealed class PaymentAfterShowEndedTests
         var show = new LoungeShow
         {
             LoungeId = lounge.Id, Name = $"Đêm nhạc {Guid.NewGuid():N}"[..18], Description = "MLACP-389",
-            Format = livestream is null ? LoungeShowFormat.Offline
+            Format = !withLivestream ? LoungeShowFormat.Offline
                 : access == AccessType.Livestream ? LoungeShowFormat.Online : LoungeShowFormat.Hybrid,
             Status = LoungeShowStatus.Published,
             ScheduledStart = DateTimeOffset.UtcNow.AddDays(2), ScheduledEnd = DateTimeOffset.UtcNow.AddDays(2).AddHours(3)
         };
         db.LoungeShows.Add(show);
         await db.SaveChangesAsync();
-        if (livestream is { } ls)
+        if (withLivestream)
             db.Add(new Livestream
             {
                 LoungeShowId = show.Id, Status = LivestreamStatus.Ended, IsFree = false,
-                StartedAt = DateTimeOffset.UtcNow.AddHours(-3), EndedAt = DateTimeOffset.UtcNow.AddMinutes(-10),
-                RecordingUrl = ls.RecordingUrl, ReplayAvailableUntil = ls.ReplayUntil
+                StartedAt = DateTimeOffset.UtcNow.AddHours(-3), EndedAt = DateTimeOffset.UtcNow.AddMinutes(-10)
             });
         var tier = new TicketTier
         {
@@ -128,7 +123,7 @@ public sealed class PaymentAfterShowEndedTests
     [Fact]
     public async Task AnEntryTicketPaidAfterTheShowEnded_IsNotIssued_AndRefundedInFull()
     {
-        var (showId, priceId) = await ShowAsync(AccessType.Physical, livestream: null);
+        var (showId, priceId) = await ShowAsync(AccessType.Physical, withLivestream: false);
         var purchase = await StartPaymentAsync(priceId);
         await SetShowStatusAsync(showId, LoungeShowStatus.Ended);
 
@@ -146,12 +141,12 @@ public sealed class PaymentAfterShowEndedTests
             .Should().BeTrue();
     }
 
-    // MLACP-510: trước đây vé livestream vẫn được cấp nếu còn bản ghi xem lại. Hệ thống không có xem lại (chủ dự án chốt
-    // "bỏ hẳn" 01/10) — kể cả khi DB còn sót một RecordingUrl cũ, người mua không có gì để xem, nên phải hoàn 100%.
+    // MLACP-510/511: không có xem lại — vé livestream của buổi đã kết thúc không giao được gì, nên hoàn 100% như vé vào
+    // cửa. (Trước MLACP-510 vé vẫn được cấp nếu còn bản ghi; ba ca có/không/hết hạn bản ghi nay không còn khác nhau.)
     [Fact]
-    public async Task ALivestreamTicketPaidAfterTheShowEnded_IsRefunded_EvenIfAnOldRecordingIsStillStored()
+    public async Task ALivestreamTicketPaidAfterTheShowEnded_IsNotIssued_AndRefundedInFull()
     {
-        var (showId, priceId) = await ShowAsync(AccessType.Livestream, (Recording, DateTimeOffset.UtcNow.AddDays(7)));
+        var (showId, priceId) = await ShowAsync(AccessType.Livestream, withLivestream: true);
         var purchase = await StartPaymentAsync(priceId);
         await SetShowStatusAsync(showId, LoungeShowStatus.Ended);
 
@@ -164,40 +159,10 @@ public sealed class PaymentAfterShowEndedTests
     }
 
     [Fact]
-    public async Task ALivestreamTicketPaidAfterTheShowEnded_IsRefunded_WhileThereIsNoRecordingToWatch()
+    public async Task AnEntryTicketOfAHybridShow_IsRefunded()
     {
-        // Livestream đã phát nhưng Mux chưa báo bản ghi: không hứa trước một bản ghi có thể không bao giờ có.
-        var (showId, priceId) = await ShowAsync(AccessType.Livestream, livestream: (null, null));
-        var purchase = await StartPaymentAsync(priceId);
-        await SetShowStatusAsync(showId, LoungeShowStatus.Ended);
-
-        (await PaidIpnAsync(purchase)).RspCode.Should().Be("02");
-
-        var (tickets, refunds) = await StateAsync(purchase.PaymentId);
-        tickets.Should().OnlyContain(t => t.Status == TicketStatus.Cancelled, "there is nothing recorded to watch");
-        refunds.Should().ContainSingle().Which.RefundPercentage.Should().Be(100m);
-    }
-
-    [Fact]
-    public async Task ALivestreamTicketPaidAfterTheShowEnded_IsRefunded_OnceTheReplayHasExpired()
-    {
-        var (showId, priceId) = await ShowAsync(AccessType.Livestream, (Recording, DateTimeOffset.UtcNow.AddDays(-1)));
-        var purchase = await StartPaymentAsync(priceId);
-        await SetShowStatusAsync(showId, LoungeShowStatus.Ended);
-
-        (await PaidIpnAsync(purchase)).RspCode.Should().Be("02");
-
-        var (tickets, refunds) = await StateAsync(purchase.PaymentId);
-        tickets.Should().OnlyContain(t => t.Status == TicketStatus.Cancelled,
-            "the viewer would be refused the recording the ticket was sold for");
-        refunds.Should().ContainSingle().Which.RefundPercentage.Should().Be(100m);
-    }
-
-    [Fact]
-    public async Task AnEntryTicketOfAHybridShow_IsRefunded_EvenThoughARecordingExists()
-    {
-        // Vé vào cửa bán chỗ ngồi tối nay, không bán bản ghi — bản ghi của phần livestream không thay được thứ đã mua.
-        var (showId, priceId) = await ShowAsync(AccessType.Physical, (Recording, DateTimeOffset.UtcNow.AddDays(7)));
+        // Vé vào cửa bán chỗ ngồi tối nay — buổi Hybrid có phần livestream cũng không thay được thứ đã mua.
+        var (showId, priceId) = await ShowAsync(AccessType.Physical, withLivestream: true);
         var purchase = await StartPaymentAsync(priceId);
         await SetShowStatusAsync(showId, LoungeShowStatus.Ended);
 
@@ -211,7 +176,7 @@ public sealed class PaymentAfterShowEndedTests
     [Fact]
     public async Task AnEntryTicketPaidWhileTheShowIsOn_IsIssuedAsBefore()
     {
-        var (showId, priceId) = await ShowAsync(AccessType.Physical, livestream: null);
+        var (showId, priceId) = await ShowAsync(AccessType.Physical, withLivestream: false);
         var purchase = await StartPaymentAsync(priceId);
         await SetShowStatusAsync(showId, LoungeShowStatus.Ongoing);
 
