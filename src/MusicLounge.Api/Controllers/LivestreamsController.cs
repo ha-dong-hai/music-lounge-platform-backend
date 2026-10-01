@@ -39,9 +39,12 @@ public sealed class LivestreamsController : ControllerBase
     [Authorize(Policy = Policies.RequireAuthenticated)]
     [ProducesResponseType<ApiResponse<LivestreamDetailDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetDetail(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetDetail(
+        int id, [FromQuery] string? viewingSessionId = null, CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetLivestreamDetailQuery(id), ct);
+        // MLACP-513: viewingSessionId = phiên trình duyệt này nhận lần trước — gửi lại khi tải lại trang để không bị tính
+        // thành thiết bị mới.
+        var result = await _sender.Send(new GetLivestreamDetailQuery(id, viewingSessionId), ct);
         return Ok(ApiResponse<LivestreamDetailDto>.Ok(result));
     }
 
