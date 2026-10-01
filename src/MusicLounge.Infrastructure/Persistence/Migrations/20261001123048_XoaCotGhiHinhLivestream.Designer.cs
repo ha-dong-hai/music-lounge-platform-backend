@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MusicLounge.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001123048_XoaCotGhiHinhLivestream")]
+    partial class XoaCotGhiHinhLivestream
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2970,7 +2973,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_partial_hours_after_show",
                             ConfigValue = "48",
                             DataType = "Integer",
-                            Description = "Số giờ sau khi buổi diễn kết thúc thì chi trả đợt đầu cho phòng trà (tỷ lệ đợt đầu tuỳ hạng phòng trà)",
+                            Description = "Hours after show end to release the partial (Tier pre_rate) tranche",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -2979,7 +2982,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_final_days_after_show",
                             ConfigValue = "14",
                             DataType = "Integer",
-                            Description = "Số ngày sau khi buổi diễn kết thúc thì chi trả phần còn lại cho phòng trà",
+                            Description = "Days after show end to release the final tranche",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -2988,7 +2991,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_completion_threshold_pct",
                             ConfigValue = "0.70",
                             DataType = "Decimal",
-                            Description = "Tỷ lệ tối thiểu giữa thời lượng diễn thực tế và theo lịch để tự động chi trả phần còn lại; thấp hơn thì khoản này chờ Admin xem xét (D16)",
+                            Description = "D16: min actual/scheduled ratio for auto-release final settlement",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -2997,7 +3000,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_tier_new_pre_rate",
                             ConfigValue = "0.50",
                             DataType = "Decimal",
-                            Description = "Hạng Mới: tỷ lệ chi trả đợt đầu cho phòng trà có điểm uy tín dưới 3,5 hoặc dưới 3 buổi diễn (D3)",
+                            Description = "D3 Tier Mới: pre_rate for venues score<3.5 or <3 shows",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3006,7 +3009,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_tier_standard_pre_rate",
                             ConfigValue = "0.70",
                             DataType = "Decimal",
-                            Description = "Hạng Chuẩn: tỷ lệ chi trả đợt đầu cho phòng trà có điểm uy tín từ 3,5 đến 4,2 (D3)",
+                            Description = "D3 Tier Chuẩn: pre_rate for venues score 3.5–4.2",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3015,7 +3018,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_tier_premium_pre_rate",
                             ConfigValue = "0.80",
                             DataType = "Decimal",
-                            Description = "Hạng Premium: tỷ lệ chi trả đợt đầu cho phòng trà có điểm uy tín từ 4,2 trở lên VÀ từ 10 buổi diễn trở lên (D3)",
+                            Description = "D3 Tier Premium: pre_rate for venues score≥4.2 AND ≥10 shows",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3024,7 +3027,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_tier_standard_min_score",
                             ConfigValue = "3.5",
                             DataType = "Decimal",
-                            Description = "Điểm uy tín tối thiểu để phòng trà đạt Hạng Chuẩn (D3)",
+                            Description = "D3: reputation_score threshold to qualify for Tier Chuẩn",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3033,7 +3036,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_tier_premium_min_score",
                             ConfigValue = "4.2",
                             DataType = "Decimal",
-                            Description = "Điểm uy tín tối thiểu để phòng trà đạt Hạng Premium (D3)",
+                            Description = "D3: reputation_score threshold to qualify for Tier Premium",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3042,7 +3045,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "settlement_tier_premium_min_shows",
                             ConfigValue = "10",
                             DataType = "Integer",
-                            Description = "Số buổi diễn đã hoàn tất tối thiểu để phòng trà đạt Hạng Premium (D3)",
+                            Description = "D3: minimum completed shows to qualify for Tier Premium",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3051,7 +3054,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "moderation_sla_hours",
                             ConfigValue = "24",
                             DataType = "Integer",
-                            Description = "Thời hạn (giờ) để Admin xử lý nội dung bị gắn cờ — NĐ 147/2024",
+                            Description = "Admin SLA to review flagged content — NĐ 147/2024",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3060,7 +3063,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "ticket_hold_minutes",
                             ConfigValue = "15",
                             DataType = "Integer",
-                            Description = "Số phút giữ chỗ trong lúc khách thanh toán; quá hạn thì nhả chỗ cho người khác (§6.3)",
+                            Description = "Checkout hold duration before slot released — §6.3",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3069,7 +3072,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "donation_hold_days",
                             ConfigValue = "7",
                             DataType = "Integer",
-                            Description = "Số ngày, tính từ lúc phòng trà nhận tiền donate, để phòng trà chuyển cho nghệ sĩ; quá hạn mà chủ phòng trà không phản hồi thì hệ thống tự xác nhận (D4)",
+                            Description = "Days before auto-confirm donation if Owner inactive — D4",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3078,7 +3081,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "donation_performer_share_rate",
                             ConfigValue = "0.88",
                             DataType = "Decimal",
-                            Description = "Tỷ lệ trên tổng tiền donate được chuyển cho nghệ sĩ (§6.5 chặng 2)",
+                            Description = "§6.5 chặng 2: % of gross donation forwarded to performer",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3087,7 +3090,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "rating_window_days",
                             ConfigValue = "7",
                             DataType = "Integer",
-                            Description = "Số ngày sau khi buổi diễn kết thúc mà khán giả còn được đánh giá (§6.13)",
+                            Description = "Days after show end to submit rating — §6.13",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3096,7 +3099,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "appeal_sla_hours",
                             ConfigValue = "48",
                             DataType = "Integer",
-                            Description = "Số giờ để Admin xem xét đơn kháng cáo án phạt (§6.17)",
+                            Description = "Hours for Admin to review penalty appeal — §6.17",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3105,7 +3108,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "appeal_auto_approve",
                             ConfigValue = "true",
                             DataType = "Boolean",
-                            Description = "Tự động chấp nhận đơn kháng cáo khi Admin xử lý quá hạn (§6.17)",
+                            Description = "Auto-approve appeal when Admin misses SLA — §6.17",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3114,7 +3117,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "complaint_sla_hours",
                             ConfigValue = "72",
                             DataType = "Integer",
-                            Description = "Thời hạn mục tiêu (giờ) để giải quyết khiếu nại của người tiêu dùng — mục tiêu vận hành của nền tảng; NĐ 85/2021 yêu cầu nền tảng làm đầu mối nhưng không quy định số giờ",
+                            Description = "Operational target to resolve a consumer complaint — NĐ 85/2021",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3123,7 +3126,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "current_terms_version",
                             ConfigValue = "v0-placeholder-pending-legal-review",
                             DataType = "String",
-                            Description = "Mã phiên bản Điều khoản sử dụng/Chính sách quyền riêng tư đang công bố; người đăng ký mới đồng ý theo phiên bản này — căn cứ đồng ý theo Luật 91/2025/QH15",
+                            Description = "Version label of the currently-published ToS/Privacy Policy — Luật 91/2025/QH15 lawful-basis consent",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3132,7 +3135,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "publish_min_business_days_lead_time",
                             ConfigValue = "7",
                             DataType = "Integer",
-                            Description = "Số ngày làm việc tối thiểu từ lúc đăng hoặc dời lịch tới ngày diễn — NĐ 144/2020 Điều 10",
+                            Description = "Min business days between publish/reschedule and show date — NĐ 144/2020 Điều 10",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3141,7 +3144,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "penalty_suspension_notice_hours",
                             ConfigValue = "24",
                             DataType = "Integer",
-                            Description = "Số giờ báo trước khi án tạm đình chỉ có hiệu lực (§6.8)",
+                            Description = "Notice hours before a Suspension penalty takes effect — §6.8",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3150,7 +3153,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "penalty_ban_notice_days",
                             ConfigValue = "7",
                             DataType = "Integer",
-                            Description = "Số ngày báo trước khi án cấm hoạt động có hiệu lực (§6.8)",
+                            Description = "Notice days before a Ban penalty takes effect — §6.8",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3159,7 +3162,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "ticket_hold_max_quantity",
                             ConfigValue = "10",
                             DataType = "Integer",
-                            Description = "Số vé tối đa cho mỗi lần giữ chỗ mua online — chặn đầu cơ vé",
+                            Description = "Max tickets per checkout hold — anti-scalping ceiling",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3168,7 +3171,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "walkin_ticket_max_quantity",
                             ConfigValue = "20",
                             DataType = "Integer",
-                            Description = "Số vé tối đa cho mỗi lần bán tại quầy — chặn lạm dụng",
+                            Description = "Max tickets per walk-in/box-office sale — anti-abuse ceiling",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3177,7 +3180,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "donation_max_amount",
                             ConfigValue = "50000000",
                             DataType = "Decimal",
-                            Description = "Số tiền tối đa cho một lần donate (VNĐ) — chặn gian lận",
+                            Description = "Max single donation amount (VND) — anti-fraud ceiling",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3186,7 +3189,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "ticket_transfer_expiry_hours",
                             ConfigValue = "48",
                             DataType = "Integer",
-                            Description = "Số giờ trước khi yêu cầu chuyển nhượng vé không được trả lời tự động bị huỷ",
+                            Description = "Hours before an unanswered ticket-transfer request auto-cancels",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3195,7 +3198,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "ai_poster_max_attempts_per_show",
                             ConfigValue = "5",
                             DataType = "Integer",
-                            Description = "Số lần tạo poster AI tối đa cho mỗi buổi diễn (tính cả lần lỗi)",
+                            Description = "Max AI poster generation attempts (incl. failures) per show",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3204,7 +3207,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "ticket_last_entry_minutes",
                             ConfigValue = "60",
                             DataType = "Integer",
-                            Description = "Hạn vào cửa: buổi diễn phải còn ít nhất số phút này thì mới bán vé (BR-31, giống mặc định vé không chọn chỗ của Eventbrite)",
+                            Description = "Last-entry cutoff: minutes of the show that must still remain for a ticket to be sold — BR-31, matches Eventbrite's general-admission default",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3213,7 +3216,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "venue_changeover_minutes",
                             ConfigValue = "30",
                             DataType = "Integer",
-                            Description = "Khoảng cách tối thiểu (phút) giữa hai buổi diễn liên tiếp ở cùng phòng trà — thời gian tiễn khán giả trước và đón khán giả sau. 30 là mức thấp của khoảng 30–60 phút phổ biến ở các địa điểm hòa nhạc (CF1)",
+                            Description = "Minimum gap between two consecutive shows at one venue — time to clear one audience and admit the next. 30 is the low end of the 30-60 min industry range for standard concert venues (CF1)",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -3222,7 +3225,7 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                             ConfigKey = "donation_message_blocked_words",
                             ConfigValue = "[]",
                             DataType = "Json",
-                            Description = "Danh sách JSON các từ/cụm từ khiến lời nhắn donate không hiện trên thông báo livestream (so khớp nguyên từ, không phân biệt hoa thường và dấu). Khoản donate vẫn được thông báo (MLACP-360)",
+                            Description = "JSON array of words/phrases that keep a donation message off the livestream alert (whole-word, case- and diacritic-insensitive). The donation itself is still announced (MLACP-360)",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });
