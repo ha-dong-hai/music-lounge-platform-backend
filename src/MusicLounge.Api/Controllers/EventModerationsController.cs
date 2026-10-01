@@ -27,9 +27,10 @@ public sealed class EventModerationsController : ControllerBase
         [FromQuery] string? targetType = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] int? targetId = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetPendingModerationsQuery(targetType, page, pageSize), ct);
+        var result = await _sender.Send(new GetPendingModerationsQuery(targetType, page, pageSize, targetId), ct);
         return Ok(ApiResponse<PaginatedResult<EventModerationDto>>.Ok(result));
     }
 

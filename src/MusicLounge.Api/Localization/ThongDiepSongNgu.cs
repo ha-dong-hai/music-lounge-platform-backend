@@ -306,6 +306,8 @@ internal static class ThongDiepSongNgu
             ["Lý do không được vượt quá 500 ký tự."] = "The reason must not exceed 500 characters.",
             ["Lý do không vượt quá 1000 ký tự."] = "The reason must not exceed 1000 characters.",
             ["Lý do thay đổi quá ngắn, hãy mô tả rõ vì sao cần đổi giá trị này."] = "The reason for the change is too short — please explain clearly why this value needs to change.",
+            // MLACP-504: thêm tay — dich-*.json / sinh-tu-dien.mjs chưa có câu này, lần sinh lại phải thêm vào dich-5.json.
+            ["Lọc theo targetId cần kèm targetType hợp lệ (Show, Livestream, GalleryImage, TourScene...)."] = "Filtering by targetId requires a valid targetType (Show, Livestream, GalleryImage, TourScene...).",
             ["Mã lượt bán này đã dùng cho một lượt bán khác. Hãy tạo lượt bán mới trên máy quầy."] = "This sale reference has already been used for a different sale. Please start a new sale on the box-office device.",
             ["Mã QR không được rỗng."] = "The QR code must not be empty.",
             ["Mã số thuế không được để trống."] = "The tax code must not be empty.",

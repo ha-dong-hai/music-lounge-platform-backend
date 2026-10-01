@@ -16,7 +16,7 @@ internal sealed class EventModerationRepository
     public EventModerationRepository(ApplicationDbContext ctx) : base(ctx) => _ctx = ctx;
 
     public async Task<PaginatedResult<EventModerationDto>> GetPendingAsync(
-        ModerationTargetType? targetType, int page, int pageSize, CancellationToken ct = default)
+        ModerationTargetType? targetType, int? targetId, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.EventModerations
             .AsNoTracking()
@@ -24,6 +24,10 @@ internal sealed class EventModerationRepository
 
         if (targetType.HasValue)
             baseQuery = baseQuery.Where(m => m.TargetType == targetType.Value);
+        // MLACP-504: trang chi tiết buổi diễn của Admin tải 100 bản chờ rồi quét tìm bản của buổi đang mở — quá 100 bản
+        // chờ thì hộp duyệt không mở được. Lọc thẳng theo đối tượng.
+        if (targetId.HasValue)
+            baseQuery = baseQuery.Where(m => m.TargetId == targetId.Value);
 
         var total = await baseQuery.CountAsync(ct);
 
