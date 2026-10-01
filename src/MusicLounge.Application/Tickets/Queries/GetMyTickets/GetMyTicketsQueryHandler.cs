@@ -25,7 +25,8 @@ internal sealed class GetMyTicketsQueryHandler
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
 
         var result = await _ticketRepo.GetByBuyerAsync(
-            _currentUser.UserId, page, pageSize, request.Status, ct);
+            _currentUser.UserId, page, pageSize,
+            new MyTicketFilter(request.Status, request.AccessType, request.When, request.Keyword), ct);
 
         return result.Map(t => new TicketListItemDto(
             t.Id,

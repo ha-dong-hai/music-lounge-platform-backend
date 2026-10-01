@@ -2,6 +2,7 @@ using MusicLounge.Application.Common;
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
+using MusicLounge.Application.Tickets;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Persistence;
@@ -69,13 +70,15 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
             .FirstOrDefaultAsync(t => t.QrCode == qrCode, ct);
 
     public async Task<PaginatedResult<Ticket>> GetByBuyerAsync(
-        int userId, int page, int pageSize, TicketStatus? status = null, CancellationToken ct = default)
+        int userId, int page, int pageSize, MyTicketFilter filter, CancellationToken ct = default)
     {
         var query = WithDetails()
             .Where(t => t.BuyerId == userId);
 
-        if (status.HasValue)
-            query = query.Where(t => t.Status == status.Value);
+        if (filter.Status.HasValue)
+            query = query.Where(t => t.Status == filter.Status.Value);
+        if (filter.AccessType.HasValue)
+            query = query.Where(t => t.Tier.AccessType == filter.AccessType.Value);
 
     // Sắp xếp phía client sau khi lấy về: SQLite (provider dùng trong test) không ORDER BY được
     // DateTimeOffset, còn Ticket.CreatedAt thì đúng kiểu đó. Trên SQL Server câu lệnh cũ chạy bình
@@ -86,7 +89,25 @@ internal sealed class TicketRepository : Repository<Ticket, Guid>, ITicketReposi
     // Đánh đổi là lấy về toàn bộ tập rồi mới phân trang. Chấp nhận được vì cả hai tập đều có trần
     // tự nhiên: vé của MỘT người mua, và vé của MỘT buổi diễn (chặn trên là sức chứa của phòng
     // trà). Đây cũng là cách codebase này vẫn xử lý khi vướng giới hạn đó.
-        var all = await query.ToListAsync(ct);
+    //
+    // MLACP-499: lọc thời điểm và từ khoá cũng làm ở đây, sau khi lấy về và TRƯỚC khi cắt trang — cùng lý do
+    // (SQLite không so sánh được DateTimeOffset; Contains trên SQLite phân biệt hoa thường còn SQL Server thì không,
+    // nên lọc ở DB sẽ cho hai kết quả khác nhau giữa test và production). totalCount đếm theo tập ĐÃ lọc.
+        var now = DateTimeOffset.UtcNow;
+        var keyword = filter.Keyword?.Trim();
+        var all = (await query.ToListAsync(ct))
+            .Where(t => filter.When switch
+            {
+                TicketTimeFilter.Upcoming => t.Show.ScheduledStart > now,
+                TicketTimeFilter.Past => t.Show.ScheduledStart <= now,
+                _ => true
+            })
+            .Where(t => string.IsNullOrEmpty(keyword)
+                || t.Show.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || t.Show.Lounge.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || t.Tier.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || t.Id.ToString().Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            .ToList();
         var items = all
             .OrderByDescending(t => t.CreatedAt)
             .Skip((page - 1) * pageSize)
