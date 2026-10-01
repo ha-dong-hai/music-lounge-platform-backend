@@ -133,6 +133,8 @@ internal static class ThongDiepSongNgu
             ["Bình luận không vượt quá 1000 ký tự."] = "The comment must not exceed 1000 characters.",
             // MLACP-498: thêm tay — dich-*.json / sinh-tu-dien.mjs chưa có câu này, lần sinh lại phải thêm vào dich-5.json.
             ["Bộ lọc status và format chỉ dùng với mine=true; danh sách công khai hãy lọc qua /lounge-shows/search."] = "The status and format filters only apply with mine=true; filter the public list through /lounge-shows/search.",
+            // MLACP-502 (gộp với 498): thêm tay — dich-*.json chưa có.
+            ["Từ khoá keyword chỉ dùng cho danh sách công khai (mine=false); buổi của tôi hãy lọc bằng status và format."] = "The keyword filter only applies to the public list (mine=false); filter your own concerts with status and format.",
             ["Buổi diễn đã đăng chỉ được thêm hạng vé livestream, và chỉ khi hình thức là online hoặc hybrid — hạng vé vào cửa và giá đã công bố được giữ nguyên như đã hứa với người mua."] = "A published concert may only have livestream ticket tiers added, and only when its format is online or hybrid — door tiers and published prices stay exactly as promised to buyers.",
             ["Buổi diễn đã kết thúc hoặc đã bị huỷ — không còn gì để mở bán."] = "The concert has ended or been cancelled — there is nothing left to put on sale.",
             ["Buổi diễn này không có khán giả tại chỗ (chỉ diễn online hoặc đã bị huỷ) — không nhận order F&B gắn với buổi diễn này."] = "This concert has no audience on site (it is online only, or it was cancelled) — food and drink orders cannot be attached to it.",

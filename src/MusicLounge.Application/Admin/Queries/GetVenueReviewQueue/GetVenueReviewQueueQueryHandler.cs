@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Lounges.DTOs;
@@ -18,6 +19,7 @@ internal sealed class GetVenueReviewQueueQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        return await _repo.GetReviewQueueAsync(request.Status, page, size, ct);
+        return await _repo.GetReviewQueueAsync(
+            request.AllStatuses ? null : request.Status, SearchKeyword.Normalize(request.Keyword), page, size, ct);
     }
 }

@@ -63,9 +63,10 @@ public sealed class LoungesController : ControllerBase
         [FromQuery] bool mine = false,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetLoungesQuery(city, mine, page, pageSize), ct);
+        var result = await _sender.Send(new GetLoungesQuery(city, mine, page, pageSize, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeListItemDto>>.Ok(result));
     }
 

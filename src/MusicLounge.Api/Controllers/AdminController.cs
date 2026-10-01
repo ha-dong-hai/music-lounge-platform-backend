@@ -302,9 +302,11 @@ public sealed class AdminController : ControllerBase
         [FromQuery] LoungeStatus status = LoungeStatus.Pending,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] bool allStatuses = false,
+        [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetVenueReviewQueueQuery(status, page, pageSize), ct);
+        var result = await _sender.Send(new GetVenueReviewQueueQuery(status, page, pageSize, allStatuses, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<VenueReviewItemDto>>.Ok(result));
     }
 
@@ -486,9 +488,10 @@ public sealed class AdminController : ControllerBase
         [FromQuery] string[]? status,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetComplaintHistoryQuery(status, page, pageSize), ct);
+        var result = await _sender.Send(new GetComplaintHistoryQuery(status, page, pageSize, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<ComplaintDto>>.Ok(result));
     }
 

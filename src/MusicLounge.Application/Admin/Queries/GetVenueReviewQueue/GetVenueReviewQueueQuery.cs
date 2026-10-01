@@ -12,4 +12,8 @@ namespace MusicLounge.Application.Admin.Queries.GetVenueReviewQueue;
 public sealed record GetVenueReviewQueueQuery(
     LoungeStatus Status = LoungeStatus.Pending,
     int Page = 1,
-    int PageSize = 20) : IQuery<PaginatedResult<VenueReviewItemDto>>;
+    int PageSize = 20,
+    // MLACP-502 (M-420): AllStatuses = true bỏ qua Status, liệt kê hồ sơ ở MỌI trạng thái. Không đổi Status thành
+    // nullable vì mặc định Pending là hợp đồng đang chạy: gọi cũ không truyền gì vẫn phải nhận hàng chờ duyệt.
+    bool AllStatuses = false,
+    string? Keyword = null) : IQuery<PaginatedResult<VenueReviewItemDto>>;

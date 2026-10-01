@@ -12,7 +12,9 @@ public interface IComplaintRepository : IRepository<Complaint, int>
     Task<PaginatedResult<ComplaintDto>> GetPendingAsync(
         int page, int pageSize, CancellationToken ct = default);
 
-    /// <summary>MLACP-462: lịch sử khiếu nại cho Admin — danh sách rỗng nghĩa là không lọc, trả mọi trạng thái.</summary>
+    /// <summary>MLACP-462: lịch sử khiếu nại cho Admin — danh sách rỗng nghĩa là không lọc, trả mọi trạng thái.
+    /// MLACP-502: <paramref name="keyword"/> (đã chuẩn hoá bằng SearchKeyword) khớp mô tả, SĐT liên hệ hoặc đúng mã.</summary>
     Task<PaginatedResult<ComplaintDto>> GetHistoryAsync(
-        IReadOnlyList<MusicLounge.Domain.Enums.ComplaintStatus> statuses, int page, int pageSize, CancellationToken ct = default);
+        IReadOnlyList<MusicLounge.Domain.Enums.ComplaintStatus> statuses, string? keyword, int page, int pageSize,
+        CancellationToken ct = default);
 }

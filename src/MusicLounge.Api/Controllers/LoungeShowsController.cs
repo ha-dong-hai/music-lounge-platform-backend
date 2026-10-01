@@ -72,10 +72,11 @@ public sealed class LoungeShowsController : ControllerBase
         [FromQuery] bool mine = false,
         [FromQuery] LoungeShowStatus? status = null,
         [FromQuery] LoungeShowFormat? format = null,
+        [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(
-            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine, status, format), ct);
+            new GetPublishedLoungeShowsQuery(page, pageSize, sortBy, includeSoldOut, mine, status, format, keyword), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 

@@ -37,10 +37,21 @@ internal sealed class ComplaintRepository : Repository<Complaint, int>, IComplai
     /// gì cho ai, trong khi chính họ là người phải trả lời nếu người khiếu nại hỏi lại.
     /// </summary>
     public async Task<PaginatedResult<ComplaintDto>> GetHistoryAsync(
-        IReadOnlyList<ComplaintStatus> statuses, int page, int pageSize, CancellationToken ct = default)
+        IReadOnlyList<ComplaintStatus> statuses, string? keyword, int page, int pageSize, CancellationToken ct = default)
     {
         var query = _ctx.Complaints.AsNoTracking();
         if (statuses.Count > 0) query = query.Where(c => statuses.Contains(c.Status));
+        // MLACP-502: tìm trước khi phân trang. Chỉ là điều kiện LỌC — DTO trả về vẫn y như cũ, không đổi cách hiển thị
+        // SĐT. Từ khoá toàn chữ số là mã khiếu nại (khớp ĐÚNG mã) hoặc một phần SĐT — không so với nội dung, vì "1" là
+        // chuỗi con của gần như mọi mô tả và sẽ đẩy đúng khiếu nại số 1 ra khỏi trang đầu.
+        if (keyword is not null)
+        {
+            if (int.TryParse(keyword, out var ma))
+                query = query.Where(c => c.Id == ma || (c.ContactPhone != null && c.ContactPhone.Contains(keyword)));
+            else
+                query = query.Where(c => c.Description.ToLower().Contains(keyword)
+                                      || (c.ContactPhone != null && c.ContactPhone.Contains(keyword)));
+        }
         return await ProjectPageAsync(query, page, pageSize, ct);
     }
 
