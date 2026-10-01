@@ -37,6 +37,18 @@ INSERT INTO @r SELECT N'ref:pay:Subscription', COUNT_BIG(*) FROM payments n JOIN
 INSERT INTO @r SELECT N'ref:pay:WalkIn', COUNT_BIG(*) FROM payments n JOIN lounge_shows x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'WalkIn';
 INSERT INTO @r SELECT N'ref:ledger:payment', COUNT_BIG(*) FROM ledger_entries n JOIN payments x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'payment';
 INSERT INTO @r SELECT N'ref:ledger:subscription', COUNT_BIG(*) FROM ledger_entries n JOIN subscription_packages x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'subscription';
+-- Bo sung sau khi khao sat ban sao Azure 02/10: cac loai co tren du lieu that ma ban sao dev khong co
+INSERT INTO @r SELECT N'poly:complaints:venue', COUNT_BIG(*) FROM complaints c JOIN music_lounges s ON CONVERT(nvarchar(50), s.Id) = CONVERT(nvarchar(50), c.TargetId) WHERE c.TargetType = N'venue';
+INSERT INTO @r SELECT N'poly:crep:Show', COUNT_BIG(*) FROM content_reports c JOIN lounge_shows s ON CONVERT(nvarchar(50), s.Id) = CONVERT(nvarchar(50), c.TargetId) WHERE c.TargetType = N'Show';
+INSERT INTO @r SELECT N'poly:crep:Livestream', COUNT_BIG(*) FROM content_reports c JOIN livestreams s ON CONVERT(nvarchar(50), s.Id) = CONVERT(nvarchar(50), c.TargetId) WHERE c.TargetType = N'Livestream';
+INSERT INTO @r SELECT N'poly:emod:GalleryImage', COUNT_BIG(*) FROM event_moderations c JOIN lounge_gallery_images s ON CONVERT(nvarchar(50), s.Id) = CONVERT(nvarchar(50), c.TargetId) WHERE c.TargetType = N'GalleryImage';
+INSERT INTO @r SELECT N'ref:notif:complaint', COUNT_BIG(*) FROM notifications n JOIN complaints x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'complaint';
+INSERT INTO @r SELECT N'ref:notif:refund_request', COUNT_BIG(*) FROM notifications n JOIN refund_requests x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'refund_request';
+INSERT INTO @r SELECT N'ref:notif:settlement', COUNT_BIG(*) FROM notifications n JOIN settlements x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'settlement';
+INSERT INTO @r SELECT N'ref:notif:payout_owner', COUNT_BIG(*) FROM notifications n JOIN users x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'payout_owner';
+INSERT INTO @r SELECT N'ref:notif:bank_account', COUNT_BIG(*) FROM notifications n JOIN bank_accounts x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'bank_account';
+INSERT INTO @r SELECT N'ref:ledger:refund', COUNT_BIG(*) FROM ledger_entries n JOIN refund_requests x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'refund';
+INSERT INTO @r SELECT N'ref:ledger:settlement', COUNT_BIG(*) FROM ledger_entries n JOIN settlements x ON CONVERT(nvarchar(50), x.Id) = n.ReferenceId WHERE n.ReferenceType = N'settlement';
 -- 4) tien: tong so cai khong doi
 INSERT INTO @r SELECT N'money:ledger_debit', CAST(SUM(CASE WHEN IsDebit = 1 THEN Amount ELSE 0 END) AS bigint) FROM ledger_entries;
 INSERT INTO @r SELECT N'money:ledger_credit', CAST(SUM(CASE WHEN IsDebit = 0 THEN Amount ELSE 0 END) AS bigint) FROM ledger_entries;

@@ -42,6 +42,19 @@ vốn đã là Guid, hay seed không khớp `OrderedGuid.FromLegacy` (đã thử
 | DB rỗng chạy toàn bộ migration | Đạt, lược đồ trùng model, seed "Jazz" = `FromLegacy("music_genres", 1)` |
 | API mới đọc dữ liệu đã đổi | `/health` 200, danh sách buổi diễn đúng thứ tự mới-nhất-trước, chi tiết 200, URL số cũ → 404 |
 
+### Lần diễn tập 02/10/2026 trên bản sao Azure (`az sql db copy` SU26SE039 → SU26SE039_Dien515, S0)
+
+| Kiểm | Kết quả |
+|---|---|
+| Chốt loại lạ (Pha 0) | Không chặn — mọi ReferenceType/TargetType trên dữ liệu thật đều đã ánh xạ |
+| Thời gian áp | 146 giây (S0) — tính vào thời gian dừng app |
+| Dấu vân tay trước/sau | 225/225 dòng giống hệt (bổ sung 11 phép kiểm cho loại chỉ có trên dữ liệu thật: 638 thông báo khiếu nại, hoàn tiền, quyết toán…); nợ = có = 3.586.000 |
+| Lược đồ vs model | 737 cột / 234 chỉ mục / 121 FK trùng; thừa đúng `donations.PlatformFee` — cột thêm ngoài migration từ đợt deploy 17/08, có mặc định 0, có từ trước 515, không ảnh hưởng ghi dữ liệu |
+| FK `is_not_trusted` / cột id còn int / hàm tạm | 0 / 0 / đã xoá |
+| Chạy API trên bản sao | **Cố ý không chạy**: app khởi động sẽ chạy job Hangfire định kỳ trên dữ liệu thật (có thể gửi email/SMS/push thật). Đã kiểm API trên bản sao dev |
+
+Bản sao và luật tường lửa tạm đã xoá ngay sau đó (deploy_log.md).
+
 ## Vận hành khi áp thật
 
 Không phải expand–contract: code cũ không đọc được GUID, code mới không đọc được int.
