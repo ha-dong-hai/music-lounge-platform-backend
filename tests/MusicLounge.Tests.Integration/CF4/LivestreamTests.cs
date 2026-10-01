@@ -260,6 +260,29 @@ public sealed class LivestreamTests
         }
     }
 
+    // MLACP-510: không có xem lại — chi tiết livestream không còn trường recordingUrl, kể cả khi DB còn sót bản ghi cũ
+    // (hai cột chỉ xoá ở MLACP-511, sau khi bản này deploy).
+    [Fact]
+    public async Task GetDetail_KhongConTraRecordingUrl_DuDbConSotBanGhiCu()
+    {
+        var id = await CreateAndApproveLivestreamWithAudienceTicketAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var ls = await db.Set<MusicLounge.Domain.Entities.Livestream>().SingleAsync(l => l.Id == id);
+            ls.RecordingUrl = "https://stream.mux.com/cu510.m3u8";
+            ls.ReplayAvailableUntil = DateTimeOffset.UtcNow.AddDays(7);
+            await db.SaveChangesAsync();
+        }
+
+        var res = await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience").GetAsync($"/api/v1/livestreams/{id}");
+        var body = await res.Content.ReadAsStringAsync();
+
+        res.StatusCode.Should().Be(HttpStatusCode.OK, body);
+        JsonDocument.Parse(body).RootElement.GetProperty("data").TryGetProperty("recordingUrl", out _)
+            .Should().BeFalse("hệ thống không có xem lại");
+    }
+
     [Fact]
     public async Task EndLivestream_ChuaBatDau_VanBiChan422()
     {
