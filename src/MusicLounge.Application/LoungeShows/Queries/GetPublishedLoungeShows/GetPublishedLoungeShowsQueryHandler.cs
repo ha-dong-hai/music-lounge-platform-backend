@@ -36,7 +36,7 @@ internal sealed class GetPublishedLoungeShowsQueryHandler
 
             // MLACP-466: nhan vien lay theo phong tra minh van hanh, khong theo chu so huu — xem OperatedShows.
             result = await OperatedShows.QueryAsync(
-                _showRepo, _currentUser, page, pageSize, request.SortBy, status: null, ct);
+                _showRepo, _currentUser, page, pageSize, request.SortBy, request.Status, request.Format, ct);
         }
         else
         {
