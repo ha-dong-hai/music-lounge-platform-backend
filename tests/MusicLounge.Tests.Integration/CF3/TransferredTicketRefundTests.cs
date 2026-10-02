@@ -321,4 +321,74 @@ public sealed class TransferredTicketRefundTests
         await scope.ServiceProvider.GetRequiredService<RefundUndeliveredLivestreamTicketsJob>()
             .ExecuteAsync(new JobCancellationToken(false));
     }
+
+    // ─── MLACP-526: đi đúng đường mua thật, không seed sẵn PayerId ───────────────
+
+    /// <summary>
+    /// Mọi bài ở trên seed sẵn <c>Payment.PayerId</c>, nên chúng xanh kể cả khi đường mua thật không ghi người trả
+    /// tiền. Và đúng là không ghi: E2E 02/10 trên bản sao dữ liệu thấy 44/44 thanh toán vé online có PayerId NULL, người
+    /// nhận chuyển nhượng huỷ được vé (200) dù chốt chặn MLACP-370 nói là không. Bài này mua vé qua API như khách thật.
+    /// </summary>
+    [Fact]
+    public async Task ATicketBoughtThroughTheRealCheckout_RecordsWhoPaid_SoTheHolderCannotCancelIt()
+    {
+        var people = await SeedPeopleAsync();
+        var show = UpcomingShow();
+        Guid priceId; string holderEmail;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.LoungeShows.Add(show);
+            await db.SaveChangesAsync();
+            var tier = new TicketTier { LoungeShowId = show.Id, Name = "Physical", AccessType = AccessType.Physical, CreatedAt = DateTime.UtcNow };
+            db.Add(tier);
+            await db.SaveChangesAsync();
+            var price = new TicketPrice
+            {
+                TierId = tier.Id, Name = "Đợt 1", Price = 200_000m, PurchaseChannel = PurchaseChannel.Online,
+                SaleStart = DateTimeOffset.UtcNow.AddDays(-30)
+            };
+            db.Add(price);
+            await db.SaveChangesAsync();
+            priceId = price.Id;
+            holderEmail = (await db.Users.SingleAsync(u => u.Id == people.HolderId)).Email;
+        }
+
+        var original = _factory.CreateAuthenticatedClient(people.OriginalId, "Audience");
+        var holder = _factory.CreateAuthenticatedClient(people.HolderId, "Audience");
+
+        var holdRes = await original.PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = priceId, Quantity = 1 });
+        holdRes.StatusCode.Should().Be(HttpStatusCode.Created);
+        var hold = (await holdRes.Content.ReadFromJsonAsync<Envelope<HoldData>>())!.Data;
+        var purchaseRes = await original.PostAsJsonAsync("/api/v1/tickets/purchase", new { HoldId = hold.HoldId });
+        purchaseRes.StatusCode.Should().Be(HttpStatusCode.Created);
+        var purchase = (await purchaseRes.Content.ReadFromJsonAsync<Envelope<PurchaseData>>())!.Data;
+        await original.GetAsync(
+            $"/api/v1/payments/vnpay/callback?vnp_TxnRef={purchase.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(purchase.Amount * 100)}");
+
+        Guid ticketId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var payment = await db.Payments.AsNoTracking().SingleAsync(p => p.OrderId == purchase.OrderId);
+            payment.PayerId.Should().Be(people.OriginalId,
+                "the payment must record who paid — CancelTicket's MLACP-370 guard and refund routing read it");
+            ticketId = (await db.Tickets.AsNoTracking().SingleAsync(t => t.PaymentId == payment.Id && t.Status == TicketStatus.Confirmed)).Id;
+        }
+
+        (await original.PostAsJsonAsync($"/api/v1/tickets/{ticketId}/transfer", new { RecipientEmail = holderEmail }))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await holder.PostAsync($"/api/v1/tickets/{ticketId}/transfer/accept", null))
+            .IsSuccessStatusCode.Should().BeTrue();
+
+        var refused = await holder.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null);
+        refused.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
+            "the money of a transferred ticket belongs to the original buyer — the holder hands it back instead");
+        (await refused.Content.ReadAsStringAsync()).Should().Contain("chuyển vé lại cho người mua ban đầu");
+    }
+
+    private sealed record Envelope<T>(bool Success, T Data);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
 }
