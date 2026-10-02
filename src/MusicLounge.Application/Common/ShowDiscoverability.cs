@@ -38,6 +38,35 @@ public static class ShowDiscoverability
         => s => VenueLifecycle.Operating.Contains(s.Lounge.Status);
 
     /// <summary>
+    /// Hai trạng thái mà buổi diễn CHƯA được công bố: bản nháp của phòng trà, và hồ sơ đang chờ
+    /// Admin duyệt. Người ngoài phòng trà không được thấy buổi diễn ở hai trạng thái này ở bất kỳ
+    /// đường công khai nào — nội dung chưa qua kiểm duyệt thì chưa phải thứ sàn đứng tên mời mua vé.
+    ///
+    /// <b>Vì sao có mảng này.</b> "Chưa công bố" từng được viết tay ở từng truy vấn là
+    /// <c>Status != Draft</c>, và <see cref="LoungeShowStatus.Pending"/> bị bỏ quên. Lỗi đã được vá
+    /// HAI lần riêng lẻ (tìm kiếm — MLACP-58; trang chi tiết) mà vẫn còn bốn chỗ lọt: danh sách theo
+    /// phòng trà, danh sách theo nghệ sĩ, sơ đồ chỗ ngồi (lộ cả giá vé), và thêm vào yêu thích. Đo
+    /// trên dữ liệu thật 30/09/2026: <c>GET /lounge-shows/by-lounge/1</c> gọi không đăng nhập trả 3
+    /// buổi đang chờ duyệt. Vá từng chỗ thì chỗ thứ bảy sẽ lại quên — nên định nghĩa nằm ở đây.
+    ///
+    /// Để dạng mảng (cùng lý do với <see cref="VenueLifecycle.Operating"/>): dùng thẳng trong truy
+    /// vấn database qua Contains, và dùng lại được cho phép kiểm trong bộ nhớ ở handler.
+    /// </summary>
+    public static readonly LoungeShowStatus[] AwaitingPublication =
+    [
+        LoungeShowStatus.Draft,
+        LoungeShowStatus.Pending
+    ];
+
+    /// <summary>
+    /// Buổi diễn đã qua cổng duyệt nên được phép nằm trong danh sách công khai. Đã kết thúc và đã
+    /// huỷ VẪN đi qua: chúng là lịch sử công khai, việc ẩn hay hiện do từng danh sách tự quyết
+    /// (<c>includeEnded</c>), không phải do cổng duyệt.
+    /// </summary>
+    public static Expression<Func<LoungeShow, bool>> PastModeration
+        => s => !AwaitingPublication.Contains(s.Status);
+
+    /// <summary>
     /// Buổi diễn nằm trong thành phố người dùng đang lọc.
     ///
     /// <b>Đã tra thực tế, và kết luận ngược với nghi vấn ban đầu — giữ nguyên là ĐÚNG.</b>
