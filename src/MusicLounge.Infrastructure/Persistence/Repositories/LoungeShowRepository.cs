@@ -205,6 +205,13 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, int>, ILoung
         if (!string.IsNullOrWhiteSpace(p.Ward))
             query = query.Where(s => s.Lounge.Address.Ward == p.Ward);
 
+        // MLACP-521: theo mã chính thức — "Thành phố Hồ Chí Minh"/"TP.HCM" không còn là hai nơi khác nhau.
+        if (!string.IsNullOrWhiteSpace(p.ProvinceCode))
+            query = query.Where(s => s.Lounge.Address.ProvinceCode == p.ProvinceCode);
+
+        if (!string.IsNullOrWhiteSpace(p.WardCode))
+            query = query.Where(s => s.Lounge.Address.WardCode == p.WardCode);
+
         if (p.DateFrom.HasValue)
             query = query.Where(s => s.ScheduledStart >= p.DateFrom.Value);
 

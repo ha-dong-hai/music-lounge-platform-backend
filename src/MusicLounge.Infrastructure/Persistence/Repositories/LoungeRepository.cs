@@ -16,7 +16,7 @@ internal sealed class LoungeRepository : ILoungeRepository
 
     public async Task<PaginatedResult<LoungeListItemDto>> GetAllAsync(
         string? city, int? ownerId, bool includeUnapproved, int page, int pageSize,
-        string? keyword = null, CancellationToken ct = default)
+        string? keyword = null, CancellationToken ct = default, string? provinceCode = null)
     {
         var now = DateTimeOffset.UtcNow;
         var query = _ctx.Lounges.AsNoTracking();
@@ -30,6 +30,10 @@ internal sealed class LoungeRepository : ILoungeRepository
 
         if (!string.IsNullOrWhiteSpace(city))
             query = query.Where(l => l.Address.City == city);
+
+        // MLACP-521: lọc theo mã tỉnh chính thức — không phụ thuộc cách gõ tên thành phố.
+        if (!string.IsNullOrWhiteSpace(provinceCode))
+            query = query.Where(l => l.Address.ProvinceCode == provinceCode);
 
         if (ownerId.HasValue)
             query = query.Where(l => l.OwnerId == ownerId.Value);
@@ -47,6 +51,7 @@ internal sealed class LoungeRepository : ILoungeRepository
             {
                 l.Id, l.Name, l.PrimaryImageUrl, l.BusinessLicenseUrl, l.Model3DUrl, l.AreaLayoutImageUrl,
                 l.Address.Street, l.Address.District, l.Address.City,
+                l.Address.ProvinceCode, l.Address.WardCode,
                 FollowerCount = l.Follows.Count
             })
             .ToListAsync(ct);
@@ -59,7 +64,7 @@ internal sealed class LoungeRepository : ILoungeRepository
         var items = pageLounges.Select(l => new LoungeListItemDto(
                 l.Id, l.Name, l.PrimaryImageUrl, l.Model3DUrl, l.AreaLayoutImageUrl,
                 l.Street, l.District, l.City, l.FollowerCount,
-                upcomingCounts.GetValueOrDefault(l.Id)))
+                upcomingCounts.GetValueOrDefault(l.Id), l.ProvinceCode, l.WardCode))
             .ToList();
 
         return new PaginatedResult<LoungeListItemDto>(items, page, pageSize, total);
@@ -75,6 +80,7 @@ internal sealed class LoungeRepository : ILoungeRepository
             {
                 l.Id, l.Name, l.PrimaryImageUrl, l.Model3DUrl, l.AreaLayoutImageUrl,
                 l.Address.Street, l.Address.Ward, l.Address.District, l.Address.City,
+                l.Address.ProvinceCode, l.Address.WardCode,
                 l.Address.Latitude, l.Address.Longitude,
                 FollowerCount = l.Follows.Count,
                 l.Description,
@@ -118,7 +124,9 @@ internal sealed class LoungeRepository : ILoungeRepository
             galleryImages,
             lounge.OwnerId,
             lounge.Status.ToString(),
-            lounge.AtmosphereId);
+            lounge.AtmosphereId,
+            lounge.ProvinceCode,
+            lounge.WardCode);
     }
 
     /// <summary>

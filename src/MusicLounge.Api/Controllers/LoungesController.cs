@@ -65,9 +65,10 @@ public sealed class LoungesController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? keyword = null,
+        [FromQuery] string? provinceCode = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetLoungesQuery(city, mine, page, pageSize, keyword), ct);
+        var result = await _sender.Send(new GetLoungesQuery(city, mine, page, pageSize, keyword, provinceCode), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeListItemDto>>.Ok(result));
     }
 
@@ -164,7 +165,8 @@ public sealed class LoungesController : ControllerBase
     {
         await _sender.Send(new UpdateLoungeCommand(
             id, body.Name, body.Description, body.AtmosphereId,
-            body.Street, body.Ward, body.District, body.City, body.Latitude, body.Longitude), ct);
+            body.Street, body.Ward, body.District, body.City, body.Latitude, body.Longitude,
+            body.ProvinceCode, body.WardCode), ct);
         return NoContent();
     }
 
@@ -540,10 +542,13 @@ public sealed record UpdateLoungeRequest(
     string? Description,
     int? AtmosphereId,
     string Street,
-    string Ward,
+    string? Ward,
     string? District,
-    string City,
+    string? City,
     double? Latitude,
-    double? Longitude);
+    double? Longitude,
+    // MLACP-521: tuỳ chọn — mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg.
+    string? ProvinceCode = null,
+    string? WardCode = null);
 
 public sealed record AssignStaffRequest(int UserId);

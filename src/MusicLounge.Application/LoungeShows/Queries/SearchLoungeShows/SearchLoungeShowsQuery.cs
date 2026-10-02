@@ -31,5 +31,8 @@ public sealed record SearchLoungeShowsQuery(
     bool IncludeSoldOut = true,
     int Page = 1,
     int PageSize = 10,
-    LoungeShowSortBy SortBy = LoungeShowSortBy.Newest)
+    LoungeShowSortBy SortBy = LoungeShowSortBy.Newest,
+    // MLACP-521: thay cho ô lọc "quận" (cấp huyện đã bỏ) — lọc theo mã tỉnh và mã phường/xã chính thức.
+    string? ProvinceCode = null,
+    string? WardCode = null)
     : IQuery<PaginatedResult<LoungeShowListItemDto>>;

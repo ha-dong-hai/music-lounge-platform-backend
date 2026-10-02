@@ -28,6 +28,10 @@ public sealed record LoungeDetailDto(
     // AtmosphereId để ghi, nhưng trước đây DTO đọc chỉ trả AtmosphereName. PUT /lounges/{id} ghi
     // đè toàn phần, nên client không đọc lại được Id thì mỗi lần Sửa mà không chọn lại không khí là
     // xoá mất liên kết — và tên hiển thị không đáng tin để dò ngược Id (đổi tên là mất khớp).
-    int? AtmosphereId = null);
+    int? AtmosphereId = null,
+    // MLACP-521: mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg — giao diện sửa cần đọc lại để chọn sẵn, vì PUT ghi đè toàn phần
+    // (cùng lý do với AtmosphereId ở trên). null = địa chỉ cũ chưa chọn theo danh mục mới.
+    string? ProvinceCode = null,
+    string? WardCode = null);
 
 public sealed record LoungeGalleryImageDto(int Id, string ImageUrl, string? Caption, int OrderIndex);

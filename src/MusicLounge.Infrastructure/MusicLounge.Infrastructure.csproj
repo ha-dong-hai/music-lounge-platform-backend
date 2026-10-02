@@ -16,6 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- MLACP-521: danh mục đơn vị hành chính 2 cấp (QĐ 19/2025/QĐ-TTg) — dữ liệu tham chiếu tĩnh, nạp vào bộ nhớ. -->
+    <EmbeddedResource Include="AdministrativeUnits\don-vi-hanh-chinh-2025.json" LogicalName="MusicLounge.AdministrativeUnits.2025.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Lets tests instantiate internal services directly (e.g. VnPayService) for focused unit
          tests, instead of only being able to test them indirectly through the full HTTP/DB stack
          via ApiFactory — which for VnPayService specifically isn't even possible, since ApiFactory
