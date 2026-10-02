@@ -170,7 +170,7 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, Guid>, ILoun
         // Draft, de lot Pending (dang cho Admin duyet, chua cong khai) vao ket qua tim kiem cong
         // khai. Loai them Pending o day; Ended/Cancelled van do rieng IncludeEnded ben duoi quyet dinh.
         var query = WithDetails()
-            .Where(s => s.Status != LoungeShowStatus.Draft && s.Status != LoungeShowStatus.Pending)
+            .Where(ShowDiscoverability.PastModeration)
             // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
             .Where(ShowDiscoverability.VenueIsOperating);
 
@@ -266,8 +266,9 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, Guid>, ILoun
         Guid performerId, bool includeEnded, int page, int pageSize, CancellationToken ct = default)
     {
         var query = WithDetails()
-            .Where(s => s.Performances.Any(p => p.PerformerId == performerId)
-                && s.Status != LoungeShowStatus.Draft)
+            .Where(s => s.Performances.Any(p => p.PerformerId == performerId))
+            // Truoc day chi loai Draft nen buoi dang cho duyet (Pending) lot ra trang nghe si cong khai.
+            .Where(ShowDiscoverability.PastModeration)
             // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
             .Where(ShowDiscoverability.VenueIsOperating);
 
@@ -294,7 +295,10 @@ internal sealed class LoungeShowRepository : Repository<LoungeShow, Guid>, ILoun
         Guid loungeId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = WithDetails()
-            .Where(s => s.LoungeId == loungeId && s.Status != LoungeShowStatus.Draft)
+            .Where(s => s.LoungeId == loungeId)
+            // Truoc day chi loai Draft nen buoi dang cho duyet (Pending) lot ra trang phong tra cong khai
+            // (do 30/09/2026: 3 buoi Pending trong ket qua goi khong dang nhap).
+            .Where(ShowDiscoverability.PastModeration)
             // MLACP-329: phong tra bi dinh chi/khoa/tu choi thi khong duoc hien ra cho nguoi ngoai.
             .Where(ShowDiscoverability.VenueIsOperating);
 

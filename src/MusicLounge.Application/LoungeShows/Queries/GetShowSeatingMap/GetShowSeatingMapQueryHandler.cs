@@ -31,11 +31,14 @@ internal sealed class GetShowSeatingMapQueryHandler : IRequestHandler<GetShowSea
         var show = await _showRepo.GetByIdWithDetailsAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
-        // Endpoint AllowAnonymous (khop show-detail cong khai) — nhung show Draft van phai an
+        // Endpoint AllowAnonymous (khop show-detail cong khai) — nhung show chua cong bo van phai an
         // giong het GetLoungeShowDetailQueryHandler, khong duoc lo layout/gia qua endpoint rieng nay.
+        // Truoc day chi chan Draft: buoi dang cho duyet (Pending) bi 404 o trang chi tiet nhung so do
+        // cho ngoi kem GIA VE cua chinh buoi do van doc duoc o day. Nay dung chung mot dinh nghia
+        // "chua cong bo" (ShowDiscoverability.AwaitingPublication) voi trang chi tiet va cac danh sach.
         // Cross-venue Staff bypass fixed the same way as GetLoungeShowDetailQueryHandler: Admin
         // bypasses fully, Staff/Owner must actually operate THIS show's venue.
-        if (show.Status == LoungeShowStatus.Draft
+        if (ShowDiscoverability.AwaitingPublication.Contains(show.Status)
             && !VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId))
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 

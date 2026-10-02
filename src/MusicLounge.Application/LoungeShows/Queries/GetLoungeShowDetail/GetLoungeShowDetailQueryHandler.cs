@@ -47,7 +47,7 @@ internal sealed class GetLoungeShowDetailQueryHandler
         // nguoi ngoai — truoc day chi chan Draft, Pending bi lot ra cong khai y het gap da fix o
         // SearchAsync (MLACP-58).
         var canOperate = VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, show.Lounge.OwnerId);
-        if (show.Status is LoungeShowStatus.Draft or LoungeShowStatus.Pending && !canOperate)
+        if (ShowDiscoverability.AwaitingPublication.Contains(show.Status) && !canOperate)
             throw new NotFoundException(nameof(Domain.Entities.LoungeShow), request.ShowId);
 
         var wishlisted = _currentUser.IsAuthenticated

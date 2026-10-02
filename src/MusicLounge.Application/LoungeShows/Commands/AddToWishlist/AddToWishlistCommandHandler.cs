@@ -1,4 +1,5 @@
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Domain.Entities;
@@ -28,9 +29,12 @@ internal sealed class AddToWishlistCommandHandler : IRequestHandler<AddToWishlis
 
     public async Task<Unit> Handle(AddToWishlistCommand request, CancellationToken ct)
     {
+        // Buoi chua cong bo (nhap / dang cho duyet) tra 404 y nhu khong ton tai: truoc day chi loai Draft,
+        // nen ai doan duoc ma so cua mot buoi Pending thi luu duoc no vao danh sach yeu thich va doc
+        // ten, anh, gio dien cua buoi chua duyet qua GET /users/me/wishlist.
         var showExists = await _showRepo.AnyAsync(
             s => s.Id == request.ShowId
-                && s.Status != LoungeShowStatus.Draft
+                && !ShowDiscoverability.AwaitingPublication.Contains(s.Status)
                 && s.Status != LoungeShowStatus.Cancelled, ct);
         if (!showExists)
             throw new NotFoundException(nameof(LoungeShow), request.ShowId);
