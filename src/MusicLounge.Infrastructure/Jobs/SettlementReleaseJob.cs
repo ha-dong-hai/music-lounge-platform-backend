@@ -85,7 +85,7 @@ public sealed class SettlementReleaseJob
 
         // Nap mot lan, va chi khi thuc su co khoan bi giu — phan lon lan chay khong park cai nao.
         List<User>? admins = null;
-        List<(int OwnerId, PayoutBlocker Blocker, decimal Amount)>? held = null;
+        List<(Guid OwnerId, PayoutBlocker Blocker, decimal Amount)>? held = null;
 
         foreach (var settlement in due)
         {
@@ -221,7 +221,7 @@ public sealed class SettlementReleaseJob
 
             // MLACP-363: khoan chuyen chang 1 cua donate vao nhat ky bang chung — cung lan luu voi chinh
             // viec giai ngan, nen khong the co cai nay ma thieu cai kia.
-            if (await DonationIdOfAsync(settlement.PaymentId, ct) is int releasedDonationId)
+            if (await DonationIdOfAsync(settlement.PaymentId, ct) is Guid releasedDonationId)
                 await DonationEvidence.AppendAsync(_uow, releasedDonationId, DonationEventType.PayoutReleased,
                     actorUserId: null, amount: settlement.NetAmount, reference: $"settlement:{settlement.Id}",
                     detail: $"Nền tảng chuyển phần của phòng trà vào tài khoản ngân hàng #{settlement.BankAccountId}.",
@@ -267,7 +267,7 @@ public sealed class SettlementReleaseJob
     /// 7 ngày về cùng một chủ phòng trà.
     /// </summary>
     private async Task NotifyHeldPayoutsAsync(
-        List<(int OwnerId, PayoutBlocker Blocker, decimal Amount)> held, DateTimeOffset now, CancellationToken ct)
+        List<(Guid OwnerId, PayoutBlocker Blocker, decimal Amount)> held, DateTimeOffset now, CancellationToken ct)
     {
         var since = now.AddDays(-7);
         foreach (var group in held.GroupBy(h => h.OwnerId))
@@ -277,7 +277,7 @@ public sealed class SettlementReleaseJob
             var total = group.Sum(h => h.Amount);
             var reference = ownerId.ToString();
 
-            List<int> recipients;
+            List<Guid> recipients;
             SongNgu title, body;
             if (PayeeVerification.WaitsOnAdmin(blocker))
             {
@@ -350,11 +350,11 @@ public sealed class SettlementReleaseJob
     /// si. Thong bao phai noi dieu do va noi so tien — "khoan thanh toan da duoc giai ngan" chung chung
     /// thi chu phong tra khong biet minh con mot viec phai lam.
     /// </summary>
-    private async Task<int?> DonationIdOfAsync(int paymentId, CancellationToken ct)
+    private async Task<Guid?> DonationIdOfAsync(Guid paymentId, CancellationToken ct)
     {
         var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == paymentId, ct);
         return payment?.ReferenceType == DonationPayouts.PaymentReferenceType
-               && int.TryParse(payment.ReferenceId, out var donationId)
+               && Guid.TryParse(payment.ReferenceId, out var donationId)
             ? donationId
             : null;
     }
@@ -363,7 +363,7 @@ public sealed class SettlementReleaseJob
     {
         var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == settlement.PaymentId, ct);
         if (payment?.ReferenceType == DonationPayouts.PaymentReferenceType
-            && int.TryParse(payment.ReferenceId, out var donationId)
+            && Guid.TryParse(payment.ReferenceId, out var donationId)
             && await _ctx.Donations.AsNoTracking().FirstOrDefaultAsync(d => d.Id == donationId, ct) is { } donation)
         {
             var rate = donation.PerformerShareRateSnapshot
@@ -394,11 +394,11 @@ public sealed class SettlementReleaseJob
     ///
     /// <para>su, khac han voi mot buoi dien da qua gio ma chua tung bat dau.</para>
     /// </summary>
-    private async Task<LoungeShow?> ShowForPaymentAsync(int paymentId, CancellationToken ct)
+    private async Task<LoungeShow?> ShowForPaymentAsync(Guid paymentId, CancellationToken ct)
     {
         var showId = await _ctx.Tickets
             .Where(t => t.PaymentId == paymentId)
-            .Select(t => (int?)t.ShowId)
+            .Select(t => (Guid?)t.ShowId)
             .FirstOrDefaultAsync(ct);
 
         return showId is null

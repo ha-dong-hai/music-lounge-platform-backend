@@ -28,30 +28,30 @@ internal sealed class GetOwnerDonationHistoryQueryHandler
     public async Task<OwnerDonationHistorySummaryDto> Handle(
         GetOwnerDonationHistoryQuery request, CancellationToken ct)
     {
-        var lounges = await _uow.Repository<MusicLoungeEntity, int>()
+        var lounges = await _uow.Repository<MusicLoungeEntity, Guid>()
             .FindAsync(l => l.OwnerId == _currentUser.UserId, ct);
         var loungeIds = lounges.Select(l => l.Id).ToHashSet();
 
-        var shows = await _uow.Repository<LoungeShow, int>()
+        var shows = await _uow.Repository<LoungeShow, Guid>()
             .FindAsync(s => loungeIds.Contains(s.LoungeId), ct);
         var showIds = shows.Select(s => s.Id).ToHashSet();
         var showById = shows.ToDictionary(s => s.Id);
 
-        var performances = await _uow.Repository<Performance, int>()
+        var performances = await _uow.Repository<Performance, Guid>()
             .FindAsync(p => showIds.Contains(p.LoungeShowId), ct);
         var performanceIds = performances.Select(p => p.Id).ToHashSet();
         var showIdByPerformance = performances.ToDictionary(p => p.Id, p => p.LoungeShowId);
         var performerIdByPerformance = performances.ToDictionary(p => p.Id, p => p.PerformerId);
 
         var performerIds = performances.Select(p => p.PerformerId).Distinct().ToList();
-        var performerById = (await _uow.Repository<Performer, int>()
+        var performerById = (await _uow.Repository<Performer, Guid>()
                 .FindAsync(p => performerIds.Contains(p.Id), ct))
             .ToDictionary(p => p.Id);
 
         // "Donate đã nhận" = Owner đã thực sự xác nhận nhận tiền (OwnerReceived) hoặc đã trả xong
         // cho nghệ sĩ (PerformerPaid) — donate còn PendingPayment/PendingOwnerAck/Cancelled chưa
         // từng "về tay" Owner, không thuộc phạm vi lịch sử này.
-        var allDonations = await _uow.Repository<Donation, int>().FindAsync(
+        var allDonations = await _uow.Repository<Donation, Guid>().FindAsync(
             d => performanceIds.Contains(d.PerformanceId)
                 && (d.Status == DonationStatus.OwnerReceived || d.Status == DonationStatus.PerformerPaid), ct);
 

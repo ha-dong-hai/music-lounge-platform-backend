@@ -21,10 +21,10 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
 
     public async Task<Unit> Handle(SetEventCustomValuesCommand request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -33,7 +33,7 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
         if (request.Values.Count == 0) return Unit.Value;
 
         var criteriaIds = request.Values.Select(v => v.CriteriaId).Distinct().ToList();
-        var criteria = await _uow.Repository<CustomCriteriaEntity, int>()
+        var criteria = await _uow.Repository<CustomCriteriaEntity, Guid>()
             .FindAsync(c => criteriaIds.Contains(c.Id), ct);
         var criteriaById = criteria.ToDictionary(c => c.Id);
 
@@ -60,7 +60,7 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
                 throw new DomainException($"Giá trị của tiêu chí \"{c.Name}\" {loi}");
         }
 
-        var valueRepo = _uow.Repository<EventCustomValue, int>();
+        var valueRepo = _uow.Repository<EventCustomValue, Guid>();
         var existing = await valueRepo.FindAsync(
             v => v.ShowId == request.ShowId && criteriaIds.Contains(v.CriteriaId), ct);
         var existingByCriteria = existing.ToDictionary(v => v.CriteriaId);

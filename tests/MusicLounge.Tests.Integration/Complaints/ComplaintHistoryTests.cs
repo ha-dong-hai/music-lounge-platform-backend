@@ -22,7 +22,7 @@ public sealed class ComplaintHistoryTests
 
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<int> KhieuNaiAsync(ComplaintStatus trangThai)
+    private async Task<Guid> KhieuNaiAsync(ComplaintStatus trangThai)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -46,7 +46,7 @@ public sealed class ComplaintHistoryTests
         return khieuNai.Id;
     }
 
-    private async Task<(IReadOnlyList<int> Ids, HttpStatusCode Code, string Body)> DocAsync(string query)
+    private async Task<(IReadOnlyList<Guid> Ids, HttpStatusCode Code, string Body)> DocAsync(string query)
     {
         var res = await Admin().GetAsync($"/api/v1/admin/complaints?{query}");
         var body = await res.Content.ReadAsStringAsync();
@@ -54,7 +54,7 @@ public sealed class ComplaintHistoryTests
 
         using var doc = JsonDocument.Parse(body);
         var ids = doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Select(x => x.GetProperty("id").GetInt32()).ToList();
+            .Select(x => x.GetProperty("id").GetGuid()).ToList();
         return (ids, res.StatusCode, body);
     }
 

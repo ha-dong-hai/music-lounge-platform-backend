@@ -37,32 +37,32 @@ public sealed class PerformersController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<PerformerDto>>.Ok(result));
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType<ApiResponse<PerformerDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetPerformerByIdQuery(id), ct);
         return Ok(ApiResponse<PerformerDto>.Ok(result));
     }
 
     [HttpPost]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(
         [FromBody] CreatePerformerCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return CreatedAtAction(nameof(GetById), new { id, version = "1.0" }, ApiResponse<int>.Ok(id));
+        return CreatedAtAction(nameof(GetById), new { id, version = "1.0" }, ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
-        int id, [FromBody] UpdatePerformerRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdatePerformerRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdatePerformerCommand(
             id, body.Name, body.AvatarUrl, body.Bio, body.Type, body.GenreIds, body.ContactEmail), ct);
@@ -70,24 +70,24 @@ public sealed class PerformersController : ControllerBase
     }
 
     // §6.14 — upsert: setting a link for a platform the performer already has replaces it.
-    [HttpPut("{id:int}/social-links")]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [HttpPut("{id:guid}/social-links")]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddSocialLink(
-        int id, [FromBody] AddPerformerSocialLinkRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] AddPerformerSocialLinkRequest body, CancellationToken ct = default)
     {
         var linkId = await _sender.Send(
             new AddPerformerSocialLinkCommand(id, body.Platform, body.Url, body.DisplayName), ct);
-        return Ok(ApiResponse<int>.Ok(linkId));
+        return Ok(ApiResponse<Guid>.Ok(linkId));
     }
 
-    [HttpDelete("{id:int}/social-links/{linkId:int}")]
+    [HttpDelete("{id:guid}/social-links/{linkId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RemoveSocialLink(int id, int linkId, CancellationToken ct = default)
+    public async Task<IActionResult> RemoveSocialLink(Guid id, Guid linkId, CancellationToken ct = default)
     {
         await _sender.Send(new RemovePerformerSocialLinkCommand(id, linkId), ct);
         return NoContent();
@@ -95,7 +95,7 @@ public sealed class PerformersController : ControllerBase
 }
 
 public sealed record UpdatePerformerRequest(
-    string Name, string? AvatarUrl, string? Bio, string Type, IReadOnlyList<int> GenreIds,
+    string Name, string? AvatarUrl, string? Bio, string Type, IReadOnlyList<Guid> GenreIds,
     string? ContactEmail = null);
 
 public sealed record AddPerformerSocialLinkRequest(string Platform, string Url, string? DisplayName);

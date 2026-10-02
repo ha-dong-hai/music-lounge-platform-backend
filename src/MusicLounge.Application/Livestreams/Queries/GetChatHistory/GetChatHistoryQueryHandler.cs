@@ -36,11 +36,11 @@ internal sealed class GetChatHistoryQueryHandler
         var userHasAccess = _currentUser.Role == Roles.Admin;
         if (!userHasAccess)
         {
-            var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
+            var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(request.LivestreamId, ct)
                 ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
-            var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct)
+            var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct)
                 ?? throw new NotFoundException(nameof(LoungeShow), livestream.LoungeShowId);
-            var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+            var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
                 ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
             // MLACP-119: dong bo voi fix cua MLACP-117 — livestream mien phi (IsFree) khong yeu

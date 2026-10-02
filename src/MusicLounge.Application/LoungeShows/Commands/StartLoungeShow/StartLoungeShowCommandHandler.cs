@@ -28,12 +28,12 @@ internal sealed class StartLoungeShowCommandHandler : IRequestHandler<StartLoung
 
     public async Task<Unit> Handle(StartLoungeShowCommand request, CancellationToken ct)
     {
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
         // D6: Staff chi duoc bat dau show cua venue duoc phan cong; Owner cua venue do cung duoc.
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền bắt đầu show của venue này.");

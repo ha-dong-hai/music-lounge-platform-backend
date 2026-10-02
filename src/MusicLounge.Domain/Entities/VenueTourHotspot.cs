@@ -5,11 +5,11 @@ namespace MusicLounge.Domain.Entities;
 // A clickable point placed inside one panorama scene, at spherical position (Yaw, Pitch) — the
 // same coordinate concept every 360 viewer library uses (krpano, Marzipano, Pannellum, Photo
 // Sphere Viewer), so this stays renderable regardless of which one the frontend picks.
-public sealed class VenueTourHotspot : Common.BaseEntity<int>
+public sealed class VenueTourHotspot : Common.BaseEntity<Guid>
 {
-    public int SceneId { get; set; }
+    public Guid SceneId { get; set; }
     // Only set (and only meaningful) when Type == Navigate — the scene this hotspot "walks" to.
-    public int? TargetSceneId { get; set; }
+    public Guid? TargetSceneId { get; set; }
     public VenueTourHotspotType Type { get; set; }
     public double Yaw { get; set; }     // horizontal angle, -180..180
     public double Pitch { get; set; }   // vertical angle, -90..90

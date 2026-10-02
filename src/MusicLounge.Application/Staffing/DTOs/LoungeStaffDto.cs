@@ -1,11 +1,11 @@
 namespace MusicLounge.Application.Staffing.DTOs;
 
 public sealed record LoungeStaffDto(
-    int Id,
-    int UserId,
+    Guid Id,
+    Guid UserId,
     string FullName,
     string Email,
     bool IsActive,
     DateTimeOffset AssignedAt,
     DateTimeOffset? DeactivatedAt,
-    int? DeactivatedBy);
+    Guid? DeactivatedBy);

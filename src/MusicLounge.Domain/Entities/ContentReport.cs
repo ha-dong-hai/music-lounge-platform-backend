@@ -6,16 +6,16 @@ namespace MusicLounge.Domain.Entities;
 // khac voi EventModeration (cong duyet AI truoc khi dang). Nhieu dong co the cung tro toi 1
 // (TargetType, TargetId) — so dong Status=Open chinh la "so lan bao cao" dung de sap xep uu tien
 // hang doi cua Admin.
-public sealed class ContentReport : Common.BaseEntity<int>
+public sealed class ContentReport : Common.BaseEntity<Guid>
 {
     public ReportTargetType TargetType { get; set; }
-    public int TargetId { get; set; }
-    public int ReporterId { get; set; }
+    public Guid TargetId { get; set; }
+    public Guid ReporterId { get; set; }
     public string Reason { get; set; } = string.Empty;
     public ContentReportStatus Status { get; set; } = ContentReportStatus.Open;
     public DateTimeOffset CreatedAt { get; set; }
 
-    public int? ResolvedByAdminId { get; set; }
+    public Guid? ResolvedByAdminId { get; set; }
     public string? ResolutionNote { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
 

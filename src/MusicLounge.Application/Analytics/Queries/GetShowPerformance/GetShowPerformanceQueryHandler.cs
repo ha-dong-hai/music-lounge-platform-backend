@@ -25,10 +25,10 @@ internal sealed class GetShowPerformanceQueryHandler
 
     public async Task<ShowPerformanceDto> Handle(GetShowPerformanceQuery request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<Domain.Entities.MusicLounge, int>()
+        var lounge = await _uow.Repository<Domain.Entities.MusicLounge, Guid>()
             .GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.MusicLounge), show.LoungeId);
 
@@ -39,7 +39,7 @@ internal sealed class GetShowPerformanceQueryHandler
         // anonymous browsing and non-consenting users are not represented here. This is the only
         // view-tracking mechanism this codebase has; a true all-traffic page-view counter would
         // need a separate, consent-independent tracking pipeline that doesn't exist yet.
-        var logs = await _uow.Repository<UserBehaviourLog, int>()
+        var logs = await _uow.Repository<UserBehaviourLog, Guid>()
             .FindAsync(l => l.LoungeShowId == request.ShowId, ct);
 
         var viewLogs = logs.Where(l => ViewActions.Contains(l.Action)).ToList();

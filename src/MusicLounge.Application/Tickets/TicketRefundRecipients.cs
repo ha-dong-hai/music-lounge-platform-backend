@@ -39,34 +39,34 @@ public static class TicketRefundRecipients
         " A ticket transferred to you can only be cancelled for a refund by the original buyer — transfer it back to them.";
 
     /// <summary>Người đã trả tiền của từng thanh toán mà các vé này thuộc về.</summary>
-    public static async Task<IReadOnlyDictionary<int, int?>> PayersAsync(
+    public static async Task<IReadOnlyDictionary<Guid, Guid?>> PayersAsync(
         IUnitOfWork uow, IEnumerable<Ticket> tickets, CancellationToken ct)
     {
         var paymentIds = tickets.Where(t => t.PaymentId is not null).Select(t => t.PaymentId!.Value).Distinct().ToList();
-        if (paymentIds.Count == 0) return new Dictionary<int, int?>();
-        return (await uow.Repository<Payment, int>().FindAsync(p => paymentIds.Contains(p.Id), ct))
+        if (paymentIds.Count == 0) return new Dictionary<Guid, Guid?>();
+        return (await uow.Repository<Payment, Guid>().FindAsync(p => paymentIds.Contains(p.Id), ct))
             .ToDictionary(p => p.Id, p => p.PayerId);
     }
 
     /// <summary>Người nhận lại tiền: người đã trả; không rõ người trả thì người đang giữ vé.</summary>
-    public static int? RefundedTo(Ticket ticket, IReadOnlyDictionary<int, int?> payers)
-        => ticket.PaymentId is int paymentId && payers.GetValueOrDefault(paymentId) is int payer
+    public static Guid? RefundedTo(Ticket ticket, IReadOnlyDictionary<Guid, Guid?> payers)
+        => ticket.PaymentId is Guid paymentId && payers.GetValueOrDefault(paymentId) is Guid payer
             ? payer
             : ticket.BuyerId;
 
     /// <summary>Vé đã qua tay người khác: người đang giữ không phải người đã trả tiền.</summary>
-    public static bool WasTransferred(Ticket ticket, IReadOnlyDictionary<int, int?> payers)
-        => RefundedTo(ticket, payers) is int payer && ticket.BuyerId is int holder && payer != holder;
+    public static bool WasTransferred(Ticket ticket, IReadOnlyDictionary<Guid, Guid?> payers)
+        => RefundedTo(ticket, payers) is Guid payer && ticket.BuyerId is Guid holder && payer != holder;
 
     /// <summary>
     /// Báo người mua ban đầu khi vé họ đã chuyển nhượng được hoàn tiền — tiền về tài khoản của họ, nên họ
     /// phải là người biết.
     /// </summary>
     public static Task NotifyOriginalBuyerAsync(
-        INotificationService notifications, Ticket ticket, IReadOnlyDictionary<int, int?> payers,
-        NotificationType type, string showName, int showId, SongNgu why, CancellationToken ct)
+        INotificationService notifications, Ticket ticket, IReadOnlyDictionary<Guid, Guid?> payers,
+        NotificationType type, string showName, Guid showId, SongNgu why, CancellationToken ct)
     {
-        if (!WasTransferred(ticket, payers) || RefundedTo(ticket, payers) is not int payer)
+        if (!WasTransferred(ticket, payers) || RefundedTo(ticket, payers) is not Guid payer)
             return Task.CompletedTask;
 
         return notifications.NotifyAsync(

@@ -33,7 +33,7 @@ public sealed class EditRoundTripTests
         var catalogItems = cats.TryGetProperty("data", out var d) ? d : cats;
         catalogItems.GetArrayLength().Should().BeGreaterThan(0,
             "không có danh mục nào trong hệ thống thì không kiểm được việc sửa có giữ danh mục hay không");
-        var categoryId = catalogItems[0].GetProperty("id").GetInt32();
+        var categoryId = catalogItems[0].GetProperty("id").GetGuid();
 
         var create = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
         {
@@ -46,20 +46,20 @@ public sealed class EditRoundTripTests
             CategoryId = categoryId,
             OfflineQuota = 120,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "DJ RoundTrip", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "DJ RoundTrip", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         create.EnsureSuccessStatusCode();
-        var showId = (await create.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var showId = (await create.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         // 1. Đọc về — đây là tất cả những gì màn hình Sửa có trong tay.
         var docLan1 = await DocChiTiet(client, showId);
-        docLan1.GetProperty("categoryId").GetInt32().Should().Be(categoryId,
+        docLan1.GetProperty("categoryId").GetGuid().Should().Be(categoryId,
             "hàm ánh xạ phải điền categoryId; khai báo trong DTO thôi chưa đủ");
         docLan1.GetProperty("offlineQuota").GetInt32().Should().Be(120);
 
@@ -71,22 +71,22 @@ public sealed class EditRoundTripTests
             ScheduledStart = docLan1.GetProperty("scheduledStart").GetDateTimeOffset(),
             ScheduledEnd = (DateTimeOffset?)null,
             Format = docLan1.GetProperty("format").GetString(),
-            CategoryId = docLan1.GetProperty("categoryId").GetInt32(),
+            CategoryId = docLan1.GetProperty("categoryId").GetGuid(),
             OfflineQuota = docLan1.GetProperty("offlineQuota").GetInt32(),
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "DJ RoundTrip", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "DJ RoundTrip", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         update.EnsureSuccessStatusCode();
 
         // 3. Đọc lại: danh mục và hạn mức phải còn nguyên.
         var docLan2 = await DocChiTiet(client, showId);
-        docLan2.GetProperty("categoryId").GetInt32().Should().Be(categoryId,
+        docLan2.GetProperty("categoryId").GetGuid().Should().Be(categoryId,
             "sửa mô tả không được làm mất danh mục — đây chính là lỗi MLACP-467");
         docLan2.GetProperty("offlineQuota").GetInt32().Should().Be(120,
             "sửa mô tả không được làm mất hạn mức vé offline");
@@ -114,7 +114,7 @@ public sealed class EditRoundTripTests
     // FnbOnlinePaymentTests…) — giữ đúng thói quen đó thay vì thêm một kiểu dùng chung mới.
     private sealed record DataResponse<T>(bool Success, T Data);
 
-    private static async Task<JsonElement> DocChiTiet(HttpClient client, int showId)
+    private static async Task<JsonElement> DocChiTiet(HttpClient client, Guid showId)
     {
         var res = await client.GetAsync($"/api/v1/lounge-shows/{showId}");
         res.EnsureSuccessStatusCode();

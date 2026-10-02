@@ -31,7 +31,7 @@ public sealed class PayoutAccountNameMatchTests
 
     public PayoutAccountNameMatchTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Seller(int OwnerId, int LoungeId);
+    private sealed record Seller(Guid OwnerId, Guid LoungeId);
 
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
@@ -64,7 +64,7 @@ public sealed class PayoutAccountNameMatchTests
         return new Seller(owner.Id, lounge.Id);
     }
 
-    private async Task<int> AccountAsync(Seller seller, string holder, bool isDefault = true)
+    private async Task<Guid> AccountAsync(Seller seller, string holder, bool isDefault = true)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -80,17 +80,17 @@ public sealed class PayoutAccountNameMatchTests
         return account.Id;
     }
 
-    private Task<HttpResponseMessage> ReviewAccountAsync(int accountId, bool approve, string? note = null)
+    private Task<HttpResponseMessage> ReviewAccountAsync(Guid accountId, bool approve, string? note = null)
         => Admin().PostAsJsonAsync($"/api/v1/admin/bank-accounts/{accountId}/review", new { Approve = approve, Note = note });
 
-    private async Task<bool> IsVerifiedAsync(int accountId)
+    private async Task<bool> IsVerifiedAsync(Guid accountId)
     {
         using var scope = _factory.Services.CreateScope();
         return (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
             .Set<BankAccount>().AsNoTracking().SingleAsync(a => a.Id == accountId)).IsVerified;
     }
 
-    private async Task<User> OwnerAsync(int ownerId)
+    private async Task<User> OwnerAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()

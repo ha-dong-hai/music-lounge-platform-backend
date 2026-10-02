@@ -46,7 +46,7 @@ internal sealed class GetLedgerIntegrityQueryHandler
         // legitimate later stages and only catches the confirm step actually firing twice.
         // FindAsync already applies this filter server-side — only Gateway-debit rows (a small
         // subset of the full table) are ever materialized here.
-        var gatewayDebits = await _uow.Repository<LedgerEntry, int>().FindAsync(
+        var gatewayDebits = await _uow.Repository<LedgerEntry, Guid>().FindAsync(
             e => e.Account.OwnerType == AccountType.Gateway && e.IsDebit, ct);
 
         var duplicateConfirmJournals = gatewayDebits

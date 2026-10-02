@@ -7,8 +7,8 @@ public sealed class AddPerformanceCommandValidator : AbstractValidator<AddPerfor
 {
     public AddPerformanceCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
-        RuleFor(x => x.PerformerId).GreaterThan(0).When(x => x.PerformerId.HasValue);
+        RuleFor(x => x.ShowId).NotEmpty();
+        RuleFor(x => x.PerformerId).NotEmpty().When(x => x.PerformerId.HasValue);
         RuleFor(x => x.PerformerName).MaximumLength(255).When(x => x.PerformerName is not null);
         RuleFor(x => x)
             .Must(x => x.PerformerId.HasValue || !string.IsNullOrWhiteSpace(x.PerformerName))

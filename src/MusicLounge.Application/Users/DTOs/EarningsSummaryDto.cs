@@ -8,7 +8,7 @@ public sealed record EarningsSummaryDto(
     IReadOnlyList<RecentSettlementDto> RecentSettlements);
 
 public sealed record RecentSettlementDto(
-    int Id,
+    Guid Id,
     decimal Amount,
     string Status,
     DateTimeOffset ScheduledAt,

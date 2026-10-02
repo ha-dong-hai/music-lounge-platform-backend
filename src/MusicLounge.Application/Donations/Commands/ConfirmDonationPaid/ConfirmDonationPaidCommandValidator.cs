@@ -6,7 +6,7 @@ public sealed class ConfirmDonationPaidCommandValidator : AbstractValidator<Conf
 {
     public ConfirmDonationPaidCommandValidator()
     {
-        RuleFor(x => x.DonationId).GreaterThan(0).WithMessage("DonationId không hợp lệ.");
+        RuleFor(x => x.DonationId).NotEmpty().WithMessage("DonationId không hợp lệ.");
         RuleFor(x => x.PaymentRef).NotEmpty().WithMessage("Mã tham chiếu thanh toán không được rỗng.")
             .MaximumLength(255).WithMessage("Mã tham chiếu thanh toán không được vượt quá 255 ký tự.");
         RuleFor(x => x.PaymentEvidenceUrl)

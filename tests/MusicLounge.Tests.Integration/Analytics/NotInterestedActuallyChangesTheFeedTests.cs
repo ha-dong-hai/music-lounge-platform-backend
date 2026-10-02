@@ -35,10 +35,10 @@ public sealed class NotInterestedActuallyChangesTheFeedTests
     public NotInterestedActuallyChangesTheFeedTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name);
-    private sealed record MutedLounge(int Id, string Name);
+    private sealed record Rec(Guid Id, string Name);
+    private sealed record MutedLounge(Guid Id, string Name);
 
-    private async Task<(int LoungeId, string City)> VenueAsync(string? city = null)
+    private async Task<(Guid LoungeId, string City)> VenueAsync(string? city = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -60,7 +60,7 @@ public sealed class NotInterestedActuallyChangesTheFeedTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, params int[] genreIds)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, params Guid[] genreIds)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -84,7 +84,7 @@ public sealed class NotInterestedActuallyChangesTheFeedTests
         return show.Id;
     }
 
-    private async Task<int> ListenerAsync(params int[] favouriteGenreIds)
+    private async Task<Guid> ListenerAsync(params Guid[] favouriteGenreIds)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -107,9 +107,9 @@ public sealed class NotInterestedActuallyChangesTheFeedTests
         return user.Id;
     }
 
-    private HttpClient Client(int userId) => _factory.CreateAuthenticatedClient(userId, "Audience");
+    private HttpClient Client(Guid userId) => _factory.CreateAuthenticatedClient(userId, "Audience");
 
-    private async Task<IReadOnlyList<int>> RecommendationsAsync(int userId, string city)
+    private async Task<IReadOnlyList<Guid>> RecommendationsAsync(Guid userId, string city)
     {
         var res = await Client(userId).GetAsync($"/api/v1/recommendations?city={city}&limit=50");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -117,19 +117,19 @@ public sealed class NotInterestedActuallyChangesTheFeedTests
         return data.Select(r => r.Id).ToList();
     }
 
-    private async Task MuteAsync(int userId, int loungeId)
+    private async Task MuteAsync(Guid userId, Guid loungeId)
     {
         var res = await Client(userId).PostAsync($"/api/v1/mutes/lounges/{loungeId}", null);
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
-    private async Task DislikeGenreAsync(int userId, int genreId, params int[] favouriteGenreIds)
+    private async Task DislikeGenreAsync(Guid userId, Guid genreId, params Guid[] favouriteGenreIds)
     {
         var res = await Client(userId).PutAsJsonAsync("/api/v1/me/preferences", new
         {
             GenreIds = favouriteGenreIds,
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = false,
             DislikedGenreIds = new[] { genreId }
         });
@@ -293,8 +293,8 @@ public sealed class NotInterestedActuallyChangesTheFeedTests
         var res = await Client(userId).PutAsJsonAsync("/api/v1/me/preferences", new
         {
             GenreIds = new[] { SeedHelper.GenreId1 },
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = false,
             DislikedGenreIds = new[] { SeedHelper.GenreId1, SeedHelper.GenreId2 }
         });

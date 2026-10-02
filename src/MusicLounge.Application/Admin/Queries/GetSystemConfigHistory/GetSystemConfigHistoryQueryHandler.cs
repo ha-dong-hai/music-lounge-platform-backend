@@ -15,12 +15,12 @@ internal sealed class GetSystemConfigHistoryQueryHandler
     public async Task<IReadOnlyList<SystemConfigHistoryDto>> Handle(
         GetSystemConfigHistoryQuery request, CancellationToken ct)
     {
-        var rows = await _uow.Repository<SystemConfigHistory, long>()
+        var rows = await _uow.Repository<SystemConfigHistory, Guid>()
             .FindAsync(h => h.ConfigKey == request.ConfigKey, ct);
 
         var actorIds = rows.Select(h => h.ChangedBy).Distinct().ToList();
         var actors = actorIds.Count > 0
-            ? (await _uow.Repository<User, int>().FindAsync(u => actorIds.Contains(u.Id), ct))
+            ? (await _uow.Repository<User, Guid>().FindAsync(u => actorIds.Contains(u.Id), ct))
                 .ToDictionary(u => u.Id, u => u.FullName)
             : [];
 

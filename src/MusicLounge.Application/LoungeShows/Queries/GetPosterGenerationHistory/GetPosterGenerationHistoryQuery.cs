@@ -3,4 +3,4 @@ using MusicLounge.Application.LoungeShows.DTOs;
 
 namespace MusicLounge.Application.LoungeShows.Queries.GetPosterGenerationHistory;
 
-public sealed record GetPosterGenerationHistoryQuery(int ShowId) : IQuery<IReadOnlyList<PosterGenerationAttemptDto>>;
+public sealed record GetPosterGenerationHistoryQuery(Guid ShowId) : IQuery<IReadOnlyList<PosterGenerationAttemptDto>>;

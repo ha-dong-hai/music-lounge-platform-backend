@@ -4,7 +4,7 @@ namespace MusicLounge.Application.Moderations.DTOs;
 // TargetType, chi co TargetId tho, khong du de Admin nhan ra day la su kien nao ma khong bam vao
 // tung dong). Gop thong tin show (ten/phong tra/ngay dien) voi tin hieu AI moderation trong 1 dong.
 public sealed record PendingLoungeShowDto(
-    int ShowId,
+    Guid ShowId,
     string Name,
     string? CoverImageUrl,
     string LoungeName,

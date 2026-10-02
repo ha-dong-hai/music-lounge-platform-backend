@@ -31,7 +31,7 @@ internal sealed class GetLoungeShowsByLoungeQueryHandler
 
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)
-            : (IReadOnlySet<int>)new HashSet<int>();
+            : (IReadOnlySet<Guid>)new HashSet<Guid>();
 
         return new PaginatedResult<LoungeShowListItemDto>(
             result.Items.Select(s => s.ToListItemDto(wishlisted)).ToList(),

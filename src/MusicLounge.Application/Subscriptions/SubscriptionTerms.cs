@@ -119,9 +119,9 @@ public static class SubscriptionTerms
     /// Mỗi lúc chỉ một lệnh gia hạn / đổi gói chờ thanh toán: bấm hai lần không được thành hai lần gia hạn.
     /// Lệnh bỏ dở tự huỷ khi CancelAbandonedPaymentsJob đánh dấu thanh toán Failed.
     /// </summary>
-    public static async Task EnsureNoPendingChangeAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
+    public static async Task EnsureNoPendingChangeAsync(IUnitOfWork uow, Guid ownerId, CancellationToken ct)
     {
-        var pending = await uow.Repository<Payment, int>().FindAsync(
+        var pending = await uow.Repository<Payment, Guid>().FindAsync(
             p => p.PayerId == ownerId
                  && p.ReferenceType == SubscriptionPayments.ReferenceType
                  && p.Status == PaymentStatus.Pending, ct);

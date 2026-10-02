@@ -8,7 +8,7 @@ public sealed class ReviewAppealCommandValidator : AbstractValidator<ReviewAppea
 
     public ReviewAppealCommandValidator()
     {
-        RuleFor(x => x.PenaltyId).GreaterThan(0).WithMessage("PenaltyId không hợp lệ.");
+        RuleFor(x => x.PenaltyId).NotEmpty().WithMessage("PenaltyId không hợp lệ.");
 
         RuleFor(x => x.Decision)
             .NotEmpty()

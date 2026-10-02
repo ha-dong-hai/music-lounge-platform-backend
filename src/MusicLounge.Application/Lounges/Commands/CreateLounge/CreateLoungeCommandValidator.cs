@@ -20,7 +20,7 @@ public sealed class CreateLoungeCommandValidator : AbstractValidator<CreateLoung
         // FE nhan duoc 400 ro rang dung field.
         RuleFor(x => x.AtmosphereId)
             .MustAsync(async (id, ct) =>
-                await uow.Repository<VenueAtmosphere, int>().AnyAsync(a => a.Id == id!.Value, ct))
+                await uow.Repository<VenueAtmosphere, Guid>().AnyAsync(a => a.Id == id!.Value, ct))
             .When(x => x.AtmosphereId.HasValue)
             .WithMessage("AtmosphereId không tồn tại.");
     }

@@ -21,7 +21,7 @@ public sealed class ChatRateLimiterTests
     public void TryAcquire_SecondCallWithinTwoSeconds_IsRejected()
     {
         var limiter = _factory.Services.GetRequiredService<IChatRateLimiter>();
-        var userId = Random.Shared.Next(1_000_000, 2_000_000); // isolated from any seeded/real user id
+        var userId = Guid.NewGuid(); // isolated from any seeded/real user id
 
         limiter.TryAcquire(userId).Should().BeTrue("first message for this user should always be allowed");
         limiter.TryAcquire(userId).Should().BeFalse("second message within 2 seconds must be rejected");
@@ -31,8 +31,8 @@ public sealed class ChatRateLimiterTests
     public void TryAcquire_DifferentUsers_DoNotRateLimitEachOther()
     {
         var limiter = _factory.Services.GetRequiredService<IChatRateLimiter>();
-        var userA = Random.Shared.Next(2_000_000, 3_000_000);
-        var userB = Random.Shared.Next(3_000_000, 4_000_000);
+        var userA = Guid.NewGuid();
+        var userB = Guid.NewGuid();
 
         limiter.TryAcquire(userA).Should().BeTrue();
         limiter.TryAcquire(userB).Should().BeTrue("rate limiting is per-user, not global");
@@ -42,7 +42,7 @@ public sealed class ChatRateLimiterTests
     public async Task TryAcquire_AfterIntervalElapses_IsAllowedAgain()
     {
         var limiter = _factory.Services.GetRequiredService<IChatRateLimiter>();
-        var userId = Random.Shared.Next(4_000_000, 5_000_000);
+        var userId = Guid.NewGuid();
 
         limiter.TryAcquire(userId).Should().BeTrue();
         await Task.Delay(TimeSpan.FromSeconds(2.1));

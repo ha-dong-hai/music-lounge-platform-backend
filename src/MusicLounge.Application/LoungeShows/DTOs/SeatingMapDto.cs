@@ -7,7 +7,7 @@ public sealed record SeatingMapDto(
     IReadOnlyList<ZoneMapEntryDto> Zones);
 
 public sealed record ZoneMapEntryDto(
-    int ZoneId,
+    Guid ZoneId,
     string Name,
     int Capacity,
     string? Color,

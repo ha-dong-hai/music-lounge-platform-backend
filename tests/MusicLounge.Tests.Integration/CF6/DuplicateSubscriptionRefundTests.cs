@@ -39,9 +39,9 @@ public sealed class DuplicateSubscriptionRefundTests
     /// <summary>
     /// The seeded owner ALREADY holds an Active plan and pays for another one; VNPay confirms it.
     /// </summary>
-    private async Task<(int PaymentId, int RefundId)> DuplicatePaymentAsync()
+    private async Task<(Guid PaymentId, Guid RefundId)> DuplicatePaymentAsync()
     {
-        int paymentId;
+        Guid paymentId;
         string orderId;
 
         using (var scope = _factory.Services.CreateScope())

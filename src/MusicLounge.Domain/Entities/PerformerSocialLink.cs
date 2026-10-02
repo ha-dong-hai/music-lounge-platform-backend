@@ -2,9 +2,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class PerformerSocialLink : Common.AuditableEntity<int>
+public sealed class PerformerSocialLink : Common.AuditableEntity<Guid>
 {
-    public int PerformerId { get; set; }
+    public Guid PerformerId { get; set; }
     public SocialPlatform Platform { get; set; }
     public string Url { get; set; } = string.Empty;
     public string? DisplayName { get; set; }

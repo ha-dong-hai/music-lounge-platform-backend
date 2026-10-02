@@ -26,7 +26,7 @@ public sealed class MissingListEndpointsTests
 
     public MissingListEndpointsTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedPublishedShowAsync(int loungeId)
+    private async Task<Guid> SeedPublishedShowAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -196,9 +196,9 @@ public sealed class MissingListEndpointsTests
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
-    private sealed record ShowListItem(int Id, string Name);
-    private sealed record PerformerDetail(int Id, string Name, Paged<ShowListItem> Shows);
-    private sealed record NamedOption(int Id, string Name);
+    private sealed record ShowListItem(Guid Id, string Name);
+    private sealed record PerformerDetail(Guid Id, string Name, Paged<ShowListItem> Shows);
+    private sealed record NamedOption(Guid Id, string Name);
     private sealed record FilterOptions(
         IReadOnlyList<NamedOption> Genres, IReadOnlyList<NamedOption> Moods,
         IReadOnlyList<NamedOption> Atmospheres, IReadOnlyList<string> Cities);
@@ -206,7 +206,7 @@ public sealed class MissingListEndpointsTests
         Guid TicketId, string? BuyerName, string? BuyerEmail, string TierName, string PriceName,
         decimal PricePaid, string Status, string PurchaseChannel,
         DateTimeOffset CreatedAt, DateTimeOffset? CheckedInAt);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
     private sealed record PurchaseData(
-        int PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
+        Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
 }

@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class OrderItem : Common.AuditableEntity<int>
+public sealed class OrderItem : Common.AuditableEntity<Guid>
 {
-    public int FnbOrderId { get; set; }
-    public int MenuItemId { get; set; }
+    public Guid FnbOrderId { get; set; }
+    public Guid MenuItemId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }  // D12: snapshot at order time — never recomputed
     public bool Cancelled { get; set; } = false;

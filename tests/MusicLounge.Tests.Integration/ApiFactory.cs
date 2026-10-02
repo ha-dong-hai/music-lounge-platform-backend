@@ -139,7 +139,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     // Helper: create an HTTP client pre-configured with test auth headers
     public HttpClient CreateAuthenticatedClient(
-        int userId, string role, int? loungeId = null)
+        Guid userId, string role, Guid? loungeId = null)
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderUserId, userId.ToString());

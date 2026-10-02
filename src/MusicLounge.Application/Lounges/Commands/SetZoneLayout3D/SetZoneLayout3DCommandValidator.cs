@@ -6,7 +6,7 @@ public sealed class SetZoneLayout3DCommandValidator : AbstractValidator<SetZoneL
 {
     public SetZoneLayout3DCommandValidator()
     {
-        RuleFor(x => x.ZoneId).GreaterThan(0);
+        RuleFor(x => x.ZoneId).NotEmpty();
 
         // X/Y/Z ca 3 cung null = xoa marker (chua gan vi tri 3D). Khong cho thieu 1 trong 3 khi
         // dat vi tri that, tranh luu du lieu nua-vien.

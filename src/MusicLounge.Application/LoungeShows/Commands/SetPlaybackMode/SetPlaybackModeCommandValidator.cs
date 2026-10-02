@@ -7,7 +7,7 @@ public sealed class SetPlaybackModeCommandValidator : AbstractValidator<SetPlayb
 {
     public SetPlaybackModeCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
 
         // Đọc thẳng từ enum thay vì chép lại danh sách chuỗi: thêm một chế độ phát mới mà quên sửa
         // validator sẽ thành một giá trị hợp lệ bị từ chối, và không ai nhớ ra chỗ này.

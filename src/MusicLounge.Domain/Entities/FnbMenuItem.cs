@@ -1,8 +1,8 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class FnbMenuItem : Common.AuditableEntity<int>
+public sealed class FnbMenuItem : Common.AuditableEntity<Guid>
 {
-    public int MenuId { get; set; }
+    public Guid MenuId { get; set; }
     public string Category { get; set; } = string.Empty;   // Food / Drink / etc.
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }

@@ -36,7 +36,7 @@ public sealed class PosterImageFormatTests
         _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
             s.Replace(ServiceDescriptor.Scoped<IAiImageGenerationService>(_ => new NhaCungCapGia(anh)))));
 
-    private async Task<int> TaoShowAsync(HttpClient client)
+    private async Task<Guid> TaoShowAsync(HttpClient client)
     {
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
         {
@@ -46,12 +46,12 @@ public sealed class PosterImageFormatTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
         res.EnsureSuccessStatusCode();
@@ -94,5 +94,5 @@ public sealed class PosterImageFormatTests
         res.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

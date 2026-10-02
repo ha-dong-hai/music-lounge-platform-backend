@@ -6,21 +6,21 @@ using MusicLounge.Domain.Exceptions;
 namespace MusicLounge.Application.Catalog.Commands.CreateVenueAtmosphere;
 
 internal sealed class CreateVenueAtmosphereCommandHandler
-    : IRequestHandler<CreateVenueAtmosphereCommand, int>
+    : IRequestHandler<CreateVenueAtmosphereCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
 
     public CreateVenueAtmosphereCommandHandler(IUnitOfWork uow) => _uow = uow;
 
-    public async Task<int> Handle(CreateVenueAtmosphereCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateVenueAtmosphereCommand request, CancellationToken ct)
     {
-        var nameExists = await _uow.Repository<VenueAtmosphere, int>()
+        var nameExists = await _uow.Repository<VenueAtmosphere, Guid>()
             .AnyAsync(a => a.Name == request.Name, ct);
         if (nameExists)
             throw new ConflictException($"Phong cách không gian '{request.Name}' đã tồn tại.");
 
         var atmosphere = new VenueAtmosphere { Name = request.Name };
-        _uow.Repository<VenueAtmosphere, int>().Add(atmosphere);
+        _uow.Repository<VenueAtmosphere, Guid>().Add(atmosphere);
         await _uow.SaveChangesAsync(ct);
 
         return atmosphere.Id;

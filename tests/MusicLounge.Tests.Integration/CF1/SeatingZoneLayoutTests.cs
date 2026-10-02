@@ -22,7 +22,7 @@ public sealed class SeatingZoneLayoutTests
 
     public SeatingZoneLayoutTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreateZoneAsync(int capacity = 20, bool isActive = true)
+    private async Task<Guid> CreateZoneAsync(int capacity = 20, bool isActive = true)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -151,7 +151,7 @@ public sealed class SeatingZoneLayoutTests
     [Fact]
     public async Task GetSeatingMap_AggregatesAvailabilityAndPriceRange_OnlyForZonesUsedInThisShow()
     {
-        int zoneWithTierId, zoneWithoutTierId, tierId;
+        Guid zoneWithTierId, zoneWithoutTierId, tierId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -235,7 +235,7 @@ public sealed class SeatingZoneLayoutTests
     [Fact]
     public async Task GetSeatingMap_ZoneDeactivatedAfterShowSoldTickets_StillAppears()
     {
-        int zoneId, tierId;
+        Guid zoneId, tierId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -280,7 +280,7 @@ public sealed class SeatingZoneLayoutTests
     [Fact]
     public async Task GetSeatingMap_ForDraftShow_ByAnonymous_Returns404()
     {
-        int draftShowId;
+        Guid draftShowId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -310,7 +310,7 @@ public sealed class SeatingZoneLayoutTests
     private sealed record SeatingMapResponse(bool Success, SeatingMapData Data);
     private sealed record SeatingMapData(string? AreaLayoutImageUrl, List<ZoneMapEntry> Zones);
     private sealed record ZoneMapEntry(
-        int ZoneId, string Name, int Capacity, string? Color,
+        Guid ZoneId, string Name, int Capacity, string? Color,
         double? Layout2DX, double? Layout2DY, double? Layout2DWidth, double? Layout2DHeight, double? Layout2DRotationDeg,
         double? Layout3DX, double? Layout3DY, double? Layout3DZ,
         int? AvailableCount, decimal? MinPrice, decimal? MaxPrice);

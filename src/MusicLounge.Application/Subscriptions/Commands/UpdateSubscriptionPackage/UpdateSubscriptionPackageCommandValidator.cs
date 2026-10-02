@@ -7,7 +7,7 @@ public sealed class UpdateSubscriptionPackageCommandValidator : AbstractValidato
 {
     public UpdateSubscriptionPackageCommandValidator()
     {
-        RuleFor(x => x.PackageId).GreaterThan(0);
+        RuleFor(x => x.PackageId).NotEmpty();
         RuleFor(x => x.Description).MaximumLength(2000);
         RuleFor(x => x.Price).GreaterThan(0).MustBeWholeDong();
         RuleFor(x => x.MaxTicketsPerEvent).GreaterThan(0);

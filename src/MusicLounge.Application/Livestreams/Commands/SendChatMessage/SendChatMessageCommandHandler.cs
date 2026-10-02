@@ -7,7 +7,7 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Livestreams.Commands.SendChatMessage;
 
-internal sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageCommand, int>
+internal sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ILivestreamHubService _hubService;
@@ -21,9 +21,9 @@ internal sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMe
         _rateLimiter = rateLimiter;
     }
 
-    public async Task<int> Handle(SendChatMessageCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(SendChatMessageCommand request, CancellationToken ct)
     {
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
 
         if (livestream.Status != LivestreamStatus.Live)
@@ -40,7 +40,7 @@ internal sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMe
         if (!_rateLimiter.TryAcquire(request.UserId))
             throw new DomainException("Bạn đang gửi tin nhắn quá nhanh. Vui lòng đợi vài giây rồi thử lại.");
 
-        var user = await _uow.Repository<User, int>().GetByIdAsync(request.UserId, ct)
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
         var chatMessage = new LivestreamChatMessage
@@ -51,7 +51,7 @@ internal sealed class SendChatMessageCommandHandler : IRequestHandler<SendChatMe
             SentAt = DateTimeOffset.UtcNow
         };
 
-        _uow.Repository<LivestreamChatMessage, int>().Add(chatMessage);
+        _uow.Repository<LivestreamChatMessage, Guid>().Add(chatMessage);
         await _uow.SaveChangesAsync(ct);
 
         await _hubService.BroadcastChatMessageAsync(

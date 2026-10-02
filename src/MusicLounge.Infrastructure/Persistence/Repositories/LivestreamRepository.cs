@@ -6,19 +6,19 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class LivestreamRepository : Repository<Livestream, int>, ILivestreamRepository
+internal sealed class LivestreamRepository : Repository<Livestream, Guid>, ILivestreamRepository
 {
     private readonly ApplicationDbContext _db;
 
     public LivestreamRepository(ApplicationDbContext db) : base(db) => _db = db;
 
-    public async Task<Livestream?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default)
+    public async Task<Livestream?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default)
         => await _db.Livestreams
             .AsNoTracking()
             .Include(l => l.LoungeShow)
             .FirstOrDefaultAsync(l => l.Id == id, ct);
 
-    public async Task<Livestream?> GetByShowIdAsync(int showId, CancellationToken ct = default)
+    public async Task<Livestream?> GetByShowIdAsync(Guid showId, CancellationToken ct = default)
         => await _db.Livestreams
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.LoungeShowId == showId, ct);
@@ -28,7 +28,7 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
     // trang thai loai bo. Chi nhan Confirmed o day se khoa vinh vien HlsUrl/chat/hub ngay sau lan
     // xem dau tien (kha nang chinh cua tinh nang gioi han phien dong thoi cung phu thuoc dieu nay —
     // khong co no thiet bi thu 2 khong bao gio qua duoc check nay du van con han muc).
-    public async Task<int> RecordViewerJoinedAsync(int livestreamId, CancellationToken ct = default)
+    public async Task<int> RecordViewerJoinedAsync(Guid livestreamId, CancellationToken ct = default)
     {
         // Cộng bằng lệnh cập nhật theo tập hợp chứ không đọc-sửa-ghi: nhiều người vào cùng lúc là
         // chuyện bình thường của một buổi phát, và đọc-sửa-ghi sẽ nuốt mất lượt của nhau.
@@ -47,7 +47,7 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
         return await CurrentViewerCountAsync(livestreamId, ct);
     }
 
-    public async Task<int> RecordViewerLeftAsync(int livestreamId, CancellationToken ct = default)
+    public async Task<int> RecordViewerLeftAsync(Guid livestreamId, CancellationToken ct = default)
     {
         // Chặn sàn ở 0. Không hạ PeakViewerCount và không giảm TotalViews: cả hai là số liệu của cả
         // buổi phát, người xem rời đi không làm chúng nhỏ lại.
@@ -58,13 +58,13 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
         return await CurrentViewerCountAsync(livestreamId, ct);
     }
 
-    private Task<int> CurrentViewerCountAsync(int livestreamId, CancellationToken ct)
+    private Task<int> CurrentViewerCountAsync(Guid livestreamId, CancellationToken ct)
         => _db.Livestreams
             .Where(l => l.Id == livestreamId)
             .Select(l => l.ViewerCount)
             .FirstOrDefaultAsync(ct);
 
-    public async Task<bool> HasViewerAccessAsync(int livestreamId, int userId, CancellationToken ct = default)
+    public async Task<bool> HasViewerAccessAsync(Guid livestreamId, Guid userId, CancellationToken ct = default)
         => await _db.Livestreams
             .Where(l => l.Id == livestreamId)
             .SelectMany(l => l.LoungeShow.Tickets)
@@ -74,7 +74,7 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
                 t.Tier.AccessType == AccessType.Livestream,
                 ct);
 
-    public async Task<Ticket?> GetViewerTicketAsync(int livestreamId, int userId, CancellationToken ct = default)
+    public async Task<Ticket?> GetViewerTicketAsync(Guid livestreamId, Guid userId, CancellationToken ct = default)
     {
         var livestream = await _db.Livestreams.AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == livestreamId, ct);
@@ -100,7 +100,7 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
     }
 
     public async Task<(IReadOnlyList<LivestreamChatMessage> Items, int TotalCount)> GetChatMessagesAsync(
-        int livestreamId, int page, int pageSize, CancellationToken ct = default)
+        Guid livestreamId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = _db.LivestreamChatMessages
             .AsNoTracking()
@@ -130,7 +130,7 @@ internal sealed class LivestreamRepository : Repository<Livestream, int>, ILives
         => _db.LivestreamTicketDetails.Add(detail);
 
     public async Task<IReadOnlyList<Guid>> GetConfirmedLivestreamTicketIdsWithoutDetailAsync(
-        int showId, CancellationToken ct = default)
+        Guid showId, CancellationToken ct = default)
         => await _db.Tickets
             .Where(t => t.ShowId == showId
                 && t.Status == TicketStatus.Confirmed

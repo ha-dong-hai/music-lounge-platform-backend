@@ -6,6 +6,6 @@ public sealed class SetChatEnabledCommandValidator : AbstractValidator<SetChatEn
 {
     public SetChatEnabledCommandValidator()
     {
-        RuleFor(x => x.LivestreamId).GreaterThan(0).WithMessage("LivestreamId không hợp lệ.");
+        RuleFor(x => x.LivestreamId).NotEmpty().WithMessage("LivestreamId không hợp lệ.");
     }
 }

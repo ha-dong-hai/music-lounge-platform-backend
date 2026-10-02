@@ -5,7 +5,7 @@ namespace MusicLounge.Application.Complaints.Commands.CreateComplaint;
 
 public sealed record CreateComplaintCommand(
     string TargetType,
-    int TargetId,
+    Guid TargetId,
     string Category,
     string Description,
     string? EvidenceUrls,

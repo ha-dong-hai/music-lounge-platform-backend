@@ -6,7 +6,7 @@ public sealed class CreateFnbMenuCommandValidator : AbstractValidator<CreateFnbM
 {
     public CreateFnbMenuCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).MaximumLength(500);
     }

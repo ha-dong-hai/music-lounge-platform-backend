@@ -7,7 +7,7 @@ namespace MusicLounge.Application.Performers.Commands.CreatePerformer;
 
 // §6.12: Performers is a shared catalog across all Owners (not scoped to one venue) — any Owner
 // can create a new profile when autocomplete (GetPerformersQuery) doesn't find an existing match.
-internal sealed class CreatePerformerCommandHandler : IRequestHandler<CreatePerformerCommand, int>
+internal sealed class CreatePerformerCommandHandler : IRequestHandler<CreatePerformerCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -18,7 +18,7 @@ internal sealed class CreatePerformerCommandHandler : IRequestHandler<CreatePerf
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(CreatePerformerCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreatePerformerCommand request, CancellationToken ct)
     {
         var performer = new Performer
         {
@@ -30,10 +30,10 @@ internal sealed class CreatePerformerCommandHandler : IRequestHandler<CreatePerf
             CreatedByUserId = _currentUser.UserId,
             CreatedAt = DateTime.UtcNow
         };
-        _uow.Repository<Performer, int>().Add(performer);
+        _uow.Repository<Performer, Guid>().Add(performer);
         await _uow.SaveChangesAsync(ct);
 
-        var genreRepo = _uow.Repository<PerformerGenre, int>();
+        var genreRepo = _uow.Repository<PerformerGenre, Guid>();
         foreach (var genreId in request.GenreIds.Distinct())
             genreRepo.Add(new PerformerGenre { PerformerId = performer.Id, GenreId = genreId });
 

@@ -8,7 +8,7 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class LedgerEntryRepository : Repository<LedgerEntry, int>, ILedgerEntryRepository
+internal sealed class LedgerEntryRepository : Repository<LedgerEntry, Guid>, ILedgerEntryRepository
 {
     private readonly ApplicationDbContext _ctx;
 
@@ -38,7 +38,7 @@ internal sealed class LedgerEntryRepository : Repository<LedgerEntry, int>, ILed
     }
 
     public async Task<PaginatedResult<OwnerTransactionDto>> GetOwnerHistoryAsync(
-        int ownerId, string? referenceType, DateTimeOffset? from, DateTimeOffset? to,
+        Guid ownerId, string? referenceType, DateTimeOffset? from, DateTimeOffset? to,
         int page, int pageSize, CancellationToken ct = default)
     {
         var query = _ctx.LedgerEntries.AsNoTracking()

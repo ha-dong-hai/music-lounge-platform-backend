@@ -36,7 +36,7 @@ public sealed class PerformerSelfConfirmationTests
 
     private sealed record Wrapped<T>(T Data);
 
-    private sealed record InitData(int DonationId, string OrderId);
+    private sealed record InitData(Guid DonationId, string OrderId);
 
     private sealed record ConfirmationView(
         string Purpose, string State, string? AccountNumberMasked, string? AccountHolder,
@@ -48,7 +48,7 @@ public sealed class PerformerSelfConfirmationTests
 
     private static string NewEmail() => $"artist-{Guid.NewGuid():N}@test.com";
 
-    private async Task<int> FreshOwnerAsync()
+    private async Task<Guid> FreshOwnerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -58,20 +58,20 @@ public sealed class PerformerSelfConfirmationTests
         return owner.Id;
     }
 
-    private HttpClient Owner(int ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
+    private HttpClient Owner(Guid ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
-    private static async Task<int> CreatePerformerAsync(HttpClient owner, string? email)
+    private static async Task<Guid> CreatePerformerAsync(HttpClient owner, string? email)
     {
         var res = await owner.PostAsJsonAsync("/api/v1/performers", new
         {
             Name = $"Artist-{Guid.NewGuid():N}"[..20], AvatarUrl = (string?)null, Bio = (string?)null,
-            Type = "Solo", GenreIds = Array.Empty<int>(), ContactEmail = email
+            Type = "Solo", GenreIds = Array.Empty<Guid>(), ContactEmail = email
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
     }
 
-    private static async Task<int> CreatePerformerAccountAsync(HttpClient owner, int performerId, string number)
+    private static async Task<Guid> CreatePerformerAccountAsync(HttpClient owner, Guid performerId, string number)
     {
         var res = await owner.PostAsJsonAsync("/api/v1/bank-accounts", new
         {
@@ -79,7 +79,7 @@ public sealed class PerformerSelfConfirmationTests
             AccountNumber = number, AccountHolder = "NGUYEN VAN NGHE SI", IsDefault = true
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
     }
 
     /// <summary>Token của liên kết mới nhất đã gửi tới hộp thư này.</summary>
@@ -106,7 +106,7 @@ public sealed class PerformerSelfConfirmationTests
         return (await res.Content.ReadFromJsonAsync<Wrapped<ConfirmationView>>())!.Data;
     }
 
-    private async Task<BankAccount> AccountAsync(int accountId)
+    private async Task<BankAccount> AccountAsync(Guid accountId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
@@ -224,9 +224,9 @@ public sealed class PerformerSelfConfirmationTests
 
     // ─── Đã nhận tiền donate ──────────────────────────────────────────────────
 
-    private async Task<(int DonationId, string Email)> DonationReportedPaidAsync()
+    private async Task<(Guid DonationId, string Email)> DonationReportedPaidAsync()
     {
-        int ownerId, loungeId, performanceId;
+        Guid ownerId, loungeId, performanceId;
         var email = NewEmail();
         using (var scope = _factory.Services.CreateScope())
         {
@@ -301,7 +301,7 @@ public sealed class PerformerSelfConfirmationTests
         return (init.DonationId, email);
     }
 
-    private async Task<Evidence> EvidenceOfAsync(int donationId)
+    private async Task<Evidence> EvidenceOfAsync(Guid donationId)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
             .GetAsync($"/api/v1/admin/donations/{donationId}/evidence");

@@ -2,9 +2,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Livestream : Common.AuditableEntity<int>
+public sealed class Livestream : Common.AuditableEntity<Guid>
 {
-    public int LoungeShowId { get; set; }
+    public Guid LoungeShowId { get; set; }
     public string? Provider { get; set; }
     public string? ProviderRef { get; set; }
     public string? RtmpUrl { get; set; }
@@ -23,7 +23,7 @@ public sealed class Livestream : Common.AuditableEntity<int>
     public int PeakViewerCount { get; set; }
     public int TotalViews { get; set; }
     // MLACP-511: da xoa RecordingUrl/ReplayAvailableUntil (he thong khong co xem lai) — buoc contract sau MLACP-510.
-    public int? TerminatedById { get; set; }
+    public Guid? TerminatedById { get; set; }
     public string? TerminatedReason { get; set; }
 
     public LoungeShow LoungeShow { get; set; } = null!;

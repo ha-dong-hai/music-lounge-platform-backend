@@ -37,7 +37,7 @@ public sealed class KycReviewTests
     /// <summary>A fresh seller each time, so one test's decisions cannot colour another's queue.</summary>
     /// <param name="cardApproved">MLACP-398: CCCD/CMND của người đại diện đã được duyệt.</param>
     /// <param name="businessLicence">MLACP-398: phòng trà của người bán đã nộp giấy chứng nhận đăng ký kinh doanh.</param>
-    private async Task<int> SeedSellerAsync(bool cardApproved = false, bool businessLicence = false)
+    private async Task<Guid> SeedSellerAsync(bool cardApproved = false, bool businessLicence = false)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -69,14 +69,14 @@ public sealed class KycReviewTests
         return user.Id;
     }
 
-    private async Task<User> ReadUserAsync(int userId)
+    private async Task<User> ReadUserAsync(Guid userId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.Users.SingleAsync(u => u.Id == userId);
     }
 
-    private async Task DeclareTaxProfileAsync(int userId, string businessType, string taxCode)
+    private async Task DeclareTaxProfileAsync(Guid userId, string businessType, string taxCode)
     {
         var client = _factory.CreateAuthenticatedClient(userId, "Owner");
         var res = await client.PutAsJsonAsync("/api/v1/me/tax-profile",
@@ -236,7 +236,7 @@ public sealed class KycReviewTests
             .Content.ReadAsStringAsync();
         using var json = System.Text.Json.JsonDocument.Parse(body);
         var item = json.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Single(i => i.GetProperty("userId").GetInt32() == userId);
+            .Single(i => i.GetProperty("userId").GetGuid() == userId);
 
         item.GetProperty("dateOfBirth").GetString().Should().Be("1985-03-09");
     }
@@ -366,8 +366,8 @@ public sealed class KycReviewTests
             .Content.ReadAsStringAsync();
         using var json = System.Text.Json.JsonDocument.Parse(body);
         var items = json.RootElement.GetProperty("data").GetProperty("items").EnumerateArray().ToList();
-        var licensed = items.Single(i => i.GetProperty("userId").GetInt32() == withLicence);
-        var unlicensed = items.Single(i => i.GetProperty("userId").GetInt32() == withoutLicence);
+        var licensed = items.Single(i => i.GetProperty("userId").GetGuid() == withLicence);
+        var unlicensed = items.Single(i => i.GetProperty("userId").GetGuid() == withoutLicence);
 
         licensed.GetProperty("legalName").GetString().Should().Be(EnterpriseName);
         licensed.GetProperty("hasBusinessLicense").GetBoolean().Should().BeTrue();
@@ -410,7 +410,7 @@ public sealed class KycReviewTests
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
     private sealed record QueueItem(
-        int UserId, string FullName, string Email, string? CitizenCardNumberMasked,
+        Guid UserId, string FullName, string Email, string? CitizenCardNumberMasked,
         DateTimeOffset? CitizenCardSubmittedAt, string? CitizenCardReviewStatus,
         string? BusinessType, string? TaxCode, DateTimeOffset? TaxProfileSubmittedAt,
         string? TaxProfileReviewStatus, bool WithholdingWouldStopIfApproved);

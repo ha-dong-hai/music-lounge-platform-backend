@@ -26,7 +26,7 @@ public sealed record GetKycReviewQueueQuery(
 /// <param name="CitizenCardNumberUnreadable">MLACP-401. Số CCCD/CMND đã lưu không còn giải mã được — cần nộp lại.</param>
 /// <param name="TaxCodeUnreadable">MLACP-401. Mã số thuế đã lưu không còn giải mã được — cần khai lại.</param>
 public sealed record KycReviewItemDto(
-    int UserId,
+    Guid UserId,
     string FullName,
     DateOnly? DateOfBirth,
     string Email,

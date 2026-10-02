@@ -6,6 +6,6 @@ public sealed class DeactivateStaffCommandValidator : AbstractValidator<Deactiva
 {
     public DeactivateStaffCommandValidator()
     {
-        RuleFor(x => x.LoungeStaffId).GreaterThan(0);
+        RuleFor(x => x.LoungeStaffId).NotEmpty();
     }
 }

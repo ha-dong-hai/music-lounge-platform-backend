@@ -3,8 +3,8 @@ using MusicLounge.Application.Common.Models;
 namespace MusicLounge.Application.LoungeShows.DTOs;
 
 public sealed record ShowRatingItemDto(
-    int Id,
-    int? UserId,
+    Guid Id,
+    Guid? UserId,
     string? UserName,
     int Score,
     string? Comment,

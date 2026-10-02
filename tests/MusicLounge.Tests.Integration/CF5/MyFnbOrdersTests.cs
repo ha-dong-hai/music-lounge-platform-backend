@@ -25,11 +25,11 @@ public sealed class MyFnbOrdersTests
     public MyFnbOrdersTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record PaymentInit(int OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
-    private sealed record OrderView(int Id, int? AudienceUserId, string Status, bool IsPaid, decimal TotalAmount);
+    private sealed record PaymentInit(Guid OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
+    private sealed record OrderView(Guid Id, Guid? AudienceUserId, string Status, bool IsPaid, decimal TotalAmount);
     private sealed record OrderPage(List<OrderView> Items, int TotalCount);
 
-    private async Task<int> MenuItemAsync()
+    private async Task<Guid> MenuItemAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -48,20 +48,20 @@ public sealed class MyFnbOrdersTests
         return item.Id;
     }
 
-    private async Task<int> PlaceOrderAsync(HttpClient client)
+    private async Task<Guid> PlaceOrderAsync(HttpClient client)
     {
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = "Bàn E5",
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = await MenuItemAsync(), Quantity = 1, Note = (string?)null } }
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
     }
 
     private HttpClient Audience() => _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
@@ -131,7 +131,7 @@ public sealed class MyFnbOrdersTests
 
     // MLACP-500. Khán giả mới (để đếm chính xác) có 15 đơn ở phòng trà A rồi 3 đơn ở phòng trà B. Đơn ở B được tạo TRƯỚC,
     // nên không lọc thì trang 1 (10 đơn mới nhất) chỉ toàn đơn của A — đúng tình huống làm mất nút Trả online.
-    private async Task<(int UserId, List<int> PhongB)> KhachCoDonOHaiPhongTraAsync()
+    private async Task<(Guid UserId, List<Guid> PhongB)> KhachCoDonOHaiPhongTraAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -139,7 +139,7 @@ public sealed class MyFnbOrdersTests
         db.Users.Add(khach);
         await db.SaveChangesAsync();
 
-        List<FnbOrder> Don(int loungeId, int soLuong) => Enumerable.Range(0, soLuong).Select(_ => new FnbOrder
+        List<FnbOrder> Don(Guid loungeId, int soLuong) => Enumerable.Range(0, soLuong).Select(_ => new FnbOrder
         {
             LoungeId = loungeId, AudienceUserId = khach.Id, PaymentMethod = PaymentMethod.Cash, TotalAmount = ItemPrice
         }).ToList();
@@ -194,6 +194,6 @@ public sealed class MyFnbOrdersTests
         var page = (await res.Content.ReadFromJsonAsync<DataResponse<OrderPage>>())!.Data;
         page.Items.Select(o => o.Id).Should().Equal(third, second);
         page.TotalCount.Should().BeGreaterThanOrEqualTo(3);
-        first.Should().BeLessThan(second);
+        first.CompareTo(second).Should().BeNegative();
     }
 }

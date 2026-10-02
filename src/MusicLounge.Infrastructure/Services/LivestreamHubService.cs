@@ -11,57 +11,57 @@ public sealed class LivestreamHubService : ILivestreamHubService
 
     public LivestreamHubService(IHubContext<LivestreamHub> hubContext) => _hubContext = hubContext;
 
-    public Task BroadcastChatMessageAsync(int livestreamId, ChatMessageDto message, CancellationToken ct = default)
+    public Task BroadcastChatMessageAsync(Guid livestreamId, ChatMessageDto message, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("ReceiveMessage", message, ct);
 
-    public Task BroadcastReactionAsync(int livestreamId, string reactionType, CancellationToken ct = default)
+    public Task BroadcastReactionAsync(Guid livestreamId, string reactionType, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("ReceiveReaction", new { reactionType }, ct);
 
-    public Task BroadcastDonationAlertAsync(int livestreamId, DonationAlertDto donation, CancellationToken ct = default)
+    public Task BroadcastDonationAlertAsync(Guid livestreamId, DonationAlertDto donation, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("DonationAlert", donation, ct);
 
-    public Task BroadcastDonationMessageHiddenAsync(int livestreamId, int donationId, CancellationToken ct = default)
+    public Task BroadcastDonationMessageHiddenAsync(Guid livestreamId, Guid donationId, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("DonationMessageHidden", new { donationId }, ct);
 
-    public Task BroadcastChatMessageHiddenAsync(int livestreamId, int chatMessageId, CancellationToken ct = default)
+    public Task BroadcastChatMessageHiddenAsync(Guid livestreamId, Guid chatMessageId, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("ChatMessageHidden", new { chatMessageId }, ct);
 
-    public Task BroadcastViewerCountAsync(int livestreamId, int count, CancellationToken ct = default)
+    public Task BroadcastViewerCountAsync(Guid livestreamId, int count, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("ViewerCountUpdated", new { count }, ct);
 
-    public Task BroadcastLivestreamTerminatedAsync(int livestreamId, string reason, CancellationToken ct = default)
+    public Task BroadcastLivestreamTerminatedAsync(Guid livestreamId, string reason, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamTerminated", new { reason }, ct);
 
-    public Task BroadcastLivestreamReconnectingAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamReconnectingAsync(Guid livestreamId, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamReconnecting", new { }, ct);
 
-    public Task BroadcastLivestreamReconnectedAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamReconnectedAsync(Guid livestreamId, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamReconnected", new { }, ct);
 
-    public Task BroadcastLivestreamFailedAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamFailedAsync(Guid livestreamId, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamFailed", new { }, ct);
 
-    public Task BroadcastLivestreamEndedAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamEndedAsync(Guid livestreamId, CancellationToken ct = default)
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamEnded", new { }, ct);

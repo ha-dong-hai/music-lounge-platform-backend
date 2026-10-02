@@ -32,7 +32,7 @@ internal sealed class GetLoungeBusinessLicenseQueryHandler
     public async Task<BusinessLicenseFileDto> Handle(
         GetLoungeBusinessLicenseQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>()
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>()
             .GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 

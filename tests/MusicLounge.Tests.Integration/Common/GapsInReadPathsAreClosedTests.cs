@@ -33,7 +33,7 @@ public sealed class GapsInReadPathsAreClosedTests
     [Fact]
     public async Task DanhMucBuoiDienChoAdmin_TraCaMoTaVaCaMucDaTat()
     {
-        int idDaTat;
+        Guid idDaTat;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -52,7 +52,7 @@ public sealed class GapsInReadPathsAreClosedTests
         // cần một đường đọc riêng cho Admin.
         var guest = _factory.CreateClient();
         var congKhai = Data(await (await guest.GetAsync("/api/v1/catalog/event-categories")).Content.ReadAsStringAsync());
-        congKhai.EnumerateArray().Select(c => c.GetProperty("id").GetInt32())
+        congKhai.EnumerateArray().Select(c => c.GetProperty("id").GetGuid())
             .Should().NotContain(idDaTat);
 
         var admin = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
@@ -60,7 +60,7 @@ public sealed class GapsInReadPathsAreClosedTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var mine = Data(await res.Content.ReadAsStringAsync()).EnumerateArray()
-            .FirstOrDefault(c => c.GetProperty("id").GetInt32() == idDaTat);
+            .FirstOrDefault(c => c.GetProperty("id").GetGuid() == idDaTat);
         mine.ValueKind.Should().NotBe(JsonValueKind.Undefined,
             "tắt một danh mục xong mà không màn hình nào nhìn thấy nó nữa thì không có đường nào bật lại");
         mine.GetProperty("isActive").GetBoolean().Should().BeFalse();
@@ -71,7 +71,7 @@ public sealed class GapsInReadPathsAreClosedTests
     [Fact]
     public async Task TheLoaiNhacChoAdmin_TraCaTenTiengAnh()
     {
-        int id;
+        Guid id;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -86,7 +86,7 @@ public sealed class GapsInReadPathsAreClosedTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var mine = Data(await res.Content.ReadAsStringAsync()).EnumerateArray()
-            .FirstOrDefault(g => g.GetProperty("id").GetInt32() == id);
+            .FirstOrDefault(g => g.GetProperty("id").GetGuid() == id);
         mine.ValueKind.Should().NotBe(JsonValueKind.Undefined);
         mine.GetProperty("nameEn").GetString().Should().Be("Test Genre",
             "PUT genres/{id} ghi đè cả NameEn, nên phải đọc lại được, nếu không sửa tên tiếng Việt là mất tên tiếng Anh");
@@ -106,7 +106,7 @@ public sealed class GapsInReadPathsAreClosedTests
         // So với GIÁ TRỊ THẬT trong cơ sở dữ liệu, không chỉ kiểm trường có mặt: khai trường trong DTO mà
         // hàm ánh xạ điền 0 thì client vẫn gửi 0 ngược lên và thứ tự vẫn hỏng. Phép kiểm chỉ hỏi "có
         // trường không" sẽ xanh trong đúng trường hợp đó — đã thử và thấy nó xanh thật.
-        Dictionary<int, int> thuTuThat;
+        Dictionary<Guid, int> thuTuThat;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -122,7 +122,7 @@ public sealed class GapsInReadPathsAreClosedTests
                 "UpdatePerformanceCommand bắt buộc gửi OrderIndex, nên phải đọc lại được — suy từ vị trí " +
                 "trong mảng là sai khi số đang lưu không liên tục (0, 5, 10)");
 
-            var performanceId = p.GetProperty("performanceId").GetInt32();
+            var performanceId = p.GetProperty("performanceId").GetGuid();
             orderIndex.GetInt32().Should().Be(thuTuThat[performanceId],
                 "giá trị trả về phải là thứ tự đang lưu, không phải một số mặc định");
         }
@@ -132,7 +132,7 @@ public sealed class GapsInReadPathsAreClosedTests
     public async Task HoSoNguoiDung_TraDanhSachTheLoaiDaLoaiTru()
     {
         var userId = SeedHelper.AudienceId;
-        int genreId;
+        Guid genreId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -154,7 +154,7 @@ public sealed class GapsInReadPathsAreClosedTests
             var profile = Data(await res.Content.ReadAsStringAsync());
             profile.TryGetProperty("dislikedGenreIds", out var disliked).Should().BeTrue(
                 "PUT /me/preferences ghi đè toàn phần và nhận DislikedGenreIds, nên hồ sơ phải trả nó về");
-            disliked.EnumerateArray().Select(x => x.GetInt32()).Should().Contain(genreId);
+            disliked.EnumerateArray().Select(x => x.GetGuid()).Should().Contain(genreId);
         }
         finally
         {
@@ -173,7 +173,7 @@ public sealed class GapsInReadPathsAreClosedTests
     {
         // Tự tạo một khoản ủng hộ thay vì trông vào dữ liệu seed: nếu danh sách rỗng thì vòng lặp kiểm
         // không chạy lần nào và ca này "xanh" mà chẳng kiểm gì.
-        int donationId;
+        Guid donationId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -201,9 +201,9 @@ public sealed class GapsInReadPathsAreClosedTests
             var data = Data(await res.Content.ReadAsStringAsync());
             var items = data.TryGetProperty("items", out var it) ? it : data;
 
-            var mine = items.EnumerateArray().FirstOrDefault(i => i.GetProperty("id").GetInt32() == donationId);
+            var mine = items.EnumerateArray().FirstOrDefault(i => i.GetProperty("id").GetGuid() == donationId);
             mine.ValueKind.Should().NotBe(JsonValueKind.Undefined, "khoản ủng hộ vừa tạo phải có trong danh sách");
-            mine.GetProperty("performerId").GetInt32().Should().BeGreaterThan(0,
+            mine.GetProperty("performerId").GetGuid().Should().NotBe(Guid.Empty,
                 "tên nghệ sĩ không dò ngược ra người được — danh sách phải mang cả Id");
         }
         finally

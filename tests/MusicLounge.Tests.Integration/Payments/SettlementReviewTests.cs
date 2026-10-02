@@ -33,7 +33,7 @@ public sealed class SettlementReviewTests
 
     private sealed record ReviewBody(string Decision, string Note);
 
-    private async Task<(int PaymentId, int SettlementId)> ParkedSettlementAsync(
+    private async Task<(Guid PaymentId, Guid SettlementId)> ParkedSettlementAsync(
         bool withBankAccount = true, decimal netAmount = 300_000m)
     {
         using var scope = _factory.Services.CreateScope();
@@ -53,12 +53,12 @@ public sealed class SettlementReviewTests
         db.Add(payment);
         await db.SaveChangesAsync();
 
-        int? payoutAccountId = null;
+        Guid? payoutAccountId = null;
         if (withBankAccount)
         {
             payoutAccountId = await db.Set<BankAccount>()
                 .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
-                .Select(a => (int?)a.Id)
+                .Select(a => (Guid?)a.Id)
                 .FirstAsync();
         }
 
@@ -82,11 +82,11 @@ public sealed class SettlementReviewTests
         return (payment.Id, settlement.Id);
     }
 
-    private Task<HttpResponseMessage> ReviewAsync(int settlementId, string decision, string note = "Da doi soat")
+    private Task<HttpResponseMessage> ReviewAsync(Guid settlementId, string decision, string note = "Da doi soat")
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
             .PostAsJsonAsync($"/api/v1/admin/settlements/{settlementId}/review", new ReviewBody(decision, note));
 
-    private async Task<Settlement> ReloadAsync(int settlementId)
+    private async Task<Settlement> ReloadAsync(Guid settlementId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -239,7 +239,7 @@ public sealed class SettlementReviewTests
         // Trước MLACP-335, chỗ này chỉ đổi trạng thái rồi `continue` — không log, không báo ai. Mà
         // PendingReview lại không có đường ra, nên khoản tiền biến mất khỏi tầm nhìn của mọi người
         // trừ Owner, người vẫn thấy nó trong mục sắp nhận được.
-        int settlementId;
+        Guid settlementId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -288,7 +288,7 @@ public sealed class SettlementReviewTests
 
             var payoutAccountId = await db.Set<BankAccount>()
                 .Where(a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == SeedHelper.LoungeId)
-                .Select(a => (int?)a.Id)
+                .Select(a => (Guid?)a.Id)
                 .FirstAsync();
 
             var settlement = new Settlement
@@ -342,7 +342,7 @@ public sealed class SettlementReviewTests
         // nếu Admin sau đó bấm chi trả, phòng trà nhận đủ tiền cho cả phần đã hoàn cho khách.
         var (paymentId, settlementId) = await ParkedSettlementAsync(netAmount: 300_000m);
 
-        int refundId;
+        Guid refundId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

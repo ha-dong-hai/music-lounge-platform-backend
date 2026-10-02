@@ -48,7 +48,7 @@ internal sealed class UpdateSystemConfigCommandHandler : IRequestHandler<UpdateS
         // so there is nothing to gain from finer-grained locking.
         await using var _ = await _lock.AcquireAsync("system-config-write", ct);
 
-        var repo = _uow.Repository<SystemConfig, int>();
+        var repo = _uow.Repository<SystemConfig, Guid>();
         var matches = await repo.FindAsync(c => c.ConfigKey == request.ConfigKey, ct);
         var config = matches.FirstOrDefault()
             ?? throw new NotFoundException(nameof(SystemConfig), request.ConfigKey);
@@ -88,7 +88,7 @@ internal sealed class UpdateSystemConfigCommandHandler : IRequestHandler<UpdateS
         // History row first, and with the OLD value captured before the entity is touched — the
         // whole point of the table is to answer "what was it before", which is unanswerable once
         // the row has been overwritten.
-        _uow.Repository<SystemConfigHistory, long>().Add(new SystemConfigHistory
+        _uow.Repository<SystemConfigHistory, Guid>().Add(new SystemConfigHistory
         {
             ConfigKey = config.ConfigKey,
             OldValue = oldValue,

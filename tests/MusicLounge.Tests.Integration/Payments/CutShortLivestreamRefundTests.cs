@@ -31,7 +31,7 @@ public sealed class CutShortLivestreamRefundTests
 
     public CutShortLivestreamRefundTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedShowAsync(
+    private async Task<Guid> SeedShowAsync(
         LivestreamStatus streamStatus,
         int deliveredMinutes,
         int waitedMinutesAfterLoss = 5,
@@ -79,11 +79,11 @@ public sealed class CutShortLivestreamRefundTests
         return show.Id;
     }
 
-    private async Task<(Guid TicketId, int PaymentId)> AddTicketAsync(
-        int showId,
+    private async Task<(Guid TicketId, Guid PaymentId)> AddTicketAsync(
+        Guid showId,
         TicketStatus status,
         AccessType accessType = AccessType.Livestream,
-        int? existingPaymentId = null)
+        Guid? existingPaymentId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -162,14 +162,14 @@ public sealed class CutShortLivestreamRefundTests
         return (await db.Tickets.SingleAsync(t => t.Id == ticketId)).Status;
     }
 
-    private async Task<List<RefundRequest>> RefundsAsync(int paymentId)
+    private async Task<List<RefundRequest>> RefundsAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.RefundRequests.Where(r => r.PaymentId == paymentId).ToListAsync();
     }
 
-    private async Task<int> CutShortNoticesAsync(int userId, int showId)
+    private async Task<int> CutShortNoticesAsync(Guid userId, Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -24,7 +24,7 @@ internal sealed class ResendVerificationCodeCommandHandler : IRequestHandler<Res
 
     public async Task<Unit> Handle(ResendVerificationCodeCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var users = await userRepo.FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault();
 

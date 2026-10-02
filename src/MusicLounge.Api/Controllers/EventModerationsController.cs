@@ -27,20 +27,20 @@ public sealed class EventModerationsController : ControllerBase
         [FromQuery] string? targetType = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] int? targetId = null,
+        [FromQuery] Guid? targetId = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetPendingModerationsQuery(targetType, page, pageSize, targetId), ct);
         return Ok(ApiResponse<PaginatedResult<EventModerationDto>>.Ok(result));
     }
 
-    [HttpPost("livestreams/{livestreamId:int}/review")]
+    [HttpPost("livestreams/{livestreamId:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ReviewLivestream(
-        int livestreamId,
+        Guid livestreamId,
         [FromBody] ReviewLivestreamRequest body,
         CancellationToken ct = default)
     {
@@ -48,13 +48,13 @@ public sealed class EventModerationsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("shows/{showId:int}/review")]
+    [HttpPost("shows/{showId:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ReviewShow(
-        int showId,
+        Guid showId,
         [FromBody] ReviewLivestreamRequest body,
         CancellationToken ct = default)
     {
@@ -65,13 +65,13 @@ public sealed class EventModerationsController : ControllerBase
     /// <summary>MLACP-388: duyệt hạng vé livestream được thêm sau khi buổi diễn đã đăng. Approved thì giá của hạng vé
     /// mở bán; Rejected (bắt buộc ghi lý do) thì hạng vé không bán. Chủ phòng trà được báo kết quả. Chỉ duyệt được một lần
     /// (409), và chỉ khi buổi diễn chưa kết thúc hay bị huỷ.</summary>
-    [HttpPost("ticket-tiers/{tierId:int}/review")]
+    [HttpPost("ticket-tiers/{tierId:guid}/review")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ReviewTicketTier(
-        int tierId,
+        Guid tierId,
         [FromBody] ReviewLivestreamRequest body,
         CancellationToken ct = default)
     {

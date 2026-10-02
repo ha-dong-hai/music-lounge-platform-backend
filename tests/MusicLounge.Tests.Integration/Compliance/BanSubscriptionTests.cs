@@ -35,7 +35,7 @@ public sealed class BanSubscriptionTests
 
     public BanSubscriptionTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int SubscriptionId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid SubscriptionId);
 
     private async Task<Venue> SeedVenueWithPlanAsync()
     {
@@ -71,7 +71,7 @@ public sealed class BanSubscriptionTests
         return new Venue(owner.Id, lounge.Id, plan.Id);
     }
 
-    private async Task<int> SeedDuePenaltyAsync(int loungeId, PenaltyType type, PenaltyStatus status = PenaltyStatus.Active)
+    private async Task<Guid> SeedDuePenaltyAsync(Guid loungeId, PenaltyType type, PenaltyStatus status = PenaltyStatus.Active)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -96,7 +96,7 @@ public sealed class BanSubscriptionTests
     }
 
     /// <summary>Kháng cáo đang chờ xét cho một án đã áp (cấu hình cho phép kháng cáo sau ngày hiệu lực).</summary>
-    private async Task MarkAppealedAsync(int penaltyId, DateTimeOffset appealDeadline)
+    private async Task MarkAppealedAsync(Guid penaltyId, DateTimeOffset appealDeadline)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -107,18 +107,18 @@ public sealed class BanSubscriptionTests
         await db.SaveChangesAsync();
     }
 
-    private Task<HttpResponseMessage> OverturnAsync(int penaltyId)
+    private Task<HttpResponseMessage> OverturnAsync(Guid penaltyId)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             $"/api/v1/venue-penalties/{penaltyId}/appeal/review", new { Decision = "Overturned", ReviewNote = "Khoá nhầm" });
 
-    private async Task<List<OwnerSubscription>> PlansOfAsync(int ownerId)
+    private async Task<List<OwnerSubscription>> PlansOfAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.OwnerSubscriptions.AsNoTracking().Where(s => s.OwnerId == ownerId).ToListAsync();
     }
 
-    private async Task<string> LatestNoticeAsync(int userId, NotificationType type)
+    private async Task<string> LatestNoticeAsync(Guid userId, NotificationType type)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -189,7 +189,7 @@ public sealed class BanSubscriptionTests
         var venue = await SeedVenueWithPlanAsync();
         var penaltyId = await SeedDuePenaltyAsync(venue.LoungeId, PenaltyType.Ban);
         await ApplyDuePenaltiesAsync();
-        int newPlanId;
+        Guid newPlanId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

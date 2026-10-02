@@ -3,7 +3,7 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.LoungeShows.DTOs;
 
 public sealed record RecommendedLoungeShowDto(
-    int Id,
+    Guid Id,
     string Name,
     string? CoverImageUrl,
     string LoungeName,

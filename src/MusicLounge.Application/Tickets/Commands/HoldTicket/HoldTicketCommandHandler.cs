@@ -39,15 +39,15 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
 
     public async Task<HoldTicketResultDto> Handle(HoldTicketCommand request, CancellationToken ct)
     {
-        var priceRepo = _uow.Repository<TicketPrice, int>();
+        var priceRepo = _uow.Repository<TicketPrice, Guid>();
         var price = await priceRepo.GetByIdAsync(request.PriceId, ct)
             ?? throw new NotFoundException(nameof(TicketPrice), request.PriceId);
 
-        var tierRepo = _uow.Repository<TicketTier, int>();
+        var tierRepo = _uow.Repository<TicketTier, Guid>();
         var tier = await tierRepo.GetByIdAsync(price.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), price.TierId);
 
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(tier.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), tier.LoungeShowId);
 
@@ -74,7 +74,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
 
         await ValidateSaleWindowAsync(price, show, ct);
 
-        int holdId;
+        Guid holdId;
         DateTimeOffset holdExpiresAt;
 
         // Serialize quota-check-then-reserve per show: without this, two buyers can both read
@@ -95,7 +95,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
                 CreatedAt = DateTimeOffset.UtcNow
             };
 
-            _uow.Repository<TicketHold, int>().Add(hold);
+            _uow.Repository<TicketHold, Guid>().Add(hold);
             await _uow.SaveChangesAsync(ct);
 
             holdId = hold.Id;
@@ -128,7 +128,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
 
         var confirmedCount = await _uow.Repository<Ticket, Guid>().CountAsync(
             t => t.PriceId == price.Id && TicketOccupancy.ChiemCho.Contains(t.Status), ct);
-        var activeHolds = await _uow.Repository<TicketHold, int>().FindAsync(
+        var activeHolds = await _uow.Repository<TicketHold, Guid>().FindAsync(
             h => h.PriceId == price.Id && !h.IsReleased, ct);
         var heldCount = activeHolds.Where(h => h.ExpiresAt > DateTimeOffset.UtcNow).Sum(h => h.Quantity);
 
@@ -136,7 +136,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
         var threshold = Math.Max(1, (int)(price.Quota.Value * LowStockThresholdRatio));
         if (remaining > threshold) return;
 
-        var wishlisters = await _uow.Repository<ShowWishlist, int>()
+        var wishlisters = await _uow.Repository<ShowWishlist, Guid>()
             .FindAsync(w => w.LoungeShowId == show.Id, ct);
 
         foreach (var w in wishlisters)
@@ -201,7 +201,7 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
         // được trường hợp 2 tier khác nhau (vd VIP + Standard) cùng zone cộng lại vượt sức chứa.
         if (tier.ZoneId.HasValue)
         {
-            var zone = await _uow.Repository<SeatingZone, int>().GetByIdAsync(tier.ZoneId.Value, ct);
+            var zone = await _uow.Repository<SeatingZone, Guid>().GetByIdAsync(tier.ZoneId.Value, ct);
             if (zone is not null)
             {
                 var zoneReserved = await _ticketRepo.GetReservedQuantityByZoneAsync(show.Id, tier.ZoneId.Value, ct);
@@ -226,9 +226,9 @@ internal sealed class HoldTicketCommandHandler : IRequestHandler<HoldTicketComma
         // 1 tier để trống TotalCapacity (hợp lệ, chỉ dùng Quota) bán được vô hạn định; subscription
         // cũng có thể hết hạn/hạ gói SAU khi tier đã tồn tại. Check lại ở đây — đúng điểm tiền/vé
         // đổi chủ thật — để không thể bị bỏ qua bằng cách để trống 1 field tuỳ chọn.
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
-        var activeSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var activeSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
         // Khong con nhanh "khong co goi thi bo qua": cap luon ton tai, chi khac nguon — snapshot cua
         // goi dang hoat dong, hoac muc mien phi neu venue chua dang ky goi nao.

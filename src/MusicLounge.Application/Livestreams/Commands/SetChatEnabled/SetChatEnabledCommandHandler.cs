@@ -20,18 +20,18 @@ internal sealed class SetChatEnabledCommandHandler : IRequestHandler<SetChatEnab
 
     public async Task<Unit> Handle(SetChatEnabledCommand request, CancellationToken ct)
     {
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), livestream.LoungeShowId);
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         if (!VenueOperatorAccess.CanOperate(_currentUser, show.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền bật/tắt chat cho livestream này.");
 
         livestream.ChatEnabled = request.Enabled;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
         await _uow.SaveChangesAsync(ct);
 
         return Unit.Value;

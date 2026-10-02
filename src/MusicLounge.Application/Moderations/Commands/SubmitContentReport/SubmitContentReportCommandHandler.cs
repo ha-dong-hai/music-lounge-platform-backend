@@ -6,7 +6,7 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Moderations.Commands.SubmitContentReport;
 
-internal sealed class SubmitContentReportCommandHandler : IRequestHandler<SubmitContentReportCommand, int>
+internal sealed class SubmitContentReportCommandHandler : IRequestHandler<SubmitContentReportCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -17,13 +17,13 @@ internal sealed class SubmitContentReportCommandHandler : IRequestHandler<Submit
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(SubmitContentReportCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(SubmitContentReportCommand request, CancellationToken ct)
     {
         var targetType = Enum.Parse<ReportTargetType>(request.TargetType, ignoreCase: true);
 
         await EnsureTargetExistsAsync(targetType, request.TargetId, ct);
 
-        var reportRepo = _uow.Repository<ContentReport, int>();
+        var reportRepo = _uow.Repository<ContentReport, Guid>();
         var alreadyReported = await reportRepo.AnyAsync(
             r => r.TargetType == targetType && r.TargetId == request.TargetId
                 && r.ReporterId == _currentUser.UserId && r.Status == ContentReportStatus.Open, ct);
@@ -45,14 +45,14 @@ internal sealed class SubmitContentReportCommandHandler : IRequestHandler<Submit
         return report.Id;
     }
 
-    private async Task EnsureTargetExistsAsync(ReportTargetType targetType, int targetId, CancellationToken ct)
+    private async Task EnsureTargetExistsAsync(ReportTargetType targetType, Guid targetId, CancellationToken ct)
     {
         var exists = targetType switch
         {
-            ReportTargetType.Show => await _uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == targetId, ct),
-            ReportTargetType.Livestream => await _uow.Repository<Livestream, int>().AnyAsync(l => l.Id == targetId, ct),
-            ReportTargetType.Rating => await _uow.Repository<LoungeShowRating, int>().AnyAsync(r => r.Id == targetId, ct),
-            ReportTargetType.ChatMessage => await _uow.Repository<LivestreamChatMessage, int>().AnyAsync(m => m.Id == targetId, ct),
+            ReportTargetType.Show => await _uow.Repository<LoungeShow, Guid>().AnyAsync(s => s.Id == targetId, ct),
+            ReportTargetType.Livestream => await _uow.Repository<Livestream, Guid>().AnyAsync(l => l.Id == targetId, ct),
+            ReportTargetType.Rating => await _uow.Repository<LoungeShowRating, Guid>().AnyAsync(r => r.Id == targetId, ct),
+            ReportTargetType.ChatMessage => await _uow.Repository<LivestreamChatMessage, Guid>().AnyAsync(m => m.Id == targetId, ct),
             _ => throw new DomainException("TargetType không hợp lệ.")
         };
         if (!exists)

@@ -26,9 +26,9 @@ public sealed class SubscriptionTests
     // OTHER tests) — subscribe-flow tests need an owner with NO existing subscription instead.
     private static int _freshOwnerCounter = 9100;
 
-    private async Task<int> CreateFreshOwnerAsync()
+    private async Task<Guid> CreateFreshOwnerAsync()
     {
-        var id = Interlocked.Increment(ref _freshOwnerCounter);
+        var id = TestId.Of(Interlocked.Increment(ref _freshOwnerCounter));
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         db.Users.Add(new User { Id = id, Email = $"freshowner{id}@test.com", FullName = "Fresh Owner" });
@@ -36,7 +36,7 @@ public sealed class SubscriptionTests
         return id;
     }
 
-    private async Task<int> CreatePackageAsync(decimal price = 500_000m, int maxTicketsPerEvent = 100)
+    private async Task<Guid> CreatePackageAsync(decimal price = 500_000m, int maxTicketsPerEvent = 100)
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await client.PostAsJsonAsync("/api/v1/subscriptions/packages", new
@@ -131,15 +131,15 @@ public sealed class SubscriptionTests
     [Fact]
     public async Task CreateLoungeShow_WithoutActiveSubscription_Returns422()
     {
-        int newOwnerId, newLoungeId;
+        Guid newOwnerId, newLoungeId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var user = new User { Id = 9001, Email = "nosub-owner@test.com", FullName = "NoSub Owner" };
+            var user = new User { Id = TestId.Of(9001), Email = "nosub-owner@test.com", FullName = "NoSub Owner" };
             db.Users.Add(user);
             var lounge = new MusicLoungeVenue
             {
-                Id = 9001, OwnerId = 9001, Name = "NoSub Lounge",
+                Id = TestId.Of(9001), OwnerId = TestId.Of(9001), Name = "NoSub Lounge",
                 Address = new MusicLounge.Domain.ValueObjects.VenueAddress
                 {
                     Street = "1 Test", District = "1", City = "HCM"
@@ -160,10 +160,10 @@ public sealed class SubscriptionTests
             Format = "Offline",
             ScheduledStart = DateTimeOffset.UtcNow.AddDays(20),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(), MoodIds = Array.Empty<Guid>(), AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
 
@@ -184,10 +184,10 @@ public sealed class SubscriptionTests
             Format = "Offline",
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(), MoodIds = Array.Empty<int>(), AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(), MoodIds = Array.Empty<Guid>(), AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
 
@@ -485,7 +485,7 @@ public sealed class SubscriptionTests
         res.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
-    private sealed record SubscriptionInitiationData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record IdResponse(bool Success, Guid Data);
+    private sealed record SubscriptionInitiationData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record SubscriptionInitiationResponse(bool Success, SubscriptionInitiationData Data);
 }

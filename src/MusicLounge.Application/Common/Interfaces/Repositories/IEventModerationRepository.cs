@@ -5,10 +5,10 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common.Interfaces.Repositories;
 
-public interface IEventModerationRepository : IRepository<EventModeration, int>
+public interface IEventModerationRepository : IRepository<EventModeration, Guid>
 {
     Task<PaginatedResult<EventModerationDto>> GetPendingAsync(
-        ModerationTargetType? targetType, int? targetId, int page, int pageSize, CancellationToken ct = default);
+        ModerationTargetType? targetType, Guid? targetId, int page, int pageSize, CancellationToken ct = default);
 
     /// <summary>Show đang Pending kèm tín hiệu AI moderation (score/risk/flag) — dùng cho danh sách
     /// Admin duyệt event, khác GetPendingAsync ở chỗ có sẵn tên show/phòng trà/ngày diễn thay vì
@@ -17,5 +17,5 @@ public interface IEventModerationRepository : IRepository<EventModeration, int>
         int page, int pageSize, CancellationToken ct = default);
 
     Task<EventModeration?> GetByTargetAsync(
-        ModerationTargetType targetType, int targetId, CancellationToken ct = default);
+        ModerationTargetType targetType, Guid targetId, CancellationToken ct = default);
 }

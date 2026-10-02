@@ -21,20 +21,20 @@ internal sealed class CurrentUserService : ICurrentUserService
     // but silently defaulting to 0 here (OWASP A10: failing open instead of closed) would mean
     // any future caller that forgets to check IsAuthenticated first attributes its action to a
     // "User 0" that doesn't exist, instead of the operation visibly failing. Throw instead.
-    public int UserId =>
-        int.TryParse(User?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
+    public Guid UserId =>
+        Guid.TryParse(User?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
             ? id
             : throw new UnauthorizedException("Không xác định được người dùng hiện tại.");
 
     public string Role =>
         User?.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
-    public int? LoungeId
+    public Guid? LoungeId
     {
         get
         {
             var claim = User?.FindFirstValue("lounge_id");
-            return claim is not null ? int.Parse(claim) : null;
+            return claim is not null ? Guid.Parse(claim) : null; // MLACP-515: khoa phong tra la GUID
         }
     }
 

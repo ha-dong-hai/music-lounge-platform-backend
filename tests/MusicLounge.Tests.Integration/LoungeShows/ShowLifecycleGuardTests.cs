@@ -31,8 +31,8 @@ public sealed class ShowLifecycleGuardTests
 
     public ShowLifecycleGuardTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int LivestreamId, DateTimeOffset DisconnectedAt)> SeedReconnectingLivestreamAsync(
-        int showId)
+    private async Task<(Guid LivestreamId, DateTimeOffset DisconnectedAt)> SeedReconnectingLivestreamAsync(
+        Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -91,7 +91,7 @@ public sealed class ShowLifecycleGuardTests
     [Fact]
     public async Task ReconnectTimeout_OnLiveShow_StillEndsTheShow()
     {
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

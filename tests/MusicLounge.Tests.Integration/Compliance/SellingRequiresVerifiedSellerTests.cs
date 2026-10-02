@@ -29,7 +29,7 @@ public sealed class SellingRequiresVerifiedSellerTests
     public SellingRequiresVerifiedSellerTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record Venue(int OwnerId, int LoungeId, int MenuItemId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid MenuItemId);
 
     private async Task<Venue> VenueAsync(KycReviewStatus? identity)
     {
@@ -67,7 +67,7 @@ public sealed class SellingRequiresVerifiedSellerTests
         return new Venue(owner.Id, lounge.Id, item.Id);
     }
 
-    private async Task SetIdentityAsync(int ownerId, KycReviewStatus? identity)
+    private async Task SetIdentityAsync(Guid ownerId, KycReviewStatus? identity)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -75,7 +75,7 @@ public sealed class SellingRequiresVerifiedSellerTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> DraftShowAsync(int loungeId)
+    private async Task<Guid> DraftShowAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -90,7 +90,7 @@ public sealed class SellingRequiresVerifiedSellerTests
         return show.Id;
     }
 
-    private async Task<int> PriceOfPublishedShowAsync(int loungeId)
+    private async Task<Guid> PriceOfPublishedShowAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -121,7 +121,7 @@ public sealed class SellingRequiresVerifiedSellerTests
 
     private static object OrderBody(Venue venue) => new
     {
-        LoungeId = venue.LoungeId, ShowId = (int?)null, ZoneId = (int?)null, TableNote = (string?)null,
+        LoungeId = venue.LoungeId, ShowId = (Guid?)null, ZoneId = (Guid?)null, TableNote = (string?)null,
         PaymentMethod = "Cash", Note = (string?)null,
         Items = new[] { new { MenuItemId = venue.MenuItemId, Quantity = 1, Note = (string?)null } }
     };
@@ -213,7 +213,7 @@ public sealed class SellingRequiresVerifiedSellerTests
         var venue = await VenueAsync(KycReviewStatus.Approved);
         var created = await Audience().PostAsJsonAsync("/api/v1/fnb-orders", OrderBody(venue));
         created.StatusCode.Should().Be(HttpStatusCode.Created);
-        var orderId = (await created.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var orderId = (await created.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         // Nộp lại CCCD đưa hồ sơ về chờ duyệt.
         await SetIdentityAsync(venue.OwnerId, KycReviewStatus.Pending);

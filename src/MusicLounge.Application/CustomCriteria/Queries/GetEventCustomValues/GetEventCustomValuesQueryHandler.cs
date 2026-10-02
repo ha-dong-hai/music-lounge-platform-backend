@@ -24,10 +24,10 @@ internal sealed class GetEventCustomValuesQueryHandler
     public async Task<IReadOnlyList<EventCustomValueDto>> Handle(
         GetEventCustomValuesQuery request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         // Đúng luật quyền của lệnh GHI (SetEventCustomValuesCommandHandler): chủ phòng trà của chính buổi
@@ -36,12 +36,12 @@ internal sealed class GetEventCustomValuesQueryHandler
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem tiêu chí của buổi diễn này.");
 
-        var values = await _uow.Repository<EventCustomValue, int>()
+        var values = await _uow.Repository<EventCustomValue, Guid>()
             .FindAsync(v => v.ShowId == request.ShowId, ct);
         if (values.Count == 0) return [];
 
         var criteriaIds = values.Select(v => v.CriteriaId).Distinct().ToList();
-        var criteria = (await _uow.Repository<CustomCriteriaEntity, int>()
+        var criteria = (await _uow.Repository<CustomCriteriaEntity, Guid>()
                 .FindAsync(c => criteriaIds.Contains(c.Id), ct))
             .ToDictionary(c => c.Id);
 

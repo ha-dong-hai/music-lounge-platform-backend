@@ -74,7 +74,7 @@ public sealed class PreviouslyUntestableEndpointsTests
     [Fact]
     public async Task SearchResults_ComeBackNewestFirst()
     {
-        int older, newer;
+        Guid older, newer;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -130,7 +130,7 @@ public sealed class PreviouslyUntestableEndpointsTests
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
-    private sealed record FollowedLounge(int Id, string Name);
-    private sealed record ShowListItem(int Id, string Name);
-    private sealed record AdminUser(int Id, string Email);
+    private sealed record FollowedLounge(Guid Id, string Name);
+    private sealed record ShowListItem(Guid Id, string Name);
+    private sealed record AdminUser(Guid Id, string Email);
 }

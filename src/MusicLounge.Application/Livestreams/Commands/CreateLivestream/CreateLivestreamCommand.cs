@@ -7,5 +7,5 @@ namespace MusicLounge.Application.Livestreams.Commands.CreateLivestream;
 // "free for anyone" would silently bypass that revenue path for every show unless the Owner
 // explicitly opts in. GetLivestreamDetailQueryHandler/GetChatHistoryQueryHandler already gate on
 // this flag correctly (MLACP-117/MLACP-119) — the bug was only ever in this default.
-public sealed record CreateLivestreamCommand(int ShowId, bool IsFree = false, bool ChatEnabled = true)
-    : ICommand<int>;
+public sealed record CreateLivestreamCommand(Guid ShowId, bool IsFree = false, bool ChatEnabled = true)
+    : ICommand<Guid>;

@@ -20,7 +20,7 @@ internal sealed class CancelSubscriptionCommandHandler : IRequestHandler<CancelS
 
     public async Task<Unit> Handle(CancelSubscriptionCommand request, CancellationToken ct)
     {
-        var subRepo = _uow.Repository<OwnerSubscription, int>();
+        var subRepo = _uow.Repository<OwnerSubscription, Guid>();
         var ownSubs = await subRepo.FindAsync(s => s.OwnerId == _currentUser.UserId, ct);
         var lastSub = ownSubs.OrderByDescending(s => s.StartedAt).FirstOrDefault()
             ?? throw new DomainException("Bạn chưa từng đăng ký gói subscription nào.");

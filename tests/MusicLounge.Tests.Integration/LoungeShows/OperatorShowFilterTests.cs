@@ -22,7 +22,7 @@ public sealed class OperatorShowFilterTests
 
     public OperatorShowFilterTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int LoungeId, int OwnerId)> PhongTraRiengAsync()
+    private async Task<(Guid LoungeId, Guid OwnerId)> PhongTraRiengAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -41,7 +41,7 @@ public sealed class OperatorShowFilterTests
 
     // Nhân viên seed đang làm ở phòng trà seed (mỗi tài khoản một phòng trà) — tạo nhân viên riêng cho phòng trà riêng,
     // có bản ghi LoungeStaff thật để qua được kiểm "còn là nhân viên" của pipeline.
-    private async Task<int> NhanVienRiengAsync(int loungeId, int ownerId)
+    private async Task<Guid> NhanVienRiengAsync(Guid loungeId, Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -56,7 +56,7 @@ public sealed class OperatorShowFilterTests
         return staff.Id;
     }
 
-    private async Task<List<int>> ThemBuoiAsync(int loungeId, LoungeShowStatus trangThai, LoungeShowFormat hinhThuc, int soLuong = 1)
+    private async Task<List<Guid>> ThemBuoiAsync(Guid loungeId, LoungeShowStatus trangThai, LoungeShowFormat hinhThuc, int soLuong = 1)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -71,14 +71,14 @@ public sealed class OperatorShowFilterTests
         return shows.Select(s => s.Id).ToList();
     }
 
-    private static async Task<(List<int> Ids, int Total)> GoiAsync(HttpClient client, string query)
+    private static async Task<(List<Guid> Ids, int Total)> GoiAsync(HttpClient client, string query)
     {
         var res = await client.GetAsync($"/api/v1/lounge-shows?{query}");
         var body = await res.Content.ReadAsStringAsync();
         res.StatusCode.Should().Be(HttpStatusCode.OK, body);
         using var doc = JsonDocument.Parse(body);
         var data = doc.RootElement.GetProperty("data");
-        return (data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("id").GetInt32()).ToList(),
+        return (data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("id").GetGuid()).ToList(),
                 data.GetProperty("totalCount").GetInt32());
     }
 
@@ -123,7 +123,7 @@ public sealed class OperatorShowFilterTests
     public async Task KhongTruyenThamSoMoi_TraNhuCu_DuMoiTrangThaiVaHinhThuc()
     {
         var (loungeId, ownerId) = await PhongTraRiengAsync();
-        var tatCa = new List<int>();
+        var tatCa = new List<Guid>();
         tatCa.AddRange(await ThemBuoiAsync(loungeId, LoungeShowStatus.Draft, LoungeShowFormat.Offline));
         tatCa.AddRange(await ThemBuoiAsync(loungeId, LoungeShowStatus.Published, LoungeShowFormat.Hybrid));
         tatCa.AddRange(await ThemBuoiAsync(loungeId, LoungeShowStatus.Cancelled, LoungeShowFormat.Online));

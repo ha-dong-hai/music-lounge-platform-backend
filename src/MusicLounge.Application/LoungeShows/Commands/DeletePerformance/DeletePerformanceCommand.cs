@@ -2,4 +2,4 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.LoungeShows.Commands.DeletePerformance;
 
-public sealed record DeletePerformanceCommand(int PerformanceId) : ICommand;
+public sealed record DeletePerformanceCommand(Guid PerformanceId) : ICommand;

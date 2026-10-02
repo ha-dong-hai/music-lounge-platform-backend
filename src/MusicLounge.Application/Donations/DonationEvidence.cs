@@ -34,11 +34,11 @@ public static class DonationEvidence
     /// dòng trước được đọc từ database, nên dòng thêm mà chưa lưu sẽ không được thấy.
     /// </summary>
     public static async Task AppendAsync(
-        IUnitOfWork uow, int donationId, DonationEventType type, int? actorUserId,
+        IUnitOfWork uow, Guid donationId, DonationEventType type, Guid? actorUserId,
         decimal? amount = null, string? reference = null, string? evidenceUrl = null,
         string? evidenceSha256 = null, string? detail = null, CancellationToken ct = default)
     {
-        var repo = uow.Repository<DonationEvent, long>();
+        var repo = uow.Repository<DonationEvent, Guid>();
         var last = (await repo.FindAsync(e => e.DonationId == donationId, ct))
             .OrderByDescending(e => e.Sequence)
             .FirstOrDefault();
@@ -90,11 +90,11 @@ public static class DonationEvidence
     {
         var fields = new[]
         {
-            e.DonationId.ToString(CultureInfo.InvariantCulture),
+            e.DonationId.ToString(),
             e.Sequence.ToString(CultureInfo.InvariantCulture),
             e.EventType.ToString(),
             e.OccurredAt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
-            e.ActorUserId?.ToString(CultureInfo.InvariantCulture) ?? "",
+            e.ActorUserId?.ToString() ?? "",
             e.Amount?.ToString("0.00", CultureInfo.InvariantCulture) ?? "",
             e.Reference ?? "",
             e.EvidenceUrl ?? "",

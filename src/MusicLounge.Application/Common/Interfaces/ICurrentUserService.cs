@@ -2,9 +2,9 @@ namespace MusicLounge.Application.Common.Interfaces;
 
 public interface ICurrentUserService
 {
-    int UserId { get; }
+    Guid UserId { get; }
     string Role { get; }
-    int? LoungeId { get; }
+    Guid? LoungeId { get; }
     bool IsAuthenticated { get; }
     Guid SecurityStamp { get; }
 }

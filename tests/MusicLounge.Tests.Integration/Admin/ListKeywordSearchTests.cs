@@ -26,14 +26,14 @@ public sealed class ListKeywordSearchTests
 
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private static async Task<(List<int> Ids, int Total)> GoiAsync(HttpClient client, string url, string truongId = "id")
+    private static async Task<(List<Guid> Ids, int Total)> GoiAsync(HttpClient client, string url, string truongId = "id")
     {
         var res = await client.GetAsync(url);
         var body = await res.Content.ReadAsStringAsync();
         res.StatusCode.Should().Be(HttpStatusCode.OK, body);
         using var doc = JsonDocument.Parse(body);
         var data = doc.RootElement.GetProperty("data");
-        return (data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty(truongId).GetInt32()).ToList(),
+        return (data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty(truongId).GetGuid()).ToList(),
                 data.GetProperty("totalCount").GetInt32());
     }
 
@@ -140,7 +140,7 @@ public sealed class ListKeywordSearchTests
             var phong = PhongTra(null, $"Phong tra {tuPhong}", LoungeStatus.Approved);
             db.Add(phong);
             await db.SaveChangesAsync();
-            LoungeShow Buoi(int loungeId, string ten) => new()
+            LoungeShow Buoi(Guid loungeId, string ten) => new()
             {
                 LoungeId = loungeId, Name = ten, Description = "test", Format = LoungeShowFormat.Offline,
                 Status = LoungeShowStatus.Published,

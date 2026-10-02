@@ -37,7 +37,7 @@ public static class FnbSettlements
         CancellationToken ct)
     {
         var referenceId = order.Id.ToString();
-        var payment = (await uow.Repository<Payment, int>().FindAsync(
+        var payment = (await uow.Repository<Payment, Guid>().FindAsync(
                 p => p.ReferenceType == FnbOrderPayments.ReferenceType
                      && p.ReferenceId == referenceId
                      && p.Status == PaymentStatus.Confirmed
@@ -48,30 +48,30 @@ public static class FnbSettlements
         if (payment is null) return;
 
         // Mỗi thanh toán một khoản quyết toán.
-        if (await uow.Repository<Settlement, int>().AnyAsync(s => s.PaymentId == payment.Id, ct))
+        if (await uow.Repository<Settlement, Guid>().AnyAsync(s => s.PaymentId == payment.Id, ct))
             return;
 
         // Thanh toán ghi sổ trước MLACP-350 đã ghi Có thẳng cho chủ phòng trà. Lên lịch chi trả cho nó
         // bây giờ nghĩa là ghi Có họ lần thứ hai, trong khi Platform chưa từng giữ khoản đó.
-        var heldByPlatform = await uow.Repository<LedgerEntry, int>().AnyAsync(
+        var heldByPlatform = await uow.Repository<LedgerEntry, Guid>().AnyAsync(
             e => e.PaymentId == payment.Id
                  && e.Account.OwnerType == AccountType.Platform
                  && !e.IsDebit, ct);
         if (!heldByPlatform) return;
 
-        var lounge = await uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct);
+        var lounge = await uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(order.LoungeId, ct);
         if (lounge is null) return;
 
         // Không có tài khoản mặc định thì vẫn ghi nhận khoản nợ với đích đến rỗng —
         // SettlementReleaseJob hoãn giải ngân cho tới khi phòng trà đăng ký tài khoản, cùng cách
         // ScheduleSettlementHandler xử lý với vé.
-        var bankAccountId = (await uow.Repository<BankAccount, int>().FindAsync(
+        var bankAccountId = (await uow.Repository<BankAccount, Guid>().FindAsync(
                 a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == lounge.Id && a.IsDefault, ct))
             .FirstOrDefault()?.Id;
 
         var holdHours = await config.GetIntAsync(ConfigKeys.FnbSettlementHoldHours, DefaultHoldHours, ct);
 
-        uow.Repository<Settlement, int>().Add(new Settlement
+        uow.Repository<Settlement, Guid>().Add(new Settlement
         {
             OwnerId = lounge.OwnerId,
             PaymentId = payment.Id,

@@ -31,11 +31,11 @@ public sealed class SubscriptionBlockedWhilePenalizedTests
 
     private sealed record Wrapped<T>(T Data);
 
-    private sealed record Initiation(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record Initiation(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
 
-    private HttpClient Owner(int ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
+    private HttpClient Owner(Guid ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
-    private async Task<int> FreshOwnerAsync()
+    private async Task<Guid> FreshOwnerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -45,7 +45,7 @@ public sealed class SubscriptionBlockedWhilePenalizedTests
         return owner.Id;
     }
 
-    private async Task SeedLoungeAsync(int ownerId, LoungeStatus status)
+    private async Task SeedLoungeAsync(Guid ownerId, LoungeStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -57,7 +57,7 @@ public sealed class SubscriptionBlockedWhilePenalizedTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> PackageAsync(decimal price = 300_000m)
+    private async Task<Guid> PackageAsync(decimal price = 300_000m)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             "/api/v1/subscriptions/packages", new
@@ -66,11 +66,11 @@ public sealed class SubscriptionBlockedWhilePenalizedTests
                 BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = false, MaxAiPostersPerMonth = 0
             });
         res.EnsureSuccessStatusCode();
-        return (await res.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
     }
 
     /// <summary>Seed một gói Active trực tiếp — dùng cho Renew/ChangePackage mà không cần trả tiền thật.</summary>
-    private async Task SeedActivePlanAsync(int ownerId, int packageId)
+    private async Task SeedActivePlanAsync(Guid ownerId, Guid packageId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -45,7 +45,7 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
         // commits, and both approve/reject — one decision silently overwrites the other's.
         await using var _ = await _lock.AcquireAsync($"moderation:show:{request.ShowId}", ct);
 
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
@@ -82,7 +82,7 @@ internal sealed class ReviewShowCommandHandler : IRequestHandler<ReviewShowComma
         showRepo.Update(show);
 
         // MLACP-79: Owner phai duoc bao ngay ket qua duyet, ca 2 chieu — khong chi khi Approved.
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct);
         if (lounge is not null)
         {
             await _notifications.NotifyAsync(

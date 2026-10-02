@@ -8,6 +8,6 @@ namespace MusicLounge.Application.Subscriptions.Commands.ChangeSubscriptionPacka
 /// được quy thành thời gian ở gói mới (không hoàn tiền mặt) — xem <see cref="SubscriptionTerms"/>.
 /// </summary>
 public sealed record ChangeSubscriptionPackageCommand(
-    int PackageId,
+    Guid PackageId,
     string ClientIpAddress
 ) : ICommand<SubscriptionChangeInitiationDto>;

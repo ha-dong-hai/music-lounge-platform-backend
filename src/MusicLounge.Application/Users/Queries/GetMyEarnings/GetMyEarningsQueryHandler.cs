@@ -19,7 +19,7 @@ internal sealed class GetMyEarningsQueryHandler : IRequestHandler<GetMyEarningsQ
 
     public async Task<EarningsSummaryDto> Handle(GetMyEarningsQuery request, CancellationToken ct)
     {
-        var settlements = await _uow.Repository<Settlement, int>()
+        var settlements = await _uow.Repository<Settlement, Guid>()
             .FindAsync(s => s.OwnerId == _currentUser.UserId, ct);
 
         // PendingReview (D16 — actual/scheduled show duration ratio missed the completion

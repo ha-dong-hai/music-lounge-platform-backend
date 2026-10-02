@@ -29,10 +29,11 @@ public sealed class DonationTests
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     /// <summary>Creates a donation and returns (donationId, orderId).</summary>
-    private async Task<(int Id, string OrderId)> CreateDonationAsync(
-        int performanceId = SeedHelper.PerformanceId,
+    private async Task<(Guid Id, string OrderId)> CreateDonationAsync(
+        Guid? performanceIdOrDefault = null,
         decimal amount = 100_000m)
     {
+        var performanceId = performanceIdOrDefault ?? SeedHelper.PerformanceId;
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await client.PostAsJsonAsync("/api/v1/donations", new
         {
@@ -88,7 +89,7 @@ public sealed class DonationTests
         res.StatusCode.Should().Be(HttpStatusCode.Created);
         var body = await res.Content.ReadFromJsonAsync<DonationInitResponse>();
         body!.Data.PaymentUrl.Should().StartWith("https://sandbox.vnpay.test");
-        body.Data.DonationId.Should().BeGreaterThan(0);
+        body.Data.DonationId.Should().NotBe(Guid.Empty);
     }
 
     [Fact]
@@ -144,7 +145,7 @@ public sealed class DonationTests
     {
         // Seed a Performance for the pre-seeded Cancelled show, then close the scope
         // before making the HTTP request to avoid SQLite single-connection conflicts.
-        int cancelledPerfId;
+        Guid cancelledPerfId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -403,7 +404,7 @@ public sealed class DonationTests
             // nen chi bai nao da giai ngan truoc do moi tao ra no. Khong duoc dua vao thu tu chay bai.
             var ownerAccountId = await db.LedgerAccounts
                 .Where(a => a.OwnerType == AccountType.User && a.OwnerId == SeedHelper.OwnerId)
-                .Select(a => (int?)a.Id)
+                .Select(a => (Guid?)a.Id)
                 .FirstOrDefaultAsync();
 
             var stage1Entries = await db.LedgerEntries
@@ -555,7 +556,7 @@ public sealed class DonationTests
         var res = await ownerClient.GetAsync("/api/v1/donations/pending-ack?pageSize=50");
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await res.Content.ReadAsStringAsync()).Should().Contain($"\"id\":{id}");
+        (await res.Content.ReadAsStringAsync()).Should().Contain($"\"id\":\"{id}\"");
     }
 
     [Fact]
@@ -580,7 +581,7 @@ public sealed class DonationTests
         var res = await ownerClient.GetAsync("/api/v1/donations/awaiting-payout?pageSize=50");
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await res.Content.ReadAsStringAsync()).Should().Contain($"\"id\":{id}");
+        (await res.Content.ReadAsStringAsync()).Should().Contain($"\"id\":\"{id}\"");
     }
 
     // ─── D17 Public donation history ──────────────────────────────────────────
@@ -601,6 +602,6 @@ public sealed class DonationTests
     // ─── DTOs ────────────────────────────────────────────────────────────────
 
     private sealed record DonationInitResponse(bool Success, DonationInitData Data);
-    private sealed record DonationInitData(int DonationId, string OrderId, decimal Gross, string PaymentUrl);
+    private sealed record DonationInitData(Guid DonationId, string OrderId, decimal Gross, string PaymentUrl);
     private sealed record BoolResponse(bool Success, bool Data);
 }

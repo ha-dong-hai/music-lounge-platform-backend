@@ -3,9 +3,9 @@ using MediatR;
 namespace MusicLounge.Application.Tickets.Events;
 
 public record TicketPaymentConfirmed(
-    int PaymentId,
-    int UserId,
-    int OwnerId,
+    Guid PaymentId,
+    Guid UserId,
+    Guid OwnerId,
     Guid[] TicketIds,
-    int? LivestreamId,
-    int ShowId) : INotification;
+    Guid? LivestreamId,
+    Guid ShowId) : INotification;

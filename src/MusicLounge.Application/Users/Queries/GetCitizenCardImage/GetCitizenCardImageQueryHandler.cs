@@ -32,7 +32,7 @@ internal sealed class GetCitizenCardImageQueryHandler
         if (_currentUser.UserId != request.TargetUserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem ảnh CCCD/CMND này.");
 
-        var user = await _uow.Repository<User, int>().GetByIdAsync(request.TargetUserId, ct)
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(request.TargetUserId, ct)
             ?? throw new NotFoundException(nameof(User), request.TargetUserId);
 
         var privateRef = request.Side.Equals("front", StringComparison.OrdinalIgnoreCase)

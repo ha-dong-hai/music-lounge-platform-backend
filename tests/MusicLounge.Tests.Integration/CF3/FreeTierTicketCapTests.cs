@@ -29,7 +29,7 @@ public sealed class FreeTierTicketCapTests
     public FreeTierTicketCapTests(ApiFactory factory) => _factory = factory;
 
     /// <summary>An owner with NO subscription at all, plus a published show ready to sell.</summary>
-    private async Task<(int OwnerId, int ShowId, int PriceId)> SeedUnsubscribedVenueAsync(int quota)
+    private async Task<(Guid OwnerId, Guid ShowId, Guid PriceId)> SeedUnsubscribedVenueAsync(int quota)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -156,7 +156,7 @@ public sealed class FreeTierTicketCapTests
         // so the date check is what actually decides — not the status column alone.
         var expired = new OwnerSubscription
         {
-            OwnerId = 999,
+            OwnerId = TestId.Of(999),
             Status = SubscriptionStatus.Active,
             StartedAt = DateTimeOffset.UtcNow.AddDays(-40),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(-1),

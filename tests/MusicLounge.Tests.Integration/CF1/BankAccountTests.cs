@@ -177,9 +177,9 @@ public sealed class BankAccountTests
 
         using var doc = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var acc = doc.RootElement.GetProperty("data")[0];
-        acc.GetProperty("loungeId").GetInt32().Should().Be(loungeId);
+        acc.GetProperty("loungeId").GetGuid().Should().Be(loungeId);
         acc.GetProperty("performerId").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
-        acc.GetProperty("ownerId").GetInt32().Should().Be(loungeId, "ownerId giữ nguyên cho client cũ");
+        acc.GetProperty("ownerId").GetGuid().Should().Be(loungeId, "ownerId giữ nguyên cho client cũ");
         ownerId.Should().NotBe(loungeId, "tiền đề: mã người dùng và mã phòng trà khác nhau, nên nhầm là thấy ngay");
     }
 
@@ -187,9 +187,9 @@ public sealed class BankAccountTests
     public void TaiKhoanNgheSi_CoPerformerIdRoNghia()
     {
         var dto = new MusicLounge.Application.BankAccounts.DTOs.BankAccountDto(
-            1, BankAccountOwnerType.Performer, 42, "ACB", "0444", "TRAN THI B", true, true, false);
+            TestId.Of(1), BankAccountOwnerType.Performer, TestId.Of(42), "ACB", "0444", "TRAN THI B", true, true, false);
 
-        dto.PerformerId.Should().Be(42);
+        dto.PerformerId.Should().Be(TestId.Of(42));
         dto.LoungeId.Should().BeNull();
     }
 
@@ -208,7 +208,7 @@ public sealed class BankAccountTests
     /// xác minh của nó xuống không mặc định — và mọi khoản giải ngân lên lịch sau đó của chủ phòng trà mẫu (nhiều test
     /// khác chờ đợi) bị giữ vì tài khoản nhận tiền chưa xác minh.
     /// </summary>
-    private async Task<(int OwnerId, int LoungeId)> OwnVenueAsync()
+    private async Task<(Guid OwnerId, Guid LoungeId)> OwnVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -230,5 +230,5 @@ public sealed class BankAccountTests
         return (owner.Id, lounge.Id);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

@@ -49,7 +49,7 @@ public sealed class ErasureDeletesIdentityFilesTests
         dangKy.IsSuccessStatusCode.Should().BeTrue("phải tạo được tài khoản thì mới kiểm được việc xoá");
 
         string thamChieuTruoc, thamChieuSau;
-        int userId;
+        Guid userId;
 
         using (var scope = _factory.Services.CreateScope())
         {
@@ -107,7 +107,7 @@ public sealed class ErasureDeletesIdentityFilesTests
             Phone = (string?)null, AcceptTerms = true
         });
 
-        int userId;
+        Guid userId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -55,7 +55,7 @@ public sealed class DonationOverdueCheckJob
         var releaseTimes = await DonationPayoutDeadline.PayoutReleaseTimesAsync(
             _uow, received.Select(d => d.Id).ToList(), ct);
 
-        int? systemAdminId = null;
+        Guid? systemAdminId = null;
 
         foreach (var donation in received)
         {
@@ -75,10 +75,10 @@ public sealed class DonationOverdueCheckJob
                 {
                     systemAdminId ??= await _ctx.Users
                         .Where(u => u.Role == UserRole.Admin)
-                        .Select(u => (int?)u.Id)
+                        .Select(u => (Guid?)u.Id)
                         .FirstOrDefaultAsync(ct);
 
-                    if (systemAdminId is int adminId)
+                    if (systemAdminId is Guid adminId)
                     {
                         _ctx.VenuePenalties.Add(new VenuePenalty
                         {
@@ -139,7 +139,7 @@ public sealed class DonationOverdueCheckJob
         await _ctx.SaveChangesAsync(ct);
     }
 
-    private async Task<(int OwnerId, int LoungeId)?> GetOwnershipAsync(int donationId, CancellationToken ct)
+    private async Task<(Guid OwnerId, Guid LoungeId)?> GetOwnershipAsync(Guid donationId, CancellationToken ct)
     {
         var row = await _ctx.Donations
             .Where(d => d.Id == donationId)

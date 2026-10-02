@@ -6,7 +6,7 @@ public sealed class RescheduleLoungeShowCommandValidator : AbstractValidator<Res
 {
     public RescheduleLoungeShowCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.NewScheduledStart).GreaterThan(DateTimeOffset.UtcNow);
     }
 }

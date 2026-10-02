@@ -14,6 +14,6 @@ namespace MusicLounge.Application.LoungeShows.Queries.GetRecommendedLoungeShows;
 /// <param name="City">Giới hạn theo thành phố, cho cả hai nhóm.</param>
 public sealed record GetRecommendedLoungeShowsQuery(
     int Limit = 10,
-    IReadOnlyList<int>? RecentShowIds = null,
-    IReadOnlyList<int>? GenreIds = null,
+    IReadOnlyList<Guid>? RecentShowIds = null,
+    IReadOnlyList<Guid>? GenreIds = null,
     string? City = null) : IQuery<IReadOnlyList<RecommendedLoungeShowDto>>;

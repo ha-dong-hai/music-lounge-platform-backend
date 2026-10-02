@@ -39,7 +39,7 @@ public sealed class PosterJobsController : ControllerBase
     }
 
     /// <summary>Máy trạm nộp ảnh đã sinh xong. Ảnh được kiểm theo chữ ký file, không tin phần mở rộng.</summary>
-    [HttpPost("{id:int}/result")]
+    [HttpPost("{id:guid}/result")]
     [RequestSizeLimit(UploadImageValidator.MaxSizeBytes)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -47,7 +47,7 @@ public sealed class PosterJobsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Result(
-        int id, IFormFile file, [FromForm] string? workerId, CancellationToken ct = default)
+        Guid id, IFormFile file, [FromForm] string? workerId, CancellationToken ct = default)
     {
         await new UploadImageValidator().ValidateAndThrowAppExceptionAsync(file, ct);
 
@@ -64,13 +64,13 @@ public sealed class PosterJobsController : ControllerBase
     }
 
     /// <summary>Máy trạm báo không sinh được ảnh (Google Flow từ chối, hết hạn mức, mất mạng...).</summary>
-    [HttpPost("{id:int}/fail")]
+    [HttpPost("{id:guid}/fail")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Fail(
-        int id, [FromBody] FailPosterJobRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] FailPosterJobRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new FailPosterJobCommand(id, TenMayTram(body?.WorkerId), body?.Reason ?? "Không rõ lý do."), ct);
         return NoContent();

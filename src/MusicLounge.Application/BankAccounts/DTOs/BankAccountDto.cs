@@ -8,9 +8,9 @@ namespace MusicLounge.Application.BankAccounts.DTOs;
 /// <see cref="LoungeId"/> / <see cref="PerformerId"/>.
 /// </param>
 public sealed record BankAccountDto(
-    int Id,
+    Guid Id,
     BankAccountOwnerType OwnerType,
-    int OwnerId,
+    Guid OwnerId,
     string BankName,
     string? AccountNumber,
     string AccountHolder,
@@ -21,8 +21,8 @@ public sealed record BankAccountDto(
 {
     /// <summary>MLACP-454: có giá trị khi đây là tài khoản nhận tiền của phòng trà. Suy ra từ OwnerType + OwnerId nên
     /// không thể lệch với dữ liệu gốc.</summary>
-    public int? LoungeId => OwnerType == BankAccountOwnerType.Lounge ? OwnerId : null;
+    public Guid? LoungeId => OwnerType == BankAccountOwnerType.Lounge ? OwnerId : null;
 
     /// <summary>MLACP-454: có giá trị khi đây là tài khoản nhận tiền donate của nghệ sĩ.</summary>
-    public int? PerformerId => OwnerType == BankAccountOwnerType.Performer ? OwnerId : null;
+    public Guid? PerformerId => OwnerType == BankAccountOwnerType.Performer ? OwnerId : null;
 }

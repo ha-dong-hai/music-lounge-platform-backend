@@ -10,9 +10,9 @@ public sealed class ChangeSubscriptionPackageCommandValidator : AbstractValidato
     {
         RuleFor(x => x.PackageId)
             .Cascade(CascadeMode.Stop)
-            .GreaterThan(0)
+            .NotEmpty()
             .MustAsync(async (packageId, ct) =>
-                await uow.Repository<SubscriptionPackage, int>().AnyAsync(p => p.Id == packageId, ct))
+                await uow.Repository<SubscriptionPackage, Guid>().AnyAsync(p => p.Id == packageId, ct))
             .WithMessage("PackageId không tồn tại.");
     }
 }

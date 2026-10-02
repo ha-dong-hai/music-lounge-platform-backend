@@ -53,7 +53,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         // it. The per-ORDER lock below is a different guard: two DIFFERENT transactions for one order.
         await using var _ = await _lock.AcquireAsync($"vnpay-fnborder:{txnRef}", ct);
 
-        var payments = await _uow.Repository<Payment, int>().FindAsync(p => p.OrderId == txnRef, ct);
+        var payments = await _uow.Repository<Payment, Guid>().FindAsync(p => p.OrderId == txnRef, ct);
         var payment = payments.FirstOrDefault();
         if (payment is null) return VnPayIpnOutcome.OrderNotFound;
 
@@ -75,7 +75,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
 
             payment.Status = PaymentStatus.Failed;
             payment.UpdatedAt = DateTimeOffset.UtcNow;
-            _uow.Repository<Payment, int>().Update(payment);
+            _uow.Repository<Payment, Guid>().Update(payment);
             await _uow.SaveChangesAsync(ct);
             _logger.LogWarning(
                 "VNPay F&B payment failed: PaymentId={PaymentId} ResponseCode={ResponseCode}",
@@ -93,10 +93,10 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
 
         // MLACP-349. Khoa theo DON truoc khi doc don — cung khoa ma nhan vien dung khi thu tien mat
         // hay huy, va khach dung khi tao link thanh toan moi.
-        var orderId = int.Parse(payment.ReferenceId);
+        var orderId = Guid.Parse(payment.ReferenceId);
         await using var orderLock = await _lock.AcquireAsync(FnbOrderPayments.LockKey(orderId), ct);
 
-        var order = await _uow.Repository<FnbOrder, int>().GetByIdAsync(orderId, ct);
+        var order = await _uow.Repository<FnbOrder, Guid>().GetByIdAsync(orderId, ct);
         if (order is null) return VnPayIpnOutcome.InternalError;
 
         // MLACP-349. Truoc day nhanh nay khong nhin DON: moi giao dich con Pending deu duoc ap, va don
@@ -124,7 +124,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         payment.VnPayResponseCode = callbackResult.ResponseCode;
         payment.PaidAt = now;
         payment.UpdatedAt = now;
-        _uow.Repository<Payment, int>().Update(payment);
+        _uow.Repository<Payment, Guid>().Update(payment);
 
         order.PaymentMethod = PaymentMethod.Gateway;
 
@@ -135,9 +135,9 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         var closesOrder = order.Status == FnbOrderStatus.Served;
         if (closesOrder)
             order.Status = FnbOrderStatus.Paid;
-        _uow.Repository<FnbOrder, int>().Update(order);
+        _uow.Repository<FnbOrder, Guid>().Update(order);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct);
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(order.LoungeId, ct);
         if (lounge is not null)
         {
             // MLACP-350: truoc day dong Co ghi thang vao tai khoan User cua chu phong tra — khong co
@@ -215,7 +215,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
         payment.VnPayResponseCode = callbackResult.ResponseCode;
         payment.PaidAt = now;
         payment.UpdatedAt = now;
-        _uow.Repository<Payment, int>().Update(payment);
+        _uow.Repository<Payment, Guid>().Update(payment);
 
         var why = paidElsewhere
             ? "đơn F&B đã được thanh toán trước đó (khoản trả trùng)"
@@ -240,7 +240,7 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
         };
-        _uow.Repository<RefundRequest, int>().Add(refund);
+        _uow.Repository<RefundRequest, Guid>().Add(refund);
 
         if (payment.PayerId is { } payerId)
         {

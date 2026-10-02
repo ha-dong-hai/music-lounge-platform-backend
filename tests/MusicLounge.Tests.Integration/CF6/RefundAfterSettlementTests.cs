@@ -40,7 +40,7 @@ public sealed class RefundAfterSettlementTests
     private const decimal OwnerNet = 900_000m;
 
     /// <summary>Payment whose settlement has ALREADY been released to the owner, plus a pending refund.</summary>
-    private async Task<int> SeedFullyReleasedPaymentWithPendingRefundAsync()
+    private async Task<Guid> SeedFullyReleasedPaymentWithPendingRefundAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -33,7 +33,7 @@ public sealed class UndeliveredOfflineShowNoticeTests
 
     public UndeliveredOfflineShowNoticeTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedAsync(
+    private async Task<Guid> SeedAsync(
         AccessType accessType, DateTimeOffset? actualStart, int endedHoursAgo)
     {
         using var scope = _factory.Services.CreateScope();
@@ -102,7 +102,7 @@ public sealed class UndeliveredOfflineShowNoticeTests
         await job.ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<int> ToldCountAsync(int userId, int showId)
+    private async Task<int> ToldCountAsync(Guid userId, Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

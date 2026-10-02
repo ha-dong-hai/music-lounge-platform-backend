@@ -28,7 +28,7 @@ public sealed class ShowImageIsActuallyShownTests
 
     private const string Poster = "/uploads/poster-abc123.png";
 
-    private async Task<int> SeedShowWithPosterAsync(string? posterUrl = Poster, string? cover = null)
+    private async Task<Guid> SeedShowWithPosterAsync(string? posterUrl = Poster, string? cover = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -151,7 +151,7 @@ public sealed class ShowImageIsActuallyShownTests
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
-    private sealed record ShowDetail(int Id, string Name, string? CoverImageUrl);
-    private sealed record ShowListItem(int Id, string Name, string? CoverImageUrl);
-    private sealed record Suggestion(int Id, string Name, string? CoverImageUrl);
+    private sealed record ShowDetail(Guid Id, string Name, string? CoverImageUrl);
+    private sealed record ShowListItem(Guid Id, string Name, string? CoverImageUrl);
+    private sealed record Suggestion(Guid Id, string Name, string? CoverImageUrl);
 }

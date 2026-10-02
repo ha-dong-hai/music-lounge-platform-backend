@@ -7,6 +7,6 @@ public sealed class AddToWishlistCommandValidator : AbstractValidator<AddToWishl
     public AddToWishlistCommandValidator()
     {
         RuleFor(x => x.ShowId)
-            .GreaterThan(0).WithMessage("ShowId không hợp lệ.");
+            .NotEmpty().WithMessage("ShowId không hợp lệ.");
     }
 }

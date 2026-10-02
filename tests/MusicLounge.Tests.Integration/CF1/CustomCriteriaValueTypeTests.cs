@@ -23,7 +23,7 @@ public sealed class CustomCriteriaValueTypeTests
 
     public CustomCriteriaValueTypeTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> TaoTieuChiAsync(CustomCriteriaDataType dataType, string? options = null)
+    private async Task<Guid> TaoTieuChiAsync(CustomCriteriaDataType dataType, string? options = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -41,7 +41,7 @@ public sealed class CustomCriteriaValueTypeTests
         return c.Id;
     }
 
-    private async Task<HttpResponseMessage> GanAsync(int criteriaId, string value)
+    private async Task<HttpResponseMessage> GanAsync(Guid criteriaId, string value)
     {
         var owner = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         return await owner.PostAsJsonAsync(

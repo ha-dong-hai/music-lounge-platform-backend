@@ -19,7 +19,7 @@ public sealed class ShowLifecycleTests
 
     public ShowLifecycleTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedPublishedShowAsync(
+    private async Task<Guid> SeedPublishedShowAsync(
         LoungeShowFormat format = LoungeShowFormat.Offline,
         DateTimeOffset? scheduledStart = null)
     {
@@ -45,7 +45,7 @@ public sealed class ShowLifecycleTests
         return show.Id;
     }
 
-    private async Task<Guid> SeedConfirmedPhysicalTicketAsync(int showId)
+    private async Task<Guid> SeedConfirmedPhysicalTicketAsync(Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -241,7 +241,7 @@ public sealed class ShowLifecycleTests
     [Fact]
     public async Task RateShow_AfterRatingWindowExpired_Returns422()
     {
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -286,7 +286,7 @@ public sealed class ShowLifecycleTests
     [Fact]
     public async Task RemoveRating_ByAdmin_StampsUpdatedByWithAdmin()
     {
-        int ratingId;
+        Guid ratingId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

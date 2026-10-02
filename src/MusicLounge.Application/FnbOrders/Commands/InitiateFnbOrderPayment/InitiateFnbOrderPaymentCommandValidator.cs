@@ -6,7 +6,7 @@ public sealed class InitiateFnbOrderPaymentCommandValidator : AbstractValidator<
 {
     public InitiateFnbOrderPaymentCommandValidator()
     {
-        RuleFor(x => x.OrderId).GreaterThan(0).WithMessage("OrderId không hợp lệ.");
+        RuleFor(x => x.OrderId).NotEmpty().WithMessage("OrderId không hợp lệ.");
         RuleFor(x => x.ClientIpAddress).NotEmpty();
     }
 }

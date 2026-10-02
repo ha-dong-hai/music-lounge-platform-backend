@@ -30,9 +30,9 @@ public sealed class PersonalisedFeedTests
     public PersonalisedFeedTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name, float RecommendationScore, string? RecommendationReason);
+    private sealed record Rec(Guid Id, string Name, float RecommendationScore, string? RecommendationReason);
 
-    private async Task<(int LoungeId, string City)> VenueInItsOwnCityAsync()
+    private async Task<(Guid LoungeId, string City)> VenueInItsOwnCityAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -54,7 +54,7 @@ public sealed class PersonalisedFeedTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowWithGenreAsync(int loungeId, string name, int? genreId, double daysFromNow = 10)
+    private async Task<Guid> ShowWithGenreAsync(Guid loungeId, string name, Guid? genreId, double daysFromNow = 10)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -72,7 +72,7 @@ public sealed class PersonalisedFeedTests
         db.LoungeShows.Add(show);
         await db.SaveChangesAsync();
 
-        if (genreId is int g)
+        if (genreId is Guid g)
         {
             db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = g });
             await db.SaveChangesAsync();
@@ -81,7 +81,7 @@ public sealed class PersonalisedFeedTests
     }
 
     /// <summary>Một tài khoản đã khai sở thích ở bước onboarding nhưng KHÔNG bật đồng ý AI.</summary>
-    private async Task<int> UserWhoDeclaredTasteButDidNotConsentAsync(int favouriteGenreId)
+    private async Task<Guid> UserWhoDeclaredTasteButDidNotConsentAsync(Guid favouriteGenreId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -20,14 +20,15 @@ public sealed class FnbTests
 
     public FnbTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreateMenuAsync(string name = "Menu Mặc Định", int loungeId = 0)
+    private async Task<Guid> CreateMenuAsync(string name = "Menu Mặc Định", Guid? loungeIdOrDefault = null)
     {
+        var loungeId = loungeIdOrDefault ?? Guid.Empty;
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var menu = new FnbMenu
         {
-            LoungeId = loungeId == 0 ? SeedHelper.LoungeId : loungeId,
+            LoungeId = loungeId == Guid.Empty ? SeedHelper.LoungeId : loungeId,
             Name = name,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -37,7 +38,7 @@ public sealed class FnbTests
         return menu.Id;
     }
 
-    private async Task<int> CreateMenuItemAsync(decimal price = 50_000m, int? menuId = null)
+    private async Task<Guid> CreateMenuItemAsync(decimal price = 50_000m, Guid? menuId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -111,7 +112,7 @@ public sealed class FnbTests
             DisplayOrder = 0
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        var itemId = (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var itemId = (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -201,8 +202,8 @@ public sealed class FnbTests
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = "Bàn A3",
             PaymentMethod = "Cash",
             Note = (string?)null,
@@ -215,7 +216,7 @@ public sealed class FnbTests
     [Fact]
     public async Task CreateFnbOrder_ForUnavailableItem_Returns422()
     {
-        int menuItemId;
+        Guid menuItemId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -241,8 +242,8 @@ public sealed class FnbTests
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,
@@ -261,8 +262,8 @@ public sealed class FnbTests
         var res = await client.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = "Bàn B1",
             PaymentMethod = "Cash",
             Note = (string?)null,
@@ -280,14 +281,14 @@ public sealed class FnbTests
         var createRes = await audienceClient.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = menuItemId, Quantity = 1, Note = (string?)null } }
         });
-        var orderId = (await createRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var orderId = (await createRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var staffClient = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
         var res = await staffClient.PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = "Preparing" });
@@ -303,14 +304,14 @@ public sealed class FnbTests
         var createRes = await audienceClient.PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = (string?)null,
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = menuItemId, Quantity = 1, Note = (string?)null } }
         });
-        var orderId = (await createRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var orderId = (await createRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var staffClient = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
         // Skip straight to Served, bypassing Preparing
@@ -341,5 +342,5 @@ public sealed class FnbTests
     }
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record FnbMenuResponseItem(int Id, int LoungeId, string Name, string? Description, bool IsActive, int DisplayOrder);
+    private sealed record FnbMenuResponseItem(Guid Id, Guid LoungeId, string Name, string? Description, bool IsActive, int DisplayOrder);
 }

@@ -66,7 +66,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         // confirm/cancel the same tickets twice.
         await using var _ = await _lock.AcquireAsync($"vnpay-ticket:{txnRef}", ct);
 
-        var paymentRepo = _uow.Repository<Payment, int>();
+        var paymentRepo = _uow.Repository<Payment, Guid>();
         // MLACP-394: chi nhan thanh toan cua ve. Truoc day tra theo ma giao dich thoi, nen mot IPN cua F&B/goi/donate lac
         // vao day (URL IPN chung khi chua re nhanh, hoac URL return cua ve) bi danh dau da tra ma khong luong nao cua no
         // duoc chay — tien bao da nhan nhung don khong duoc ghi so, khong duoc cap nhat.
@@ -112,7 +112,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                     var closedTickets = await _uow.Repository<Ticket, Guid>().FindAsync(t => t.PaymentId == payment.Id, ct);
                     if (closedTickets.Count > 0
                         && closedTickets.All(t => t.Status is TicketStatus.Cancelled or TicketStatus.Pending)
-                        && await _uow.Repository<LoungeShow, int>().GetByIdAsync(closedTickets[0].ShowId, ct) is { } closedShow)
+                        && await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(closedTickets[0].ShowId, ct) is { } closedShow)
                         return await RecordNotIssuedAsync(
                             payment, closedTickets, closedShow, NotIssued.OrderClosed, result, txnRef, ct);
                 }
@@ -155,7 +155,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             // huy trong luc khach con tren trang VNPay — ShowCancellation chi hoan ve Confirmed nen bo qua ve nay —
             // roi tien ve: ve bi chuyen Confirmed cho mot buoi dien khong con to chuc, khong ai tao yeu cau hoan.
             if (tickets.Count > 0
-                && await _uow.Repository<LoungeShow, int>().GetByIdAsync(tickets[0].ShowId, ct) is { } showNow)
+                && await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(tickets[0].ShowId, ct) is { } showNow)
             {
                 if (showNow.Status == LoungeShowStatus.Cancelled)
                     return await RecordNotIssuedAsync(
@@ -163,7 +163,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
 
                 // MLACP-383: cung ke ho do voi ChangeLoungeShowFormat — no chi hoan ve vao cua da Confirmed, con ve
                 // vao cua dang Pending luc buoi dien chuyen online thi den day moi co tien.
-                var tierNow = await _uow.Repository<TicketTier, int>().GetByIdAsync(tickets[0].TierId, ct);
+                var tierNow = await _uow.Repository<TicketTier, Guid>().GetByIdAsync(tickets[0].TierId, ct);
                 if (tierNow is not null && !PhysicalAccess.IsOffered(showNow, tierNow.AccessType))
                     return await RecordNotIssuedAsync(
                         payment, tickets, showNow, NotIssued.WentOnline, result, txnRef, ct);
@@ -198,7 +198,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             var firstTicket = tickets.FirstOrDefault();
             if (firstTicket is not null)
             {
-                var tier = await _uow.Repository<TicketTier, int>().GetByIdAsync(firstTicket.TierId, ct);
+                var tier = await _uow.Repository<TicketTier, Guid>().GetByIdAsync(firstTicket.TierId, ct);
                 if (tier?.AccessType == AccessType.Livestream)
                 {
                     var livestream = await _livestreamRepo.GetByShowIdAsync(firstTicket.ShowId, ct);
@@ -223,16 +223,16 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             await _uow.SaveChangesAsync(ct);
 
             var ownerId = firstTicket is not null
-                ? await _showRepo.GetLoungeOwnerIdAsync(firstTicket.ShowId, ct) ?? 0
-                : 0;
+                ? await _showRepo.GetLoungeOwnerIdAsync(firstTicket.ShowId, ct) ?? Guid.Empty
+                : Guid.Empty;
 
             await _publisher.Publish(new TicketPaymentConfirmed(
                 PaymentId: payment.Id,
-                UserId: firstTicket?.BuyerId ?? 0,
+                UserId: firstTicket?.BuyerId ?? Guid.Empty,
                 OwnerId: ownerId,
                 TicketIds: tickets.Select(t => t.Id).ToArray(),
                 LivestreamId: null,
-                ShowId: firstTicket?.ShowId ?? 0), ct);
+                ShowId: firstTicket?.ShowId ?? Guid.Empty), ct);
 
             _logger.LogInformation(
                 "VNPay ticket callback confirmed: PaymentId={PaymentId} TxnRef={TxnRef} TicketCount={TicketCount} at {At}",
@@ -338,7 +338,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         payment.VnPayResponseCode = result.ResponseCode;
         payment.PaidAt = now;
         payment.UpdatedAt = now;
-        _uow.Repository<Payment, int>().Update(payment);
+        _uow.Repository<Payment, Guid>().Update(payment);
 
         var ticketRepo = _uow.Repository<Ticket, Guid>();
         foreach (var ticket in tickets)
@@ -360,9 +360,9 @@ internal sealed class ProcessVnPayCallbackCommandHandler
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
         };
-        _uow.Repository<RefundRequest, int>().Add(refund);
+        _uow.Repository<RefundRequest, Guid>().Add(refund);
 
-        if (payerId is int buyerId)
+        if (payerId is Guid buyerId)
             await _notifications.NotifyAsync(
                 buyerId,
                 noticeType,

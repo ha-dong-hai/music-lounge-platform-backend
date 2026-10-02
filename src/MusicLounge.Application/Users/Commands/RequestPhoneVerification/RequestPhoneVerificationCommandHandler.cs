@@ -30,7 +30,7 @@ internal sealed class RequestPhoneVerificationCommandHandler
 
     public async Task<Unit> Handle(RequestPhoneVerificationCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 

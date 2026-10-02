@@ -14,14 +14,14 @@ namespace MusicLounge.Application.Settlements.DTOs;
 /// </param>
 /// <param name="Ratio">Chỉ có giá trị khi <c>Verdict</c> là <c>Measured</c>.</param>
 public sealed record SettlementReviewDto(
-    int SettlementId,
-    int OwnerId,
-    int PaymentId,
+    Guid SettlementId,
+    Guid OwnerId,
+    Guid PaymentId,
     string ReleaseType,
     decimal GrossAmount,
     decimal NetAmount,
     DateTimeOffset ScheduledAt,
-    int? ShowId,
+    Guid? ShowId,
     string? ShowName,
     DateTimeOffset? ScheduledStart,
     DateTimeOffset? ScheduledEnd,

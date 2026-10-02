@@ -6,6 +6,6 @@ public sealed class MarkNotificationReadCommandValidator : AbstractValidator<Mar
 {
     public MarkNotificationReadCommandValidator()
     {
-        RuleFor(x => x.NotificationId).GreaterThan(0).WithMessage("NotificationId không hợp lệ.");
+        RuleFor(x => x.NotificationId).NotEmpty().WithMessage("NotificationId không hợp lệ.");
     }
 }

@@ -18,7 +18,7 @@ internal sealed class MarkNotificationReadCommandHandler : IRequestHandler<MarkN
 
     public async Task<Unit> Handle(MarkNotificationReadCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<Notification, int>();
+        var repo = _uow.Repository<Notification, Guid>();
         var notification = await repo.GetByIdAsync(request.NotificationId, ct)
             ?? throw new NotFoundException(nameof(Notification), request.NotificationId);
 

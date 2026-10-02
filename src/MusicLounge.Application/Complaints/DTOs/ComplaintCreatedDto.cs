@@ -5,4 +5,4 @@ namespace MusicLounge.Application.Complaints.DTOs;
 /// lại — đây là cách duy nhất họ tra được kết quả về sau. Null với người đã có tài khoản, vì họ xem
 /// được qua GET /complaints/my.
 /// </param>
-public sealed record ComplaintCreatedDto(int Id, string? LookupReference);
+public sealed record ComplaintCreatedDto(Guid Id, string? LookupReference);

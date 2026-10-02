@@ -32,7 +32,7 @@ public sealed record MonthlyRevenueDto(
 public sealed record RevenueBySourceDto(decimal Gmv, decimal PlatformRevenue);
 
 public sealed record TopShowRevenueDto(
-    int ShowId,
+    Guid ShowId,
     string Title,
     string LoungeName,
     DateTimeOffset StartTime,
@@ -41,7 +41,7 @@ public sealed record TopShowRevenueDto(
 
 /// <param name="ShowCount">Số buổi hòa nhạc thuộc thể loại này có vé bán được trong khoảng thời gian đã chọn.</param>
 public sealed record GenreDemandDto(
-    int GenreId,
+    Guid GenreId,
     string GenreName,
     int TicketsSold,
     int ShowCount);

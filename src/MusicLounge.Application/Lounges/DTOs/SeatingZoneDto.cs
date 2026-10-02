@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.Lounges.DTOs;
 
 public sealed record SeatingZoneDto(
-    int Id,
-    int LoungeId,
+    Guid Id,
+    Guid LoungeId,
     string Name,
     string? Description,
     int Capacity,

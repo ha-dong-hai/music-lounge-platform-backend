@@ -6,7 +6,7 @@ public sealed class SetLoungeImageCommandValidator : AbstractValidator<SetLounge
 {
     public SetLoungeImageCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.ImageUrl).NotEmpty().MaximumLength(500);
     }
 }

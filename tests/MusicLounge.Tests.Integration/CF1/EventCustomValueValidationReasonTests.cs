@@ -32,7 +32,7 @@ public sealed class EventCustomValueValidationReasonTests
     /// Ghi thẳng vào cơ sở dữ liệu, KHÔNG qua API: dựng lại đúng dòng dữ liệu cũ có từ trước khi có hàng
     /// rào. Đi qua API thì lệnh ghi sẽ từ chối, và ca cần kiểm sẽ không bao giờ dựng được.
     /// </summary>
-    private async Task<int> TaoTieuChiVaGiaTriAsync(
+    private async Task<Guid> TaoTieuChiVaGiaTriAsync(
         CustomCriteriaDataType dataType, string? options, string value)
     {
         using var scope = _factory.Services.CreateScope();
@@ -54,7 +54,7 @@ public sealed class EventCustomValueValidationReasonTests
         return c.Id;
     }
 
-    private async Task<JsonElement> DocAsync(int criteriaId)
+    private async Task<JsonElement> DocAsync(Guid criteriaId)
     {
         var owner = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         var res = await owner.GetAsync($"/api/v1/custom-criteria/shows/{SeedHelper.ShowId}/values");
@@ -62,7 +62,7 @@ public sealed class EventCustomValueValidationReasonTests
 
         var root = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
         var data = root.TryGetProperty("data", out var d) ? d : root;
-        return data.EnumerateArray().First(v => v.GetProperty("criteriaId").GetInt32() == criteriaId);
+        return data.EnumerateArray().First(v => v.GetProperty("criteriaId").GetGuid() == criteriaId);
     }
 
     [Fact]

@@ -39,7 +39,7 @@ public sealed class ForgetInferredAiProfileTests
     /// <summary>
     /// Một người đã bật đồng ý AI, đã khai sở thích, và hệ thống đã suy ra đủ thứ về họ.
     /// </summary>
-    private async Task<int> UserWithBothDeclaredAndInferredDataAsync(bool consent = true)
+    private async Task<Guid> UserWithBothDeclaredAndInferredDataAsync(bool consent = true)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -85,7 +85,7 @@ public sealed class ForgetInferredAiProfileTests
         return user.Id;
     }
 
-    private async Task<(int Scores, int Recommendations, int Genres, int Moods)> CountAsync(int userId)
+    private async Task<(int Scores, int Recommendations, int Genres, int Moods)> CountAsync(Guid userId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -111,7 +111,7 @@ public sealed class ForgetInferredAiProfileTests
             {
                 GenreIds = new[] { SeedHelper.GenreId1 },
                 MoodIds = new[] { SeedHelper.MoodId1 },
-                AtmosphereIds = Array.Empty<int>(),
+                AtmosphereIds = Array.Empty<Guid>(),
                 EnableAiConsent = false
             });
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -134,7 +134,7 @@ public sealed class ForgetInferredAiProfileTests
             {
                 GenreIds = new[] { SeedHelper.GenreId1 },
                 MoodIds = new[] { SeedHelper.MoodId1 },
-                AtmosphereIds = Array.Empty<int>(),
+                AtmosphereIds = Array.Empty<Guid>(),
                 EnableAiConsent = false
             });
 
@@ -154,8 +154,8 @@ public sealed class ForgetInferredAiProfileTests
             .PutAsJsonAsync("/api/v1/me/preferences", new
             {
                 GenreIds = new[] { SeedHelper.GenreId2 },
-                MoodIds = Array.Empty<int>(),
-                AtmosphereIds = Array.Empty<int>(),
+                MoodIds = Array.Empty<Guid>(),
+                AtmosphereIds = Array.Empty<Guid>(),
                 EnableAiConsent = true
             });
 
@@ -192,7 +192,7 @@ public sealed class ForgetInferredAiProfileTests
         //
         // Đếm tổng hợp trên giao dịch thì không cần xin phép — đó là đếm. Nhưng bảng này khoá theo
         // (người, buổi diễn) và dùng để suy ra sở thích, tức đúng là lập hồ sơ.
-        int userId;
+        Guid userId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

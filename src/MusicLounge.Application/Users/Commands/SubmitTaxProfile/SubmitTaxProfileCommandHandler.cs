@@ -35,7 +35,7 @@ internal sealed class SubmitTaxProfileCommandHandler : IRequestHandler<SubmitTax
 
     public async Task<Unit> Handle(SubmitTaxProfileCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var taxCode = request.TaxCode.Trim();
 
         // TaxCode is encrypted non-deterministically, so the duplicate check has to go through the

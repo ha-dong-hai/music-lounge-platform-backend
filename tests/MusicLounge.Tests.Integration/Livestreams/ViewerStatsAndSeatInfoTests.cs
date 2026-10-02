@@ -28,7 +28,7 @@ public sealed class ViewerStatsAndSeatInfoTests
 
     public ViewerStatsAndSeatInfoTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedLivestreamAsync()
+    private async Task<Guid> SeedLivestreamAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -51,7 +51,7 @@ public sealed class ViewerStatsAndSeatInfoTests
         return livestream.Id;
     }
 
-    private async Task<(int Viewers, int Peak, int Total)> ReadAsync(int livestreamId)
+    private async Task<(int Viewers, int Peak, int Total)> ReadAsync(Guid livestreamId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -59,14 +59,14 @@ public sealed class ViewerStatsAndSeatInfoTests
         return (l.ViewerCount, l.PeakViewerCount, l.TotalViews);
     }
 
-    private async Task<int> JoinAsync(int livestreamId)
+    private async Task<int> JoinAsync(Guid livestreamId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ILivestreamRepository>()
             .RecordViewerJoinedAsync(livestreamId);
     }
 
-    private async Task<int> LeaveAsync(int livestreamId)
+    private async Task<int> LeaveAsync(Guid livestreamId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ILivestreamRepository>()

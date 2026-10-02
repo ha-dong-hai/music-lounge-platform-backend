@@ -19,7 +19,7 @@ namespace MusicLounge.Application.Lounges.DTOs;
 /// <c>GET /lounges/{id}/business-license</c>, vốn có kiểm quyền.</para>
 /// </summary>
 public sealed record LoungeListItemDto(
-    int Id,
+    Guid Id,
     string Name,
     string? PrimaryImageUrl,
     string? Model3DUrl,

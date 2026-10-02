@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Analytics.DTOs;
 
 public sealed record ArtistDonationStatsDto(
-    int PerformerId,
+    Guid PerformerId,
     string PerformerName,
     int DonationCount,
     decimal TotalGross,
@@ -10,6 +10,6 @@ public sealed record ArtistDonationStatsDto(
 
 public sealed record OwnerArtistDonationReportDto(
     decimal GrandTotalDonated,
-    int? TopPerformerId,
+    Guid? TopPerformerId,
     string? TopPerformerName,
     IReadOnlyList<ArtistDonationStatsDto> ByArtist);

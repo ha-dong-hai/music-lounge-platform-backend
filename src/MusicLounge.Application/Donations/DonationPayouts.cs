@@ -27,13 +27,13 @@ public static class DonationPayouts
     public const string PaymentReferenceType = "Donation";
 
     public static async Task ScheduleAsync(
-        IUnitOfWork uow, Payment payment, int ownerId, int loungeId, DateTimeOffset now, CancellationToken ct)
+        IUnitOfWork uow, Payment payment, Guid ownerId, Guid loungeId, DateTimeOffset now, CancellationToken ct)
     {
-        var bankAccountId = (await uow.Repository<BankAccount, int>().FindAsync(
+        var bankAccountId = (await uow.Repository<BankAccount, Guid>().FindAsync(
                 a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == loungeId && a.IsDefault, ct))
             .FirstOrDefault()?.Id;
 
-        uow.Repository<Settlement, int>().Add(new Settlement
+        uow.Repository<Settlement, Guid>().Add(new Settlement
         {
             OwnerId = ownerId,
             PaymentId = payment.Id,
@@ -54,15 +54,15 @@ public static class DonationPayouts
     /// <param name="ReleasedAt">Lúc nền tảng đã chuyển tiền cho phòng trà; null khi chưa chuyển.</param>
     public sealed record PayoutState(bool HasPayout, DateTimeOffset? ReleasedAt, bool HasBankAccount);
 
-    public static async Task<PayoutState> StateAsync(IUnitOfWork uow, int donationId, CancellationToken ct)
+    public static async Task<PayoutState> StateAsync(IUnitOfWork uow, Guid donationId, CancellationToken ct)
     {
         var referenceId = donationId.ToString();
-        var payment = (await uow.Repository<Payment, int>().FindAsync(
+        var payment = (await uow.Repository<Payment, Guid>().FindAsync(
                 p => p.ReferenceType == PaymentReferenceType && p.ReferenceId == referenceId, ct))
             .FirstOrDefault();
         if (payment is null) return new PayoutState(false, null, false);
 
-        var settlement = (await uow.Repository<Settlement, int>().FindAsync(
+        var settlement = (await uow.Repository<Settlement, Guid>().FindAsync(
                 s => s.PaymentId == payment.Id, ct))
             .FirstOrDefault();
 

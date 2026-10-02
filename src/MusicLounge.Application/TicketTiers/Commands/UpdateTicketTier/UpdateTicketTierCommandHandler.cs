@@ -28,14 +28,14 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
 
     public async Task<Unit> Handle(UpdateTicketTierCommand request, CancellationToken ct)
     {
-        var tierRepo = _uow.Repository<TicketTier, int>();
+        var tierRepo = _uow.Repository<TicketTier, Guid>();
         var tier = await tierRepo.GetByIdAsync(request.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), request.TierId);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(tier.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(tier.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), tier.LoungeShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -61,7 +61,7 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
 
         if (request.TotalCapacity.HasValue)
         {
-            var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+            var activeStatusSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
                 s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
             var freeTierCap = await _config.GetIntAsync(
                 ConfigKeys.FreeTierMaxTicketsPerEvent,
@@ -69,7 +69,7 @@ internal sealed class UpdateTicketTierCommandHandler : IRequestHandler<UpdateTic
             var cap = SubscriptionEntitlements.ResolveTicketCap(
                 SubscriptionEntitlements.ActivePlan(activeStatusSubs, DateTimeOffset.UtcNow), freeTierCap);
 
-            var otherTiers = await _uow.Repository<TicketTier, int>()
+            var otherTiers = await _uow.Repository<TicketTier, Guid>()
                 .FindAsync(t => t.LoungeShowId == show.Id && t.Id != tier.Id, ct);
             var totalCapacity = otherTiers.Sum(t => t.TotalCapacity ?? 0) + request.TotalCapacity.Value;
 

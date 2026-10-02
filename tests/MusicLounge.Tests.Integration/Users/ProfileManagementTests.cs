@@ -342,7 +342,7 @@ public sealed class ProfileManagementTests
     private static string PublicUploadPath(string publicUrl)
         => Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", publicUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
-    private async Task<int> CreateDedicatedUserAsync()
+    private async Task<Guid> CreateDedicatedUserAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

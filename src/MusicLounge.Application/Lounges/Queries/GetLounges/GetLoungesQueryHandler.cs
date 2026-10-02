@@ -26,7 +26,7 @@ internal sealed class GetLoungesQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        int? ownerId = null;
+        Guid? ownerId = null;
         if (request.Mine)
         {
             if (!_currentUser.IsAuthenticated)

@@ -9,14 +9,14 @@ using MusicLounge.Infrastructure.Persistence;
 namespace MusicLounge.Infrastructure.Repositories;
 
 internal sealed class EventModerationRepository
-    : Repository<EventModeration, int>, IEventModerationRepository
+    : Repository<EventModeration, Guid>, IEventModerationRepository
 {
     private readonly ApplicationDbContext _ctx;
 
     public EventModerationRepository(ApplicationDbContext ctx) : base(ctx) => _ctx = ctx;
 
     public async Task<PaginatedResult<EventModerationDto>> GetPendingAsync(
-        ModerationTargetType? targetType, int? targetId, int page, int pageSize, CancellationToken ct = default)
+        ModerationTargetType? targetType, Guid? targetId, int page, int pageSize, CancellationToken ct = default)
     {
         var baseQuery = _ctx.EventModerations
             .AsNoTracking()
@@ -95,7 +95,7 @@ internal sealed class EventModerationRepository
     }
 
     public async Task<EventModeration?> GetByTargetAsync(
-        ModerationTargetType targetType, int targetId, CancellationToken ct = default)
+        ModerationTargetType targetType, Guid targetId, CancellationToken ct = default)
     {
         return await _ctx.EventModerations
             .FirstOrDefaultAsync(m => m.TargetType == targetType && m.TargetId == targetId, ct);

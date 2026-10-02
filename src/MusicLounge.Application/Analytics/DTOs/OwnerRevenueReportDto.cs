@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Analytics.DTOs;
 
 public sealed record RevenueByEventDto(
-    int ShowId,
+    Guid ShowId,
     string ShowName,
     DateTimeOffset ScheduledStart,
     decimal TicketRevenue,

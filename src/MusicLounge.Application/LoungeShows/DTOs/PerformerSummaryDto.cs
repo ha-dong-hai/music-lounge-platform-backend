@@ -3,12 +3,12 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.LoungeShows.DTOs;
 
 public sealed record PerformerSummaryDto(
-    int Id,
+    Guid Id,
     string Name,
     string? AvatarUrl,
     string? Bio,
     IReadOnlyList<GenreDto> Genres,
-    int PerformanceId,
+    Guid PerformanceId,
     bool AcceptsDonation,
     PerformerRole Role,
     // MLACP-469: UpdatePerformanceCommand BẮT BUỘC gửi OrderIndex, mà trước đây không DTO đọc nào

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicLounge.Domain.Entities;
@@ -15,12 +16,12 @@ internal sealed class MoodConfiguration : IEntityTypeConfiguration<Mood>
 
         // MLACP-14: danh mục dòng nhạc/cảm xúc mặc định cho form tạo buổi diễn.
         b.HasData(
-            new Mood { Id = 1, Name = "Hoài niệm" },
-            new Mood { Id = 2, Name = "Tiền chiến" },
-            new Mood { Id = 3, Name = "Lãng mạn" },
-            new Mood { Id = 4, Name = "Chill" },
-            new Mood { Id = 5, Name = "Sôi động" },
-            new Mood { Id = 6, Name = "Nhẹ nhàng" }
+            new Mood { Id = OrderedGuid.FromLegacy("moods", 1), Name = "Hoài niệm" },
+            new Mood { Id = OrderedGuid.FromLegacy("moods", 2), Name = "Tiền chiến" },
+            new Mood { Id = OrderedGuid.FromLegacy("moods", 3), Name = "Lãng mạn" },
+            new Mood { Id = OrderedGuid.FromLegacy("moods", 4), Name = "Chill" },
+            new Mood { Id = OrderedGuid.FromLegacy("moods", 5), Name = "Sôi động" },
+            new Mood { Id = OrderedGuid.FromLegacy("moods", 6), Name = "Nhẹ nhàng" }
         );
     }
 }

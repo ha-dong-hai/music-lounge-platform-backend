@@ -132,7 +132,7 @@ public static class PaymentIncident
         string referenceType,
         string referenceId,
         CancellationToken ct,
-        int? refundRequestId = null)
+        Guid? refundRequestId = null)
     {
         logger.LogError(
             "VNPay xac nhan THANH CONG cho mot ban ghi da dong — tien da thu ma he thong khong con " +
@@ -140,7 +140,7 @@ public static class PaymentIncident
             "RefundRequestId={RefundRequestId} at {At}",
             what.Vi, txnRef, amount, referenceType, referenceId, refundRequestId, DateTimeOffset.UtcNow);
 
-        var admins = await uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin, ct);
+        var admins = await uow.Repository<User, Guid>().FindAsync(u => u.Role == UserRole.Admin, ct);
         if (admins.Count == 0) return;
 
         // MLACP-392: tu MLACP-351/382/383/385/386/389, cac duong "tien ve nhung khong cap/khong ap duoc" da TU TAO yeu

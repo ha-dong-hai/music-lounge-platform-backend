@@ -29,7 +29,7 @@ public sealed class FnbOrdersCancelledWithShowTests
 
     public FnbOrdersCancelledWithShowTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId);
 
     private async Task<Venue> VenueAsync()
     {
@@ -49,7 +49,7 @@ public sealed class FnbOrdersCancelledWithShowTests
         return new Venue(owner.Id, lounge.Id);
     }
 
-    private async Task<int> BuyerAsync()
+    private async Task<Guid> BuyerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -59,7 +59,7 @@ public sealed class FnbOrdersCancelledWithShowTests
         return user.Id;
     }
 
-    private async Task<int> ShowAsync(int loungeId, DateTimeOffset start)
+    private async Task<Guid> ShowAsync(Guid loungeId, DateTimeOffset start)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -79,7 +79,7 @@ public sealed class FnbOrdersCancelledWithShowTests
         return show.Id;
     }
 
-    private async Task<int> MenuItemAsync(int loungeId)
+    private async Task<Guid> MenuItemAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -97,8 +97,8 @@ public sealed class FnbOrdersCancelledWithShowTests
 
     /// <param name="gatewayConfirmed">Có một Payment Gateway Confirmed cho đơn này (khách đã trả trước qua VNPay,
     /// bếp chưa phục vụ xong nên đơn vẫn ở <paramref name="status"/>, không nhảy Paid — đúng quy tắc MLACP-349).</param>
-    private async Task<(int OrderId, int? PaymentId)> FnbOrderAsync(
-        int loungeId, int showId, int menuItemId, int? audienceUserId, FnbOrderStatus status,
+    private async Task<(Guid OrderId, Guid? PaymentId)> FnbOrderAsync(
+        Guid loungeId, Guid showId, Guid menuItemId, Guid? audienceUserId, FnbOrderStatus status,
         bool gatewayConfirmed = false)
     {
         using var scope = _factory.Services.CreateScope();
@@ -119,7 +119,7 @@ public sealed class FnbOrdersCancelledWithShowTests
         });
         await db.SaveChangesAsync();
 
-        int? paymentId = null;
+        Guid? paymentId = null;
         if (gatewayConfirmed)
         {
             var payment = new Payment
@@ -164,28 +164,28 @@ public sealed class FnbOrdersCancelledWithShowTests
         return (order.Id, paymentId);
     }
 
-    private async Task<FnbOrder> OrderStateAsync(int orderId)
+    private async Task<FnbOrder> OrderStateAsync(Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<FnbOrder>().AsNoTracking()
             .SingleAsync(o => o.Id == orderId);
     }
 
-    private async Task<List<OrderItem>> ItemsAsync(int orderId)
+    private async Task<List<OrderItem>> ItemsAsync(Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<OrderItem>().AsNoTracking()
             .Where(i => i.FnbOrderId == orderId).ToListAsync();
     }
 
-    private async Task<List<RefundRequest>> RefundsAsync(int paymentId)
+    private async Task<List<RefundRequest>> RefundsAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().RefundRequests.AsNoTracking()
             .Where(r => r.PaymentId == paymentId).ToListAsync();
     }
 
-    private async Task<List<Notification>> NoticesAsync(int userId, NotificationType type)
+    private async Task<List<Notification>> NoticesAsync(Guid userId, NotificationType type)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()

@@ -9,14 +9,14 @@ namespace MusicLounge.Application.LoungeShows.Commands.AddToWishlist;
 
 internal sealed class AddToWishlistCommandHandler : IRequestHandler<AddToWishlistCommand, Unit>
 {
-    private readonly IRepository<ShowWishlist, int> _wishlistRepo;
-    private readonly IRepository<LoungeShow, int> _showRepo;
+    private readonly IRepository<ShowWishlist, Guid> _wishlistRepo;
+    private readonly IRepository<LoungeShow, Guid> _showRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IUnitOfWork _uow;
 
     public AddToWishlistCommandHandler(
-        IRepository<ShowWishlist, int> wishlistRepo,
-        IRepository<LoungeShow, int> showRepo,
+        IRepository<ShowWishlist, Guid> wishlistRepo,
+        IRepository<LoungeShow, Guid> showRepo,
         ICurrentUserService currentUser,
         IUnitOfWork uow)
     {

@@ -53,13 +53,13 @@ public static class StreamLoss
         {
             var ratingWindowDays = await config.GetIntAsync(ConfigKeys.RatingWindowDays, 7, ct);
             LoungeShowLifecycle.TryMarkEnded(show, now, ratingWindowDays);   // §6.13
-            uow.Repository<LoungeShow, int>().Update(show);
+            uow.Repository<LoungeShow, Guid>().Update(show);
             return StreamLossOutcome.ShowEnded;
         }
 
         // Hybrid: chỉ stream dừng. Chủ phòng trà phải biết — không thì buổi diễn nằm Ongoing tới khi
         // job tự đóng chạy, và cửa sổ đánh giá mở trễ theo.
-        var lounge = await uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
+        var lounge = await uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct);
         if (lounge is not null)
         {
             await notifications.NotifyAsync(

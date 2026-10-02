@@ -31,7 +31,7 @@ public sealed class EventManagementTests
 
     // MLACP-374: SeedHelper.OwnerId da so huu SeedHelper.LoungeId — cac bai test tao phong tra MOI
     // can mot chu con trong (chua co phong tra nao), khong the dung lai SeedHelper.OwnerId nua.
-    private async Task<int> FreshOwnerIdAsync()
+    private async Task<Guid> FreshOwnerIdAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -41,7 +41,7 @@ public sealed class EventManagementTests
         return owner.Id;
     }
 
-    private async Task<int> CreateShowAsync(string format = "Offline")
+    private async Task<Guid> CreateShowAsync(string format = "Offline")
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         var res = await client.PostAsJsonAsync("/api/v1/lounge-shows", new
@@ -56,19 +56,19 @@ public sealed class EventManagementTests
             // khung giờ ở cùng phòng trà bị từ chối.
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = format == "Online" ? 200 : (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         res.EnsureSuccessStatusCode();
-        var body = await res.Content.ReadFromJsonAsync<DataResponse<int>>();
+        var body = await res.Content.ReadFromJsonAsync<DataResponse<Guid>>();
         var showId = body!.Data;
 
         var legalRes = await client.PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/legal-approval", new
@@ -80,7 +80,7 @@ public sealed class EventManagementTests
         return showId;
     }
 
-    private async Task CreateTierAsync(int showId, string accessType = "Physical")
+    private async Task CreateTierAsync(Guid showId, string accessType = "Physical")
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         var res = await client.PostAsJsonAsync("/api/v1/ticket-tiers", new
@@ -89,7 +89,7 @@ public sealed class EventManagementTests
             Name = "Standard",
             Description = (string?)null,
             AccessType = accessType,
-            ZoneId = (int?)null,
+            ZoneId = (Guid?)null,
             TotalCapacity = 100,
             Prices = new[]
             {
@@ -118,7 +118,7 @@ public sealed class EventManagementTests
         {
             Name = "New Test Lounge",
             Description = "A venue",
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "1 Test St",
             Ward = "Ward 1",
             District = "District 1",
@@ -148,7 +148,7 @@ public sealed class EventManagementTests
         {
             Name = "Second Lounge For Same Owner",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "1 Test St",
             Ward = "Ward 1",
             District = "District 1",
@@ -173,7 +173,7 @@ public sealed class EventManagementTests
         {
             Name = "Should Fail",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "1 Test St",
             Ward = "Ward 1",
             District = "District 1",
@@ -195,7 +195,7 @@ public sealed class EventManagementTests
         {
             Name = $"MineTrueLounge-{Guid.NewGuid():N}",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "1 Test St",
             Ward = "Ward 1",
             District = "District 1",
@@ -203,13 +203,13 @@ public sealed class EventManagementTests
             Latitude = (double?)null,
             Longitude = (double?)null
         });
-        var loungeId = (await createRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var loungeId = (await createRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var res = await client.GetAsync("/api/v1/lounges?mine=true&pageSize=100");
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().Contain($"\"id\":{loungeId}");
+        body.Should().Contain($"\"id\":\"{loungeId}\"");
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public sealed class EventManagementTests
         {
             Name = $"MineTrueLounge-{Guid.NewGuid():N}",
             Description = (string?)null,
-            AtmosphereId = (int?)null,
+            AtmosphereId = (Guid?)null,
             Street = "1 Test St",
             Ward = "Ward 1",
             District = "District 1",
@@ -228,14 +228,14 @@ public sealed class EventManagementTests
             Latitude = (double?)null,
             Longitude = (double?)null
         });
-        var loungeId = (await createRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var loungeId = (await createRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var otherOwnerClient = _factory.CreateAuthenticatedClient(SeedHelper.OtherOwnerId, "Owner");
         var res = await otherOwnerClient.GetAsync("/api/v1/lounges?mine=true&pageSize=100");
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().NotContain($"\"id\":{loungeId}", "mine=true must only return the caller's own lounges");
+        body.Should().NotContain($"\"id\":\"{loungeId}\"", "mine=true must only return the caller's own lounges");
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public sealed class EventManagementTests
     public async Task CreateLoungeShow_AsOwner_Returns201WithId()
     {
         var id = await CreateShowAsync();
-        id.Should().BeGreaterThan(0);
+        id.Should().NotBe(Guid.Empty);
     }
 
     [Fact]
@@ -270,12 +270,12 @@ public sealed class EventManagementTests
             Format = "Offline",
             ScheduledStart = DateTimeOffset.UtcNow.AddDays(3),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = (int?)null,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = Array.Empty<object>()
         });
 
@@ -469,7 +469,7 @@ public sealed class EventManagementTests
         var assignRes = await ownerClient.PostAsJsonAsync(
             $"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = SeedHelper.OtherOwnerId });
         assignRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var assignBody = await assignRes.Content.ReadFromJsonAsync<DataResponse<int>>();
+        var assignBody = await assignRes.Content.ReadFromJsonAsync<DataResponse<Guid>>();
 
         var listRes = await ownerClient.GetAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/staff");
         (await listRes.Content.ReadAsStringAsync()).Should().Contain("\"isActive\":true");
@@ -496,7 +496,7 @@ public sealed class EventManagementTests
     [Fact]
     public async Task AssignStaff_ByAdmin_NotTheOwner_Returns201()
     {
-        int candidateUserId;
+        Guid candidateUserId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -522,7 +522,7 @@ public sealed class EventManagementTests
     [Fact]
     public async Task DeactivateStaff_ByAdmin_NotTheOwner_Returns204()
     {
-        int candidateUserId;
+        Guid candidateUserId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -540,7 +540,7 @@ public sealed class EventManagementTests
         var assignRes = await ownerClient.PostAsJsonAsync(
             $"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = candidateUserId });
         assignRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var staffId = (await assignRes.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var staffId = (await assignRes.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
         var res = await adminClient.DeleteAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/staff/{staffId}");
@@ -570,9 +570,9 @@ public sealed class EventManagementTests
         // assignment lam anh huong cac test khac dang dung chung 1 database instance.
         var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
 
-        int candidateUserId;
-        int secondLoungeId;
-        int secondOwnerId;
+        Guid candidateUserId;
+        Guid secondLoungeId;
+        Guid secondOwnerId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -623,7 +623,7 @@ public sealed class EventManagementTests
         var assignRes = await ownerClient.PostAsJsonAsync(
             $"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = SeedHelper.AudienceId });
         assignRes.StatusCode.Should().Be(HttpStatusCode.Created);
-        var assignBody = await assignRes.Content.ReadFromJsonAsync<DataResponse<int>>();
+        var assignBody = await assignRes.Content.ReadFromJsonAsync<DataResponse<Guid>>();
 
         using (var scope = _factory.Services.CreateScope())
         {
@@ -673,7 +673,7 @@ public sealed class EventManagementTests
             "the response shape must match every other NotFoundException-driven 404 in this API");
     }
 
-    private sealed record UserLookupData(int Id, string FullName, string Email);
+    private sealed record UserLookupData(Guid Id, string FullName, string Email);
 
     // ─── GET /lounge-shows?mine=true ────────────────────────────────────────
     // Owner self-service lookup for Draft shows added during REST-standards review — the only
@@ -688,13 +688,13 @@ public sealed class EventManagementTests
 
         var publicRes = await ownerClient.GetAsync("/api/v1/lounge-shows?pageSize=100");
         (await publicRes.Content.ReadAsStringAsync())
-            .Should().NotContain($"\"id\":{showId}", "Draft show must not appear on the default public listing");
+            .Should().NotContain($"\"id\":\"{showId}\"", "Draft show must not appear on the default public listing");
 
         var mineRes = await ownerClient.GetAsync("/api/v1/lounge-shows?mine=true&pageSize=100");
 
         mineRes.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await mineRes.Content.ReadAsStringAsync();
-        body.Should().Contain($"\"id\":{showId}");
+        body.Should().Contain($"\"id\":\"{showId}\"");
         body.Should().Contain("\"status\":\"Draft\"");
     }
 
@@ -708,7 +708,7 @@ public sealed class EventManagementTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
-        body.Should().NotContain($"\"id\":{showId}", "mine=true must only return the caller's own shows");
+        body.Should().NotContain($"\"id\":\"{showId}\"", "mine=true must only return the caller's own shows");
     }
 
     [Fact]
@@ -740,7 +740,7 @@ public sealed class EventManagementTests
             // Doi sang mot khung gio con trong: sua lich cung phai qua bo chong trung lich CF1.
             ScheduledStart = SeedHelper.NextShowStart(),
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 100,
             OnlineQuota = (int?)null
         });
@@ -761,7 +761,7 @@ public sealed class EventManagementTests
             Name = "Admin-created tier",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (int?)null,
+            ZoneId = (Guid?)null,
             TotalCapacity = 50,
             Prices = new[]
             {
@@ -801,7 +801,7 @@ public sealed class EventManagementTests
     // inspection (a genuine read-then-write TOCTOU gap) and by matching an already-proven pattern,
     // not by this test forcing an actual race.
 
-    private async Task<int> CreateTierAsync(int showId, int totalCapacity)
+    private async Task<Guid> CreateTierAsync(Guid showId, int totalCapacity)
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
         var res = await client.PostAsJsonAsync("/api/v1/ticket-tiers", new
@@ -810,7 +810,7 @@ public sealed class EventManagementTests
             Name = $"Tier-{Guid.NewGuid():N}",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (int?)null,
+            ZoneId = (Guid?)null,
             TotalCapacity = totalCapacity,
             Prices = new[]
             {
@@ -826,7 +826,7 @@ public sealed class EventManagementTests
             }
         });
         res.EnsureSuccessStatusCode();
-        var body = await res.Content.ReadFromJsonAsync<DataResponse<int>>();
+        var body = await res.Content.ReadFromJsonAsync<DataResponse<Guid>>();
         return body!.Data;
     }
 
@@ -836,7 +836,7 @@ public sealed class EventManagementTests
         var showId = await CreateShowAsync();
         // 10 tiers × 10 = 100, safely under the seed subscription cap of 1000 (SeedHelper).
         const int tierCount = 10;
-        var tierIds = new List<int>();
+        var tierIds = new List<Guid>();
         for (var i = 0; i < tierCount; i++)
             tierIds.Add(await CreateTierAsync(showId, totalCapacity: 10));
 

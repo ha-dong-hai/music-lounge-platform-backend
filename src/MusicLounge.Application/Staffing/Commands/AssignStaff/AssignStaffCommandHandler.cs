@@ -11,7 +11,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Staffing.Commands.AssignStaff;
 
-internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCommand, int>
+internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -28,9 +28,9 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
         _logger = logger;
     }
 
-    public async Task<int> Handle(AssignStaffCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(AssignStaffCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         // MLACP-381: endpoint khai bao Policies.RequireOwner (cho ca Admin di qua tang authorize), nhung
@@ -39,11 +39,11 @@ internal sealed class AssignStaffCommandHandler : IRequestHandler<AssignStaffCom
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền quản lý staff cho venue này.");
 
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
-        var staffRepo = _uow.Repository<LoungeStaffEntity, int>();
+        var staffRepo = _uow.Repository<LoungeStaffEntity, Guid>();
         var alreadyAssigned = await staffRepo.AnyAsync(
             s => s.LoungeId == request.LoungeId && s.UserId == request.UserId && s.IsActive, ct);
         if (alreadyAssigned)

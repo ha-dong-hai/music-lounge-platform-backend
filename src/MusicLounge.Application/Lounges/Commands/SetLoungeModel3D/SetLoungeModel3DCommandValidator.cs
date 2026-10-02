@@ -6,7 +6,7 @@ public sealed class SetLoungeModel3DCommandValidator : AbstractValidator<SetLoun
 {
     public SetLoungeModel3DCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.ModelUrl).MaximumLength(500);
     }
 }

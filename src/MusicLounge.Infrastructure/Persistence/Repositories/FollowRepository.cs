@@ -7,14 +7,14 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class FollowRepository : Repository<Follow, int>, IFollowRepository
+internal sealed class FollowRepository : Repository<Follow, Guid>, IFollowRepository
 {
     private readonly ApplicationDbContext _ctx;
 
     public FollowRepository(ApplicationDbContext ctx) : base(ctx) => _ctx = ctx;
 
     public async Task<PaginatedResult<FollowedLoungeDto>> GetFollowedLoungesByUserAsync(
-        int userId, int page, int pageSize, CancellationToken ct = default)
+        Guid userId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = _ctx.Follows
             .AsNoTracking()
@@ -41,15 +41,15 @@ internal sealed class FollowRepository : Repository<Follow, int>, IFollowReposit
         return new PaginatedResult<FollowedLoungeDto>(items, page, pageSize, total);
     }
 
-    public async Task<IReadOnlyList<int>> GetFollowerUserIdsAsync(int loungeId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Guid>> GetFollowerUserIdsAsync(Guid loungeId, CancellationToken ct = default)
         => await _ctx.Follows
             .AsNoTracking()
             .Where(f => f.LoungeId == loungeId)
             .Select(f => f.UserId)
             .ToListAsync(ct);
 
-    public async Task<IReadOnlySet<int>> GetFollowedAmongAsync(
-        int userId, IReadOnlyCollection<int> loungeIds, CancellationToken ct = default)
+    public async Task<IReadOnlySet<Guid>> GetFollowedAmongAsync(
+        Guid userId, IReadOnlyCollection<Guid> loungeIds, CancellationToken ct = default)
         => (await _ctx.Follows
                 .AsNoTracking()
                 .Where(f => f.UserId == userId && loungeIds.Contains(f.LoungeId))

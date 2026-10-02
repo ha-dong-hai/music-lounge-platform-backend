@@ -48,7 +48,7 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
         // claim here would 401 every authenticated test request, not just ones that actually care
         // about logout/token revocation, so it has to reflect the DB's current value, not a fixed
         // stub.
-        if (int.TryParse(userIdValues.ToString(), out var userId))
+        if (Guid.TryParse(userIdValues.ToString(), out var userId))
         {
             var securityStamp = await _db.Users
                 .Where(u => u.Id == userId)

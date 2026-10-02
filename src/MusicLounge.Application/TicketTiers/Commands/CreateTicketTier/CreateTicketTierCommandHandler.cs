@@ -11,7 +11,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.TicketTiers.Commands.CreateTicketTier;
 
-internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTicketTierCommand, int>
+internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTicketTierCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -30,12 +30,12 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
         _lock = @lock;
     }
 
-    public async Task<int> Handle(CreateTicketTierCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateTicketTierCommand request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -83,7 +83,7 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
 
         if (request.TotalCapacity.HasValue)
         {
-            var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+            var activeStatusSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
                 s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
             // Cap luon ton tai — goi dang hoat dong, hoac muc mien phi. Day la thoi diem venue TAO
             // MOT CAM KET MOI, dung cho gioi han nen can.
@@ -93,7 +93,7 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
             var cap = SubscriptionEntitlements.ResolveTicketCap(
                 SubscriptionEntitlements.ActivePlan(activeStatusSubs, DateTimeOffset.UtcNow), freeTierCap);
 
-            var existingTiers = await _uow.Repository<TicketTier, int>()
+            var existingTiers = await _uow.Repository<TicketTier, Guid>()
                 .FindAsync(t => t.LoungeShowId == request.ShowId, ct);
             var totalCapacity = existingTiers.Sum(t => t.TotalCapacity ?? 0) + request.TotalCapacity.Value;
 
@@ -112,13 +112,13 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
             TotalCapacity = request.TotalCapacity
         };
 
-        _uow.Repository<TicketTier, int>().Add(tier);
+        _uow.Repository<TicketTier, Guid>().Add(tier);
         await _uow.SaveChangesAsync(ct);
 
         foreach (var priceInput in request.Prices)
         {
             var channel = Enum.Parse<PurchaseChannel>(priceInput.PurchaseChannel, ignoreCase: true);
-            _uow.Repository<TicketPrice, int>().Add(new TicketPrice
+            _uow.Repository<TicketPrice, Guid>().Add(new TicketPrice
             {
                 TierId = tier.Id,
                 Name = priceInput.Name,
@@ -138,7 +138,7 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
         {
             // Cung SLA voi duyet buoi dien va livestream (ND 147/2024 — doc tu system_config, khong co dinh).
             var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
-            _uow.Repository<EventModeration, int>().Add(new EventModeration
+            _uow.Repository<EventModeration, Guid>().Add(new EventModeration
             {
                 TargetType = ModerationTargetType.TicketTier,
                 TargetId = tier.Id,

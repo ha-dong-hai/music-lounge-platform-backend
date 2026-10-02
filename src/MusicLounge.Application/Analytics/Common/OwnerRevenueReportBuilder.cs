@@ -26,9 +26,9 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
     }
 
     public async Task<OwnerRevenueReportDto> BuildAsync(
-        int loungeId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken ct = default)
+        Guid loungeId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken ct = default)
     {
-        var shows = await _uow.Repository<LoungeShow, int>()
+        var shows = await _uow.Repository<LoungeShow, Guid>()
             .FindAsync(s => s.LoungeId == loungeId, ct);
         var showIds = shows.Select(s => s.Id).ToHashSet();
         var showById = shows.ToDictionary(s => s.Id);
@@ -43,7 +43,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         var tickets = allTickets.Where(t => InRange(t.CreatedAt)).ToList();
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
-        var prices = await _uow.Repository<TicketPrice, int>().FindAsync(p => priceIds.Contains(p.Id), ct);
+        var prices = await _uow.Repository<TicketPrice, Guid>().FindAsync(p => priceIds.Contains(p.Id), ct);
         var priceById = prices.ToDictionary(p => p.Id);
         decimal TicketAmount(Ticket t) => priceById.TryGetValue(t.PriceId, out var p) ? p.Price : 0m;
 
@@ -51,7 +51,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         // MLACP-349: "da thanh toan" khong con dong nghia voi buoc cuoi cua bep. Don tra truoc qua
         // VNPay la tien that tu luc IPN xac nhan, du bep chua phuc vu xong — dem theo Status == Paid
         // se bo sot no. Xem FnbOrderPayments.
-        var loungeFnbOrders = await _uow.Repository<FnbOrder, int>()
+        var loungeFnbOrders = await _uow.Repository<FnbOrder, Guid>()
             .FindAsync(o => o.LoungeId == loungeId && o.Status != FnbOrderStatus.Cancelled, ct);
         var paidFnbOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(
             _uow, loungeFnbOrders.Select(o => o.Id).ToList(), ct);
@@ -72,12 +72,12 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
             d.Gross, d.Net, d.PerformerShareRateSnapshot ?? fallbackPerformerShareRate).PerformerAmount;
         decimal OwnerShare(Donation d) => d.Gross - ForPerformer(d);
 
-        var performances = await _uow.Repository<Performance, int>()
+        var performances = await _uow.Repository<Performance, Guid>()
             .FindAsync(p => showIds.Contains(p.LoungeShowId), ct);
         var performanceIds = performances.Select(p => p.Id).ToHashSet();
         var showIdByPerformance = performances.ToDictionary(p => p.Id, p => p.LoungeShowId);
 
-        var allDonations = await _uow.Repository<Donation, int>().FindAsync(
+        var allDonations = await _uow.Repository<Donation, Guid>().FindAsync(
             d => performanceIds.Contains(d.PerformanceId) && d.PaymentConfirmedAt != null, ct);
         var donations = allDonations.Where(d => InRange(d.PaymentConfirmedAt!.Value)).ToList();
 
@@ -144,7 +144,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         // ---- Quyet toan da nhan + phi nen tang da tra (MLACP-207) ----
         // Settlement.OwnerId la User.Id (co the co nhieu venue) — thu hep dung venue nay qua
         // PaymentId cua chinh cac ve thuoc loungeId (Settlement khong co LoungeId/ShowId truc tiep).
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(loungeId, ct);
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(loungeId, ct);
         var ticketPaymentIds = allTickets
             .Where(t => t.PaymentId.HasValue)
             .Select(t => t.PaymentId!.Value)
@@ -155,7 +155,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         var fnbReferenceIds = loungeFnbOrders.Select(o => o.Id.ToString()).ToList();
         var fnbPaymentIds = fnbReferenceIds.Count == 0
             ? []
-            : (await _uow.Repository<Payment, int>().FindAsync(
+            : (await _uow.Repository<Payment, Guid>().FindAsync(
                     p => p.ReferenceType == FnbOrderPayments.ReferenceType
                          && p.Method == PaymentMethod.Gateway
                          && fnbReferenceIds.Contains(p.ReferenceId), ct))
@@ -166,7 +166,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         var donationReferenceIds = allDonations.Select(d => d.Id.ToString()).ToList();
         var donationPaymentIds = donationReferenceIds.Count == 0
             ? []
-            : (await _uow.Repository<Payment, int>().FindAsync(
+            : (await _uow.Repository<Payment, Guid>().FindAsync(
                     p => p.ReferenceType == DonationPayouts.PaymentReferenceType
                          && donationReferenceIds.Contains(p.ReferenceId), ct))
                 .Select(p => p.Id)
@@ -177,7 +177,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
         var totalPlatformFeePaid = 0m;
         if (lounge is not null && settledPaymentIds.Count > 0)
         {
-            var allSettlements = await _uow.Repository<Settlement, int>().FindAsync(
+            var allSettlements = await _uow.Repository<Settlement, Guid>().FindAsync(
                 s => s.OwnerId == lounge.OwnerId
                     && settledPaymentIds.Contains(s.PaymentId)
                     && s.Status == SettlementStatus.Released, ct);

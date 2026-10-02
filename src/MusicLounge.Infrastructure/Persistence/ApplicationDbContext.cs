@@ -112,14 +112,30 @@ public sealed class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        // MLACP-515 (D-19): MỌI khoá chính GUID một cột lấy giá trị từ OrderedGuid — một chỗ duy nhất, để thứ tự "mới nhất
+        // trước theo Id" đúng như nhau trên SQL Server (production) và SQLite (test). Không đặt ở từng Configuration: quên
+        // một bảng là bảng đó sắp lộn xộn mà không test nào báo.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var pk = entityType.FindPrimaryKey();
+            // Bỏ qua khoá chính ĐỒNG THỜI là khoá ngoại (quan hệ 1-1 dùng chung khoá, vd PhysicalTicketDetail.TicketId):
+            // giá trị phải lấy đúng từ bản ghi cha. Sinh GUID mới ở đây làm chi tiết vé lạc sang vé khác — test check-in
+            // bắt được (vé mới quét lần đầu đã báo "đã check-in").
+            if (pk is { Properties.Count: 1 } && pk.Properties[0].ClrType == typeof(Guid) && !entityType.IsOwned()
+                && !pk.Properties[0].IsForeignKey())
+                modelBuilder.Entity(entityType.ClrType).Property(pk.Properties[0].Name)
+                    .ValueGeneratedOnAdd()
+                    .HasValueGenerator<OrderedGuidValueGenerator>();
+        }
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
-        var userId = _currentUser?.IsAuthenticated == true ? _currentUser.UserId : (int?)null;
+        var userId = _currentUser?.IsAuthenticated == true ? _currentUser.UserId : (Guid?)null;
 
-        foreach (var entry in ChangeTracker.Entries<AuditableEntity<int>>())
+        foreach (var entry in ChangeTracker.Entries<AuditableEntity<Guid>>())
         {
             if (entry.State == EntityState.Added)
             {

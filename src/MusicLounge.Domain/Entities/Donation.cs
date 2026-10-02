@@ -2,10 +2,10 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Donation : Common.BaseEntity<int>
+public sealed class Donation : Common.BaseEntity<Guid>
 {
-    public int? DonorUserId { get; set; }
-    public int PerformanceId { get; set; }
+    public Guid? DonorUserId { get; set; }
+    public Guid PerformanceId { get; set; }
 
     public decimal Gross { get; set; }
     public decimal Net { get; set; }
@@ -27,10 +27,10 @@ public sealed class Donation : Common.BaseEntity<int>
     // MLACP-360: phòng trà gỡ lời nhắn khỏi livestream (không hoàn tiền). Ghi ai gỡ, lúc nào — lời
     // nhắn gốc vẫn giữ nguyên, để còn đối chiếu khi người donate khiếu nại.
     public DateTimeOffset? MessageHiddenAt { get; set; }
-    public int? MessageHiddenByUserId { get; set; }
+    public Guid? MessageHiddenByUserId { get; set; }
 
     public string? GatewayRef { get; set; }
-    public int? BankAccountId { get; set; }                 // D12: FK snapshot — performer bank account paid to (W31)
+    public Guid? BankAccountId { get; set; }                 // D12: FK snapshot — performer bank account paid to (W31)
 
     // D12: snapshot of system_config.donation_performer_share_rate, set once ProcessDonationPaymentCommandHandler
     // confirms the donation is real (same moment Net becomes authoritative). ConfirmDonationPaidCommandHandler

@@ -42,7 +42,7 @@ public sealed class LastEntryCutoffTests
     /// Dựng một buổi diễn đang diễn ra, bắt đầu cách đây <paramref name="startedHoursAgo"/> tiếng
     /// và kéo dài 4 tiếng, kèm một đợt bán vé tại quầy.
     /// </summary>
-    private async Task<(int PriceId, int LoungeId, int OwnerId)> SeedOngoingShowAsync(
+    private async Task<(Guid PriceId, Guid LoungeId, Guid OwnerId)> SeedOngoingShowAsync(
         double startedHoursAgo, DateTimeOffset? saleEnd)
     {
         using var scope = _factory.Services.CreateScope();
@@ -98,7 +98,7 @@ public sealed class LastEntryCutoffTests
         return (price.Id, lounge.Id, freshOwner.Id);
     }
 
-    private Task<HttpResponseMessage> SellAtTheDoorAsync(int priceId, int loungeId, int ownerId)
+    private Task<HttpResponseMessage> SellAtTheDoorAsync(Guid priceId, Guid loungeId, Guid ownerId)
         => _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId)
             .PostAsJsonAsync("/api/v1/tickets/walk-in", new { PriceId = priceId, Quantity = 1 });
 
@@ -202,7 +202,7 @@ public sealed class LastEntryCutoffTests
         // cuối — kết thúc trừ 60 phút.
         var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 1, saleEnd: null);
 
-        int showId;
+        Guid showId;
         DateTimeOffset showEnd;
         using (var scope = _factory.Services.CreateScope())
         {
@@ -232,7 +232,7 @@ public sealed class LastEntryCutoffTests
         var ownEnd = DateTimeOffset.UtcNow.AddMinutes(30);
         var (priceId, loungeId, ownerId) = await SeedOngoingShowAsync(startedHoursAgo: 1, saleEnd: ownEnd);
 
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -269,6 +269,6 @@ public sealed class LastEntryCutoffTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Tier(int Id, IReadOnlyList<Price> Prices);
-    private sealed record Price(int Id, DateTimeOffset SaleEnd, bool SaleEndIsAutomatic);
+    private sealed record Tier(Guid Id, IReadOnlyList<Price> Prices);
+    private sealed record Price(Guid Id, DateTimeOffset SaleEnd, bool SaleEndIsAutomatic);
 }

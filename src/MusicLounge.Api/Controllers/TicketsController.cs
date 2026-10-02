@@ -60,14 +60,14 @@ public sealed class TicketsController : ControllerBase
     /// đường tạo giữ chỗ chứ không có đường bỏ, nên ghế bị treo tới khi job dọn hết hạn chạy, dù
     /// người mua đã rời đi và người khác đang muốn mua đúng ghế đó. Hold đã dùng để mua vé thì
     /// không bỏ được (409) — bỏ nó đi là xoá bản ghi đứng sau một khoản thanh toán thật.</summary>
-    [HttpDelete("holds/{holdId:int}")]
+    [HttpDelete("holds/{holdId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CancelHold(int holdId, CancellationToken ct = default)
+    public async Task<IActionResult> CancelHold(Guid holdId, CancellationToken ct = default)
     {
         await _sender.Send(new CancelHoldCommand(holdId), ct);
         return NoContent();
@@ -147,7 +147,7 @@ public sealed class TicketsController : ControllerBase
     /// số tiền hoàn theo đúng % quy định của event, trả về id yêu cầu hoàn tiền (0 nếu là vé
     /// Pending, không tạo yêu cầu hoàn tiền).</summary>
     [HttpPost("{id:guid}/cancel")]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -155,20 +155,20 @@ public sealed class TicketsController : ControllerBase
     public async Task<IActionResult> Cancel(Guid id, CancellationToken ct = default)
     {
         var refundRequestId = await _sender.Send(new CancelTicketCommand(id), ct);
-        return Ok(ApiResponse<int>.Ok(refundRequestId));
+        return Ok(ApiResponse<Guid>.Ok(refundRequestId));
     }
 
     /// <summary>MLACP-345: nhân viên/chủ của đúng phòng trà xác nhận đã trả tiền mặt cho khách của
     /// một yêu cầu hoàn đã được duyệt — chỉ cho vé bán tại quầy, nơi nền tảng chưa bao giờ giữ khoản
     /// tiền đó. Người mua được báo kèm lối khiếu nại nếu chưa nhận được. Chỉ xác nhận được 1 lần
     /// (409 nếu đã xác nhận).</summary>
-    [HttpPost("refund-requests/{id:int}/cash-handed-back")]
+    [HttpPost("refund-requests/{id:guid}/cash-handed-back")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> ConfirmCashRefundHandedBack(int id, CancellationToken ct = default)
+    public async Task<IActionResult> ConfirmCashRefundHandedBack(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new ConfirmCashRefundHandedBackCommand(id), ct);
         return NoContent();
@@ -228,7 +228,7 @@ public sealed class TicketsController : ControllerBase
     /// hoàn của chính mình, còn chờ xử lý, mà giao dịch gốc qua VNPay đã quá hạn VNPay nhận lệnh hoàn (422 nếu còn hoàn
     /// được về phương thức đã thanh toán). Gửi lại để sửa tài khoản khi yêu cầu còn chờ. Luật BVQLNTD 2023 Điều 38 khoản 4:
     /// hoàn bằng phương thức khác chỉ khi người tiêu dùng đồng ý.</summary>
-    [HttpPut("refund-requests/{id:int}/payout-account")]
+    [HttpPut("refund-requests/{id:guid}/payout-account")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -236,7 +236,7 @@ public sealed class TicketsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ProvideRefundPayoutAccount(
-        int id, [FromBody] ProvideRefundPayoutAccountRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] ProvideRefundPayoutAccountRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new ProvideRefundPayoutAccountCommand(
             id, body.BankName, body.AccountNumber, body.AccountHolder, body.Consent), ct);
@@ -302,7 +302,7 @@ public sealed class TicketsController : ControllerBase
 
 public sealed record InitiateTransferRequest(string RecipientEmail);
 
-public sealed record PurchaseTicketRequest(int HoldId);
+public sealed record PurchaseTicketRequest(Guid HoldId);
 
 public sealed record ProvideRefundPayoutAccountRequest(
     string BankName, string AccountNumber, string AccountHolder, bool Consent);

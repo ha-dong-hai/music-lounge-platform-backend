@@ -28,16 +28,16 @@ internal sealed class LookupPerformerConfirmationQueryHandler
     public async Task<PerformerConfirmationDto> Handle(LookupPerformerConfirmationQuery request, CancellationToken ct)
     {
         var confirmation = await PerformerConfirmations.FindByTokenAsync(_uow, request.Token, ct);
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(confirmation.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(confirmation.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), confirmation.PerformerId);
 
         string? bankName = null, masked = null, holder = null, paymentRef = null, showName = null, venueName = null;
         decimal? amount = null;
         var outdated = false;
 
-        if (confirmation.Purpose == PerformerConfirmationPurpose.BankAccount && confirmation.BankAccountId is int accountId)
+        if (confirmation.Purpose == PerformerConfirmationPurpose.BankAccount && confirmation.BankAccountId is Guid accountId)
         {
-            var account = await _uow.Repository<BankAccount, int>().GetByIdAsync(accountId, ct);
+            var account = await _uow.Repository<BankAccount, Guid>().GetByIdAsync(accountId, ct);
             if (account is null)
             {
                 outdated = true;
@@ -54,21 +54,21 @@ internal sealed class LookupPerformerConfirmationQueryHandler
             }
         }
         else if (confirmation.Purpose == PerformerConfirmationPurpose.DonationReceipt
-                 && confirmation.DonationId is int donationId
-                 && await _uow.Repository<Donation, int>().GetByIdAsync(donationId, ct) is { } donation)
+                 && confirmation.DonationId is Guid donationId
+                 && await _uow.Repository<Donation, Guid>().GetByIdAsync(donationId, ct) is { } donation)
         {
             paymentRef = donation.PaymentRef;
             // Đúng số tiền phòng trà đã báo chuyển, lấy từ nhật ký bằng chứng — không tính lại.
-            amount = (await _uow.Repository<DonationEvent, long>().FindAsync(
+            amount = (await _uow.Repository<DonationEvent, Guid>().FindAsync(
                     e => e.DonationId == donationId && e.EventType == DonationEventType.VenueReportedPaid, ct))
                 .OrderByDescending(e => e.Sequence)
                 .FirstOrDefault()?.Amount;
 
-            var performance = await _uow.Repository<Performance, int>().GetByIdAsync(donation.PerformanceId, ct);
+            var performance = await _uow.Repository<Performance, Guid>().GetByIdAsync(donation.PerformanceId, ct);
             var show = performance is null ? null
-                : await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct);
+                : await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(performance.LoungeShowId, ct);
             var lounge = show is null ? null
-                : await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
+                : await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct);
             showName = show?.Name;
             venueName = lounge?.Name;
         }

@@ -11,7 +11,7 @@ namespace MusicLounge.Application.Lounges.Commands.AddVenueTourScene;
 // Gated by the active subscription's MaxTourScenesSnapshot — same D12 snapshot-at-subscribe-time
 // pattern as MaxTicketsPerEventSnapshot (CreateTicketTierCommandHandler), so a later Admin edit to
 // the package can't shrink a tour an Owner already built mid-subscription.
-internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenueTourSceneCommand, int>
+internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenueTourSceneCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -44,9 +44,9 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         _lock = @lock;
     }
 
-    public async Task<int> Handle(AddVenueTourSceneCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(AddVenueTourSceneCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
@@ -96,7 +96,7 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
             Name = request.Name,
             OrderIndex = VenueTourRules.NextOrderIndex(existingScenes)
         };
-        _uow.Repository<VenueTourScene, int>().Add(scene);
+        _uow.Repository<VenueTourScene, Guid>().Add(scene);
         await _uow.SaveChangesAsync(ct);
 
         if (moderation is not null)
@@ -105,22 +105,22 @@ internal sealed class AddVenueTourSceneCommandHandler : IRequestHandler<AddVenue
         return scene.Id;
     }
 
-    private async Task<IReadOnlyList<VenueTourScene>> KiemGioiHanAsync(int ownerId, int loungeId, CancellationToken ct)
+    private async Task<IReadOnlyList<VenueTourScene>> KiemGioiHanAsync(Guid ownerId, Guid loungeId, CancellationToken ct)
     {
-        var subscriptions = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var subscriptions = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == ownerId && s.Status == SubscriptionStatus.Active, ct);
-        var existingScenes = await _uow.Repository<VenueTourScene, int>().FindAsync(s => s.LoungeId == loungeId, ct);
+        var existingScenes = await _uow.Repository<VenueTourScene, Guid>().FindAsync(s => s.LoungeId == loungeId, ct);
 
         var loi = VenueTourRules.QuotaViolation(
             existingScenes.Count, VenueTourRules.MaxScenes(subscriptions, DateTimeOffset.UtcNow));
         return loi is null ? existingScenes : throw new DomainException(loi);
     }
 
-    private async Task FlagForReviewAsync(int sceneId, AiModerationResult moderation, CancellationToken ct)
+    private async Task FlagForReviewAsync(Guid sceneId, AiModerationResult moderation, CancellationToken ct)
     {
         var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
         var now = DateTimeOffset.UtcNow;
-        _uow.Repository<EventModeration, int>().Add(new EventModeration
+        _uow.Repository<EventModeration, Guid>().Add(new EventModeration
         {
             TargetType = ModerationTargetType.TourScene,
             TargetId = sceneId,

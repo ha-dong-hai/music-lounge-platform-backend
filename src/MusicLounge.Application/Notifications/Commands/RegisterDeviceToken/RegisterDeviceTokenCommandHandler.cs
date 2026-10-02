@@ -17,7 +17,7 @@ internal sealed class RegisterDeviceTokenCommandHandler : IRequestHandler<Regist
 
     public async Task<Unit> Handle(RegisterDeviceTokenCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<DeviceToken, int>();
+        var repo = _uow.Repository<DeviceToken, Guid>();
         var now = DateTimeOffset.UtcNow;
 
         // A token is unique per physical device, not per user — the same phone can log out of one

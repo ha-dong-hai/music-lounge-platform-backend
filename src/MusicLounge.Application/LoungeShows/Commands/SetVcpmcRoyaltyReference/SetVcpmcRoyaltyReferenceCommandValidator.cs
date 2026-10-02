@@ -6,7 +6,7 @@ public sealed class SetVcpmcRoyaltyReferenceCommandValidator : AbstractValidator
 {
     public SetVcpmcRoyaltyReferenceCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.VcpmcRoyaltyReference).NotEmpty().MaximumLength(500);
     }
 }

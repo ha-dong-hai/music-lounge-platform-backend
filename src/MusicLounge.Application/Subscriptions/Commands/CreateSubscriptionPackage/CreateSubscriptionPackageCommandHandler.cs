@@ -6,13 +6,13 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.Subscriptions.Commands.CreateSubscriptionPackage;
 
 internal sealed class CreateSubscriptionPackageCommandHandler
-    : IRequestHandler<CreateSubscriptionPackageCommand, int>
+    : IRequestHandler<CreateSubscriptionPackageCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
 
     public CreateSubscriptionPackageCommandHandler(IUnitOfWork uow) => _uow = uow;
 
-    public async Task<int> Handle(CreateSubscriptionPackageCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateSubscriptionPackageCommand request, CancellationToken ct)
     {
         var package = new SubscriptionPackage
         {
@@ -27,7 +27,7 @@ internal sealed class CreateSubscriptionPackageCommandHandler
             IsActive = true
         };
 
-        _uow.Repository<SubscriptionPackage, int>().Add(package);
+        _uow.Repository<SubscriptionPackage, Guid>().Add(package);
         await _uow.SaveChangesAsync(ct);
         return package.Id;
     }

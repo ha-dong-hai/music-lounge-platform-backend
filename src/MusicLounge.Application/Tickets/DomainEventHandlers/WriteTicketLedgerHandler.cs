@@ -22,7 +22,7 @@ internal sealed class WriteTicketLedgerHandler : INotificationHandler<TicketPaym
 
     public async Task Handle(TicketPaymentConfirmed notification, CancellationToken ct)
     {
-        var payment = await _uow.Repository<Payment, int>().GetByIdAsync(notification.PaymentId, ct);
+        var payment = await _uow.Repository<Payment, Guid>().GetByIdAsync(notification.PaymentId, ct);
         if (payment is null) return;
 
         // Cash (walk-in/box-office) payments never actually flow through the platform's own
@@ -53,7 +53,7 @@ internal sealed class WriteTicketLedgerHandler : INotificationHandler<TicketPaym
         payment.TaxWithheld = fees.Tax;
         payment.PersonalIncomeTaxWithheld = fees.PersonalIncomeTax;
         payment.NetAmount = fees.OwnerNet;
-        _uow.Repository<Payment, int>().Update(payment);
+        _uow.Repository<Payment, Guid>().Update(payment);
 
         // Owner's share is credited to Platform (held in trust), NOT to the owner's own User
         // account — that account is only credited later, when SettlementReleaseJob actually

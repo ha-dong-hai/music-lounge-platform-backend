@@ -30,11 +30,11 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
 
     public async Task<Unit> Handle(DeactivateStaffCommand request, CancellationToken ct)
     {
-        var staffRepo = _uow.Repository<LoungeStaffEntity, int>();
+        var staffRepo = _uow.Repository<LoungeStaffEntity, Guid>();
         var assignment = await staffRepo.GetByIdAsync(request.LoungeStaffId, ct)
             ?? throw new NotFoundException(nameof(LoungeStaffEntity), request.LoungeStaffId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(assignment.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(assignment.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), assignment.LoungeId);
 
         // MLACP-381: cung ly do voi AssignStaffCommandHandler — endpoint khai bao Policies.RequireOwner
@@ -53,7 +53,7 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
         // AssignStaffCommandHandler thang cap Audience -> Staff luc gan; o day phai lam nguoc lai
         // khi khong con active o venue nao khac, neu khong user giu quyen Staff (RequireStaff
         // policy) vinh vien du da bi go khoi moi venue.
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(assignment.UserId, ct);
         if (user is not null && user.Role == UserRole.Staff)
         {

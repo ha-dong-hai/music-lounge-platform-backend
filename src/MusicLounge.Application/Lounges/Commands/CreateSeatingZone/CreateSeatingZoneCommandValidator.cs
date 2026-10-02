@@ -6,7 +6,7 @@ public sealed class CreateSeatingZoneCommandValidator : AbstractValidator<Create
 {
     public CreateSeatingZoneCommandValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0);
+        RuleFor(x => x.LoungeId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Description).MaximumLength(500);
         RuleFor(x => x.Capacity).GreaterThan(0);

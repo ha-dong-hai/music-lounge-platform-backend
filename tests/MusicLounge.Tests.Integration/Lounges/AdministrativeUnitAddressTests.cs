@@ -26,7 +26,7 @@ public sealed class AdministrativeUnitAddressTests
 
     public AdministrativeUnitAddressTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> FreshOwnerAsync()
+    private async Task<Guid> FreshOwnerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -98,7 +98,7 @@ public sealed class AdministrativeUnitAddressTests
         // Chữ client gửi kèm KHÔNG được tin: tên phải lấy từ danh mục theo mã.
         var res = await owner.PostAsJsonAsync("/api/v1/lounges", TaoPhongTra(HoChiMinh, PhuongSaiGon, city: "HCM", ward: "Bến Nghé"));
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        var id = (await DataAsync(res)).GetInt32();
+        var id = (await DataAsync(res)).GetGuid();
 
         var chiTiet = await DataAsync(await owner.GetAsync($"/api/v1/lounges/{id}"));
         chiTiet.GetProperty("provinceCode").GetString().Should().Be(HoChiMinh);
@@ -148,7 +148,7 @@ public sealed class AdministrativeUnitAddressTests
     public async Task SuaTheoMa_CapNhatMa_VaXoaQuanCu()
     {
         var ownerId = await FreshOwnerAsync();
-        int id;
+        Guid id;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

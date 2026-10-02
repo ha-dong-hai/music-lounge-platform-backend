@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Analytics.DTOs;
 
 public sealed record ShowPerformanceDto(
-    int ShowId,
+    Guid ShowId,
     string ShowName,
     int TotalPageViews,
     int UniqueViewers,

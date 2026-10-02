@@ -2,5 +2,5 @@ namespace MusicLounge.Application.Common.Interfaces;
 
 public interface IAIRecommendationService
 {
-    Task TriggerRecommendationRefreshAsync(int userId, CancellationToken ct = default);
+    Task TriggerRecommendationRefreshAsync(Guid userId, CancellationToken ct = default);
 }

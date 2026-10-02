@@ -11,7 +11,7 @@ internal sealed class InferredAiProfileRepository : IInferredAiProfileRepository
 
     public InferredAiProfileRepository(ApplicationDbContext ctx) => _ctx = ctx;
 
-    public async Task ForgetAsync(int userId, CancellationToken ct = default)
+    public async Task ForgetAsync(Guid userId, CancellationToken ct = default)
     {
         // Diem so hanh vi theo tung buoi dien. Khoa kep nen khong nam sau repository chung duoc —
         // va do la ly do no da bi bo sot o duong xoa du lieu ca nhan.

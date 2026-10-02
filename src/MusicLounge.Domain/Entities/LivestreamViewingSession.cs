@@ -6,10 +6,10 @@ namespace MusicLounge.Domain.Entities;
 // Phiên không heartbeat quá timeout (ConfigKeys.LivestreamHeartbeatTimeoutSeconds) tự động không
 // còn tính là "đang hoạt động" khi đếm — lọc theo LastHeartbeatAt tại điểm kiểm tra, không cần job
 // dọn dẹp riêng (cùng pattern với TicketHold.ExpiresAt).
-public sealed class LivestreamViewingSession : Common.BaseEntity<int>
+public sealed class LivestreamViewingSession : Common.BaseEntity<Guid>
 {
     public Guid TicketId { get; set; }
-    public int LivestreamId { get; set; }
+    public Guid LivestreamId { get; set; }
     public string SessionId { get; set; } = string.Empty;
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset LastHeartbeatAt { get; set; }

@@ -2,10 +2,10 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class Performance : Common.BaseEntity<int>
+public sealed class Performance : Common.BaseEntity<Guid>
 {
-    public int LoungeShowId { get; set; }
-    public int PerformerId { get; set; }
+    public Guid LoungeShowId { get; set; }
+    public Guid PerformerId { get; set; }
     public PerformerRole Role { get; set; } = PerformerRole.Main;
     public int OrderIndex { get; set; }
     public TimeOnly? SetTime { get; set; }

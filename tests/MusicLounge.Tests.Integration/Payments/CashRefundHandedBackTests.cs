@@ -29,7 +29,7 @@ public sealed class CashRefundHandedBackTests
 
     public CashRefundHandedBackTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> ApprovedRefundAsync(
+    private async Task<Guid> ApprovedRefundAsync(
         PaymentMethod method = PaymentMethod.Cash,
         RefundRequestStatus status = RefundRequestStatus.Approved,
         int resolvedHoursAgo = 1,
@@ -94,11 +94,11 @@ public sealed class CashRefundHandedBackTests
         return doc.RootElement.GetProperty("message").GetString();
     }
 
-    private Task<HttpResponseMessage> ConfirmAsync(int refundId, int userId, string role)
+    private Task<HttpResponseMessage> ConfirmAsync(Guid refundId, Guid userId, string role)
         => _factory.CreateAuthenticatedClient(userId, role)
             .PostAsync($"/api/v1/tickets/refund-requests/{refundId}/cash-handed-back", null);
 
-    private async Task<int> CountAsync(int userId, NotificationType type, string referenceType, int refundId)
+    private async Task<int> CountAsync(Guid userId, NotificationType type, string referenceType, Guid refundId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -188,7 +188,7 @@ public sealed class CashRefundHandedBackTests
     [Fact]
     public async Task YeuCauGanVoiGiaoDichKhongCoVeThiBaoLoiRo()
     {
-        int refundId;
+        Guid refundId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

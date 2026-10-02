@@ -97,7 +97,7 @@ public sealed class AdminDashboardTests
     }
 
     /// <summary>Buổi hòa nhạc đã bán <paramref name="soVe"/> vé, mỗi vé <paramref name="giaVe"/> đồng.</summary>
-    private async Task<(int ShowId, string Ten)> BuoiHoaNhacCoVeAsync(decimal giaVe, int soVe, int? genreId = null)
+    private async Task<(Guid ShowId, string Ten)> BuoiHoaNhacCoVeAsync(decimal giaVe, int soVe, Guid? genreId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -270,15 +270,15 @@ public sealed class AdminDashboardTests
         var data = await DocAsync("?limit=50");
         var top = data.GetProperty("topShows").EnumerateArray().ToList();
 
-        var dongCao = top.Single(x => x.GetProperty("showId").GetInt32() == showCao);
+        var dongCao = top.Single(x => x.GetProperty("showId").GetGuid() == showCao);
         dongCao.GetProperty("title").GetString().Should().Be(tenCao);
         dongCao.GetProperty("ticketsSold").GetInt32().Should().Be(5);
         dongCao.GetProperty("ticketRevenue").GetDecimal().Should().Be(4_500_000_000m);
         dongCao.GetProperty("loungeName").GetString().Should().NotBeNullOrEmpty("bảng cần tên phòng trà");
         dongCao.GetProperty("startTime").ValueKind.Should().NotBe(JsonValueKind.Null);
 
-        var viTriCao = top.FindIndex(x => x.GetProperty("showId").GetInt32() == showCao);
-        var viTriThap = top.FindIndex(x => x.GetProperty("showId").GetInt32() == showThap);
+        var viTriCao = top.FindIndex(x => x.GetProperty("showId").GetGuid() == showCao);
+        var viTriThap = top.FindIndex(x => x.GetProperty("showId").GetGuid() == showThap);
         viTriCao.Should().BeLessThan(viTriThap, "xếp theo doanh thu giảm dần");
     }
 
@@ -300,13 +300,13 @@ public sealed class AdminDashboardTests
 
         var data = await DocAsync();
         var theLoai = data.GetProperty("genres").EnumerateArray()
-            .FirstOrDefault(g => g.GetProperty("genreId").GetInt32() == SeedHelper.GenreId1);
+            .FirstOrDefault(g => g.GetProperty("genreId").GetGuid() == SeedHelper.GenreId1);
 
         theLoai.ValueKind.Should().Be(JsonValueKind.Object, "thể loại của buổi hòa nhạc vừa bán vé phải xuất hiện");
         theLoai.GetProperty("genreName").GetString().Should().NotBeNullOrEmpty();
         theLoai.GetProperty("ticketsSold").GetInt32().Should().BeGreaterThanOrEqualTo(3);
         theLoai.GetProperty("showCount").GetInt32().Should().BeGreaterThanOrEqualTo(1);
-        showId.Should().BeGreaterThan(0);
+        showId.Should().NotBe(Guid.Empty);
     }
 
     [Fact]

@@ -17,4 +17,4 @@ public sealed record PosterGenerationResultDto(
     string? ImageUrl,
     int RemainingThisMonth,
     string Status = nameof(AiPosterGenerationStatus.Succeeded),
-    int? AttemptId = null);
+    Guid? AttemptId = null);

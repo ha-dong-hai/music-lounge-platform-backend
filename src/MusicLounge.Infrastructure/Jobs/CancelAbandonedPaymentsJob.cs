@@ -105,13 +105,13 @@ public sealed class CancelAbandonedPaymentsJob
     /// khong huy thi job tro nen vo dung: cho ngoi bi giu vinh vien va nguoi mua that khong con ve
     /// de mua. Bao ve duoc khi API co san, va khong lam hong he thong khi khong co.</para>
     /// </summary>
-    private async Task<List<int>> KeepOnlyUnpaidAsync(List<int> paymentIds, CancellationToken ct)
+    private async Task<List<Guid>> KeepOnlyUnpaidAsync(List<Guid> paymentIds, CancellationToken ct)
     {
         var payments = await _ctx.Payments
             .Where(p => paymentIds.Contains(p.Id))
             .ToListAsync(ct);
 
-        var keep = new List<int>();
+        var keep = new List<Guid>();
         List<Domain.Entities.User>? admins = null;
 
         foreach (var payment in payments)

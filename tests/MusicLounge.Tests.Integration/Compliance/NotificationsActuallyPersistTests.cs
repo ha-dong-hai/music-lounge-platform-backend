@@ -31,14 +31,14 @@ public sealed class NotificationsActuallyPersistTests
 
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<int> NotificationCountAsync(int userId, NotificationType type)
+    private async Task<int> NotificationCountAsync(Guid userId, NotificationType type)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.Notifications.CountAsync(n => n.UserId == userId && n.Type == type);
     }
 
-    private async Task<(int LoungeId, int OwnerId)> SeedVenueAsync()
+    private async Task<(Guid LoungeId, Guid OwnerId)> SeedVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -103,7 +103,7 @@ public sealed class NotificationsActuallyPersistTests
         });
         issued.IsSuccessStatusCode.Should().BeTrue();
 
-        int penaltyId;
+        Guid penaltyId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -137,7 +137,7 @@ public sealed class NotificationsActuallyPersistTests
             SuspensionDays = 7
         });
 
-        int penaltyId;
+        Guid penaltyId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

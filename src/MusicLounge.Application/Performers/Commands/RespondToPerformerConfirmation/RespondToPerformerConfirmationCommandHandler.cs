@@ -59,7 +59,7 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
                 "Cần bạn đồng ý cho MusicLounge xử lý email và thông tin tài khoản nhận tiền của bạn " +
                 "(Luật Bảo vệ dữ liệu cá nhân) trước khi xác nhận hoặc báo sai.");
 
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(confirmation.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(confirmation.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), confirmation.PerformerId);
         var dispute = string.Equals(request.Decision, "Dispute", StringComparison.OrdinalIgnoreCase);
         var note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
@@ -75,13 +75,13 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
         }
 
         performer.DataConsentAt ??= now;
-        _uow.Repository<Performer, int>().Update(performer);
+        _uow.Repository<Performer, Guid>().Update(performer);
 
         confirmation.UsedAt = now;
         confirmation.Outcome = dispute ? PerformerConfirmationOutcome.Disputed : PerformerConfirmationOutcome.Confirmed;
         confirmation.ConsentGivenAt = now;
         confirmation.Note = note;
-        _uow.Repository<PerformerConfirmation, int>().Update(confirmation);
+        _uow.Repository<PerformerConfirmation, Guid>().Update(confirmation);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;
@@ -90,8 +90,8 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
     private async Task RespondToBankAccountAsync(
         PerformerConfirmation confirmation, Performer performer, bool dispute, string? note, CancellationToken ct)
     {
-        var repo = _uow.Repository<BankAccount, int>();
-        var account = confirmation.BankAccountId is int id ? await repo.GetByIdAsync(id, ct) : null;
+        var repo = _uow.Repository<BankAccount, Guid>();
+        var account = confirmation.BankAccountId is Guid id ? await repo.GetByIdAsync(id, ct) : null;
         if (account is null)
             throw new DomainException("Tài khoản ngân hàng trong liên kết này không còn tồn tại.");
 
@@ -109,7 +109,7 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
         var masked = _pii.TryDecrypt(account.AccountNumber) is { } plainNumber
             ? PerformerConfirmations.MaskAccountNumber(plainNumber)
             : PerformerConfirmations.UnreadableAccountNumber;
-        var admins = await _uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Admin, ct);
+        var admins = await _uow.Repository<User, Guid>().FindAsync(u => u.Role == UserRole.Admin, ct);
         foreach (var admin in admins)
         {
             await _notifications.NotifyAsync(
@@ -137,7 +137,7 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
     {
         var donationId = confirmation.DonationId
             ?? throw new DomainException("Liên kết này không gắn với khoản donate nào.");
-        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(donationId, ct)
+        var donation = await _uow.Repository<Donation, Guid>().GetByIdAsync(donationId, ct)
             ?? throw new NotFoundException(nameof(Donation), donationId);
 
         var detail = dispute
@@ -152,7 +152,7 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
         if (!dispute) return;
 
         var slaHours = await _config.GetIntAsync(ConfigKeys.ComplaintSlaHours, 72, ct);
-        _uow.Repository<Complaint, int>().Add(new Complaint
+        _uow.Repository<Complaint, Guid>().Add(new Complaint
         {
             ComplainantUserId = null,
             TargetType = "donation",

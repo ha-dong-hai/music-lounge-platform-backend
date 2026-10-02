@@ -23,13 +23,13 @@ internal sealed class GetLoungeCustomCriteriaQueryHandler
     public async Task<IReadOnlyList<CustomCriteriaDto>> Handle(
         GetLoungeCustomCriteriaQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem tiêu chí của venue này.");
 
-        var criteria = await _uow.Repository<CustomCriteriaEntity, int>().FindAsync(
+        var criteria = await _uow.Repository<CustomCriteriaEntity, Guid>().FindAsync(
             c => c.LoungeId == request.LoungeId && (request.IncludeInactive || c.IsActive), ct);
 
         return criteria

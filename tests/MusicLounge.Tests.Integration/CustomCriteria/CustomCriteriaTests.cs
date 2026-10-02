@@ -107,7 +107,7 @@ public sealed class CustomCriteriaTests
             Options = (string?)null
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        var id = (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        var id = (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

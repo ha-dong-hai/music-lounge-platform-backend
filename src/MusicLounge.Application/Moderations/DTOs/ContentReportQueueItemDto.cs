@@ -2,7 +2,7 @@ namespace MusicLounge.Application.Moderations.DTOs;
 
 public sealed record ContentReportQueueItemDto(
     string TargetType,
-    int TargetId,
+    Guid TargetId,
     string? TargetSummary,
     int ReportCount,
     string LatestReason,
@@ -13,5 +13,5 @@ public sealed record ContentReportQueueItemDto(
     /// hòa nhạc tương ứng. Có trường này thì mọi dòng trong hàng đợi mới mở được ngữ cảnh; trước đây loại Livestream không
     /// mở được vì <c>TargetId</c> là mã buổi phát chứ không phải mã buổi hòa nhạc. <c>null</c> khi không tra được.
     /// </summary>
-    int? ShowId = null
+    Guid? ShowId = null
 );

@@ -18,7 +18,7 @@ public sealed class PerformersCreatedByMeTests
     public PerformersCreatedByMeTests(ApiFactory factory) => _factory = factory;
 
     // 130 hồ sơ; 3 của chủ phòng trà mới nằm rải ở vị trí 10, 70, 125 — còn lại của chủ phòng trà khác hoặc không rõ người tạo.
-    private async Task<(int OwnerId, List<int> CuaToi)> DanhMucCo130HoSoAsync()
+    private async Task<(Guid OwnerId, List<Guid> CuaToi)> DanhMucCo130HoSoAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -37,14 +37,14 @@ public sealed class PerformersCreatedByMeTests
         return (owner.Id, hoSo.Where(p => p.CreatedByUserId == owner.Id).Select(p => p.Id).ToList());
     }
 
-    private static async Task<(List<int> Ids, int Total)> GoiAsync(HttpClient client, string query)
+    private static async Task<(List<Guid> Ids, int Total)> GoiAsync(HttpClient client, string query)
     {
         var res = await client.GetAsync($"/api/v1/performers?{query}");
         var body = await res.Content.ReadAsStringAsync();
         res.StatusCode.Should().Be(HttpStatusCode.OK, body);
         using var doc = JsonDocument.Parse(body);
         var data = doc.RootElement.GetProperty("data");
-        return (data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("id").GetInt32()).ToList(),
+        return (data.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("id").GetGuid()).ToList(),
                 data.GetProperty("totalCount").GetInt32());
     }
 

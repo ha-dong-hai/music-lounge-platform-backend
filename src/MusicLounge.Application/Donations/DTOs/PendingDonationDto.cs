@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Donations.DTOs;
 
 public sealed record PendingDonationDto(
-    int Id,
+    Guid Id,
     string PerformerName,
     string ShowName,
     decimal Gross,

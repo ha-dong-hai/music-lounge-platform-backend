@@ -29,7 +29,7 @@ public sealed class StaffChangesByAdminTests
     private HttpClient Owner() => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<(int UserId, string Name)> CandidateAsync()
+    private async Task<(Guid UserId, string Name)> CandidateAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -40,14 +40,14 @@ public sealed class StaffChangesByAdminTests
         return (user.Id, name);
     }
 
-    private static async Task<int> AssignAsync(HttpClient client, int userId)
+    private static async Task<Guid> AssignAsync(HttpClient client, Guid userId)
     {
         var res = await client.PostAsJsonAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/staff", new { UserId = userId });
         res.StatusCode.Should().Be(HttpStatusCode.Created, await res.Content.ReadAsStringAsync());
-        return (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
     }
 
-    private static async Task RemoveAsync(HttpClient client, int staffId)
+    private static async Task RemoveAsync(HttpClient client, Guid staffId)
         => (await client.DeleteAsync($"/api/v1/lounges/{SeedHelper.LoungeId}/staff/{staffId}"))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -61,7 +61,7 @@ public sealed class StaffChangesByAdminTests
             .ToListAsync();
     }
 
-    private async Task<LoungeStaff> StaffRowAsync(int staffId)
+    private async Task<LoungeStaff> StaffRowAsync(Guid staffId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<LoungeStaff>().AsNoTracking()
@@ -105,8 +105,8 @@ public sealed class StaffChangesByAdminTests
         list.StatusCode.Should().Be(HttpStatusCode.OK);
         using var json = JsonDocument.Parse(await list.Content.ReadAsStringAsync());
         json.RootElement.GetProperty("data").EnumerateArray()
-            .Single(e => e.GetProperty("id").GetInt32() == staffId)
-            .GetProperty("deactivatedBy").GetInt32()
+            .Single(e => e.GetProperty("id").GetGuid() == staffId)
+            .GetProperty("deactivatedBy").GetGuid()
             .Should().Be(SeedHelper.AdminId, "the owner can see who removed the account from their staff list");
     }
 

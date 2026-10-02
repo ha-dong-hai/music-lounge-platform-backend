@@ -26,9 +26,9 @@ public sealed class LivestreamTests
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     /// <summary>Creates a fresh show in the DB so each test gets its own show (no ConflictException).</summary>
-    private async Task<int> CreateFreshShowAsync()
+    private async Task<Guid> CreateFreshShowAsync()
     {
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -49,7 +49,7 @@ public sealed class LivestreamTests
         return showId;
     }
 
-    private async Task<int> CreateAndApproveLivestreamAsync()
+    private async Task<Guid> CreateAndApproveLivestreamAsync()
     {
         var showId = await CreateFreshShowAsync();
         return await CreateAndApproveLivestreamForShowAsync(showId);
@@ -60,9 +60,9 @@ public sealed class LivestreamTests
     /// then creates and approves a livestream for that show.
     /// Used by HLS access-control tests where the audience must have a valid ticket.
     /// </summary>
-    private async Task<int> CreateAndApproveLivestreamWithAudienceTicketAsync()
+    private async Task<Guid> CreateAndApproveLivestreamWithAudienceTicketAsync()
     {
-        int showId;
+        Guid showId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -108,7 +108,7 @@ public sealed class LivestreamTests
         return await CreateAndApproveLivestreamForShowAsync(showId);
     }
 
-    private async Task<int> CreateAndApproveLivestreamForShowAsync(int showId)
+    private async Task<Guid> CreateAndApproveLivestreamForShowAsync(Guid showId)
     {
         var staffClient = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
         var createRes = await staffClient.PostAsJsonAsync("/api/v1/livestreams", new { ShowId = showId });
@@ -124,7 +124,7 @@ public sealed class LivestreamTests
         return id;
     }
 
-    private async Task<int> CreateApprovedAndStartedLivestreamAsync()
+    private async Task<Guid> CreateApprovedAndStartedLivestreamAsync()
     {
         var id = await CreateAndApproveLivestreamAsync();
         var staffClient = _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
@@ -145,7 +145,7 @@ public sealed class LivestreamTests
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
         var body = await res.Content.ReadFromJsonAsync<IdResponse>();
-        body!.Data.Should().BeGreaterThan(0);
+        body!.Data.Should().NotBe(Guid.Empty);
     }
 
     [Fact]
@@ -639,5 +639,5 @@ public sealed class LivestreamTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 }

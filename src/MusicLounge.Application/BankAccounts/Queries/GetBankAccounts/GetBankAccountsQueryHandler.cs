@@ -25,7 +25,7 @@ internal sealed class GetBankAccountsQueryHandler
         await BankAccountAccess.EnsureCanManageAsync(
             _uow, _currentUser, request.OwnerType, request.OwnerId, ct);
 
-        var accounts = await _uow.Repository<BankAccount, int>().FindAsync(
+        var accounts = await _uow.Repository<BankAccount, Guid>().FindAsync(
             a => a.OwnerType == request.OwnerType && a.OwnerId == request.OwnerId, ct);
 
         // Decrypt only here, at the one boundary already gated by BankAccountAccess — every other

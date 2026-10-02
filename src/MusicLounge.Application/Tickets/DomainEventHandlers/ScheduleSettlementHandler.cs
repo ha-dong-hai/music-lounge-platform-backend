@@ -26,8 +26,8 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
 
     public async Task Handle(TicketPaymentConfirmed notification, CancellationToken ct)
     {
-        var payment = await _uow.Repository<Payment, int>().GetByIdAsync(notification.PaymentId, ct);
-        if (payment is null || notification.OwnerId == 0) return;
+        var payment = await _uow.Repository<Payment, Guid>().GetByIdAsync(notification.PaymentId, ct);
+        if (payment is null || notification.OwnerId == Guid.Empty) return;
 
         // Cash (walk-in/box-office) sales must not get a settlement schedule by default — the owner
         // already holds 100% of the cash from the moment of sale, so a scheduled payout here would be
@@ -45,10 +45,10 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
             .FindAsync(t => t.PaymentId == payment.Id, ct);
         var showId = ticket.FirstOrDefault()?.ShowId;
         var show = showId.HasValue
-            ? await _uow.Repository<LoungeShow, int>().GetByIdAsync(showId.Value, ct)
+            ? await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(showId.Value, ct)
             : null;
         var lounge = show is not null
-            ? await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+            ? await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             : null;
 
         // A settlement needs somewhere to pay into, but this handler must NOT be the thing that
@@ -110,7 +110,7 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         var stage1Amount = Math.Round(ownerNet * partialPct, 2);
         var stage2Amount = ownerNet - stage1Amount;
 
-        var repo = _uow.Repository<Settlement, int>();
+        var repo = _uow.Repository<Settlement, Guid>();
         // D12: snapshot rates at time of creation — config changes later won't affect existing settlements
         var preRate = partialPct;
         var postRate = 1 - partialPct;
@@ -147,21 +147,21 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         await _uow.SaveChangesAsync(ct);
     }
 
-    private async Task<int?> ResolveDefaultBankAccountIdAsync(
-        BankAccountOwnerType ownerType, int ownerId, CancellationToken ct)
+    private async Task<Guid?> ResolveDefaultBankAccountIdAsync(
+        BankAccountOwnerType ownerType, Guid ownerId, CancellationToken ct)
     {
-        var accounts = await _uow.Repository<BankAccount, int>().FindAsync(
+        var accounts = await _uow.Repository<BankAccount, Guid>().FindAsync(
             a => a.OwnerType == ownerType && a.OwnerId == ownerId && a.IsDefault, ct);
         return accounts.FirstOrDefault()?.Id;
     }
 
     private async Task<decimal> ResolveTierPreRateAsync(MusicLoungeEntity lounge, CancellationToken ct)
     {
-        var ratings = await _uow.Repository<LoungeShowRating, int>().FindAsync(
+        var ratings = await _uow.Repository<LoungeShowRating, Guid>().FindAsync(
             r => !r.IsRemoved && r.LoungeShow.LoungeId == lounge.Id, ct);
         var score = ratings.Count > 0 ? (decimal)ratings.Average(r => r.Score) : 0m;
 
-        var completedShows = await _uow.Repository<LoungeShow, int>().CountAsync(
+        var completedShows = await _uow.Repository<LoungeShow, Guid>().CountAsync(
             s => s.LoungeId == lounge.Id && s.Status == LoungeShowStatus.Ended, ct);
 
         var standardMinScore = await _config.GetDecimalAsync(ConfigKeys.SettlementTierStandardMinScore, 3.5m, ct);
@@ -174,7 +174,7 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         if (lounge.ReputationScore != score)
         {
             lounge.ReputationScore = score;
-            _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
+            _uow.Repository<MusicLoungeEntity, Guid>().Update(lounge);
         }
 
         if (score >= premiumMinScore && completedShows >= premiumMinShows)

@@ -25,7 +25,7 @@ internal sealed class GetPendingRefundRequestsQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
-        var (pending, total) = await _uow.Repository<RefundRequest, int>().GetPagedAsync(
+        var (pending, total) = await _uow.Repository<RefundRequest, Guid>().GetPagedAsync(
             r => r.Status == RefundRequestStatus.Pending, r => r.Id, page, size, ct);
 
         // Cung mot con so voi cai da hua voi nguoi mua o GetMyRefundRequests va cai
@@ -35,7 +35,7 @@ internal sealed class GetPendingRefundRequestsQueryHandler
 
         // MLACP-387: Admin can thay yeu cau nao dang cho nguoi mua khai tai khoan, va tai khoan da khai de chuyen khoan.
         var paymentIds = pending.Select(r => r.PaymentId).Distinct().ToList();
-        var payments = (await _uow.Repository<Payment, int>().FindAsync(p => paymentIds.Contains(p.Id), ct))
+        var payments = (await _uow.Repository<Payment, Guid>().FindAsync(p => paymentIds.Contains(p.Id), ct))
             .ToDictionary(p => p.Id);
         var windowDays = await RefundGatewayWindow.WindowDaysAsync(_config, ct);
         var now = DateTimeOffset.UtcNow;

@@ -20,11 +20,11 @@ internal sealed class DeleteFnbMenuCommandHandler : IRequestHandler<DeleteFnbMen
 
     public async Task<Unit> Handle(DeleteFnbMenuCommand request, CancellationToken ct)
     {
-        var menuRepo = _uow.Repository<FnbMenu, int>();
+        var menuRepo = _uow.Repository<FnbMenu, Guid>();
         var menu = await menuRepo.GetByIdAsync(request.MenuId, ct)
             ?? throw new NotFoundException(nameof(FnbMenu), request.MenuId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(menu.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(menu.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), menu.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)

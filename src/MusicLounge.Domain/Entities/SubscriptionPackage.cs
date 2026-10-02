@@ -6,7 +6,7 @@ namespace MusicLounge.Domain.Entities;
 // D1: AuditableEntity (CreatedAt/UpdatedAt/CreatedBy/UpdatedBy, auto-stamped by
 // ApplicationDbContext.SaveChangesAsync) — a Price/entitlement edit here affects platform revenue,
 // so it's worth knowing which Admin changed it and when.
-public sealed class SubscriptionPackage : Common.AuditableEntity<int>
+public sealed class SubscriptionPackage : Common.AuditableEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;       // Basic / Pro / Premium
     public string? Description { get; set; }

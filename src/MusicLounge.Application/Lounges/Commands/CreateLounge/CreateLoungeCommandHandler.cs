@@ -6,7 +6,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Lounges.Commands.CreateLounge;
 
-internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeCommand, int>
+internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -19,12 +19,12 @@ internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeC
         _catalog = catalog;
     }
 
-    public async Task<int> Handle(CreateLoungeCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateLoungeCommand request, CancellationToken ct)
     {
         // MLACP-374: mot chu chi duoc so huu MOT phong tra — xac nhan tu nguoi dung, he thong khong
         // thiet ke cho nhieu phong tra chung 1 chu (OwnerSubscription, ho so thue, KYC deu tinh theo
         // User). Kiem tra tuong minh o day thay vi de lo DbUpdateException chung chung tu unique index.
-        var alreadyOwnsLounge = await _uow.Repository<MusicLoungeEntity, int>()
+        var alreadyOwnsLounge = await _uow.Repository<MusicLoungeEntity, Guid>()
             .AnyAsync(l => l.OwnerId == _currentUser.UserId, ct);
         if (alreadyOwnsLounge)
             throw new ConflictException(
@@ -41,7 +41,7 @@ internal sealed class CreateLoungeCommandHandler : IRequestHandler<CreateLoungeC
             Address = _catalog.BuildLoungeAddress(request)
         };
 
-        _uow.Repository<MusicLoungeEntity, int>().Add(lounge);
+        _uow.Repository<MusicLoungeEntity, Guid>().Add(lounge);
         await _uow.SaveChangesAsync(ct);
 
         return lounge.Id;

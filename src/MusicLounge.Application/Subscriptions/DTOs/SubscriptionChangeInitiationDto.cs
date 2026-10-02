@@ -5,7 +5,7 @@ namespace MusicLounge.Application.Subscriptions.DTOs;
 /// nhận (tính theo thời điểm đó), nên có thể nhỏ hơn ước tính một chút.
 /// </summary>
 public sealed record SubscriptionChangeInitiationDto(
-    int PaymentId,
+    Guid PaymentId,
     string OrderId,
     decimal Amount,
     string PaymentUrl,

@@ -30,14 +30,14 @@ public sealed class BankAccountsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAll(
-        [FromQuery] BankAccountOwnerType ownerType, [FromQuery] int ownerId, CancellationToken ct = default)
+        [FromQuery] BankAccountOwnerType ownerType, [FromQuery] Guid ownerId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetBankAccountsQuery(ownerType, ownerId), ct);
         return Ok(ApiResponse<IReadOnlyList<BankAccountDto>>.Ok(result));
     }
 
     [HttpPost]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -47,16 +47,16 @@ public sealed class BankAccountsController : ControllerBase
         var id = await _sender.Send(command, ct);
         return CreatedAtAction(
             nameof(GetAll), new { ownerType = command.OwnerType, ownerId = command.OwnerId, version = "1.0" },
-            ApiResponse<int>.Ok(id));
+            ApiResponse<Guid>.Ok(id));
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
-        int id, [FromBody] UpdateBankAccountRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateBankAccountRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateBankAccountCommand(
             id, body.BankName, body.AccountNumber, body.AccountHolder, body.IsDefault), ct);

@@ -61,9 +61,9 @@ public sealed class RecommenderEvaluationEndpointTests
         db.Add(lounge);
         await db.SaveChangesAsync();
 
-        var showIds = new List<int>();
-        var tierIds = new List<int>();
-        var priceIds = new List<int>();
+        var showIds = new List<Guid>();
+        var tierIds = new List<Guid>();
+        var priceIds = new List<Guid>();
 
         for (var i = 0; i < showCount; i++)
         {

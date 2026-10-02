@@ -37,11 +37,11 @@ public sealed class LateVnPayConfirmationTests
 
     public LateVnPayConfirmationTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record InitData(int DonationId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record InitData(Guid DonationId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record InitResponse(bool Success, InitData Data);
     private sealed record IpnBody(string RspCode, string Message);
 
-    private async Task<(int DonationId, string OrderId)> NewDonationAsync(decimal amount)
+    private async Task<(Guid DonationId, string OrderId)> NewDonationAsync(decimal amount)
     {
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await client.PostAsJsonAsync("/api/v1/donations", new
@@ -67,7 +67,7 @@ public sealed class LateVnPayConfirmationTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!;
     }
 
-    private async Task<int> IncidentCountAsync(int donationId)
+    private async Task<int> IncidentCountAsync(Guid donationId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

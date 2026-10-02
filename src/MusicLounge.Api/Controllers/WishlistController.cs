@@ -33,19 +33,19 @@ public sealed class WishlistController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 
-    [HttpPost("{showId:int}")]
+    [HttpPost("{showId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Add(int showId, CancellationToken ct = default)
+    public async Task<IActionResult> Add(Guid showId, CancellationToken ct = default)
     {
         await _sender.Send(new AddToWishlistCommand(showId), ct);
         return NoContent();
     }
 
-    [HttpDelete("{showId:int}")]
+    [HttpDelete("{showId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Remove(int showId, CancellationToken ct = default)
+    public async Task<IActionResult> Remove(Guid showId, CancellationToken ct = default)
     {
         await _sender.Send(new RemoveFromWishlistCommand(showId), ct);
         return NoContent();

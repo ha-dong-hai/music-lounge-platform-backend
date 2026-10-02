@@ -5,7 +5,7 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common.Interfaces.Repositories;
 
-public interface IUserRepository : IRepository<User, int>
+public interface IUserRepository : IRepository<User, Guid>
 {
     Task<PaginatedResult<UserAdminDto>> SearchAsync(
         string? searchText, UserRole? role, bool? isActive,

@@ -35,16 +35,16 @@ public sealed class DonationLiveAlertTests
 
     public DonationLiveAlertTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int StaffId, int PerformanceId, int LivestreamId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid StaffId, Guid PerformanceId, Guid LivestreamId);
 
-    private sealed record InitData(int DonationId, string OrderId);
+    private sealed record InitData(Guid DonationId, string OrderId);
 
     private sealed record Wrapped<T>(T Data);
 
     private RecordingLivestreamHubService Hub =>
         (RecordingLivestreamHubService)_factory.Services.GetRequiredService<ILivestreamHubService>();
 
-    private List<DonationAlertDto> AlertsOn(int livestreamId) => Hub.For(livestreamId)
+    private List<DonationAlertDto> AlertsOn(Guid livestreamId) => Hub.For(livestreamId)
         .Where(s => s.Event == "DonationAlert")
         .Select(s => (DonationAlertDto)s.Payload!)
         .ToList();
@@ -106,8 +106,8 @@ public sealed class DonationLiveAlertTests
         return new Venue(owner.Id, lounge.Id, staff.Id, performance.Id, livestream.Id);
     }
 
-    private async Task<int> DonateAndConfirmAsync(
-        int performanceId, string? message = "Hay quá!", bool anonymous = false, bool messagePublic = true)
+    private async Task<Guid> DonateAndConfirmAsync(
+        Guid performanceId, string? message = "Hay quá!", bool anonymous = false, bool messagePublic = true)
     {
         var audience = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await audience.PostAsJsonAsync("/api/v1/donations", new
@@ -263,7 +263,7 @@ public sealed class DonationLiveAlertTests
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         Hub.For(venue.LivestreamId)
-            .Should().Contain(s => s.Event == "DonationMessageHidden" && (int)s.Payload! == donationId,
+            .Should().Contain(s => s.Event == "DonationMessageHidden" && (Guid)s.Payload! == donationId,
                 "màn hình của người đang xem phải gỡ lời nhắn ngay, không đợi tải lại");
 
         using var scope = _factory.Services.CreateScope();

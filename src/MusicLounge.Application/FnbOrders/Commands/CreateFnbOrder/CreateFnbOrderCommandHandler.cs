@@ -9,7 +9,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.FnbOrders.Commands.CreateFnbOrder;
 
-internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOrderCommand, int>
+internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOrderCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -20,9 +20,9 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(CreateFnbOrderCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateFnbOrderCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         // MLACP-380: cung quy uoc MLACP-354 da dat cho ve/donation — F&B bi bo sot. Cau cho nguoi mua khac cau cho
@@ -51,7 +51,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
         // venue's zone/show, showing up on the wrong venue's floor display.
         if (request.ZoneId.HasValue)
         {
-            var zone = await _uow.Repository<SeatingZone, int>().GetByIdAsync(request.ZoneId.Value, ct)
+            var zone = await _uow.Repository<SeatingZone, Guid>().GetByIdAsync(request.ZoneId.Value, ct)
                 ?? throw new NotFoundException(nameof(SeatingZone), request.ZoneId.Value);
             if (zone.LoungeId != request.LoungeId)
                 throw new DomainException("Khu vực này không thuộc venue này.");
@@ -59,7 +59,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
 
         if (request.ShowId.HasValue)
         {
-            var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId.Value, ct)
+            var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId.Value, ct)
                 ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId.Value);
             if (show.LoungeId != request.LoungeId)
                 throw new DomainException("Show này không thuộc venue này.");
@@ -72,8 +72,8 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
                     "gắn với buổi diễn này.");
         }
 
-        int? audienceUserId = null;
-        int? staffId = null;
+        Guid? audienceUserId = null;
+        Guid? staffId = null;
 
         if (_currentUser.Role is Roles.Staff or Roles.Owner or Roles.Admin)
         {
@@ -87,12 +87,12 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
         }
 
         var menuItemIds = request.Items.Select(i => i.MenuItemId).Distinct().ToList();
-        var menuItems = await _uow.Repository<FnbMenuItem, int>()
+        var menuItems = await _uow.Repository<FnbMenuItem, Guid>()
             .FindAsync(m => menuItemIds.Contains(m.Id), ct);
         var menuItemsById = menuItems.ToDictionary(m => m.Id);
 
         var menuIds = menuItems.Select(m => m.MenuId).Distinct().ToList();
-        var menus = await _uow.Repository<FnbMenu, int>()
+        var menus = await _uow.Repository<FnbMenu, Guid>()
             .FindAsync(m => menuIds.Contains(m.Id), ct);
         var menusById = menus.ToDictionary(m => m.Id);
 
@@ -121,7 +121,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
             Note = request.Note
         };
 
-        _uow.Repository<FnbOrder, int>().Add(order);
+        _uow.Repository<FnbOrder, Guid>().Add(order);
         await _uow.SaveChangesAsync(ct);
 
         decimal total = 0m;
@@ -130,7 +130,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
             var menuItem = menuItemsById[input.MenuItemId];
             total += menuItem.Price * input.Quantity;
 
-            _uow.Repository<OrderItem, int>().Add(new OrderItem
+            _uow.Repository<OrderItem, Guid>().Add(new OrderItem
             {
                 FnbOrderId = order.Id,
                 MenuItemId = input.MenuItemId,
@@ -141,7 +141,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
         }
 
         order.TotalAmount = total;
-        _uow.Repository<FnbOrder, int>().Update(order);
+        _uow.Repository<FnbOrder, Guid>().Update(order);
         await _uow.SaveChangesAsync(ct);
 
         return order.Id;

@@ -6,7 +6,7 @@ public sealed class SetShowPosterCommandValidator : AbstractValidator<SetShowPos
 {
     public SetShowPosterCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.ImageUrl).NotEmpty().MaximumLength(500);
     }
 }

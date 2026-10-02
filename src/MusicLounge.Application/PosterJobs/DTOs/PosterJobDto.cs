@@ -8,8 +8,8 @@ namespace MusicLounge.Application.PosterJobs.DTOs;
 /// buổi hòa nhạc và tên phòng trà — đó là thông tin công khai, in trên chính poster.
 /// </summary>
 public sealed record PosterJobDto(
-    int Id,
-    int ShowId,
+    Guid Id,
+    Guid ShowId,
     string Prompt,
     string AspectRatio,
     int AttemptCount);

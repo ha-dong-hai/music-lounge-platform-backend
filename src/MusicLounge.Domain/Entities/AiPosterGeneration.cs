@@ -8,10 +8,10 @@ namespace MusicLounge.Domain.Entities;
 // it must never cost them a poster), and (b) there's an auditable record to point to if an Owner
 // disputes "I paid for posters I never got" — the log shows exactly which attempts failed and why,
 // distinct from ones that succeeded but the Owner simply regenerated over.
-public sealed class AiPosterGeneration : Common.BaseEntity<int>
+public sealed class AiPosterGeneration : Common.BaseEntity<Guid>
 {
-    public int ShowId { get; set; }
-    public int OwnerId { get; set; }
+    public Guid ShowId { get; set; }
+    public Guid OwnerId { get; set; }
     public AiPosterGenerationStatus Status { get; set; }
     public string Prompt { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }

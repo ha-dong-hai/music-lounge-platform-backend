@@ -18,7 +18,7 @@ namespace MusicLounge.Application.Analytics.DTOs;
 /// con số này càng cao.
 /// </param>
 public sealed record DemandForecastDto(
-    int ShowId,
+    Guid ShowId,
     string ShowName,
     string Status,
     string Explanation,

@@ -25,7 +25,7 @@ public sealed class VenuePenaltiesController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = Policies.RequireAdmin)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Issue([FromBody] IssuePenaltyRequest body, CancellationToken ct = default)
@@ -35,7 +35,7 @@ public sealed class VenuePenaltiesController : ControllerBase
             ct);
         // Khong co GET /venue-penalties/{id} don le — dung CreatedAtAction(nameof(Issue)) se sinh
         // Location vo nghia (tro ve chinh POST action). Owner tra cuu lai qua GET /venue-penalties/mine.
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<Guid>.Ok(id));
     }
 
     /// <summary>
@@ -70,32 +70,32 @@ public sealed class VenuePenaltiesController : ControllerBase
         return Ok(ApiResponse<PaginatedResult<VenuePenaltyDto>>.Ok(result));
     }
 
-    [HttpPost("{id:int}/appeal")]
+    [HttpPost("{id:guid}/appeal")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> SubmitAppeal(
-        int id, [FromBody] SubmitAppealRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] SubmitAppealRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new SubmitAppealCommand(id, body.AppealReason), ct);
         return NoContent();
     }
 
-    [HttpPost("{id:int}/appeal/review")]
+    [HttpPost("{id:guid}/appeal/review")]
     [Authorize(Policy = Policies.RequireAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReviewAppeal(
-        int id, [FromBody] ReviewAppealRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] ReviewAppealRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new ReviewAppealCommand(id, body.Decision, body.ReviewNote), ct);
         return NoContent();
     }
 }
 
-public sealed record IssuePenaltyRequest(int LoungeId, string PenaltyType, string Reason, string? EvidenceRef, int? SuspensionDays);
+public sealed record IssuePenaltyRequest(Guid LoungeId, string PenaltyType, string Reason, string? EvidenceRef, int? SuspensionDays);
 public sealed record SubmitAppealRequest(string AppealReason);
 public sealed record ReviewAppealRequest(string Decision, string? ReviewNote);

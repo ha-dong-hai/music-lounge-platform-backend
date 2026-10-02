@@ -8,11 +8,11 @@ namespace MusicLounge.Domain.Entities;
 // poster vendor calls, a stitch runs on OUR OWN server's CPU, so an unbounded retry loop is a
 // direct cost/DoS vector, not just a wasted vendor bill; and (b) it's an auditable record of why a
 // given stitch failed, since the resulting VenueTourScene (on success) doesn't carry that context.
-public sealed class VenueTourStitchAttempt : Common.BaseEntity<int>
+public sealed class VenueTourStitchAttempt : Common.BaseEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public VenueTourStitchStatus Status { get; set; }
-    public int? ResultSceneId { get; set; }
+    public Guid? ResultSceneId { get; set; }
     public string? ErrorMessage { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 

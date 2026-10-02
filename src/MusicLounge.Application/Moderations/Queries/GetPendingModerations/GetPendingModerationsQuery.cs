@@ -10,5 +10,5 @@ public sealed record GetPendingModerationsQuery(
     int PageSize = 20,
     // MLACP-504: lấy bản chờ duyệt của ĐÚNG một đối tượng (vd buổi diễn đang mở). Bắt buộc đi cùng TargetType hợp lệ —
     // xem validator.
-    int? TargetId = null
+    Guid? TargetId = null
 ) : IQuery<PaginatedResult<EventModerationDto>>;

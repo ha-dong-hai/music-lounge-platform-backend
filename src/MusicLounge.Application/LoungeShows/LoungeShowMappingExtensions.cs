@@ -11,7 +11,7 @@ internal static class LoungeShowMappingExtensions
 {
     internal static LoungeShowListItemDto ToListItemDto(
         this LoungeShow show,
-        IReadOnlySet<int> wishlistedIds)
+        IReadOnlySet<Guid> wishlistedIds)
         => show.ToListItemDtoCore(wishlistedIds.Contains(show.Id));
 
     internal static LoungeShowListItemDto ToListItemDto(
@@ -49,9 +49,9 @@ internal static class LoungeShowMappingExtensions
     /// toán — hai con số đó lệch nhau là cách nhanh nhất để mất lòng tin.
     /// </param>
     internal static LoungeShowDetailDto ToDetailDto(
-        this LoungeShow show, IReadOnlySet<int> wishlistedIds,
+        this LoungeShow show, IReadOnlySet<Guid> wishlistedIds,
         bool? userHasTicket = null, bool? userHasRated = null,
-        IReadOnlyDictionary<int, int>? soldAndHeld = null,
+        IReadOnlyDictionary<Guid, int>? soldAndHeld = null,
         IReadOnlyList<LoungeGalleryImageDto>? galleryImages = null,
         int lastEntryMinutes = TicketSaleWindow.DefaultLastEntryMinutes)
         => ToDetailDtoCore(
@@ -59,9 +59,9 @@ internal static class LoungeShowMappingExtensions
             TicketSaleWindow.LastEntry(show, lastEntryMinutes));
 
     private static LoungeShowDetailDto ToDetailDtoCore(
-        LoungeShow show, IReadOnlySet<int> wishlistedIds,
+        LoungeShow show, IReadOnlySet<Guid> wishlistedIds,
         bool? userHasTicket, bool? userHasRated,
-        IReadOnlyDictionary<int, int>? soldAndHeld,
+        IReadOnlyDictionary<Guid, int>? soldAndHeld,
         IReadOnlyList<LoungeGalleryImageDto>? galleryImages,
         DateTimeOffset lastEntry)
         => new(show.Id, show.Name, show.Description, show.DisplayImageUrl(),
@@ -158,14 +158,14 @@ internal static class LoungeShowMappingExtensions
                galleryImages);
 
     private static PerformerSummaryDto ToSummaryDto(
-        this Performer performer, int performanceId, bool acceptsDonation,
+        this Performer performer, Guid performanceId, bool acceptsDonation,
         PerformerRole role, TimeOnly? setTime, int orderIndex)
         => new(performer.Id, performer.Name, performer.AvatarUrl, performer.Bio,
                performer.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
                performanceId, acceptsDonation, role, orderIndex, setTime);
 
     private static TicketTierSummaryDto ToSummaryDto(
-        this TicketTier tier, IReadOnlyDictionary<int, int>? soldAndHeld, DateTimeOffset lastEntry)
+        this TicketTier tier, IReadOnlyDictionary<Guid, int>? soldAndHeld, DateTimeOffset lastEntry)
         => new(tier.Id, tier.Name, tier.Description, tier.AccessType, tier.TotalCapacity, tier.ZoneId,
                tier.Prices.Where(p => p.IsActive).Select(p => p.ToSummaryDto(soldAndHeld, lastEntry)).ToList());
 
@@ -175,7 +175,7 @@ internal static class LoungeShowMappingExtensions
     /// về vẫn luôn là một mốc có thật — FE không phải đoán, và không phải đổi kiểu dữ liệu.
     /// </param>
     private static TicketPriceSummaryDto ToSummaryDto(
-        this TicketPrice price, IReadOnlyDictionary<int, int>? soldAndHeld, DateTimeOffset lastEntry)
+        this TicketPrice price, IReadOnlyDictionary<Guid, int>? soldAndHeld, DateTimeOffset lastEntry)
     {
         int? availableSlots = price.Quota.HasValue
             ? Math.Max(0, price.Quota.Value - (soldAndHeld?.GetValueOrDefault(price.Id, 0) ?? 0))

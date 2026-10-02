@@ -102,7 +102,7 @@ public sealed class AutoApproveOverdueRefundsJob
             await TryApproveAsync(refundId, slaHours, graceHours, ct);
     }
 
-    private async Task TryApproveAsync(int refundId, int slaHours, int graceHours, CancellationToken ct)
+    private async Task TryApproveAsync(Guid refundId, int slaHours, int graceHours, CancellationToken ct)
     {
         // Mỗi yêu cầu một scope riêng, tức một DbContext riêng. Handler ghi ProcessedBy/ResolvedAt lên
         // thực thể TRƯỚC khi gọi VNPay; nếu VNPay từ chối thì TransactionBehavior rollback giao dịch,

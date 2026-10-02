@@ -10,11 +10,11 @@ namespace MusicLounge.Application.Common.Interfaces;
 public interface IAuthAttemptTracker
 {
     /// <summary>Null if not currently locked out, otherwise how long until the lockout expires.</summary>
-    Task<TimeSpan?> GetLockoutRemainingAsync(int userId, CancellationToken ct = default);
+    Task<TimeSpan?> GetLockoutRemainingAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>Increments the failure counter, locking the account out once it crosses the threshold.</summary>
-    Task RecordFailureAsync(int userId, CancellationToken ct = default);
+    Task RecordFailureAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>Clears the failure counter and any active lockout — called after a verified success.</summary>
-    Task ResetAsync(int userId, CancellationToken ct = default);
+    Task ResetAsync(Guid userId, CancellationToken ct = default);
 }

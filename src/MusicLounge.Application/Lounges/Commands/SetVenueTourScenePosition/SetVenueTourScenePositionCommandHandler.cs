@@ -20,13 +20,13 @@ internal sealed class SetVenueTourScenePositionCommandHandler
 
     public async Task<Unit> Handle(SetVenueTourScenePositionCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        var sceneRepo = _uow.Repository<VenueTourScene, int>();
+        var sceneRepo = _uow.Repository<VenueTourScene, Guid>();
         var scene = await sceneRepo.GetByIdAsync(request.SceneId, ct);
         if (scene is null || scene.LoungeId != request.LoungeId)
             throw new NotFoundException(nameof(VenueTourScene), request.SceneId);

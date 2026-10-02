@@ -7,7 +7,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.Lounges.Commands.AddVenueTourHotspot;
 
-internal sealed class AddVenueTourHotspotCommandHandler : IRequestHandler<AddVenueTourHotspotCommand, int>
+internal sealed class AddVenueTourHotspotCommandHandler : IRequestHandler<AddVenueTourHotspotCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -18,15 +18,15 @@ internal sealed class AddVenueTourHotspotCommandHandler : IRequestHandler<AddVen
         _currentUser = currentUser;
     }
 
-    public async Task<int> Handle(AddVenueTourHotspotCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(AddVenueTourHotspotCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền sửa venue này.");
 
-        var sceneRepo = _uow.Repository<VenueTourScene, int>();
+        var sceneRepo = _uow.Repository<VenueTourScene, Guid>();
         var scene = await sceneRepo.GetByIdAsync(request.SceneId, ct);
         if (scene is null || scene.LoungeId != request.LoungeId)
             throw new NotFoundException(nameof(VenueTourScene), request.SceneId);
@@ -50,7 +50,7 @@ internal sealed class AddVenueTourHotspotCommandHandler : IRequestHandler<AddVen
             Label = request.Label,
             InfoText = request.InfoText
         };
-        _uow.Repository<VenueTourHotspot, int>().Add(hotspot);
+        _uow.Repository<VenueTourHotspot, Guid>().Add(hotspot);
         await _uow.SaveChangesAsync(ct);
         return hotspot.Id;
     }

@@ -25,15 +25,15 @@ internal sealed class GetPosterGenerationHistoryQueryHandler
     public async Task<IReadOnlyList<PosterGenerationAttemptDto>> Handle(
         GetPosterGenerationHistoryQuery request, CancellationToken ct)
     {
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(request.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền xem lịch sử tạo poster của show này.");
 
-        var attempts = await _uow.Repository<AiPosterGeneration, int>().FindAsync(
+        var attempts = await _uow.Repository<AiPosterGeneration, Guid>().FindAsync(
             g => g.ShowId == request.ShowId, ct);
 
         return attempts

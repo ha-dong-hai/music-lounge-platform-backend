@@ -36,7 +36,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         // before either commits, both write a (possibly contradictory) decision.
         await using var _ = await _lock.AcquireAsync($"appeal-review:{request.PenaltyId}", ct);
 
-        var penaltyRepo = _uow.Repository<VenuePenalty, int>();
+        var penaltyRepo = _uow.Repository<VenuePenalty, Guid>();
         var penalty = await penaltyRepo.GetByIdAsync(request.PenaltyId, ct)
             ?? throw new NotFoundException(nameof(VenuePenalty), request.PenaltyId);
 
@@ -53,7 +53,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
         penalty.CompensationNote = request.ReviewNote;
         penaltyRepo.Update(penalty);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(penalty.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(penalty.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), penalty.LoungeId);
 
         // Exact now (was inferred from EffectiveAt <= now, which could be wrong in the window
@@ -67,7 +67,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
             // whatever is STILL in force. MLACP-367: the same rule every other place uses (PenaltyLifecycle).
             // This used to count only Suspension/Ban, so lifting one warning while another stood reset the
             // venue to Approved; and it reset a status no penalty had set.
-            var remaining = await _uow.Repository<VenuePenalty, int>().FindAsync(
+            var remaining = await _uow.Repository<VenuePenalty, Guid>().FindAsync(
                 p => p.LoungeId == penalty.LoungeId
                     && p.Id != penalty.Id
                     && PenaltyLifecycle.InForce.Contains(p.Status),
@@ -76,7 +76,7 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
             if (PenaltyLifecycle.StatusAfterReleasing(lounge.Status, penalty.PenaltyType, remaining) is { } releasedStatus)
             {
                 lounge.Status = releasedStatus;
-                _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
+                _uow.Repository<MusicLoungeEntity, Guid>().Update(lounge);
             }
 
             // MLACP-369: khoa vinh vien da ap roi bi huy thi tra lai goi cho chu — dung phan thoi gian con lai
@@ -85,11 +85,11 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
             // thoi gian bi khoa — bi khoa oan thi cang dang duoc giu.
             if (wasAlreadyApplied && penalty.PenaltyType == PenaltyType.Ban)
             {
-                var ownerSubscriptions = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+                var ownerSubscriptions = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
                     s => s.OwnerId == lounge.OwnerId, ct);
                 restoredPlan = PenaltySubscriptions.RestoreAfterBanLifted(ownerSubscriptions, penalty, now);
                 if (restoredPlan is not null)
-                    _uow.Repository<OwnerSubscription, int>().Update(restoredPlan);
+                    _uow.Repository<OwnerSubscription, Guid>().Update(restoredPlan);
             }
         }
 

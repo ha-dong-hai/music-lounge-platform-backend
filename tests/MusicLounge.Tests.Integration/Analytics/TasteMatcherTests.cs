@@ -1,3 +1,5 @@
+using MusicLounge.Tests.Integration.Helpers;
+using MusicLounge.Domain.Common;
 using FluentAssertions;
 using MusicLounge.Application.Analytics.Common;
 
@@ -16,15 +18,16 @@ namespace MusicLounge.Tests.Integration.Analytics;
 /// </summary>
 public sealed class TasteMatcherTests
 {
+    // MLACP-515: khoá giờ là GUID. Test giữ số nhỏ cho dễ đọc, đổi sang GUID ở ranh giới bằng TestId.Of.
+    private static HashSet<Guid> G(int[]? ids) => (ids ?? []).Select(n => TestId.Of(n)).ToHashSet();
+
     private static TasteProfile Likes(int[]? genres = null, int[]? moods = null,
         int[]? atmospheres = null, int[]? follows = null)
-        => new((genres ?? []).ToHashSet(), (moods ?? []).ToHashSet(),
-               (atmospheres ?? []).ToHashSet(), (follows ?? []).ToHashSet());
+        => new(G(genres), G(moods), G(atmospheres), G(follows));
 
     private static ShowTags Show(int[]? genres = null, int[]? moods = null,
         int[]? atmospheres = null, int loungeId = 1)
-        => new(ShowId: 1, loungeId, (genres ?? []).ToHashSet(),
-               (moods ?? []).ToHashSet(), (atmospheres ?? []).ToHashSet());
+        => new(ShowId: TestId.Of(1), TestId.Of(loungeId), G(genres), G(moods), G(atmospheres));
 
     [Fact]
     public void APerfectMatchOnEveryDimension_ScoresOne()

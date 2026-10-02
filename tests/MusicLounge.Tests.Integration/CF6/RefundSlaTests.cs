@@ -31,7 +31,7 @@ public sealed class RefundSlaTests
 
     public RefundSlaTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedPendingRefundAsync(DateTimeOffset paidAt, DateTime createdAt)
+    private async Task<Guid> SeedPendingRefundAsync(DateTimeOffset paidAt, DateTime createdAt)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -66,7 +66,7 @@ public sealed class RefundSlaTests
         return refund.Id;
     }
 
-    private async Task<int> CountAdminAlertsAsync(int refundId)
+    private async Task<int> CountAdminAlertsAsync(Guid refundId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -1,3 +1,4 @@
+using MusicLounge.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicLounge.Domain.Entities;
@@ -17,10 +18,10 @@ internal sealed class EventCategoryConfiguration : IEntityTypeConfiguration<Even
 
         // MLACP-14: danh mục loại buổi diễn mặc định cho form tạo buổi diễn.
         b.HasData(
-            new EventCategory { Id = 1, Name = "Đêm nhạc thường", IsActive = true },
-            new EventCategory { Id = 2, Name = "Mini Show", IsActive = true },
-            new EventCategory { Id = 3, Name = "Sự kiện riêng", IsActive = true },
-            new EventCategory { Id = 4, Name = "Họp báo", IsActive = true }
+            new EventCategory { Id = OrderedGuid.FromLegacy("event_categories", 1), Name = "Đêm nhạc thường", IsActive = true },
+            new EventCategory { Id = OrderedGuid.FromLegacy("event_categories", 2), Name = "Mini Show", IsActive = true },
+            new EventCategory { Id = OrderedGuid.FromLegacy("event_categories", 3), Name = "Sự kiện riêng", IsActive = true },
+            new EventCategory { Id = OrderedGuid.FromLegacy("event_categories", 4), Name = "Họp báo", IsActive = true }
         );
     }
 }

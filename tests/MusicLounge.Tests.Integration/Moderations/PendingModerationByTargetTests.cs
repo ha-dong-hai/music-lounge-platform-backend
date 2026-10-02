@@ -22,12 +22,12 @@ public sealed class PendingModerationByTargetTests
 
     // 120 bản chờ của 120 "buổi diễn" (TargetId không cần là buổi thật — bảng kiểm duyệt không có khoá ngoại tới đối
     // tượng). Dải id riêng mỗi lần chạy để không đụng bản của test khác. Kèm một bản Livestream TRÙNG id với buổi cuối.
-    private async Task<(List<int> TargetIds, int BanCuaBuoiCuoi, int BanLivestreamTrungId)> Co120BanChoAsync()
+    private async Task<(List<Guid> TargetIds, Guid BanCuaBuoiCuoi, Guid BanLivestreamTrungId)> Co120BanChoAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var goc = Random.Shared.Next(1_000_000, 2_000_000_000 - 1_000);
-        var targetIds = Enumerable.Range(goc, 120).ToList();
+        var targetIds = Enumerable.Range(goc, 120).Select(n => TestId.Of(n)).ToList();
         var ban = targetIds.Select(t => new EventModeration
         {
             TargetType = ModerationTargetType.Show, TargetId = t, AiScore = 0.99f // điểm cao: chen lên đầu hàng chờ
@@ -39,14 +39,14 @@ public sealed class PendingModerationByTargetTests
         return (targetIds, ban[^1].Id, livestream.Id);
     }
 
-    private async Task<List<int>> GoiAsync(string query)
+    private async Task<List<Guid>> GoiAsync(string query)
     {
         var res = await Admin().GetAsync($"/api/v1/moderations/pending?{query}");
         var body = await res.Content.ReadAsStringAsync();
         res.StatusCode.Should().Be(HttpStatusCode.OK, body);
         using var doc = JsonDocument.Parse(body);
         return doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Select(x => x.GetProperty("id").GetInt32()).ToList();
+            .Select(x => x.GetProperty("id").GetGuid()).ToList();
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class PendingModerationByTargetTests
     [Fact]
     public async Task TargetIdThieuTargetType_400_ChuKhongTraLanCacLoai()
     {
-        var res = await Admin().GetAsync("/api/v1/moderations/pending?targetId=5");
+        var res = await Admin().GetAsync("/api/v1/moderations/pending?targetId=TestId.Of(5)");
 
         res.StatusCode.Should().Be(HttpStatusCode.BadRequest, await res.Content.ReadAsStringAsync());
     }

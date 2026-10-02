@@ -14,13 +14,13 @@ namespace MusicLounge.Application.Analytics.Common;
 /// tại đúng trong thời gian xử lý một request để sắp xếp câu trả lời cho request đó.
 /// </summary>
 public sealed record TasteProfile(
-    IReadOnlySet<int> GenreIds,
-    IReadOnlySet<int> MoodIds,
-    IReadOnlySet<int> AtmosphereIds,
-    IReadOnlySet<int> FollowedLoungeIds)
+    IReadOnlySet<Guid> GenreIds,
+    IReadOnlySet<Guid> MoodIds,
+    IReadOnlySet<Guid> AtmosphereIds,
+    IReadOnlySet<Guid> FollowedLoungeIds)
 {
     public static TasteProfile Empty { get; } =
-        new(new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>());
+        new(new HashSet<Guid>(), new HashSet<Guid>(), new HashSet<Guid>(), new HashSet<Guid>());
 
     /// <summary>
     /// Không biết gì về người này. Khi đó phải trả về bảng đang được quan tâm y như cũ — sắp xếp
@@ -33,11 +33,11 @@ public sealed record TasteProfile(
 
 /// <summary>Các thẻ phân loại của một buổi diễn, đủ để so với gu người nghe.</summary>
 public sealed record ShowTags(
-    int ShowId,
-    int LoungeId,
-    IReadOnlySet<int> GenreIds,
-    IReadOnlySet<int> MoodIds,
-    IReadOnlySet<int> AtmosphereIds);
+    Guid ShowId,
+    Guid LoungeId,
+    IReadOnlySet<Guid> GenreIds,
+    IReadOnlySet<Guid> MoodIds,
+    IReadOnlySet<Guid> AtmosphereIds);
 
 /// <summary>
 /// Chấm điểm một buổi diễn hợp gu người nghe tới đâu.
@@ -80,7 +80,7 @@ public static class TasteMatcher
     /// Giao trên hợp. Một trong hai tập rỗng thì bằng 0 — không biết gu người nghe, hoặc buổi diễn
     /// chưa gắn thẻ nào, thì không có căn cứ để nói là hợp.
     /// </summary>
-    public static float Jaccard(IReadOnlySet<int> a, IReadOnlySet<int> b)
+    public static float Jaccard(IReadOnlySet<Guid> a, IReadOnlySet<Guid> b)
     {
         if (a.Count == 0 || b.Count == 0) return 0f;
 

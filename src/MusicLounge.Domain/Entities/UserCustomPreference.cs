@@ -2,10 +2,10 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class UserCustomPreference : Common.BaseEntity<int>
+public sealed class UserCustomPreference : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int CriteriaId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid CriteriaId { get; set; }
     public string Value { get; set; } = string.Empty;  // JSON value
     public CustomPreferenceSource Source { get; set; }
     // EMA: weight_new = 0.3 × new_signal + 0.7 × old_weight

@@ -35,16 +35,16 @@ public sealed class FnbRefundTests
     public FnbRefundTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record PaymentInit(int OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
+    private sealed record PaymentInit(Guid OrderId, string PaymentGatewayOrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
 
     private HttpClient Audience() => _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
     private HttpClient Staff() => _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<int> CreateOrderAsync()
+    private async Task<Guid> CreateOrderAsync()
     {
-        int menuItemId;
+        Guid menuItemId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -67,18 +67,18 @@ public sealed class FnbRefundTests
         var res = await Audience().PostAsJsonAsync("/api/v1/fnb-orders", new
         {
             LoungeId = SeedHelper.LoungeId,
-            ShowId = (int?)null,
-            ZoneId = (int?)null,
+            ShowId = (Guid?)null,
+            ZoneId = (Guid?)null,
             TableNote = "Bàn D4",
             PaymentMethod = "Cash",
             Note = (string?)null,
             Items = new[] { new { MenuItemId = menuItemId, Quantity, Note = (string?)null } }
         });
         res.StatusCode.Should().Be(HttpStatusCode.Created);
-        return (await res.Content.ReadFromJsonAsync<DataResponse<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
     }
 
-    private async Task<string> InitiateAsync(int orderId)
+    private async Task<string> InitiateAsync(Guid orderId)
     {
         var res = await Audience().PostAsync($"/api/v1/fnb-orders/{orderId}/pay", null);
         res.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -95,7 +95,7 @@ public sealed class FnbRefundTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!.RspCode;
     }
 
-    private Task<HttpResponseMessage> StaffSetAsync(int orderId, string status)
+    private Task<HttpResponseMessage> StaffSetAsync(Guid orderId, string status)
         => Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status });
 
     private async Task<Payment> PaymentAsync(string txnRef)
@@ -105,14 +105,14 @@ public sealed class FnbRefundTests
         return await db.Payments.AsNoTracking().SingleAsync(p => p.OrderId == txnRef);
     }
 
-    private async Task<List<RefundRequest>> RefundsAsync(int paymentId)
+    private async Task<List<RefundRequest>> RefundsAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await db.RefundRequests.AsNoTracking().Where(r => r.PaymentId == paymentId).ToListAsync();
     }
 
-    private async Task<(decimal PlatformDebit, decimal OwnerDebit, decimal GatewayCredit, int Lines)> RefundJournalAsync(int paymentId)
+    private async Task<(decimal PlatformDebit, decimal OwnerDebit, decimal GatewayCredit, int Lines)> RefundJournalAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -127,7 +127,7 @@ public sealed class FnbRefundTests
             rows.Count);
     }
 
-    private Task<HttpResponseMessage> ApproveAsync(int refundId)
+    private Task<HttpResponseMessage> ApproveAsync(Guid refundId)
         => Admin().PostAsJsonAsync($"/api/v1/admin/refund-requests/{refundId}/process", new { Decision = "Approved" });
 
     // ── Phòng trà huỷ đơn khách đã trả trước ────────────────────────────────
@@ -244,7 +244,7 @@ public sealed class FnbRefundTests
         var orderId = await CreateOrderAsync();
         (await StaffSetAsync(orderId, "Preparing")).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        int paymentId;
+        Guid paymentId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

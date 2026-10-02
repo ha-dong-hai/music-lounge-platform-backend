@@ -6,6 +6,6 @@ public sealed class GetShowPerformanceQueryValidator : AbstractValidator<GetShow
 {
     public GetShowPerformanceQueryValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0).WithMessage("ShowId không hợp lệ.");
+        RuleFor(x => x.ShowId).NotEmpty().WithMessage("ShowId không hợp lệ.");
     }
 }

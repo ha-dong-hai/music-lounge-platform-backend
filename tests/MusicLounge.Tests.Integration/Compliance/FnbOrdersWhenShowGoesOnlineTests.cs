@@ -25,7 +25,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
 
     public FnbOrdersWhenShowGoesOnlineTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int MenuItemId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid MenuItemId);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -54,7 +54,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         return new Venue(owner.Id, lounge.Id, item.Id);
     }
 
-    private async Task<int> BuyerAsync()
+    private async Task<Guid> BuyerAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -64,7 +64,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         return user.Id;
     }
 
-    private async Task<int> ShowAsync(int loungeId, LoungeShowFormat format = LoungeShowFormat.Offline,
+    private async Task<Guid> ShowAsync(Guid loungeId, LoungeShowFormat format = LoungeShowFormat.Offline,
         LoungeShowStatus status = LoungeShowStatus.Published)
     {
         using var scope = _factory.Services.CreateScope();
@@ -83,8 +83,8 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
 
     /// <param name="prepaid">Khách đã trả trước qua VNPay (Payment Gateway Confirmed) — đơn vẫn ở
     /// <paramref name="status"/> vì bếp chưa phục vụ xong (MLACP-349). Đơn Paid thì có Payment tiền mặt đã đóng.</param>
-    private async Task<(int OrderId, int? PaymentId)> OrderAsync(
-        Venue venue, int showId, int buyerId, FnbOrderStatus status, bool prepaid = false)
+    private async Task<(Guid OrderId, Guid? PaymentId)> OrderAsync(
+        Venue venue, Guid showId, Guid buyerId, FnbOrderStatus status, bool prepaid = false)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -113,13 +113,13 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         return (order.Id, payment.Id);
     }
 
-    private async Task GoOnlineAsync(Venue venue, int showId)
+    private async Task GoOnlineAsync(Venue venue, Guid showId)
         => (await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
                 .PutAsJsonAsync($"/api/v1/lounge-shows/{showId}/format", new { NewFormat = "Online" }))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
     private async Task<(FnbOrder Order, List<OrderItem> Items, List<RefundRequest> Refunds)> StateAsync(
-        int orderId, int? paymentId)
+        Guid orderId, Guid? paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -131,7 +131,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         return (order, items, refunds);
     }
 
-    private async Task<List<Notification>> OrderNoticesAsync(int buyerId, int orderId)
+    private async Task<List<Notification>> OrderNoticesAsync(Guid buyerId, Guid orderId)
     {
         using var scope = _factory.Services.CreateScope();
         return await Db(scope).Notifications.AsNoTracking()
@@ -139,10 +139,10 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
             .ToListAsync();
     }
 
-    private async Task<HttpResponseMessage> PlaceOrderAsync(Venue venue, int showId)
+    private async Task<HttpResponseMessage> PlaceOrderAsync(Venue venue, Guid showId)
         => await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience").PostAsJsonAsync("/api/v1/fnb-orders", new
         {
-            LoungeId = venue.LoungeId, ShowId = (int?)showId, ZoneId = (int?)null, TableNote = (string?)null,
+            LoungeId = venue.LoungeId, ShowId = (Guid?)showId, ZoneId = (Guid?)null, TableNote = (string?)null,
             PaymentMethod = "Cash", Note = (string?)null,
             Items = new[] { new { MenuItemId = venue.MenuItemId, Quantity = 1, Note = (string?)null } }
         });

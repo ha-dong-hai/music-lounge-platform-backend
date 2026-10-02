@@ -6,6 +6,6 @@ public sealed class RemoveFromWishlistCommandValidator : AbstractValidator<Remov
 {
     public RemoveFromWishlistCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0).WithMessage("ShowId không hợp lệ.");
+        RuleFor(x => x.ShowId).NotEmpty().WithMessage("ShowId không hợp lệ.");
     }
 }

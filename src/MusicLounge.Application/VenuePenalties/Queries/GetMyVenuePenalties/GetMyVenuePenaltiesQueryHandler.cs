@@ -35,11 +35,11 @@ internal sealed class GetMyVenuePenaltiesQueryHandler
         // A penalty's Id is assigned at insert time and IssuedAt is set to UtcNow at that same
         // moment, so Id order and IssuedAt order are always identical here (penalties are never
         // backdated), and Id keeps pagination server-side on both SQLite and SQL Server.
-        var (pageItems, totalCount) = await _uow.Repository<VenuePenalty, int>()
+        var (pageItems, totalCount) = await _uow.Repository<VenuePenalty, Guid>()
             .GetPagedAsync(p => p.Lounge.OwnerId == _currentUser.UserId, p => p.Id, page, size, ct);
 
         var loungeIds = pageItems.Select(p => p.LoungeId).Distinct().ToList();
-        var lounges = await _uow.Repository<MusicLoungeEntity, int>()
+        var lounges = await _uow.Repository<MusicLoungeEntity, Guid>()
             .FindAsync(l => loungeIds.Contains(l.Id), ct);
         var loungeNames = lounges.ToDictionary(l => l.Id, l => l.Name);
 

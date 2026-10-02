@@ -10,6 +10,6 @@ public sealed class GetFnbMenusQueryValidator : AbstractValidator<GetFnbMenusQue
 {
     public GetFnbMenusQueryValidator()
     {
-        RuleFor(x => x.LoungeId).GreaterThan(0).WithMessage("LoungeId không hợp lệ.");
+        RuleFor(x => x.LoungeId).NotEmpty().WithMessage("LoungeId không hợp lệ.");
     }
 }

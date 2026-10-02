@@ -40,7 +40,7 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
 
     public async Task<Unit> Handle(TerminateLivestreamCommand request, CancellationToken ct)
     {
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
 
         if (livestream.Status != LivestreamStatus.Live)
@@ -63,9 +63,9 @@ internal sealed class TerminateLivestreamCommandHandler : IRequestHandler<Termin
         livestream.EndedAt = now;
         livestream.TerminatedById = _currentUser.UserId;
         livestream.TerminatedReason = request.Reason;
-        _uow.Repository<Livestream, int>().Update(livestream);
+        _uow.Repository<Livestream, Guid>().Update(livestream);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct);
         if (show is not null)
         {
             // §6.13 — show da dien (du bi cat ngang) van cho rate, TRU khi show da bi huy/da ket thuc.

@@ -19,10 +19,10 @@ internal sealed class GetDonationEvidenceQueryHandler : IRequestHandler<GetDonat
 
     public async Task<DonationEvidenceDto> Handle(GetDonationEvidenceQuery request, CancellationToken ct)
     {
-        _ = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
+        _ = await _uow.Repository<Donation, Guid>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
-        var events = (await _uow.Repository<DonationEvent, long>().FindAsync(
+        var events = (await _uow.Repository<DonationEvent, Guid>().FindAsync(
                 e => e.DonationId == request.DonationId, ct))
             .OrderBy(e => e.Sequence)
             .ToList();

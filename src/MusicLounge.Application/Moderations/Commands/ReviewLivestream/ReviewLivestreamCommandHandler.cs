@@ -40,7 +40,7 @@ internal sealed class ReviewLivestreamCommandHandler : IRequestHandler<ReviewLiv
         // Same double-review race as ReviewShowCommandHandler — see its comment.
         await using var _ = await _lock.AcquireAsync($"moderation:livestream:{request.LivestreamId}", ct);
 
-        var livestream = await _uow.Repository<Livestream, int>().GetByIdAsync(request.LivestreamId, ct)
+        var livestream = await _uow.Repository<Livestream, Guid>().GetByIdAsync(request.LivestreamId, ct)
             ?? throw new NotFoundException(nameof(Livestream), request.LivestreamId);
 
         var moderation = await _moderationRepo.GetByTargetAsync(
@@ -62,10 +62,10 @@ internal sealed class ReviewLivestreamCommandHandler : IRequestHandler<ReviewLiv
 
         _moderationRepo.Update(moderation);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(livestream.LoungeShowId, ct);
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(livestream.LoungeShowId, ct);
         var lounge = show is null
             ? null
-            : await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct);
+            : await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct);
         if (lounge is not null)
         {
             await _notifications.NotifyAsync(

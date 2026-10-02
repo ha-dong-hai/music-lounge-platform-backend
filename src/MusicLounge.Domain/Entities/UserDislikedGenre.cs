@@ -13,10 +13,10 @@ namespace MusicLounge.Domain.Entities;
 /// <b>Không được mâu thuẫn với <see cref="UserFavouriteGenre"/>.</b> Cùng một thể loại vừa thích
 /// vừa không thích là một trạng thái vô nghĩa; đường ghi có trách nhiệm gỡ bên kia ra.
 /// </summary>
-public sealed class UserDislikedGenre : Common.BaseEntity<int>
+public sealed class UserDislikedGenre : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int GenreId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid GenreId { get; set; }
 
     public User User { get; set; } = null!;
     public MusicGenre Genre { get; set; } = null!;

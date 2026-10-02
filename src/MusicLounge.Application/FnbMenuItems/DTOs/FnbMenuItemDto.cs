@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.FnbMenuItems.DTOs;
 
 public sealed record FnbMenuItemDto(
-    int Id,
-    int MenuId,
+    Guid Id,
+    Guid MenuId,
     string Category,
     string Name,
     string? Description,

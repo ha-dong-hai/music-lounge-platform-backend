@@ -9,6 +9,6 @@ namespace MusicLounge.Application.LoungeShows.Commands.GeneratePoster;
 // reason a failed attempt doesn't cost the Owner's quota is auditable. Each individual
 // SaveChangesAsync call still gets EF Core's own implicit per-call transaction regardless.
 public sealed record GeneratePosterCommand(
-    int ShowId,
+    Guid ShowId,
     string? StyleHint
 ) : ICommand<PosterGenerationResultDto>, INoTransactionCommand;

@@ -17,7 +17,7 @@ internal sealed class UnregisterDeviceTokenCommandHandler : IRequestHandler<Unre
 
     public async Task<Unit> Handle(UnregisterDeviceTokenCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<DeviceToken, int>();
+        var repo = _uow.Repository<DeviceToken, Guid>();
         var existing = (await repo.FindAsync(
             t => t.Token == request.Token && t.UserId == _currentUser.UserId, ct)).FirstOrDefault();
 

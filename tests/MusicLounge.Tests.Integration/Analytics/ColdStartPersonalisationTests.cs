@@ -32,9 +32,9 @@ public sealed class ColdStartPersonalisationTests
     public ColdStartPersonalisationTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name, string? RecommendationReason);
+    private sealed record Rec(Guid Id, string Name, string? RecommendationReason);
 
-    private async Task<(int LoungeId, string City)> VenueAsync()
+    private async Task<(Guid LoungeId, string City)> VenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -56,7 +56,7 @@ public sealed class ColdStartPersonalisationTests
         return (lounge.Id, city);
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, int? genreId, double daysFromNow = 15)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, Guid? genreId, double daysFromNow = 15)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -74,7 +74,7 @@ public sealed class ColdStartPersonalisationTests
         db.LoungeShows.Add(show);
         await db.SaveChangesAsync();
 
-        if (genreId is int g)
+        if (genreId is Guid g)
         {
             db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = g });
             await db.SaveChangesAsync();
@@ -86,7 +86,7 @@ public sealed class ColdStartPersonalisationTests
     /// Tạo hàng loạt buổi diễn trong một lần lưu, để dựng được tập ứng viên đủ lớn mà không tốn
     /// hàng chục lần đi lại database.
     /// </summary>
-    private async Task BulkShowsAsync(int loungeId, int count, int genreId, int firstDayOffset)
+    private async Task BulkShowsAsync(Guid loungeId, int count, Guid genreId, int firstDayOffset)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -117,7 +117,7 @@ public sealed class ColdStartPersonalisationTests
     }
 
     /// <summary>Tài khoản chưa từng khai sở thích và chưa bật đồng ý AI — tình trạng mặc định.</summary>
-    private async Task<int> BrandNewAccountAsync()
+    private async Task<Guid> BrandNewAccountAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -136,7 +136,7 @@ public sealed class ColdStartPersonalisationTests
         return user.Id;
     }
 
-    private async Task BuyTicketAsync(int userId, int showId)
+    private async Task BuyTicketAsync(Guid userId, Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -175,7 +175,7 @@ public sealed class ColdStartPersonalisationTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(int userId, string city)
+    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(Guid userId, string city)
     {
         var res = await _factory.CreateAuthenticatedClient(userId, "Audience")
             .GetAsync($"/api/v1/recommendations?city={city}&limit=50");

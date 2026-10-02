@@ -29,15 +29,15 @@ internal sealed class GetMyDataExportQueryHandler : IRequestHandler<GetMyDataExp
     {
         var userId = _currentUser.UserId;
 
-        var user = await _uow.Repository<User, int>().GetByIdAsync(userId, ct)
+        var user = await _uow.Repository<User, Guid>().GetByIdAsync(userId, ct)
             ?? throw new NotFoundException(nameof(User), userId);
 
         var tickets = await _uow.Repository<Ticket, Guid>().FindAsync(t => t.BuyerId == userId, ct);
-        var donations = await _uow.Repository<Donation, int>().FindAsync(d => d.DonorUserId == userId, ct);
-        var ratings = await _uow.Repository<LoungeShowRating, int>().FindAsync(r => r.UserId == userId, ct);
-        var complaints = await _uow.Repository<Complaint, int>().FindAsync(c => c.ComplainantUserId == userId, ct);
-        var follows = await _uow.Repository<Follow, int>().FindAsync(f => f.UserId == userId, ct);
-        var wishlists = await _uow.Repository<ShowWishlist, int>().FindAsync(w => w.UserId == userId, ct);
+        var donations = await _uow.Repository<Donation, Guid>().FindAsync(d => d.DonorUserId == userId, ct);
+        var ratings = await _uow.Repository<LoungeShowRating, Guid>().FindAsync(r => r.UserId == userId, ct);
+        var complaints = await _uow.Repository<Complaint, Guid>().FindAsync(c => c.ComplainantUserId == userId, ct);
+        var follows = await _uow.Repository<Follow, Guid>().FindAsync(f => f.UserId == userId, ct);
+        var wishlists = await _uow.Repository<ShowWishlist, Guid>().FindAsync(w => w.UserId == userId, ct);
 
         return new MyDataExportDto(
             new ExportedProfile(user.Id, user.Email, user.FullName, user.Phone, user.CreatedAt),

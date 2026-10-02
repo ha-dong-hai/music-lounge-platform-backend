@@ -7,6 +7,6 @@ namespace MusicLounge.Application.PosterJobs.Commands.CompletePosterJob;
 /// </summary>
 /// <param name="Content">Nội dung ảnh. Kiểu ảnh được suy từ CHÍNH nội dung file chứ không tin phần mở rộng do máy trạm gửi.</param>
 public sealed record CompletePosterJobCommand(
-    int JobId,
+    Guid JobId,
     string WorkerId,
     byte[] Content) : ICommand;

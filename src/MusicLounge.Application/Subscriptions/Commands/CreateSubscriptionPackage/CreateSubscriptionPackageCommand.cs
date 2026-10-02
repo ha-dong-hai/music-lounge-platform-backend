@@ -11,4 +11,4 @@ public sealed record CreateSubscriptionPackageCommand(
     bool HasAiPoster,
     int MaxAiPostersPerMonth,
     int MaxTourScenes
-) : ICommand<int>;
+) : ICommand<Guid>;

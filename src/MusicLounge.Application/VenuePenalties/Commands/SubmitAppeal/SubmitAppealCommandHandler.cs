@@ -31,11 +31,11 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
 
     public async Task<Unit> Handle(SubmitAppealCommand request, CancellationToken ct)
     {
-        var penaltyRepo = _uow.Repository<VenuePenalty, int>();
+        var penaltyRepo = _uow.Repository<VenuePenalty, Guid>();
         var penalty = await penaltyRepo.GetByIdAsync(request.PenaltyId, ct)
             ?? throw new NotFoundException(nameof(VenuePenalty), request.PenaltyId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(penalty.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(penalty.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), penalty.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId)
@@ -71,7 +71,7 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
             "Penalty appeal submitted: PenaltyId={PenaltyId} LoungeId={LoungeId} AppealDeadline={AppealDeadline} by OwnerUserId={OwnerUserId} at {At}",
             penalty.Id, penalty.LoungeId, penalty.AppealDeadline, _currentUser.UserId, now);
 
-        var adminIds = await _uow.Repository<User, int>()
+        var adminIds = await _uow.Repository<User, Guid>()
             .FindAsync(u => u.Role == UserRole.Admin, ct);
         foreach (var admin in adminIds)
         {

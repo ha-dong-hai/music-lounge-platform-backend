@@ -33,21 +33,21 @@ public static class FnbOrderPayments
     /// nhan, nhan vien thu tien mat hay huy. Thieu no thi IPN va nhan vien co the cung doc "chua tra"
     /// roi cung ghi nhan mot khoan thu.
     /// </summary>
-    public static string LockKey(int orderId) => $"fnb-order:{orderId}";
+    public static string LockKey(Guid orderId) => $"fnb-order:{orderId}";
 
     /// <summary>Những đơn trong tập này đã có một thanh toán được xác nhận.</summary>
-    public static async Task<HashSet<int>> ConfirmedOrderIdsAsync(
-        IUnitOfWork uow, IReadOnlyCollection<int> orderIds, CancellationToken ct)
+    public static async Task<HashSet<Guid>> ConfirmedOrderIdsAsync(
+        IUnitOfWork uow, IReadOnlyCollection<Guid> orderIds, CancellationToken ct)
     {
         if (orderIds.Count == 0) return [];
 
         var referenceIds = orderIds.Select(id => id.ToString()).Distinct().ToList();
-        var payments = await uow.Repository<Payment, int>().FindAsync(
+        var payments = await uow.Repository<Payment, Guid>().FindAsync(
             p => p.ReferenceType == ReferenceType
                  && p.Status == PaymentStatus.Confirmed
                  && referenceIds.Contains(p.ReferenceId), ct);
 
-        return payments.Select(p => int.Parse(p.ReferenceId)).ToHashSet();
+        return payments.Select(p => Guid.Parse(p.ReferenceId)).ToHashSet();
     }
 
     /// <summary>
@@ -55,10 +55,10 @@ public static class FnbOrderPayments
     /// để IPN hỏi được "có thanh toán NÀO KHÁC đã trả cho đơn này chưa".
     /// </summary>
     public static async Task<bool> HasConfirmedPaymentAsync(
-        IUnitOfWork uow, int orderId, int? exceptPaymentId, CancellationToken ct)
+        IUnitOfWork uow, Guid orderId, Guid? exceptPaymentId, CancellationToken ct)
     {
         var referenceId = orderId.ToString();
-        return await uow.Repository<Payment, int>().AnyAsync(
+        return await uow.Repository<Payment, Guid>().AnyAsync(
             p => p.ReferenceType == ReferenceType
                  && p.ReferenceId == referenceId
                  && p.Status == PaymentStatus.Confirmed
@@ -75,13 +75,13 @@ public static class FnbOrderPayments
     /// trả hoặc đã huỷ.
     /// </summary>
     public static async Task<Payment?> LiveOnlinePaymentAsync(
-        IUnitOfWork uow, int orderId, DateTimeOffset now, CancellationToken ct)
+        IUnitOfWork uow, Guid orderId, DateTimeOffset now, CancellationToken ct)
     {
         var referenceId = orderId.ToString();
 
         // Lọc trạng thái phía server, so thời gian phía client — provider SQLite dùng trong test không
         // dịch được phép so enum kèm DateTimeOffset trong cùng một truy vấn.
-        var pending = await uow.Repository<Payment, int>().FindAsync(
+        var pending = await uow.Repository<Payment, Guid>().FindAsync(
             p => p.ReferenceType == ReferenceType
                  && p.ReferenceId == referenceId
                  && p.Status == PaymentStatus.Pending
@@ -97,20 +97,20 @@ public static class FnbOrderPayments
     /// Với mỗi đơn đang có giao dịch online còn trả được, thời điểm link VNPay hết hạn — để màn hình
     /// của nhân viên thấy "khách đang trả online" trước khi họ thu tiền mặt.
     /// </summary>
-    public static async Task<Dictionary<int, DateTimeOffset>> LiveOnlinePaymentDeadlinesAsync(
-        IUnitOfWork uow, IReadOnlyCollection<int> orderIds, DateTimeOffset now, CancellationToken ct)
+    public static async Task<Dictionary<Guid, DateTimeOffset>> LiveOnlinePaymentDeadlinesAsync(
+        IUnitOfWork uow, IReadOnlyCollection<Guid> orderIds, DateTimeOffset now, CancellationToken ct)
     {
         if (orderIds.Count == 0) return [];
 
         var referenceIds = orderIds.Select(id => id.ToString()).Distinct().ToList();
-        var pending = await uow.Repository<Payment, int>().FindAsync(
+        var pending = await uow.Repository<Payment, Guid>().FindAsync(
             p => p.ReferenceType == ReferenceType
                  && p.Status == PaymentStatus.Pending
                  && p.Method == PaymentMethod.Gateway
                  && referenceIds.Contains(p.ReferenceId), ct);
 
         return pending
-            .Select(p => (OrderId: int.Parse(p.ReferenceId),
+            .Select(p => (OrderId: Guid.Parse(p.ReferenceId),
                           Deadline: p.CreatedAt.AddMinutes(VnPayPaymentWindow.Minutes)))
             .Where(x => x.Deadline > now)
             .GroupBy(x => x.OrderId)

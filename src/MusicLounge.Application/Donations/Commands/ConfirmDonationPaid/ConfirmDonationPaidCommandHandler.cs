@@ -61,7 +61,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         // Same class of bug as ProcessRefundRequestCommandHandler before MLACP-251.
         await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
 
-        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
+        var donation = await _uow.Repository<Donation, Guid>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
 
         if (donation.Status != DonationStatus.OwnerReceived)
@@ -80,7 +80,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         // than confirm a payment silently going nowhere on record: the Owner is asserting money
         // already moved (PaymentRef/evidence prove it), so demand the performer profile actually
         // has a payout account registered before that assertion is accepted.
-        var performerAccounts = await _uow.Repository<BankAccount, int>().FindAsync(
+        var performerAccounts = await _uow.Repository<BankAccount, Guid>().FindAsync(
             a => a.OwnerType == BankAccountOwnerType.Performer && a.OwnerId == ownership.PerformerId && a.IsDefault, ct);
         var bankAccountId = performerAccounts.FirstOrDefault()?.Id
             ?? throw new DomainException(
@@ -102,7 +102,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         donation.PaymentEvidenceUrl = request.PaymentEvidenceUrl;
         donation.BankAccountId = bankAccountId;
 
-        _uow.Repository<Donation, int>().Update(donation);
+        _uow.Repository<Donation, Guid>().Update(donation);
 
         // Chặng 2 (§6.5): owner forwards a configurable share of the ORIGINAL gross to the
         // performer (default 88% — system_config, §6.7; changing it needs direct SQL, there is no
@@ -147,7 +147,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
 
         // MLACP-364: moi nghe si tu xac nhan da nhan — hoac bao chua nhan. Chu phong tra khong the xac
         // nhan thay nghe si; truoc day "da tra nghe si" chi co loi khai cua mot phia.
-        if (await _uow.Repository<Performer, int>().GetByIdAsync(ownership.PerformerId, ct) is { } performer)
+        if (await _uow.Repository<Performer, Guid>().GetByIdAsync(ownership.PerformerId, ct) is { } performer)
             await PerformerConfirmations.InviteAsync(_uow, _email, _settings, _logger, performer,
                 PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef), ct);
 

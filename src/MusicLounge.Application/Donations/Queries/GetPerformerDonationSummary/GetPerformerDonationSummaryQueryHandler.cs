@@ -23,7 +23,7 @@ internal sealed class GetPerformerDonationSummaryQueryHandler
 
     public async Task<PerformerDonationSummaryDto> Handle(GetPerformerDonationSummaryQuery request, CancellationToken ct)
     {
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(request.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
         // Tổng hợp cần mọi khoản của nghệ sĩ, không chỉ một trang — số khoản mỗi nghệ sĩ có giới hạn tự

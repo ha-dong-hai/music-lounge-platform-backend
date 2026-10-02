@@ -29,9 +29,9 @@ internal sealed class GetPerformersQueryHandler
         // nghệ sĩ của mình, mà danh mục là dùng chung: trước đây FE lật tối đa 10 trang × 50 hồ sơ để tự lọc, quá 500 hồ
         // sơ là thiếu. Không truyền thì vẫn là danh mục chung như cũ. Route đã buộc đăng nhập (RequireOwner) nên
         // createdByMe không bao giờ tới đây khi chưa đăng nhập — gọi ẩn danh nhận 401 ở cửa.
-        int? createdBy = request.CreatedByMe ? _currentUser.UserId : null;
+        Guid? createdBy = request.CreatedByMe ? _currentUser.UserId : null;
 
-        var (performers, total) = await _uow.Repository<Performer, int>().GetPagedAsync(
+        var (performers, total) = await _uow.Repository<Performer, Guid>().GetPagedAsync(
             p => (string.IsNullOrEmpty(search) || p.Name.Contains(search))
                  && (createdBy == null || p.CreatedByUserId == createdBy),
             p => p.Id,

@@ -18,14 +18,14 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
             .Must(t => ValidTargetTypes.Contains(t))
             .WithMessage($"TargetType phải là một trong: {string.Join(", ", ValidTargetTypes)}.");
 
-        RuleFor(x => x.TargetId).GreaterThan(0).WithMessage("TargetId không hợp lệ.");
+        RuleFor(x => x.TargetId).NotEmpty().WithMessage("TargetId không hợp lệ.");
 
         // Endpoint nay AllowAnonymous — truoc day TargetId chi check > 0, khong xac minh doi tuong
         // that su ton tai, nen bat ky ai (khong can dang nhap) cung tao duoc complaint tro toi 1
         // show/venue/donation/ticket/penalty khong co that, de lai rac Admin khong the xu ly.
         RuleFor(x => x.TargetId)
             .MustAsync((command, targetId, ct) => TargetExistsAsync(uow, command.TargetType, targetId, ct))
-            .When(x => ValidTargetTypes.Contains(x.TargetType) && x.TargetId > 0)
+            .When(x => ValidTargetTypes.Contains(x.TargetType) && x.TargetId != Guid.Empty)
             .WithMessage("Đối tượng bị khiếu nại (TargetType/TargetId) không tồn tại.");
 
         // MLACP-197: chi cho tao khieu nai "donate chua duoc tra" khi donate that su chua tra
@@ -35,7 +35,7 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
         RuleFor(x => x.TargetId)
             .MustAsync((command, targetId, ct) => DonationEligibleForNotPaidComplaintAsync(uow, config, targetId, ct))
             .When(x => x.TargetType == "donation"
-                && x.TargetId > 0
+                && x.TargetId != Guid.Empty
                 && Enum.TryParse<ComplaintCategory>(x.Category, true, out var cat)
                 && cat == ComplaintCategory.DonationNotPaid)
             .WithMessage("Chỉ có thể khiếu nại donate chưa được trả sau khi đã quá hạn giữ tiền quy định.");
@@ -54,25 +54,24 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
     }
 
     private static Task<bool> TargetExistsAsync(
-        IUnitOfWork uow, string targetType, int targetId, CancellationToken ct) => targetType switch
+        IUnitOfWork uow, string targetType, Guid targetId, CancellationToken ct) => targetType switch
     {
-        "show" => uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == targetId, ct),
-        "venue" => uow.Repository<MusicLounge.Domain.Entities.MusicLounge, int>().AnyAsync(l => l.Id == targetId, ct),
-        "donation" => uow.Repository<Donation, int>().AnyAsync(d => d.Id == targetId, ct),
-        "penalty" => uow.Repository<VenuePenalty, int>().AnyAsync(p => p.Id == targetId, ct),
-        // Ticket.Id is a Guid (BaseEntity<Guid>), so this command's `int TargetId` can never hold a
-        // real ticket's primary key at all — a pre-existing schema mismatch, not something this
-        // rule can validate without changing TargetId's type (a breaking API/FE contract change out
-        // of scope here). Left unchecked rather than validated against the wrong column.
-        "ticket" => Task.FromResult(true),
-        "livestream" => uow.Repository<Livestream, int>().AnyAsync(l => l.Id == targetId, ct),
+        "show" => uow.Repository<LoungeShow, Guid>().AnyAsync(s => s.Id == targetId, ct),
+        "venue" => uow.Repository<MusicLounge.Domain.Entities.MusicLounge, Guid>().AnyAsync(l => l.Id == targetId, ct),
+        "donation" => uow.Repository<Donation, Guid>().AnyAsync(d => d.Id == targetId, ct),
+        "penalty" => uow.Repository<VenuePenalty, Guid>().AnyAsync(p => p.Id == targetId, ct),
+        // MLACP-515: trước đây TargetId là int còn Ticket.Id vốn đã là Guid nên không kiểm được, phải để lọt. Nay mọi khoá
+        // là GUID — kiểm như các loại khác. (Khiếu nại "ticket" cũ mang số int không trỏ được vé nào; migration giữ
+        // nguyên-giá-trị-đã-đổi-dạng cho chúng, xem Mlacp515GuidKeys.)
+        "ticket" => uow.Repository<Ticket, Guid>().AnyAsync(t => t.Id == targetId, ct),
+        "livestream" => uow.Repository<Livestream, Guid>().AnyAsync(l => l.Id == targetId, ct),
         _ => Task.FromResult(false)
     };
 
     private static async Task<bool> DonationEligibleForNotPaidComplaintAsync(
-        IUnitOfWork uow, ISystemConfigService config, int donationId, CancellationToken ct)
+        IUnitOfWork uow, ISystemConfigService config, Guid donationId, CancellationToken ct)
     {
-        var donation = await uow.Repository<Donation, int>().GetByIdAsync(donationId, ct);
+        var donation = await uow.Repository<Donation, Guid>().GetByIdAsync(donationId, ct);
         if (donation is null || donation.Status == DonationStatus.PerformerPaid) return false;
 
         // MLACP-362: cung mot hạn voi nhac nho/canh cao/lich su cua chu, tinh tu luc phong tra that su

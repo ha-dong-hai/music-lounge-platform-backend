@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.FnbOrders.DTOs;
 
 public sealed record OrderItemDto(
-    int Id,
-    int MenuItemId,
+    Guid Id,
+    Guid MenuItemId,
     string MenuItemName,
     int Quantity,
     decimal UnitPrice,
@@ -10,11 +10,11 @@ public sealed record OrderItemDto(
     string? Note);
 
 public sealed record FnbOrderDto(
-    int Id,
-    int LoungeId,
-    int? ShowId,
-    int? AudienceUserId,
-    int? StaffId,
+    Guid Id,
+    Guid LoungeId,
+    Guid? ShowId,
+    Guid? AudienceUserId,
+    Guid? StaffId,
     string? TableNote,
     string Status,
     string PaymentMethod,

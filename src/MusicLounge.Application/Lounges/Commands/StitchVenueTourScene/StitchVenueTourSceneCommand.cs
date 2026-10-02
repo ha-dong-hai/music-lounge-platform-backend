@@ -11,7 +11,7 @@ namespace MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
 // SaveChangesAsync call above commits immediately via EF's own implicit transaction, so the row
 // is guaranteed visible by the time the job can possibly run.
 public sealed record StitchVenueTourSceneCommand(
-    int LoungeId,
+    Guid LoungeId,
     IReadOnlyList<string> SourceImageUrls,
     string? Name
-) : ICommand<int>, INoTransactionCommand;
+) : ICommand<Guid>, INoTransactionCommand;

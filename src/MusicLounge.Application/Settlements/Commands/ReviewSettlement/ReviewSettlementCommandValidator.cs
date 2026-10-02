@@ -6,7 +6,7 @@ internal sealed class ReviewSettlementCommandValidator : AbstractValidator<Revie
 {
     public ReviewSettlementCommandValidator()
     {
-        RuleFor(x => x.SettlementId).GreaterThan(0);
+        RuleFor(x => x.SettlementId).NotEmpty();
 
         RuleFor(x => x.Decision)
             .Must(d => d is "Release" or "Withhold")

@@ -42,14 +42,14 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
         // Suspended/Locked are not currently operating.
         // MLACP-452: dung dinh nghia chung VenueLifecycle.Operating thay vi viet lai dieu kien — cung con so voi
         // OperatingVenues cua /analytics/platform va danh sach phong tra cong khai. Gia tri khong doi.
-        var activeVenuesCount = await _uow.Repository<MusicLoungeEntity, int>().CountAsync(
+        var activeVenuesCount = await _uow.Repository<MusicLoungeEntity, Guid>().CountAsync(
             l => VenueLifecycle.Operating.Contains(l.Status), ct);
 
         // Filter by equality server-side, then narrow to the date range client-side — combining an
         // enum/navigation equality filter with a DateTimeOffset range comparison in one query does
         // not reliably translate under the SQLite provider used in tests, same class of limitation
         // documented throughout this codebase's other repositories/jobs.
-        var shows = await _uow.Repository<LoungeShow, int>().FindAsync(
+        var shows = await _uow.Repository<LoungeShow, Guid>().FindAsync(
             s => s.Status == LoungeShowStatus.Published
                 || s.Status == LoungeShowStatus.Ongoing
                 || s.Status == LoungeShowStatus.Ended, ct);
@@ -60,7 +60,7 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
         // Cộng cả hai làm con số phồng lên gần bằng tổng tiền người mua trả — tức là báo cáo rằng nền tảng ăn gần trọn
         // mỗi tấm vé. Nay dùng định nghĩa chung ở PlatformRevenue, cùng con số với /analytics/admin-dashboard nên hai
         // màn hình không bao giờ lệch nhau.
-        var thanhToanDaXacNhan = await _uow.Repository<Payment, int>().FindAsync(
+        var thanhToanDaXacNhan = await _uow.Repository<Payment, Guid>().FindAsync(
             p => p.Status == PaymentStatus.Confirmed, ct);
         var platformRevenueInPeriod = thanhToanDaXacNhan
             .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= from && p.PaidAt.Value <= to)
@@ -71,7 +71,7 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
         // instant of the DateTimeOffset range rather than the DateTimeOffset itself.
         var fromUtc = from.UtcDateTime;
         var toUtc = to.UtcDateTime;
-        var audienceUsers = await _uow.Repository<User, int>().FindAsync(u => u.Role == UserRole.Audience, ct);
+        var audienceUsers = await _uow.Repository<User, Guid>().FindAsync(u => u.Role == UserRole.Audience, ct);
         var newAudienceSignupsInPeriod = audienceUsers
             .Count(u => u.CreatedAt >= fromUtc && u.CreatedAt <= toUtc);
 

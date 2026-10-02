@@ -9,7 +9,7 @@ using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.LoungeShows.Commands.CreateLoungeShow;
 
-internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLoungeShowCommand, int>
+internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLoungeShowCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -23,9 +23,9 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
         _config = config;
     }
 
-    public async Task<int> Handle(CreateLoungeShowCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateLoungeShowCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -36,7 +36,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
         // Filter Status server-side, loc ExpiresAt client-side - ket hop enum equality voi
         // DateTimeOffset comparison trong 1 query khong dich duoc sang SQLite (provider dung trong test).
         var now = DateTimeOffset.UtcNow;
-        var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var activeStatusSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == lounge.OwnerId && s.Status == SubscriptionStatus.Active, ct);
         var hasActiveSubscription = activeStatusSubs.Any(s => s.ExpiresAt > now);
 
@@ -73,14 +73,14 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
             CancellationDeadlineHours = request.CancellationDeadlineHours
         };
 
-        _uow.Repository<LoungeShow, int>().Add(show);
+        _uow.Repository<LoungeShow, Guid>().Add(show);
         await _uow.SaveChangesAsync(ct);
 
-        var performerRepo = _uow.Repository<Performer, int>();
+        var performerRepo = _uow.Repository<Performer, Guid>();
 
         foreach (var input in request.Performances)
         {
-            int performerId;
+            Guid performerId;
             if (input.PerformerId.HasValue)
             {
                 var performer = await performerRepo.GetByIdAsync(input.PerformerId.Value, ct)
@@ -101,7 +101,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
             }
 
             var role = Enum.Parse<PerformerRole>(input.Role, ignoreCase: true);
-            _uow.Repository<Performance, int>().Add(new Performance
+            _uow.Repository<Performance, Guid>().Add(new Performance
             {
                 LoungeShowId = show.Id,
                 PerformerId = performerId,
@@ -114,7 +114,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
 
         foreach (var genreId in request.GenreIds.Distinct())
         {
-            _uow.Repository<LoungeShowGenre, int>().Add(new LoungeShowGenre
+            _uow.Repository<LoungeShowGenre, Guid>().Add(new LoungeShowGenre
             {
                 LoungeShowId = show.Id,
                 GenreId = genreId
@@ -123,7 +123,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
 
         foreach (var moodId in request.MoodIds.Distinct())
         {
-            _uow.Repository<LoungeShowMood, int>().Add(new LoungeShowMood
+            _uow.Repository<LoungeShowMood, Guid>().Add(new LoungeShowMood
             {
                 LoungeShowId = show.Id,
                 MoodId = moodId
@@ -132,7 +132,7 @@ internal sealed class CreateLoungeShowCommandHandler : IRequestHandler<CreateLou
 
         foreach (var atmosphereId in request.AtmosphereIds.Distinct())
         {
-            _uow.Repository<LoungeShowAtmosphere, int>().Add(new LoungeShowAtmosphere
+            _uow.Repository<LoungeShowAtmosphere, Guid>().Add(new LoungeShowAtmosphere
             {
                 LoungeShowId = show.Id,
                 AtmosphereId = atmosphereId

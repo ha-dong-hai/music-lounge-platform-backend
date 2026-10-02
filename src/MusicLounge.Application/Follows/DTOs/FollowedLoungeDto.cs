@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Follows.DTOs;
 
 public sealed record FollowedLoungeDto(
-    int Id,
+    Guid Id,
     string Name,
     string? PrimaryImageUrl,
     string District,

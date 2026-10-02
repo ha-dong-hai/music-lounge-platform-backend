@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Tickets.DTOs;
 
 public sealed record PaymentInitiationDto(
-    int PaymentId,
+    Guid PaymentId,
     string OrderId,
     decimal Amount,
     string PaymentUrl,

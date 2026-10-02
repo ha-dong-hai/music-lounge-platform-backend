@@ -43,7 +43,7 @@ public static class TasteInference
     /// Gu suy ra từ danh sách buổi diễn, <b>sắp theo thứ tự mới nhất trước</b>.
     /// </summary>
     public static TasteProfile FromShows(
-        IReadOnlyList<ShowTags> newestFirst, IReadOnlySet<int> followedLoungeIds)
+        IReadOnlyList<ShowTags> newestFirst, IReadOnlySet<Guid> followedLoungeIds)
     {
         var window = newestFirst.Take(RecencyWindow).ToList();
 
@@ -58,15 +58,15 @@ public static class TasteInference
     /// Những thẻ xuất hiện đủ nhiều để gọi là gu. Trả về tập rỗng khi không có thẻ nào — đó là câu
     /// trả lời đúng, không phải lỗi: buổi diễn chưa gắn thẻ thì không suy ra được gì.
     /// </summary>
-    public static IReadOnlySet<int> Dominant(IEnumerable<IReadOnlySet<int>> tagsPerShow)
+    public static IReadOnlySet<Guid> Dominant(IEnumerable<IReadOnlySet<Guid>> tagsPerShow)
     {
-        var appearances = new Dictionary<int, int>();
+        var appearances = new Dictionary<Guid, int>();
 
         foreach (var tags in tagsPerShow)
             foreach (var tagId in tags)
                 appearances[tagId] = appearances.GetValueOrDefault(tagId) + 1;
 
-        if (appearances.Count == 0) return new HashSet<int>();
+        if (appearances.Count == 0) return new HashSet<Guid>();
 
         // Ngưỡng tính từ thẻ mạnh nhất, nên với lịch sử chỉ một buổi thì ngưỡng là 0.5 và thẻ duy
         // nhất đó (xuất hiện 1 lần) vẫn ở lại. Đây là điểm bắt buộc phải đúng: người mới là đúng

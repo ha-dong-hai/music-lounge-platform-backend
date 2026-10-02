@@ -15,14 +15,14 @@ internal sealed class GetShowRatingsQueryHandler : IRequestHandler<GetShowRating
 
     public async Task<ShowRatingsDto> Handle(GetShowRatingsQuery request, CancellationToken ct)
     {
-        var showExists = await _uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == request.ShowId, ct);
+        var showExists = await _uow.Repository<LoungeShow, Guid>().AnyAsync(s => s.Id == request.ShowId, ct);
         if (!showExists)
             throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
         // DONE WHEN: "Đánh giá bị gỡ không hiển thị" — loại IsRemoved ngay từ đầu, không tính vào
         // điểm trung bình lẫn phân bố sao, cùng quy ước đã dùng ở GetOwnerAnalyticsQueryHandler/
         // GetLoungeShowDetailQueryHandler.
-        var ratings = await _uow.Repository<LoungeShowRating, int>()
+        var ratings = await _uow.Repository<LoungeShowRating, Guid>()
             .FindAsync(r => r.LoungeShowId == request.ShowId && !r.IsRemoved, ct);
 
         var totalCount = ratings.Count;
@@ -38,7 +38,7 @@ internal sealed class GetShowRatingsQueryHandler : IRequestHandler<GetShowRating
         // chi load User cho nhung rating con UserId that.
         var userIds = ratings.Where(r => r.UserId.HasValue).Select(r => r.UserId!.Value).Distinct().ToList();
         var users = userIds.Count > 0
-            ? await _uow.Repository<User, int>().FindAsync(u => userIds.Contains(u.Id), ct)
+            ? await _uow.Repository<User, Guid>().FindAsync(u => userIds.Contains(u.Id), ct)
             : [];
         var userById = users.ToDictionary(u => u.Id);
 

@@ -2,7 +2,7 @@
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class User : Common.AuditableEntity<int>
+public sealed class User : Common.AuditableEntity<Guid>
 {
     public string Email { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
@@ -55,7 +55,7 @@ public sealed class User : Common.AuditableEntity<int>
     // photographs nobody had signed off on.
     public KycReviewStatus? CitizenCardReviewStatus { get; set; }
     public DateTimeOffset? CitizenCardReviewedAt { get; set; }
-    public int? CitizenCardReviewedBy { get; set; }
+    public Guid? CitizenCardReviewedBy { get; set; }
     public string? CitizenCardReviewNote { get; set; }
     // MLACP-399. Họ tên được chốt lúc Admin DUYỆT CCCD/CMND — ở bước đó Admin đối chiếu họ tên với ảnh giấy tờ. Tách khỏi
     // FullName vì FullName sửa được bất cứ lúc nào mà không mất trạng thái đã duyệt. Tài khoản nhận tiền của hộ/cá nhân
@@ -84,7 +84,7 @@ public sealed class User : Common.AuditableEntity<int>
     // TaxWithholdingPolicy. Self-service "please stop deducting tax from me" is not a claim a seller
     // gets to make about themselves.
     public DateTimeOffset? TaxProfileVerifiedAt { get; set; }
-    public int? TaxProfileVerifiedBy { get; set; }
+    public Guid? TaxProfileVerifiedBy { get; set; }
     // Separate from the timestamp above because "rejected" and "not looked at yet" are different
     // answers to give the seller, and only one of them means they have something to fix.
     public KycReviewStatus? TaxProfileReviewStatus { get; set; }

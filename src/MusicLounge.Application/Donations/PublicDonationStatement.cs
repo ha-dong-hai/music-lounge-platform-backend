@@ -46,11 +46,11 @@ public static class PublicDonationStatement
         var releaseTimes = await DonationPayoutDeadline.PayoutReleaseTimesAsync(uow, ids, ct);
 
         var referenceIds = ids.Select(id => id.ToString()).ToList();
-        var paymentByDonation = (await uow.Repository<Payment, int>().FindAsync(
+        var paymentByDonation = (await uow.Repository<Payment, Guid>().FindAsync(
                 p => p.ReferenceType == DonationPayouts.PaymentReferenceType && referenceIds.Contains(p.ReferenceId), ct))
-            .ToDictionary(p => int.Parse(p.ReferenceId));
+            .ToDictionary(p => Guid.Parse(p.ReferenceId));
 
-        var events = await uow.Repository<DonationEvent, long>().FindAsync(
+        var events = await uow.Repository<DonationEvent, Guid>().FindAsync(
             e => ids.Contains(e.DonationId)
                  && (e.EventType == DonationEventType.VenueReportedPaid
                      || e.EventType == DonationEventType.PerformerConfirmedReceipt
@@ -65,8 +65,8 @@ public static class PublicDonationStatement
             .GroupBy(e => e.DonationId)
             .ToDictionary(g => g.Key, g => g.OrderBy(e => e.Sequence).Last());
 
-        var nullableIds = ids.Select(id => (int?)id).ToList();
-        var askedToConfirm = (await uow.Repository<PerformerConfirmation, int>().FindAsync(
+        var nullableIds = ids.Select(id => (Guid?)id).ToList();
+        var askedToConfirm = (await uow.Repository<PerformerConfirmation, Guid>().FindAsync(
                 c => c.Purpose == PerformerConfirmationPurpose.DonationReceipt && nullableIds.Contains(c.DonationId), ct))
             .Select(c => c.DonationId!.Value)
             .ToHashSet();
@@ -157,7 +157,7 @@ public static class PublicDonationStatement
     };
 
     public static PerformerDonationSummaryDto Summarize(
-        int performerId, string performerName, IReadOnlyList<PublicDonationDto> entries, PublicDonationPolicyDto policy)
+        Guid performerId, string performerName, IReadOnlyList<PublicDonationDto> entries, PublicDonationPolicyDto policy)
     {
         decimal ForPerformer(Func<PublicDonationDto, bool> where)
             => entries.Where(where).Sum(e => e.PerformerAmount ?? 0m);

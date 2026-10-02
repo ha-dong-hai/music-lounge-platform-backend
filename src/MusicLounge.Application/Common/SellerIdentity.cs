@@ -20,13 +20,13 @@ namespace MusicLounge.Application.Common;
 /// </summary>
 public static class SellerIdentity
 {
-    public static async Task<KycReviewStatus?> StatusOfAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
-        => (await uow.Repository<User, int>().GetByIdAsync(ownerId, ct))?.CitizenCardReviewStatus;
+    public static async Task<KycReviewStatus?> StatusOfAsync(IUnitOfWork uow, Guid ownerId, CancellationToken ct)
+        => (await uow.Repository<User, Guid>().GetByIdAsync(ownerId, ct))?.CitizenCardReviewStatus;
 
     /// <summary>Trạng thái danh tính của chủ phòng trà. Null khi không tìm thấy phòng trà — nơi gọi coi là chưa xác minh.</summary>
-    public static async Task<KycReviewStatus?> StatusOfVenueSellerAsync(IUnitOfWork uow, int loungeId, CancellationToken ct)
+    public static async Task<KycReviewStatus?> StatusOfVenueSellerAsync(IUnitOfWork uow, Guid loungeId, CancellationToken ct)
     {
-        var lounge = await uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(loungeId, ct);
+        var lounge = await uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(loungeId, ct);
         return lounge is null ? null : await StatusOfAsync(uow, lounge.OwnerId, ct);
     }
 

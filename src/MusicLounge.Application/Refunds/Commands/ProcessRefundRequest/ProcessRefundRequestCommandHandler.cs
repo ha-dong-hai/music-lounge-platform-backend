@@ -56,7 +56,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // (CancelTicket/CheckInTicket/InitiateTicketTransfer).
         await using var _ = await _lock.AcquireAsync($"refund-request:{request.RefundRequestId}", ct);
 
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var refund = await refundRepo.GetByIdAsync(request.RefundRequestId, ct)
             ?? throw new NotFoundException(nameof(RefundRequest), request.RefundRequestId);
 
@@ -68,7 +68,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // ro ai lam thi hong han chu khong ghi cho mot "User 0" khong ton tai. Chi co AutoApproved
         // moi duoc bo qua buoc doc do; duong Admin duyet van doc UserId, van fail-closed nhu cu.
         // ProcessedBy = null nghia la he thong tu duyet.
-        int? actorId = request.AutoApproved ? null : _currentUser.UserId;
+        Guid? actorId = request.AutoApproved ? null : _currentUser.UserId;
         refund.ProcessedBy = actorId;
         refund.ResolvedAt = DateTimeOffset.UtcNow;
         refund.ResolutionNote = string.IsNullOrWhiteSpace(request.ResolutionNote)
@@ -111,7 +111,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             return Unit.Value;
         }
 
-        var paymentRepo = _uow.Repository<Payment, int>();
+        var paymentRepo = _uow.Repository<Payment, Guid>();
         var payment = await paymentRepo.GetByIdAsync(refund.PaymentId, ct)
             ?? throw new NotFoundException(nameof(Payment), refund.PaymentId);
 
@@ -197,7 +197,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // khong duoc, AutoApproveOverdueRefundsJob thu lai mai, trong khi chu phong tra da duoc bao
         // "se duoc xu ly theo dung thoi han cam ket".
         var isPlatformRevenue = payment.ReferenceType == SubscriptionPayments.ReferenceType;
-        int? ownerId = isPlatformRevenue
+        Guid? ownerId = isPlatformRevenue
             ? null
             : await ResolveOwnerIdAsync(payment, ct)
               ?? throw new DomainException("Không xác định được chủ phòng trà cho giao dịch này.");
@@ -273,7 +273,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         var neverBooked = payment.Status == PaymentStatus.Failed;
         var shouldReverseJournal = !neverBooked
             && (isGatewayPayment
-                || await _uow.Repository<LedgerEntry, int>().AnyAsync(e => e.PaymentId == payment.Id, ct));
+                || await _uow.Repository<LedgerEntry, Guid>().AnyAsync(e => e.PaymentId == payment.Id, ct));
 
         // Ti le nay dung cho ca hai viec: dao but toan (chi khi co but toan de dao) va co gian cac
         // tranche quyet toan chua giai ngan (luon chay). Nen no nam ngoai khoi duoi.
@@ -333,7 +333,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // automatically", so an offline show stayed Published forever and stayed cancellable weeks
         // later. That route is closed: AutoEndStaleShowsJob ends stale shows, and CancelTicket blocks
         // by time as well as by status (MLACP-338).
-        var releasedToOwner = (await _uow.Repository<Settlement, int>().FindAsync(
+        var releasedToOwner = (await _uow.Repository<Settlement, Guid>().FindAsync(
                 s => s.PaymentId == payment.Id && s.Status == SettlementStatus.Released, ct))
             .Sum(s => s.NetAmount);
         var stillHeldByPlatform = Math.Max(0m, payment.NetAmount - releasedToOwner);
@@ -341,7 +341,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // MLACP-351: thanh toan F&B ghi so truoc MLACP-350 da ghi Co THANG cho chu phong tra — Platform
         // chua tung giu khoan do, nen phan cua chu phong tra phai thu tu chinh tai khoan cua ho.
         if (payment.ReferenceType == FnbOrderPayments.ReferenceType
-            && !await _uow.Repository<LedgerEntry, int>().AnyAsync(
+            && !await _uow.Repository<LedgerEntry, Guid>().AnyAsync(
                 e => e.PaymentId == payment.Id
                      && e.Account.OwnerType == AccountType.Platform
                      && !e.IsDebit, ct))
@@ -395,7 +395,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         // The settlement tranches for this payment were sized against its original gross amount;
         // shrink whichever ones haven't released yet by the same proportion, or
         // SettlementReleaseJob will still pay the owner for a ticket that was refunded.
-        var settlementRepo = _uow.Repository<Settlement, int>();
+        var settlementRepo = _uow.Repository<Settlement, Guid>();
         //
         // MLACP-335: phai gom ca PendingReview, khong chi Scheduled. Mot tranche bi chot D16 giu
         // lai VAN CHUA chi tra dong nao — no chi dang doi Admin quyet. Bo sot no o day nghia la neu
@@ -496,7 +496,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     private async Task NotifyBuyerAsync(
         RefundRequest refund, SongNgu title, SongNgu body, CancellationToken ct)
     {
-        if (refund.RequestedBy is not int buyerId) return;
+        if (refund.RequestedBy is not Guid buyerId) return;
 
         await _notifications.NotifyAsync(
             buyerId,
@@ -513,14 +513,14 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     /// đường của vé (<c>GetTicketShowOwnerIdAsync</c> trả null khi thanh toán không có vé), nên mọi yêu
     /// cầu hoàn cho thanh toán F&amp;B đều dừng ở "không xác định được chủ phòng trà".
     /// </summary>
-    private async Task<int?> ResolveOwnerIdAsync(Payment payment, CancellationToken ct)
+    private async Task<Guid?> ResolveOwnerIdAsync(Payment payment, CancellationToken ct)
     {
         if (payment.ReferenceType == FnbOrderPayments.ReferenceType
-            && int.TryParse(payment.ReferenceId, out var orderId))
+            && Guid.TryParse(payment.ReferenceId, out var orderId))
         {
-            var order = await _uow.Repository<FnbOrder, int>().GetByIdAsync(orderId, ct);
+            var order = await _uow.Repository<FnbOrder, Guid>().GetByIdAsync(orderId, ct);
             if (order is null) return null;
-            var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(order.LoungeId, ct);
+            var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(order.LoungeId, ct);
             return lounge?.OwnerId;
         }
 

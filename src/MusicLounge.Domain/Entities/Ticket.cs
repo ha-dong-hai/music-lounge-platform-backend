@@ -4,16 +4,16 @@ namespace MusicLounge.Domain.Entities;
 
 public sealed class Ticket : Common.BaseEntity<Guid>
 {
-    public int? BuyerId { get; set; }       // nullable — ON DELETE SET NULL (BVDLCN 2025)
-    public int PriceId { get; set; }
-    public int TierId { get; set; }
-    public int ShowId { get; set; }
-    public int? PaymentId { get; set; }
+    public Guid? BuyerId { get; set; }       // nullable — ON DELETE SET NULL (BVDLCN 2025)
+    public Guid PriceId { get; set; }
+    public Guid TierId { get; set; }
+    public Guid ShowId { get; set; }
+    public Guid? PaymentId { get; set; }
     public TicketStatus Status { get; set; } = TicketStatus.Pending;
     public string? QrCode { get; set; }     // generated on Confirmed
     public PurchaseChannel PurchaseChannel { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
-    public int? PendingTransferToUserId { get; set; }          // chuyển nhượng vé: người nhận đang chờ accept
+    public Guid? PendingTransferToUserId { get; set; }          // chuyển nhượng vé: người nhận đang chờ accept
     public DateTimeOffset? PendingTransferInitiatedAt { get; set; }
 
     public User? Buyer { get; set; }

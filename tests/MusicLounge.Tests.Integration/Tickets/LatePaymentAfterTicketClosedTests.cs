@@ -31,11 +31,11 @@ public sealed class LatePaymentAfterTicketClosedTests
     public LatePaymentAfterTicketClosedTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record PurchaseData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
 
-    private async Task<int> PriceAsync()
+    private async Task<Guid> PriceAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -91,7 +91,7 @@ public sealed class LatePaymentAfterTicketClosedTests
     }
 
     /// <summary>Đẩy thời điểm tạo link về quá khứ — link VNPay (15 phút) coi như đã hết hạn.</summary>
-    private async Task AgePaymentAsync(int paymentId, TimeSpan by)
+    private async Task AgePaymentAsync(Guid paymentId, TimeSpan by)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -100,7 +100,7 @@ public sealed class LatePaymentAfterTicketClosedTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<List<Ticket>> TicketsAsync(int paymentId)
+    private async Task<List<Ticket>> TicketsAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Tickets.AsNoTracking()

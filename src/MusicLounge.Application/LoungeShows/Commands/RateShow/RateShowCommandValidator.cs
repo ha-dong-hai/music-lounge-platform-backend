@@ -10,8 +10,8 @@ internal sealed class RateShowCommandValidator : AbstractValidator<RateShowComma
     {
         RuleFor(x => x.ShowId)
             .Cascade(CascadeMode.Stop)
-            .GreaterThan(0).WithMessage("ShowId không hợp lệ.")
-            .MustAsync(async (showId, ct) => await uow.Repository<LoungeShow, int>().AnyAsync(s => s.Id == showId, ct))
+            .NotEmpty().WithMessage("ShowId không hợp lệ.")
+            .MustAsync(async (showId, ct) => await uow.Repository<LoungeShow, Guid>().AnyAsync(s => s.Id == showId, ct))
             .WithMessage("ShowId không tồn tại.");
         RuleFor(x => x.Score)
             .InclusiveBetween(1, 5).WithMessage("Điểm đánh giá phải từ 1 đến 5.");

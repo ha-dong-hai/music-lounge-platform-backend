@@ -19,7 +19,7 @@ public sealed class LoungeGalleryTests
 
     public LoungeGalleryTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
     private sealed record UploadResponse(bool Success, UploadedUrl Data);
     private sealed record UploadedUrl(string Url);
 
@@ -72,18 +72,18 @@ public sealed class LoungeGalleryTests
     [Fact]
     public async Task AddGalleryImage_NoSubscriptionRequired_UnlikeTourScenes()
     {
-        int freshOwnerId, freshLoungeId;
+        Guid freshOwnerId, freshLoungeId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var owner = new MusicLounge.Domain.Entities.User
             {
-                Id = 9400, Email = "gallery-owner@test.com", FullName = "Gallery Owner"
+                Id = TestId.Of(9400), Email = "gallery-owner@test.com", FullName = "Gallery Owner"
             };
             db.Users.Add(owner);
             var lounge = new MusicLounge.Domain.Entities.MusicLounge
             {
-                Id = 9400, OwnerId = 9400, Name = "Gallery Lounge",
+                Id = TestId.Of(9400), OwnerId = TestId.Of(9400), Name = "Gallery Lounge",
                 Address = new MusicLounge.Domain.ValueObjects.VenueAddress { Street = "1 Test", District = "1", City = "HCM" }
             };
             db.Lounges.Add(lounge);

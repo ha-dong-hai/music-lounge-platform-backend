@@ -196,7 +196,7 @@ public sealed class ComplianceTests
 
     /// <summary>Một phòng trà riêng cho mỗi lần gọi, một chủ MỚI (MLACP-377: 1 chủ 1 phòng trà), kèm gói
     /// subscription đang chạy của chính chủ đó.</summary>
-    private async Task<int> DedicatedVenueAsync()
+    private async Task<Guid> DedicatedVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -208,7 +208,7 @@ public sealed class ComplianceTests
 
         db.OwnerSubscriptions.Add(new OwnerSubscription
         {
-            OwnerId = freshOwner.Id, PackageId = 1, StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            OwnerId = freshOwner.Id, PackageId = TestId.Of(1), StartedAt = DateTimeOffset.UtcNow.AddDays(-1),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(29), Status = SubscriptionStatus.Active,
             MaxTicketsPerEventSnapshot = 1000, HasAiPosterSnapshot = true, MaxAiPostersPerMonthSnapshot = 10,
             MaxTourScenesSnapshot = 5
@@ -248,7 +248,7 @@ public sealed class ComplianceTests
     /// kiem tra, khong duoc dich di. Cac test con lai chi can "mot buoi dien nao do o tuong lai",
     /// va tu MLACP-308 thi chung phai co khung gio rieng nhau.
     /// </param>
-    private async Task<int> CreateShowAsync(DateTimeOffset scheduledStart, bool exactTime = false)
+    private async Task<Guid> CreateShowAsync(DateTimeOffset scheduledStart, bool exactTime = false)
     {
         // Khong dung exactTime thi khong quan tam gio nao, chi can mot gio con trong.
         if (!exactTime) scheduledStart = SeedHelper.NextShowStart();
@@ -263,7 +263,7 @@ public sealed class ComplianceTests
 
         // MLACP-377: loungeId co the la venue rieng (DedicatedVenueAsync, chu MOI) hoac SeedHelper.LoungeId
         // (chu SeedHelper.OwnerId) — tra dung chu tu DB thay vi gia dinh mot chu co dinh.
-        int ownerId;
+        Guid ownerId;
         using (var ownerScope = _factory.Services.CreateScope())
             ownerId = ownerScope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
                 .Lounges.AsNoTracking().Single(l => l.Id == loungeId).OwnerId;
@@ -277,15 +277,15 @@ public sealed class ComplianceTests
             Format = "Offline",
             ScheduledStart = scheduledStart,
             ScheduledEnd = (DateTimeOffset?)null,
-            CategoryId = (int?)null,
+            CategoryId = (Guid?)null,
             OfflineQuota = 50,
             OnlineQuota = (int?)null,
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             Performances = new[]
             {
-                new { PerformerId = (int?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
+                new { PerformerId = (Guid?)null, PerformerName = "DJ Test", Role = "Main", OrderIndex = 1, SetTime = (string?)null, AcceptsDonation = true }
             }
         });
         res.EnsureSuccessStatusCode();
@@ -295,9 +295,9 @@ public sealed class ComplianceTests
 
     // MLACP-377: showId co the thuoc venue rieng (DedicatedVenueAsync, chu MOI) hoac SeedHelper.LoungeId —
     // tra dung chu/lounge tu show that thay vi gia dinh SeedHelper.LoungeId co dinh.
-    private async Task<HttpClient> ClientForShowAsync(int showId)
+    private async Task<HttpClient> ClientForShowAsync(Guid showId)
     {
-        int loungeId, ownerId;
+        Guid loungeId, ownerId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -307,7 +307,7 @@ public sealed class ComplianceTests
         return _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId);
     }
 
-    private async Task AddTierAsync(int showId)
+    private async Task AddTierAsync(Guid showId)
     {
         var client = await ClientForShowAsync(showId);
         var res = await client.PostAsJsonAsync("/api/v1/ticket-tiers", new
@@ -316,7 +316,7 @@ public sealed class ComplianceTests
             Name = "Standard",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (int?)null,
+            ZoneId = (Guid?)null,
             TotalCapacity = 30,
             Prices = new[]
             {
@@ -430,7 +430,7 @@ public sealed class ComplianceTests
 
     // ─── D19 VCPMC royalty ────────────────────────────────────────────────────
 
-    private async Task<int> CreatePublishedApprovedShowAsync()
+    private async Task<Guid> CreatePublishedApprovedShowAsync()
     {
         var showId = await CreateShowAsync(DateTimeOffset.UtcNow.AddDays(20));
         await AddTierAsync(showId);
@@ -472,11 +472,11 @@ public sealed class ComplianceTests
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 
     // POST /complaints tra ve mot object thay vi mot so ke tu MLACP-287: khach vang lai can
     // ma tra cuu de biet ket qua khieu nai cua minh, vi ho khong dang nhap duoc de xem
     // /complaints/my va he thong khong co SMS bao ket qua.
     private sealed record ComplaintCreatedResponse(bool Success, ComplaintCreatedData Data);
-    private sealed record ComplaintCreatedData(int Id, string? LookupReference);
+    private sealed record ComplaintCreatedData(Guid Id, string? LookupReference);
 }

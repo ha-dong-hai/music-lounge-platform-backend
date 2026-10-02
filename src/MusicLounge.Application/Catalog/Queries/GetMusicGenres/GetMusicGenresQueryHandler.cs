@@ -8,9 +8,9 @@ namespace MusicLounge.Application.Catalog.Queries.GetMusicGenres;
 internal sealed class GetMusicGenresQueryHandler
     : IRequestHandler<GetMusicGenresQuery, List<CatalogItemDto>>
 {
-    private readonly IRepository<MusicGenre, int> _repo;
+    private readonly IRepository<MusicGenre, Guid> _repo;
 
-    public GetMusicGenresQueryHandler(IRepository<MusicGenre, int> repo) => _repo = repo;
+    public GetMusicGenresQueryHandler(IRepository<MusicGenre, Guid> repo) => _repo = repo;
 
     public async Task<List<CatalogItemDto>> Handle(GetMusicGenresQuery request, CancellationToken ct)
     {

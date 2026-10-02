@@ -9,7 +9,7 @@ public sealed class UpdateLoungeShowCommandValidator : AbstractValidator<UpdateL
 {
     public UpdateLoungeShowCommandValidator(IUnitOfWork uow)
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(4000);
         RuleFor(x => x.ScheduledStart).GreaterThan(DateTimeOffset.UtcNow);
@@ -27,7 +27,7 @@ public sealed class UpdateLoungeShowCommandValidator : AbstractValidator<UpdateL
         // DbUpdateException, which GlobalExceptionHandler maps to a generic 409 with no field named.
         RuleFor(x => x.CategoryId)
             .MustAsync(async (id, ct) =>
-                await uow.Repository<EventCategory, int>().AnyAsync(c => c.Id == id!.Value, ct))
+                await uow.Repository<EventCategory, Guid>().AnyAsync(c => c.Id == id!.Value, ct))
             .When(x => x.CategoryId.HasValue)
             .WithMessage("CategoryId không tồn tại.");
 

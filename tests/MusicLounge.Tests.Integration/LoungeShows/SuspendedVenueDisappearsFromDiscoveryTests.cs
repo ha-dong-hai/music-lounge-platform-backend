@@ -37,12 +37,12 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Page<T>(IReadOnlyList<T> Items, int TotalCount);
-    private sealed record Item(int Id, string Name);
-    private sealed record Suggestion(int Id, string Name);
+    private sealed record Item(Guid Id, string Name);
+    private sealed record Suggestion(Guid Id, string Name);
     private sealed record FilterOptions(IReadOnlyList<string> Cities);
-    private sealed record PerformerDetail(int Id, Page<Item> Shows);
+    private sealed record PerformerDetail(Guid Id, Page<Item> Shows);
 
-    private async Task<int> VenueAsync(string city)
+    private async Task<Guid> VenueAsync(string city)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -63,7 +63,7 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
         return lounge.Id;
     }
 
-    private async Task<int> ShowAsync(int loungeId, string name, int? performerId = null)
+    private async Task<Guid> ShowAsync(Guid loungeId, string name, Guid? performerId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -88,7 +88,7 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
         return show.Id;
     }
 
-    private async Task SetStatusAsync(int loungeId, LoungeStatus status)
+    private async Task SetStatusAsync(Guid loungeId, LoungeStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -146,7 +146,7 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
         var name = $"GoiY-{Guid.NewGuid():N}"[..20];
         var show = await ShowAsync(venue, name);
 
-        async Task<IReadOnlyList<int>> SuggestAsync()
+        async Task<IReadOnlyList<Guid>> SuggestAsync()
         {
             var res = await _factory.CreateClient()
                 .GetAsync($"/api/v1/lounge-shows/suggestions?q={name}");
@@ -184,7 +184,7 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
         var show = await ShowAsync(venue, $"TheoNgheSi-{Guid.NewGuid():N}"[..20], SeedHelper.PerformerId);
 
         // Endpoint nay tra ve ho so nghe si, danh sach buoi dien nam trong truong Shows.
-        async Task<IReadOnlyList<int>> ByPerformerAsync()
+        async Task<IReadOnlyList<Guid>> ByPerformerAsync()
         {
             var res = await _factory.CreateClient()
                 .GetAsync($"/api/v1/lounge-shows/by-performer/{SeedHelper.PerformerId}?pageSize=200");
@@ -211,7 +211,7 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
         var anchor = await ShowAsync(good, $"Goc-{Guid.NewGuid():N}"[..20]);
         var related = await ShowAsync(bad, $"LienQuan-{Guid.NewGuid():N}"[..20]);
 
-        async Task<IReadOnlyList<int>> SimilarAsync()
+        async Task<IReadOnlyList<Guid>> SimilarAsync()
         {
             var res = await _factory.CreateClient().GetAsync($"/api/v1/lounge-shows/{anchor}/similar");
             res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -276,7 +276,7 @@ public sealed class SuspendedVenueDisappearsFromDiscoveryTests
         await SetStatusAsync(venue, LoungeStatus.Suspended);
 
         // MLACP-377: VenueAsync() gio tao mot chu MOI cho moi phong tra — tra dung chu tu DB.
-        int ownerId;
+        Guid ownerId;
         using (var scope = _factory.Services.CreateScope())
             ownerId = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
                 .Lounges.AsNoTracking().Single(l => l.Id == venue).OwnerId;

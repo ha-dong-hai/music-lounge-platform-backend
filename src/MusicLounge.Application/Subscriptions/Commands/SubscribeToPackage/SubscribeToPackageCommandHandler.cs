@@ -31,7 +31,7 @@ internal sealed class SubscribeToPackageCommandHandler
     public async Task<SubscriptionPaymentInitiationDto> Handle(
         SubscribeToPackageCommand request, CancellationToken ct)
     {
-        var package = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(request.PackageId, ct)
+        var package = await _uow.Repository<SubscriptionPackage, Guid>().GetByIdAsync(request.PackageId, ct)
             ?? throw new NotFoundException(nameof(SubscriptionPackage), request.PackageId);
 
         if (!package.IsActive)
@@ -42,7 +42,7 @@ internal sealed class SubscribeToPackageCommandHandler
         await SubscriptionVenueGate.EnsureNotPenalizedAsync(_uow, _currentUser.UserId, ct);
 
         var now = DateTimeOffset.UtcNow;
-        var activeStatusSubs = await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var activeStatusSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
             s => s.OwnerId == _currentUser.UserId && s.Status == SubscriptionStatus.Active, ct);
         var hasActiveSubscription = activeStatusSubs.Any(s => s.ExpiresAt > now);
 
@@ -71,7 +71,7 @@ internal sealed class SubscribeToPackageCommandHandler
             SubscriptionMaxTourScenesSnapshot = package.MaxTourScenes,
             CreatedAt = now
         };
-        _uow.Repository<Payment, int>().Add(payment);
+        _uow.Repository<Payment, Guid>().Add(payment);
         await _uow.SaveChangesAsync(ct);
 
         var paymentUrl = _vnPay.CreatePaymentUrl(new VnPayPaymentRequest(

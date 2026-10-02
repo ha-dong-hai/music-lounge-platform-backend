@@ -30,22 +30,22 @@ public static class DonationPayoutDeadline
     /// Mã donate → lúc nền tảng đã chuyển tiền cho phòng trà (null: có khoản quyết toán nhưng chưa
     /// chuyển). Không có trong kết quả: donate có từ trước MLACP-361, không có khoản quyết toán nào.
     /// </summary>
-    public static async Task<IReadOnlyDictionary<int, DateTimeOffset?>> PayoutReleaseTimesAsync(
-        IUnitOfWork uow, IReadOnlyCollection<int> donationIds, CancellationToken ct)
+    public static async Task<IReadOnlyDictionary<Guid, DateTimeOffset?>> PayoutReleaseTimesAsync(
+        IUnitOfWork uow, IReadOnlyCollection<Guid> donationIds, CancellationToken ct)
     {
-        if (donationIds.Count == 0) return new Dictionary<int, DateTimeOffset?>();
+        if (donationIds.Count == 0) return new Dictionary<Guid, DateTimeOffset?>();
 
         var referenceIds = donationIds.Select(id => id.ToString()).ToList();
-        var payments = await uow.Repository<Payment, int>().FindAsync(
+        var payments = await uow.Repository<Payment, Guid>().FindAsync(
             p => p.ReferenceType == DonationPayouts.PaymentReferenceType && referenceIds.Contains(p.ReferenceId), ct);
         var paymentIds = payments.Select(p => p.Id).ToList();
-        var settlementByPayment = (await uow.Repository<Settlement, int>().FindAsync(
+        var settlementByPayment = (await uow.Repository<Settlement, Guid>().FindAsync(
                 s => paymentIds.Contains(s.PaymentId), ct))
             .GroupBy(s => s.PaymentId)
             .ToDictionary(g => g.Key, g => g.First());
 
         return payments.ToDictionary(
-            p => int.Parse(p.ReferenceId),
+            p => Guid.Parse(p.ReferenceId),
             p => settlementByPayment.TryGetValue(p.Id, out var s) && s.Status == SettlementStatus.Released
                 ? s.ReleasedAt
                 : (DateTimeOffset?)null);
@@ -57,13 +57,13 @@ public static class DonationPayoutDeadline
     /// mốc ấy thì dùng lúc chủ xác nhận — mốc sớm nhất còn lại cho thấy chủ đã có tiền.
     /// </summary>
     public static DateTimeOffset? ReceivedAt(
-        int donationId, DateTimeOffset? paymentConfirmedAt, DateTimeOffset? ownerAckAt,
-        IReadOnlyDictionary<int, DateTimeOffset?> releaseTimes)
+        Guid donationId, DateTimeOffset? paymentConfirmedAt, DateTimeOffset? ownerAckAt,
+        IReadOnlyDictionary<Guid, DateTimeOffset?> releaseTimes)
         => releaseTimes.TryGetValue(donationId, out var releasedAt)
             ? releasedAt
             : paymentConfirmedAt ?? ownerAckAt;
 
-    public static DateTimeOffset? ReceivedAt(Donation donation, IReadOnlyDictionary<int, DateTimeOffset?> releaseTimes)
+    public static DateTimeOffset? ReceivedAt(Donation donation, IReadOnlyDictionary<Guid, DateTimeOffset?> releaseTimes)
         => ReceivedAt(donation.Id, donation.PaymentConfirmedAt, donation.OwnerAckAt, releaseTimes);
 
     /// <summary>Hạn chuyển tiền cho nghệ sĩ — cũng là hạn hệ thống tự coi như phòng trà đã nhận.</summary>

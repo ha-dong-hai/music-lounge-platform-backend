@@ -27,7 +27,7 @@ public sealed class ContentReportsController : ControllerBase
     /// 409 nếu bạn đã báo cáo nội dung này và báo cáo đó vẫn đang chờ xử lý.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireAuthenticated)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -35,7 +35,7 @@ public sealed class ContentReportsController : ControllerBase
         [FromBody] SubmitContentReportCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<Guid>.Ok(id));
     }
 
     /// <summary>Admin — hàng đợi nội dung bị báo cáo, sắp xếp theo số lần báo cáo giảm dần (nội

@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Users.DTOs;
 
 public sealed record UserProfileDto(
-    int Id,
+    Guid Id,
     string FullName,
     string Email,
     // MLACP-427: truoc day khong tra hai truong nay, nen xac minh xong giao dien khong biet de hien "da xac minh", an nut
@@ -11,13 +11,13 @@ public sealed record UserProfileDto(
     bool PhoneVerified,
     string? AvatarUrl,
     bool AiConsent,
-    IReadOnlyList<int> FavouriteGenreIds,
-    IReadOnlyList<int> FavouriteMoodIds,
-    IReadOnlyList<int> FavouriteAtmosphereIds,
+    IReadOnlyList<Guid> FavouriteGenreIds,
+    IReadOnlyList<Guid> FavouriteMoodIds,
+    IReadOnlyList<Guid> FavouriteAtmosphereIds,
     // PUT /me/preferences ghi đè toàn phần và nhận cả DislikedGenreIds, nhưng trước đây không đường
     // đọc nào trả danh sách loại trừ về. Người dùng mở lại trang sở thích rồi bấm Lưu là mất sạch
     // phần đã loại trừ — mà loại trừ thể loại chính là cách duy nhất họ nói "đừng gợi ý thứ này nữa".
-    IReadOnlyList<int> DislikedGenreIds,
+    IReadOnlyList<Guid> DislikedGenreIds,
     // MLACP-489: có đường ghi (PUT /me/language) thì phải có đường đọc — không thì trang cài đặt không biết đang chọn
     // gì, và mặc định của nó sẽ âm thầm ghi đè lựa chọn thật khi người dùng bấm Lưu.
     string PreferredLanguage);

@@ -28,7 +28,7 @@ public sealed class LivestreamTierAfterPublishTests
 
     public LivestreamTierAfterPublishTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int ShowId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid ShowId);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -82,7 +82,7 @@ public sealed class LivestreamTierAfterPublishTests
         => Owner(venue).PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = venue.ShowId, Name = name, Description = (string?)null, AccessType = accessType,
-            ZoneId = (int?)null, TotalCapacity = (int?)null,
+            ZoneId = (Guid?)null, TotalCapacity = (int?)null,
             Prices = new[]
             {
                 new
@@ -93,13 +93,13 @@ public sealed class LivestreamTierAfterPublishTests
             }
         });
 
-    private static async Task<int> DataIdAsync(HttpResponseMessage res)
+    private static async Task<Guid> DataIdAsync(HttpResponseMessage res)
     {
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-        return doc.RootElement.GetProperty("data").GetInt32();
+        return doc.RootElement.GetProperty("data").GetGuid();
     }
 
-    private async Task<(int TierId, int PriceId)> AddLivestreamTierAsync(Venue venue, string name)
+    private async Task<(Guid TierId, Guid PriceId)> AddLivestreamTierAsync(Venue venue, string name)
     {
         var res = await AddTierAsync(venue, "Livestream", name);
         res.IsSuccessStatusCode.Should().BeTrue(await res.Content.ReadAsStringAsync());
@@ -109,10 +109,10 @@ public sealed class LivestreamTierAfterPublishTests
         return (tierId, priceId);
     }
 
-    private Task<HttpResponseMessage> HoldAsync(int priceId)
+    private Task<HttpResponseMessage> HoldAsync(Guid priceId)
         => Audience().PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = priceId, Quantity = 1 });
 
-    private Task<HttpResponseMessage> ReviewAsync(int tierId, string decision, string? note)
+    private Task<HttpResponseMessage> ReviewAsync(Guid tierId, string decision, string? note)
         => Admin().PostAsJsonAsync($"/api/v1/moderations/ticket-tiers/{tierId}/review", new { Decision = decision, ReviewNote = note });
 
     [Fact]

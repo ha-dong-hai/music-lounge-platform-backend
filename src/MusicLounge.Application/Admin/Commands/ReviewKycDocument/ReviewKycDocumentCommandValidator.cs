@@ -6,7 +6,7 @@ public sealed class ReviewKycDocumentCommandValidator : AbstractValidator<Review
 {
     public ReviewKycDocumentCommandValidator()
     {
-        RuleFor(x => x.UserId).GreaterThan(0);
+        RuleFor(x => x.UserId).NotEmpty();
 
         RuleFor(x => x.Note)
             .NotEmpty()

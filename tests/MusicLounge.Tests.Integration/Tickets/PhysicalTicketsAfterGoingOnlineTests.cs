@@ -26,10 +26,10 @@ public sealed class PhysicalTicketsAfterGoingOnlineTests
     public PhysicalTicketsAfterGoingOnlineTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record PurchaseData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
     private sealed record IpnBody(string RspCode, string Message);
-    private sealed record Venue(int OwnerId, int LoungeId, int ShowId, int OnlinePriceId, int CounterPriceId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid ShowId, Guid OnlinePriceId, Guid CounterPriceId);
 
     private async Task<Venue> OfflineShowAsync()
     {
@@ -93,10 +93,10 @@ public sealed class PhysicalTicketsAfterGoingOnlineTests
         => (await Owner(venue).PutAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/format", new { NewFormat = "Online" }))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-    private Task<HttpResponseMessage> HoldAsync(int priceId)
+    private Task<HttpResponseMessage> HoldAsync(Guid priceId)
         => Audience().PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = priceId, Quantity = 1 });
 
-    private async Task<int> HoldIdAsync(int priceId)
+    private async Task<Guid> HoldIdAsync(Guid priceId)
     {
         var res = await HoldAsync(priceId);
         res.StatusCode.Should().Be(HttpStatusCode.Created, "test premise: an offline show sells entry tickets");

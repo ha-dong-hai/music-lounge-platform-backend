@@ -2,10 +2,10 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class OwnerSubscription : Common.BaseEntity<int>
+public sealed class OwnerSubscription : Common.BaseEntity<Guid>
 {
-    public int OwnerId { get; set; }
-    public int PackageId { get; set; }
+    public Guid OwnerId { get; set; }
+    public Guid PackageId { get; set; }
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }   // extended by suspension_days when venue penalized
     public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;

@@ -25,7 +25,7 @@ public sealed class HybridStreamLossTests
 
     public HybridStreamLossTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Seeded(int ShowId, int LivestreamId, DateTimeOffset? DisconnectedAt, string? QrCode);
+    private sealed record Seeded(Guid ShowId, Guid LivestreamId, DateTimeOffset? DisconnectedAt, string? QrCode);
 
     private async Task<Seeded> SeedAsync(LoungeShowFormat format, LivestreamStatus streamStatus)
     {
@@ -129,7 +129,7 @@ public sealed class HybridStreamLossTests
     private HttpClient Staff() => _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff", SeedHelper.LoungeId);
     private HttpClient Admin() => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<HttpResponseMessage> ModerationRemoveStreamAsync(int livestreamId)
+    private async Task<HttpResponseMessage> ModerationRemoveStreamAsync(Guid livestreamId)
     {
         using (var scope = _factory.Services.CreateScope())
         {

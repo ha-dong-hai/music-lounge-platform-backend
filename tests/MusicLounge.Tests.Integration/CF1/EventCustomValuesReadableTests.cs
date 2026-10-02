@@ -32,7 +32,7 @@ public sealed class EventCustomValuesReadableTests
         return root.TryGetProperty("data", out var d) ? d : root;
     }
 
-    private async Task<int> TaoTieuChiAsync(string name, bool isActive = true)
+    private async Task<Guid> TaoTieuChiAsync(string name, bool isActive = true)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -64,7 +64,7 @@ public sealed class EventCustomValuesReadableTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var mine = Data(await res.Content.ReadAsStringAsync()).EnumerateArray()
-            .FirstOrDefault(v => v.GetProperty("criteriaId").GetInt32() == criteriaId);
+            .FirstOrDefault(v => v.GetProperty("criteriaId").GetGuid() == criteriaId);
         mine.ValueKind.Should().NotBe(JsonValueKind.Undefined,
             "ghi xong mà không đọc lại được thì lần sửa sau là mất giá trị");
 

@@ -24,7 +24,7 @@ public sealed class LocksHeldUntilCommitTests
 
     public LocksHeldUntilCommitTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int ShowId, int PriceId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid ShowId, Guid PriceId);
 
     private async Task<Venue> PublishedShowAsync()
     {
@@ -81,7 +81,7 @@ public sealed class LocksHeldUntilCommitTests
         }
     }
 
-    private async Task<bool> ShowBookingLockIsHeldAsync(int showId)
+    private async Task<bool> ShowBookingLockIsHeldAsync(Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var locks = scope.ServiceProvider.GetRequiredService<IShowBookingLock>();

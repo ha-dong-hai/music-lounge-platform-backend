@@ -14,15 +14,15 @@ internal sealed class DeleteVenueAtmosphereCommandHandler : IRequestHandler<Dele
 
     public async Task<Unit> Handle(DeleteVenueAtmosphereCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<VenueAtmosphere, int>();
+        var repo = _uow.Repository<VenueAtmosphere, Guid>();
         var atmosphere = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(VenueAtmosphere), request.Id);
 
         // MusicLounge.AtmosphereId la FK truc tiep (khong phai bang join nhu 2 cai duoi) - de sot
         // neu chi kiem tra bang join, nen phai check rieng.
-        var inUse = await _uow.Repository<LoungeShowAtmosphere, int>().AnyAsync(x => x.AtmosphereId == request.Id, ct)
-            || await _uow.Repository<UserFavouriteAtmosphere, int>().AnyAsync(x => x.AtmosphereId == request.Id, ct)
-            || await _uow.Repository<MusicLoungeEntity, int>().AnyAsync(x => x.AtmosphereId == request.Id, ct);
+        var inUse = await _uow.Repository<LoungeShowAtmosphere, Guid>().AnyAsync(x => x.AtmosphereId == request.Id, ct)
+            || await _uow.Repository<UserFavouriteAtmosphere, Guid>().AnyAsync(x => x.AtmosphereId == request.Id, ct)
+            || await _uow.Repository<MusicLoungeEntity, Guid>().AnyAsync(x => x.AtmosphereId == request.Id, ct);
         if (inUse)
             throw new ConflictException($"Phong cách không gian '{atmosphere.Name}' đang được sử dụng, không thể xóa.");
 

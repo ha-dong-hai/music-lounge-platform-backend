@@ -21,8 +21,8 @@ public sealed class TicketBookingTests
 
     public TicketBookingTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> CreatePhysicalPriceAsync(
-        int showId, bool onlineOnly = false, int quota = 50)
+    private async Task<Guid> CreatePhysicalPriceAsync(
+        Guid showId, bool onlineOnly = false, int quota = 50)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -384,7 +384,7 @@ public sealed class TicketBookingTests
         refund!.CreatedBy.Should().Be(SeedHelper.AudienceId);
     }
 
-    private sealed record IdResponse(bool Success, int Data);
+    private sealed record IdResponse(bool Success, Guid Data);
 
     [Fact]
     public async Task CancelTicket_ByNonBuyer_Returns403()

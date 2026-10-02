@@ -24,7 +24,7 @@ public sealed class SettlementTests
 
     public SettlementTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int PaymentId, int SettlementId)> SeedDueSettlementAsync(
+    private async Task<(Guid PaymentId, Guid SettlementId)> SeedDueSettlementAsync(
         SettlementReleaseType releaseType = SettlementReleaseType.Partial70)
     {
         using var scope = _factory.Services.CreateScope();
@@ -83,9 +83,9 @@ public sealed class SettlementTests
     [Fact]
     public async Task TicketPurchaseThroughSettlementRelease_CreditsOwnerNetExactlyOnce()
     {
-        int paymentId;
+        Guid paymentId;
         Guid ticketId;
-        int showId;
+        Guid showId;
         const decimal gross = 1_000_000m;
         const decimal expectedOwnerNet = 900_000m; // gross - 5% platform - 5% tax (system_config defaults)
 
@@ -206,7 +206,7 @@ public sealed class SettlementTests
         const decimal expectedTax = 50_000m;         // 5% system_config default
         const decimal expectedOwnerNet = 900_000m;
 
-        int paymentId;
+        Guid paymentId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -223,9 +223,9 @@ public sealed class SettlementTests
             paymentId = payment.Id;
         }
 
-        // OwnerId: 0 — deliberately isolates WriteTicketLedgerHandler under test: it's the exact
+        // OwnerId: Guid.Empty — deliberately isolates WriteTicketLedgerHandler under test: it's the exact
         // value ScheduleSettlementHandler itself treats as "nothing to schedule" and returns early
-        // on (see its own `if (payment is null || notification.OwnerId == 0) return;`), so this
+        // on (see its own `if (payment is null || notification.OwnerId == Guid.Empty) return;`), so this
         // doesn't also require seeding a ticket/show/lounge/bank-account just to reach the
         // assertions below. WriteTicketLedgerHandler only interpolates OwnerId into a ledger line's
         // free-text Description, never validates it.
@@ -233,7 +233,7 @@ public sealed class SettlementTests
         {
             var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
             await publisher.Publish(new TicketPaymentConfirmed(
-                PaymentId: paymentId, UserId: SeedHelper.AudienceId, OwnerId: 0,
+                PaymentId: paymentId, UserId: SeedHelper.AudienceId, OwnerId: Guid.Empty,
                 TicketIds: [], LivestreamId: null, ShowId: SeedHelper.ShowId));
         }
 
@@ -286,7 +286,7 @@ public sealed class SettlementTests
     [Fact]
     public async Task SettlementReleaseJob_LeavesNotYetDueSettlementUntouched()
     {
-        int settlementId;
+        Guid settlementId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

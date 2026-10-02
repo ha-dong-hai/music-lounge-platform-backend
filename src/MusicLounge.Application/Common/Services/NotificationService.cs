@@ -20,7 +20,7 @@ internal sealed class NotificationService : INotificationService
     // SaveChangesAsync (already required at the end of every handler/job) commits it, so a
     // notification never persists half-committed relative to the change that triggered it.
     public async Task NotifyAsync(
-        int userId,
+        Guid userId,
         NotificationType type,
         SongNgu title,
         SongNgu body,
@@ -37,7 +37,7 @@ internal sealed class NotificationService : INotificationService
         var titleEn = Cat(title.En, NotificationLimits.TitleMaxLength);
         var bodyEn = Cat(body.En, NotificationLimits.BodyMaxLength);
 
-        _uow.Repository<Notification, int>().Add(new Notification
+        _uow.Repository<Notification, Guid>().Add(new Notification
         {
             UserId = userId,
             Type = type,
@@ -60,7 +60,7 @@ internal sealed class NotificationService : INotificationService
         // TRẦN: mỗi thông báo một lần đọc User theo khoá chính (thường đã nằm trong change tracker nên không tốn truy
         // vấn). Buổi hòa nhạc bị huỷ với N vé là N lần đọc — ổn ở quy mô hiện tại. Nâng cấp khi cần: nạp sẵn
         // PreferredLanguage theo lô cho danh sách người nhận rồi truyền vào.
-        var recipient = await _uow.Repository<User, int>().GetByIdAsync(userId, ct);
+        var recipient = await _uow.Repository<User, Guid>().GetByIdAsync(userId, ct);
         var lang = recipient?.PreferredLanguage;
         var pushTitle = NgonNgu.LaTiengAnh(lang) && !string.IsNullOrWhiteSpace(titleEn) ? titleEn : titleVi;
         var pushBody = NgonNgu.LaTiengAnh(lang) && !string.IsNullOrWhiteSpace(bodyEn) ? bodyEn : bodyVi;

@@ -26,7 +26,7 @@ public sealed class SuspensionExpiryTests
 
     public SuspensionExpiryTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int LoungeId, int OwnerId)> SeedSuspendedVenueAsync()
+    private async Task<(Guid LoungeId, Guid OwnerId)> SeedSuspendedVenueAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -55,8 +55,8 @@ public sealed class SuspensionExpiryTests
         return (lounge.Id, owner.Id);
     }
 
-    private async Task<int> SeedAppliedSuspensionAsync(
-        int loungeId, int suspensionDays, DateTimeOffset appliedAt, DateTimeOffset? suspensionEnd)
+    private async Task<Guid> SeedAppliedSuspensionAsync(
+        Guid loungeId, int suspensionDays, DateTimeOffset appliedAt, DateTimeOffset? suspensionEnd)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -86,7 +86,7 @@ public sealed class SuspensionExpiryTests
     }
 
     private async Task<(LoungeStatus Status, PenaltyStatus Penalty, DateTimeOffset? End)> ReadAsync(
-        int loungeId, int penaltyId)
+        Guid loungeId, Guid penaltyId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -31,11 +31,11 @@ public sealed class RefundPayoutAccountTests
 
     public RefundPayoutAccountTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Seeded(int RefundId, int PaymentId, int BuyerId);
+    private sealed record Seeded(Guid RefundId, Guid PaymentId, Guid BuyerId);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    private async Task<int> NewUserAsync(string prefix)
+    private async Task<Guid> NewUserAsync(string prefix)
     {
         using var scope = _factory.Services.CreateScope();
         var db = Db(scope);
@@ -110,12 +110,12 @@ public sealed class RefundPayoutAccountTests
         return new Seeded(refund.Id, payment.Id, buyerId);
     }
 
-    private Task<HttpResponseMessage> ProvideAsync(int userId, int refundId, bool consent = true)
+    private Task<HttpResponseMessage> ProvideAsync(Guid userId, Guid refundId, bool consent = true)
         => _factory.CreateAuthenticatedClient(userId, "Audience").PutAsJsonAsync(
             $"/api/v1/tickets/refund-requests/{refundId}/payout-account",
             new { BankName = "Vietcombank", AccountNumber, AccountHolder = "NGUYEN VAN A", Consent = consent });
 
-    private Task<HttpResponseMessage> ManualTransferAsync(int refundId, string reference)
+    private Task<HttpResponseMessage> ManualTransferAsync(Guid refundId, string reference)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             $"/api/v1/admin/refund-requests/{refundId}/process",
             new { Decision = "Approved", ApprovedAmount = (decimal?)null, ManualTransferReference = reference });
@@ -126,13 +126,13 @@ public sealed class RefundPayoutAccountTests
         await scope.ServiceProvider.GetRequiredService<RefundSlaBreachAlertJob>().ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<RefundRequest> RefundAsync(int refundId)
+    private async Task<RefundRequest> RefundAsync(Guid refundId)
     {
         using var scope = _factory.Services.CreateScope();
         return await Db(scope).RefundRequests.AsNoTracking().SingleAsync(r => r.Id == refundId);
     }
 
-    private async Task<int> NoticesAsync(int userId, string title, int refundId)
+    private async Task<int> NoticesAsync(Guid userId, string title, Guid refundId)
     {
         using var scope = _factory.Services.CreateScope();
         return await Db(scope).Notifications.AsNoTracking()
@@ -319,7 +319,7 @@ public sealed class RefundPayoutAccountTests
             res.StatusCode.Should().Be(HttpStatusCode.OK);
             using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
             return doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-                .Single(e => e.GetProperty("id").GetInt32() == seeded.RefundId).Clone();
+                .Single(e => e.GetProperty("id").GetGuid() == seeded.RefundId).Clone();
         }
 
         (await MineAsync()).GetProperty("payoutAccountRequired").GetBoolean().Should().BeTrue();

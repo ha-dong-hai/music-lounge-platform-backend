@@ -50,7 +50,7 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
 
     public async Task<Unit> Handle(RequestDataErasureCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 
@@ -68,16 +68,16 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         }
 
         var userId = user.Id;
-        await RemoveAllAsync<Follow, int>(f => f.UserId == userId, ct);
-        await RemoveAllAsync<ShowWishlist, int>(w => w.UserId == userId, ct);
-        await RemoveAllAsync<UserFavouriteGenre, int>(x => x.UserId == userId, ct);
-        await RemoveAllAsync<UserFavouriteMood, int>(x => x.UserId == userId, ct);
-        await RemoveAllAsync<UserFavouriteAtmosphere, int>(x => x.UserId == userId, ct);
-        await RemoveAllAsync<UserBehaviourLog, int>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<Follow, Guid>(f => f.UserId == userId, ct);
+        await RemoveAllAsync<ShowWishlist, Guid>(w => w.UserId == userId, ct);
+        await RemoveAllAsync<UserFavouriteGenre, Guid>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<UserFavouriteMood, Guid>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<UserFavouriteAtmosphere, Guid>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<UserBehaviourLog, Guid>(x => x.UserId == userId, ct);
         // MLACP-330: hai tin hieu tieu cuc cung la lua chon nguoi dung tu khai, nen chung di
         // cung nhom voi so thich yeu thich — xoa tai khoan thi xoa het.
-        await RemoveAllAsync<LoungeMute, int>(x => x.UserId == userId, ct);
-        await RemoveAllAsync<UserDislikedGenre, int>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<LoungeMute, Guid>(x => x.UserId == userId, ct);
+        await RemoveAllAsync<UserDislikedGenre, Guid>(x => x.UserId == userId, ct);
 
         // Toan bo ho so he thong da suy ra: diem so hanh vi theo tung buoi dien, goi y da tinh
         // san, trong so tieu chi rieng.
@@ -94,7 +94,7 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
         // xu ly xong (ghi chu xu ly va but toan chi giu ban che so, du lam chung tu). Giu lai voi yeu cau CON CHO: nen tang
         // van dang no nguoi nay khoan tien do, va xoa di nghia la khong con cach nao tra — tai khoan dang nhap bi khoa ngay
         // ben duoi nen ho cung khong khai lai duoc.
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var resolvedWithAccount = await refundRepo.FindAsync(
             r => r.RequestedBy == userId && r.Status != RefundRequestStatus.Pending && r.PayoutAccountNumber != null, ct);
         foreach (var refund in resolvedWithAccount)
@@ -182,7 +182,7 @@ internal sealed class RequestDataErasureCommandHandler : IRequestHandler<Request
     /// tay được. Đây là chỗ duy nhất trong hệ thống biết tệp đó tồn tại — sau dòng này thì cột trong
     /// cơ sở dữ liệu đã bị gán null.</para>
     /// </summary>
-    private async Task XoaTepRiengTuAsync(string? privateRef, int userId, string moTa, CancellationToken ct)
+    private async Task XoaTepRiengTuAsync(string? privateRef, Guid userId, string moTa, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(privateRef))
             return;

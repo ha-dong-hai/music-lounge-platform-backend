@@ -19,7 +19,7 @@ public sealed class StaffOperatedShowsTests
 
     public StaffOperatedShowsTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> BuoiHoaNhacAsync(int loungeId, LoungeShowStatus trangThai)
+    private async Task<Guid> BuoiHoaNhacAsync(Guid loungeId, LoungeShowStatus trangThai)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -34,13 +34,13 @@ public sealed class StaffOperatedShowsTests
         return show.Id;
     }
 
-    private static async Task<IReadOnlyList<int>> DanhSachCuaToiAsync(HttpClient client)
+    private static async Task<IReadOnlyList<Guid>> DanhSachCuaToiAsync(HttpClient client)
     {
         var res = await client.GetAsync("/api/v1/lounge-shows?mine=true&page=1&pageSize=100");
         res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());
         using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         return doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
-            .Select(x => x.GetProperty("id").GetInt32()).ToList();
+            .Select(x => x.GetProperty("id").GetGuid()).ToList();
     }
 
     [Fact]

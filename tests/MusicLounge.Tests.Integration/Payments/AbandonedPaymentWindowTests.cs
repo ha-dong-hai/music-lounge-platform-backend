@@ -42,7 +42,7 @@ public sealed class AbandonedPaymentWindowTests
 
     public AbandonedPaymentWindowTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int PaymentId, Guid TicketId)> PendingPurchaseAsync(int ageMinutes)
+    private async Task<(Guid PaymentId, Guid TicketId)> PendingPurchaseAsync(int ageMinutes)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

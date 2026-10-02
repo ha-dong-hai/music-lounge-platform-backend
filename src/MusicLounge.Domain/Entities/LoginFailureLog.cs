@@ -5,7 +5,7 @@ namespace MusicLounge.Domain.Entities;
 // so it can't detect the credential-stuffing pattern this log is for: the SAME source IP failing
 // across MANY DIFFERENT accounts. Short-lived by design (LoginSpikeDetectionJob prunes rows older
 // than its own detection window) — this is a rolling security signal, not a permanent audit trail.
-public sealed class LoginFailureLog : Common.BaseEntity<int>
+public sealed class LoginFailureLog : Common.BaseEntity<Guid>
 {
     public string Email { get; set; } = string.Empty;
     public string? IpAddress { get; set; }

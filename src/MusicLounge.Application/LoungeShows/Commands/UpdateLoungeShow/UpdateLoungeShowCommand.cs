@@ -3,13 +3,13 @@
 namespace MusicLounge.Application.LoungeShows.Commands.UpdateLoungeShow;
 
 public sealed record UpdateLoungeShowCommand(
-    int ShowId,
+    Guid ShowId,
     string Name,
     string Description,
     DateTimeOffset ScheduledStart,
     DateTimeOffset? ScheduledEnd,
     DateTimeOffset? TicketSaleClosesAt,
-    int? CategoryId,
+    Guid? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota,
     // MLACP-288. The three D13 policy columns, finally settable. All optional: omitting them keeps

@@ -54,7 +54,7 @@ public sealed class RecomputeUserEventScoresJob
     {
         var ct = cancellationToken.ShutdownToken;
 
-        var scores = new Dictionary<(int UserId, int ShowId), ScoreAccumulator>();
+        var scores = new Dictionary<(Guid UserId, Guid ShowId), ScoreAccumulator>();
 
         await AccumulateViewsAsync(scores, ct);
         await AccumulateIntentAsync(scores, ct);
@@ -142,7 +142,7 @@ public sealed class RecomputeUserEventScoresJob
     }
 
     private async Task AccumulateViewsAsync(
-        Dictionary<(int, int), ScoreAccumulator> scores, CancellationToken ct)
+        Dictionary<(Guid, Guid), ScoreAccumulator> scores, CancellationToken ct)
     {
         var rows = await _ctx.BehaviourLogs
             .Where(l => ViewFamily.Contains(l.Action))
@@ -155,7 +155,7 @@ public sealed class RecomputeUserEventScoresJob
     }
 
     private async Task AccumulateIntentAsync(
-        Dictionary<(int, int), ScoreAccumulator> scores, CancellationToken ct)
+        Dictionary<(Guid, Guid), ScoreAccumulator> scores, CancellationToken ct)
     {
         var rows = await _ctx.BehaviourLogs
             .Where(l => IntentFamily.Contains(l.Action))
@@ -168,7 +168,7 @@ public sealed class RecomputeUserEventScoresJob
     }
 
     private async Task AccumulateWishlistAsync(
-        Dictionary<(int, int), ScoreAccumulator> scores, CancellationToken ct)
+        Dictionary<(Guid, Guid), ScoreAccumulator> scores, CancellationToken ct)
     {
         var rows = await _ctx.Wishlists
             .Select(w => new { w.UserId, w.LoungeShowId })
@@ -179,7 +179,7 @@ public sealed class RecomputeUserEventScoresJob
     }
 
     private async Task AccumulateAttendanceAsync(
-        Dictionary<(int, int), ScoreAccumulator> scores, CancellationToken ct)
+        Dictionary<(Guid, Guid), ScoreAccumulator> scores, CancellationToken ct)
     {
         var rows = await _ctx.Tickets
             .Where(t => t.BuyerId != null
@@ -193,7 +193,7 @@ public sealed class RecomputeUserEventScoresJob
     }
 
     private async Task AccumulateDonationsAsync(
-        Dictionary<(int, int), ScoreAccumulator> scores, CancellationToken ct)
+        Dictionary<(Guid, Guid), ScoreAccumulator> scores, CancellationToken ct)
     {
         var rows = await (
             from d in _ctx.Donations
@@ -207,7 +207,7 @@ public sealed class RecomputeUserEventScoresJob
     }
 
     private async Task AccumulateRatingsAsync(
-        Dictionary<(int, int), ScoreAccumulator> scores, CancellationToken ct)
+        Dictionary<(Guid, Guid), ScoreAccumulator> scores, CancellationToken ct)
     {
         var rows = await _ctx.Ratings
             .Where(r => r.UserId != null && !r.IsRemoved)
@@ -218,7 +218,7 @@ public sealed class RecomputeUserEventScoresJob
             Get(scores, r.UserId, r.LoungeShowId).RatingStars = r.Score;
     }
 
-    private static ScoreAccumulator Get(Dictionary<(int, int), ScoreAccumulator> scores, int userId, int showId)
+    private static ScoreAccumulator Get(Dictionary<(Guid, Guid), ScoreAccumulator> scores, Guid userId, Guid showId)
     {
         var key = (userId, showId);
         if (!scores.TryGetValue(key, out var acc))

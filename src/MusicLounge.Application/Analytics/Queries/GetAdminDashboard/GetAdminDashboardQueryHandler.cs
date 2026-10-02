@@ -67,7 +67,7 @@ internal sealed class GetAdminDashboardQueryHandler
         var thangDau = new DateTimeOffset(nowVn.Year, nowVn.Month, 1, 0, 0, 0, VnOffset)
             .AddMonths(-(SoThangHienThi - 1));
 
-        var thanhToan = (await _uow.Repository<Payment, int>()
+        var thanhToan = (await _uow.Repository<Payment, Guid>()
                 .FindAsync(p => p.Status == PaymentStatus.Confirmed, ct))
             .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= thangDau)
             .ToList();
@@ -132,16 +132,16 @@ internal sealed class GetAdminDashboardQueryHandler
         if (ve.Count == 0) return ([], []);
 
         var maGia = ve.Select(t => t.PriceId).Distinct().ToList();
-        var giaTheoMa = (await _uow.Repository<TicketPrice, int>().FindAsync(p => maGia.Contains(p.Id), ct))
+        var giaTheoMa = (await _uow.Repository<TicketPrice, Guid>().FindAsync(p => maGia.Contains(p.Id), ct))
             .ToDictionary(p => p.Id, p => p.Price);
         decimal TienVe(Ticket t) => giaTheoMa.GetValueOrDefault(t.PriceId);
 
         var maShow = ve.Select(t => t.ShowId).Distinct().ToList();
-        var shows = (await _uow.Repository<LoungeShow, int>().FindAsync(s => maShow.Contains(s.Id), ct))
+        var shows = (await _uow.Repository<LoungeShow, Guid>().FindAsync(s => maShow.Contains(s.Id), ct))
             .ToDictionary(s => s.Id);
 
         var maPhongTra = shows.Values.Select(s => s.LoungeId).Distinct().ToList();
-        var tenPhongTra = (await _uow.Repository<Domain.Entities.MusicLounge, int>()
+        var tenPhongTra = (await _uow.Repository<Domain.Entities.MusicLounge, Guid>()
                 .FindAsync(l => maPhongTra.Contains(l.Id), ct))
             .ToDictionary(l => l.Id, l => l.Name);
 
@@ -162,12 +162,12 @@ internal sealed class GetAdminDashboardQueryHandler
 
         // Một buổi hòa nhạc có thể mang nhiều thể loại: vé của nó được tính cho TỪNG thể loại. Cộng các cột lại sẽ lớn
         // hơn tổng số vé bán ra — đó là bản chất của biểu đồ này, không phải lỗi.
-        var lienKetTheLoai = await _uow.Repository<LoungeShowGenre, int>()
+        var lienKetTheLoai = await _uow.Repository<LoungeShowGenre, Guid>()
             .FindAsync(g => maShow.Contains(g.LoungeShowId), ct);
 
         var veTheoShow = ve.GroupBy(t => t.ShowId).ToDictionary(g => g.Key, g => g.Count());
         var maTheLoai = lienKetTheLoai.Select(l => l.GenreId).Distinct().ToList();
-        var tenTheLoai = (await _uow.Repository<MusicGenre, int>().FindAsync(g => maTheLoai.Contains(g.Id), ct))
+        var tenTheLoai = (await _uow.Repository<MusicGenre, Guid>().FindAsync(g => maTheLoai.Contains(g.Id), ct))
             .ToDictionary(g => g.Id, g => g.Name);
 
         var genres = lienKetTheLoai

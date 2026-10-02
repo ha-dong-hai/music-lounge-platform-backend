@@ -77,7 +77,7 @@ public sealed class RealRecommendationPipelineTests
     /// Một khán giả đã đồng ý cho dùng dữ liệu, có gu nhạc rõ ràng, và một loạt buổi diễn trong đó
     /// có buổi khớp gu và buổi không khớp.
     /// </summary>
-    private async Task<(int UserId, int MatchingShowId, int UnrelatedShowId)> SeedTasteAsync()
+    private async Task<(Guid UserId, Guid MatchingShowId, Guid UnrelatedShowId)> SeedTasteAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -113,7 +113,7 @@ public sealed class RealRecommendationPipelineTests
         db.Add(lounge);
         await db.SaveChangesAsync();
 
-        async Task<int> MakeShow(string name, int? genreId)
+        async Task<Guid> MakeShow(string name, Guid? genreId)
         {
             var start = DateTimeOffset.UtcNow.AddDays(12);
             var show = new LoungeShow
@@ -129,7 +129,7 @@ public sealed class RealRecommendationPipelineTests
             db.LoungeShows.Add(show);
             await db.SaveChangesAsync();
 
-            if (genreId is int g)
+            if (genreId is Guid g)
             {
                 db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = g });
                 await db.SaveChangesAsync();

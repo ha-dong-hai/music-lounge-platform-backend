@@ -38,12 +38,12 @@ public sealed class CompensationAwareCreditTests
     private sealed record Wrapped<T>(T Data);
 
     private sealed record ChangeInitiation(
-        int PaymentId, string OrderId, decimal Amount, string PaymentUrl,
+        Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl,
         decimal CreditValue, decimal CreditDays, DateTimeOffset EstimatedExpiresAt);
 
-    private HttpClient Owner(int ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
+    private HttpClient Owner(Guid ownerId) => _factory.CreateAuthenticatedClient(ownerId, "Owner");
 
-    private async Task<(int OwnerId, int LoungeId)> FreshOwnerWithLoungeAsync()
+    private async Task<(Guid OwnerId, Guid LoungeId)> FreshOwnerWithLoungeAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -60,7 +60,7 @@ public sealed class CompensationAwareCreditTests
         return (owner.Id, lounge.Id);
     }
 
-    private async Task<int> PackageAsync(decimal price)
+    private async Task<Guid> PackageAsync(decimal price)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             "/api/v1/subscriptions/packages", new
@@ -69,11 +69,11 @@ public sealed class CompensationAwareCreditTests
                 BillingCycle = "Monthly", MaxTicketsPerEvent = 100, HasAiPoster = false, MaxAiPostersPerMonth = 0
             });
         res.EnsureSuccessStatusCode();
-        return (await res.Content.ReadFromJsonAsync<Wrapped<int>>())!.Data;
+        return (await res.Content.ReadFromJsonAsync<Wrapped<Guid>>())!.Data;
     }
 
     /// <summary>Seed thẳng một gói Active — kiểm soát chính xác StartedAt/ExpiresAt/AmountPaid cho phép tính.</summary>
-    private async Task<int> SeedActivePlanAsync(int ownerId, int packageId, DateTimeOffset startedAt, DateTimeOffset expiresAt, decimal amountPaid)
+    private async Task<Guid> SeedActivePlanAsync(Guid ownerId, Guid packageId, DateTimeOffset startedAt, DateTimeOffset expiresAt, decimal amountPaid)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -87,7 +87,7 @@ public sealed class CompensationAwareCreditTests
         return plan.Id;
     }
 
-    private async Task ApplySuspensionAsync(int loungeId, int suspensionDays)
+    private async Task ApplySuspensionAsync(Guid loungeId, int suspensionDays)
     {
         using (var scope = _factory.Services.CreateScope())
         {
@@ -121,7 +121,7 @@ public sealed class CompensationAwareCreditTests
     // Bai nay chi so sanh SO TIEN QUY DOI truoc/sau — khong tra tien lan nao, nen lenh doi goi truoc do (neu
     // co) van con Pending mai. Don no truoc, giong het CancelAbandonedPaymentsJob (Failed), de moi lan goi
     // deu doc lap voi lich su goi truoc.
-    private async Task<ChangeInitiation> ChangePackageAsync(int ownerId, int newPackageId)
+    private async Task<ChangeInitiation> ChangePackageAsync(Guid ownerId, Guid newPackageId)
     {
         using (var scope = _factory.Services.CreateScope())
         {
@@ -210,7 +210,7 @@ public sealed class CompensationAwareCreditTests
         // Goi bi khoa: con 12 ngay luc bi khoa (se duoc tra lai nguyen 12 ngay nay).
         var appliedAt = now.AddDays(-3);
         var bannedPlanId = await SeedActivePlanAsync(ownerId, bannedPackage, now.AddDays(-18), appliedAt.AddDays(12), 300_000m);
-        int banPenaltyId;
+        Guid banPenaltyId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

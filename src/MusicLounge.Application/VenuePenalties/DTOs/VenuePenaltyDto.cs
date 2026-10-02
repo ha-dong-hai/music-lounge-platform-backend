@@ -3,8 +3,8 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Application.VenuePenalties.DTOs;
 
 public sealed record VenuePenaltyDto(
-    int Id,
-    int LoungeId,
+    Guid Id,
+    Guid LoungeId,
     string LoungeName,
     PenaltyType PenaltyType,
     string Reason,

@@ -6,6 +6,6 @@ public sealed class StartLoungeShowCommandValidator : AbstractValidator<StartLou
 {
     public StartLoungeShowCommandValidator()
     {
-        RuleFor(x => x.ShowId).GreaterThan(0);
+        RuleFor(x => x.ShowId).NotEmpty();
     }
 }

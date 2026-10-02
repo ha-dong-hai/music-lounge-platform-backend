@@ -13,7 +13,7 @@ internal sealed class UpdateVenueAtmosphereCommandHandler : IRequestHandler<Upda
 
     public async Task<Unit> Handle(UpdateVenueAtmosphereCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<VenueAtmosphere, int>();
+        var repo = _uow.Repository<VenueAtmosphere, Guid>();
         var atmosphere = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(VenueAtmosphere), request.Id);
 

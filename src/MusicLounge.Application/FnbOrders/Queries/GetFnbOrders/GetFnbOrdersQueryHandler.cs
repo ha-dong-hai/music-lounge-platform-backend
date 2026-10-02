@@ -25,7 +25,7 @@ internal sealed class GetFnbOrdersQueryHandler
     public async Task<PaginatedResult<FnbOrderDto>> Handle(
         GetFnbOrdersQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         var isOwner = lounge.OwnerId == _currentUser.UserId;
@@ -48,7 +48,7 @@ internal sealed class GetFnbOrdersQueryHandler
         // must be recent orders; a bar board filters by status and sorts oldest-first on its side.
         // Keyed on Id (auto-increment, same sequence as CreatedAt) rather than CreatedAt itself — SQLite's EF Core
         // provider refuses ORDER BY on a DateTimeOffset column, a hard limitation independent of the query shape.
-        var (pageItems, total) = await _uow.Repository<FnbOrder, int>().GetPagedAsync(
+        var (pageItems, total) = await _uow.Repository<FnbOrder, Guid>().GetPagedAsync(
             o => o.LoungeId == request.LoungeId && (!statusFilter.HasValue || o.Status == statusFilter.Value),
             o => o.Id, page, pageSize, ct);
 

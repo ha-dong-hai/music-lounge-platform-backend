@@ -1,9 +1,9 @@
 namespace MusicLounge.Application.Tickets.DTOs;
 
 public sealed record TicketPriceStatDto(
-    int TierId,
+    Guid TierId,
     string TierName,
-    int PriceId,
+    Guid PriceId,
     string PriceName,
     decimal UnitPrice,
     int QuantitySold,
@@ -11,7 +11,7 @@ public sealed record TicketPriceStatDto(
     int CheckedInCount);
 
 public sealed record ShowTicketStatsDto(
-    int ShowId,
+    Guid ShowId,
     string ShowName,
     int TotalTicketsSold,
     decimal TotalRevenue,

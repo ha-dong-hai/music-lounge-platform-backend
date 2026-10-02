@@ -38,7 +38,7 @@ internal sealed class PurchaseTicketCommandHandler
         // commits, and both create a Payment + a batch of Pending tickets from the SAME hold.
         await using var _ = await _lock.AcquireAsync($"purchase-hold:{request.HoldId}", ct);
 
-        var holdRepo = _uow.Repository<TicketHold, int>();
+        var holdRepo = _uow.Repository<TicketHold, Guid>();
         var hold = await holdRepo.GetByIdAsync(request.HoldId, ct)
             ?? throw new NotFoundException(nameof(TicketHold), request.HoldId);
 
@@ -53,15 +53,15 @@ internal sealed class PurchaseTicketCommandHandler
         if (hold.IsReleased)
             throw new ConflictException("Vé giữ chỗ này đã được dùng để mua vé rồi.");
 
-        var priceRepo = _uow.Repository<TicketPrice, int>();
+        var priceRepo = _uow.Repository<TicketPrice, Guid>();
         var price = await priceRepo.GetByIdAsync(hold.PriceId, ct)
             ?? throw new NotFoundException(nameof(TicketPrice), hold.PriceId);
 
-        var tierRepo = _uow.Repository<TicketTier, int>();
+        var tierRepo = _uow.Repository<TicketTier, Guid>();
         var tier = await tierRepo.GetByIdAsync(price.TierId, ct)
             ?? throw new NotFoundException(nameof(TicketTier), price.TierId);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(tier.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(tier.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), tier.LoungeShowId);
 
         if (show.Status is not LoungeShowStatus.Published and not LoungeShowStatus.Ongoing)
@@ -97,7 +97,7 @@ internal sealed class PurchaseTicketCommandHandler
             IdempotencyKey = $"hold:{hold.Id}",
             CreatedAt = DateTimeOffset.UtcNow
         };
-        _uow.Repository<Payment, int>().Add(payment);
+        _uow.Repository<Payment, Guid>().Add(payment);
         await _uow.SaveChangesAsync(ct);   // get payment.Id
 
         var tickets = Enumerable.Range(0, hold.Quantity).Select(_ => new Ticket
@@ -119,7 +119,7 @@ internal sealed class PurchaseTicketCommandHandler
         // in quota checks (confirmed/pending tickets + active holds both count against quota).
         hold.IsReleased = true;
         hold.ReleasedAt = DateTimeOffset.UtcNow;
-        _uow.Repository<TicketHold, int>().Update(hold);
+        _uow.Repository<TicketHold, Guid>().Update(hold);
 
         await _uow.SaveChangesAsync(ct);
 

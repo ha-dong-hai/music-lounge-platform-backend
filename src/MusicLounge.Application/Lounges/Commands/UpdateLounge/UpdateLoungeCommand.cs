@@ -3,10 +3,10 @@ using MusicLounge.Application.Common.Abstractions;
 namespace MusicLounge.Application.Lounges.Commands.UpdateLounge;
 
 public sealed record UpdateLoungeCommand(
-    int LoungeId,
+    Guid LoungeId,
     string Name,
     string? Description,
-    int? AtmosphereId,
+    Guid? AtmosphereId,
     string Street,
     string? Ward,
     string? District,

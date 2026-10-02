@@ -6,7 +6,7 @@ public sealed class SubmitAppealCommandValidator : AbstractValidator<SubmitAppea
 {
     public SubmitAppealCommandValidator()
     {
-        RuleFor(x => x.PenaltyId).GreaterThan(0).WithMessage("PenaltyId không hợp lệ.");
+        RuleFor(x => x.PenaltyId).NotEmpty().WithMessage("PenaltyId không hợp lệ.");
 
         RuleFor(x => x.AppealReason)
             .NotEmpty().WithMessage("Phải ghi lý do kháng cáo.")

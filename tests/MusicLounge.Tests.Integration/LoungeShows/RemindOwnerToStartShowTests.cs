@@ -30,7 +30,7 @@ public sealed class RemindOwnerToStartShowTests
 
     public RemindOwnerToStartShowTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<int> SeedShowAsync(
+    private async Task<Guid> SeedShowAsync(
         LoungeShowStatus status, DateTimeOffset scheduledStart, DateTimeOffset scheduledEnd)
     {
         using var scope = _factory.Services.CreateScope();
@@ -57,7 +57,7 @@ public sealed class RemindOwnerToStartShowTests
         await job.ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<int> ReminderCountAsync(int showId)
+    private async Task<int> ReminderCountAsync(Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

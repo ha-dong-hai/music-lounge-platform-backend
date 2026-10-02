@@ -20,7 +20,7 @@ public sealed class TierFitsShowFormatTests
 
     public TierFitsShowFormatTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int OwnerId, int ShowId)> BanNhapAsync(LoungeShowFormat hinhThuc)
+    private async Task<(Guid OwnerId, Guid ShowId)> BanNhapAsync(LoungeShowFormat hinhThuc)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -43,11 +43,11 @@ public sealed class TierFitsShowFormatTests
         return (lounge.OwnerId, show.Id);
     }
 
-    private Task<HttpResponseMessage> TaoHangVeAsync(int ownerId, int showId, string accessType)
+    private Task<HttpResponseMessage> TaoHangVeAsync(Guid ownerId, Guid showId, string accessType)
         => _factory.CreateAuthenticatedClient(ownerId, "Owner").PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId, Name = $"Hang {accessType}", Description = (string?)null, AccessType = accessType,
-            ZoneId = (int?)null, TotalCapacity = (int?)null,
+            ZoneId = (Guid?)null, TotalCapacity = (int?)null,
             Prices = new[]
             {
                 new

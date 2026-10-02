@@ -14,7 +14,7 @@ namespace MusicLounge.Application.Common;
 // (and forgetting) it.
 public static class VenueOperatorAccess
 {
-    public static bool CanOperate(ICurrentUserService currentUser, int loungeId, int loungeOwnerId) =>
+    public static bool CanOperate(ICurrentUserService currentUser, Guid loungeId, Guid loungeOwnerId) =>
         currentUser.Role == Roles.Admin
         || (currentUser.Role == Roles.Staff && currentUser.LoungeId == loungeId)
         || (currentUser.Role == Roles.Owner && currentUser.UserId == loungeOwnerId);

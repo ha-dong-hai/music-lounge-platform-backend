@@ -1,9 +1,9 @@
 namespace MusicLounge.Domain.Entities;
 
-public sealed class UserFavouriteGenre : Common.BaseEntity<int>
+public sealed class UserFavouriteGenre : Common.BaseEntity<Guid>
 {
-    public int UserId { get; set; }
-    public int GenreId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid GenreId { get; set; }
 
     public User User { get; set; } = null!;
     public MusicGenre Genre { get; set; } = null!;

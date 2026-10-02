@@ -14,7 +14,7 @@ internal sealed class GetFnbMenusQueryHandler
 
     public async Task<IReadOnlyList<FnbMenuDto>> Handle(GetFnbMenusQuery request, CancellationToken ct)
     {
-        var menus = await _uow.Repository<FnbMenu, int>().FindAsync(
+        var menus = await _uow.Repository<FnbMenu, Guid>().FindAsync(
             m => m.LoungeId == request.LoungeId && (!request.ActiveOnly || m.IsActive), ct);
 
         return menus

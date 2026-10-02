@@ -4,8 +4,8 @@ namespace MusicLounge.Application.Common.Interfaces;
 
 public interface IBackgroundJobService
 {
-    void EnqueueLogUserBehaviour(int userId, int showId, BehaviourAction action);
-    void EnqueueRecommendationRefresh(int userId);
+    void EnqueueLogUserBehaviour(Guid userId, Guid showId, BehaviourAction action);
+    void EnqueueRecommendationRefresh(Guid userId);
 
     // MLACP-140: "check-in" cho ve Livestream — khong co quay/nhan vien quet QR nhu ve vat ly
     // (CheckInTicketCommandHandler chi ap dung AccessType.Physical), nen viec thuc su nhan duoc
@@ -13,15 +13,15 @@ public interface IBackgroundJobService
     // GetLivestreamDetailQueryHandler) la bang chung "da tham du" tuong duong. Job chuyen cac ve
     // Livestream Confirmed cua user+show nay sang Used, de RateShowCommandHandler dung chung 1
     // dieu kien Status=Used cho ca 2 loai ve thay vi phai mien check-in rieng cho ve online.
-    void EnqueueLivestreamCheckIn(int userId, int showId);
+    void EnqueueLivestreamCheckIn(Guid userId, Guid showId);
 
     // MLACP-191: len lich kiem tra sau `delay` (system_config: livestream_reconnect_timeout_minutes)
     // xem livestream con dang Reconnecting voi dung DisconnectedAt da ghi nhan luc enqueue khong —
     // neu con thi danh dau Failed. disconnectedAt lam guard chong job cu bi tre sau 1 chu ky ngat/
     // ket noi lai khac da xay ra.
-    void EnqueueLivestreamReconnectTimeout(int livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay);
+    void EnqueueLivestreamReconnectTimeout(Guid livestreamId, DateTimeOffset disconnectedAt, TimeSpan delay);
     void EnqueueFcmNotification(
-        int userId, string title, string body, string? referenceType = null, string? referenceId = null);
+        Guid userId, string title, string body, string? referenceType = null, string? referenceId = null);
     // MLACP-489: language = User.PreferredLanguage của người nhận — ba thứ này gửi bất đồng bộ, lúc gửi không có
     // request nào để đọc Accept-Language.
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language);
@@ -30,13 +30,13 @@ public interface IBackgroundJobService
 
     // Runs AI moderation scoring for a freshly-created EventModeration row in the background, so a
     // slow/unavailable AI vendor never delays the Publish/CreateLivestream response it's called from.
-    void EnqueueModerationAiScoring(int moderationId);
+    void EnqueueModerationAiScoring(Guid moderationId);
 
     // Panorama stitching can take 15-30+ seconds (sometimes brushing the panorama-stitcher
     // HttpClient's 120s timeout on harder photo sets) - running it inline would block the Owner's
     // HTTP request for that whole window. The attempt row (already Pending when this is called)
     // is updated to Succeeded/Failed by the job itself; the Owner polls for the result instead.
-    void EnqueueStitchVenueTourScene(int attemptId, int loungeId, IReadOnlyList<string> sourceImageUrls, string? name);
+    void EnqueueStitchVenueTourScene(Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name);
 
     // Cho Admin ep chay ngay 1 recurring job da dang ky (vd de kiem tra/van hanh), khong doi lich Cron.
     void TriggerRecurringJobNow(string recurringJobId);

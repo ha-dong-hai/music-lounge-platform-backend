@@ -20,7 +20,7 @@ internal sealed class GetPlatformAnalyticsQueryHandler
         // MLACP-452: dem theo tung trang thai roi SUY RA tong va so dang hoat dong tu cung bang dem — ba con so khong the
         // lech nhau. "Dang hoat dong" lay dung VenueLifecycle.Operating, dinh nghia chung ma danh sach cong khai va
         // /analytics/admin-overview cung dung; truoc day endpoint nay dem moi trang thai ma khong noi ro.
-        var loungeRepo = _uow.Repository<MusicLoungeEntity, int>();
+        var loungeRepo = _uow.Repository<MusicLoungeEntity, Guid>();
         var venuesByStatus = new Dictionary<string, int>();
         foreach (var status in Enum.GetValues<LoungeStatus>())
             venuesByStatus[status.ToString()] = await loungeRepo.CountAsync(l => l.Status == status, ct);
@@ -28,12 +28,12 @@ internal sealed class GetPlatformAnalyticsQueryHandler
         var totalVenues = venuesByStatus.Values.Sum();
         var operatingVenues = VenueLifecycle.Operating.Sum(s => venuesByStatus[s.ToString()]);
 
-        var totalPublishedShows = await _uow.Repository<LoungeShow, int>().CountAsync(
+        var totalPublishedShows = await _uow.Repository<LoungeShow, Guid>().CountAsync(
             s => s.Status == LoungeShowStatus.Published
                 || s.Status == LoungeShowStatus.Ongoing
                 || s.Status == LoungeShowStatus.Ended, ct);
 
-        var totalUsers = await _uow.Repository<User, int>().CountAsync(_ => true, ct);
+        var totalUsers = await _uow.Repository<User, Guid>().CountAsync(_ => true, ct);
 
         var totalTicketsSold = await _uow.Repository<Ticket, Guid>()
             .CountAsync(t => t.Status == TicketStatus.Confirmed, ct);
@@ -41,16 +41,16 @@ internal sealed class GetPlatformAnalyticsQueryHandler
         // totalTicketsSold above counts both online (TicketHold) and walk-in/box-office (WalkIn)
         // sales — GMV must count the same two channels or the dashboard shows two numbers that
         // contradict each other for any venue selling mostly at the door.
-        var totalGmv = await _uow.Repository<Payment, int>().SumAsync(
+        var totalGmv = await _uow.Repository<Payment, Guid>().SumAsync(
             p => p.Status == PaymentStatus.Confirmed
                 && (p.ReferenceType == "TicketHold" || p.ReferenceType == "WalkIn"),
             p => p.GrossAmount, ct);
 
-        var totalDonationVolume = await _uow.Repository<Donation, int>().SumAsync(
+        var totalDonationVolume = await _uow.Repository<Donation, Guid>().SumAsync(
             d => d.Status != DonationStatus.PendingPayment && d.Status != DonationStatus.Cancelled,
             d => d.Gross, ct);
 
-        var pendingModerations = await _uow.Repository<EventModeration, int>()
+        var pendingModerations = await _uow.Repository<EventModeration, Guid>()
             .CountAsync(m => m.AdminDecision == null, ct);
 
         return new PlatformAnalyticsDto(

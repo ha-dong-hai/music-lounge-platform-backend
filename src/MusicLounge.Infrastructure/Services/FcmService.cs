@@ -32,11 +32,11 @@ internal sealed class FcmService : IFcmService
         _logger = logger;
     }
 
-    public Task SendAsync(int userId, string title, string body, CancellationToken ct = default)
+    public Task SendAsync(Guid userId, string title, string body, CancellationToken ct = default)
         => SendAsync(userId, title, body, new Dictionary<string, string>(), ct);
 
     public async Task SendAsync(
-        int userId, string title, string body, Dictionary<string, string> data, CancellationToken ct = default)
+        Guid userId, string title, string body, Dictionary<string, string> data, CancellationToken ct = default)
     {
         if (!TryEnsureInitialized())
         {
@@ -46,7 +46,7 @@ internal sealed class FcmService : IFcmService
             return;
         }
 
-        var tokenRepo = _uow.Repository<DeviceToken, int>();
+        var tokenRepo = _uow.Repository<DeviceToken, Guid>();
         var devices = await tokenRepo.FindAsync(d => d.UserId == userId, ct);
         if (devices.Count == 0)
         {

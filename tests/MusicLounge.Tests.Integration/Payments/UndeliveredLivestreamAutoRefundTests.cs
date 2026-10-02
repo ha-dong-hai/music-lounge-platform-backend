@@ -31,7 +31,7 @@ public sealed class UndeliveredLivestreamAutoRefundTests
 
     public UndeliveredLivestreamAutoRefundTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Seeded(int ShowId, Guid LivestreamTicketId, Guid? PhysicalTicketId);
+    private sealed record Seeded(Guid ShowId, Guid LivestreamTicketId, Guid? PhysicalTicketId);
 
     private async Task<Seeded> SeedAsync(
         LoungeShowFormat format,
@@ -80,7 +80,7 @@ public sealed class UndeliveredLivestreamAutoRefundTests
     }
 
     private static async Task<Guid> AddTicketAsync(
-        ApplicationDbContext db, int showId, AccessType accessType)
+        ApplicationDbContext db, Guid showId, AccessType accessType)
     {
         var tier = new TicketTier
         {

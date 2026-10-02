@@ -3,7 +3,7 @@ using MusicLounge.Application.Lounges.DTOs;
 namespace MusicLounge.Application.LoungeShows.DTOs;
 
 public sealed record LoungeSummaryDto(
-    int Id,
+    Guid Id,
     string Name,
     string Street,
     string Ward,

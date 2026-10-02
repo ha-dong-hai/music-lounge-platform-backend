@@ -1,8 +1,8 @@
 namespace MusicLounge.Application.Donations.DTOs;
 
 public sealed record DonationDto(
-    int Id,
-    int PerformanceId,
+    Guid Id,
+    Guid PerformanceId,
     string PerformerName,
     string ShowName,
     decimal Gross,

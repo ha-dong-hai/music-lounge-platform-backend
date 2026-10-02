@@ -12,11 +12,11 @@ public sealed record TicketPriceInput(
     DateTimeOffset? SaleEnd);
 
 public sealed record CreateTicketTierCommand(
-    int ShowId,
+    Guid ShowId,
     string Name,
     string? Description,
     string AccessType,
-    int? ZoneId,
+    Guid? ZoneId,
     int? TotalCapacity,
     IReadOnlyList<TicketPriceInput> Prices
-) : ICommand<int>;
+) : ICommand<Guid>;

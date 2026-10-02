@@ -36,7 +36,7 @@ public sealed class VenueStatusFromPenaltiesTests
 
     private HttpClient Admin => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
 
-    private async Task<(int OwnerId, int LoungeId)> SeedVenueAsync(LoungeStatus status)
+    private async Task<(Guid OwnerId, Guid LoungeId)> SeedVenueAsync(LoungeStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -60,8 +60,8 @@ public sealed class VenueStatusFromPenaltiesTests
     }
 
     /// <param name="applied">Tạm khoá/khoá vĩnh viễn đã qua thời gian báo trước và đã được áp.</param>
-    private async Task<int> SeedPenaltyAsync(
-        int loungeId, PenaltyType type, PenaltyStatus status = PenaltyStatus.Active, bool applied = true,
+    private async Task<Guid> SeedPenaltyAsync(
+        Guid loungeId, PenaltyType type, PenaltyStatus status = PenaltyStatus.Active, bool applied = true,
         DateTimeOffset? appealDeadline = null)
     {
         using var scope = _factory.Services.CreateScope();
@@ -83,14 +83,14 @@ public sealed class VenueStatusFromPenaltiesTests
         return penalty.Id;
     }
 
-    private async Task<LoungeStatus> StatusOfAsync(int loungeId)
+    private async Task<LoungeStatus> StatusOfAsync(Guid loungeId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return (await db.Lounges.SingleAsync(l => l.Id == loungeId)).Status;
     }
 
-    private async Task<string> LatestAppealNoticeToAsync(int ownerId)
+    private async Task<string> LatestAppealNoticeToAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -101,14 +101,14 @@ public sealed class VenueStatusFromPenaltiesTests
             .Body;
     }
 
-    private Task<HttpResponseMessage> IssueWarningAsync(int loungeId)
+    private Task<HttpResponseMessage> IssueWarningAsync(Guid loungeId)
         => Admin.PostAsJsonAsync("/api/v1/venue-penalties", new
         {
             LoungeId = loungeId, PenaltyType = "Warning", Reason = "Cảnh cáo thử nghiệm",
             EvidenceRef = (string?)null, SuspensionDays = (int?)null
         });
 
-    private Task<HttpResponseMessage> OverturnAsync(int penaltyId)
+    private Task<HttpResponseMessage> OverturnAsync(Guid penaltyId)
         => Admin.PostAsJsonAsync($"/api/v1/venue-penalties/{penaltyId}/appeal/review",
             new { Decision = "Overturned", ReviewNote = "Xác minh lại" });
 
@@ -142,7 +142,7 @@ public sealed class VenueStatusFromPenaltiesTests
     {
         var (_, loungeId) = await SeedVenueAsync(LoungeStatus.Locked);
         await SeedPenaltyAsync(loungeId, PenaltyType.Ban);
-        int complaintId;
+        Guid complaintId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -17,20 +17,20 @@ internal static class BankAccountAccess
 {
     public static async Task EnsureCanManageAsync(
         IUnitOfWork uow, ICurrentUserService currentUser,
-        BankAccountOwnerType ownerType, int ownerId, CancellationToken ct)
+        BankAccountOwnerType ownerType, Guid ownerId, CancellationToken ct)
     {
         if (currentUser.Role == Roles.Admin) return;
 
         if (ownerType == BankAccountOwnerType.Lounge)
         {
-            var lounge = await uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(ownerId, ct)
+            var lounge = await uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(ownerId, ct)
                 ?? throw new NotFoundException(nameof(MusicLoungeEntity), ownerId);
             if (lounge.OwnerId != currentUser.UserId)
                 throw new ForbiddenException("Bạn không có quyền quản lý tài khoản ngân hàng của venue này.");
         }
         else
         {
-            var performer = await uow.Repository<Performer, int>().GetByIdAsync(ownerId, ct)
+            var performer = await uow.Repository<Performer, Guid>().GetByIdAsync(ownerId, ct)
                 ?? throw new NotFoundException(nameof(Performer), ownerId);
             if (performer.CreatedByUserId != currentUser.UserId)
                 throw new ForbiddenException(

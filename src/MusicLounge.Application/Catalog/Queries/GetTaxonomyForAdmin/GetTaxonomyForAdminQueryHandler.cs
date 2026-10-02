@@ -7,9 +7,9 @@ namespace MusicLounge.Application.Catalog.Queries.GetTaxonomyForAdmin;
 internal sealed class GetEventCategoriesForAdminQueryHandler
     : IRequestHandler<GetEventCategoriesForAdminQuery, List<AdminEventCategoryDto>>
 {
-    private readonly IRepository<EventCategory, int> _repo;
+    private readonly IRepository<EventCategory, Guid> _repo;
 
-    public GetEventCategoriesForAdminQueryHandler(IRepository<EventCategory, int> repo) => _repo = repo;
+    public GetEventCategoriesForAdminQueryHandler(IRepository<EventCategory, Guid> repo) => _repo = repo;
 
     public async Task<List<AdminEventCategoryDto>> Handle(
         GetEventCategoriesForAdminQuery request, CancellationToken ct)
@@ -27,9 +27,9 @@ internal sealed class GetEventCategoriesForAdminQueryHandler
 internal sealed class GetMusicGenresForAdminQueryHandler
     : IRequestHandler<GetMusicGenresForAdminQuery, List<AdminMusicGenreDto>>
 {
-    private readonly IRepository<MusicGenre, int> _repo;
+    private readonly IRepository<MusicGenre, Guid> _repo;
 
-    public GetMusicGenresForAdminQueryHandler(IRepository<MusicGenre, int> repo) => _repo = repo;
+    public GetMusicGenresForAdminQueryHandler(IRepository<MusicGenre, Guid> repo) => _repo = repo;
 
     public async Task<List<AdminMusicGenreDto>> Handle(
         GetMusicGenresForAdminQuery request, CancellationToken ct)

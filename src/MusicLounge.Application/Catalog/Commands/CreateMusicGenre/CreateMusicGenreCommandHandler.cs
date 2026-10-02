@@ -5,21 +5,21 @@ using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.Catalog.Commands.CreateMusicGenre;
 
-internal sealed class CreateMusicGenreCommandHandler : IRequestHandler<CreateMusicGenreCommand, int>
+internal sealed class CreateMusicGenreCommandHandler : IRequestHandler<CreateMusicGenreCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
 
     public CreateMusicGenreCommandHandler(IUnitOfWork uow) => _uow = uow;
 
-    public async Task<int> Handle(CreateMusicGenreCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(CreateMusicGenreCommand request, CancellationToken ct)
     {
-        var nameExists = await _uow.Repository<MusicGenre, int>()
+        var nameExists = await _uow.Repository<MusicGenre, Guid>()
             .AnyAsync(g => g.Name == request.Name, ct);
         if (nameExists)
             throw new ConflictException($"Thể loại '{request.Name}' đã tồn tại.");
 
         var genre = new MusicGenre { Name = request.Name, NameEn = request.NameEn };
-        _uow.Repository<MusicGenre, int>().Add(genre);
+        _uow.Repository<MusicGenre, Guid>().Add(genre);
         await _uow.SaveChangesAsync(ct);
 
         return genre.Id;

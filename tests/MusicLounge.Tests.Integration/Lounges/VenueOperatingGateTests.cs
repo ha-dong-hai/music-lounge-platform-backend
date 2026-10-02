@@ -31,8 +31,8 @@ public sealed class VenueOperatingGateTests
     public VenueOperatingGateTests(ApiFactory factory) => _factory = factory;
 
     private sealed record DataResponse<T>(bool Success, T Data);
-    private sealed record HoldResult(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record Venue(int LoungeId, int ShowId, int OnlinePriceId, int CounterPriceId, int PerformanceId, int OwnerId);
+    private sealed record HoldResult(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record Venue(Guid LoungeId, Guid ShowId, Guid OnlinePriceId, Guid CounterPriceId, Guid PerformanceId, Guid OwnerId);
 
     /// <summary>
     /// Phòng trà riêng của chủ phòng trà trong seed (gói 1000 vé/buổi — hạn mức không cản), để đổi trạng
@@ -100,7 +100,7 @@ public sealed class VenueOperatingGateTests
         return new Venue(lounge.Id, show.Id, online.Id, counter.Id, performance.Id, freshOwner.Id);
     }
 
-    private async Task SetVenueStatusAsync(int loungeId, LoungeStatus status)
+    private async Task SetVenueStatusAsync(Guid loungeId, LoungeStatus status)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -111,7 +111,7 @@ public sealed class VenueOperatingGateTests
 
     private HttpClient Audience() => _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
 
-    private Task<HttpResponseMessage> HoldAsync(int priceId)
+    private Task<HttpResponseMessage> HoldAsync(Guid priceId)
         => Audience().PostAsJsonAsync("/api/v1/tickets/holds", new { PriceId = priceId, Quantity = 1 });
 
     // ── Giữ chỗ ─────────────────────────────────────────────────────────────

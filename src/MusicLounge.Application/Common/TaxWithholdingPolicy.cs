@@ -52,9 +52,9 @@ public static class TaxWithholdingPolicy
     /// exact failure PaymentFeeCalculator was extracted to prevent.
     /// </summary>
     public static async Task<TaxWithholdingRates> ResolveForOwnerAsync(
-        IUnitOfWork uow, ISystemConfigService config, int ownerId, CancellationToken ct)
+        IUnitOfWork uow, ISystemConfigService config, Guid ownerId, CancellationToken ct)
     {
-        var owner = await uow.Repository<User, int>().GetByIdAsync(ownerId, ct);
+        var owner = await uow.Repository<User, Guid>().GetByIdAsync(ownerId, ct);
         var vatRate = await config.GetDecimalAsync(ConfigKeys.TaxRate, 0.05m, ct);
         // Defaulted to 0 rather than to the decree's 2%: switching this on changes what every
         // household seller is paid, so it is an explicit decision an Admin makes through

@@ -23,17 +23,17 @@ internal sealed class GetLoungeStaffQueryHandler
     public async Task<IReadOnlyList<LoungeStaffDto>> Handle(
         GetLoungeStaffQuery request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
             throw new ForbiddenException("Bạn không có quyền xem danh sách staff của venue này.");
 
-        var assignments = await _uow.Repository<LoungeStaffEntity, int>()
+        var assignments = await _uow.Repository<LoungeStaffEntity, Guid>()
             .FindAsync(s => s.LoungeId == request.LoungeId, ct);
 
         var userIds = assignments.Select(a => a.UserId).Distinct().ToList();
-        var users = await _uow.Repository<User, int>()
+        var users = await _uow.Repository<User, Guid>()
             .FindAsync(u => userIds.Contains(u.Id), ct);
         var usersById = users.ToDictionary(u => u.Id);
 

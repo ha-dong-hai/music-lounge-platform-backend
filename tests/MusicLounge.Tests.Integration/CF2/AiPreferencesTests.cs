@@ -38,9 +38,9 @@ public sealed class AiPreferencesTests
 
         var response = await client.PutAsJsonAsync("/api/v1/me/preferences", new
         {
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = false
         });
 
@@ -54,9 +54,9 @@ public sealed class AiPreferencesTests
 
         var response = await client.PutAsJsonAsync("/api/v1/me/preferences", new
         {
-            GenreIds = new[] { 99999 }, // does not exist
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = new[] { Guid.NewGuid() }, // does not exist (MLACP-515: id la GUID)
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = false
         });
 
@@ -71,8 +71,8 @@ public sealed class AiPreferencesTests
         var response = await client.PutAsJsonAsync("/api/v1/me/preferences", new
         {
             GenreIds = Enumerable.Range(1, 11).ToArray(), // 11 items — exceeds max
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = false
         });
 
@@ -86,9 +86,9 @@ public sealed class AiPreferencesTests
 
         var response = await client.PutAsJsonAsync("/api/v1/me/preferences", new
         {
-            GenreIds = Array.Empty<int>(),
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            GenreIds = Array.Empty<Guid>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = false
         });
 

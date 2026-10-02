@@ -30,9 +30,9 @@ public sealed class VenueDiversityInRecommendationsTests
     public VenueDiversityInRecommendationsTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(int Id, string Name, string LoungeName);
+    private sealed record Rec(Guid Id, string Name, string LoungeName);
 
-    private async Task<int> VenueAsync(string city, string name)
+    private async Task<Guid> VenueAsync(string city, string name)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -59,7 +59,7 @@ public sealed class VenueDiversityInRecommendationsTests
     /// thì buổi của nó phải diễn sớm hơn hẳn; để cùng dải ngày thì hai bên tự đan xen và bài kiểm
     /// tra không kiểm được gì.
     /// </param>
-    private async Task ShowsAsync(int loungeId, int count, string prefix, int startOffsetDays = 15)
+    private async Task ShowsAsync(Guid loungeId, int count, string prefix, int startOffsetDays = 15)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -85,7 +85,7 @@ public sealed class VenueDiversityInRecommendationsTests
         }
     }
 
-    private async Task<int> ListenerWhoLikesGenreOneAsync()
+    private async Task<Guid> ListenerWhoLikesGenreOneAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -106,7 +106,7 @@ public sealed class VenueDiversityInRecommendationsTests
         return user.Id;
     }
 
-    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(int userId, string city, int limit)
+    private async Task<IReadOnlyList<Rec>> RecommendationsAsync(Guid userId, string city, int limit)
     {
         var res = await _factory.CreateAuthenticatedClient(userId, "Audience")
             .GetAsync($"/api/v1/recommendations?city={city}&limit={limit}");

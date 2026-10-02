@@ -10,7 +10,7 @@ namespace MusicLounge.Application.Lounges.Commands.AddLoungeGalleryImage;
 
 // Free for every Owner, no subscription gate — same as PrimaryImageUrl, unlike VenueTourScene
 // (the 360° tour, which IS gated) since these are just showcase photos, not an interactive feature.
-internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddLoungeGalleryImageCommand, int>
+internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddLoungeGalleryImageCommand, Guid>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
@@ -29,9 +29,9 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
         _config = config;
     }
 
-    public async Task<int> Handle(AddLoungeGalleryImageCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(AddLoungeGalleryImageCommand request, CancellationToken ct)
     {
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
@@ -44,7 +44,7 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
         var moderation = await _moderationGate.CheckOrThrowAsync(
             imageBytes, ImageMimeTypeHelper.ForModeration(imageBytes), ct);
 
-        var imageRepo = _uow.Repository<LoungeGalleryImage, int>();
+        var imageRepo = _uow.Repository<LoungeGalleryImage, Guid>();
         var existingCount = (await imageRepo.FindAsync(g => g.LoungeId == request.LoungeId, ct)).Count;
 
         var image = new LoungeGalleryImage
@@ -60,7 +60,7 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
         if (existingCount == 0)
         {
             lounge.PrimaryImageUrl = request.ImageUrl;
-            _uow.Repository<MusicLoungeEntity, int>().Update(lounge);
+            _uow.Repository<MusicLoungeEntity, Guid>().Update(lounge);
         }
 
         await _uow.SaveChangesAsync(ct);
@@ -71,11 +71,11 @@ internal sealed class AddLoungeGalleryImageCommandHandler : IRequestHandler<AddL
         return image.Id;
     }
 
-    private async Task FlagForReviewAsync(int imageId, AiModerationResult moderation, CancellationToken ct)
+    private async Task FlagForReviewAsync(Guid imageId, AiModerationResult moderation, CancellationToken ct)
     {
         var slaHours = await _config.GetIntAsync(ConfigKeys.ModerationSlaHours, 24, ct);
         var now = DateTimeOffset.UtcNow;
-        _uow.Repository<EventModeration, int>().Add(new EventModeration
+        _uow.Repository<EventModeration, Guid>().Add(new EventModeration
         {
             TargetType = ModerationTargetType.GalleryImage,
             TargetId = imageId,

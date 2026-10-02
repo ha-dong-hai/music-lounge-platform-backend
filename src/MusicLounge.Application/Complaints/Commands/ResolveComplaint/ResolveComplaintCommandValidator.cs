@@ -9,7 +9,7 @@ internal sealed class ResolveComplaintCommandValidator : AbstractValidator<Resol
 
     public ResolveComplaintCommandValidator()
     {
-        RuleFor(x => x.ComplaintId).GreaterThan(0);
+        RuleFor(x => x.ComplaintId).NotEmpty();
 
         RuleFor(x => x.Status)
             .Must(s => AllowedStatuses.Contains(s))

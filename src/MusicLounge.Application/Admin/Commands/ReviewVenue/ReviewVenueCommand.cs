@@ -8,6 +8,6 @@ namespace MusicLounge.Application.Admin.Commands.ReviewVenue;
 /// chối" là bắt họ đoán xem thiếu gì.
 /// </param>
 public sealed record ReviewVenueCommand(
-    int LoungeId,
+    Guid LoungeId,
     string Decision,
     string? ReviewNote) : ICommand;

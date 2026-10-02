@@ -43,7 +43,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             return VnPayIpnOutcome.InvalidSignature;
         }
 
-        var paymentRepo = _uow.Repository<Payment, int>();
+        var paymentRepo = _uow.Repository<Payment, Guid>();
         var initialMatches = await paymentRepo.FindAsync(
             p => p.OrderId == txnRef && p.ReferenceType == SubscriptionPayments.ReferenceType, ct);
         var paymentLookup = initialMatches.FirstOrDefault();
@@ -118,8 +118,8 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             return VnPayIpnOutcome.RecordedAsFailed;
         }
 
-        var package = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(
-            int.Parse(payment.ReferenceId), ct);
+        var package = await _uow.Repository<SubscriptionPackage, Guid>().GetByIdAsync(
+            Guid.Parse(payment.ReferenceId), ct);
         if (package is null || payment.PayerId is null) return VnPayIpnOutcome.InternalError;
 
         var ownerId = payment.PayerId.Value;
@@ -142,7 +142,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         // cung la thanh toan trung: thanh toan tao tu lenh Gia han hoac Doi goi la dung thu chu muon mua. Chi thanh toan
         // tu lenh Dang ky moi di duong "thanh toan trung" ben duoi.
         var purchase = SubscriptionTerms.PurchaseOf(payment.OrderId);
-        var currentPlan = (await _uow.Repository<OwnerSubscription, int>().FindAsync(
+        var currentPlan = (await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
                 s => s.OwnerId == ownerId && s.Status == SubscriptionStatus.Active, ct))
             .FirstOrDefault();
         if (currentPlan is not null && purchase != SubscriptionPurchase.Subscribe)
@@ -152,7 +152,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             {
                 summary = ExtendPlan(currentPlan, package, payment, now);
                 // FindAsync doc AsNoTracking — khong Update thi han moi khong duoc luu du VNPay da thu tien.
-                _uow.Repository<OwnerSubscription, int>().Update(currentPlan);
+                _uow.Repository<OwnerSubscription, Guid>().Update(currentPlan);
             }
             else
             {
@@ -195,7 +195,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         // phantom revenue, just a liability for a refund) rather than leaving it at Pending forever,
         // don't create a duplicate OwnerSubscription, and tell the owner explicitly instead of
         // silently keeping a payment nobody will ever notice needs reconciling.
-        var hasActiveSubscription = await _uow.Repository<OwnerSubscription, int>().AnyAsync(
+        var hasActiveSubscription = await _uow.Repository<OwnerSubscription, Guid>().AnyAsync(
             s => s.OwnerId == ownerId && s.Status == SubscriptionStatus.Active, ct);
         if (hasActiveSubscription)
         {
@@ -220,7 +220,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             // nothing. Raise the real request so it enters the same queue, SLA and overdue alerting
             // as every other refund (RefundSlaBreachAlertJob), instead of depending on someone
             // noticing a ledger description.
-            _uow.Repository<RefundRequest, int>().Add(new RefundRequest
+            _uow.Repository<RefundRequest, Guid>().Add(new RefundRequest
             {
                 PaymentId = payment.Id,
                 RequestedBy = ownerId,
@@ -268,7 +268,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             MaxAiPostersPerMonthSnapshot = payment.SubscriptionMaxAiPostersPerMonthSnapshot ?? package.MaxAiPostersPerMonth,
             MaxTourScenesSnapshot = payment.SubscriptionMaxTourScenesSnapshot ?? package.MaxTourScenes
         };
-        _uow.Repository<OwnerSubscription, int>().Add(subscription);
+        _uow.Repository<OwnerSubscription, Guid>().Add(subscription);
 
         // Subscription la doanh thu 100% cua platform (khong chia se voi owner/khong tru thue
         // ho ben thu 3 nhu ve/donate) - khac voi J1 ticket journal co 3 ben.
@@ -313,10 +313,10 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
     /// mới theo giá gói mới (không hoàn tiền mặt).
     /// </summary>
     private async Task<SongNgu> ChangePlanAsync(
-        OwnerSubscription current, SubscriptionPackage newPackage, Payment payment, int ownerId,
+        OwnerSubscription current, SubscriptionPackage newPackage, Payment payment, Guid ownerId,
         DateTimeOffset now, CancellationToken ct)
     {
-        var oldPackage = await _uow.Repository<SubscriptionPackage, int>().GetByIdAsync(current.PackageId, ct);
+        var oldPackage = await _uow.Repository<SubscriptionPackage, Guid>().GetByIdAsync(current.PackageId, ct);
         var credit = SubscriptionTerms.RemainingValue(current, oldPackage?.Price ?? 0m, now);
         var cycleEnd = SubscriptionTerms.CycleEnd(newPackage.BillingCycle, now);
         var extra = SubscriptionTerms.TimeWorth(credit, payment.GrossAmount, cycleEnd - now);
@@ -325,7 +325,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         // khong quan tam thu tu cac lenh EF gui xuong trong cung mot lan luu.
         current.Status = SubscriptionStatus.Cancelled;
         current.CancelledAt = now;
-        _uow.Repository<OwnerSubscription, int>().Update(current);
+        _uow.Repository<OwnerSubscription, Guid>().Update(current);
         await _uow.SaveChangesAsync(ct);
 
         var plan = new OwnerSubscription
@@ -341,7 +341,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             MaxAiPostersPerMonthSnapshot = payment.SubscriptionMaxAiPostersPerMonthSnapshot ?? newPackage.MaxAiPostersPerMonth,
             MaxTourScenesSnapshot = payment.SubscriptionMaxTourScenesSnapshot ?? newPackage.MaxTourScenes
         };
-        _uow.Repository<OwnerSubscription, int>().Add(plan);
+        _uow.Repository<OwnerSubscription, Guid>().Add(plan);
 
         var until = VietnamTime.Format(plan.ExpiresAt, "dd/MM/yyyy");
         return new SongNgu(
@@ -362,7 +362,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
     /// doanh thu gói chỉ được ghi khi gói được kích hoạt.</para>
     /// </summary>
     private async Task<VnPayIpnOutcome> RecordNotActivatedAsync(
-        Payment payment, int ownerId, LoungeStatus penalized, VnPayCallbackResult result, string? txnRef,
+        Payment payment, Guid ownerId, LoungeStatus penalized, VnPayCallbackResult result, string? txnRef,
         DateTimeOffset now, CancellationToken ct)
     {
         payment.Status = PaymentStatus.Failed;
@@ -370,7 +370,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
         payment.VnPayResponseCode = result.ResponseCode;
         payment.PaidAt = now;
         payment.UpdatedAt = now;
-        _uow.Repository<Payment, int>().Update(payment);
+        _uow.Repository<Payment, Guid>().Update(payment);
 
         var why = penalized == LoungeStatus.Locked ? "bị khoá vĩnh viễn" : "bị tạm khoá";
         var whyEn = penalized == LoungeStatus.Locked ? "permanently banned" : "suspended";
@@ -384,7 +384,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
         };
-        _uow.Repository<RefundRequest, int>().Add(refund);
+        _uow.Repository<RefundRequest, Guid>().Add(refund);
 
         await _notifications.NotifyAsync(
             ownerId,

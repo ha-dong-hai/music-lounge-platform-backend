@@ -25,14 +25,14 @@ public static class SubscriptionVenueGate
     /// trà thuộc chủ này, hoặc null nếu không bị phạt. Tách khỏi <see cref="EnsureNotPenalizedAsync"/> để IPN VNPay hỏi
     /// cùng một quy tắc mà không ném lỗi — IPN mà ném lỗi thì VNPay nhận mã retry được và gọi lại mãi.
     /// </summary>
-    public static async Task<LoungeStatus?> PenalizedStatusAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
+    public static async Task<LoungeStatus?> PenalizedStatusAsync(IUnitOfWork uow, Guid ownerId, CancellationToken ct)
     {
-        var lounge = (await uow.Repository<MusicLoungeEntity, int>().FindAsync(l => l.OwnerId == ownerId, ct))
+        var lounge = (await uow.Repository<MusicLoungeEntity, Guid>().FindAsync(l => l.OwnerId == ownerId, ct))
             .FirstOrDefault();
         return lounge?.Status is LoungeStatus.Suspended or LoungeStatus.Locked ? lounge.Status : null;
     }
 
-    public static async Task EnsureNotPenalizedAsync(IUnitOfWork uow, int ownerId, CancellationToken ct)
+    public static async Task EnsureNotPenalizedAsync(IUnitOfWork uow, Guid ownerId, CancellationToken ct)
     {
         if (await PenalizedStatusAsync(uow, ownerId, ct) is not { } status) return;
 

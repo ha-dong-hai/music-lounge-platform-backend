@@ -2,9 +2,9 @@ using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Domain.Entities;
 
-public sealed class LoungeShow : Common.AuditableEntity<int>
+public sealed class LoungeShow : Common.AuditableEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string? CoverImageUrl { get; set; }
@@ -17,7 +17,7 @@ public sealed class LoungeShow : Common.AuditableEntity<int>
     public LoungeShowStatus Status { get; set; } = LoungeShowStatus.Draft;
     public int? OfflineQuota { get; set; }
     public int? OnlineQuota { get; set; }
-    public int? CategoryId { get; set; }
+    public Guid? CategoryId { get; set; }
     public DateTimeOffset? TicketSaleClosesAt { get; set; }         // D13: khi nào đóng bán vé
     public bool CancellationAllowed { get; set; } = true;           // D13: cho phép hoàn vé không
     public int? CancellationDeadlineHours { get; set; }             // D13: hoàn trước bao nhiêu giờ
@@ -35,7 +35,7 @@ public sealed class LoungeShow : Common.AuditableEntity<int>
     // D18 (NĐ 144/2020/NĐ-CP Điều 8-10): show bán vé cho công chúng bắt buộc có văn bản chấp
     // thuận tổ chức biểu diễn từ Sở VHTT, nộp trước tối thiểu 7 ngày làm việc so với ScheduledStart.
     public string? LegalApprovalReference { get; set; }             // Owner khai báo số văn bản/link chấp thuận
-    public int? LegalApprovalConfirmedByAdminId { get; set; }       // Admin xác nhận hợp lệ khi duyệt event
+    public Guid? LegalApprovalConfirmedByAdminId { get; set; }       // Admin xác nhận hợp lệ khi duyệt event
     public DateTimeOffset? LegalApprovalConfirmedAt { get; set; }
 
     // D19: nghĩa vụ trả phí tác quyền cho VCPMC/RIAV trước khi show DIỄN RA (khác nghĩa vụ

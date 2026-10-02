@@ -48,7 +48,7 @@ internal sealed class ReviewVenueCommandHandler : IRequestHandler<ReviewVenueCom
         // quyết định trước mà không ai biết.
         await using var _ = await _lock.AcquireAsync($"venue-review:{request.LoungeId}", ct);
 
-        var repo = _uow.Repository<MusicLoungeEntity, int>();
+        var repo = _uow.Repository<MusicLoungeEntity, Guid>();
         var lounge = await repo.GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 

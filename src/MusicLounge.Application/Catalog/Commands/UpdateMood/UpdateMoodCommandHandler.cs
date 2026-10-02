@@ -13,7 +13,7 @@ internal sealed class UpdateMoodCommandHandler : IRequestHandler<UpdateMoodComma
 
     public async Task<Unit> Handle(UpdateMoodCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<Mood, int>();
+        var repo = _uow.Repository<Mood, Guid>();
         var mood = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(Mood), request.Id);
 

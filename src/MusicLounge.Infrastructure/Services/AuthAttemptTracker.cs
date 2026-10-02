@@ -19,7 +19,7 @@ internal sealed class AuthAttemptTracker : IAuthAttemptTracker
         _settings = settings.Value;
     }
 
-    public async Task<TimeSpan?> GetLockoutRemainingAsync(int userId, CancellationToken ct = default)
+    public async Task<TimeSpan?> GetLockoutRemainingAsync(Guid userId, CancellationToken ct = default)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -34,7 +34,7 @@ internal sealed class AuthAttemptTracker : IAuthAttemptTracker
         return remaining > TimeSpan.Zero ? remaining : null;
     }
 
-    public async Task RecordFailureAsync(int userId, CancellationToken ct = default)
+    public async Task RecordFailureAsync(Guid userId, CancellationToken ct = default)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -60,7 +60,7 @@ internal sealed class AuthAttemptTracker : IAuthAttemptTracker
                 ct);
     }
 
-    public async Task ResetAsync(int userId, CancellationToken ct = default)
+    public async Task ResetAsync(Guid userId, CancellationToken ct = default)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

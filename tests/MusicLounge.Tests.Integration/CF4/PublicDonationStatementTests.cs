@@ -38,16 +38,16 @@ public sealed class PublicDonationStatementTests
 
     public PublicDonationStatementTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int PerformerId, int PerformanceId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid PerformerId, Guid PerformanceId);
 
-    private sealed record InitData(int DonationId, string OrderId);
+    private sealed record InitData(Guid DonationId, string OrderId);
 
     private sealed record Wrapped<T>(T Data);
 
     private sealed record Page(List<Entry> Items, int TotalCount);
 
     private sealed record Entry(
-        int Id, string? DonorDisplayName, decimal? Gross, string Status, DateTimeOffset? PaidAt, string? Message,
+        Guid Id, string? DonorDisplayName, decimal? Gross, string Status, DateTimeOffset? PaidAt, string? Message,
         decimal? PlatformFee, decimal? TaxWithheld, decimal? PerformerAmount, decimal? VenueRetained,
         DateTimeOffset? PlatformPaidVenueAt, DateTimeOffset? VenueAcknowledgedAt, bool VenueAcknowledgedAutomatically,
         DateTimeOffset? PayoutDueAt, DateTimeOffset? VenueReportedPaidAt, bool HasTransferReceipt, bool Overdue,
@@ -120,7 +120,7 @@ public sealed class PublicDonationStatementTests
     private HttpClient OwnerOf(Venue venue) => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId);
 
     private async Task<InitData> CreateAsync(
-        int performanceId, string? message = "Cảm ơn!", bool anonymous = false, bool messagePublic = true)
+        Guid performanceId, string? message = "Cảm ơn!", bool anonymous = false, bool messagePublic = true)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience").PostAsJsonAsync(
             "/api/v1/donations",
@@ -137,8 +137,8 @@ public sealed class PublicDonationStatementTests
         (await _factory.CreateClient().GetAsync(url)).StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    private async Task<int> DonateAsync(
-        int performanceId, string? message = "Cảm ơn!", bool anonymous = false, bool messagePublic = true,
+    private async Task<Guid> DonateAsync(
+        Guid performanceId, string? message = "Cảm ơn!", bool anonymous = false, bool messagePublic = true,
         string? transactionNo = null)
     {
         var init = await CreateAsync(performanceId, message, anonymous, messagePublic);
@@ -153,16 +153,16 @@ public sealed class PublicDonationStatementTests
             .ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task AcknowledgeAsync(Venue venue, int donationId)
+    private async Task AcknowledgeAsync(Venue venue, Guid donationId)
         => (await OwnerOf(venue).PostAsync($"/api/v1/donations/{donationId}/acknowledge", null))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-    private async Task ReportPaidAsync(Venue venue, int donationId, string paymentRef = "CK-365", string? evidenceUrl = null)
+    private async Task ReportPaidAsync(Venue venue, Guid donationId, string paymentRef = "CK-365", string? evidenceUrl = null)
         => (await OwnerOf(venue).PostAsJsonAsync($"/api/v1/donations/{donationId}/confirm-paid",
                 new { PaymentRef = paymentRef, PaymentEvidenceUrl = evidenceUrl }))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-    private async Task BackdateVenuePayoutAsync(int donationId, TimeSpan ago)
+    private async Task BackdateVenuePayoutAsync(Guid donationId, TimeSpan ago)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -198,7 +198,7 @@ public sealed class PublicDonationStatementTests
 
     // ─── Đọc trang công khai (không đăng nhập) ────────────────────────────────
 
-    private async Task<(Page Page, string Raw)> ListAsync(int performerId)
+    private async Task<(Page Page, string Raw)> ListAsync(Guid performerId)
     {
         var res = await _factory.CreateClient().GetAsync($"/api/v1/performers/{performerId}/donations?pageSize=100");
         res.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -206,10 +206,10 @@ public sealed class PublicDonationStatementTests
         return (JsonSerializer.Deserialize<Wrapped<Page>>(raw, Json)!.Data, raw);
     }
 
-    private async Task<Entry> EntryAsync(int performerId, int donationId)
+    private async Task<Entry> EntryAsync(Guid performerId, Guid donationId)
         => (await ListAsync(performerId)).Page.Items.Single(e => e.Id == donationId);
 
-    private async Task<(Summary Summary, string Raw)> SummaryAsync(int performerId)
+    private async Task<(Summary Summary, string Raw)> SummaryAsync(Guid performerId)
     {
         var res = await _factory.CreateClient().GetAsync($"/api/v1/performers/{performerId}/donations/summary");
         res.StatusCode.Should().Be(HttpStatusCode.OK);

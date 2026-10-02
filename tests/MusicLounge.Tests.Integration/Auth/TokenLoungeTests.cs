@@ -27,7 +27,7 @@ public sealed class TokenLoungeTests
     private static string EmailMoi() => $"tl-{Guid.NewGuid():N}@test.com";
 
     /// <summary>Đăng ký qua API (đúng luồng thật, băm mật khẩu thật), rồi đánh dấu email đã xác thực trong DB.</summary>
-    private async Task<int> TaoTaiKhoanAsync(string email, string role)
+    private async Task<Guid> TaoTaiKhoanAsync(string email, string role)
     {
         var res = await _factory.CreateClient().PostAsJsonAsync("/api/v1/auth/register", new
         {
@@ -44,7 +44,7 @@ public sealed class TokenLoungeTests
         return user.Id;
     }
 
-    private async Task<int> TaoPhongTraAsync(int ownerId)
+    private async Task<Guid> TaoPhongTraAsync(Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -75,8 +75,8 @@ public sealed class TokenLoungeTests
         return doc.RootElement.TryGetProperty("lounge_id", out var v) ? v.GetString() : null;
     }
 
-    private static int? LoungeIdTrongPhanHoi(JsonElement data)
-        => data.GetProperty("loungeId").ValueKind == JsonValueKind.Null ? null : data.GetProperty("loungeId").GetInt32();
+    private static Guid? LoungeIdTrongPhanHoi(JsonElement data)
+        => data.GetProperty("loungeId").ValueKind == JsonValueKind.Null ? null : data.GetProperty("loungeId").GetGuid();
 
     [Fact]
     public async Task ChuPhongTra_DangNhap_TokenCoLoungeIdCuaPhongTraMinh()

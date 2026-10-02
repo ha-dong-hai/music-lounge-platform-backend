@@ -8,9 +8,9 @@ namespace MusicLounge.Application.Catalog.Queries.GetEventCategories;
 internal sealed class GetEventCategoriesQueryHandler
     : IRequestHandler<GetEventCategoriesQuery, List<CatalogItemDto>>
 {
-    private readonly IRepository<EventCategory, int> _repo;
+    private readonly IRepository<EventCategory, Guid> _repo;
 
-    public GetEventCategoriesQueryHandler(IRepository<EventCategory, int> repo) => _repo = repo;
+    public GetEventCategoriesQueryHandler(IRepository<EventCategory, Guid> repo) => _repo = repo;
 
     public async Task<List<CatalogItemDto>> Handle(GetEventCategoriesQuery request, CancellationToken ct)
     {

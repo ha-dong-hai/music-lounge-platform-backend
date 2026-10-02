@@ -27,8 +27,8 @@ public sealed class RecommendationDataPipelineTests
     [Fact]
     public async Task RecomputeUserEventScoresJob_AggregatesRealSignalsIntoUserEventScore()
     {
-        const int userId = SeedHelper.AudienceId;
-        int showId;
+        var userId = SeedHelper.AudienceId;
+        Guid showId;
 
         using (var scope = _factory.Services.CreateScope())
         {
@@ -128,8 +128,8 @@ public sealed class RecommendationDataPipelineTests
         var body = new
         {
             GenreIds = new[] { SeedHelper.GenreId1, SeedHelper.GenreId2 },
-            MoodIds = Array.Empty<int>(),
-            AtmosphereIds = Array.Empty<int>(),
+            MoodIds = Array.Empty<Guid>(),
+            AtmosphereIds = Array.Empty<Guid>(),
             EnableAiConsent = true
         };
 

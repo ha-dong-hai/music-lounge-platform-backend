@@ -10,8 +10,8 @@ internal sealed class HoldTicketCommandValidator : AbstractValidator<HoldTicketC
     {
         RuleFor(x => x.PriceId)
             .Cascade(CascadeMode.Stop)
-            .GreaterThan(0).WithMessage("PriceId không hợp lệ.")
-            .MustAsync(async (priceId, ct) => await uow.Repository<TicketPrice, int>().AnyAsync(p => p.Id == priceId, ct))
+            .NotEmpty().WithMessage("PriceId không hợp lệ.")
+            .MustAsync(async (priceId, ct) => await uow.Repository<TicketPrice, Guid>().AnyAsync(p => p.Id == priceId, ct))
             .WithMessage("PriceId không tồn tại.");
 
         RuleFor(x => x.Quantity)

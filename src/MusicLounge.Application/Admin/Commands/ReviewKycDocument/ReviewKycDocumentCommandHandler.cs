@@ -34,7 +34,7 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
 
     public async Task<Unit> Handle(ReviewKycDocumentCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
@@ -79,7 +79,7 @@ internal sealed class ReviewKycDocumentCommandHandler : IRequestHandler<ReviewKy
                     throw new DomainException(
                         "Chưa duyệt được hồ sơ doanh nghiệp: CCCD/CMND của người đại diện (chủ tài khoản) chưa được duyệt.");
 
-                var venues = await _uow.Repository<MusicLoungeEntity, int>().FindAsync(l => l.OwnerId == user.Id, ct);
+                var venues = await _uow.Repository<MusicLoungeEntity, Guid>().FindAsync(l => l.OwnerId == user.Id, ct);
                 if (!venues.Any(l => !string.IsNullOrWhiteSpace(l.BusinessLicenseUrl)))
                     throw new DomainException(
                         "Chưa duyệt được hồ sơ doanh nghiệp: phòng trà chưa nộp giấy chứng nhận đăng ký kinh doanh để đối chiếu.");

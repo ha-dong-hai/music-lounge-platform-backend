@@ -7,7 +7,7 @@ public sealed class AddPerformerSocialLinkCommandValidator : AbstractValidator<A
 {
     public AddPerformerSocialLinkCommandValidator()
     {
-        RuleFor(x => x.PerformerId).GreaterThan(0);
+        RuleFor(x => x.PerformerId).NotEmpty();
 
         RuleFor(x => x.Platform)
             .Must(p => Enum.TryParse<SocialPlatform>(p, ignoreCase: true, out _))

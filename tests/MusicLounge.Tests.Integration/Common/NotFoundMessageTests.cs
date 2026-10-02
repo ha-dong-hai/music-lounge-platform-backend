@@ -89,13 +89,15 @@ public sealed class NotFoundMessageTests
     [Fact]
     public async Task Api404_TraThongBaoTiengViet_KhongLoTenLop()
     {
-        var res = await _factory.CreateClient().GetAsync("/api/v1/lounges/999999");
+        // MLACP-515: id không tồn tại là một GUID — số nguyên không còn khớp route {id:guid} (404 trống, không có câu báo).
+        var maKhongTonTai = Guid.NewGuid();
+        var res = await _factory.CreateClient().GetAsync($"/api/v1/lounges/{maKhongTonTai}");
 
         res.StatusCode.Should().Be(HttpStatusCode.NotFound);
         using var body = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
         var message = body.RootElement.GetProperty("message").GetString();
 
-        message.Should().Be("Không tìm thấy phòng trà (mã 999999).");
+        message.Should().Be($"Không tìm thấy phòng trà (mã {maKhongTonTai}).");
         message.Should().NotMatchRegex(@"'[A-Z][A-Za-z]+'", "không được còn tên lớp trong dấu nháy như câu cũ");
     }
 

@@ -21,14 +21,14 @@ internal sealed class DeletePerformanceCommandHandler : IRequestHandler<DeletePe
 
     public async Task<Unit> Handle(DeletePerformanceCommand request, CancellationToken ct)
     {
-        var performanceRepo = _uow.Repository<Performance, int>();
+        var performanceRepo = _uow.Repository<Performance, Guid>();
         var performance = await performanceRepo.GetByIdAsync(request.PerformanceId, ct)
             ?? throw new NotFoundException(nameof(Performance), request.PerformanceId);
 
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(performance.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), performance.LoungeShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)

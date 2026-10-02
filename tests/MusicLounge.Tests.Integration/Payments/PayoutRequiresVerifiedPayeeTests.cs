@@ -27,7 +27,7 @@ public sealed class PayoutRequiresVerifiedPayeeTests
 
     public PayoutRequiresVerifiedPayeeTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Payee(int OwnerId, int BankAccountId, int SettlementId);
+    private sealed record Payee(Guid OwnerId, Guid BankAccountId, Guid SettlementId);
 
     private ApplicationDbContext Db(IServiceScope scope) => scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -103,14 +103,14 @@ public sealed class PayoutRequiresVerifiedPayeeTests
         await scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>().ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<SettlementStatus> StatusAsync(int settlementId)
+    private async Task<SettlementStatus> StatusAsync(Guid settlementId)
     {
         using var scope = _factory.Services.CreateScope();
         return (await Db(scope).Settlements.AsNoTracking().SingleAsync(s => s.Id == settlementId)).Status;
     }
 
     /// <summary>Thông báo "đang giữ tiền" gửi cho <paramref name="recipientId"/> về chủ phòng trà <paramref name="ownerId"/>.</summary>
-    private async Task<List<Notification>> HeldNoticesAsync(int recipientId, int ownerId)
+    private async Task<List<Notification>> HeldNoticesAsync(Guid recipientId, Guid ownerId)
     {
         using var scope = _factory.Services.CreateScope();
         return await Db(scope).Notifications.AsNoTracking()
@@ -118,7 +118,7 @@ public sealed class PayoutRequiresVerifiedPayeeTests
             .ToListAsync();
     }
 
-    private Task<HttpResponseMessage> ReviewAccountAsync(int bankAccountId, bool approve, string? note = null)
+    private Task<HttpResponseMessage> ReviewAccountAsync(Guid bankAccountId, bool approve, string? note = null)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin")
             .PostAsJsonAsync($"/api/v1/admin/bank-accounts/{bankAccountId}/review", new { Approve = approve, Note = note });
 
@@ -255,7 +255,7 @@ public sealed class PayoutRequiresVerifiedPayeeTests
     [Fact]
     public async Task APerformersAccount_IsNotReviewedHere()
     {
-        int accountId;
+        Guid accountId;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = Db(scope);

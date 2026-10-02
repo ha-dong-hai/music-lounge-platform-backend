@@ -52,7 +52,7 @@ internal sealed class GetLoungeShowDetailQueryHandler
 
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)
-            : (IReadOnlySet<int>)new HashSet<int>();
+            : (IReadOnlySet<Guid>)new HashSet<Guid>();
 
         if (_currentUser.IsAuthenticated)
         {
@@ -73,7 +73,7 @@ internal sealed class GetLoungeShowDetailQueryHandler
                 .AnyAsync(t => t.ShowId == request.ShowId
                     && t.BuyerId == _currentUser.UserId
                     && (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used), ct);
-            userHasRated = await _uow.Repository<LoungeShowRating, int>()
+            userHasRated = await _uow.Repository<LoungeShowRating, Guid>()
                 .AnyAsync(r => r.LoungeShowId == request.ShowId
                     && r.UserId == _currentUser.UserId, ct);
         }
@@ -86,7 +86,7 @@ internal sealed class GetLoungeShowDetailQueryHandler
 
         // MusicLounge entity khong co nav collection toi LoungeGalleryImage — truy van rieng thay
         // vi Include tu WithDetails().
-        var galleryImages = await _uow.Repository<LoungeGalleryImage, int>()
+        var galleryImages = await _uow.Repository<LoungeGalleryImage, Guid>()
             .FindAsync(g => g.LoungeId == show.LoungeId, ct);
         var galleryDtos = galleryImages
             .OrderBy(g => g.OrderIndex)
@@ -107,7 +107,7 @@ internal sealed class GetLoungeShowDetailQueryHandler
     private async Task<OperatorShowInfoDto> OperatorInfoAsync(Domain.Entities.LoungeShow show, CancellationToken ct)
     {
         // Moi lan gui duyet la mot dong moi (bi tu choi -> sua -> gui lai), nen dong moi nhat la trang thai hien tai.
-        var latest = (await _uow.Repository<EventModeration, int>()
+        var latest = (await _uow.Repository<EventModeration, Guid>()
                 .FindAsync(m => m.TargetType == ModerationTargetType.Show && m.TargetId == show.Id, ct))
             .OrderByDescending(m => m.Id)
             .FirstOrDefault();

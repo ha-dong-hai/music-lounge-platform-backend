@@ -3,9 +3,9 @@ using MusicLounge.Domain.Enums;
 namespace MusicLounge.Domain.Entities;
 
 // AI custom: each venue defines its own criteria for recommendation
-public sealed class CustomCriteria : Common.AuditableEntity<int>
+public sealed class CustomCriteria : Common.AuditableEntity<Guid>
 {
-    public int LoungeId { get; set; }
+    public Guid LoungeId { get; set; }
     public string Name { get; set; } = string.Empty;       // "Ngôn ngữ biểu diễn"
     public string Key { get; set; } = string.Empty;        // machine-readable: "performance_language"
     public CustomCriteriaDataType DataType { get; set; }

@@ -47,11 +47,11 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         // (TargetType, TargetId), so nothing else stops the duplicate.
         await using var _ = await _lock.AcquireAsync($"moderation:show:{request.ShowId}", ct);
 
-        var showRepo = _uow.Repository<LoungeShow, int>();
+        var showRepo = _uow.Repository<LoungeShow, Guid>();
         var show = await showRepo.GetByIdAsync(request.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), request.ShowId);
 
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
@@ -85,14 +85,14 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
             _uow, _config, show.LoungeId, excludeShowId: show.Id,
             show.ScheduledStart, show.ScheduledEnd, ct);
 
-        var tiers = await _uow.Repository<TicketTier, int>()
+        var tiers = await _uow.Repository<TicketTier, Guid>()
             .FindAsync(t => t.LoungeShowId == show.Id, ct);
         if (tiers.Count == 0)
             throw new DomainException("Event phải có ít nhất 1 hạng vé trước khi nộp duyệt.");
 
         // MLACP-46: DONE WHEN doi ca 2 dieu kien (hang ve + nghe si) - ban local master chi check
         // hang ve, thieu check danh sach bieu dien.
-        var performerCount = await _uow.Repository<Performance, int>()
+        var performerCount = await _uow.Repository<Performance, Guid>()
             .CountAsync(p => p.LoungeShowId == show.Id, ct);
         if (performerCount == 0)
             throw new DomainException("Event phải có ít nhất 1 nghệ sĩ trong danh sách biểu diễn trước khi nộp duyệt.");
@@ -133,7 +133,7 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
         // tickets 30 minutes later. Money taken, no ticket, no refund. Checking here is what keeps
         // that path off the table in the first place; ScheduleSettlementHandler's own null-account
         // branch is the backstop for a venue that removes its account after publishing.
-        var defaultPayoutAccounts = await _uow.Repository<BankAccount, int>().FindAsync(
+        var defaultPayoutAccounts = await _uow.Repository<BankAccount, Guid>().FindAsync(
             a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == lounge.Id && a.IsDefault, ct);
         if (defaultPayoutAccounts.Count == 0)
             throw new DomainException(
@@ -172,7 +172,7 @@ internal sealed class PublishLoungeShowCommandHandler : IRequestHandler<PublishL
                 TargetId = show.Id,
                 SlaDeadline = now.AddHours(slaHours)
             };
-            _uow.Repository<EventModeration, int>().Add(moderation);
+            _uow.Repository<EventModeration, Guid>().Add(moderation);
         }
         else
         {

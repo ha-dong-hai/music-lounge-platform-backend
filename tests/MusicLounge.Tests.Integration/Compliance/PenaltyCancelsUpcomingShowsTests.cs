@@ -33,7 +33,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
 
     public PenaltyCancelsUpcomingShowsTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId);
 
     private async Task<Venue> VenueAsync()
     {
@@ -53,7 +53,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
         return new Venue(owner.Id, lounge.Id);
     }
 
-    private async Task<int> UserAsync()
+    private async Task<Guid> UserAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -63,7 +63,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
         return user.Id;
     }
 
-    private async Task<int> ShowAsync(int loungeId, DateTimeOffset start, LoungeShowStatus status = LoungeShowStatus.Published)
+    private async Task<Guid> ShowAsync(Guid loungeId, DateTimeOffset start, LoungeShowStatus status = LoungeShowStatus.Published)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -84,7 +84,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
     }
 
     /// <param name="payerId">Người đã trả tiền; null = vé bán tại quầy (tiền mặt, không có tài khoản).</param>
-    private async Task<(Guid TicketId, int PaymentId)> TicketAsync(int showId, int? payerId, int? holderId = null)
+    private async Task<(Guid TicketId, Guid PaymentId)> TicketAsync(Guid showId, Guid? payerId, Guid? holderId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -140,7 +140,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
         return (ticket.Id, payment.Id);
     }
 
-    private async Task PenaltyAsync(int loungeId, PenaltyType type, PenaltyStatus status = PenaltyStatus.Active)
+    private async Task PenaltyAsync(Guid loungeId, PenaltyType type, PenaltyStatus status = PenaltyStatus.Active)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -162,7 +162,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
         await scope.ServiceProvider.GetRequiredService<ApplyDuePenaltiesJob>().ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private async Task<LoungeShowStatus> ShowStatusAsync(int showId)
+    private async Task<LoungeShowStatus> ShowStatusAsync(Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         return (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoungeShows.AsNoTracking()
@@ -176,14 +176,14 @@ public sealed class PenaltyCancelsUpcomingShowsTests
             .SingleAsync(t => t.Id == ticketId)).Status;
     }
 
-    private async Task<List<RefundRequest>> RefundsAsync(int paymentId)
+    private async Task<List<RefundRequest>> RefundsAsync(Guid paymentId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().RefundRequests.AsNoTracking()
             .Where(r => r.PaymentId == paymentId).ToListAsync();
     }
 
-    private async Task<List<Notification>> NoticesAsync(int userId, NotificationType type)
+    private async Task<List<Notification>> NoticesAsync(Guid userId, NotificationType type)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()

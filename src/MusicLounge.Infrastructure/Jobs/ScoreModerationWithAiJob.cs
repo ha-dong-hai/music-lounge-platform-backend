@@ -28,7 +28,7 @@ public sealed class ScoreModerationWithAiJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 30)]
-    public async Task ExecuteAsync(int moderationId, IJobCancellationToken cancellationToken)
+    public async Task ExecuteAsync(Guid moderationId, IJobCancellationToken cancellationToken)
     {
         var ct = cancellationToken.ShutdownToken;
 

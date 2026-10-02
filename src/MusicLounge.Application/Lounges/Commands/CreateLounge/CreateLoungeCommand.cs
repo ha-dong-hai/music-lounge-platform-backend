@@ -10,7 +10,7 @@ namespace MusicLounge.Application.Lounges.Commands.CreateLounge;
 public sealed record CreateLoungeCommand(
     string Name,
     string? Description,
-    int? AtmosphereId,
+    Guid? AtmosphereId,
     string Street,
     string? Ward,
     string? District,
@@ -20,4 +20,4 @@ public sealed record CreateLoungeCommand(
     // MLACP-521: tuỳ chọn — mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg (xem ILoungeAddressInput).
     string? ProvinceCode = null,
     string? WardCode = null
-) : ICommand<int>, ILoungeAddressInput;
+) : ICommand<Guid>, ILoungeAddressInput;

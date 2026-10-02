@@ -53,13 +53,13 @@ internal sealed class HideDonationMessageCommandHandler : IRequestHandler<HideDo
         // người gỡ và thời điểm gỡ của nhau.
         await using var _ = await _lock.AcquireAsync($"donation:{request.DonationId}", ct);
 
-        var donation = await _uow.Repository<Donation, int>().GetByIdAsync(request.DonationId, ct)
+        var donation = await _uow.Repository<Donation, Guid>().GetByIdAsync(request.DonationId, ct)
             ?? throw new NotFoundException(nameof(Donation), request.DonationId);
-        var performance = await _uow.Repository<Performance, int>().GetByIdAsync(donation.PerformanceId, ct)
+        var performance = await _uow.Repository<Performance, Guid>().GetByIdAsync(donation.PerformanceId, ct)
             ?? throw new NotFoundException(nameof(Performance), donation.PerformanceId);
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(performance.LoungeShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(performance.LoungeShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), performance.LoungeShowId);
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         var isOwner = lounge.OwnerId == _currentUser.UserId;
@@ -76,7 +76,7 @@ internal sealed class HideDonationMessageCommandHandler : IRequestHandler<HideDo
 
         donation.MessageHiddenAt = DateTimeOffset.UtcNow;
         donation.MessageHiddenByUserId = _currentUser.UserId;
-        _uow.Repository<Donation, int>().Update(donation);
+        _uow.Repository<Donation, Guid>().Update(donation);
         await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.MessageHidden,
             _currentUser.UserId, detail: "Gỡ lời nhắn khỏi livestream (không hoàn tiền).", ct: ct);
         await _uow.SaveChangesAsync(ct);

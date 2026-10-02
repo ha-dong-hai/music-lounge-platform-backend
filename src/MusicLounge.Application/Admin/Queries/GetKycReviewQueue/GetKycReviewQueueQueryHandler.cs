@@ -34,7 +34,7 @@ internal sealed class GetKycReviewQueueQueryHandler
         // MLACP-398: duyệt hồ sơ doanh nghiệp cần giấy chứng nhận đăng ký kinh doanh của phòng trà — cho Admin thấy ngay
         // trên danh sách hồ sơ nào đã có, như danh sách duyệt phòng trà đang làm.
         var pageUserIds = pageUsers.Select(u => u.Id).ToList();
-        var licensedOwnerIds = (await _uow.Repository<MusicLoungeEntity, int>().FindAsync(
+        var licensedOwnerIds = (await _uow.Repository<MusicLoungeEntity, Guid>().FindAsync(
                 l => pageUserIds.Contains(l.OwnerId) && l.BusinessLicenseUrl != null && l.BusinessLicenseUrl != "", ct))
             .Select(l => l.OwnerId)
             .ToHashSet();

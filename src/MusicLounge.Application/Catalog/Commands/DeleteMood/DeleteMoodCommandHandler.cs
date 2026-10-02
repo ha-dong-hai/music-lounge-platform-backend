@@ -13,12 +13,12 @@ internal sealed class DeleteMoodCommandHandler : IRequestHandler<DeleteMoodComma
 
     public async Task<Unit> Handle(DeleteMoodCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<Mood, int>();
+        var repo = _uow.Repository<Mood, Guid>();
         var mood = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(Mood), request.Id);
 
-        var inUse = await _uow.Repository<LoungeShowMood, int>().AnyAsync(x => x.MoodId == request.Id, ct)
-            || await _uow.Repository<UserFavouriteMood, int>().AnyAsync(x => x.MoodId == request.Id, ct);
+        var inUse = await _uow.Repository<LoungeShowMood, Guid>().AnyAsync(x => x.MoodId == request.Id, ct)
+            || await _uow.Repository<UserFavouriteMood, Guid>().AnyAsync(x => x.MoodId == request.Id, ct);
         if (inUse)
             throw new ConflictException($"Dòng nhạc/cảm xúc '{mood.Name}' đang được sử dụng, không thể xóa.");
 

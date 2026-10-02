@@ -27,7 +27,7 @@ internal sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPassw
 
     public async Task<Unit> Handle(ForgotPasswordCommand request, CancellationToken ct)
     {
-        var users = await _uow.Repository<User, int>()
+        var users = await _uow.Repository<User, Guid>()
             .FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault();
 
@@ -45,7 +45,7 @@ internal sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPassw
             user.PasswordResetTokenHash = PasswordResetTokenHasher.Hash(rawToken);
             user.PasswordResetTokenExpiresAt = DateTimeOffset.UtcNow.Add(TokenLifetime);
 
-            _uow.Repository<User, int>().Update(user);
+            _uow.Repository<User, Guid>().Update(user);
             await _uow.SaveChangesAsync(ct);
 
             var resetLink = $"{_businessSettings.PasswordResetUrl}?token={Uri.EscapeDataString(rawToken)}";

@@ -28,10 +28,10 @@ public sealed class SearchFilterTests
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Paged<T>(IReadOnlyList<T> Items, int TotalCount);
-    private sealed record Item(int Id, string Name);
+    private sealed record Item(Guid Id, string Name);
 
     /// <summary>Phòng trà riêng cho mỗi bài, thành phố duy nhất — để bài này không thấy dữ liệu của bài khác.</summary>
-    private async Task<(int LoungeId, string City)> PhongTraRiengAsync()
+    private async Task<(Guid LoungeId, string City)> PhongTraRiengAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -52,8 +52,8 @@ public sealed class SearchFilterTests
     }
 
     /// <summary>Buổi hòa nhạc đã công khai, kèm các mức giá mô tả bằng (giá, đã duyệt chưa, số vé tối đa).</summary>
-    private async Task<int> BuoiHoaNhacAsync(
-        int loungeId, params (decimal Gia, bool DaDuyet, int? SoVe)[] mucGia)
+    private async Task<Guid> BuoiHoaNhacAsync(
+        Guid loungeId, params (decimal Gia, bool DaDuyet, int? SoVe)[] mucGia)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -92,7 +92,7 @@ public sealed class SearchFilterTests
     }
 
     /// <summary>Bán hết vé của mọi mức giá thuộc buổi hòa nhạc này.</summary>
-    private async Task BanHetVeAsync(int showId)
+    private async Task BanHetVeAsync(Guid showId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -109,7 +109,7 @@ public sealed class SearchFilterTests
         await db.SaveChangesAsync();
     }
 
-    private async Task<IReadOnlyList<int>> TimAsync(string query)
+    private async Task<IReadOnlyList<Guid>> TimAsync(string query)
     {
         var res = await _factory.CreateClient().GetAsync($"/api/v1/lounge-shows/search?{query}&pageSize=100");
         res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());

@@ -8,7 +8,7 @@ public sealed class ReviewTicketTierCommandValidator : AbstractValidator<ReviewT
 
     public ReviewTicketTierCommandValidator()
     {
-        RuleFor(x => x.TierId).GreaterThan(0).WithMessage("TierId không hợp lệ.");
+        RuleFor(x => x.TierId).NotEmpty().WithMessage("TierId không hợp lệ.");
 
         RuleFor(x => x.Decision)
             .NotEmpty()

@@ -35,11 +35,11 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
 
     public async Task<Unit> Handle(ConfirmCashRefundHandedBackCommand request, CancellationToken ct)
     {
-        var refundRepo = _uow.Repository<RefundRequest, int>();
+        var refundRepo = _uow.Repository<RefundRequest, Guid>();
         var refund = await refundRepo.GetByIdAsync(request.RefundRequestId, ct)
             ?? throw new NotFoundException(nameof(RefundRequest), request.RefundRequestId);
 
-        var payment = await _uow.Repository<Payment, int>().GetByIdAsync(refund.PaymentId, ct)
+        var payment = await _uow.Repository<Payment, Guid>().GetByIdAsync(refund.PaymentId, ct)
             ?? throw new NotFoundException(nameof(Payment), refund.PaymentId);
 
         // Lan tu giao dich ve phong tra qua ve — mot Payment chi thuoc mot buoi dien.
@@ -47,9 +47,9 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
                 .FindAsync(t => t.PaymentId == payment.Id, ct))
             .FirstOrDefault()
             ?? throw new DomainException("Không xác định được vé của giao dịch này.");
-        var show = await _uow.Repository<LoungeShow, int>().GetByIdAsync(ticket.ShowId, ct)
+        var show = await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(ticket.ShowId, ct)
             ?? throw new NotFoundException(nameof(LoungeShow), ticket.ShowId);
-        var lounge = await _uow.Repository<MusicLoungeEntity, int>().GetByIdAsync(show.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(show.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         // Phan quyen truoc moi dieu kien nghiep vu: nguoi ngoai khong duoc biet ca trang thai cua
@@ -73,7 +73,7 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
 
         // Noi dung su that va chi duong neu khong dung: nen tang khong chung kien viec giao tien, nen
         // khong khang dinh thay phong tra — chi chuyen loi xac nhan cua ho, kem loi thoat cho khach.
-        if (refund.RequestedBy is int buyerId)
+        if (refund.RequestedBy is Guid buyerId)
             await _notifications.NotifyAsync(
                 buyerId,
                 NotificationType.RefundUpdate,

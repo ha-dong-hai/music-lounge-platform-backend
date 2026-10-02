@@ -20,7 +20,7 @@ internal sealed class LookupComplaintQueryHandler
 
     public async Task<ComplaintLookupDto> Handle(LookupComplaintQuery request, CancellationToken ct)
     {
-        var matches = await _uow.Repository<Complaint, int>()
+        var matches = await _uow.Repository<Complaint, Guid>()
             .FindAsync(c => c.LookupReference == request.Reference, ct);
 
         // Cùng một thông báo cho "mã sai" và "mã không tồn tại" — mã tra cứu chính là thứ chứng minh

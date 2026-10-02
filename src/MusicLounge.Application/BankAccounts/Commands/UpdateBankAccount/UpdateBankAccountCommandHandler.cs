@@ -33,7 +33,7 @@ internal sealed class UpdateBankAccountCommandHandler : IRequestHandler<UpdateBa
 
     public async Task<Unit> Handle(UpdateBankAccountCommand request, CancellationToken ct)
     {
-        var repo = _uow.Repository<BankAccount, int>();
+        var repo = _uow.Repository<BankAccount, Guid>();
         var account = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(BankAccount), request.Id);
 
@@ -72,7 +72,7 @@ internal sealed class UpdateBankAccountCommandHandler : IRequestHandler<UpdateBa
 
         // MLACP-364: tai khoan cua nghe si do nguoi khac nhap thay — moi chinh nghe si xac nhan.
         if (account.OwnerType == BankAccountOwnerType.Performer
-            && await _uow.Repository<Performer, int>().GetByIdAsync(account.OwnerId, ct) is { } performer
+            && await _uow.Repository<Performer, Guid>().GetByIdAsync(account.OwnerId, ct) is { } performer
             && await PerformerConfirmations.InviteAsync(_uow, _email, _settings, _logger, performer,
                 PerformerConfirmations.ForBankAccount(account, request.AccountNumber), ct))
             await _uow.SaveChangesAsync(ct);

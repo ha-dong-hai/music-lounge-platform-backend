@@ -35,7 +35,7 @@ internal sealed class InitiateFnbOrderPaymentCommandHandler
     {
         await using var _ = await _lock.AcquireAsync(FnbOrderPayments.LockKey(request.OrderId), ct);
 
-        var orderRepo = _uow.Repository<FnbOrder, int>();
+        var orderRepo = _uow.Repository<FnbOrder, Guid>();
         var order = await orderRepo.GetByIdAsync(request.OrderId, ct)
             ?? throw new NotFoundException(nameof(FnbOrder), request.OrderId);
 
@@ -77,7 +77,7 @@ internal sealed class InitiateFnbOrderPaymentCommandHandler
         // mat mang Method = Gateway ma khong co ma giao dich. Phuong thuc chi duoc ghi khi tien that su
         // ve: ProcessFnbOrderPayment (online) hoac UpdateFnbOrderStatus (tien mat).
 
-        _uow.Repository<Payment, int>().Add(new Payment
+        _uow.Repository<Payment, Guid>().Add(new Payment
         {
             OrderId = orderId,
             PayerId = order.AudienceUserId,

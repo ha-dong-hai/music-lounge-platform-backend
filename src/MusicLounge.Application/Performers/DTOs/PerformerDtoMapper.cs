@@ -15,19 +15,19 @@ internal static class PerformerDtoMapper
         if (performers.Count == 0) return [];
 
         var performerIds = performers.Select(p => p.Id).ToHashSet();
-        var genreLinks = await uow.Repository<PerformerGenre, int>().FindAsync(
+        var genreLinks = await uow.Repository<PerformerGenre, Guid>().FindAsync(
             g => performerIds.Contains(g.PerformerId), ct);
 
         var genreIds = genreLinks.Select(l => l.GenreId).Distinct().ToList();
         var genres = genreIds.Count == 0
             ? []
-            : await uow.Repository<MusicGenre, int>().FindAsync(g => genreIds.Contains(g.Id), ct);
+            : await uow.Repository<MusicGenre, Guid>().FindAsync(g => genreIds.Contains(g.Id), ct);
         var genreNameById = genres.ToDictionary(g => g.Id, g => g.Name);
 
         var genresByPerformer = genreLinks.GroupBy(l => l.PerformerId)
             .ToDictionary(g => g.Key, g => g.Select(l => l.GenreId).ToList());
 
-        var socialLinks = await uow.Repository<PerformerSocialLink, int>().FindAsync(
+        var socialLinks = await uow.Repository<PerformerSocialLink, Guid>().FindAsync(
             s => performerIds.Contains(s.PerformerId), ct);
         var socialLinksByPerformer = socialLinks.GroupBy(s => s.PerformerId)
             .ToDictionary(g => g.Key, g => g

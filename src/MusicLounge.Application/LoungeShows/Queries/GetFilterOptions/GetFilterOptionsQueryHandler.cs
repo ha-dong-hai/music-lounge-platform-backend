@@ -20,9 +20,9 @@ internal sealed class GetFilterOptionsQueryHandler
 
     public async Task<FilterOptionsDto> Handle(GetFilterOptionsQuery request, CancellationToken ct)
     {
-        var genres = await _uow.Repository<MusicGenre, int>().GetAllAsync(ct);
-        var moods = await _uow.Repository<Mood, int>().GetAllAsync(ct);
-        var atmospheres = await _uow.Repository<VenueAtmosphere, int>().GetAllAsync(ct);
+        var genres = await _uow.Repository<MusicGenre, Guid>().GetAllAsync(ct);
+        var moods = await _uow.Repository<Mood, Guid>().GetAllAsync(ct);
+        var atmospheres = await _uow.Repository<VenueAtmosphere, Guid>().GetAllAsync(ct);
 
         // GetDistinctCitiesAsync đã tồn tại trong repository từ lâu và chưa từng được gọi.
         var cities = await _showRepo.GetDistinctCitiesAsync(ct);

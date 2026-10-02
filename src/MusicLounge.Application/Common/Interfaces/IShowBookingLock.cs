@@ -8,5 +8,5 @@ namespace MusicLounge.Application.Common.Interfaces;
 /// </summary>
 public interface IShowBookingLock
 {
-    Task<IAsyncDisposable> AcquireAsync(int showId, CancellationToken ct = default);
+    Task<IAsyncDisposable> AcquireAsync(Guid showId, CancellationToken ct = default);
 }

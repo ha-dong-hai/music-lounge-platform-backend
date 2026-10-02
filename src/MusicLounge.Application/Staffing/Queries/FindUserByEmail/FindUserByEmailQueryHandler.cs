@@ -14,7 +14,7 @@ internal sealed class FindUserByEmailQueryHandler : IRequestHandler<FindUserByEm
 
     public async Task<UserLookupDto> Handle(FindUserByEmailQuery request, CancellationToken ct)
     {
-        var users = await _uow.Repository<User, int>()
+        var users = await _uow.Repository<User, Guid>()
             .FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault()
             ?? throw new NotFoundException(nameof(User), request.Email);

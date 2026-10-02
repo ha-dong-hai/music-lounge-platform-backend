@@ -29,7 +29,7 @@ public sealed class RefundPolicyDisclosureTests
 
     public RefundPolicyDisclosureTests(ApiFactory factory) => _factory = factory;
 
-    private async Task<(int ShowId, int PriceId)> SeedSellableShowAsync()
+    private async Task<(Guid ShowId, Guid PriceId)> SeedSellableShowAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -130,11 +130,11 @@ public sealed class RefundPolicyDisclosureTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record ShowDetail(int Id, string Name, RefundPolicy? RefundPolicy);
+    private sealed record ShowDetail(Guid Id, string Name, RefundPolicy? RefundPolicy);
     private sealed record RefundPolicy(
         bool CancellationAllowed, decimal RefundPercentage, DateTimeOffset? CancelBefore,
         int? DeadlineHoursBeforeStart, bool AlwaysFullRefundIfVenueCancels, string Summary);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
     private sealed record PurchaseData(
-        int PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
+        Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl, Guid[] TicketIds);
 }

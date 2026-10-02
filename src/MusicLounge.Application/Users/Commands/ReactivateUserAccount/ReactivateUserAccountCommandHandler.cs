@@ -22,7 +22,7 @@ internal sealed class ReactivateUserAccountCommandHandler : IRequestHandler<Reac
 
     public async Task<Unit> Handle(ReactivateUserAccountCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var user = await userRepo.GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 

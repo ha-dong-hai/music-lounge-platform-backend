@@ -3,4 +3,4 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Analytics.Queries.GetShowPerformance;
 
-public sealed record GetShowPerformanceQuery(int ShowId) : IQuery<ShowPerformanceDto>;
+public sealed record GetShowPerformanceQuery(Guid ShowId) : IQuery<ShowPerformanceDto>;

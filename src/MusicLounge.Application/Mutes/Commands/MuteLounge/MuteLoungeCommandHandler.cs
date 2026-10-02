@@ -27,7 +27,7 @@ internal sealed class MuteLoungeCommandHandler : ICommandHandler<MuteLoungeComma
 
     public async Task<Unit> Handle(MuteLoungeCommand request, CancellationToken ct)
     {
-        var loungeExists = await _uow.Repository<Domain.Entities.MusicLounge, int>()
+        var loungeExists = await _uow.Repository<Domain.Entities.MusicLounge, Guid>()
             .AnyAsync(l => l.Id == request.LoungeId, ct);
 
         if (!loungeExists)
@@ -35,19 +35,19 @@ internal sealed class MuteLoungeCommandHandler : ICommandHandler<MuteLoungeComma
 
         var userId = _currentUser.UserId;
 
-        var alreadyMuted = await _uow.Repository<LoungeMute, int>()
+        var alreadyMuted = await _uow.Repository<LoungeMute, Guid>()
             .AnyAsync(m => m.UserId == userId && m.LoungeId == request.LoungeId, ct);
 
         if (alreadyMuted)
             throw new ConflictException("Bạn đã tắt tiếng phòng trà này.");
 
         // Gỡ theo dõi nếu có: hai chỉ thị trái ngược cho cùng một phòng trà không được cùng tồn tại.
-        var follows = await _uow.Repository<Follow, int>()
+        var follows = await _uow.Repository<Follow, Guid>()
             .FindAsync(f => f.UserId == userId && f.LoungeId == request.LoungeId, ct);
         foreach (var follow in follows)
-            _uow.Repository<Follow, int>().Remove(follow);
+            _uow.Repository<Follow, Guid>().Remove(follow);
 
-        _uow.Repository<LoungeMute, int>().Add(new LoungeMute
+        _uow.Repository<LoungeMute, Guid>().Add(new LoungeMute
         {
             UserId = userId,
             LoungeId = request.LoungeId,

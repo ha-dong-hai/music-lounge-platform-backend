@@ -32,9 +32,9 @@ public sealed class DonationVenuePayoutTests
 
     public DonationVenuePayoutTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Venue(int OwnerId, int LoungeId, int PerformanceId, int? BankAccountId);
+    private sealed record Venue(Guid OwnerId, Guid LoungeId, Guid PerformanceId, Guid? BankAccountId);
 
-    private sealed record InitData(int DonationId, string OrderId);
+    private sealed record InitData(Guid DonationId, string OrderId);
 
     private sealed record Wrapped<T>(T Data);
 
@@ -62,7 +62,7 @@ public sealed class DonationVenuePayoutTests
         db.Lounges.Add(lounge);
         await db.SaveChangesAsync();
 
-        int? bankAccountId = null;
+        Guid? bankAccountId = null;
         if (withBankAccount)
         {
             var pii = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
@@ -96,7 +96,7 @@ public sealed class DonationVenuePayoutTests
         return new Venue(owner.Id, lounge.Id, performance.Id, bankAccountId);
     }
 
-    private async Task<int> DonateAndConfirmAsync(int performanceId)
+    private async Task<Guid> DonateAndConfirmAsync(Guid performanceId)
     {
         var audience = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
         var res = await audience.PostAsJsonAsync("/api/v1/donations", new
@@ -127,7 +127,7 @@ public sealed class DonationVenuePayoutTests
             .ExecuteAsync(new JobCancellationToken(false));
     }
 
-    private static async Task<(Payment Payment, Settlement Settlement)> PayoutOfAsync(ApplicationDbContext db, int donationId)
+    private static async Task<(Payment Payment, Settlement Settlement)> PayoutOfAsync(ApplicationDbContext db, Guid donationId)
     {
         var payment = await db.Payments.SingleAsync(
             p => p.ReferenceType == "Donation" && p.ReferenceId == donationId.ToString());
@@ -135,7 +135,7 @@ public sealed class DonationVenuePayoutTests
         return (payment, settlement);
     }
 
-    private Task<HttpResponseMessage> AcknowledgeAsync(Venue venue, int donationId)
+    private Task<HttpResponseMessage> AcknowledgeAsync(Venue venue, Guid donationId)
         => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
             .PostAsync($"/api/v1/donations/{donationId}/acknowledge", null);
 

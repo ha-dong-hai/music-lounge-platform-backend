@@ -14,7 +14,7 @@ internal sealed class GetLoungeZonesQueryHandler
 
     public async Task<IReadOnlyList<SeatingZoneDto>> Handle(GetLoungeZonesQuery request, CancellationToken ct)
     {
-        var zones = await _uow.Repository<SeatingZone, int>().FindAsync(
+        var zones = await _uow.Repository<SeatingZone, Guid>().FindAsync(
             z => z.LoungeId == request.LoungeId && (!request.ActiveOnly || z.IsActive), ct);
 
         return zones

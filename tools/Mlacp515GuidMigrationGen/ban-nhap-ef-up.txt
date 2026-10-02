@@ -1,0 +1,2452 @@
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DeleteData(
+                table: "event_categories",
+                keyColumn: "Id",
+                keyValue: 1);
+
+            migrationBuilder.DeleteData(
+                table: "event_categories",
+                keyColumn: "Id",
+                keyValue: 2);
+
+            migrationBuilder.DeleteData(
+                table: "event_categories",
+                keyColumn: "Id",
+                keyValue: 3);
+
+            migrationBuilder.DeleteData(
+                table: "event_categories",
+                keyColumn: "Id",
+                keyValue: 4);
+
+            migrationBuilder.DeleteData(
+                table: "moods",
+                keyColumn: "Id",
+                keyValue: 1);
+
+            migrationBuilder.DeleteData(
+                table: "moods",
+                keyColumn: "Id",
+                keyValue: 2);
+
+            migrationBuilder.DeleteData(
+                table: "moods",
+                keyColumn: "Id",
+                keyValue: 3);
+
+            migrationBuilder.DeleteData(
+                table: "moods",
+                keyColumn: "Id",
+                keyValue: 4);
+
+            migrationBuilder.DeleteData(
+                table: "moods",
+                keyColumn: "Id",
+                keyValue: 5);
+
+            migrationBuilder.DeleteData(
+                table: "moods",
+                keyColumn: "Id",
+                keyValue: 6);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 1);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 2);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 3);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 4);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 5);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 6);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 7);
+
+            migrationBuilder.DeleteData(
+                table: "music_genres",
+                keyColumn: "Id",
+                keyValue: 8);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 2);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 3);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 4);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 5);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 6);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 7);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 8);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 9);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 10);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 11);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 12);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 15);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 16);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 17);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 18);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 19);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 20);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 21);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 22);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 23);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 24);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 25);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 26);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 27);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 28);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 29);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 30);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 31);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 32);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 33);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 34);
+
+            migrationBuilder.DeleteData(
+                table: "system_config",
+                keyColumn: "Id",
+                keyValue: 35);
+
+            migrationBuilder.DeleteData(
+                table: "venue_atmospheres",
+                keyColumn: "Id",
+                keyValue: 1);
+
+            migrationBuilder.DeleteData(
+                table: "venue_atmospheres",
+                keyColumn: "Id",
+                keyValue: 2);
+
+            migrationBuilder.DeleteData(
+                table: "venue_atmospheres",
+                keyColumn: "Id",
+                keyValue: 3);
+
+            migrationBuilder.DeleteData(
+                table: "venue_atmospheres",
+                keyColumn: "Id",
+                keyValue: 4);
+
+            migrationBuilder.DeleteData(
+                table: "venue_atmospheres",
+                keyColumn: "Id",
+                keyValue: 5);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ResultSceneId",
+                table: "venue_tour_stitch_attempts",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "venue_tour_stitch_attempts",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "venue_tour_stitch_attempts",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "venue_tour_scenes",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "venue_tour_scenes",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TargetSceneId",
+                table: "venue_tour_hotspots",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "SceneId",
+                table: "venue_tour_hotspots",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "venue_tour_hotspots",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ReviewedBy",
+                table: "venue_penalties",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "venue_penalties",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "IssuedBy",
+                table: "venue_penalties",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CompensatedSubscriptionId",
+                table: "venue_penalties",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "venue_penalties",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "venue_atmospheres",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "venue_atmospheres",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "venue_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TaxProfileVerifiedBy",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CitizenCardReviewedBy",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_favourite_moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "MoodId",
+                table: "user_favourite_moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "user_favourite_moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_favourite_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "GenreId",
+                table: "user_favourite_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "user_favourite_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_favourite_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AtmosphereId",
+                table: "user_favourite_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "user_favourite_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ShowId",
+                table: "user_event_scores",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_event_scores",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_disliked_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "GenreId",
+                table: "user_disliked_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "user_disliked_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_custom_preferences",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CriteriaId",
+                table: "user_custom_preferences",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "user_custom_preferences",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "user_behaviour_logs",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "user_behaviour_logs",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "user_behaviour_logs",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TierId",
+                table: "tickets",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ShowId",
+                table: "tickets",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PriceId",
+                table: "tickets",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PendingTransferToUserId",
+                table: "tickets",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PaymentId",
+                table: "tickets",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "BuyerId",
+                table: "tickets",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ZoneId",
+                table: "ticket_tiers",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "ticket_tiers",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "ticket_tiers",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "ticket_tiers",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ticket_tiers",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TierId",
+                table: "ticket_prices",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ticket_prices",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "ticket_holds",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PriceId",
+                table: "ticket_holds",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ticket_holds",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ChangedBy",
+                table: "system_config_history",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "system_config_history",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(long),
+                oldType: "bigint")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "system_config",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "system_config",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "subscription_packages",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "subscription_packages",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "subscription_packages",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "show_wishlists",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "show_wishlists",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "show_wishlists",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PaymentId",
+                table: "settlements",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OwnerId",
+                table: "settlements",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "BankAccountId",
+                table: "settlements",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "settlements",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "seating_zones",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "seating_zones",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "seating_zones",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "seating_zones",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "refund_requests",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "RequestedBy",
+                table: "refund_requests",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ProcessedBy",
+                table: "refund_requests",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PaymentId",
+                table: "refund_requests",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "refund_requests",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "refund_requests",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "SoldByStaffId",
+                table: "physical_ticket_details",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CheckedInByStaffId",
+                table: "physical_ticket_details",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "performers",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedByUserId",
+                table: "performers",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "performers",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "performers",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "performer_social_links",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PerformerId",
+                table: "performer_social_links",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "performer_social_links",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "performer_social_links",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PerformerId",
+                table: "performer_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "GenreId",
+                table: "performer_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "performer_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PerformerId",
+                table: "performer_confirmations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "DonationId",
+                table: "performer_confirmations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "BankAccountId",
+                table: "performer_confirmations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "performer_confirmations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PerformerId",
+                table: "performances",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "performances",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "performances",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PayerId",
+                table: "payments",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "payments",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PackageId",
+                table: "owner_subscriptions",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OwnerId",
+                table: "owner_subscriptions",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "owner_subscriptions",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "notifications",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "notifications",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "music_lounges",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "StatusReviewedBy",
+                table: "music_lounges",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OwnerId",
+                table: "music_lounges",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "music_lounges",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AtmosphereId",
+                table: "music_lounges",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "music_lounges",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "music_genres",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "music_genres",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "music_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "moods",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "moods",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "lounge_staff",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "lounge_staff",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "DeactivatedBy",
+                table: "lounge_staff",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AssignedBy",
+                table: "lounge_staff",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_staff",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "lounge_shows",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "lounge_shows",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LegalApprovalConfirmedByAdminId",
+                table: "lounge_shows",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "lounge_shows",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CategoryId",
+                table: "lounge_shows",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_shows",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "lounge_show_ratings",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "lounge_show_ratings",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "lounge_show_ratings",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "lounge_show_ratings",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_show_ratings",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "MoodId",
+                table: "lounge_show_moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "lounge_show_moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_show_moods",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "lounge_show_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "GenreId",
+                table: "lounge_show_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_show_genres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "lounge_show_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AtmosphereId",
+                table: "lounge_show_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_show_atmospheres",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "lounge_mutes",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "lounge_mutes",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_mutes",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "lounge_images",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_images",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "lounge_gallery_images",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "lounge_gallery_images",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "login_spike_alert_states",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "login_failure_logs",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "livestreams",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TerminatedById",
+                table: "livestreams",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "livestreams",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "livestreams",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "livestreams",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LivestreamId",
+                table: "livestream_viewing_sessions",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "livestream_viewing_sessions",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LivestreamId",
+                table: "livestream_ticket_details",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "livestream_chat_messages",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LivestreamId",
+                table: "livestream_chat_messages",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "livestream_chat_messages",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PaymentId",
+                table: "ledger_entries",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AccountId",
+                table: "ledger_entries",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ledger_entries",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OwnerId",
+                table: "ledger_accounts",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ledger_accounts",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "known_admin_snapshots",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "known_admin_snapshots",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "follows",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "follows",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "follows",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ZoneId",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "StaffId",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ShowId",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AudienceUserId",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "fnb_orders",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "fnb_order_items",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "MenuItemId",
+                table: "fnb_order_items",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "FnbOrderId",
+                table: "fnb_order_items",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "fnb_order_items",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "fnb_order_items",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "fnb_menus",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "fnb_menus",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "fnb_menus",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "fnb_menus",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "fnb_menu_items",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "MenuId",
+                table: "fnb_menu_items",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "fnb_menu_items",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "fnb_menu_items",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "event_moderations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TargetId",
+                table: "event_moderations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "event_moderations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AdminId",
+                table: "event_moderations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "event_moderations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "event_custom_values",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ShowId",
+                table: "event_custom_values",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CriteriaId",
+                table: "event_custom_values",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "event_custom_values",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "event_custom_values",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "event_categories",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "event_categories",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "event_categories",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "PerformanceId",
+                table: "donations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "MessageHiddenByUserId",
+                table: "donations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "DonorUserId",
+                table: "donations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "BankAccountId",
+                table: "donations",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "donations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "DonationId",
+                table: "donation_events",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ActorUserId",
+                table: "donation_events",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "donation_events",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(long),
+                oldType: "bigint")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "device_tokens",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "device_tokens",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "custom_criteria",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeId",
+                table: "custom_criteria",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "custom_criteria",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "custom_criteria",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TargetId",
+                table: "content_reports",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ResolvedByAdminId",
+                table: "content_reports",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ReporterId",
+                table: "content_reports",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "content_reports",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "TargetId",
+                table: "complaints",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ComplainantUserId",
+                table: "complaints",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "AdminId",
+                table: "complaints",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "complaints",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UpdatedBy",
+                table: "bank_accounts",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OwnerId",
+                table: "bank_accounts",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "CreatedBy",
+                table: "bank_accounts",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(int),
+                oldType: "int",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "bank_accounts",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "UserId",
+                table: "ai_recommendations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "LoungeShowId",
+                table: "ai_recommendations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ai_recommendations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "ShowId",
+                table: "ai_poster_generations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OwnerId",
+                table: "ai_poster_generations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "Id",
+                table: "ai_poster_generations",
+                type: "uniqueidentifier",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int")
+                .OldAnnotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.InsertData(
+                table: "event_categories",
+                columns: new[] { "Id", "CreatedAt", "CreatedBy", "Description", "IsActive", "Name", "UpdatedAt", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { new Guid("00000000-0001-8dcd-8fac-000000000001"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, true, "Đêm nhạc thường", null, null },
+                    { new Guid("00000000-0002-8dcd-8fac-000000000002"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, true, "Mini Show", null, null },
+                    { new Guid("00000000-0003-8dcd-8fac-000000000003"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, true, "Sự kiện riêng", null, null },
+                    { new Guid("00000000-0004-8dcd-8fac-000000000004"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, true, "Họp báo", null, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "moods",
+                columns: new[] { "Id", "CreatedAt", "CreatedBy", "Name", "UpdatedAt", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { new Guid("00000000-0001-8f66-84f7-000000000001"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Hoài niệm", null, null },
+                    { new Guid("00000000-0002-8f66-84f7-000000000002"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Tiền chiến", null, null },
+                    { new Guid("00000000-0003-8f66-84f7-000000000003"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Lãng mạn", null, null },
+                    { new Guid("00000000-0004-8f66-84f7-000000000004"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Chill", null, null },
+                    { new Guid("00000000-0005-8f66-84f7-000000000005"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Sôi động", null, null },
+                    { new Guid("00000000-0006-8f66-84f7-000000000006"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Nhẹ nhàng", null, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "music_genres",
+                columns: new[] { "Id", "CreatedAt", "CreatedBy", "Name", "NameEn", "UpdatedAt", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { new Guid("00000000-0001-81b5-8b05-000000000001"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Jazz", "Jazz", null, null },
+                    { new Guid("00000000-0002-81b5-8b05-000000000002"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Acoustic", "Acoustic", null, null },
+                    { new Guid("00000000-0003-81b5-8b05-000000000003"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Ballad", "Ballad", null, null },
+                    { new Guid("00000000-0004-81b5-8b05-000000000004"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Bolero", "Bolero", null, null },
+                    { new Guid("00000000-0005-81b5-8b05-000000000005"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Pop", "Pop", null, null },
+                    { new Guid("00000000-0006-81b5-8b05-000000000006"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Trữ tình", null, null, null },
+                    { new Guid("00000000-0007-81b5-8b05-000000000007"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "R&B", "R&B", null, null },
+                    { new Guid("00000000-0008-81b5-8b05-000000000008"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Cổ điển", "Classical", null, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "system_config",
+                columns: new[] { "Id", "ConfigKey", "ConfigValue", "DataType", "Description", "UpdatedAt", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { new Guid("00000000-0002-8276-802b-000000000002"), "platform_commission_rate", "0.05", "Decimal", "Hoa hồng nền tảng (5%) — quyết định thương mại của dự án, KHÔNG do nghị định nào quy định", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0003-8276-802b-000000000003"), "tax_rate", "0.05", "Decimal", "Thuế GTGT khấu trừ tại nguồn (5% — tỷ lệ cho DỊCH VỤ theo NĐ 117/2025/NĐ-CP). Chỉ khấu trừ cho hộ/cá nhân kinh doanh; doanh nghiệp tự kê khai.", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0004-8276-802b-000000000004"), "settlement_partial_hours_after_show", "48", "Integer", "Số giờ sau khi buổi diễn kết thúc thì chi trả đợt đầu cho phòng trà (tỷ lệ đợt đầu tuỳ hạng phòng trà)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0005-8276-802b-000000000005"), "settlement_final_days_after_show", "14", "Integer", "Số ngày sau khi buổi diễn kết thúc thì chi trả phần còn lại cho phòng trà", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0006-8276-802b-000000000006"), "settlement_completion_threshold_pct", "0.70", "Decimal", "Tỷ lệ tối thiểu giữa thời lượng diễn thực tế và theo lịch để tự động chi trả phần còn lại; thấp hơn thì khoản này chờ Admin xem xét (D16)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0007-8276-802b-000000000007"), "settlement_tier_new_pre_rate", "0.50", "Decimal", "Hạng Mới: tỷ lệ chi trả đợt đầu cho phòng trà có điểm uy tín dưới 3,5 hoặc dưới 3 buổi diễn (D3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0008-8276-802b-000000000008"), "settlement_tier_standard_pre_rate", "0.70", "Decimal", "Hạng Chuẩn: tỷ lệ chi trả đợt đầu cho phòng trà có điểm uy tín từ 3,5 đến 4,2 (D3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0009-8276-802b-000000000009"), "settlement_tier_premium_pre_rate", "0.80", "Decimal", "Hạng Premium: tỷ lệ chi trả đợt đầu cho phòng trà có điểm uy tín từ 4,2 trở lên VÀ từ 10 buổi diễn trở lên (D3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-000a-8276-802b-00000000000a"), "settlement_tier_standard_min_score", "3.5", "Decimal", "Điểm uy tín tối thiểu để phòng trà đạt Hạng Chuẩn (D3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-000b-8276-802b-00000000000b"), "settlement_tier_premium_min_score", "4.2", "Decimal", "Điểm uy tín tối thiểu để phòng trà đạt Hạng Premium (D3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-000c-8276-802b-00000000000c"), "settlement_tier_premium_min_shows", "10", "Integer", "Số buổi diễn đã hoàn tất tối thiểu để phòng trà đạt Hạng Premium (D3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-000f-8276-802b-00000000000f"), "moderation_sla_hours", "24", "Integer", "Thời hạn (giờ) để Admin xử lý nội dung bị gắn cờ — NĐ 147/2024", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0010-8276-802b-000000000010"), "ticket_hold_minutes", "15", "Integer", "Số phút giữ chỗ trong lúc khách thanh toán; quá hạn thì nhả chỗ cho người khác (§6.3)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0011-8276-802b-000000000011"), "donation_hold_days", "7", "Integer", "Số ngày, tính từ lúc phòng trà nhận tiền donate, để phòng trà chuyển cho nghệ sĩ; quá hạn mà chủ phòng trà không phản hồi thì hệ thống tự xác nhận (D4)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0012-8276-802b-000000000012"), "rating_window_days", "7", "Integer", "Số ngày sau khi buổi diễn kết thúc mà khán giả còn được đánh giá (§6.13)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0013-8276-802b-000000000013"), "appeal_sla_hours", "48", "Integer", "Số giờ để Admin xem xét đơn kháng cáo án phạt (§6.17)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0014-8276-802b-000000000014"), "appeal_auto_approve", "true", "Boolean", "Tự động chấp nhận đơn kháng cáo khi Admin xử lý quá hạn (§6.17)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0015-8276-802b-000000000015"), "donation_performer_share_rate", "0.88", "Decimal", "Tỷ lệ trên tổng tiền donate được chuyển cho nghệ sĩ (§6.5 chặng 2)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0016-8276-802b-000000000016"), "complaint_sla_hours", "72", "Integer", "Thời hạn mục tiêu (giờ) để giải quyết khiếu nại của người tiêu dùng — mục tiêu vận hành của nền tảng; NĐ 85/2021 yêu cầu nền tảng làm đầu mối nhưng không quy định số giờ", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0017-8276-802b-000000000017"), "current_terms_version", "v0-placeholder-pending-legal-review", "String", "Mã phiên bản Điều khoản sử dụng/Chính sách quyền riêng tư đang công bố; người đăng ký mới đồng ý theo phiên bản này — căn cứ đồng ý theo Luật 91/2025/QH15", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0018-8276-802b-000000000018"), "publish_min_business_days_lead_time", "7", "Integer", "Số ngày làm việc tối thiểu từ lúc đăng hoặc dời lịch tới ngày diễn — NĐ 144/2020 Điều 10", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0019-8276-802b-000000000019"), "penalty_suspension_notice_hours", "24", "Integer", "Số giờ báo trước khi án tạm đình chỉ có hiệu lực (§6.8)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-001a-8276-802b-00000000001a"), "penalty_ban_notice_days", "7", "Integer", "Số ngày báo trước khi án cấm hoạt động có hiệu lực (§6.8)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-001b-8276-802b-00000000001b"), "ticket_hold_max_quantity", "10", "Integer", "Số vé tối đa cho mỗi lần giữ chỗ mua online — chặn đầu cơ vé", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-001c-8276-802b-00000000001c"), "walkin_ticket_max_quantity", "20", "Integer", "Số vé tối đa cho mỗi lần bán tại quầy — chặn lạm dụng", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-001d-8276-802b-00000000001d"), "donation_max_amount", "50000000", "Decimal", "Số tiền tối đa cho một lần donate (VNĐ) — chặn gian lận", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-001e-8276-802b-00000000001e"), "ticket_transfer_expiry_hours", "48", "Integer", "Số giờ trước khi yêu cầu chuyển nhượng vé không được trả lời tự động bị huỷ", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-001f-8276-802b-00000000001f"), "ai_poster_max_attempts_per_show", "5", "Integer", "Số lần tạo poster AI tối đa cho mỗi buổi diễn (tính cả lần lỗi)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0020-8276-802b-000000000020"), "personal_income_tax_rate", "0", "Decimal", "Thuế TNCN khấu trừ tại nguồn. NĐ 117/2025/NĐ-CP quy định 2% cho DỊCH VỤ của cá nhân cư trú; seed bằng 0 để việc bật khấu trừ là một quyết định vận hành có ghi lý do, không phải hệ quả của một lần triển khai. Chỉ áp cho hộ/cá nhân kinh doanh.", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0021-8276-802b-000000000021"), "ticket_last_entry_minutes", "60", "Integer", "Hạn vào cửa: buổi diễn phải còn ít nhất số phút này thì mới bán vé (BR-31, giống mặc định vé không chọn chỗ của Eventbrite)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0022-8276-802b-000000000022"), "venue_changeover_minutes", "30", "Integer", "Khoảng cách tối thiểu (phút) giữa hai buổi diễn liên tiếp ở cùng phòng trà — thời gian tiễn khán giả trước và đón khán giả sau. 30 là mức thấp của khoảng 30–60 phút phổ biến ở các địa điểm hòa nhạc (CF1)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null },
+                    { new Guid("00000000-0023-8276-802b-000000000023"), "donation_message_blocked_words", "[]", "Json", "Danh sách JSON các từ/cụm từ khiến lời nhắn donate không hiện trên thông báo livestream (so khớp nguyên từ, không phân biệt hoa thường và dấu). Khoản donate vẫn được thông báo (MLACP-360)", new DateTimeOffset(new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "venue_atmospheres",
+                columns: new[] { "Id", "CreatedAt", "CreatedBy", "Name", "UpdatedAt", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { new Guid("00000000-0001-8fcf-8056-000000000001"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Ấm cúng", null, null },
+                    { new Guid("00000000-0002-8fcf-8056-000000000002"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Sang trọng", null, null },
+                    { new Guid("00000000-0003-8fcf-8056-000000000003"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Mộc mạc", null, null },
+                    { new Guid("00000000-0004-8fcf-8056-000000000004"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Nghệ thuật", null, null },
+                    { new Guid("00000000-0005-8fcf-8056-000000000005"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Hiện đại", null, null }
+                });
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)

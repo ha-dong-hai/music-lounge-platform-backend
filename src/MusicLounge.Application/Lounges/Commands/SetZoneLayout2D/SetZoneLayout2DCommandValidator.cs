@@ -6,7 +6,7 @@ public sealed class SetZoneLayout2DCommandValidator : AbstractValidator<SetZoneL
 {
     public SetZoneLayout2DCommandValidator()
     {
-        RuleFor(x => x.ZoneId).GreaterThan(0);
+        RuleFor(x => x.ZoneId).NotEmpty();
 
         // He toa do % (0-100) tren canvas so do — doc lap do phan giai man hinh.
         RuleFor(x => x.X).InclusiveBetween(0, 100);

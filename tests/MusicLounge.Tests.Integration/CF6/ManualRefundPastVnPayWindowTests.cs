@@ -26,7 +26,7 @@ public sealed class ManualRefundPastVnPayWindowTests
 
     public ManualRefundPastVnPayWindowTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Seeded(int RefundId, int PaymentId, int OwnerId);
+    private sealed record Seeded(Guid RefundId, Guid PaymentId, Guid OwnerId);
 
     /// <param name="transactionId">Null cho thanh toán qua cổng thì một lệnh gọi VNPay chắc chắn thất bại
     /// (<c>FakeVnPayService.RefundAsync</c> từ chối khi không có mã giao dịch) — nên duyệt thành công nghĩa là
@@ -111,12 +111,12 @@ public sealed class ManualRefundPastVnPayWindowTests
         return new Seeded(refund.Id, payment.Id, owner.Id);
     }
 
-    private Task<HttpResponseMessage> ProcessAsync(int refundId, string decision, string? manualTransferReference)
+    private Task<HttpResponseMessage> ProcessAsync(Guid refundId, string decision, string? manualTransferReference)
         => _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
             $"/api/v1/admin/refund-requests/{refundId}/process",
             new { Decision = decision, ApprovedAmount = (decimal?)null, ManualTransferReference = manualTransferReference });
 
-    private async Task<RefundRequest> RefundAsync(int refundId)
+    private async Task<RefundRequest> RefundAsync(Guid refundId)
     {
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().RefundRequests.AsNoTracking()

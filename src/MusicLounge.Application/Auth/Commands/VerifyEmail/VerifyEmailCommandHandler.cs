@@ -30,7 +30,7 @@ internal sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCom
 
     public async Task<AuthResultDto> Handle(VerifyEmailCommand request, CancellationToken ct)
     {
-        var userRepo = _uow.Repository<User, int>();
+        var userRepo = _uow.Repository<User, Guid>();
         var users = await userRepo.FindAsync(u => u.Email == request.Email, ct);
         var user = users.FirstOrDefault();
 

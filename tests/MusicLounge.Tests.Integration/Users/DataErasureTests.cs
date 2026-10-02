@@ -30,7 +30,7 @@ public sealed class DataErasureTests
     private static string UniqueEmail() => $"erase-{Guid.NewGuid():N}@test.com";
 
     /// <summary>Registers a real local account (real hashed password via the actual Register flow) and returns its Id.</summary>
-    private async Task<int> CreateLocalAccountAsync(string email, string password)
+    private async Task<Guid> CreateLocalAccountAsync(string email, string password)
     {
         var client = _factory.CreateClient();
         await client.PostAsJsonAsync("/api/v1/auth/register", new
@@ -45,7 +45,7 @@ public sealed class DataErasureTests
     }
 
     /// <summary>Directly inserts a Google-only account (no password) — mirrors AuthProvider="google" shape.</summary>
-    private async Task<int> CreateGoogleOnlyAccountAsync()
+    private async Task<Guid> CreateGoogleOnlyAccountAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

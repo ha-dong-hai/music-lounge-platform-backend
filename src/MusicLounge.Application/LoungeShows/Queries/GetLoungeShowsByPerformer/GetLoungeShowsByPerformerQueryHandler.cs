@@ -26,7 +26,7 @@ internal sealed class GetLoungeShowsByPerformerQueryHandler
     public async Task<PerformerDetailDto> Handle(
         GetLoungeShowsByPerformerQuery request, CancellationToken ct)
     {
-        var performer = await _uow.Repository<Performer, int>().GetByIdAsync(request.PerformerId, ct)
+        var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
         var page = Math.Max(1, request.Page);
@@ -37,7 +37,7 @@ internal sealed class GetLoungeShowsByPerformerQueryHandler
 
         var wishlisted = _currentUser.IsAuthenticated
             ? await _showRepo.GetWishlistedShowIdsAsync(_currentUser.UserId, ct)
-            : (IReadOnlySet<int>)new HashSet<int>();
+            : (IReadOnlySet<Guid>)new HashSet<Guid>();
 
         return performer.ToDetailDto(new PaginatedResult<LoungeShowListItemDto>(
             shows.Items.Select(s => s.ToListItemDto(wishlisted)).ToList(),

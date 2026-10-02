@@ -1,7 +1,7 @@
 namespace MusicLounge.Application.Users.DTOs;
 
 public sealed record UserAdminDto(
-    int Id,
+    Guid Id,
     string Email,
     string FullName,
     string? Phone,

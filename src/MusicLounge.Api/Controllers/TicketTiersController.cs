@@ -28,7 +28,7 @@ public sealed class TicketTiersController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType<ApiResponse<IReadOnlyList<TicketTierSummaryDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByShow(
-        [FromQuery] int showId, CancellationToken ct = default)
+        [FromQuery] Guid showId, CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetTicketTiersQuery(showId), ct);
         return Ok(ApiResponse<IReadOnlyList<TicketTierSummaryDto>>.Ok(result));
@@ -40,7 +40,7 @@ public sealed class TicketTiersController : ControllerBase
     /// vượt giới hạn vé/event của gói subscription đang hoạt động.</summary>
     [HttpPost]
     [Authorize(Policy = Policies.RequireOwner)]
-    [ProducesResponseType<ApiResponse<int>>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiResponse<Guid>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -48,12 +48,12 @@ public sealed class TicketTiersController : ControllerBase
         [FromBody] CreateTicketTierCommand command, CancellationToken ct = default)
     {
         var id = await _sender.Send(command, ct);
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<int>.Ok(id));
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<Guid>.Ok(id));
     }
 
     /// <summary>Chỉ sửa được khi buổi diễn còn Draft (422 nếu khác); tăng TotalCapacity vẫn bị kiểm
     /// tra lại giới hạn subscription giống lúc tạo.</summary>
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -61,20 +61,20 @@ public sealed class TicketTiersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Update(
-        int id, [FromBody] UpdateTicketTierRequest body, CancellationToken ct = default)
+        Guid id, [FromBody] UpdateTicketTierRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateTicketTierCommand(id, body.Name, body.Description, body.TotalCapacity), ct);
         return NoContent();
     }
 
     /// <summary>Xóa thật (hard delete) — chỉ áp dụng khi buổi diễn còn Draft (422 nếu khác).</summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {
         await _sender.Send(new DeleteTicketTierCommand(id), ct);
         return NoContent();

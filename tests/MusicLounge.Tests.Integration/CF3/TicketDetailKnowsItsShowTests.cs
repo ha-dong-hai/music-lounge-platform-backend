@@ -72,7 +72,7 @@ public sealed class TicketDetailKnowsItsShowTests
         var d = Data(await chiTiet.Content.ReadAsStringAsync());
         d.TryGetProperty("showId", out var showId).Should().BeTrue(
             "không có mã buổi diễn thì từ trang chi tiết vé không dẫn đi đâu được");
-        showId.GetInt32().Should().Be(SeedHelper.ShowId);
+        showId.GetGuid().Should().Be(SeedHelper.ShowId);
 
         // Hai đường đọc cùng một thực thể thì phải nói cùng một điều.
         var ds = await client.GetAsync("/api/v1/tickets/my?page=1&pageSize=50");
@@ -83,7 +83,7 @@ public sealed class TicketDetailKnowsItsShowTests
             .FirstOrDefault(t => t.GetProperty("id").GetString() == veId.ToString());
 
         dong.ValueKind.Should().NotBe(JsonValueKind.Undefined, "phải tìm được đúng vé đó trong danh sách");
-        dong.GetProperty("showId").GetInt32().Should().Be(showId.GetInt32(),
+        dong.GetProperty("showId").GetGuid().Should().Be(showId.GetGuid(),
             "danh sách và chi tiết mà lệch nhau thì một trong hai đang nói sai");
     }
 }

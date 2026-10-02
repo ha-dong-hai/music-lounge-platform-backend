@@ -3,7 +3,7 @@ using MusicLounge.Application.Common.Abstractions;
 namespace MusicLounge.Application.Subscriptions.Commands.UpdateSubscriptionPackage;
 
 public sealed record UpdateSubscriptionPackageCommand(
-    int PackageId,
+    Guid PackageId,
     string? Description,
     decimal Price,
     int MaxTicketsPerEvent,

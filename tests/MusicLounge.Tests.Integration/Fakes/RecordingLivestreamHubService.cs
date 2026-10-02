@@ -11,48 +11,48 @@ namespace MusicLounge.Tests.Integration.Fakes;
 /// </summary>
 public sealed class RecordingLivestreamHubService : ILivestreamHubService
 {
-    public sealed record Sent(int LivestreamId, string Event, object? Payload);
+    public sealed record Sent(Guid LivestreamId, string Event, object? Payload);
 
     private readonly ConcurrentQueue<Sent> _sent = new();
 
-    public IReadOnlyList<Sent> For(int livestreamId) => _sent.Where(s => s.LivestreamId == livestreamId).ToList();
+    public IReadOnlyList<Sent> For(Guid livestreamId) => _sent.Where(s => s.LivestreamId == livestreamId).ToList();
 
-    private Task Record(int livestreamId, string evt, object? payload)
+    private Task Record(Guid livestreamId, string evt, object? payload)
     {
         _sent.Enqueue(new Sent(livestreamId, evt, payload));
         return Task.CompletedTask;
     }
 
-    public Task BroadcastChatMessageAsync(int livestreamId, ChatMessageDto message, CancellationToken ct = default)
+    public Task BroadcastChatMessageAsync(Guid livestreamId, ChatMessageDto message, CancellationToken ct = default)
         => Record(livestreamId, "ReceiveMessage", message);
 
-    public Task BroadcastReactionAsync(int livestreamId, string reactionType, CancellationToken ct = default)
+    public Task BroadcastReactionAsync(Guid livestreamId, string reactionType, CancellationToken ct = default)
         => Record(livestreamId, "ReceiveReaction", reactionType);
 
-    public Task BroadcastDonationAlertAsync(int livestreamId, DonationAlertDto donation, CancellationToken ct = default)
+    public Task BroadcastDonationAlertAsync(Guid livestreamId, DonationAlertDto donation, CancellationToken ct = default)
         => Record(livestreamId, "DonationAlert", donation);
 
-    public Task BroadcastDonationMessageHiddenAsync(int livestreamId, int donationId, CancellationToken ct = default)
+    public Task BroadcastDonationMessageHiddenAsync(Guid livestreamId, Guid donationId, CancellationToken ct = default)
         => Record(livestreamId, "DonationMessageHidden", donationId);
 
-    public Task BroadcastChatMessageHiddenAsync(int livestreamId, int chatMessageId, CancellationToken ct = default)
+    public Task BroadcastChatMessageHiddenAsync(Guid livestreamId, Guid chatMessageId, CancellationToken ct = default)
         => Record(livestreamId, "ChatMessageHidden", chatMessageId);
 
-    public Task BroadcastViewerCountAsync(int livestreamId, int count, CancellationToken ct = default)
+    public Task BroadcastViewerCountAsync(Guid livestreamId, int count, CancellationToken ct = default)
         => Record(livestreamId, "ViewerCountUpdated", count);
 
-    public Task BroadcastLivestreamTerminatedAsync(int livestreamId, string reason, CancellationToken ct = default)
+    public Task BroadcastLivestreamTerminatedAsync(Guid livestreamId, string reason, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamTerminated", reason);
 
-    public Task BroadcastLivestreamReconnectingAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamReconnectingAsync(Guid livestreamId, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamReconnecting", null);
 
-    public Task BroadcastLivestreamReconnectedAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamReconnectedAsync(Guid livestreamId, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamReconnected", null);
 
-    public Task BroadcastLivestreamFailedAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamFailedAsync(Guid livestreamId, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamFailed", null);
 
-    public Task BroadcastLivestreamEndedAsync(int livestreamId, CancellationToken ct = default)
+    public Task BroadcastLivestreamEndedAsync(Guid livestreamId, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamEnded", null);
 }

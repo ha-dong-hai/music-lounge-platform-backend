@@ -35,7 +35,7 @@ public sealed class SettlementPreconditionTests
     public SettlementPreconditionTests(ApiFactory factory) => _factory = factory;
 
     /// <summary>Builds a Published show on a brand-new lounge that has NO bank account at all.</summary>
-    private async Task<(int PriceId, int ShowId)> SeedShowOnVenueWithoutBankAccountAsync()
+    private async Task<(Guid PriceId, Guid ShowId)> SeedShowOnVenueWithoutBankAccountAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -133,6 +133,6 @@ public sealed class SettlementPreconditionTests
     }
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record HoldData(int HoldId, DateTimeOffset ExpiresAt);
-    private sealed record PurchaseData(int PaymentId, string OrderId, decimal Amount, string PaymentUrl);
+    private sealed record HoldData(Guid HoldId, DateTimeOffset ExpiresAt);
+    private sealed record PurchaseData(Guid PaymentId, string OrderId, decimal Amount, string PaymentUrl);
 }

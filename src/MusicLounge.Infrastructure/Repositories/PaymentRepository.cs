@@ -5,16 +5,16 @@ using MusicLounge.Infrastructure.Persistence;
 
 namespace MusicLounge.Infrastructure.Repositories;
 
-internal sealed class PaymentRepository : Repository<Payment, int>, IPaymentRepository
+internal sealed class PaymentRepository : Repository<Payment, Guid>, IPaymentRepository
 {
     private readonly ApplicationDbContext _ctx;
 
     public PaymentRepository(ApplicationDbContext ctx) : base(ctx) => _ctx = ctx;
 
-    public async Task<int?> GetTicketShowOwnerIdAsync(int paymentId, CancellationToken ct = default)
+    public async Task<Guid?> GetTicketShowOwnerIdAsync(Guid paymentId, CancellationToken ct = default)
         => await _ctx.Tickets
             .AsNoTracking()
             .Where(t => t.PaymentId == paymentId)
-            .Select(t => (int?)t.Show.Lounge.OwnerId)
+            .Select(t => (Guid?)t.Show.Lounge.OwnerId)
             .FirstOrDefaultAsync(ct);
 }
