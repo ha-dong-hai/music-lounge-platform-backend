@@ -87,6 +87,10 @@ internal sealed class PurchaseTicketCommandHandler
         var payment = new Payment
         {
             OrderId = orderId,
+            // MLACP-526: ghi NGƯỜI TRẢ TIỀN ngay lúc tạo thanh toán. Trước đây bỏ trống, nên chốt chặn MLACP-370 ở
+            // CancelTicket (đọc PayerId) không bao giờ kích hoạt: người nhận chuyển nhượng tự huỷ được vé người khác trả.
+            // Hold đã được kiểm là của chính người gọi ở trên (hold.UserId == _currentUser.UserId).
+            PayerId = _currentUser.UserId,
             GrossAmount = totalAmount,
             Status = PaymentStatus.Pending,
             ReferenceType = VnPayOrderRefs.TicketPaymentReferenceType,

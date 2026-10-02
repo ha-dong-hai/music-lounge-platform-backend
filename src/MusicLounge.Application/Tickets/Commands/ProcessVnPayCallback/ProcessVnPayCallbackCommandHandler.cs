@@ -348,7 +348,8 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         }
 
         // Luc bam thanh toan ve chua the duoc chuyen nhuong, nen nguoi giu ve chinh la nguoi tra tien — dung
-        // BuyerId khi thanh toan thieu PayerId.
+        // BuyerId khi thanh toan thieu PayerId. Tu MLACP-526 PurchaseTicket luon ghi PayerId va migration da bu du lieu
+        // cu, nen nhanh du phong nay chi con cho dong mo ho ma migration co y de NULL.
         var payerId = payment.PayerId ?? tickets.Select(t => t.BuyerId).FirstOrDefault(b => b is not null);
 
         var refund = new RefundRequest
