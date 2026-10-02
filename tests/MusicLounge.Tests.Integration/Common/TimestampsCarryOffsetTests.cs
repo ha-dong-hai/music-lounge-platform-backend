@@ -23,10 +23,11 @@ namespace MusicLounge.Tests.Integration.Common;
 /// <para>Khai <c>DateTimeOffset</c> thì chuyển đổi ngầm gắn múi giờ của máy chủ (App Service Linux chạy
 /// UTC, đã kiểm: không đặt WEBSITE_TIME_ZONE) và chuỗi ra có "+00:00".</para>
 ///
-/// <para>TRẦN GIỚI HẠN của cách này: nó đúng vì máy chủ chạy UTC. Đặt múi giờ khác cho App Service thì
-/// mọi mốc đọc từ cơ sở dữ liệu sẽ bị gắn nhầm múi giờ đó. Đường nâng cấp thật là ép
-/// <c>DateTimeKind.Utc</c> ngay khi đọc lên, nhưng đó là đụng vào cả 139 trường và cả tầng dữ liệu —
-/// không làm ở đây. (MLACP-475)</para>
+/// <para>TRẦN GIỚI HẠN ban đầu (MLACP-475): chỉ đúng khi máy chủ chạy UTC — đặt múi giờ khác cho App Service
+/// (hoặc chạy trên máy dev +07) thì mốc đọc từ cơ sở dữ liệu bị gắn nhầm múi giờ đó. ĐÃ NÂNG CẤP ở MLACP-526:
+/// ApplicationDbContext.ConfigureConventions ép <c>DateTimeKind.Utc</c> ngay khi đọc mọi cột DateTime. Việc này
+/// nhỏ hơn ước lượng "139 trường" lúc đầu: các cột còn lại đã là DateTimeOffset (tự mang múi giờ), chỉ còn
+/// 2 cột DateTime (AuditableEntity.CreatedAt/UpdatedAt). Xem <see cref="MocDateTimeDocTuCoSoDuLieu_MangKindUtc"/>.</para>
 /// </summary>
 [Collection("Integration")]
 public sealed class TimestampsCarryOffsetTests
@@ -109,5 +110,61 @@ public sealed class TimestampsCarryOffsetTests
         foreach (var moc in mocs)
             CoMuiGio.IsMatch(moc!).Should().BeTrue(
                 $"mốc \"{moc}\" không có múi giờ nên trình duyệt ở Việt Nam sẽ hiện lệch 7 tiếng");
+    }
+
+    /// <summary>
+    /// MLACP-526: mốc DateTime đọc từ cơ sở dữ liệu phải mang <c>Kind=Utc</c>, để chuyển sang DateTimeOffset ra
+    /// "+00:00" trên MỌI máy chủ — không phụ thuộc múi giờ của máy. Trước đây đọc lên là Unspecified, nên chạy ở máy
+    /// +07 (máy dev) thì đơn món vừa đặt hiện "7 giờ trước" (E2E 02/10). Kiểm Kind chứ không kiểm chuỗi JSON: chuỗi
+    /// chỉ sai khi máy chạy test KHÁC UTC, còn Kind sai trên mọi máy — CI chạy UTC cũng bắt được.
+    /// </summary>
+    [Fact]
+    public async Task MocDateTimeDocTuCoSoDuLieu_MangKindUtc()
+    {
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            // Chặn "quét trúng số không": phải còn ít nhất một cột DateTime trong model thì bài này mới có nghĩa.
+            var cotDateTime = db.Model.GetEntityTypes().SelectMany(e => e.GetProperties())
+                .Count(p => (Nullable.GetUnderlyingType(p.ClrType) ?? p.ClrType) == typeof(DateTime));
+            cotDateTime.Should().BeGreaterThan(0, "model phải còn cột DateTime, nếu không bài kiểm không kiểm gì");
+
+            var pii = scope.ServiceProvider.GetRequiredService<IPiiEncryptionService>();
+            db.Add(new BankAccount
+            {
+                OwnerType = BankAccountOwnerType.Lounge, OwnerId = SeedHelper.LoungeId,
+                BankName = "Ngân hàng Kiểm Thử Kind", AccountNumber = pii.Encrypt("5550001112299"),
+                AccountHolder = "Nguyen Van Kind", IsDefault = false, IsVerified = false
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var docLen = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SingleAsync(
+                Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(db.Set<BankAccount>()),
+                b => b.BankName == "Ngân hàng Kiểm Thử Kind");
+
+            docLen.CreatedAt.Kind.Should().Be(DateTimeKind.Utc,
+                "giá trị ghi bằng DateTime.UtcNow; đọc lên Unspecified thì chuyển sang DateTimeOffset gắn múi giờ của máy chủ");
+            ((DateTimeOffset)docLen.CreatedAt).Offset.Should().Be(TimeSpan.Zero);
+
+            // Cột nullable (UpdatedAt) cũng phải được bao phủ.
+            var sua = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SingleAsync(
+                db.Set<BankAccount>(), b => b.Id == docLen.Id);
+            sua.AccountHolder = "Nguyen Van Kind Sua";
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var docLai = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SingleAsync(
+                Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(db.Set<BankAccount>()),
+                b => b.BankName == "Ngân hàng Kiểm Thử Kind");
+            docLai.UpdatedAt.Should().NotBeNull();
+            docLai.UpdatedAt!.Value.Kind.Should().Be(DateTimeKind.Utc, "cột DateTime? cũng phải được đánh dấu Utc khi đọc");
+        }
     }
 }

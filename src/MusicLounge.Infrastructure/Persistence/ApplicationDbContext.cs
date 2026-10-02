@@ -109,6 +109,20 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<EventCustomValue> EventCustomValues => Set<EventCustomValue>();
     public DbSet<UserCustomPreference> UserCustomPreferences => Set<UserCustomPreference>();
 
+    // MLACP-526: cột DateTime (datetime2) không lưu múi giờ, nên EF đọc lên Kind=Unspecified, và phép đổi ngầm sang
+    // DateTimeOffset ở DTO gắn múi giờ CỦA MÁY CHỦ. Azure chạy UTC nên không lộ; máy +07 thì lệch 7 tiếng ("đơn vừa đặt
+    // 7 giờ trước", E2E 02/10). Mọi chỗ ghi đều là DateTime.UtcNow (đã kiểm: không có DateTime.Now), nên đọc lên đánh
+    // dấu Utc là đúng. Đây là "đường nâng cấp" MLACP-475 ghi ở TimestampsCarryOffsetTests — thực tế chỉ 2 cột
+    // (AuditableEntity.CreatedAt/UpdatedAt); quy ước áp cho mọi DateTime nên cột thêm sau cũng được bao phủ.
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcKindDateTimeConverter>();
+    }
+
+    private sealed class UtcKindDateTimeConverter()
+        : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+            v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
