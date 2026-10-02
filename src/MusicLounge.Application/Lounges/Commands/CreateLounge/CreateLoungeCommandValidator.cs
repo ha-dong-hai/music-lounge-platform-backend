@@ -1,22 +1,18 @@
 using FluentValidation;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Application.Lounges;
 
 namespace MusicLounge.Application.Lounges.Commands.CreateLounge;
 
 public sealed class CreateLoungeCommandValidator : AbstractValidator<CreateLoungeCommand>
 {
-    public CreateLoungeCommandValidator(IUnitOfWork uow)
+    public CreateLoungeCommandValidator(IUnitOfWork uow, IAdministrativeUnitCatalog catalog)
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).MaximumLength(2000);
-        RuleFor(x => x.Street).NotEmpty().MaximumLength(255);
-        // Cai cach hanh chinh 2025 (NQ 1171/NQ-UBTVQH15) bo cap Quan/Huyen o nhieu tinh —
-        // khong con bat buoc nhap, van gioi han do dai neu co.
-        RuleFor(x => x.District).MaximumLength(100);
-        RuleFor(x => x.City).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude.HasValue);
-        RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude.HasValue);
+        // MLACP-521: luật địa chỉ dùng chung với UpdateLounge.
+        this.AddLoungeAddressRules(catalog);
 
         // Truoc day AtmosphereId sai (vd 0, hoac ID khong ton tai) roi den tan luc SaveChangesAsync
         // moi vi pham FK constraint, GlobalExceptionHandler bat DbUpdateException chung chung roi

@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using System.ComponentModel.DataAnnotations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -64,9 +65,10 @@ public sealed class LoungesController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? keyword = null,
+        [FromQuery] string? provinceCode = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetLoungesQuery(city, mine, page, pageSize, keyword), ct);
+        var result = await _sender.Send(new GetLoungesQuery(city, mine, page, pageSize, keyword, provinceCode), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeListItemDto>>.Ok(result));
     }
 
@@ -163,7 +165,8 @@ public sealed class LoungesController : ControllerBase
     {
         await _sender.Send(new UpdateLoungeCommand(
             id, body.Name, body.Description, body.AtmosphereId,
-            body.Street, body.Ward, body.District, body.City, body.Latitude, body.Longitude), ct);
+            body.Street, body.Ward, body.District, body.City, body.Latitude, body.Longitude,
+            body.ProvinceCode, body.WardCode), ct);
         return NoContent();
     }
 
@@ -180,7 +183,8 @@ public sealed class LoungesController : ControllerBase
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<UserLookupDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> LookupUserByEmail([FromQuery] string email, CancellationToken ct = default)
+    // MLACP-519: email thật sự bắt buộc — [Required] để hợp đồng Swagger khai đúng (trước đây ghi tuỳ chọn mà thiếu thì 400).
+    public async Task<IActionResult> LookupUserByEmail([FromQuery, Required] string email, CancellationToken ct = default)
     {
         var result = await _sender.Send(new FindUserByEmailQuery(email), ct);
         return Ok(ApiResponse<UserLookupDto>.Ok(result));
@@ -538,10 +542,13 @@ public sealed record UpdateLoungeRequest(
     string? Description,
     Guid? AtmosphereId,
     string Street,
-    string Ward,
+    string? Ward,
     string? District,
-    string City,
+    string? City,
     double? Latitude,
-    double? Longitude);
+    double? Longitude,
+    // MLACP-521: tuỳ chọn — mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg.
+    string? ProvinceCode = null,
+    string? WardCode = null);
 
 public sealed record AssignStaffRequest(Guid UserId);

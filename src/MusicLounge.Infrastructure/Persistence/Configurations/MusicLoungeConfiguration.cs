@@ -40,6 +40,10 @@ internal sealed class MusicLoungeConfiguration : IEntityTypeConfiguration<MusicL
             addr.Property(a => a.City).HasMaxLength(100).IsRequired().HasColumnName("Address_City");
             addr.Property(a => a.Latitude).HasColumnName("Address_Latitude");
             addr.Property(a => a.Longitude).HasColumnName("Address_Longitude");
+            // MLACP-521: mã tỉnh/xã chính thức — lọc theo mã thay vì so chuỗi tên gõ tay.
+            addr.Property(a => a.ProvinceCode).HasMaxLength(2).HasColumnName("Address_ProvinceCode");
+            addr.Property(a => a.WardCode).HasMaxLength(5).HasColumnName("Address_WardCode");
+            addr.HasIndex(a => new { a.ProvinceCode, a.WardCode });
             addr.Ignore(a => a.FullAddress); // computed property, không map vào DB
             addr.HasIndex(a => a.City);
             addr.HasIndex(a => new { a.City, a.District });

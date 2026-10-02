@@ -111,6 +111,9 @@ public sealed record LoungeShowSearchParams(
     bool IncludeEnded,
     int Page,
     int PageSize,
-    LoungeShowSortBy SortBy);
+    LoungeShowSortBy SortBy,
+    // MLACP-521: lọc theo mã đơn vị hành chính chính thức (QĐ 19/2025/QĐ-TTg).
+    string? ProvinceCode = null,
+    string? WardCode = null);
 
 public sealed record LoungeShowSuggestionItem(Guid Id, string Name, string? CoverImageUrl);

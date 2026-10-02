@@ -1,4 +1,5 @@
 using MusicLounge.Application.Common.Abstractions;
+using MusicLounge.Application.Lounges;
 
 namespace MusicLounge.Application.Lounges.Commands.CreateLounge;
 
@@ -11,9 +12,12 @@ public sealed record CreateLoungeCommand(
     string? Description,
     Guid? AtmosphereId,
     string Street,
-    string Ward,
+    string? Ward,
     string? District,
-    string City,
+    string? City,
     double? Latitude,
-    double? Longitude
-) : ICommand<Guid>;
+    double? Longitude,
+    // MLACP-521: tuỳ chọn — mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg (xem ILoungeAddressInput).
+    string? ProvinceCode = null,
+    string? WardCode = null
+) : ICommand<Guid>, ILoungeAddressInput;

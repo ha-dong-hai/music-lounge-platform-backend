@@ -13,7 +13,7 @@ public interface ILoungeRepository
     /// </param>
     Task<PaginatedResult<LoungeListItemDto>> GetAllAsync(
         string? city, Guid? ownerId, bool includeUnapproved, int page, int pageSize,
-        string? keyword = null, CancellationToken ct = default);
+        string? keyword = null, CancellationToken ct = default, string? provinceCode = null);
 
     Task<LoungeDetailDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
 

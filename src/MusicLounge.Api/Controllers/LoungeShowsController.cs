@@ -104,12 +104,14 @@ public sealed class LoungeShowsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] LoungeShowSortBy sortBy = LoungeShowSortBy.Newest,
+        [FromQuery] string? provinceCode = null,
+        [FromQuery] string? wardCode = null,
         CancellationToken ct = default)
     {
         var result = await _sender.Send(new SearchLoungeShowsQuery(
             genreIds, moodIds, atmosphereIds, keyword, format, dateFrom, dateTo,
             city, minPrice, maxPrice, includeSoldOut,
-            page, pageSize, sortBy), ct);
+            page, pageSize, sortBy, provinceCode, wardCode), ct);
         return Ok(ApiResponse<PaginatedResult<LoungeShowListItemDto>>.Ok(result));
     }
 
@@ -130,7 +132,10 @@ public sealed class LoungeShowsController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType<ApiResponse<IReadOnlyList<LoungeShowSuggestionItem>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSuggestions(
-        [FromQuery] string q,
+        // MLACP-519 (M-387 DEF-BE-06/07): `string q` không dấu ? với Nullable bật khiến ASP.NET Core coi q là BẮT BUỘC —
+        // thiếu q hay ?q= rỗng bị 400 ngay ở model binding, nhánh "rỗng → danh sách rỗng" bên dưới không bao giờ chạy,
+        // trong khi hợp đồng Swagger lại khai q tuỳ chọn. Ô gợi ý vừa xoá hết chữ phải nhận [] chứ không phải lỗi.
+        [FromQuery] string? q = null,
         [FromQuery] int limit = 8,
         CancellationToken ct = default)
     {

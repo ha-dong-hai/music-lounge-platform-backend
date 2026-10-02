@@ -21,7 +21,6 @@ public sealed class LivestreamConfiguration : IEntityTypeConfiguration<Livestrea
         builder.Property(l => l.ChatEnabled).HasDefaultValue(true);
         builder.Property(l => l.PeakViewerCount).HasDefaultValue(0);
         builder.Property(l => l.TotalViews).HasDefaultValue(0);
-        builder.Property(l => l.RecordingUrl).HasMaxLength(500);
         builder.Property(l => l.TerminatedReason).HasMaxLength(1000);
 
         builder.HasOne(l => l.LoungeShow)

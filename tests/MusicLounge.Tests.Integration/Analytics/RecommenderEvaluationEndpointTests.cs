@@ -184,11 +184,12 @@ public sealed class RecommenderEvaluationEndpointTests
 
         var report = await EvaluateAsync();
 
-        report.Method.Should().Contain("Leave-one-out");
+        // MLACP-520: câu chữ đã viết lại bằng tiếng Việt cho Admin đọc (M-449) — test giữ Ý ĐỊNH, không giữ chữ cũ.
+        report.Method.Should().ContainEquivalentOf("leave-one-out", "phải nêu tên cách đo để người đọc tra được");
         report.Caveat.Should().Contain("phổ biến",
-            "phải nói rõ đánh giá offline thiên lệch theo độ phổ biến");
-        report.Caveat.Should().Contain("online",
-            "và nói rõ nó không thay thế được thước đo online");
+            "phải nói rõ đánh giá trên dữ liệu cũ thiên lệch theo độ phổ biến");
+        report.Caveat.Should().Contain("người dùng thật",
+            "và nói rõ nó không thay thế được số đo trên người dùng thật (CTR, tỉ lệ mua)");
     }
 
     [Fact]

@@ -33,6 +33,7 @@ public class NotFoundException : Exception
     private static readonly Dictionary<string, string> Nhan = new(StringComparer.Ordinal)
     {
         // Phòng trà và nhân sự
+        ["AdministrativeProvince"] = "tỉnh/thành phố", // MLACP-521
         ["MusicLoungeEntity"] = "phòng trà",
         ["MusicLounge"] = "phòng trà",
         ["Lounge"] = "phòng trà",

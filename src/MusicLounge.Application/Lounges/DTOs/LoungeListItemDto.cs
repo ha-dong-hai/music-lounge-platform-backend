@@ -28,4 +28,7 @@ public sealed record LoungeListItemDto(
     string District,
     string City,
     int FollowerCount,
-    int UpcomingShowCount);
+    int UpcomingShowCount,
+    // MLACP-521: mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg; null = địa chỉ cũ chưa chọn theo danh mục mới.
+    string? ProvinceCode = null,
+    string? WardCode = null);

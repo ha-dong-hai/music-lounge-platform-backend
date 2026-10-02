@@ -8,9 +8,12 @@ public sealed record UpdateLoungeCommand(
     string? Description,
     Guid? AtmosphereId,
     string Street,
-    string Ward,
+    string? Ward,
     string? District,
-    string City,
+    string? City,
     double? Latitude,
-    double? Longitude
-) : ICommand;
+    double? Longitude,
+    // MLACP-521: tuỳ chọn — mã tỉnh/xã theo QĐ 19/2025/QĐ-TTg (xem ILoungeAddressInput).
+    string? ProvinceCode = null,
+    string? WardCode = null
+) : ICommand, ILoungeAddressInput;
