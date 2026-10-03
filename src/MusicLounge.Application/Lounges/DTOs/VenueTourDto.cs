@@ -7,7 +7,8 @@ public sealed record VenueTourHotspotDto(
     double Pitch,
     string? Label,
     Guid? TargetSceneId,
-    string? InfoText);
+    string? InfoText,
+    Guid? ZoneId); // MLACP-555: set only for Type "Zone"
 
 public sealed record VenueTourSceneDto(
     Guid Id,
