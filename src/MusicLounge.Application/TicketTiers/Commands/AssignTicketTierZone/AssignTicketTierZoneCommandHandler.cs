@@ -19,15 +19,18 @@ namespace MusicLounge.Application.TicketTiers.Commands.AssignTicketTierZone;
 //  - Buổi đã kết thúc/huỷ: không gắn (không còn ai chọn chỗ).
 //  - Chỉ hạng vé TẠI CHỖ (Physical); vé xem trực tuyến không có chỗ ngồi.
 //  - Khu phải thuộc ĐÚNG phòng trà của buổi diễn và đang hoạt động.
+//  - MLACP-589: khu chưa thuộc hạng vé nào khác của buổi này — mỗi khu một hạng vé (TierZoneRules).
 internal sealed class AssignTicketTierZoneCommandHandler : IRequestHandler<AssignTicketTierZoneCommand, Unit>
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAsyncKeyedLock _lock;
 
-    public AssignTicketTierZoneCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public AssignTicketTierZoneCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser, IAsyncKeyedLock @lock)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _lock = @lock;
     }
 
     public async Task<Unit> Handle(AssignTicketTierZoneCommand request, CancellationToken ct)
@@ -54,11 +57,10 @@ internal sealed class AssignTicketTierZoneCommandHandler : IRequestHandler<Assig
         if (show.Status != LoungeShowStatus.Draft && tier.ZoneId.HasValue)
             throw new DomainException("Hạng vé đã có khu ghế và buổi diễn đã mở bán — không đổi khu được, để người đã mua không bị chuyển chỗ.");
 
-        var zone = await _uow.Repository<SeatingZone, Guid>().GetByIdAsync(request.ZoneId, ct);
-        if (zone is null || zone.LoungeId != show.LoungeId)
-            throw new DomainException("Khu ghế không thuộc phòng trà của buổi diễn này.");
-        if (!zone.IsActive)
-            throw new DomainException("Khu ghế này đang tạm ngưng.");
+        // MLACP-589: cùng một luật với lúc tạo hạng vé — khu đúng phòng trà, đang hoạt động, và chưa thuộc hạng vé KHÁC của
+        // buổi này (mỗi khu một hạng vé). Khoá theo buổi diễn, cùng khoá với Create/Update hạng vé.
+        await using var _ = await _lock.AcquireAsync($"ticket-tier-capacity:{show.Id}", ct);
+        var zone = await TierZoneRules.EnsureZoneIsFreeForShowAsync(_uow, show, request.ZoneId, exceptTierId: tier.Id, ct);
 
         tier.ZoneId = zone.Id;
         tierRepo.Update(tier);

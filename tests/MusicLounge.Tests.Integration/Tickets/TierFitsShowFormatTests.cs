@@ -47,7 +47,7 @@ public sealed class TierFitsShowFormatTests
         => _factory.CreateAuthenticatedClient(ownerId, "Owner").PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId, Name = $"Hang {accessType}", Description = (string?)null, AccessType = accessType,
-            ZoneId = (Guid?)null, TotalCapacity = (int?)null,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId, accessType), TotalCapacity = (int?)null,
             Prices = new[]
             {
                 new
