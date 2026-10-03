@@ -34,18 +34,26 @@ internal sealed class GetShowRatingsQueryHandler : IRequestHandler<GetShowRating
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
 
+        // MLACP-573: lọc theo số sao chỉ áp vào DANH SÁCH nhận xét (và tổng số của trang) — tổng quan ở trên giữ nguyên.
+        var locTheoSao = request.Score.HasValue
+            ? ratings.Where(r => r.Score == request.Score.Value).ToList()
+            : ratings;
+        var trang = locTheoSao
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
         // LoungeShowRating.UserId co the null (DSAR erasure anonymize User row, khong xoa Rating) —
-        // chi load User cho nhung rating con UserId that.
-        var userIds = ratings.Where(r => r.UserId.HasValue).Select(r => r.UserId!.Value).Distinct().ToList();
+        // chi load User cho nhung rating con UserId that. MLACP-573: chi nap nguoi viet cua TRANG dang tra, khong phai
+        // cua moi danh gia (truoc day nap ca nghin User de in 20 ten).
+        var userIds = trang.Where(r => r.UserId.HasValue).Select(r => r.UserId!.Value).Distinct().ToList();
         var users = userIds.Count > 0
             ? await _uow.Repository<User, Guid>().FindAsync(u => userIds.Contains(u.Id), ct)
             : [];
         var userById = users.ToDictionary(u => u.Id);
 
-        var items = ratings
-            .OrderByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        var items = trang
             .Select(r => new ShowRatingItemDto(
                 r.Id,
                 r.UserId,
@@ -59,6 +67,6 @@ internal sealed class GetShowRatingsQueryHandler : IRequestHandler<GetShowRating
             averageScore,
             totalCount,
             distribution,
-            new PaginatedResult<ShowRatingItemDto>(items, page, pageSize, totalCount));
+            new PaginatedResult<ShowRatingItemDto>(items, page, pageSize, locTheoSao.Count));
     }
 }

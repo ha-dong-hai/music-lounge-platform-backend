@@ -588,16 +588,19 @@ public sealed class LoungeShowsController : ControllerBase
     /// <summary>Danh sách đánh giá công khai của 1 buổi diễn — điểm trung bình + phân bố sao (1-5)
     /// tính trên toàn bộ đánh giá còn hiệu lực, danh sách nhận xét phân trang sắp mới nhất lên
     /// trước. Đánh giá đã bị Admin gỡ (IsRemoved) không tính vào điểm trung bình/phân bố và không
-    /// xuất hiện trong danh sách.</summary>
+    /// xuất hiện trong danh sách. <c>score</c> (1–5, tuỳ chọn) chỉ lọc danh sách nhận xét; tổng quan không đổi
+    /// (MLACP-573).</summary>
     [HttpGet("{id:guid}/ratings")]
     [AllowAnonymous]
     [SwaggerOptionalAuth]
     [ProducesResponseType<ApiResponse<ShowRatingsDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRatings(
-        Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+        Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] int? score = null,
+        CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetShowRatingsQuery(id, page, pageSize), ct);
+        var result = await _sender.Send(new GetShowRatingsQuery(id, page, pageSize, score), ct);
         return Ok(ApiResponse<ShowRatingsDto>.Ok(result));
     }
 }
