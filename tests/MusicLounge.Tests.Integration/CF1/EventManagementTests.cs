@@ -89,7 +89,7 @@ public sealed class EventManagementTests
             Name = "Standard",
             Description = (string?)null,
             AccessType = accessType,
-            ZoneId = (Guid?)null,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId, accessType),
             TotalCapacity = 100,
             Prices = new[]
             {
@@ -761,7 +761,7 @@ public sealed class EventManagementTests
             Name = "Admin-created tier",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (Guid?)null,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId),
             TotalCapacity = 50,
             Prices = new[]
             {
@@ -810,7 +810,7 @@ public sealed class EventManagementTests
             Name = $"Tier-{Guid.NewGuid():N}",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (Guid?)null,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId),
             TotalCapacity = totalCapacity,
             Prices = new[]
             {

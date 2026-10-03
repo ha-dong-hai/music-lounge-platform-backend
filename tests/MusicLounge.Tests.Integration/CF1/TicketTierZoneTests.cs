@@ -51,6 +51,20 @@ public sealed class TicketTierZoneTests
 
     private async Task<Guid> CreateTierAsync(Guid showId, Guid? zoneId = null, string accessType = "Physical")
     {
+        // MLACP-589: API không còn cho tạo hạng vé vào cửa thiếu khu. Hạng vé "chưa gắn khu" mà các ca gắn-khu-sau cần là
+        // hạng vé CŨ (tạo trước luật) — dựng thẳng trong DB, đúng tình trạng dữ liệu thật mà lệnh gắn khu phải xử lý.
+        if (zoneId is null && accessType == "Physical")
+        {
+            using var scope = _factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var tier = new TicketTier { Id = OrderedGuid.New(), LoungeShowId = showId, Name = "Vé cũ chưa gắn khu", AccessType = AccessType.Physical };
+            db.TicketTiers.Add(tier);
+            db.Add(new TicketPrice { TierId = tier.Id, Name = "Giá thường", Price = 250_000m, IsActive = true,
+                PurchaseChannel = PurchaseChannel.Both, SaleStart = DateTimeOffset.UtcNow, SaleEnd = DateTimeOffset.UtcNow.AddDays(5) });
+            await db.SaveChangesAsync();
+            return tier.Id;
+
+        }
         var res = await CreateTierRawAsync(showId, zoneId, accessType);
         res.EnsureSuccessStatusCode();
         return (await res.Content.ReadFromJsonAsync<DataResponse<Guid>>())!.Data;
@@ -211,5 +225,91 @@ public sealed class TicketTierZoneTests
         ((int)res.StatusCode).Should().BeOneOf(400, 422);
     }
 
+    // ---------- MLACP-589: mỗi hạng vé vào cửa một khu, mỗi khu một hạng vé ----------
+
+    [Fact]
+    public async Task CreateTier_PhysicalWithoutZone_Rejected_NoTierCreated()
+    {
+        var show = await CreateDraftShowAsync();
+
+        var res = await CreateTierRawAsync(show, zoneId: null);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("phải gắn với một khu ghế");
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.TicketTiers.CountAsync(t => t.LoungeShowId == show)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateTier_ZoneAlreadyUsedByAnotherTierOfTheShow_Rejected()
+    {
+        var show = await CreateDraftShowAsync();
+        var zone = await CreateZoneAsync(SeedHelper.LoungeId);
+        await CreateTierAsync(show, zone);
+
+        var res = await CreateTierRawAsync(show, zone);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("Mỗi khu chỉ gắn với một hạng vé");
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.TicketTiers.CountAsync(t => t.LoungeShowId == show && t.ZoneId == zone)).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateTier_SameZoneInAnotherShow_Allowed()
+    {
+        // Luật là theo TỪNG buổi diễn: cùng một khu VIP đêm nào cũng bán.
+        var zone = await CreateZoneAsync(SeedHelper.LoungeId);
+        await CreateTierAsync(await CreateDraftShowAsync(), zone);
+
+        var res = await CreateTierRawAsync(await CreateDraftShowAsync(), zone);
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task CreateTier_InactiveZone_Rejected()
+    {
+        var show = await CreateDraftShowAsync();
+        var zone = await CreateZoneAsync(SeedHelper.LoungeId);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await db.SeatingZones.FirstAsync(z => z.Id == zone)).IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        (await CreateTierRawAsync(show, zone)).StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task Assign_ZoneAlreadyUsedByAnotherTierOfTheShow_Rejected()
+    {
+        var show = await CreateDraftShowAsync();
+        var zone = await CreateZoneAsync(SeedHelper.LoungeId);
+        await CreateTierAsync(show, zone);
+        var tierCu = await CreateTierAsync(show); // hạng vé cũ chưa gắn khu
+
+        var res = await AssignAsync(tierCu, zone);
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await res.Content.ReadAsStringAsync()).Should().Contain("Mỗi khu chỉ gắn với một hạng vé");
+        (await ZoneOfAsync(tierCu)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Assign_SameZoneAgainToTheSameTier_IsNotAConflictWithItself()
+    {
+        var show = await CreateDraftShowAsync();
+        var zone = await CreateZoneAsync(SeedHelper.LoungeId);
+        var tier = await CreateTierAsync(show, zone);
+
+        (await AssignAsync(tier, zone)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await ZoneOfAsync(tier)).Should().Be(zone);
+    }
+
     private sealed record DataResponse<T>(bool Success, T Data);
+
 }
