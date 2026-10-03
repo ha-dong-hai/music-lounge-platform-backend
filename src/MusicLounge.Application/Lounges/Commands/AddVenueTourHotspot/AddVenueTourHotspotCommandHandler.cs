@@ -40,10 +40,23 @@ internal sealed class AddVenueTourHotspotCommandHandler : IRequestHandler<AddVen
         }
 
         var type = Enum.Parse<VenueTourHotspotType>(request.Type, ignoreCase: true);
+
+        if (type == VenueTourHotspotType.Zone)
+        {
+            var zone = await _uow.Repository<SeatingZone, Guid>().GetByIdAsync(request.ZoneId!.Value, ct);
+            // Same 404 as a foreign TargetSceneId: another venue's zone does not exist from this tour's view.
+            if (zone is null || zone.LoungeId != request.LoungeId)
+                throw new NotFoundException(nameof(SeatingZone), request.ZoneId.Value);
+            // Same wording as AssignTicketTierZone — a paused zone sells nothing, so no point to tap.
+            if (!zone.IsActive)
+                throw new DomainException("Khu ghế này đang tạm ngưng.");
+        }
+
         var hotspot = new VenueTourHotspot
         {
             SceneId = request.SceneId,
             TargetSceneId = type == VenueTourHotspotType.Navigate ? request.TargetSceneId : null,
+            ZoneId = type == VenueTourHotspotType.Zone ? request.ZoneId : null,
             Type = type,
             Yaw = request.Yaw,
             Pitch = request.Pitch,

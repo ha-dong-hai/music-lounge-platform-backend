@@ -490,7 +490,7 @@ public sealed class LoungesController : ControllerBase
         Guid id, Guid sceneId, [FromBody] AddVenueTourHotspotRequest body, CancellationToken ct = default)
     {
         var hotspotId = await _sender.Send(new AddVenueTourHotspotCommand(
-            id, sceneId, body.Type, body.Yaw, body.Pitch, body.Label, body.TargetSceneId, body.InfoText), ct);
+            id, sceneId, body.Type, body.Yaw, body.Pitch, body.Label, body.TargetSceneId, body.InfoText, body.ZoneId), ct);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<Guid>.Ok(hotspotId));
     }
 
@@ -518,7 +518,8 @@ public sealed record StitchVenueTourSceneRequest(IReadOnlyList<string> SourceIma
 public sealed record SetVenueTourScenePositionRequest(double? X, double? Y);
 
 public sealed record AddVenueTourHotspotRequest(
-    string Type, double Yaw, double Pitch, string? Label, Guid? TargetSceneId, string? InfoText);
+    string Type, double Yaw, double Pitch, string? Label, Guid? TargetSceneId, string? InfoText,
+    Guid? ZoneId = null); // MLACP-555: chỉ cho Type "Zone"
 
 public sealed record CreateSeatingZoneRequest(string Name, string? Description, int Capacity);
 

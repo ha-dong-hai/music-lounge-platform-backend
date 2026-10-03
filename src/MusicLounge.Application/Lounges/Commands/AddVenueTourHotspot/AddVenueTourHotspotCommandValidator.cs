@@ -11,7 +11,7 @@ public sealed class AddVenueTourHotspotCommandValidator : AbstractValidator<AddV
         RuleFor(x => x.SceneId).NotEmpty();
         RuleFor(x => x.Type)
             .Must(t => Enum.TryParse<VenueTourHotspotType>(t, ignoreCase: true, out _))
-            .WithMessage("Type phải là 'Navigate' hoặc 'Info'.");
+            .WithMessage("Type phải là 'Navigate', 'Info' hoặc 'Zone'.");
         RuleFor(x => x.Yaw).InclusiveBetween(-180, 180);
         RuleFor(x => x.Pitch).InclusiveBetween(-90, 90);
         RuleFor(x => x.Label).MaximumLength(100);
@@ -20,6 +20,10 @@ public sealed class AddVenueTourHotspotCommandValidator : AbstractValidator<AddV
         RuleFor(x => x.TargetSceneId)
             .NotNull().WithMessage("Hotspot loại Navigate phải có TargetSceneId.")
             .When(x => string.Equals(x.Type, nameof(VenueTourHotspotType.Navigate), StringComparison.OrdinalIgnoreCase));
+
+        RuleFor(x => x.ZoneId)
+            .NotNull().WithMessage("Hotspot loại Zone phải có ZoneId.")
+            .When(x => string.Equals(x.Type, nameof(VenueTourHotspotType.Zone), StringComparison.OrdinalIgnoreCase));
 
         RuleFor(x => x.TargetSceneId)
             .Must((cmd, targetSceneId) => targetSceneId != cmd.SceneId)
