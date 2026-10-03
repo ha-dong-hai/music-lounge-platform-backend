@@ -389,8 +389,89 @@ public sealed class VenueTourTests
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    // ---------- MLACP-586: đổi tên cảnh ----------
+
+    [Fact]
+    public async Task RenameTourScene_ByOwner_ChangesNameAndKeepsHotspotsAndPosition()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId); // thêm KHÔNG tên — đúng tình huống chủ dự án gặp ("Cảnh 1")
+        (await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", new
+        {
+            Type = "Info", Yaw = 10.0, Pitch = 0.0, Label = "Quầy pha chế", InfoText = "Mở từ 19:00", TargetSceneId = (Guid?)null
+        })).EnsureSuccessStatusCode();
+        (await client.PutAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/position", new { X = 40.5, Y = 60.25 }))
+            .EnsureSuccessStatusCode();
+
+        var res = await client.PutAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/name", new { Name = "  Quầy bar  " });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var body = await (await _factory.CreateClient().GetAsync($"/api/v1/lounges/{loungeId}/tour")).Content.ReadAsStringAsync();
+        body.Should().Contain("\"name\":\"Quầy bar\"", "tên được cắt khoảng trắng hai đầu")
+            .And.Contain("Quầy pha chế", "đổi tên không được làm mất điểm bấm")
+            .And.Contain("\"positionX\":40.5", "đổi tên không được làm mất vị trí trên mặt bằng");
+    }
+
+    [Fact]
+    public async Task RenameTourScene_BlankName_ClearsTheName()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId, "Sảnh chính");
+
+        var res = await client.PutAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/name", new { Name = "   " });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Set<VenueTourScene>().Single(s => s.Id == sceneId).Name.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RenameTourScene_ByAnotherOwner_Returns403_NameUnchanged()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var (otherOwnerId, _) = await CreateOwnerWithLoungeAsync();
+        var sceneId = await AddSceneAsync(_factory.CreateAuthenticatedClient(ownerId, "Owner"), loungeId, "Sảnh chính");
+
+        var res = await _factory.CreateAuthenticatedClient(otherOwnerId, "Owner")
+            .PutAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/name", new { Name = "Chiếm tên" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Set<VenueTourScene>().Single(s => s.Id == sceneId).Name.Should().Be("Sảnh chính");
+    }
+
+    [Fact]
+    public async Task RenameTourScene_SceneOfAnotherLounge_Returns404()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var (otherOwnerId, otherLoungeId) = await CreateOwnerWithLoungeAsync();
+        var otherScene = await AddSceneAsync(_factory.CreateAuthenticatedClient(otherOwnerId, "Owner"), otherLoungeId, "Của người khác");
+
+        var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner")
+            .PutAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{otherScene}/name", new { Name = "Đổi trộm" });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task RenameTourScene_NameOver100Chars_Returns400()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId);
+
+        var res = await client.PutAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/name", new { Name = new string('a', 101) });
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     [Fact]
     public async Task SetTourScenePosition_ByOwner_PersistsCoordinatesAndSurfacesFloorPlanImage()
+
     {
         var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
         var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
