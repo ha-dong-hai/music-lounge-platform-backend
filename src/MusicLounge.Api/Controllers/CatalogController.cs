@@ -28,11 +28,11 @@ public sealed class CatalogController : ControllerBase
     public CatalogController(ISender sender) => _sender = sender;
 
     [HttpGet("music-genres")]
-    [ProducesResponseType<ApiResponse<List<CatalogItemDto>>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiResponse<List<MusicGenreCatalogItemDto>>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMusicGenres(CancellationToken ct = default)
     {
         var result = await _sender.Send(new GetMusicGenresQuery(), ct);
-        return Ok(ApiResponse<List<CatalogItemDto>>.Ok(result));
+        return Ok(ApiResponse<List<MusicGenreCatalogItemDto>>.Ok(result));
     }
 
     [HttpGet("moods")]
