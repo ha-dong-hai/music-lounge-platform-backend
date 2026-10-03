@@ -332,9 +332,12 @@ internal sealed class SampleDataBuilder
         {
             var (show, cluster) = (staged[i].Show, staged[i].Cluster);
             var gs = clusterGenres[cluster];
-            db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = gs[i % gs.Count].Id });
-            if (gs.Count > 1 && i % 3 == 0)
-                db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = gs[(i + 1) % gs.Count].Id });
+            // Xoay vòng theo SỐ THỨ TỰ CỦA BUỔI TRONG CỤM (i / số cụm), không theo i: i của một cụm luôn cách nhau đúng số
+            // cụm, nên i % 2 là hằng số và cụm hai thể loại chỉ dùng một — đo 03/10 trên DB giống Azure: 8/12 thể loại có buổi.
+            var thuTu = i / clusterGenres.Count;
+            db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = gs[thuTu % gs.Count].Id });
+            if (gs.Count > 1 && thuTu % 3 == 0)
+                db.Add(new LoungeShowGenre { LoungeShowId = show.Id, GenreId = gs[(thuTu + 1) % gs.Count].Id });
             db.Add(new LoungeShowMood { LoungeShowId = show.Id, MoodId = moods[(cluster + i / 7) % moods.Count].Id });
             db.Add(new LoungeShowAtmosphere { LoungeShowId = show.Id, AtmosphereId = atmospheres[cluster % atmospheres.Count].Id });
 
