@@ -30,7 +30,7 @@ public sealed class PersonalisedFeedTests
     public PersonalisedFeedTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(Guid Id, string Name, float RecommendationScore, string? RecommendationReason);
+    private sealed record Rec(Guid Id, string Name, float RecommendationScore, string? RecommendationReason, string? RecommendationSource = null);
 
     private async Task<(Guid LoungeId, string City)> VenueInItsOwnCityAsync()
     {
@@ -144,6 +144,8 @@ public sealed class PersonalisedFeedTests
             "buổi diễn cùng thể loại với thứ khách vừa xem phải được đẩy lên trên");
         recs.Single(r => r.Id == sameKind).RecommendationReason.Should().Contain("vừa xem",
             "khách phải hiểu vì sao mình được gợi ý cái này");
+        recs.Single(r => r.Id == sameKind).RecommendationSource.Should().Be("Taste",
+            "MLACP-565: khách không bao giờ nhận nhãn AI — xếp theo thứ vừa xem là khớp gu, không phải AI");
     }
 
     [Fact]
@@ -171,7 +173,7 @@ public sealed class PersonalisedFeedTests
         var recs = await AskAsync(_factory.CreateClient(), $"city={city}&limit=50");
 
         recs.Should().NotBeEmpty();
-        recs.Should().OnlyContain(r => r.RecommendationReason == "Đang thịnh hành" && r.RecommendationScore == 0f);
+        recs.Should().OnlyContain(r => r.RecommendationReason == "Đang thịnh hành" && r.RecommendationScore == 0f && r.RecommendationSource == "Trending");
     }
 
     [Fact]

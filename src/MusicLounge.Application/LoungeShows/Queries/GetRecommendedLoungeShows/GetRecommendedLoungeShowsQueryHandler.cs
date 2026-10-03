@@ -188,8 +188,11 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         return RecommendationRefresh.CanProduceAnything(logs, hasDeclaredTaste: false, followsAnyVenue: false);
     }
 
-    /// <summary>Một buổi diễn đã được chấm điểm, kèm lý do sẽ hiện cho người dùng.</summary>
-    private sealed record Scored(LoungeShow Show, float Score, string Reason);
+    /// <summary>Một buổi diễn đã được chấm điểm, kèm lý do sẽ hiện cho người dùng và NGUỒN (MLACP-565 — xem
+    /// RecommendedLoungeShowDto.RecommendationSource).</summary>
+    private sealed record Scored(LoungeShow Show, float Score, string Reason, string Source);
+
+    internal const string NguonAi = "Ai", NguonTaste = "Taste", NguonTrending = "Trending";
 
     /// <summary>
     /// Gu suy ra từ chính request khách vãng lai gửi lên. Không đọc và không ghi hồ sơ nào của họ,
@@ -447,7 +450,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
 
         return CapPerVenue(ordered, limit, x => x.Show.LoungeId)
             .Take(limit)
-            .Select(x => x.Show.ToRecommendedDto(x.Score, x.Reason))
+            .Select(x => x.Show.ToRecommendedDto(x.Score, x.Reason, x.Source))
             .ToList();
     }
 
@@ -564,7 +567,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         // Không biết gì về người hỏi thì trả về đúng bảng đang được quan tâm. Xếp theo một cái gu
         // rỗng chỉ tạo ra thứ tự ngẫu nhiên đội lốt cá nhân hoá.
         if (taste.KnowsNothing || candidates.Count == 0)
-            return candidates.Select(s => new Scored(s, 0f, "Đang thịnh hành")).ToList();
+            return candidates.Select(s => new Scored(s, 0f, "Đang thịnh hành", NguonTrending)).ToList();
 
         var tagsByShow = (await _showRepo.GetShowTagsAsync(candidates.Select(s => s.Id).ToList(), ct))
             .ToDictionary(t => t.ShowId);
@@ -585,8 +588,9 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
             })
             .OrderByDescending(x => x.Score)
             .ThenBy(x => trendingRank[x.Show.Id])
-            .Select(x => new Scored(
-                x.Show, x.Score, x.Score > 0 ? reasonWhenMatched : "Đang thịnh hành"))
+            .Select(x => x.Score > 0
+                ? new Scored(x.Show, x.Score, reasonWhenMatched, NguonTaste)
+                : new Scored(x.Show, x.Score, "Đang thịnh hành", NguonTrending))
             .ToList();
     }
 
@@ -634,7 +638,7 @@ internal sealed class GetRecommendedLoungeShowsQueryHandler
         var fromCache = reachable
             .Where(s => ShowSchedule.EffectiveEnd(s) >= now)
             .OrderByDescending(s => recByShowId[s.Id].FinalScore)
-            .Select(s => new Scored(s, recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason))
+            .Select(s => new Scored(s, recByShowId[s.Id].FinalScore, recByShowId[s.Id].Reason, NguonAi))
             .ToList();
 
         // Chỉ đếm những buổi người dùng chưa có: nếu cache toàn thứ họ đã mua vé thì nó vẫn không

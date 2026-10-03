@@ -45,7 +45,7 @@ public sealed class ConsentingUsersGetTheSameRulesTests
     public ConsentingUsersGetTheSameRulesTests(ApiFactory factory) => _factory = factory;
 
     private sealed record Envelope<T>(bool Success, T Data);
-    private sealed record Rec(Guid Id, string Name, string LoungeCity);
+    private sealed record Rec(Guid Id, string Name, string LoungeCity, string? RecommendationSource = null);
 
     private async Task<(Guid LoungeId, string City)> VenueAsync()
     {
@@ -244,6 +244,28 @@ public sealed class ConsentingUsersGetTheSameRulesTests
 
         ids.Take(2).Should().Equal([a, b],
             "hai suất đầu phải là kết quả đã tính sẵn, đúng thứ tự điểm của chúng");
+    }
+
+    // ---------- MLACP-565: nguồn gợi ý để giao diện gắn nhãn "AI gợi ý" đúng chỗ ----------
+
+    [Fact]
+    public async Task EachRecommendationSaysWhereItCameFrom_SoOnlyAiPicksAreLabelledAi()
+    {
+        // Chủ dự án 03/10/2026: nền tảng nổi bật nhờ AI — nhưng nhãn AI chỉ được gắn lên thẻ thật sự do AI chọn.
+        // Một danh sách của người đã đồng ý AI trộn ba nguồn: phần tính sẵn (ML.NET), phần bù khớp gu, phần bù thịnh hành.
+        var (loungeId, city) = await VenueAsync();
+        var tuAi = await ShowAsync(loungeId, "Tu AI", SeedHelper.GenreId1, daysFromNow: 30);
+        var khopGu = await ShowAsync(loungeId, "Khop gu", SeedHelper.GenreId1, daysFromNow: 12);
+        var thinhHanh = await ShowAsync(loungeId, "Khong khop", SeedHelper.GenreId2, daysFromNow: 13);
+
+        var userId = await ConsentingUserAsync(SeedHelper.GenreId1);
+        await CacheAsync(userId, tuAi, 0.8f);
+
+        var recs = await RecommendationsAsync(userId, city, limit: 10);
+
+        recs.Single(r => r.Id == tuAi).RecommendationSource.Should().Be("Ai", "kết quả job nền ML.NET tính sẵn");
+        recs.Single(r => r.Id == khopGu).RecommendationSource.Should().Be("Taste", "phần bù khớp gu tính ngay — không phải AI");
+        recs.Single(r => r.Id == thinhHanh).RecommendationSource.Should().Be("Trending", "không khớp gì thì là bảng thịnh hành");
     }
 
     // ---------- 4. buổi diễn mới có tới được người đã đồng ý không ----------
