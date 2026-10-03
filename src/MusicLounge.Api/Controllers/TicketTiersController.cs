@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.LoungeShows.DTOs;
+using MusicLounge.Application.TicketTiers.Commands.AssignTicketTierZone;
 using MusicLounge.Application.TicketTiers.Commands.CreateTicketTier;
 using MusicLounge.Application.TicketTiers.Commands.DeleteTicketTier;
 using MusicLounge.Application.TicketTiers.Commands.UpdateTicketTier;
@@ -67,6 +68,21 @@ public sealed class TicketTiersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>MLACP-545: gắn khu ghế cho hạng vé tại chỗ. Buổi còn Draft: gắn/đổi tự do; đã mở bán: chỉ gắn khi hạng vé
+    /// CHƯA có khu (không chuyển chỗ người đã mua). Khu phải thuộc đúng phòng trà của buổi diễn.</summary>
+    [HttpPut("{id:guid}/zone")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> AssignZone(
+        Guid id, [FromBody] AssignTicketTierZoneRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new AssignTicketTierZoneCommand(id, body.ZoneId), ct);
+        return NoContent();
+    }
+
     /// <summary>Xóa thật (hard delete) — chỉ áp dụng khi buổi diễn còn Draft (422 nếu khác).</summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -82,3 +98,5 @@ public sealed class TicketTiersController : ControllerBase
 }
 
 public sealed record UpdateTicketTierRequest(string Name, string? Description, int? TotalCapacity);
+
+public sealed record AssignTicketTierZoneRequest(Guid ZoneId);

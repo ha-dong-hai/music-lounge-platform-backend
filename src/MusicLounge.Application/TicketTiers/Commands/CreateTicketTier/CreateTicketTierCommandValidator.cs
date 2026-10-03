@@ -23,6 +23,18 @@ public sealed class CreateTicketTierCommandValidator : AbstractValidator<CreateT
             .When(x => x.ZoneId.HasValue)
             .WithMessage("ZoneId không tồn tại.");
 
+        // MLACP-545: trước đây chỉ kiểm khu TỒN TẠI — chủ phòng trà A gắn được khu của phòng trà B vào hạng vé của mình.
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) =>
+            {
+                var show = await uow.Repository<LoungeShow, Guid>().GetByIdAsync(cmd.ShowId, ct);
+                var zone = await uow.Repository<SeatingZone, Guid>().GetByIdAsync(cmd.ZoneId!.Value, ct);
+                return show is null || zone is null || zone.LoungeId == show.LoungeId; // thiếu thì rule khác/handler báo
+            })
+            .When(x => x.ZoneId.HasValue)
+            .WithName("ZoneId")
+            .WithMessage("Khu ghế không thuộc phòng trà của buổi diễn này.");
+
         RuleFor(x => x.AccessType)
             .Must(a => ValidAccessTypes.Contains(a, StringComparer.OrdinalIgnoreCase))
             .WithMessage("AccessType phải là 'Physical' hoặc 'Livestream'.");

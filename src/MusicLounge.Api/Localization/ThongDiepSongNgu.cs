@@ -176,6 +176,12 @@ internal static class ThongDiepSongNgu
             ["Chỉ có thể sửa danh sách biểu diễn khi event còn ở trạng thái Draft."] = "The line-up can only be edited while the concert is still a Draft.",
             ["Chỉ có thể sửa event khi còn ở trạng thái Draft."] = "A concert can only be edited while it is still a Draft.",
             ["Chỉ có thể sửa hạng vé khi event còn ở trạng thái Draft."] = "Ticket tiers can only be edited while the concert is still a Draft.",
+            // MLACP-545: gắn khu ghế cho hạng vé
+            ["Chỉ hạng vé tại chỗ mới gắn được khu ghế."] = "Only in-venue ticket tiers can be assigned a seating zone.",
+            ["Buổi diễn đã kết thúc hoặc đã huỷ, không gắn khu ghế được nữa."] = "The concert has ended or been cancelled, so a seating zone can no longer be assigned.",
+            ["Hạng vé đã có khu ghế và buổi diễn đã mở bán — không đổi khu được, để người đã mua không bị chuyển chỗ."] = "This tier already has a seating zone and the concert is on sale — the zone cannot be changed, so buyers are not moved.",
+            ["Khu ghế không thuộc phòng trà của buổi diễn này."] = "This seating zone does not belong to the venue of this concert.",
+            ["Khu ghế này đang tạm ngưng."] = "This seating zone is currently inactive.",
             ["Chỉ có thể terminate livestream đang phát sóng (status = Live)."] = "Only a livestream that is on air (status = Live) can be terminated.",
             ["Chỉ có thể thêm hạng vé khi event còn ở trạng thái Draft."] = "Ticket tiers can only be added while the concert is still a Draft.",
             ["Chỉ có thể xóa event khi còn ở trạng thái Draft."] = "A concert can only be deleted while it is still a Draft.",
