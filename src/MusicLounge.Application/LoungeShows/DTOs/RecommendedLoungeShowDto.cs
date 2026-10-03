@@ -9,6 +9,10 @@ public sealed record RecommendedLoungeShowDto(
     string LoungeName,
     string LoungeDistrict,
     string LoungeCity,
+    // MLACP-580: ảnh đại diện phòng trà, để khối "Chương trình in riêng cho bạn" vẫn có hình khi buổi chưa có poster
+    // (chủ dự án 03/10/2026: "không có hình ảnh thì thật thiếu sự trực quan"). Tách riêng khỏi CoverImageUrl chứ KHÔNG
+    // gộp vào DisplayImageUrl: giao diện phải ghi rõ đây là ảnh phòng trà, không phải poster của đêm diễn.
+    string? LoungeImageUrl,
     DateTimeOffset ScheduledStart,
     LoungeShowFormat Format,
     LoungeShowStatus Status,
