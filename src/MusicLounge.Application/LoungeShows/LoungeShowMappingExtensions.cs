@@ -123,7 +123,7 @@ internal static class LoungeShowMappingExtensions
     }
 
     internal static RecommendedLoungeShowDto ToRecommendedDto(
-        this LoungeShow show, float score, string reason)
+        this LoungeShow show, float score, string reason, string source)
     {
         // MLACP-388: gia chua duyet khong phai gia dang ban — khong dua vao khoang gia hien cho nguoi mua.
         var prices = show.TicketTiers.SelectMany(t => t.Prices).Where(p => p.IsActive).ToList();
@@ -135,7 +135,7 @@ internal static class LoungeShowMappingExtensions
             prices.Count > 0 ? prices.Max(p => p.Price) : null,
             show.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
             show.Performances.OrderBy(p => p.OrderIndex).Select(p => p.Performer.Name).ToList(),
-            score, reason);
+            score, reason, source);
     }
 
     internal static PerformerDetailDto ToDetailDto(
