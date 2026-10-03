@@ -24,6 +24,7 @@ using MusicLounge.Application.Lounges.Queries.GetLoungeBusinessLicense;
 using MusicLounge.Application.Lounges.Commands.ClearLoungeImage;
 using MusicLounge.Application.Lounges.Commands.SetLoungeImage;
 using MusicLounge.Application.Lounges.Commands.SetVenueTourScenePosition;
+using MusicLounge.Application.Lounges.Commands.RenameVenueTourScene;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout2D;
 using MusicLounge.Application.Lounges.Commands.SetZoneLayout3D;
 using MusicLounge.Application.Lounges.Commands.StitchVenueTourScene;
@@ -463,6 +464,20 @@ public sealed class LoungesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>MLACP-586: đổi tên một cảnh của tour 360° (tên rỗng = bỏ tên). Không đụng ảnh, vị trí hay điểm bấm.</summary>
+    [HttpPut("{id:guid}/tour/scenes/{sceneId:guid}/name")]
+    [Authorize(Policy = Policies.RequireOwner)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RenameTourScene(
+        Guid id, Guid sceneId, [FromBody] RenameVenueTourSceneRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new RenameVenueTourSceneCommand(id, sceneId, body.Name), ct);
+        return NoContent();
+    }
+
     /// <summary>Đặt vị trí đánh dấu của 1 scene trên ảnh mặt bằng (area-layout-image) — X/Y theo %
     /// (0-100). Truyền cả 2 null để xóa vị trí đã đặt.</summary>
     [HttpPut("{id:guid}/tour/scenes/{sceneId:guid}/position")]
@@ -516,6 +531,8 @@ public sealed record AddVenueTourSceneRequest(string ImageUrl, string? Name);
 public sealed record StitchVenueTourSceneRequest(IReadOnlyList<string> SourceImageUrls, string? Name);
 
 public sealed record SetVenueTourScenePositionRequest(double? X, double? Y);
+public sealed record RenameVenueTourSceneRequest(string? Name);
+
 
 public sealed record AddVenueTourHotspotRequest(
     string Type, double Yaw, double Pitch, string? Label, Guid? TargetSceneId, string? InfoText,
