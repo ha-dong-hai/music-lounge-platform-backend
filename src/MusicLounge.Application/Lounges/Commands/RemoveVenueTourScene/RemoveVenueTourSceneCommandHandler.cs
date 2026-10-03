@@ -53,6 +53,14 @@ internal sealed class RemoveVenueTourSceneCommandHandler : IRequestHandler<Remov
             attemptRepo.Update(attempt);
         }
 
+        // MLACP-543: LƯU phần gỡ liên kết TRƯỚC, rồi mới xoá scene. FindAsync đọc AsNoTracking, nên Update() gắn lại
+        // attempt với ResultSceneId = null mà EF KHÔNG biết giá trị cũ là scene này → không xếp UPDATE trước DELETE.
+        // Azure SQL 03/10/2026 chạy DELETE trước: "conflicted with the REFERENCE constraint
+        // FK_venue_tour_stitch_attempts_venue_tour_scenes_ResultSceneId" → 409, mọi scene do ghép ảnh tạo ra không xoá
+        // được. Hai lần lưu vẫn nằm trong MỘT transaction (TransactionBehavior bọc mọi ICommand) — lỗi ở bước nào cũng
+        // hoàn tác cả hai.
+        await _uow.SaveChangesAsync(ct);
+
         sceneRepo.Remove(scene);
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;

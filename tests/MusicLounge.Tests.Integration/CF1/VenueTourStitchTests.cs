@@ -268,6 +268,46 @@ public sealed class VenueTourStitchTests
         body.Should().Contain("giới hạn");
     }
 
+    // MLACP-543: xoá một scene do GHÉP ẢNH tạo ra trả 409 trên Azure — log: "The DELETE statement conflicted with the
+    // REFERENCE constraint FK_venue_tour_stitch_attempts_venue_tour_scenes_ResultSceneId". Handler CÓ gán
+    // ResultSceneId = null, nhưng attempt được đọc bằng FindAsync (AsNoTracking) rồi Update() — EF không biết giá trị
+    // khoá ngoại CŨ nên không xếp UPDATE trước DELETE. Test cũ chỉ xoá scene có hotspot trỏ tới, chưa từng xoá scene
+    // của một lần ghép thành công.
+    [Fact]
+    public async Task RemoveTourScene_CreatedByStitch_DeletesScene_KeepsAttemptLogWithNullLink()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var url = await UploadRealImageAsync(client);
+        var add = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes", new { ImageUrl = url, Name = "Quầy bar" });
+        add.StatusCode.Should().Be(HttpStatusCode.Created);
+        var sceneId = (await add.Content.ReadFromJsonAsync<IdResponse>())!.Data;
+
+        // Dựng đúng trạng thái trên Azure: một lần ghép THÀNH CÔNG trỏ tới scene này (dịch vụ ghép giả trong test chỉ
+        // mô phỏng nhánh lỗi, nên ghi thẳng bản ghi nhật ký).
+        var attemptId = OrderedGuid.New();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.VenueTourStitchAttempts.Add(new VenueTourStitchAttempt
+            {
+                Id = attemptId, LoungeId = loungeId, Status = VenueTourStitchStatus.Succeeded,
+                ResultSceneId = sceneId, CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5)
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var res = await client.DeleteAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}");
+
+        res.IsSuccessStatusCode.Should().BeTrue($"xoá scene của lần ghép ảnh phải thành công, nhận {(int)res.StatusCode}");
+        using var check = _factory.Services.CreateScope();
+        var db2 = check.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db2.VenueTourScenes.AnyAsync(s => s.Id == sceneId)).Should().BeFalse();
+        var attempt = await db2.VenueTourStitchAttempts.AsNoTracking().FirstAsync(a => a.Id == attemptId);
+        attempt.ResultSceneId.Should().BeNull("nhật ký ghép ảnh giữ lại, chỉ bỏ liên kết tới scene đã xoá");
+        attempt.Status.Should().Be(VenueTourStitchStatus.Succeeded);
+    }
+
     private sealed record IdResponse(bool Success, Guid Data);
     private sealed record UploadResponse(bool Success, UploadedUrl Data);
     private sealed record UploadedUrl(string Url);
