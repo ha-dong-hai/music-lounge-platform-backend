@@ -42,6 +42,9 @@ internal sealed class GetMyTicketsQueryHandler
             t.Status,
             t.QrCode,
             t.CreatedAt,
-            t.PendingTransferToUserId is not null));
+            t.PendingTransferToUserId is not null,
+            // PhysicalDetail/LivestreamDetail/Show.Lounge đã được WithDetails() nạp sẵn — không thêm truy vấn.
+            t.PhysicalDetail?.CheckedInAt ?? t.LivestreamDetail?.FirstAccessedAt,
+            t.Show.CoverImageUrl ?? t.Show.Lounge.PrimaryImageUrl));
     }
 }
