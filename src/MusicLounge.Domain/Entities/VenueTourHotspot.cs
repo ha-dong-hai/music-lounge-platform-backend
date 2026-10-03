@@ -15,7 +15,10 @@ public sealed class VenueTourHotspot : Common.BaseEntity<Guid>
     public double Pitch { get; set; }   // vertical angle, -90..90
     public string? Label { get; set; }
     public string? InfoText { get; set; }
+    // Only set (and only meaningful) when Type == Zone — the seating zone this point shows.
+    public Guid? ZoneId { get; set; }
 
     public VenueTourScene Scene { get; set; } = null!;
     public VenueTourScene? TargetScene { get; set; }
+    public SeatingZone? Zone { get; set; }
 }

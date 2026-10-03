@@ -30,6 +30,15 @@ internal sealed class VenueTourHotspotConfiguration : IEntityTypeConfiguration<V
             .HasForeignKey(x => x.TargetSceneId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // MLACP-555. Restrict: zones are never hard-deleted (DeactivateSeatingZone only clears IsActive),
+        // and a Cascade here would be a second cascade path from music_lounges (via scenes and via
+        // zones) — the same SQL Server error 1785 as above. A deactivated zone's hotspot stays in the
+        // table; GetVenueTourQueryHandler hides it so the Audience never taps a zone that isn't sold.
+        b.HasOne(x => x.Zone)
+            .WithMany()
+            .HasForeignKey(x => x.ZoneId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         b.HasIndex(x => x.SceneId);
     }
 }

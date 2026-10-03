@@ -2,6 +2,7 @@ using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Lounges.DTOs;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
@@ -27,7 +28,15 @@ internal sealed class GetVenueTourQueryHandler : IRequestHandler<GetVenueTourQue
         // this lounge's scenes in one round trip, then group in memory instead of N+1-ing per scene.
         var allHotspots = await _uow.Repository<VenueTourHotspot, Guid>()
             .FindAsync(h => sceneIds.Contains(h.SceneId), ct);
-        var hotspotsBySceneId = allHotspots.GroupBy(h => h.SceneId)
+
+        // MLACP-555: a Zone hotspot whose zone was deactivated afterwards is hidden, not deleted —
+        // reactivating the zone brings the point back without the owner placing it again.
+        var activeZoneIds = (await _uow.Repository<SeatingZone, Guid>()
+                .FindAsync(z => z.LoungeId == request.LoungeId && z.IsActive, ct))
+            .Select(z => z.Id).ToHashSet();
+        var hotspotsBySceneId = allHotspots
+            .Where(h => h.Type != VenueTourHotspotType.Zone || (h.ZoneId.HasValue && activeZoneIds.Contains(h.ZoneId.Value)))
+            .GroupBy(h => h.SceneId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var sceneDtos = scenes
@@ -43,7 +52,7 @@ internal sealed class GetVenueTourQueryHandler : IRequestHandler<GetVenueTourQue
                 s.PositionY,
                 (hotspotsBySceneId.TryGetValue(s.Id, out var hotspots) ? hotspots : [])
                     .Select(h => new VenueTourHotspotDto(
-                        h.Id, h.Type.ToString(), h.Yaw, h.Pitch, h.Label, h.TargetSceneId, h.InfoText))
+                        h.Id, h.Type.ToString(), h.Yaw, h.Pitch, h.Label, h.TargetSceneId, h.InfoText, h.ZoneId))
                     .ToList()))
             .ToList();
 

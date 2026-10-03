@@ -10,5 +10,6 @@ public sealed record AddVenueTourHotspotCommand(
     double Pitch,
     string? Label,
     Guid? TargetSceneId,
-    string? InfoText
+    string? InfoText,
+    Guid? ZoneId = null // MLACP-555, only for Type == Zone
 ) : ICommand<Guid>;
