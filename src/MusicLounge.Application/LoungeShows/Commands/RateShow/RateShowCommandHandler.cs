@@ -10,11 +10,13 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IBackgroundJobService _backgroundJobs;
 
-    public RateShowCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public RateShowCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser, IBackgroundJobService backgroundJobs)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _backgroundJobs = backgroundJobs;
     }
 
     public async Task<Unit> Handle(RateShowCommand request, CancellationToken ct)
@@ -54,15 +56,22 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
         if (alreadyRated)
             throw new ConflictException("Bạn đã đánh giá show này rồi.");
 
-        _uow.Repository<LoungeShowRating, Guid>().Add(new LoungeShowRating
+        var rating = new LoungeShowRating
         {
             UserId = _currentUser.UserId,
             LoungeShowId = request.ShowId,
             Score = request.Score,
             Comment = request.Comment
-        });
+        };
+        _uow.Repository<LoungeShowRating, Guid>().Add(rating);
 
         await _uow.SaveChangesAsync(ct);
+
+        // MLACP-574: có LỜI BÌNH thì đưa AI chấm nền (ScoreRatingWithAiJob). Đánh giá chỉ có sao thì không có gì để chấm.
+        // Lời bình hiện ngay; chỉ bị ẩn tạm nếu AI đánh giá rủi ro cao — AI hỏng thì vẫn hiện.
+        if (!string.IsNullOrWhiteSpace(rating.Comment))
+            _backgroundJobs.EnqueueRatingAiScoring(rating.Id);
+
         return Unit.Value;
     }
 }

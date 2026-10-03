@@ -32,6 +32,10 @@ public interface IBackgroundJobService
     // slow/unavailable AI vendor never delays the Publish/CreateLivestream response it's called from.
     void EnqueueModerationAiScoring(Guid moderationId);
 
+    /// <summary>MLACP-574: AI chấm lời bình của một đánh giá vừa gửi (ScoreRatingWithAiJob) — rủi ro cao thì ẩn tạm,
+    /// chờ Admin quyết. Chạy nền để AI chậm/hỏng không ảnh hưởng việc gửi đánh giá.</summary>
+    void EnqueueRatingAiScoring(Guid ratingId);
+
     // Panorama stitching can take 15-30+ seconds (sometimes brushing the panorama-stitcher
     // HttpClient's 120s timeout on harder photo sets) - running it inline would block the Owner's
     // HTTP request for that whole window. The attempt row (already Pending when this is called)
