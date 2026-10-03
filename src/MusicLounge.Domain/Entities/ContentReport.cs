@@ -10,7 +10,9 @@ public sealed class ContentReport : Common.BaseEntity<Guid>
 {
     public ReportTargetType TargetType { get; set; }
     public Guid TargetId { get; set; }
-    public Guid ReporterId { get; set; }
+    // MLACP-574: null = báo cáo do HỆ THỐNG tạo (AI gắn cờ một lời bình rủi ro cao). Dùng chung hàng đợi Admin với báo
+    // cáo của người dùng — cùng SLA, cùng hai hành động Gỡ / Bỏ qua — thay vì dựng một hàng đợi thứ hai.
+    public Guid? ReporterId { get; set; }
     public string Reason { get; set; } = string.Empty;
     public ContentReportStatus Status { get; set; } = ContentReportStatus.Open;
     public DateTimeOffset CreatedAt { get; set; }
@@ -19,6 +21,6 @@ public sealed class ContentReport : Common.BaseEntity<Guid>
     public string? ResolutionNote { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
 
-    public User Reporter { get; set; } = null!;
+    public User? Reporter { get; set; }
     public User? ResolvedByAdmin { get; set; }
 }

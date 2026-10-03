@@ -59,8 +59,10 @@ internal sealed class GetShowRatingsQueryHandler : IRequestHandler<GetShowRating
                 r.UserId,
                 r.UserId.HasValue && userById.TryGetValue(r.UserId.Value, out var user) ? user.FullName : null,
                 r.Score,
-                r.Comment,
-                r.CreatedAt))
+                // MLACP-574: PublicComment — lời bình đang bị ẩn tạm chờ Admin thì không trả chữ, chỉ báo cờ.
+                r.PublicComment,
+                r.CreatedAt,
+                r.CommentHiddenAt is not null))
             .ToList();
 
         return new ShowRatingsDto(

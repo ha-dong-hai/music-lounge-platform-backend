@@ -96,6 +96,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<IAIRecommendationService>();
             services.AddSingleton<IAIRecommendationService, FakeAiService>();
 
+            // MLACP-574: AI kiem duyet gia — mac dinh tra null (nhu khi khong co Gemini:ApiKey), co dau thi tra diem.
+            services.RemoveAll<IAiModerationService>();
+            services.AddSingleton<IAiModerationService, FakeAiModerationService>();
+
             services.RemoveAll<IFcmService>();
             services.AddSingleton<IFcmService, FakeFcmService>();
 

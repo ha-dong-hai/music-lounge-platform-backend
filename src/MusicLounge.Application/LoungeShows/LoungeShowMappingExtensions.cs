@@ -199,11 +199,12 @@ internal static class LoungeShowMappingExtensions
     private static IReadOnlyList<FeaturedRatingDto> ToFeaturedRatingDtos(
         this ICollection<LoungeShowRating> ratings)
         => ratings
-            .Where(r => !r.IsRemoved && !string.IsNullOrWhiteSpace(r.Comment) && r.User is not null)
+            // MLACP-574: PublicComment — lời đang ẩn tạm chờ Admin không được lên "đánh giá nổi bật".
+            .Where(r => !r.IsRemoved && !string.IsNullOrWhiteSpace(r.PublicComment) && r.User is not null)
             .OrderByDescending(r => r.Score)
             .ThenByDescending(r => r.CreatedAt)
             .Take(5)
             .Select(r => new FeaturedRatingDto(
-                r.Score, r.Comment!, r.User!.FullName, r.User.AvatarUrl, r.CreatedAt))
+                r.Score, r.PublicComment!, r.User!.FullName, r.User.AvatarUrl, r.CreatedAt))
             .ToList();
 }
