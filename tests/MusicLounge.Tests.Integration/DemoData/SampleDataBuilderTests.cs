@@ -119,6 +119,25 @@ public sealed class SampleDataBuilderTests
             var khongDongY = users.Where(u => !u.AiConsent).Select(u => u.Id).ToList();
             (await db.BehaviourLogs.AnyAsync(b => khongDongY.Contains(b.UserId))).Should().BeFalse("không ghi hành vi của người chưa đồng ý");
             (await db.UserEventScores.CountAsync(x => userIds.Contains(x.UserId))).Should().BeGreaterThan(10, "ngưỡng huấn luyện lọc cộng tác");
+
+            // GIỐNG THẬT, không đều tăm tắp. Bản đầu của bộ dựng chọn người mua theo vòng: ai cũng có vé của MỌI buổi đúng gu
+            // mình, và buổi nào trong một cụm cũng bán đúng 7 vé. Hệ gợi ý (đúng luật) không gợi ý lại buổi đã có vé, nên
+            // khán giả khai gu R&B nhận toàn jazz, cổ điển, rock — trông như gợi ý hỏng trong khi lỗi là ở dữ liệu
+            // (phát hiện 03/10 khi thử trên database cục bộ giống Azure).
+            var sapDienIds = shows.Where(s => s.Status == LoungeShowStatus.Published).Select(s => s.Id).ToList();
+            var theLoaiCuaBuoi = (await db.LoungeShowGenres.Where(g => sapDienIds.Contains(g.LoungeShowId)).ToListAsync())
+                .GroupBy(g => g.LoungeShowId).ToDictionary(g => g.Key, g => g.Select(x => x.GenreId).ToHashSet());
+            var guCuaNguoi = (await db.Set<UserFavouriteGenre>().Where(g => userIds.Contains(g.UserId)).ToListAsync())
+                .GroupBy(g => g.UserId).ToDictionary(g => g.Key, g => g.Select(x => x.GenreId).ToHashSet());
+            var daCoVe = tickets.Where(t => t.BuyerId != null).GroupBy(t => t.BuyerId!.Value).ToDictionary(g => g.Key, g => g.Select(t => t.ShowId).ToHashSet());
+            foreach (var (userId, gu) in guCuaNguoi)
+            {
+                var conLai = theLoaiCuaBuoi.Count(kv => kv.Value.Overlaps(gu) && !(daCoVe.GetValueOrDefault(userId)?.Contains(kv.Key) ?? false));
+                conLai.Should().BeGreaterThanOrEqualTo(2, "người đã khai gu phải còn buổi đúng gu CHƯA mua để hệ gợi ý có cái mà gợi ý");
+            }
+            var veTheoBuoi = sapDienIds.Select(id => tickets.Count(t => t.ShowId == id)).ToList();
+            veTheoBuoi.Distinct().Count().Should().BeGreaterThanOrEqualTo(5, "số vé bán của các buổi phải khác nhau, có buổi đắt khách có buổi ế");
+            veTheoBuoi.Should().Contain(0, "phải có buổi chưa bán được vé nào — buổi mới đăng là chuyện thường");
         }
 
         // Chạy lần hai phải từ chối, không dựng chồng.

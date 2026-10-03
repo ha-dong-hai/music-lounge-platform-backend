@@ -177,8 +177,8 @@ internal sealed class SampleDataBuilder
         var past = shows.Where(s => s.Past).ToList();
 
         var stats = new Stats();
-        await FollowAndWishlistAsync(users, venues, upcoming, stats);
         await SellAsync(db, users, shows, stats, ct);
+        await FollowAndWishlistAsync(users, venues, upcoming, stats);
         await WriteBehaviourLogsAsync(db, users, shows, now, ct);
         await FinishPastShowsAsync(scope.ServiceProvider, db, users, past, stats, now, ct);
         await SpreadUpcomingPurchasesAsync(db, upcoming, now, ct);
@@ -382,27 +382,29 @@ internal sealed class SampleDataBuilder
         return staged;
     }
 
+    /// <summary>
+    /// Theo dõi phòng trà và lưu quan tâm — chọn theo TỪNG NGƯỜI. Chỉ lưu những buổi đúng gu mà người đó CHƯA mua vé:
+    /// lưu quan tâm là "để ý, chưa quyết", lưu một buổi đã có vé là dữ liệu vô nghĩa.
+    /// </summary>
     private async Task FollowAndWishlistAsync(
         IReadOnlyList<Person> users, IReadOnlyList<MusicLoungeVenue> venues, IReadOnlyList<Staged> upcoming, Stats stats)
     {
         foreach (var p in users.Where(p => !p.Blank))
         {
             var client = _host.ClientFor(p.User.Id, "Audience");
-            var i = users.ToList().IndexOf(p);
 
-            // Bỏ lựa chọn trùng (database ít phòng trà thì hai lượt có thể rơi vào cùng một nơi): gọi trùng chỉ nhận 409.
-            var theoDoi = Enumerable.Range(0, i % 3).Select(k => venues[(i + k * 2) % venues.Count].Id).Distinct();
-            foreach (var loungeId in theoDoi)
+            foreach (var venue in venues.OrderBy(_ => _rng.Next()).Take(_rng.Next(0, 3)))
             {
-                var res = await client.PostAsync($"/api/v1/follows/lounges/{loungeId}", null);
+                var res = await client.PostAsync($"/api/v1/follows/lounges/{venue.Id}", null);
                 if (res.IsSuccessStatusCode) stats.Follows++;
             }
 
-            var hop = upcoming.Where(s => s.Cluster == p.Cluster).ToList();
-            var luu = hop.Count == 0 ? [] : Enumerable.Range(0, 1 + i % 3).Select(k => hop[(i + k * 3) % hop.Count].Show.Id).Distinct();
-            foreach (var showId in luu)
+            var chuaMua = upcoming
+                .Where(s => s.Cluster == p.Cluster && !(_purchases.GetValueOrDefault(s.Show.Id)?.Any(x => x.BuyerId == p.User.Id) ?? false))
+                .OrderBy(_ => _rng.Next()).Take(_rng.Next(1, 3));
+            foreach (var s in chuaMua)
             {
-                var res = await client.PostAsync($"/api/v1/wishlist/{showId}", null);
+                var res = await client.PostAsync($"/api/v1/wishlist/{s.Show.Id}", null);
                 if (res.IsSuccessStatusCode) stats.Wishlists++;
             }
         }
@@ -410,41 +412,73 @@ internal sealed class SampleDataBuilder
 
     private readonly Dictionary<Guid, List<Purchase>> _purchases = [];
 
+    private sealed record Plan(Person Buyer, Staged Show, int Quantity, int Tier);
+
     /// <summary>
-    /// Mua vé qua đúng ba bước của người dùng thật: giữ chỗ → thanh toán → callback VNPay. Người mua nghiêng về buổi
-    /// đúng cụm gu của mình (4 phần), còn 1 phần mua buổi khác cụm — không ai chỉ nghe đúng một dòng nhạc, và lọc cộng
-    /// tác cần những giao điểm đó.
+    /// AI MUA BUỔI NÀO — quyết theo TỪNG KHÁN GIẢ, có ngẫu nhiên (hạt cố định nên hai lần dựng ra cùng một bộ).
+    ///
+    /// Bản đầu chọn người mua theo vòng trên từng buổi: kết quả là ai cũng có vé của MỌI buổi đúng gu mình, và mọi buổi
+    /// trong một cụm bán đúng 7 vé. Hệ gợi ý không gợi ý lại buổi đã có vé (đúng luật), nên khán giả khai gu R&B nhận toàn
+    /// jazz và cổ điển — trông như gợi ý hỏng trong khi lỗi là ở dữ liệu. Người thật không mua hết mọi đêm hợp gu mình.
+    ///
+    /// - Buổi SẮP diễn: mỗi người mua 0–2 buổi, 4/5 là đúng gu. Phần lớn buổi đúng gu còn lại chưa mua → gợi ý có đất diễn.
+    /// - Buổi ĐÃ diễn: mỗi người đã đi 3–7 đêm, 3/5 đúng gu — một đêm diễn thật luôn có người đi theo bạn, và lọc cộng
+    ///   tác cần những giao điểm khác gu đó.
+    /// - Vài buổi ĐẮT KHÁCH được thêm người mua ở mọi cụm; vài buổi MỚI ĐĂNG chưa ai mua — bảng thịnh hành có cao có thấp.
     /// </summary>
+    private List<Plan> PlanPurchases(IReadOnlyList<Person> users, IReadOnlyList<Staged> shows)
+    {
+        var plans = new List<Plan>();
+        var buyers = users.Where(p => !p.Blank).ToList();
+        var upcoming = shows.Where(s => !s.Past).ToList();
+        var past = shows.Where(s => s.Past).ToList();
+        // Bốn buổi xa nhất coi như vừa đăng: chưa ai mua.
+        var moiDang = upcoming.OrderByDescending(s => s.Show.ScheduledStart).Take(4).ToHashSet();
+        var banDuoc = upcoming.Where(s => !moiDang.Contains(s)).ToList();
+
+        void Chon(Person buyer, List<Staged> pool, int soBuoi, double phanDungGu)
+        {
+            var daChon = new HashSet<Staged>();
+            for (var k = 0; k < soBuoi; k++)
+            {
+                var dungGu = _rng.NextDouble() < phanDungGu;
+                var ungVien = pool.Where(s => (s.Cluster == buyer.Cluster) == dungGu && !daChon.Contains(s)).ToList();
+                if (ungVien.Count == 0) ungVien = pool.Where(s => !daChon.Contains(s)).ToList();
+                if (ungVien.Count == 0) return;
+                var show = ungVien[_rng.Next(ungVien.Count)];
+                daChon.Add(show);
+                plans.Add(new Plan(buyer, show, Quantity: _rng.NextDouble() < 0.3 ? 2 : 1, Tier: _rng.NextDouble() < 0.25 ? 1 : 0));
+            }
+        }
+
+        foreach (var buyer in buyers)
+        {
+            Chon(buyer, banDuoc, _rng.Next(0, 3), 0.8);
+            Chon(buyer, past, _rng.Next(3, 8), 0.6);
+        }
+
+        foreach (var hot in banDuoc.OrderBy(_ => _rng.Next()).Take(4))
+            foreach (var buyer in buyers.Where(b => !plans.Any(x => x.Buyer == b && x.Show == hot)).OrderBy(_ => _rng.Next()).Take(_rng.Next(5, 10)))
+                plans.Add(new Plan(buyer, hot, _rng.NextDouble() < 0.3 ? 2 : 1, 0));
+
+        return plans;
+    }
+
+    /// <summary>Mua vé qua đúng ba bước của người dùng thật: giữ chỗ → thanh toán → callback VNPay.</summary>
     private async Task SellAsync(ApplicationDbContext db, IReadOnlyList<Person> users, IReadOnlyList<Staged> shows, Stats stats, CancellationToken ct)
     {
-        var buyers = users.Where(p => !p.Blank).ToList();
-
-        for (var si = 0; si < shows.Count; si++)
+        foreach (var plan in PlanPurchases(users, shows))
         {
-            var s = shows[si];
-            // Buổi đã diễn bán khá (12–18 lượt mua); buổi sắp diễn rải từ 0 tới 9 để bảng thịnh hành có cao có thấp.
-            var luot = s.Past ? 12 + si % 7 : (si * 5) % 10;
-            var daMua = new HashSet<Guid>();
+            var purchase = await BuyAsync(plan.Buyer.User.Id, plan.Show.PriceIds[plan.Tier], plan.Quantity);
+            if (purchase is null) { stats.PurchasesRefused++; continue; }
 
-            for (var k = 0; k < luot; k++)
-            {
-                // Buổi sắp diễn: 4/5 lượt mua là người đúng gu. Buổi đã diễn: 3/5 — một đêm diễn thật luôn có người đi theo bạn.
-                var dungGu = s.Past ? k % 5 < 3 : k % 5 != 4;
-                var nhom = dungGu ? buyers.Where(b => b.Cluster == s.Cluster).ToList() : buyers;
-                var buyer = nhom[(si * 3 + k * 7) % nhom.Count];
-                if (!daMua.Add(buyer.User.Id)) continue;
+            var confirmed = await db.Payments.AsNoTracking().AnyAsync(p => p.Id == purchase.PaymentId && p.Status == PaymentStatus.Confirmed, ct);
+            if (!confirmed) { stats.PurchasesRefused++; continue; }
 
-                var purchase = await BuyAsync(buyer.User.Id, s.PriceIds[k % 4 == 3 ? 1 : 0], quantity: k % 3 == 0 ? 2 : 1);
-                if (purchase is null) { stats.PurchasesRefused++; continue; }
-
-                var confirmed = await db.Payments.AsNoTracking().AnyAsync(p => p.Id == purchase.PaymentId && p.Status == PaymentStatus.Confirmed, ct);
-                if (!confirmed) { stats.PurchasesRefused++; continue; }
-
-                stats.PurchasesOk++;
-                stats.Tickets += purchase.TicketIds.Count;
-                if (!_purchases.TryGetValue(s.Show.Id, out var list)) _purchases[s.Show.Id] = list = [];
-                list.Add(purchase);
-            }
+            stats.PurchasesOk++;
+            stats.Tickets += purchase.TicketIds.Count;
+            if (!_purchases.TryGetValue(plan.Show.Show.Id, out var list)) _purchases[plan.Show.Show.Id] = list = [];
+            list.Add(purchase);
         }
     }
 
@@ -485,17 +519,18 @@ internal sealed class SampleDataBuilder
         {
             var i = users.ToList().IndexOf(p);
             var hop = upcoming.Where(s => s.Cluster == p.Cluster).ToList();
-            var soDong = 6 + i % 7; // đều vượt ngưỡng RecommendationRefresh.MinBehaviourLogs (5)
+            var soDong = _rng.Next(6, 14); // đều vượt ngưỡng RecommendationRefresh.MinBehaviourLogs (5)
             for (var k = 0; k < soDong; k++)
             {
-                var pool = k % 4 == 3 || hop.Count == 0 ? upcoming : hop; // phần lớn đúng gu, đôi khi ghé buổi khác
+                var pool = _rng.NextDouble() < 0.25 || hop.Count == 0 ? upcoming : hop; // phần lớn đúng gu, đôi khi ghé buổi khác
+                var action = actions[_rng.Next(actions.Length)];
                 db.Add(new UserBehaviourLog
                 {
                     UserId = p.User.Id,
-                    LoungeShowId = pool[(i * 5 + k * 3) % pool.Count].Show.Id,
-                    Action = actions[(i + k) % actions.Length],
-                    DurationSeconds = actions[(i + k) % actions.Length] == BehaviourAction.ViewEventLong ? 45 + (i * k) % 120 : null,
-                    CreatedAt = now.AddDays(-((i + k * 2) % 14)).AddHours(-(k * 5 % 23))
+                    LoungeShowId = pool[_rng.Next(pool.Count)].Show.Id,
+                    Action = action,
+                    DurationSeconds = action == BehaviourAction.ViewEventLong ? _rng.Next(45, 180) : null,
+                    CreatedAt = now.AddHours(-_rng.Next(2, 14 * 24))
                 });
             }
 
@@ -528,7 +563,7 @@ internal sealed class SampleDataBuilder
             var list = _purchases.GetValueOrDefault(s.Show.Id) ?? [];
             for (var k = 0; k < list.Count; k++)
             {
-                if (k % 7 == 6) continue; // khoảng 1/7 lượt mua không tới
+                if (_rng.NextDouble() < 0.14) continue; // khoảng 1/7 lượt mua không tới
                 var ticketIds = list[k].TicketIds;
                 await db.Tickets.Where(t => ticketIds.Contains(t.Id)).ExecuteUpdateAsync(u => u.SetProperty(t => t.Status, TicketStatus.Used), ct);
                 await db.Set<PhysicalTicketDetail>().Where(d => ticketIds.Contains(d.TicketId))
@@ -558,18 +593,17 @@ internal sealed class SampleDataBuilder
         var chuaKetThuc = await db.LoungeShows.CountAsync(s => pastIds.Contains(s.Id) && s.Status != LoungeShowStatus.Ended, ct);
         if (chuaKetThuc > 0) _log($"CẢNH BÁO: {chuaKetThuc} buổi mẫu chưa kết thúc được — các buổi đó sẽ không có đánh giá.");
 
-        // 4. Đánh giá qua API. Mỗi buổi có một "chất lượng" riêng để điểm trung bình các buổi khác nhau thật.
+        // 4. Đánh giá qua API. Mỗi buổi có một "chất lượng" riêng để điểm trung bình các buổi khác nhau thật; từng người
+        // lệch quanh mức đó. Không phải ai đi xem cũng đánh giá, và khoảng 1/4 chỉ chấm sao không viết gì.
+        var lech = new[] { -2, -1, -1, 0, 0, 0, 0, 1, 1, 1, 2 };
         foreach (var s in past)
         {
-            var k = 0;
             foreach (var buyerId in daVao[s.Show.Id])
             {
-                k++;
-                if (k % 7 == 0) continue; // không phải ai đi xem cũng đánh giá
-                var sao = Math.Clamp(s.Quality + new[] { 1, 0, 1, -1, 0, 1, 2, -2 }[(k + s.DaysAgo) % 8], 1, 5);
+                if (_rng.NextDouble() < 0.2) continue;
+                var sao = Math.Clamp(s.Quality + lech[_rng.Next(lech.Length)], 1, 5);
                 var loi = Comments[sao];
-                // Khoảng 1/4 chỉ chấm sao, không viết gì.
-                var comment = k % 4 == 3 ? null : loi[(k + s.DaysAgo) % loi.Length];
+                var comment = _rng.NextDouble() < 0.25 ? null : loi[_rng.Next(loi.Length)];
 
                 var res = await _host.ClientFor(buyerId, "Audience")
                     .PostAsJsonAsync($"/api/v1/lounge-shows/{s.Show.Id}/rate", new { Score = sao, Comment = comment });
