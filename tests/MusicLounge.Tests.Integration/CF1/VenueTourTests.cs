@@ -440,6 +440,110 @@ public sealed class VenueTourTests
         scene.PositionY.Should().BeNull();
     }
 
+    // ---- MLACP-555: điểm bấm "Khu" trên ảnh 360 — khách chạm để chọn khu ghế khi mua vé ----
+
+    private async Task<Guid> AddZoneAsync(Guid loungeId, bool isActive = true)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var zone = new SeatingZone { Id = OrderedGuid.New(), LoungeId = loungeId, Name = "Khu VIP", Capacity = 20, IsActive = isActive };
+        db.SeatingZones.Add(zone);
+        await db.SaveChangesAsync();
+        return zone.Id;
+    }
+
+    private static object ZoneHotspot(Guid? zoneId) => new
+    {
+        Type = "Zone", Yaw = 30.0, Pitch = -10.0, Label = "Khu VIP",
+        TargetSceneId = (Guid?)null, InfoText = (string?)null, ZoneId = zoneId
+    };
+
+    [Fact]
+    public async Task AddTourHotspot_Zone_IsReturnedWithZoneIdOnTour()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId);
+        var zoneId = await AddZoneAsync(loungeId);
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", ZoneHotspot(zoneId));
+
+        res.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await _factory.CreateClient().GetStringAsync($"/api/v1/lounges/{loungeId}/tour");
+        body.Should().Contain("\"type\":\"Zone\"").And.Contain($"\"zoneId\":\"{zoneId}\"");
+    }
+
+    [Fact]
+    public async Task AddTourHotspot_ZoneWithoutZoneId_Returns400()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId);
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", ZoneHotspot(null));
+
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task AddTourHotspot_ZoneFromDifferentLounge_Returns404()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var (_, otherLoungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId);
+        var otherZoneId = await AddZoneAsync(otherLoungeId);
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", ZoneHotspot(otherZoneId));
+
+        res.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task AddTourHotspot_InactiveZone_Returns422()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId);
+        var zoneId = await AddZoneAsync(loungeId, isActive: false);
+
+        var res = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", ZoneHotspot(zoneId));
+
+        res.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    /// <summary>Khu bị tạm ngưng SAU khi đã đặt điểm: điểm bị ẩn khỏi tour (khách không chạm được khu không bán),
+    /// nhưng vẫn giữ trong bảng để mở lại khu là điểm hiện lại. Điểm Info cùng cảnh không bị ảnh hưởng.</summary>
+    [Fact]
+    public async Task GetTour_ZoneDeactivatedAfterwards_HidesOnlyThatZoneHotspot()
+    {
+        var (ownerId, loungeId) = await CreateOwnerWithLoungeAsync();
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var sceneId = await AddSceneAsync(client, loungeId);
+        var zoneId = await AddZoneAsync(loungeId);
+        var zoneRes = await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", ZoneHotspot(zoneId));
+        var zoneHotspotId = (await zoneRes.Content.ReadFromJsonAsync<IdResponse>())!.Data;
+        await client.PostAsJsonAsync($"/api/v1/lounges/{loungeId}/tour/scenes/{sceneId}/hotspots", new
+        {
+            Type = "Info", Yaw = 0.0, Pitch = 0.0, Label = "Quầy bar",
+            TargetSceneId = (Guid?)null, InfoText = "Mở 18h"
+        });
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var zone = await db.SeatingZones.FindAsync(zoneId);
+            zone!.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        var body = await _factory.CreateClient().GetStringAsync($"/api/v1/lounges/{loungeId}/tour");
+        body.Should().NotContain("\"type\":\"Zone\"").And.Contain("Mở 18h");
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db2.VenueTourHotspots.FindAsync(zoneHotspotId)).Should().NotBeNull("ẩn chứ không xoá — mở lại khu là điểm hiện lại");
+    }
+
     private sealed record IdResponse(bool Success, Guid Data);
     private sealed record UploadResponse(bool Success, UploadedUrl Data);
     private sealed record UploadedUrl(string Url);
