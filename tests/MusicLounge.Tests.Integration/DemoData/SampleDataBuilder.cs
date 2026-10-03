@@ -595,7 +595,12 @@ internal sealed class SampleDataBuilder
 
         // 4. Đánh giá qua API. Mỗi buổi có một "chất lượng" riêng để điểm trung bình các buổi khác nhau thật; từng người
         // lệch quanh mức đó. Không phải ai đi xem cũng đánh giá, và khoảng 1/4 chỉ chấm sao không viết gì.
+        // Số sao lệch ngẫu nhiên quanh chất lượng của buổi; còn LỜI BÌNH thì xoay vòng có chủ đích: một bộ dữ liệu mẫu phải
+        // BẢO ĐẢM có đủ lời dài, lời ngắn, lời nhiều dòng và đánh giá không lời — trông vào ngẫu nhiên thì có lần dựng
+        // không rút trúng lời dài nào (bài kiểm tra bắt được khi chạy cả bộ test: chuỗi ngẫu nhiên đi khác theo số phòng trà).
         var lech = new[] { -2, -1, -1, 0, 0, 0, 0, 1, 1, 1, 2 };
+        var luotTheoSao = new int[6];
+        var soDanhGia = 0;
         foreach (var s in past)
         {
             foreach (var buyerId in daVao[s.Show.Id])
@@ -603,7 +608,7 @@ internal sealed class SampleDataBuilder
                 if (_rng.NextDouble() < 0.2) continue;
                 var sao = Math.Clamp(s.Quality + lech[_rng.Next(lech.Length)], 1, 5);
                 var loi = Comments[sao];
-                var comment = _rng.NextDouble() < 0.25 ? null : loi[_rng.Next(loi.Length)];
+                var comment = ++soDanhGia % 4 == 0 ? null : loi[luotTheoSao[sao]++ % loi.Length];
 
                 var res = await _host.ClientFor(buyerId, "Audience")
                     .PostAsJsonAsync($"/api/v1/lounge-shows/{s.Show.Id}/rate", new { Score = sao, Comment = comment });
