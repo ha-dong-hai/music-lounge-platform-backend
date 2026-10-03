@@ -16,6 +16,7 @@ using MusicLounge.Application.Catalog.Commands.DeleteVenueAtmosphere;
 using MusicLounge.Application.Catalog.Commands.UpdateEventCategory;
 using MusicLounge.Application.Catalog.Commands.UpdateMood;
 using MusicLounge.Application.Catalog.Commands.UpdateMusicGenre;
+using MusicLounge.Application.Catalog.Commands.SetMusicGenreImage;
 using MusicLounge.Application.Catalog.Commands.UpdateVenueAtmosphere;
 using MusicLounge.Application.Admin.Commands.UpdateSystemConfig;
 using MusicLounge.Application.Admin.DTOs;
@@ -132,6 +133,31 @@ public sealed class AdminController : ControllerBase
         Guid id, [FromBody] UpdateMusicGenreRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdateMusicGenreCommand(id, body.Name, body.NameEn), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// MLACP-581: đặt ảnh riêng cho thẻ thể loại ở trang chủ. Ảnh phải tải lên trước qua <c>POST /uploads/images</c>.
+    /// Endpoint riêng (không gộp vào PUT genres/{id}) để sửa tên không làm mất ảnh.
+    /// </summary>
+    [HttpPut("genres/{id:guid}/image")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetGenreImage(
+        Guid id, [FromBody] SetMusicGenreImageRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetMusicGenreImageCommand(id, body.ImageUrl), ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-581: gỡ ảnh riêng — thẻ thể loại quay về mượn ảnh của một buổi hòa nhạc thuộc thể loại đó.</summary>
+    [HttpDelete("genres/{id:guid}/image")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ClearGenreImage(Guid id, CancellationToken ct = default)
+    {
+        await _sender.Send(new SetMusicGenreImageCommand(id, null), ct);
         return NoContent();
     }
 
@@ -627,6 +653,7 @@ public sealed class AdminController : ControllerBase
 }
 
 public sealed record UpdateMusicGenreRequest(string Name, string? NameEn);
+public sealed record SetMusicGenreImageRequest(string ImageUrl);
 public sealed record UpdateMoodRequest(string Name);
 public sealed record UpdateVenueAtmosphereRequest(string Name);
 public sealed record UpdateEventCategoryRequest(string Name, string? Description, bool IsActive);
