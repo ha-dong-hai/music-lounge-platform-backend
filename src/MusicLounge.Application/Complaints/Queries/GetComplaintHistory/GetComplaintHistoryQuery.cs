@@ -20,4 +20,6 @@ public sealed record GetComplaintHistoryQuery(
     string[]? Status,
     int Page = 1,
     int PageSize = 20,
-    string? Keyword = null) : IQuery<PaginatedResult<ComplaintDto>>;
+    string? Keyword = null,
+    DateTimeOffset? CreatedFrom = null,
+    DateTimeOffset? CreatedTo = null) : IQuery<PaginatedResult<ComplaintDto>>;

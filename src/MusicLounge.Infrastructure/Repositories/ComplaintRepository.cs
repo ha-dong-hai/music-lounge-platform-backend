@@ -37,10 +37,27 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
     /// gì cho ai, trong khi chính họ là người phải trả lời nếu người khiếu nại hỏi lại.
     /// </summary>
     public async Task<PaginatedResult<ComplaintDto>> GetHistoryAsync(
-        IReadOnlyList<ComplaintStatus> statuses, string? keyword, int page, int pageSize, CancellationToken ct = default)
+        IReadOnlyList<ComplaintStatus> statuses, string? keyword, int page, int pageSize, CancellationToken ct = default,
+        DateTimeOffset? createdFrom = null, DateTimeOffset? createdTo = null)
     {
         var query = _ctx.Complaints.AsNoTracking();
         if (statuses.Count > 0) query = query.Where(c => statuses.Contains(c.Status));
+
+        // MLACP-598: lọc theo ngày gửi. Complaint.CreatedAt là DateTimeOffset — so sánh nó trong truy vấn không dịch được
+        // dưới provider SQLite của bộ test (cùng giới hạn đã ghi ở GetAdminDashboardQueryHandler), nên lấy cặp (mã, ngày
+        // gửi) của các dòng đã qua bộ lọc trạng thái, lọc ngày ở ứng dụng, rồi truy vấn tiếp theo mã.
+        // Trần giới hạn: nạp mã + ngày của mọi khiếu nại khớp trạng thái. Ở quy mô đồ án thì rẻ; khi lên hàng chục
+        // nghìn dòng, đường nâng cấp là thêm cột ngày dạng UTC có chỉ mục để so thẳng trong SQL.
+        if (createdFrom.HasValue || createdTo.HasValue)
+        {
+            var moc = await query.Select(c => new { c.Id, c.CreatedAt }).ToListAsync(ct);
+            var maTrongKy = moc
+                .Where(x => (!createdFrom.HasValue || x.CreatedAt >= createdFrom.Value)
+                    && (!createdTo.HasValue || x.CreatedAt <= createdTo.Value))
+                .Select(x => x.Id)
+                .ToList();
+            query = query.Where(c => maTrongKy.Contains(c.Id));
+        }
         // MLACP-502: tìm trước khi phân trang. Chỉ là điều kiện LỌC — DTO trả về vẫn y như cũ, không đổi cách hiển thị
         // SĐT. MLACP-515: mã khiếu nại giờ là GUID — gõ đúng một GUID thì khớp ĐÚNG mã; toàn chữ số là một phần SĐT
         // (không so với nội dung, vì chuỗi số ngắn là chuỗi con của gần như mọi mô tả).
