@@ -29,7 +29,8 @@ internal sealed class ContentReportConfiguration : IEntityTypeConfiguration<Cont
         // "may cause cycles or multiple cascade paths" — nen bang nay KHONG TAO DUOC neu ca hai
         // deu Cascade/SetNull.
         //
-        // Vi sao doi ben nay chu khong doi Reporter: ReporterId la bat buoc va Cascade tren do la
+        // Vi sao doi ben nay chu khong doi Reporter: ReporterId (null chi khi he thong AI tu tao bao cao, MLACP-574;
+        // bao cao cua nguoi dung luon co) va Cascade tren do la
         // hanh vi co y nghia (nguoi dung bien mat thi bao cao cua ho di theo). ResolvedByAdminId
         // cho phep null va chi la lien ket toi nguoi da xu ly. Ngoai ra he thong nay KHONG BAO GIO
         // xoa cung nguoi dung — quy trinh xoa du lieu ca nhan an danh hoa hang User tai cho — nen

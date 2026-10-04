@@ -67,6 +67,10 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
         // Open thay vi bi dong cho 1 hanh dong chua thuc su xay ra.
         if (resolution == ContentReportStatus.Removed)
             await TakeDownAsync(targetType, request.TargetId, request.Note, ct);
+        // MLACP-574: Admin "Bỏ qua" một lời bình đang bị AI ẩn tạm = Admin xác nhận lời đó ổn → hiện lại. Không có bước
+        // này thì lời bình bị AI bắt nhầm sẽ ẩn mãi dù báo cáo đã đóng.
+        else if (targetType == ReportTargetType.Rating)
+            await RestoreRatingCommentAsync(request.TargetId, ct);
 
         var now = DateTimeOffset.UtcNow;
         foreach (var report in openReports)
@@ -258,6 +262,16 @@ internal sealed class ResolveContentReportCommandHandler : IRequestHandler<Resol
     }
 
     // Mirrors RemoveRatingCommandHandler.
+    private async Task RestoreRatingCommentAsync(Guid ratingId, CancellationToken ct)
+    {
+        var repo = _uow.Repository<LoungeShowRating, Guid>();
+        var rating = await repo.GetByIdAsync(ratingId, ct);
+        if (rating is null || rating.CommentHiddenAt is null) return;
+
+        rating.CommentHiddenAt = null;
+        repo.Update(rating);
+    }
+
     private async Task TakeDownRatingAsync(Guid ratingId, string? note, CancellationToken ct)
     {
         var repo = _uow.Repository<LoungeShowRating, Guid>();

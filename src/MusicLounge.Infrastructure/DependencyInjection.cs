@@ -172,6 +172,7 @@ public static class DependencyInjection
         services.AddScoped<ContentReportSlaBreachAlertJob>();
         services.AddScoped<ComplaintSlaBreachAlertJob>();
         services.AddScoped<ScoreModerationWithAiJob>();
+        services.AddScoped<ScoreRatingWithAiJob>();
         services.AddScoped<StitchVenueTourSceneJob>();
         services.AddScoped<ExpireStuckStitchAttemptsJob>();
         services.AddScoped<ExpirePosterJobsJob>();

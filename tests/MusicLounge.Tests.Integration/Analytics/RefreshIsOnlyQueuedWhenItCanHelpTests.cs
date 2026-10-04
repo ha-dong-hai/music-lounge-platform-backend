@@ -57,6 +57,7 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
         public void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language) { }
         public void EnqueuePhoneVerificationCode(string toPhone, string code, string language) { }
         public void EnqueueModerationAiScoring(Guid moderationId) { }
+        public void EnqueueRatingAiScoring(Guid ratingId) { }
         public void EnqueueStitchVenueTourScene(Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name) { }
         public void TriggerRecurringJobNow(string recurringJobId) { }
         public IReadOnlyList<string> GetRecurringJobIds() => [];
