@@ -20,16 +20,26 @@
 .PARAMETER Clean
     Xoa toan bo du lieu demo thay vi sinh.
 
+.PARAMETER Sample
+    MLACP-577. Dung bo DU LIEU MAU da dang cho ca san thay vi bo demo AI: ten nhu that (khong co tien to "[DEMO] "),
+    ve mua qua dung API nen co thanh toan + so cai + lich quyet toan do he thong tinh, co buoi da dien va danh gia.
+    Dau nhan biet de don nam o cho nguoi xem khong thay (tai khoan danh dau + duoi email @mau.musiclounge.test).
+    Dung kem -Clean de xoa dung bo nay. Hai bo doc lap: co the co ca hai, va don tung bo rieng.
+
 .EXAMPLE
     ./scripts/demo-data.ps1 -ConnectionString "Server=...;Database=SU26SE039;..."
     ./scripts/demo-data.ps1 -ConnectionString "Server=...;Database=SU26SE039;..." -Clean
+    ./scripts/demo-data.ps1 -ConnectionString "Server=...;Database=SU26SE039;..." -Sample
+    ./scripts/demo-data.ps1 -ConnectionString "Server=...;Database=SU26SE039;..." -Sample -Clean
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$ConnectionString,
 
-    [switch]$Clean
+    [switch]$Clean,
+
+    [switch]$Sample
 )
 
 $ErrorActionPreference = 'Stop'
@@ -42,11 +52,16 @@ if (-not (Test-Path $project)) {
 }
 
 $target = if ($Clean) { 'Clean' } else { 'Seed' }
+# Hai bo dung hai lop rieng va hai cap bien moi truong rieng (cau xac nhan khac nhau) de khong chay nham bo nay thay bo kia.
+$script = if ($Sample) { 'SampleDataScript' } else { 'DemoDataScript' }
+$prefix = if ($Sample) { 'SAMPLE_SEED' } else { 'DEMO_SEED' }
+$phrase = if ($Sample) { 'yes-seed-sample-data' } else { 'yes-seed-demo-data' }
+$ten = if ($Sample) { 'du lieu MAU (MLACP-577)' } else { 'du lieu demo' }
 
 if ($Clean) {
-    Write-Host "Se XOA toan bo du lieu demo khoi database da chi dinh." -ForegroundColor Yellow
+    Write-Host "Se XOA toan bo $ten khoi database da chi dinh." -ForegroundColor Yellow
 } else {
-    Write-Host "Se SINH du lieu demo vao database da chi dinh." -ForegroundColor Yellow
+    Write-Host "Se SINH $ten vao database da chi dinh." -ForegroundColor Yellow
 }
 $answer = Read-Host "Go 'yes' de tiep tuc"
 if ($answer -ne 'yes') {
@@ -54,14 +69,14 @@ if ($answer -ne 'yes') {
     return
 }
 
-$env:DEMO_SEED_CONNECTION = $ConnectionString
-$env:DEMO_SEED_CONFIRM = 'yes-seed-demo-data'
+Set-Item "Env:${prefix}_CONNECTION" $ConnectionString
+Set-Item "Env:${prefix}_CONFIRM" $phrase
 
 try {
-    dotnet test $project --filter "FullyQualifiedName~DemoDataScript.$target" --logger 'console;verbosity=detailed'
+    dotnet test $project --filter "FullyQualifiedName~$script.$target" --logger 'console;verbosity=detailed'
 }
 finally {
     # Khong de chuoi ket noi va cau xac nhan nam lai trong phien lam viec.
-    Remove-Item Env:DEMO_SEED_CONNECTION -ErrorAction SilentlyContinue
-    Remove-Item Env:DEMO_SEED_CONFIRM -ErrorAction SilentlyContinue
+    Remove-Item "Env:${prefix}_CONNECTION" -ErrorAction SilentlyContinue
+    Remove-Item "Env:${prefix}_CONFIRM" -ErrorAction SilentlyContinue
 }
