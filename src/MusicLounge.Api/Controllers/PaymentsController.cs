@@ -78,5 +78,11 @@ public sealed class PaymentsController : ControllerBase
 }
 
 /// <summary>VNPay's IPN response contract — VNPay parses this body, not the HTTP status, to decide
-/// whether the callback was handled and whether to keep retrying.</summary>
-public sealed record VnPayIpnResponse(string RspCode, string Message);
+/// whether the callback was handled and whether to keep retrying.
+/// Key names are pinned explicitly: ASP.NET's default camelCase policy used to turn these into
+/// <c>rspCode</c>/<c>message</c>, while VNPay's spec (and the comment above) names them <c>RspCode</c>/<c>Message</c>.
+/// Every IPN test read the body case-insensitively, so none saw it — VnPayIpnResponseShapeTests reads the raw
+/// string on all four IPN endpoints.</summary>
+public sealed record VnPayIpnResponse(
+    [property: System.Text.Json.Serialization.JsonPropertyName("RspCode")] string RspCode,
+    [property: System.Text.Json.Serialization.JsonPropertyName("Message")] string Message);
