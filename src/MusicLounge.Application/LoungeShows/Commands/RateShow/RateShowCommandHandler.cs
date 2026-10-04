@@ -41,6 +41,22 @@ internal sealed class RateShowCommandHandler : IRequestHandler<RateShowCommand, 
         // MLACP-347: Refunded cung qua duoc — do la ve DA xem roi moi duoc hoan vi buoi phat song bi
         // cat ngang. Chinh nhung nguoi nay la nhan chung cua buoi dien hong; chan ho thi buoi dien
         // te nhat cua phong tra lai la buoi khong co danh gia nao.
+        // MLACP-591: người trong phòng trà không được chấm buổi diễn của chính phòng trà mình. Điều kiện check-in ở dưới
+        // KHÔNG chặn được họ: người soát vé chính là chủ/nhân viên, nên chủ tự mua vé, nhờ nhân viên quét, rồi tự chấm
+        // 5 sao. Chuẩn tham chiếu: FTC 16 CFR 465 (hiệu lực 21/10/2024) cấm đánh giá của người quản lý doanh nghiệp về
+        // chính doanh nghiệp; Google Maps coi chủ/nhân viên tự đánh giá là xung đột lợi ích.
+        // Xét theo DỮ LIỆU (chủ sở hữu phòng trà, dòng LoungeStaff đang hoạt động), không theo vai trong JWT — chủ vẫn
+        // chấm được buổi của phòng trà KHÁC như mọi khán giả.
+        // Giới hạn cố ý: nhân viên ĐÃ NGHỈ vẫn chấm được (Google chặn cả người cũ, nhưng chặn vĩnh viễn ai từng làm
+        // một buổi thì quá tay). Cần chặt hơn thì bỏ điều kiện IsActive ở truy vấn LoungeStaff.
+        var laNguoiTrongPhongTra =
+            await _uow.Repository<Domain.Entities.MusicLounge, Guid>()
+                .AnyAsync(l => l.Id == show.LoungeId && l.OwnerId == _currentUser.UserId, ct)
+            || await _uow.Repository<LoungeStaff, Guid>()
+                .AnyAsync(s => s.LoungeId == show.LoungeId && s.UserId == _currentUser.UserId && s.IsActive, ct);
+        if (laNguoiTrongPhongTra)
+            throw new ForbiddenException("Chủ và nhân viên phòng trà không đánh giá buổi diễn của chính phòng trà mình.");
+
         var hasCheckedIn = await _uow.Repository<Ticket, Guid>()
             .AnyAsync(t => t.ShowId == request.ShowId
                 && t.BuyerId == _currentUser.UserId
