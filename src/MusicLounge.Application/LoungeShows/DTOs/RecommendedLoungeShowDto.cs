@@ -28,4 +28,6 @@ public sealed record RecommendedLoungeShowDto(
     //               Chỉ có với người đã đăng nhập VÀ đã bật đồng ý AI.
     //   "Taste"    — khớp gu, tính ngay trong request: sở thích tự khai / phòng trà theo dõi / buổi khách vừa xem.
     //   "Trending" — không khớp gì, xếp theo vé bán + lượt lưu gần đây.
-    string RecommendationSource);
+    string RecommendationSource,
+    // MLACP-633: giờ kết thúc hiệu lực (ShowSchedule.EffectiveEnd) — thẻ gợi ý cũng phải hiện rõ "bắt đầu – kết thúc".
+    DateTimeOffset EffectiveEnd);

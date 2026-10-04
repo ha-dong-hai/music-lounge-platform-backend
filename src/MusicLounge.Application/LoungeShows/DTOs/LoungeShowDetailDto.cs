@@ -40,6 +40,9 @@ public sealed record LoungeShowDetailDto(
     Guid? CategoryId,
     int? OfflineQuota,
     int? OnlineQuota,
+    // MLACP-633: giờ kết thúc hệ thống thật sự dùng (ShowSchedule.EffectiveEnd). ScheduledEnd ở trên có thể rỗng;
+    // trang chi tiết phải luôn hiện "bắt đầu – kết thúc", và không được tự viết lại quy tắc 4 tiếng ở giao diện.
+    DateTimeOffset EffectiveEnd,
     // MLACP-450: chi tra cho nguoi van hanh phong tra (chu, nhan vien duoc phan cong, Admin — dung
     // VenueOperatorAccess.CanOperate). Endpoint nay cong khai, nen ly do bi tu choi va ma VCPMC khong duoc lo
     // cho khan gia: nguoi ngoai nhan null.

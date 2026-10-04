@@ -67,6 +67,10 @@ internal sealed class StartLivestreamCommandHandler : IRequestHandler<StartLives
             throw new DomainException(
                 $"Không thể phát livestream cho show ở trạng thái '{show.Status}'.");
 
+        // MLACP-633: cùng quy tắc với lệnh bắt đầu buổi diễn tại chỗ — hết giờ theo lịch thì không mở phát.
+        if (ShowSchedule.IsPastEnd(show, DateTimeOffset.UtcNow))
+            throw new DomainException("Buổi diễn đã qua giờ kết thúc theo lịch nên không thể bắt đầu nữa.");
+
         // D19: phai tra tac quyen VCPMC truoc khi show dien ra
         if (string.IsNullOrWhiteSpace(show.VcpmcRoyaltyReference))
             throw new DomainException(

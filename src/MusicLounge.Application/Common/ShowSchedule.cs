@@ -28,6 +28,25 @@ public static class ShowSchedule
         => EffectiveEnd(show.ScheduledStart, show.ScheduledEnd);
 
     /// <summary>
+    /// MLACP-633: chặn bắt đầu một buổi diễn mà lịch đã qua giờ kết thúc. Trước đây hai lệnh bắt đầu
+    /// không kiểm giờ nào cả: bấm lúc nào cũng chuyển sang Ongoing, và Ongoing là trạng thái mở bán
+    /// phòng xem livestream và hiện nhãn "đang diễn" ở trang công khai. Một buổi đã hết giờ mà còn bắt
+    /// đầu được thì trang công khai báo "đang diễn" cho một thứ đã xong.
+    ///
+    /// Cố ý KHÔNG chặn bắt đầu sớm: chủ dự án quyết 04/10/2026 giữ nguyên — phòng trà có lúc mở màn
+    /// sớm, và bắt đầu sớm chỉ là chuyện vận hành của phòng trà. Nếu sau này cần chặn sớm thì đặt
+    /// một khoá system_config "số phút được bắt đầu trước giờ" ở đây, cạnh quy tắc này.
+    ///
+    /// Mốc so là giờ kết thúc hiệu lực (<see cref="EffectiveEnd(LoungeShow)"/>) để buổi không khai
+    /// giờ kết thúc vẫn có mốc, giống mọi chỗ khác trong hệ thống.
+    ///
+    /// Trả bool chứ không tự ném lỗi: câu lỗi phải là chuỗi viết thẳng ở chỗ ném, vì từ điển song
+    /// ngữ (<c>ThongDiepSongNgu</c>) được sinh bằng máy từ các chuỗi <c>DomainException("...")</c> trong mã.
+    /// </summary>
+    public static bool IsPastEnd(LoungeShow show, DateTimeOffset now)
+        => now >= EffectiveEnd(show);
+
+    /// <summary>
     /// Các trạng thái mà buổi diễn thật sự đang giữ chỗ ở phòng trà.
     ///
     /// <see cref="LoungeShowStatus.Draft"/> cố ý không nằm đây: bản nháp là chỗ Owner dựng thử, và
