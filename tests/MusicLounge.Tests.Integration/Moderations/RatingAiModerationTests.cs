@@ -220,7 +220,7 @@ public sealed class RatingAiModerationTests
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            foreach (var u in new[] { SeedHelper.AudienceId, SeedHelper.StaffId })
+            foreach (var u in new[] { SeedHelper.AudienceId, SeedHelper.OtherVenueStaffId })
                 db.Add(new Ticket
                 {
                     Id = Guid.NewGuid(), BuyerId = u, PriceId = SeedHelper.TicketPriceId, TierId = SeedHelper.TicketTierId,
@@ -237,7 +237,7 @@ public sealed class RatingAiModerationTests
             (await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience")
                 .PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/rate", new { Score = 5, Comment = "Hay lắm" }))
                 .IsSuccessStatusCode.Should().BeTrue();
-            (await _factory.CreateAuthenticatedClient(SeedHelper.StaffId, "Staff")
+            (await _factory.CreateAuthenticatedClient(SeedHelper.OtherVenueStaffId, "Staff")
                 .PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/rate", new { Score = 4, Comment = (string?)null }))
                 .IsSuccessStatusCode.Should().BeTrue();
         }
