@@ -86,6 +86,16 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
             audienceUserId = _currentUser.UserId;
         }
 
+        // MLACP-630: khách tự gọi món mà client không gửi khu thì lấy khu theo VÉ của chính họ (GuestSeat). Khu client gửi
+        // (đã kiểm thuộc đúng phòng trà ở trên) vẫn được tôn trọng — khách có thể đã đổi chỗ. Đơn nhân viên tạo hộ thì
+        // không suy: người đứng tên đơn là nhân viên, vé của họ không nói gì về chỗ khách ngồi.
+        // KHÔNG tự gán ShowId: đơn gắn buổi diễn sẽ bị huỷ/hoàn theo buổi diễn (MLACP-390) — đó là quyết định về tiền,
+        // không phải về vị trí.
+        var zoneId = request.ZoneId;
+        if (audienceUserId.HasValue && zoneId is null)
+            zoneId = (await GuestSeat.ResolveAsync(
+                _uow, audienceUserId.Value, request.LoungeId, DateTimeOffset.UtcNow, ct))?.ZoneId;
+
         var menuItemIds = request.Items.Select(i => i.MenuItemId).Distinct().ToList();
         var menuItems = await _uow.Repository<FnbMenuItem, Guid>()
             .FindAsync(m => menuItemIds.Contains(m.Id), ct);
@@ -114,7 +124,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
             ShowId = request.ShowId,
             AudienceUserId = audienceUserId,
             StaffId = staffId,
-            ZoneId = request.ZoneId,
+            ZoneId = zoneId,
             TableNote = request.TableNote,
             Status = FnbOrderStatus.Pending,
             PaymentMethod = paymentMethod,
