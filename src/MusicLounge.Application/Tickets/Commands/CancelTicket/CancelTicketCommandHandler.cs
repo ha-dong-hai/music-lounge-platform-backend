@@ -175,8 +175,11 @@ internal sealed class CancelTicketCommandHandler : IRequestHandler<CancelTicketC
                 ? "Buổi diễn không được tổ chức — hoàn 100%"
                 : changedAfterPurchase
                     ? "Phòng trà đổi lịch hoặc địa chỉ sau khi mua vé — hoàn 100%"
-                    : "Audience yêu cầu hủy vé",
-            AmountRequested = Math.Round(price.Price * refundPercentage / 100m, 2),
+                    : "Khách yêu cầu huỷ vé",
+            // MLACP-615: dong nguyen — VND khong co don vi le, va so nay di thang sang lenh hoan VNPay khi Admin duyet ma
+            // khong sua so (gia 100.001d hoan 50% tung ra 50.000,5d). Lam tron nua len (AwayFromZero), cung chieu voi
+            // VnPayService.ToVnPayAmount, nen phan le nghieng ve phia nguoi mua.
+            AmountRequested = Math.Round(price.Price * refundPercentage / 100m, 0, MidpointRounding.AwayFromZero),
             RefundPercentage = refundPercentage,
             Status = RefundRequestStatus.Pending
         };
