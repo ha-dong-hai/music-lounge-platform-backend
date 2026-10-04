@@ -37,7 +37,7 @@ internal sealed class GetMusicGenresForAdminQueryHandler
         var rows = await _repo.FindAsync(_ => true, ct);
         return rows
             .OrderBy(g => g.Name, StringComparer.CurrentCulture)
-            .Select(g => new AdminMusicGenreDto(g.Id, g.Name, g.NameEn))
+            .Select(g => new AdminMusicGenreDto(g.Id, g.Name, g.NameEn, g.ImageUrl))
             .ToList();
     }
 }

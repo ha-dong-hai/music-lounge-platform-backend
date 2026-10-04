@@ -3,4 +3,4 @@ using MusicLounge.Application.Common.Abstractions;
 
 namespace MusicLounge.Application.Catalog.Queries.GetMusicGenres;
 
-public sealed record GetMusicGenresQuery : IQuery<List<CatalogItemDto>>;
+public sealed record GetMusicGenresQuery : IQuery<List<MusicGenreCatalogItemDto>>;

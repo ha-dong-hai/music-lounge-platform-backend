@@ -28,4 +28,4 @@ public sealed record GetMusicGenresForAdminQuery : IQuery<List<AdminMusicGenreDt
 
 public sealed record AdminEventCategoryDto(Guid Id, string Name, string? Description, bool IsActive);
 
-public sealed record AdminMusicGenreDto(Guid Id, string Name, string? NameEn);
+public sealed record AdminMusicGenreDto(Guid Id, string Name, string? NameEn, string? ImageUrl);

@@ -13,6 +13,7 @@ internal sealed class MusicGenreConfiguration : IEntityTypeConfiguration<MusicGe
         b.HasKey(g => g.Id);
         b.Property(g => g.Name).HasMaxLength(100).IsRequired();
         b.Property(g => g.NameEn).HasMaxLength(100);
+        b.Property(g => g.ImageUrl).HasMaxLength(500);
         b.HasIndex(g => g.Name).IsUnique();
 
         // MLACP-14: danh mục thể loại nhạc mặc định cho form tạo buổi diễn.
