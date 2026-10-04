@@ -31,4 +31,8 @@ public sealed class BusinessSettings
     // bat buoc cua Program.cs — de trong thi he thong van chay, chi khong gui duoc lien ket (ghi log loi),
     // de khong lam vo cac moi truong dang chay chua cau hinh.
     public string PerformerConfirmationUrl { get; init; } = string.Empty;
+
+    // MLACP-635: trang chi tiết MỘT vé trên web (…/my-shows/ticket) — thư xác nhận vé nối thêm /{ticketId}. Không bắt buộc:
+    // để trống thì thư vẫn gửi, chỉ không có nút "Xem vé của tôi".
+    public string TicketDetailUrl { get; init; } = string.Empty;
 }

@@ -1,4 +1,4 @@
-﻿using MusicLounge.Domain.Enums;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common.Interfaces;
 
@@ -35,6 +35,10 @@ public interface IBackgroundJobService
     /// <summary>MLACP-574: AI chấm lời bình của một đánh giá vừa gửi (ScoreRatingWithAiJob) — rủi ro cao thì ẩn tạm,
     /// chờ Admin quyết. Chạy nền để AI chậm/hỏng không ảnh hưởng việc gửi đánh giá.</summary>
     void EnqueueRatingAiScoring(Guid ratingId);
+
+    /// <summary>MLACP-635: thư xác nhận vé cho một lần thanh toán online (SendTicketConfirmationEmailJob). Chạy nền: gửi thư
+    /// hỏng hay chậm không được làm hỏng luồng thanh toán, và Hangfire thử lại khi SMTP lỗi tạm thời.</summary>
+    void EnqueueTicketConfirmationEmail(Guid paymentId);
 
     // Panorama stitching can take 15-30+ seconds (sometimes brushing the panorama-stitcher
     // HttpClient's 120s timeout on harder photo sets) - running it inline would block the Owner's
