@@ -320,7 +320,7 @@ public sealed class LoungeShowsController : ControllerBase
     }
 
     /// <summary>Danh sách người đã mua vé buổi hòa nhạc này, để chủ phòng trà đối soát và đón
-    /// khách — chỉ chủ venue đó hoặc Admin (403 nếu khác), vì danh sách có tên và email người mua.
+    /// khách — chủ venue đó, nhân viên của venue đó (bản không có email, MLACP-592) hoặc Admin; 403 nếu khác, vì danh sách có tên và email người mua.
     /// Khác `GET {id}/ticket-stats` vốn chỉ trả con số tổng.</summary>
     [HttpGet("{id:guid}/orders")]
     [Authorize]
