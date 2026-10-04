@@ -36,7 +36,7 @@ internal sealed class GetPlatformAnalyticsQueryHandler
         var totalUsers = await _uow.Repository<User, Guid>().CountAsync(_ => true, ct);
 
         var totalTicketsSold = await _uow.Repository<Ticket, Guid>()
-            .CountAsync(t => t.Status == TicketStatus.Confirmed, ct);
+            .CountAsync(t => TicketRevenue.DaThuTien.Contains(t.Status), ct);
 
         // totalTicketsSold above counts both online (TicketHold) and walk-in/box-office (WalkIn)
         // sales — GMV must count the same two channels or the dashboard shows two numbers that

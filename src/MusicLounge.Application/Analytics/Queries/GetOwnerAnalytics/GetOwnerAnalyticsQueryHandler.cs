@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Application.FnbOrders;
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
@@ -36,7 +37,7 @@ internal sealed class GetOwnerAnalyticsQueryHandler
         var now = DateTimeOffset.UtcNow;
 
         var tickets = await _uow.Repository<Ticket, Guid>()
-            .FindAsync(t => showIds.Contains(t.ShowId) && t.Status == TicketStatus.Confirmed, ct);
+            .FindAsync(t => showIds.Contains(t.ShowId) && TicketRevenue.DaThuTien.Contains(t.Status), ct);
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
         var prices = await _uow.Repository<TicketPrice, Guid>()
