@@ -28,6 +28,10 @@ public sealed class LoungeShow : Common.AuditableEntity<Guid>
     // sau — không bị sửa. Đổi địa chỉ chỉ ảnh hưởng vé vào cửa.
     public DateTimeOffset? RescheduledAt { get; set; }
     public DateTimeOffset? VenueMovedAt { get; set; }
+    // MLACP-622: lần gần nhất danh sách biểu diễn thay đổi BẤT LỢI cho người đã mua (bỏ nghệ sĩ / hạ nghệ sĩ chính) khi đã
+    // mở bán, và lý do phòng trà ghi. Cùng khuôn với hai mốc trên: người mua trước mốc này được hoàn 100% trong cửa sổ riêng.
+    public DateTimeOffset? LineupChangedAt { get; set; }
+    public string? LineupChangeNote { get; set; }
     public bool IsPublic { get; set; } = true;                      // ẩn/hiện event với public
     public bool PosterByAi { get; set; } = false;                   // poster có phải AI tạo không (W02 subscription gate)
     public DateTimeOffset? RatingOpenUntil { get; set; }   // §6.13: set = actual_end + 7d when show ends

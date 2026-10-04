@@ -167,6 +167,10 @@ public static class TicketRefundPolicy
             && show.VenueMovedAt is DateTimeOffset movedAt && ticket.CreatedAt < movedAt
             && (changedAt is null || movedAt > changedAt))
             changedAt = movedAt;
+        // MLACP-622: nghệ sĩ đã công bố bị bỏ / hạ vai — ảnh hưởng mọi loại vé (người xem trực tuyến cũng mua vì nghệ sĩ).
+        if (show.LineupChangedAt is DateTimeOffset lineupAt && ticket.CreatedAt < lineupAt
+            && (changedAt is null || lineupAt > changedAt))
+            changedAt = lineupAt;
 
         return changedAt is DateTimeOffset at ? FullRefundWindowEnd(show, at) : null;
     }

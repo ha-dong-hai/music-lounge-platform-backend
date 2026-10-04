@@ -520,7 +520,8 @@ public sealed class LoungeShowsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — chỉ khi buổi diễn còn Draft (422 nếu khác).
+    /// <summary>Thêm nghệ sĩ vào danh sách biểu diễn — khi buổi diễn chưa bắt đầu (nháp, chờ duyệt, đang mở bán; MLACP-622).
+    /// Thêm nghệ sĩ không mở hoàn tiền cho người đã mua.
     /// Trả 409 nếu nghệ sĩ này đã có trong line-up của đúng buổi diễn này.</summary>
     [HttpPost("{id:guid}/performances")]
     [Authorize(Policy = Policies.RequireOwner)]
@@ -539,8 +540,9 @@ public sealed class LoungeShowsController : ControllerBase
         return CreatedAtAction(nameof(GetDetail), new { id, version = "1.0" }, ApiResponse<Guid>.Ok(performanceId));
     }
 
-    /// <summary>Sửa vai trò/thứ tự/giờ diễn/bật-tắt nhận donate của 1 nghệ sĩ trong line-up — chỉ
-    /// khi buổi diễn còn Draft (422 nếu khác). Đổi sang nghệ sĩ khác: xóa rồi thêm lại.</summary>
+    /// <summary>Sửa vai trò/thứ tự/giờ diễn/bật-tắt nhận donate của 1 nghệ sĩ trong line-up — khi buổi diễn chưa bắt đầu
+    /// (MLACP-622). Hạ nghệ sĩ chính xuống vai khác trên buổi đang mở bán: bắt buộc <c>changeReason</c>, người đã mua được
+    /// báo và được hoàn 100%. Đổi sang nghệ sĩ khác: xóa rồi thêm lại.</summary>
     [HttpPut("{id:guid}/performances/{performanceId:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -552,20 +554,24 @@ public sealed class LoungeShowsController : ControllerBase
         Guid id, Guid performanceId, [FromBody] UpdatePerformanceRequest body, CancellationToken ct = default)
     {
         await _sender.Send(new UpdatePerformanceCommand(
-            performanceId, body.Role, body.OrderIndex, body.SetTime, body.AcceptsDonation), ct);
+            performanceId, body.Role, body.OrderIndex, body.SetTime, body.AcceptsDonation, body.ChangeReason), ct);
         return NoContent();
     }
 
-    /// <summary>Xóa 1 nghệ sĩ khỏi danh sách biểu diễn — chỉ khi buổi diễn còn Draft (422 nếu khác).</summary>
+    /// <summary>Xóa 1 nghệ sĩ khỏi danh sách biểu diễn — khi buổi diễn chưa bắt đầu (MLACP-622). Buổi đang mở bán: bắt
+    /// buộc <c>changeReason</c> (query), người đã mua được báo và được hoàn 100% (NĐ 144/2020 Điều 10 khoản 4 điểm d;
+    /// Luật BVQLNTD 2023). 409 nếu tiết mục đã nhận tiền ủng hộ.</summary>
     [HttpDelete("{id:guid}/performances/{performanceId:guid}")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> DeletePerformance(Guid id, Guid performanceId, CancellationToken ct = default)
+    public async Task<IActionResult> DeletePerformance(
+        Guid id, Guid performanceId, [FromQuery] string? changeReason = null, CancellationToken ct = default)
     {
-        await _sender.Send(new DeletePerformanceCommand(performanceId), ct);
+        await _sender.Send(new DeletePerformanceCommand(performanceId, changeReason), ct);
         return NoContent();
     }
 
@@ -636,7 +642,8 @@ public sealed record UpdatePerformanceRequest(
     string Role,
     int OrderIndex,
     TimeOnly? SetTime,
-    bool AcceptsDonation);
+    bool AcceptsDonation,
+    string? ChangeReason = null);
 
 public sealed record RateShowRequest(int Score, string? Comment);
 

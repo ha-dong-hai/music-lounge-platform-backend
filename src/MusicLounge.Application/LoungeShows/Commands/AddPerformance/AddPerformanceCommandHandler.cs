@@ -30,8 +30,8 @@ internal sealed class AddPerformanceCommandHandler : IRequestHandler<AddPerforma
         if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != Roles.Admin)
             throw new ForbiddenException("Bạn không có quyền sửa danh sách biểu diễn của event này.");
 
-        if (show.Status != LoungeShowStatus.Draft)
-            throw new DomainException("Chỉ có thể sửa danh sách biểu diễn khi event còn ở trạng thái Draft.");
+        // MLACP-622: thêm nghệ sĩ không bất lợi cho người đã mua — cho cả khi chờ duyệt / đã mở bán, không mở hoàn.
+        LineupChange.EnsureEditable(show);
 
         var performerRepo = _uow.Repository<Performer, Guid>();
         Guid performerId;

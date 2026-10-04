@@ -7,5 +7,7 @@ public sealed record UpdatePerformanceCommand(
     string Role,
     int OrderIndex,
     TimeOnly? SetTime,
-    bool AcceptsDonation
+    bool AcceptsDonation,
+    // MLACP-622: bắt buộc khi buổi đã mở bán và thay đổi là hạ nghệ sĩ chính xuống vai khác.
+    string? ChangeReason = null
 ) : ICommand;
