@@ -1,4 +1,6 @@
 using MediatR;
+using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
@@ -38,9 +40,13 @@ internal sealed class GetShowOrdersQueryHandler
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), show.LoungeId);
 
         // Danh sách này có tên và email người mua, nên quyền phải kiểm ở đây chứ không chỉ dựa vào
-        // policy "là Owner" ở controller — nếu không thì chủ venue nào cũng đọc được khách của venue khác.
-        if (lounge.OwnerId != _currentUser.UserId && _currentUser.Role != "Admin")
+        // policy ở controller — nếu không thì chủ venue nào cũng đọc được khách của venue khác.
+        // MLACP-592: nhân viên CỦA ĐÚNG phòng trà cũng xem được, vì người đón khách ở cửa là họ (Eventbrite cho vai soát
+        // vé tìm khách theo tên khi khách quên vé). Nhưng nhân viên chỉ nhận BẢN RÚT GỌN, không có email: đón khách cần
+        // tên, không cần email (NĐ 13/2023 Điều 3: dữ liệu cá nhân chỉ xử lý trong phạm vi mục đích cần).
+        if (!VenueOperatorAccess.CanOperate(_currentUser, lounge.Id, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền xem đơn hàng của buổi hòa nhạc này.");
+        var anEmail = _currentUser.Role == Roles.Staff;
 
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
@@ -50,7 +56,7 @@ internal sealed class GetShowOrdersQueryHandler
         return result.Map(t => new ShowOrderDto(
             t.Id,
             t.Buyer?.FullName,
-            t.Buyer?.Email,
+            anEmail ? null : t.Buyer?.Email,
             t.Tier.Name,
             t.Price.Name,
             t.Price.Price,
