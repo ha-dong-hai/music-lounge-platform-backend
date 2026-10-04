@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Application.Catalog.DTOs;
 using MusicLounge.Application.Catalog.Queries.GetEventCategories;
+using MusicLounge.Application.Catalog.Queries.GetMoneyTerms;
 using MusicLounge.Application.Catalog.Queries.GetProvinces;
 using MusicLounge.Application.Catalog.Queries.GetWardsOfProvince;
 using MusicLounge.Application.Common.Interfaces;
@@ -66,6 +67,17 @@ public sealed class CatalogController : ControllerBase
     {
         var result = await _sender.Send(new GetProvincesQuery(), ct);
         return Ok(ApiResponse<IReadOnlyList<AdministrativeProvince>>.Ok(result));
+    }
+
+    /// <summary>MLACP-625: biểu phí và điều khoản tiền ĐANG ÁP DỤNG (phí nền tảng, thuế khấu trừ, hạn hoàn tiền, cách
+    /// chia tiền ủng hộ, lịch chi cho phòng trà). Web in các con số này ở bước mua vé, hộp ủng hộ và trang Điều khoản —
+    /// không gõ cứng, vì Admin đổi được qua PUT /admin/system-config.</summary>
+    [HttpGet("money-terms")]
+    [ProducesResponseType<ApiResponse<MoneyTermsDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMoneyTerms(CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMoneyTermsQuery(), ct);
+        return Ok(ApiResponse<MoneyTermsDto>.Ok(result));
     }
 
     /// <summary>MLACP-521: phường/xã của một tỉnh — không còn cấp quận/huyện ở giữa.</summary>
