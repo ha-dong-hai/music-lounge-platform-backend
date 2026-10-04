@@ -63,7 +63,8 @@ public static class ShowCancellation
         var ticketOutcome = await CancelTicketsAsync(uow, notifications, show, because, showCancelled, ct);
         if (!cancelFnbOrders)
         {
-            await NotifyOpenFnbOrdersKeptAsync(uow, notifications, show, ct);
+            await NotifyOpenFnbOrdersKeptAsync(uow, notifications, show,
+                new SongNgu($"\"{show.Name}\" đã bị huỷ.", $"\"{show.Name}\" has been cancelled."), ct);
             return ticketOutcome;
         }
         var fnbOrders = await CancelFnbOrdersAsync(uow, notifications, @lock, show, showCancelled, ct);
@@ -136,12 +137,14 @@ public static class ShowCancellation
     /// (MLACP-390 tách ra để đường chuyển sang online dùng lại).
     /// </summary>
     /// <summary>
-    /// MLACP-632 — buổi diễn bị chủ phòng trà huỷ: báo khách có đơn đồ uống còn mở rằng đơn VẪN GIỮ và họ tự quyết.
+    /// MLACP-632 — buổi diễn bị chủ phòng trà huỷ hoặc chuyển sang chỉ phát trực tuyến: báo khách có đơn đồ uống còn mở
+    /// rằng đơn VẪN GIỮ và họ tự quyết. Dùng chung cho ChangeLoungeShowFormatCommandHandler.
     /// Đơn của khách đặt qua app không mang ShowId (app không gắn đơn với buổi — xem CreateFnbOrderCommandHandler),
     /// nên ngoài đơn gắn đúng buổi này còn tính đơn còn mở ở CÙNG phòng trà của người có vé buổi này.
     /// </summary>
-    private static async Task NotifyOpenFnbOrdersKeptAsync(
-        IUnitOfWork uow, INotificationService notifications, LoungeShow show, CancellationToken ct)
+    /// <param name="what">Câu mở đầu nói chuyện gì đã xảy ra với buổi diễn, ví dụ "\"Tên buổi\" đã bị huỷ."</param>
+    internal static async Task NotifyOpenFnbOrdersKeptAsync(
+        IUnitOfWork uow, INotificationService notifications, LoungeShow show, SongNgu what, CancellationToken ct)
     {
         var holderIds = (await uow.Repository<Ticket, Guid>().FindAsync(t => t.ShowId == show.Id && t.BuyerId != null, ct))
             .Select(t => t.BuyerId!.Value).Distinct().ToList();
@@ -159,10 +162,10 @@ public static class ShowCancellation
                    "The bar has already started on it — if you want to change it, please talk to the staff.");
             await notifications.NotifyAsync(
                 o.AudienceUserId!.Value, NotificationType.FnbOrderUpdate,
-                new SongNgu("Buổi diễn đã huỷ — đơn đồ uống của bạn vẫn được giữ", "Show cancelled — your food & drink order is kept"),
+                new SongNgu("Đơn đồ uống của bạn vẫn được giữ", "Your food & drink order is kept"),
                 new SongNgu(
-                    $"\"{show.Name}\" đã bị huỷ. Đơn đồ uống #{o.Id} của bạn vẫn được giữ. {vi}",
-                    $"\"{show.Name}\" has been cancelled. Your food & drink order #{o.Id} is kept. {en}"),
+                    $"{what.Vi} Đơn đồ uống #{o.Id} của bạn vẫn được giữ. {vi}",
+                    $"{what.En} Your food & drink order #{o.Id} is kept. {en}"),
                 referenceType: "fnb_order", referenceId: o.Id.ToString(), ct: ct);
         }
     }

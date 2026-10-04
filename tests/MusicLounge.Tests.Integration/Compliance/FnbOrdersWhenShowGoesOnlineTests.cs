@@ -150,7 +150,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
     // ── Đơn đang có khi buổi diễn chuyển sang online ─────────────────────────
 
     [Fact]
-    public async Task GoingOnline_AnUnpaidOrderNotYetServed_IsCancelled_AndTheGuestIsTold()
+    public async Task GoingOnline_AnUnpaidOrderNotYetServed_IsKept_AndTheGuestIsTold()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -160,13 +160,15 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         await GoOnlineAsync(venue, showId);
 
         var (order, items, _) = await StateAsync(orderId, null);
-        order.Status.Should().Be(FnbOrderStatus.Cancelled, "no one will be at the venue to serve");
-        items.Should().OnlyContain(i => i.Cancelled);
-        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("chuyển sang online"));
+        // MLACP-632: khách tự quyết — hệ thống không huỷ thay.
+        order.Status.Should().Be(FnbOrderStatus.Pending);
+        items.Should().OnlyContain(i => !i.Cancelled);
+        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n =>
+            n.Body.Contains("chỉ phát trực tuyến") && n.Body.Contains("vẫn được giữ") && n.Body.Contains("tự huỷ"));
     }
 
     [Fact]
-    public async Task GoingOnline_APrepaidOrderStillInTheKitchen_IsCancelled_AndRefundedInFull()
+    public async Task GoingOnline_APrepaidOrderStillInTheKitchen_IsKept_NoAutomaticRefund()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -176,12 +178,9 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         await GoOnlineAsync(venue, showId);
 
         var (order, _, refunds) = await StateAsync(orderId, paymentId);
-        order.Status.Should().Be(FnbOrderStatus.Cancelled);
-        var refund = refunds.Should().ContainSingle().Subject;
-        refund.RefundPercentage.Should().Be(100m);
-        refund.AmountRequested.Should().Be(100_000m);
-        refund.RequestedBy.Should().Be(buyer);
-        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("hoàn 100%"));
+        order.Status.Should().Be(FnbOrderStatus.Preparing);
+        refunds.Should().BeEmpty("đơn vẫn được giữ — không tự hoàn");
+        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("trao đổi với nhân viên"));
     }
 
     [Fact]
