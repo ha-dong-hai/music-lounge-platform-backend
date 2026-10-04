@@ -48,7 +48,12 @@ internal sealed class GetTicketDetailQueryHandler : IRequestHandler<GetTicketDet
             ticket.QrCode,
             ticket.CreatedAt,
             ticket.PhysicalDetail is null ? null : new PhysicalDetailDto(
-                ticket.PhysicalDetail.SeatInfo,
+                // MLACP-609: suy chỗ ngồi từ KHU của hạng vé, cùng cách màn soát vé đã làm từ MLACP-303 (GetTicketByQr,
+                // CheckInTicket). Trước đây riêng trang "vé của tôi" trả thẳng cột SeatInfo — cột chưa từng được ghi —
+                // nên khán giả chọn mua vé ở "Khu Giữa" rồi nhận tấm vé in "không xếp chỗ cố định", trong khi nhân viên
+                // quét đúng vé đó lại thấy tên khu. Vé bán theo khu (mỗi hạng vé vào cửa gắn một khu, MLACP-589), nên
+                // tên khu chính là thông tin chỗ ngồi duy nhất có.
+                ticket.PhysicalDetail.SeatInfo ?? ticket.Tier.Zone?.Name,
                 ticket.PhysicalDetail.CheckedInAt),
             ticket.LivestreamDetail is null ? null : new TicketLivestreamDetailDto(
                 ticket.LivestreamDetail.AccessToken),

@@ -161,6 +161,7 @@ public sealed class ViewerStatsAndSeatInfoTests
         // Staff greeting a guest had a blank field exactly where they needed an answer.
         const string zoneName = "Khu VIP tầng 2";
         string qr;
+        Guid ticketId;
 
         using (var scope = _factory.Services.CreateScope())
         {
@@ -223,6 +224,7 @@ public sealed class ViewerStatsAndSeatInfoTests
             db.Add(new PhysicalTicketDetail { TicketId = ticket.Id });
             await db.SaveChangesAsync();
             qr = ticket.QrCode;
+            ticketId = ticket.Id;
         }
 
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")
@@ -231,5 +233,13 @@ public sealed class ViewerStatsAndSeatInfoTests
 
         (await res.Content.ReadAsStringAsync()).Should().Contain(zoneName,
             "the point of scanning the ticket is knowing where to send the guest");
+
+        // MLACP-609: chính NGƯỜI MUA mở vé của mình cũng phải thấy khu đó — trước đây chỉ nhân viên quét mới thấy,
+        // còn vé của khán giả in "không xếp chỗ cố định" dù họ đã chọn khu lúc mua.
+        var cuaNguoiMua = await _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience")
+            .GetAsync($"/api/v1/tickets/{ticketId}");
+        cuaNguoiMua.IsSuccessStatusCode.Should().BeTrue();
+        (await cuaNguoiMua.Content.ReadAsStringAsync()).Should().Contain(zoneName,
+            "người mua đã chọn khu này lúc mua vé thì tấm vé phải ghi đúng khu đó");
     }
 }
