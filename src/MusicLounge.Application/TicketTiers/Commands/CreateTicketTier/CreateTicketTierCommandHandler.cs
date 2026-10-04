@@ -81,6 +81,18 @@ internal sealed class CreateTicketTierCommandHandler : IRequestHandler<CreateTic
         // scenario this closes.
         await using var _ = await _lock.AcquireAsync($"ticket-tier-capacity:{request.ShowId}", ct);
 
+        // MLACP-589: hạng vé vào cửa PHẢI gắn một khu ghế, và khu đó chưa thuộc hạng vé nào khác của buổi này. Kiểm trong
+        // khoá theo buổi diễn ở trên (đọc-rồi-ghi): hai lệnh tạo đồng thời không thể cùng lấy một khu. Trước đây ZoneId
+        // tuỳ chọn và không được kiểm thuộc phòng trà nào — gửi mã khu của phòng trà khác vẫn lưu.
+        if (accessType == AccessType.Physical)
+        {
+            if (request.ZoneId is not { } zoneId)
+                throw new DomainException(
+                    "Hạng vé vào cửa phải gắn với một khu ghế trên sơ đồ phòng trà. Hãy chọn khu cho hạng vé này " +
+                    "(chưa có khu nào thì tạo ở mục Khu vực chỗ ngồi trước).");
+            await TierZoneRules.EnsureZoneIsFreeForShowAsync(_uow, show, zoneId, exceptTierId: null, ct);
+        }
+
         if (request.TotalCapacity.HasValue)
         {
             var activeStatusSubs = await _uow.Repository<OwnerSubscription, Guid>().FindAsync(

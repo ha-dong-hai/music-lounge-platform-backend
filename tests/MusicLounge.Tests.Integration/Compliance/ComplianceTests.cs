@@ -316,7 +316,7 @@ public sealed class ComplianceTests
             Name = "Standard",
             Description = (string?)null,
             AccessType = "Physical",
-            ZoneId = (Guid?)null,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId),
             TotalCapacity = 30,
             Prices = new[]
             {

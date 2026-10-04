@@ -54,7 +54,7 @@ public sealed class OperatorShowInfoTests
         (await Chu().PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId, Name = "Thường", Description = (string?)null, AccessType = "Physical",
-            ZoneId = (Guid?)null, TotalCapacity = 100,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId), TotalCapacity = 100,
             Prices = new[]
             {
                 new

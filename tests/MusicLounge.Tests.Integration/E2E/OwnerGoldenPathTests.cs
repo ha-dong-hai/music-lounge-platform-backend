@@ -175,7 +175,7 @@ public sealed class OwnerGoldenPathTests
         var tierRes = await ownerClient.PostAsJsonAsync("/api/v1/ticket-tiers", new
         {
             ShowId = showId, Name = "Standard", Description = (string?)null, AccessType = "Physical",
-            ZoneId = (Guid?)null, TotalCapacity = 100,
+            ZoneId = KhuThu.ChoBuoi(_factory, showId), TotalCapacity = 100,
             Prices = new[]
             {
                 new
