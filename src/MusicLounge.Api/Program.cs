@@ -243,6 +243,10 @@ try
             .AllowCredentials());
     });
 
+    // Ngưỡng đọc từ appsettings (mục RateLimiting), mặc định 100 và 10 như trước — xem RateLimitSettings.
+    // Đọc NGOÀI lambda để cấu hình sai làm dừng ngay lúc khởi động, không phải ở yêu cầu đầu tiên.
+    var rateLimit = MusicLounge.Infrastructure.Settings.RateLimitSettings.From(builder.Configuration);
+
     builder.Services.AddRateLimiter(opt =>
     {
         opt.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -266,26 +270,27 @@ try
                 errors = (object?)null
             }, ct);
         };
-        // Mac dinh: 100 request/phut theo IP, ap dung toan API. Cac endpoint dung tien
-        // (purchase/subscribe) da tu co idempotency/hold-based guard rieng o tang Application.
+        // Mac dinh: 100 request/phut theo IP (RateLimiting:GlobalPermitPerMinute), ap dung toan API. Cac endpoint
+        // dung tien (purchase/subscribe) da tu co idempotency/hold-based guard rieng o tang Application.
         opt.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
             System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
                 ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 100,
+                    PermitLimit = rateLimit.GlobalPermitPerMinute,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0
                 }));
 
         // Rieng auth (login/register/google) can chan brute-force/credential-stuffing chat hon
-        // nhieu so voi gioi han chung — 10 request/phut/IP, cong don voi GlobalLimiter o tren.
+        // nhieu so voi gioi han chung — mac dinh 10 request/phut/IP (RateLimiting:AuthPermitPerMinute), cong don
+        // voi GlobalLimiter o tren.
         opt.AddPolicy("auth", ctx =>
             System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
                 ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 10,
+                    PermitLimit = rateLimit.AuthPermitPerMinute,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0
                 }));
