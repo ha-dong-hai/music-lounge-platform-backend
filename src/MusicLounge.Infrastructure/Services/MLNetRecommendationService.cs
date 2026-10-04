@@ -119,6 +119,17 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
         _uow = uow;
     }
 
+    /// <summary>
+    /// MLACP-601. Câu lý do gợi ý IN THẲNG cho khán giả ở trang chủ. Trước đây là mô tả thuật toán ("Hybrid: nội dung yêu
+    /// thích + hành vi người dùng tương tự + tiêu chí riêng của venue…") — người xem không hiểu và không cần hiểu mô hình
+    /// ghép từ mấy nguồn điểm. Tên thuật toán vẫn nằm ở cột <c>Algorithm</c> cho việc phân tích; câu này chỉ nói điều
+    /// người xem quan tâm: vì sao buổi này hợp với họ. Cùng giọng với các lý do khác ("Hợp với sở thích bạn đã chọn",
+    /// "Giống những buổi diễn bạn vừa xem").
+    /// </summary>
+    public static string LyDoChoNguoiXem(bool laPhongTraDangTheoDoi) => laPhongTraDangTheoDoi
+        ? "Hợp với gu nhạc của bạn, ở phòng trà bạn đang theo dõi"
+        : "Hợp với gu nhạc của bạn và những buổi khán giả giống bạn hay chọn";
+
     public async Task TriggerRecommendationRefreshAsync(Guid userId, CancellationToken ct = default)
     {
         var behaviourLogs = await _logRepo.FindAsync(l => l.UserId == userId, ct);
@@ -228,9 +239,7 @@ internal sealed class MLNetRecommendationService : IAIRecommendationService
                     CollabScore = collab,
                     CustomScore = custom,
                     FinalScore = final,
-                    Reason = isFollowedVenue
-                        ? "Hybrid: nội dung yêu thích + hành vi người dùng tương tự + tiêu chí riêng của venue + venue bạn đang theo dõi"
-                        : "Hybrid: nội dung yêu thích + hành vi người dùng tương tự + tiêu chí riêng của venue",
+                    Reason = LyDoChoNguoiXem(isFollowedVenue),
                     CreatedAt = DateTimeOffset.UtcNow,
                     ExpiresAt = DateTimeOffset.UtcNow.AddHours(6)
                 };
