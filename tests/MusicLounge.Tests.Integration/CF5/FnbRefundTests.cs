@@ -95,8 +95,14 @@ public sealed class FnbRefundTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!.RspCode;
     }
 
+    // MLACP-631: huỷ bắt buộc lý do — gửi kèm một lý do thật cho mọi lần đổi trạng thái (bước khác bỏ qua trường này).
     private Task<HttpResponseMessage> StaffSetAsync(Guid orderId, string status)
-        => Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status });
+        => Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status, Reason = "Khách đổi ý" });
+
+    // MLACP-631: đơn đã bắt đầu làm chỉ chủ phòng trà huỷ được.
+    private Task<HttpResponseMessage> OwnerCancelAsync(Guid orderId)
+        => _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")
+            .PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = "Cancelled", Reason = "Khách bỏ về giữa chừng" });
 
     private async Task<Payment> PaymentAsync(string txnRef)
     {
@@ -276,7 +282,7 @@ public sealed class FnbRefundTests
             paymentId = payment.Id;
         }
 
-        (await StaffSetAsync(orderId, "Cancelled")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await OwnerCancelAsync(orderId)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var refund = (await RefundsAsync(paymentId)).Single();
         (await ApproveAsync(refund.Id)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 

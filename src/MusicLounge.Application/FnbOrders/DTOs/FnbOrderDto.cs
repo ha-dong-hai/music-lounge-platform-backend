@@ -27,4 +27,10 @@ public sealed record FnbOrderDto(
     bool IsPaid,
     // MLACP-349: khach dang co mot link VNPay con tra duoc cho toi thoi diem nay — trong luc do he thong
     // tu choi thu tien mat va huy don, va man hinh nhan vien can thay vi sao.
-    DateTimeOffset? OnlinePaymentLiveUntil);
+    DateTimeOffset? OnlinePaymentLiveUntil,
+    // MLACP-631: dấu vết huỷ. CancelledByName chỉ trả cho phía phòng trà; khách chỉ thấy lý do và thời điểm.
+    DateTimeOffset? CancelledAt = null,
+    string? CancelReason = null,
+    string? CancelledByName = null,
+    // MLACP-631: nhân viên đã cầm tiền mặt — chỉ trả cho phía phòng trà, để đối chiếu tiền mặt cuối ca.
+    string? CashCollectedByName = null);

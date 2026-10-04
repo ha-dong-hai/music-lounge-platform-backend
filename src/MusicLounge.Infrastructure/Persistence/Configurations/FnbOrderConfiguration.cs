@@ -15,6 +15,7 @@ internal sealed class FnbOrderConfiguration : IEntityTypeConfiguration<FnbOrder>
         b.Property(x => x.PaymentMethod).HasConversion<string>().HasMaxLength(20);
         b.Property(x => x.TotalAmount).HasPrecision(15, 2).HasDefaultValue(0m);
         b.Property(x => x.Note).HasMaxLength(500);
+        b.Property(x => x.CancelReason).HasMaxLength(500);
 
         b.HasIndex(x => new { x.LoungeId, x.Status });
 
