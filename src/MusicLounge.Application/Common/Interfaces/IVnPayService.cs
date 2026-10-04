@@ -20,9 +20,10 @@ public interface IVnPayService
     /// Calls VNPay's Merchant API (POST /merchant_webapi/api/transaction, vnp_Command=refund) to
     /// refund a previously-confirmed payment. Distinct signing scheme from CreatePaymentUrl/
     /// VerifyCallback (raw pipe-joined values, no URL-encoding) — see VNPay's official Payment
-    /// Gateway Techspec 2.1.0, "Truy vấn & Hoàn tiền" section. NOTE: VNPay restricts refund by
-    /// default on sandbox merchant accounts — VNPay support must enable it before this can be
-    /// exercised against a real sandbox, independent of whether this code is correct.
+    /// Gateway Techspec 2.1.0, "Truy vấn & Hoàn tiền" section.
+    /// MLACP-614: chay that voi sandbox ngay 04/10/2026 va VNPay tra 00. Chu thich cu o day ghi "VNPay khoa refund
+    /// tren sandbox" — sai: lenh chua tung toi duoc VNPay vi thieu header User-Agent (403) va vnp_OrderInfo co dau #
+    /// (03 Invalid data format).
     /// </summary>
     Task<VnPayRefundResult> RefundAsync(VnPayRefundRequest request, CancellationToken ct = default);
 
@@ -37,8 +38,8 @@ public interface IVnPayService
     /// <para>Cung so do chu ky nhu RefundAsync (gia tri tho noi bang dau |, khong url-encode) nhung
     /// THU TU TRUONG KHAC. Xem chu thich tai cho dung trong VnPayService.</para>
     ///
-    /// <para>LUU Y: VNPay khoa merchant API tren tai khoan sandbox theo mac dinh — cung tinh trang
-    /// da ghi cho RefundAsync, va doc lap voi chuyen code dung hay sai.</para>
+    /// <para>MLACP-614: merchant API tren sandbox KHONG bi khoa nhu tung ghi o day — lenh nay truoc do bi chan vi
+    /// cung hai loi phia minh voi RefundAsync (thieu User-Agent, vnp_OrderInfo co ky tu dac biet).</para>
     /// </summary>
     Task<VnPayTransactionQueryResult> QueryTransactionAsync(
         VnPayTransactionQuery query, CancellationToken ct = default);

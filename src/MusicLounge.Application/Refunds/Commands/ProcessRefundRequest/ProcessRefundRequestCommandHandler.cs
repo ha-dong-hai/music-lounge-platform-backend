@@ -221,9 +221,10 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         else if (isGatewayPayment)
         {
             // MLACP-100: goi VNPay Merchant API that su TRUOC khi dong bo cai — chi ghi so cai/chuyen
-            // trang thai neu VNPay xac nhan da hoan tien thanh cong. Chua live-verify duoc chu ky nay
-            // voi sandbox that (VNPay mac dinh khoa refund tren tai khoan sandbox, can lien he VNPay
-            // de mo — xem comment trong IVnPayService.RefundAsync).
+            // trang thai neu VNPay xac nhan da hoan tien thanh cong.
+            // MLACP-614: da chay that voi sandbox ngay 04/10/2026 (VNPay tra 00, yeu cau chuyen Approved). Truoc do
+            // lenh nay chua tung toi duoc VNPay vi hai loi phia minh — xem VnPayService.MerchantApiOrderInfo va cho
+            // dang ky client "vnpay" — chu khong phai vi VNPay khoa refund tren sandbox nhu chu thich cu tung ghi.
             var vnPayResult = await _vnPay.RefundAsync(new VnPayRefundRequest(
                 TxnRef: payment.OrderId,
                 Amount: amountApproved,
@@ -239,6 +240,22 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                     "VNPay",
                     $"Gọi API hoàn tiền VNPay thất bại (mã lỗi {vnPayResult.ResponseCode}): {vnPayResult.Message}. " +
                     "Yêu cầu hoàn tiền vẫn ở trạng thái Pending, chưa ghi sổ cái.");
+
+            // MLACP-614: truoc day ma giao dich hoan VNPay tra ve bi bo di — he thong ghi "da hoan" ma khong giu lai
+            // thu gi de doi soat voi cong thanh toan hay de tra loi khi nguoi mua hoi "tien cua toi dau". Ghi ma do
+            // vao ho so hoan tien (Admin va nguoi mua deu doc duoc) va vao dong so cai phia cong.
+            if (!string.IsNullOrWhiteSpace(vnPayResult.TransactionNo))
+            {
+                gatewayOutflowNote += $" (mã giao dịch hoàn VNPay {vnPayResult.TransactionNo})";
+                var ghiChu = $"Đã gửi lệnh hoàn qua VNPay, mã giao dịch hoàn {vnPayResult.TransactionNo}"
+                             + (refund.ResolutionNote is { } ghiChuAdmin ? $" — {ghiChuAdmin}" : "");
+                refund.ResolutionNote = ghiChu.Length > 500 ? ghiChu[..500] : ghiChu;
+            }
+
+            _logger.LogInformation(
+                "VNPay da nhan lenh hoan — RefundRequestId={RefundRequestId} PaymentId={PaymentId} SoTien={Amount} " +
+                "MaGiaoDichHoan={RefundTransactionNo}",
+                refund.Id, payment.Id, amountApproved, vnPayResult.TransactionNo);
         }
         else
         {

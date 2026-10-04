@@ -103,6 +103,35 @@ public sealed class RefundProcessingTests
             .Should().Be(entries.Where(e => !e.IsDebit).Sum(e => e.Amount));
     }
 
+    /// <summary>
+    /// MLACP-614: ma giao dich hoan VNPay tra ve tung bi bo di — ho so ghi "da hoan" ma khong con gi de doi soat.
+    /// </summary>
+    [Fact]
+    public async Task ProcessRefundRequest_Approve_GhiMaGiaoDichHoanCuaVnPay_VaoHoSoVaSoCai()
+    {
+        var (refundId, paymentId) = await SeedPendingRefundRequestAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+
+        var res = await client.PostAsJsonAsync(
+            $"/api/v1/admin/refund-requests/{refundId}/process",
+            new { Decision = "Approved", ApprovedAmount = 100_000m, ResolutionNote = "Buổi diễn đổi lịch" });
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var payment = await db.Payments.FindAsync(paymentId);
+        var maHoan = MusicLounge.Tests.Integration.Fakes.FakeVnPayService.MaGiaoDichHoan(payment!.TransactionId);
+
+        var refund = await db.RefundRequests.FindAsync(refundId);
+        refund!.ResolutionNote.Should().Contain(maHoan, "ho so hoan tien phai giu ma giao dich hoan de doi soat voi VNPay");
+        refund.ResolutionNote.Should().Contain("Buổi diễn đổi lịch", "ghi chu cua Admin khong duoc mat");
+
+        var dongCong = db.LedgerEntries
+            .Where(e => e.PaymentId == paymentId && e.ReferenceType == "refund" && !e.IsDebit)
+            .Select(e => e.Description).ToList();
+        dongCong.Should().Contain(d => d != null && d.Contains(maHoan), "dong so cai phia cong phai ghi ma giao dich hoan");
+    }
+
     [Fact]
     public async Task ProcessRefundRequest_Reject_LeavesPaymentAndLedgerUntouched()
     {
