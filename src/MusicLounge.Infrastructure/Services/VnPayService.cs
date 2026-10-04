@@ -107,12 +107,12 @@ internal sealed class VnPayService : IVnPayService
     // Merchant API (refund/querydr) — POST JSON to a DIFFERENT base URL than the browser-redirect
     // flow above, and signed with a THIRD encoding scheme: raw values joined by '|' in a fixed
     // documented field order, no URL-encoding at all (unlike either encoder used above). Per
-    // VNPay's official Payment Gateway Techspec 2.1.0, "Truy vấn & Hoàn tiền" section — NOT
-    // live-verified against a real sandbox call the way the two flows above were (VNPay restricts
-    // refund on sandbox accounts by default; contacting VNPay support to enable it is a
-    // prerequisite independent of whether this code is correct).
+    // VNPay's official Payment Gateway Techspec 2.1.0, "Truy vấn & Hoàn tiền" section.
+    // MLACP-614: live-verified 04/10/2026 — sandbox tra vnp_ResponseCode=00 cho lenh hoan toan phan mot giao dich
+    // the NCB that. Chu ky va thu tu truong duoi day vi vay la dung.
     public async Task<VnPayRefundResult> RefundAsync(VnPayRefundRequest request, CancellationToken ct = default)
     {
+        var orderInfo = MerchantApiOrderInfo(request.OrderInfo);
         var now = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
         var transactionDate = request.TransactionDate.ToOffset(TimeSpan.FromHours(7));
 
@@ -128,7 +128,7 @@ internal sealed class VnPayService : IVnPayService
         var signData = string.Join('|',
             requestId, _settings.Version, "refund", _settings.TmnCode,
             transactionType, request.TxnRef, amountStr, transactionNo,
-            transactionDateStr, request.CreatedBy, createDateStr, request.IpAddress, request.OrderInfo);
+            transactionDateStr, request.CreatedBy, createDateStr, request.IpAddress, orderInfo);
         var signature = ComputeHmacSha512(_settings.HashSecret, signData);
 
         var body = new VnPayRefundApiRequest(
@@ -139,7 +139,7 @@ internal sealed class VnPayService : IVnPayService
             vnp_TransactionType: transactionType,
             vnp_TxnRef: request.TxnRef,
             vnp_Amount: amountStr,
-            vnp_OrderInfo: request.OrderInfo,
+            vnp_OrderInfo: orderInfo,
             vnp_TransactionNo: transactionNo,
             vnp_TransactionDate: transactionDateStr,
             vnp_CreateBy: request.CreatedBy,
@@ -214,6 +214,25 @@ internal sealed class VnPayService : IVnPayService
             .Replace("!", "%21")
             .Replace("'", "%27");
 
+    // MLACP-614: gia tri header User-Agent cho client "vnpay" (xem DependencyInjection — thieu header la 403).
+    internal const string UserAgent = "MusicLounge/1.0";
+
+    // MLACP-614: merchant API cua VNPay tra "03 Invalid data format" khi vnp_OrderInfo co ky tu dac biet. Do ngay
+    // 04/10/2026 tren sandbox: "Hoan tien yeu cau #<guid>" -> 03, bo dau # -> qua buoc kiem dinh dang (ca refund lan
+    // querydr). Tai lieu VNPay cung ghi truong nay la "tieng Viet khong dau, khong ky tu dac biet". Loc o DAY — ham
+    // dung chung cua hai lenh merchant API — thay vi sua tung noi goi, de noi goi moi khong lap lai loi. Gia tri da loc
+    // la gia tri duoc KY va duoc GUI, hai cho phai giong het nhau.
+    // Tran gioi han: chi giu chu cai khong dau, chu so, khoang trang va gach noi — la tap da do la qua duoc. Chu co dau
+    // bi bo han chu khong chuyen thanh khong dau; noi goi hien nay deu viet khong dau san.
+    internal static string MerchantApiOrderInfo(string orderInfo)
+    {
+        var sb = new StringBuilder(orderInfo.Length);
+        foreach (var ch in orderInfo)
+            if (ch is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or ' ' or '-')
+                sb.Append(ch);
+        return sb.ToString().Trim();
+    }
+
     private static bool FixedTimeEqualsIgnoreCase(string a, string b)
     {
         // Hash hex length is fixed/public (SHA512 -> 128 hex chars), so comparing lengths first
@@ -241,11 +260,12 @@ internal sealed class VnPayService : IVnPayService
     //   vnp_RequestId | vnp_Version | vnp_Command | vnp_TmnCode | vnp_TxnRef |
     //   vnp_TransactionDate | vnp_CreateDate | vnp_IpAddr | vnp_OrderInfo
     //
-    // Khong live-verify duoc voi sandbox that (VNPay khoa merchant API tren tai khoan sandbox theo
-    // mac dinh) — cung tinh trang da ghi cho RefundAsync.
+    // MLACP-614: sandbox khong khoa merchant API; lenh nay tung bi chan vi thieu User-Agent va vnp_OrderInfo co dau #
+    // (da sua). Rieng CHU KY cua querydr thi chua duoc chay that toi ket qua 00 — khac voi RefundAsync.
     public async Task<VnPayTransactionQueryResult> QueryTransactionAsync(
         VnPayTransactionQuery query, CancellationToken ct = default)
     {
+        var orderInfo = MerchantApiOrderInfo(query.OrderInfo);
         var now = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
         var transactionDate = query.TransactionDate.ToOffset(TimeSpan.FromHours(7));
 
@@ -255,7 +275,7 @@ internal sealed class VnPayService : IVnPayService
 
         var signData = string.Join('|',
             requestId, _settings.Version, "querydr", _settings.TmnCode, query.TxnRef,
-            transactionDateStr, createDateStr, query.IpAddress, query.OrderInfo);
+            transactionDateStr, createDateStr, query.IpAddress, orderInfo);
         var signature = ComputeHmacSha512(_settings.HashSecret, signData);
 
         var body = new VnPayQueryApiRequest(
@@ -264,7 +284,7 @@ internal sealed class VnPayService : IVnPayService
             vnp_Command: "querydr",
             vnp_TmnCode: _settings.TmnCode,
             vnp_TxnRef: query.TxnRef,
-            vnp_OrderInfo: query.OrderInfo,
+            vnp_OrderInfo: orderInfo,
             vnp_TransactionNo: query.TransactionNo ?? string.Empty,
             vnp_TransactionDate: transactionDateStr,
             vnp_CreateDate: createDateStr,

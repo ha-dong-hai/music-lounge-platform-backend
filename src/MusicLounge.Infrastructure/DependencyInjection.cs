@@ -219,7 +219,15 @@ public static class DependencyInjection
         services.AddHttpClient("mux").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("firebase").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         services.AddHttpClient("gemini").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
-        services.AddHttpClient("vnpay").ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
+        // MLACP-614: HttpClient cua .NET mac dinh KHONG gui header User-Agent, va tuong lua (openresty) truoc merchant
+        // API cua VNPay tra 403 cho moi yeu cau thieu header nay — do ngay 04/10/2026 tren sandbox: cung mot noi dung,
+        // bo User-Agent -> 403, co User-Agent -> 200. Vi vay ca lenh hoan tien (refund) lan lenh doi soat (querydr)
+        // chua tung toi duoc VNPay. Dat o day, noi dang ky client, de moi loi goi dung client "vnpay" deu co.
+        services.AddHttpClient("vnpay").ConfigureHttpClient(c =>
+        {
+            c.Timeout = externalCallTimeout;
+            c.DefaultRequestHeaders.UserAgent.ParseAdd(VnPayService.UserAgent);
+        });
         services.AddHttpClient(SmsService.HttpClientName).ConfigureHttpClient(c => c.Timeout = externalCallTimeout);
         // Image generation can run noticeably longer than the other external calls this app makes —
         // a longer, dedicated timeout instead of reusing externalCallTimeout so a legitimately slow

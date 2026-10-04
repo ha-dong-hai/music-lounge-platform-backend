@@ -69,5 +69,9 @@ public sealed class FakeVnPayService : IVnPayService
     public Task<VnPayRefundResult> RefundAsync(VnPayRefundRequest request, CancellationToken ct = default)
         => Task.FromResult(string.IsNullOrWhiteSpace(request.TransactionNo)
             ? new VnPayRefundResult(false, "91", "Khong tim thay giao dich yeu cau hoan tra", null)
-            : new VnPayRefundResult(true, "00", "Confirm Success", request.TransactionNo));
+            // MLACP-614: VNPay cap mot ma RIENG cho giao dich hoan, khong phai ma cua giao dich goc — fake tra ma
+            // khac han de test phan biet duoc "ghi ma hoan" voi "ghi lai ma goc".
+            : new VnPayRefundResult(true, "00", "Confirm Success", MaGiaoDichHoan(request.TransactionNo)));
+
+    public static string MaGiaoDichHoan(string? maGoc) => $"HT{maGoc}";
 }
