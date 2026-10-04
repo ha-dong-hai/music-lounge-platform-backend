@@ -7,12 +7,25 @@ namespace MusicLounge.Application.Analytics.DTOs;
 /// <param name="Months">6 tháng gần nhất, tháng hiện tại là tháng chưa trọn. Theo giờ Việt Nam (UTC+7).</param>
 /// <param name="TopShows">Buổi hòa nhạc có doanh thu vé cao nhất trong khoảng thời gian đã chọn.</param>
 /// <param name="Genres">Thể loại nhạc được mua vé nhiều nhất trong khoảng thời gian đã chọn.</param>
+/// <param name="SeriesUnit">MLACP-594: đơn vị gộp của <paramref name="Series"/> — <c>day</c> (khoảng ≤ 31 ngày),
+/// <c>week</c> (≤ 184 ngày, tuần bắt đầu thứ Hai) hoặc <c>month</c>.</param>
+/// <param name="Series">MLACP-594: tiền theo ĐÚNG khoảng from/to đã chọn, đủ mọi nhóm kể cả nhóm không có giao dịch.
+/// <paramref name="Months"/> giữ nguyên (luôn 6 tháng) để giao diện cũ không vỡ.</param>
 public sealed record AdminDashboardDto(
     DateTimeOffset PeriodFrom,
     DateTimeOffset PeriodTo,
     IReadOnlyList<MonthlyRevenueDto> Months,
     IReadOnlyList<TopShowRevenueDto> TopShows,
-    IReadOnlyList<GenreDemandDto> Genres);
+    IReadOnlyList<GenreDemandDto> Genres,
+    string SeriesUnit,
+    IReadOnlyList<RevenueBucketDto> Series);
+
+/// <param name="Start">Đầu nhóm theo giờ Việt Nam (00:00 của ngày, thứ Hai của tuần, hoặc ngày 1 của tháng).</param>
+public sealed record RevenueBucketDto(
+    DateTimeOffset Start,
+    RevenueBySourceDto Ticket,
+    RevenueBySourceDto Package,
+    RevenueBySourceDto Donation);
 
 /// <param name="Month">Dạng <c>yyyy-MM</c> theo giờ Việt Nam.</param>
 public sealed record MonthlyRevenueDto(

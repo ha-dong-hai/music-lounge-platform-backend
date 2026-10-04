@@ -55,8 +55,67 @@ internal sealed class GetAdminDashboardQueryHandler
 
         var months = await SauThangGanNhatAsync(nowVn, ct);
         var (topShows, genres) = await TopVaTheLoaiAsync(from, to, limit, ct);
+        var (donVi, chuoi) = await ChuoiTheoKyAsync(from, to, ct);
 
-        return new AdminDashboardDto(from, to, months, topShows, genres);
+        return new AdminDashboardDto(from, to, months, topShows, genres, donVi, chuoi);
+    }
+
+    // ---------- MLACP-594: tiền theo ĐÚNG khoảng đã chọn ----------
+
+    /// <summary>Khoảng tới mức này thì gộp theo ngày; dài hơn tới <see cref="TranTuan"/> thì theo tuần; dài hơn nữa theo
+    /// tháng. Cùng cách Stripe tự đổi đơn vị theo độ dài khoảng: 30 ngày thì 30 cột ngày, nửa năm thì ~26 cột tuần, một
+    /// năm thì 12 cột tháng — biểu đồ không bao giờ quá ~31 cột, kể cả khi chọn nhiều năm (60 cột cho 5 năm là trần).</summary>
+    internal const int TranNgay = 31;
+    internal const int TranTuan = 184;
+
+    internal static string DonViCho(DateTimeOffset from, DateTimeOffset to)
+    {
+        var soNgay = (to - from).TotalDays;
+        return soNgay <= TranNgay ? "day" : soNgay <= TranTuan ? "week" : "month";
+    }
+
+    /// <summary>Đầu nhóm (giờ VN) chứa thời điểm <paramref name="luc"/>. Tuần bắt đầu thứ Hai (ISO 8601, thói quen ở VN).</summary>
+    internal static DateTimeOffset DauNhom(DateTimeOffset luc, string donVi)
+    {
+        var vn = luc.ToOffset(VnOffset);
+        var ngay = new DateTimeOffset(vn.Year, vn.Month, vn.Day, 0, 0, 0, VnOffset);
+        return donVi switch
+        {
+            "day" => ngay,
+            "week" => ngay.AddDays(-(((int)ngay.DayOfWeek + 6) % 7)),
+            _ => new DateTimeOffset(vn.Year, vn.Month, 1, 0, 0, 0, VnOffset)
+        };
+    }
+
+    private static DateTimeOffset NhomKe(DateTimeOffset dau, string donVi) => donVi switch
+    {
+        "day" => dau.AddDays(1),
+        "week" => dau.AddDays(7),
+        _ => dau.AddMonths(1)
+    };
+
+    private async Task<(string, IReadOnlyList<RevenueBucketDto>)> ChuoiTheoKyAsync(
+        DateTimeOffset from, DateTimeOffset to, CancellationToken ct)
+    {
+        var donVi = DonViCho(from, to);
+        var thanhToan = (await _uow.Repository<Payment, Guid>()
+                .FindAsync(p => p.Status == PaymentStatus.Confirmed, ct))
+            .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= from && p.PaidAt.Value <= to && NguonCua(p) is not null)
+            .ToList();
+
+        var theoNhom = thanhToan
+            .GroupBy(p => (Dau: DauNhom(p.PaidAt!.Value, donVi), Nguon: NguonCua(p)!))
+            .ToDictionary(g => g.Key, g => new RevenueBySourceDto(
+                g.Sum(p => p.GrossAmount), g.Sum(PlatformRevenue.CuaThanhToan)));
+        RevenueBySourceDto Khoi(DateTimeOffset dau, string nguon) =>
+            theoNhom.GetValueOrDefault((dau, nguon)) ?? new RevenueBySourceDto(0m, 0m);
+
+        // Sinh đủ mọi nhóm kể cả nhóm không có giao dịch — cùng lý do với khối 6 tháng: cột thiếu bị đọc nhầm là "chưa
+        // có dữ liệu" thay vì "không bán được gì". Nhóm đầu/cuối có thể chỉ trọn một phần (khoảng cắt giữa tuần/tháng).
+        var chuoi = new List<RevenueBucketDto>();
+        for (var dau = DauNhom(from, donVi); dau <= to; dau = NhomKe(dau, donVi))
+            chuoi.Add(new RevenueBucketDto(dau, Khoi(dau, NguonVe), Khoi(dau, NguonGoi), Khoi(dau, NguonDonate)));
+        return (donVi, chuoi);
     }
 
     // ---------- khối 1+2: tiền theo tháng, tách nguồn ----------
