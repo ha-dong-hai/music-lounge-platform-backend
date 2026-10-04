@@ -60,8 +60,9 @@ internal sealed class CancelLoungeShowCommandHandler : IRequestHandler<CancelLou
                 "Show đang phát trực tiếp — hãy dừng (terminate) livestream trước khi hủy event.");
 
         // MLACP-373: phan huy — hoan 100% moi ve, bao nguoi giu ve — nam o ShowCancellation, dung chung voi job ap an
-        // phat khi phong tra bi khoa / tam khoa. MLACP-380: don F&B gan voi show cung duoc huy/hoan theo cung duong.
-        await ShowCancellation.CancelAsync(_uow, _notifications, _lock, show, why: null, ct);
+        // phat khi phong tra bi khoa / tam khoa. MLACP-632: chu phong tra huy buoi thi don do uong GIU NGUYEN, khach
+        // duoc bao va tu quyet (chu du an chot 04/10/2026) — thay cho MLACP-380 (huy luon don F&B gan voi show).
+        await ShowCancellation.CancelAsync(_uow, _notifications, _lock, show, why: null, cancelFnbOrders: false, ct);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;

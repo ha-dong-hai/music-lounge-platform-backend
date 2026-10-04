@@ -228,9 +228,10 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         (await StateAsync(otherOrderId, null)).Order.Status.Should().Be(FnbOrderStatus.Pending);
     }
 
-    /// <summary>Đường huỷ buổi diễn dùng chung phần huỷ đơn đã tách ra — hành vi MLACP-380 phải giữ nguyên.</summary>
+    /// <summary>MLACP-632: chủ phòng trà huỷ buổi thì đơn đồ uống GIỮ NGUYÊN (khác chuyển sang online) — món đã mang
+    /// ra bàn vẫn là món đã giao, phòng trà tự thu.</summary>
     [Fact]
-    public async Task CancellingTheShow_StillCancelsAServedUnpaidOrder_AsBefore()
+    public async Task CancellingTheShow_KeepsAServedUnpaidOrder_AndTellsTheCustomer()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -241,8 +242,8 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
                 .PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await StateAsync(orderId, null)).Order.Status.Should().Be(FnbOrderStatus.Cancelled);
-        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("buổi diễn bị huỷ"));
+        (await StateAsync(orderId, null)).Order.Status.Should().Be(FnbOrderStatus.Served);
+        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("vẫn được giữ"));
     }
 
     // ── Đơn mới gắn với buổi diễn ────────────────────────────────────────────

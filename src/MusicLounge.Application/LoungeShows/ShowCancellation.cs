@@ -9,8 +9,13 @@ namespace MusicLounge.Application.LoungeShows;
 
 /// <summary>
 /// Huỷ một buổi diễn: hoàn 100% cho MỌI vé đã xác nhận (không riêng vé vào cửa như đổi hình thức — vé livestream cũng
-/// mất giá trị khi buổi diễn không còn), báo từng người giữ vé và người mua ban đầu của vé đã chuyển nhượng. Đơn F&B
-/// gắn với buổi diễn (MLACP-380) cũng được huỷ theo cùng đường này — xem <see cref="CancelFnbOrdersAsync"/>.
+/// mất giá trị khi buổi diễn không còn), báo từng người giữ vé và người mua ban đầu của vé đã chuyển nhượng.
+///
+/// <para>ĐƠN ĐỒ UỐNG (MLACP-632, chủ dự án 04/10/2026): khi CHỦ PHÒNG TRÀ huỷ buổi diễn, đơn đồ uống KHÔNG bị huỷ theo —
+/// phòng trà vẫn mở cửa, khách có thể vẫn ngồi uống; khách được báo và tự quyết theo luật thường ngày (tự huỷ khi quầy
+/// chưa nhận, đã làm thì trao đổi với nhân viên). Trước đây (MLACP-380) huỷ buổi là huỷ luôn mọi đơn chưa đóng, kể cả
+/// món đã mang ra bàn. Khi NỀN TẢNG huỷ vì phòng trà bị khoá/tạm khoá thì vẫn huỷ đơn như cũ — phòng trà không còn
+/// được giao dịch trên hệ thống, và tiền khách trả trước phải được hoàn.</para>
 ///
 /// <para>MLACP-373: tách khỏi <c>CancelLoungeShowCommandHandler</c> để nền tảng đi đúng đường này khi phòng trà bị khoá
 /// hoặc tạm khoá (<c>ApplyDuePenaltiesJob</c>) — handler đòi người gọi là chủ phòng trà hoặc Admin, còn job thì không
@@ -42,9 +47,11 @@ public static class ShowCancellation
     /// cùng khoá với lúc khách trả tiền/nhân viên đổi trạng thái/IPN VNPay, tránh một đơn vừa bị huỷ ở đây vừa được
     /// xử lý ở một trong ba đường đó cùng lúc.</param>
     /// <param name="why">Null khi chính chủ phòng trà huỷ — nội dung báo giữ nguyên như trước.</param>
+    /// <param name="cancelFnbOrders">MLACP-632: true chỉ khi nền tảng huỷ vì phòng trà ngừng giao dịch. Chủ phòng trà
+    /// huỷ buổi thì false — đơn đồ uống giữ nguyên, khách chỉ được báo.</param>
     public static async Task<Outcome> CancelAsync(
         IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show, SongNgu? why,
-        CancellationToken ct)
+        bool cancelFnbOrders, CancellationToken ct)
     {
         show.Status = LoungeShowStatus.Cancelled;
         uow.Repository<LoungeShow, Guid>().Update(show);
@@ -54,6 +61,11 @@ public static class ShowCancellation
         var showCancelled = new SongNgu($"buổi diễn bị huỷ{because.Vi}", $"the show was cancelled{because.En}");
 
         var ticketOutcome = await CancelTicketsAsync(uow, notifications, show, because, showCancelled, ct);
+        if (!cancelFnbOrders)
+        {
+            await NotifyOpenFnbOrdersKeptAsync(uow, notifications, show, ct);
+            return ticketOutcome;
+        }
         var fnbOrders = await CancelFnbOrdersAsync(uow, notifications, @lock, show, showCancelled, ct);
 
         return ticketOutcome with { FnbOrders = fnbOrders };
@@ -123,6 +135,38 @@ public static class ShowCancellation
     /// hoàn. Huỷ mọi đơn chưa đóng, kể cả đơn đã phục vụ, theo luật chung ở <see cref="FnbOrderCancellation"/>
     /// (MLACP-390 tách ra để đường chuyển sang online dùng lại).
     /// </summary>
+    /// <summary>
+    /// MLACP-632 — buổi diễn bị chủ phòng trà huỷ: báo khách có đơn đồ uống còn mở rằng đơn VẪN GIỮ và họ tự quyết.
+    /// Đơn của khách đặt qua app không mang ShowId (app không gắn đơn với buổi — xem CreateFnbOrderCommandHandler),
+    /// nên ngoài đơn gắn đúng buổi này còn tính đơn còn mở ở CÙNG phòng trà của người có vé buổi này.
+    /// </summary>
+    private static async Task NotifyOpenFnbOrdersKeptAsync(
+        IUnitOfWork uow, INotificationService notifications, LoungeShow show, CancellationToken ct)
+    {
+        var holderIds = (await uow.Repository<Ticket, Guid>().FindAsync(t => t.ShowId == show.Id && t.BuyerId != null, ct))
+            .Select(t => t.BuyerId!.Value).Distinct().ToList();
+        var open = new[] { FnbOrderStatus.Pending, FnbOrderStatus.Preparing, FnbOrderStatus.Served };
+        var orders = await uow.Repository<FnbOrder, Guid>().FindAsync(
+            o => o.AudienceUserId != null && open.Contains(o.Status)
+                 && (o.ShowId == show.Id || (o.LoungeId == show.LoungeId && holderIds.Contains(o.AudienceUserId!.Value))), ct);
+
+        foreach (var o in orders)
+        {
+            var (vi, en) = o.Status == FnbOrderStatus.Pending
+                ? ("Quầy chưa nhận đơn — nếu không cần nữa, bạn tự huỷ được trong mục Đơn của tôi (đã trả trước thì được hoàn 100%).",
+                   "The bar has not started it yet — if you no longer want it, you can cancel it under My orders (prepaid orders are refunded in full).")
+                : ("Quầy đã bắt đầu làm — nếu muốn đổi ý, hãy trao đổi với nhân viên phục vụ.",
+                   "The bar has already started on it — if you want to change it, please talk to the staff.");
+            await notifications.NotifyAsync(
+                o.AudienceUserId!.Value, NotificationType.FnbOrderUpdate,
+                new SongNgu("Buổi diễn đã huỷ — đơn đồ uống của bạn vẫn được giữ", "Show cancelled — your food & drink order is kept"),
+                new SongNgu(
+                    $"\"{show.Name}\" đã bị huỷ. Đơn đồ uống #{o.Id} của bạn vẫn được giữ. {vi}",
+                    $"\"{show.Name}\" has been cancelled. Your food & drink order #{o.Id} is kept. {en}"),
+                referenceType: "fnb_order", referenceId: o.Id.ToString(), ct: ct);
+        }
+    }
+
     private static Task<int> CancelFnbOrdersAsync(
         IUnitOfWork uow, INotificationService notifications, IAsyncKeyedLock @lock, LoungeShow show,
         SongNgu showCancelled, CancellationToken ct)
