@@ -130,6 +130,7 @@ internal static class LoungeShowMappingExtensions
         return new RecommendedLoungeShowDto(
             show.Id, show.Name, show.DisplayImageUrl(),
             show.Lounge.Name, show.Lounge.Address.District, show.Lounge.Address.City,
+            show.Lounge.PrimaryImageUrl,
             show.ScheduledStart, show.Format, show.Status,
             prices.Count > 0 ? prices.Min(p => p.Price) : null,
             prices.Count > 0 ? prices.Max(p => p.Price) : null,
