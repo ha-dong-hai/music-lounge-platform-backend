@@ -106,4 +106,33 @@ public sealed class ComplaintHistoryTests
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             "khiếu nại chứa mô tả sự việc và số điện thoại người khiếu nại");
     }
+
+    // ---------- MLACP-597: hàng chờ xếp cũ nhất trước ----------
+
+    [Fact]
+    public async Task ChiLocTrangThaiChuaXong_ThiCuNhatTruoc()
+    {
+        var cu = await KhieuNaiAsync(ComplaintStatus.Open);
+        var moi = await KhieuNaiAsync(ComplaintStatus.Investigating);
+
+        var (ids, code, body) = await DocAsync("status=Open&status=Investigating&pageSize=100");
+
+        code.Should().Be(HttpStatusCode.OK, body);
+        ids.Should().Contain(cu).And.Contain(moi);
+        ids.ToList().IndexOf(cu).Should().BeLessThan(ids.ToList().IndexOf(moi),
+            "đây là hàng chờ: việc chờ lâu nhất phải nằm trên, không bị khiếu nại mới đẩy xuống trang sau");
+    }
+
+    [Fact]
+    public async Task KhongLoc_HoacCoLanTrangThaiDaXong_ThiVanMoiNhatTruoc()
+    {
+        var cu = await KhieuNaiAsync(ComplaintStatus.Open);
+        var moi = await KhieuNaiAsync(ComplaintStatus.Resolved);
+
+        var (tatCa, _, _) = await DocAsync("pageSize=100");
+        tatCa.ToList().IndexOf(moi).Should().BeLessThan(tatCa.ToList().IndexOf(cu), "không lọc là LỊCH SỬ: mới nhất trước");
+
+        var (lan, _, _) = await DocAsync("status=Open&status=Resolved&pageSize=100");
+        lan.ToList().IndexOf(moi).Should().BeLessThan(lan.ToList().IndexOf(cu));
+    }
 }

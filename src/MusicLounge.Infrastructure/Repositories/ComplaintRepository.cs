@@ -26,7 +26,7 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
     {
         var query = _ctx.Complaints.AsNoTracking()
             .Where(c => c.Status == ComplaintStatus.Open || c.Status == ComplaintStatus.Investigating);
-        return await ProjectPageAsync(query, page, pageSize, ct);
+        return await ProjectPageAsync(query, page, pageSize, ct, cuNhatTruoc: true);
     }
 
     /// <summary>
@@ -54,15 +54,23 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
                 query = query.Where(c => c.Description.ToLower().Contains(keyword)
                                       || (c.ContactPhone != null && c.ContactPhone.Contains(keyword)));
         }
-        return await ProjectPageAsync(query, page, pageSize, ct);
+        // MLACP-597: Admin chỉ lọc các trạng thái CHƯA xong (Open/Investigating) thì đó là HÀNG CHỜ, không phải lịch sử —
+        // xếp cũ nhất trước như mọi hàng đợi duyệt khác của hệ thống (hoàn tiền, định danh, tài khoản nhận tiền, kháng
+        // nghị). Trước đây trang quản trị dùng endpoint này cho cả tab "chờ xử lý" nên khiếu nại vừa gửi nằm trên đầu,
+        // khiếu nại chờ lâu nhất bị đẩy xuống trang sau. Có lẫn trạng thái đã xong hoặc không lọc → vẫn mới nhất trước.
+        var chiViecChuaXong = statuses.Count > 0
+            && statuses.All(s => s is ComplaintStatus.Open or ComplaintStatus.Investigating);
+        return await ProjectPageAsync(query, page, pageSize, ct, cuNhatTruoc: chiViecChuaXong);
     }
 
+    /// <param name="cuNhatTruoc">Hàng chờ → cũ nhất trước. Mặc định mới nhất trước (lịch sử, "khiếu nại của tôi").
+    /// Xếp theo Id: khoá chính là GUID có thứ tự thời gian (OrderedGuid) nên trùng thứ tự tạo, và tránh được việc so
+    /// <c>DateTimeOffset</c> mà provider SQLite của bộ test không dịch được.</param>
     private static async Task<PaginatedResult<ComplaintDto>> ProjectPageAsync(
-        IQueryable<Complaint> query, int page, int pageSize, CancellationToken ct)
+        IQueryable<Complaint> query, int page, int pageSize, CancellationToken ct, bool cuNhatTruoc = false)
     {
         var total = await query.CountAsync(ct);
-        var items = await query
-            .OrderByDescending(c => c.Id)
+        var items = await (cuNhatTruoc ? query.OrderBy(c => c.Id) : query.OrderByDescending(c => c.Id))
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(c => new ComplaintDto(
