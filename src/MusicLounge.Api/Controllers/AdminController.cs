@@ -452,9 +452,13 @@ public sealed class AdminController : ControllerBase
         [FromQuery] bool? isActive,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] DateTimeOffset? createdFrom = null,
+        [FromQuery] DateTimeOffset? createdTo = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetUsersQuery(searchText, role, isActive, page, pageSize), ct);
+        // MLACP-598: createdFrom/createdTo lọc theo ngày đăng ký (gồm cả hai đầu); from sau to → 422.
+        var result = await _sender.Send(
+            new GetUsersQuery(searchText, role, isActive, page, pageSize, createdFrom, createdTo), ct);
         return Ok(ApiResponse<PaginatedResult<UserAdminDto>>.Ok(result));
     }
 
@@ -515,9 +519,13 @@ public sealed class AdminController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? keyword = null,
+        [FromQuery] DateTimeOffset? createdFrom = null,
+        [FromQuery] DateTimeOffset? createdTo = null,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetComplaintHistoryQuery(status, page, pageSize, keyword), ct);
+        // MLACP-598: createdFrom/createdTo lọc theo ngày gửi khiếu nại (gồm cả hai đầu); from sau to → 422.
+        var result = await _sender.Send(
+            new GetComplaintHistoryQuery(status, page, pageSize, keyword, createdFrom, createdTo), ct);
         return Ok(ApiResponse<PaginatedResult<ComplaintDto>>.Ok(result));
     }
 

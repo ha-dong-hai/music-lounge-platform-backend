@@ -16,7 +16,8 @@ internal sealed class UserRepository : Repository<User, Guid>, IUserRepository
 
     public async Task<PaginatedResult<UserAdminDto>> SearchAsync(
         string? searchText, UserRole? role, bool? isActive,
-        int page, int pageSize, CancellationToken ct = default)
+        int page, int pageSize, CancellationToken ct = default,
+        DateTimeOffset? createdFrom = null, DateTimeOffset? createdTo = null)
     {
         var query = _ctx.Users.AsNoTracking();
 
@@ -32,6 +33,19 @@ internal sealed class UserRepository : Repository<User, Guid>, IUserRepository
 
         if (isActive.HasValue)
             query = query.Where(u => u.IsActive == isActive.Value);
+
+        // MLACP-598: lọc theo ngày đăng ký. User.CreatedAt là DateTime giờ UTC (AuditableEntity) nên đổi mốc sang UTC rồi
+        // so thẳng trong truy vấn — dịch được ở cả SQL Server lẫn SQLite của bộ test.
+        if (createdFrom.HasValue)
+        {
+            var tu = createdFrom.Value.UtcDateTime;
+            query = query.Where(u => u.CreatedAt >= tu);
+        }
+        if (createdTo.HasValue)
+        {
+            var den = createdTo.Value.UtcDateTime;
+            query = query.Where(u => u.CreatedAt <= den);
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query

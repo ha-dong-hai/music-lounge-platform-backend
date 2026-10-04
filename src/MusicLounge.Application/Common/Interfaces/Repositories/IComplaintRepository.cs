@@ -16,5 +16,5 @@ public interface IComplaintRepository : IRepository<Complaint, Guid>
     /// MLACP-502: <paramref name="keyword"/> (đã chuẩn hoá bằng SearchKeyword) khớp mô tả, SĐT liên hệ hoặc đúng mã.</summary>
     Task<PaginatedResult<ComplaintDto>> GetHistoryAsync(
         IReadOnlyList<MusicLounge.Domain.Enums.ComplaintStatus> statuses, string? keyword, int page, int pageSize,
-        CancellationToken ct = default);
+        CancellationToken ct = default, DateTimeOffset? createdFrom = null, DateTimeOffset? createdTo = null);
 }

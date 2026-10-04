@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
@@ -17,7 +18,10 @@ internal sealed class GetUsersQueryHandler
         var page = Math.Max(1, request.Page);
         var size = Math.Clamp(request.PageSize, 1, 50);
 
+        KhoangNgay.DamBaoHopLe(request.CreatedFrom, request.CreatedTo);
+
         return await _userRepo.SearchAsync(
-            request.SearchText, request.Role, request.IsActive, page, size, ct);
+            request.SearchText, request.Role, request.IsActive, page, size, ct,
+            request.CreatedFrom, request.CreatedTo);
     }
 }
