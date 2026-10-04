@@ -216,9 +216,10 @@ public sealed class MeController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Lịch sử giao dịch hợp nhất của Owner (vé bán được, donate nhận, quyết toán đã nhận
-    /// — cùng một nguồn sổ cái D8) — lọc theo khoảng thời gian và loại giao dịch
-    /// (payment/donation/settlement).</summary>
+    /// <summary>Sổ chi tiết tài khoản riêng của Owner trên sổ cái (D8): tiền đã thực sự về tay chủ phòng trà
+    /// (quyết toán đã giải ngân) và tiền bị trừ lại (thu hồi khi vé đã giải ngân rồi mới hoàn — số âm). Tiền vé
+    /// đã bán nhưng chưa tới hạn quyết toán vẫn do nền tảng giữ hộ nên KHÔNG có ở đây (MLACP-616 sửa câu mô tả cũ
+    /// hứa "vé bán được, donate nhận"). Lọc theo khoảng thời gian và loại bút toán.</summary>
     [HttpGet("transactions")]
     [Authorize(Policy = Policies.RequireOwner)]
     [ProducesResponseType<ApiResponse<PaginatedResult<OwnerTransactionDto>>>(StatusCodes.Status200OK)]
