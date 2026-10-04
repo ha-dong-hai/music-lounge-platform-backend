@@ -43,9 +43,15 @@ public static class VenueLifecycle
     /// <para>Không dùng <see cref="ExplainRestriction"/> cho người mua: câu đó viết cho chủ phòng trà
     /// ("vui lòng chỉnh sửa hồ sơ và liên hệ Admin"), và lý do phòng trà bị đình chỉ là chuyện giữa
     /// phòng trà với nền tảng — người mua chỉ cần biết là chưa mua được.</para>
+    ///
+    /// <para>MLACP-613: câu này dùng chung cho BỐN chỗ — giữ chỗ/mua vé, ủng hộ nghệ sĩ, gọi món và trả tiền đơn gọi món.
+    /// Bản trước viết "Phòng trà của buổi diễn này … chưa thể mua vé hay donate", nên khán giả đang GỌI MÓN bị báo là
+    /// không mua được vé (đo 04/10/2026 khi chạy trọn luồng gọi món trên giao diện). Nay câu nêu đủ ba việc và không
+    /// gắn với "buổi diễn" — đơn gọi món không thuộc buổi diễn nào. "donate" đổi thành "ủng hộ nghệ sĩ" cho khớp chữ
+    /// trên giao diện.</para>
     /// </summary>
     public const string TradingPausedForBuyers =
-        "Phòng trà của buổi diễn này hiện tạm ngừng giao dịch trên nền tảng — chưa thể mua vé hay donate lúc này.";
+        "Phòng trà này hiện tạm ngừng giao dịch trên nền tảng — chưa thể mua vé, gọi món hay ủng hộ nghệ sĩ lúc này.";
 
     /// <summary>
     /// MLACP-354. Trạng thái hiện tại của phòng trà, đọc thẳng từ cơ sở dữ liệu. Null khi không tìm

@@ -77,7 +77,11 @@ public sealed class VenueLifecycleUnitTests
     public void UTCID09_CauTuChoiChoNguoiMua_GiuNguyenVan_VaKhongLoLyDo()
     {
         VenueLifecycle.TradingPausedForBuyers.Should().Be(
-            "Phòng trà của buổi diễn này hiện tạm ngừng giao dịch trên nền tảng — chưa thể mua vé hay donate lúc này.");
+            "Phòng trà này hiện tạm ngừng giao dịch trên nền tảng — chưa thể mua vé, gọi món hay ủng hộ nghệ sĩ lúc này.");
+
+        // MLACP-613: câu dùng chung cho mua vé, gọi món và ủng hộ — phải nêu cả ba, không chỉ "mua vé".
+        VenueLifecycle.TradingPausedForBuyers.Should().ContainAll("mua vé", "gọi món", "ủng hộ");
+        VenueLifecycle.TradingPausedForBuyers.Should().NotContainAny("donate", "buổi diễn này");
 
         VenueLifecycle.TradingPausedForBuyers.Should()
             .NotContainAny("đình chỉ", "khoá", "vi phạm", "Suspended", "Locked");
