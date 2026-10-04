@@ -49,16 +49,16 @@ internal sealed class RescheduleLoungeShowCommandHandler : IRequestHandler<Resch
         if (show.Status is not LoungeShowStatus.Published)
             throw new DomainException("Chỉ có thể đổi lịch event đã Published (chưa bắt đầu diễn ra).");
 
-        // D18: doi lich la doi ngay dien da duoc "van ban chap thuan" ban dau bao ve — ap dung lai
-        // dung nguyen tac 7 ngay lam viec (NĐ 144/2020 Điều 10) cho ngay dien MOI, tranh loophole
-        // "publish dung han roi doi lich gap ngay hom sau".
-        var minLeadDays = await _config.GetIntAsync(ConfigKeys.PublishMinBusinessDaysLeadTime, 7, ct);
+        // MLACP-621: dời lịch buổi ĐÃ chấp thuận chỉ cần báo trước 02 ngày làm việc (NĐ 144/2020 Điều 10 khoản 4
+        // điểm đ) — trước đây dùng chung mốc 7 ngày của hồ sơ xin chấp thuận lần đầu, chặt hơn luật. Xem ShowRescheduleNotice.
+        var minNoticeDays = await ShowRescheduleNotice.BusinessDaysAsync(_config, ct);
         var businessDaysUntilNewStart = BusinessDayCalculator.CountBusinessDaysBetween(
             DateTimeOffset.UtcNow, request.NewScheduledStart);
-        if (businessDaysUntilNewStart < minLeadDays)
+        if (businessDaysUntilNewStart < minNoticeDays)
             throw new DomainException(
-                $"Theo NĐ 144/2020 Điều 10, ngày diễn mới phải cách thời điểm đổi lịch tối thiểu " +
-                $"{minLeadDays} ngày làm việc. Hiện chỉ còn {businessDaysUntilNewStart} ngày làm việc.");
+                $"Theo NĐ 144/2020 (Điều 10 khoản 4 điểm đ), dời giờ diễn phải báo trước cơ quan đã chấp thuận ít nhất " +
+                $"{minNoticeDays} ngày làm việc — ngày diễn mới hiện chỉ cách {businessDaysUntilNewStart} ngày làm việc. " +
+                "Nhớ gửi văn bản thông báo cho cơ quan đã chấp thuận và chính quyền địa phương.");
 
         var oldStart = show.ScheduledStart;
         var delta = request.NewScheduledStart - oldStart;
