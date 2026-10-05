@@ -39,6 +39,39 @@ public sealed class TaxIdMatchesCitizenCardTests
         return (user.Id, card);
     }
 
+    /// <summary>Số CCCD đã lưu không giải mã được (khoá cũ đã mất, MLACP-401) nhưng mã băm vẫn còn — đúng trạng thái đo trên
+    /// DB cục bộ 05/10/2026 khi bản đầu của MLACP-660 bỏ qua đối chiếu và lưu một số bịa.</summary>
+    private async Task<(Guid UserId, string CardNumber)> OwnerWithUnreadableCitizenCardAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var card = Random.Shared.NextInt64(100_000_000_000L, 999_999_999_999L).ToString();
+        var user = new User
+        {
+            Email = $"tax660u-{Guid.NewGuid():N}@test.com", FullName = "Chủ hộ kinh doanh 660", Role = UserRole.Owner,
+            AuthProvider = "local", EmailVerifiedAt = DateTimeOffset.UtcNow, IsActive = true,
+            CitizenCardNumber = "khong-giai-ma-duoc", CitizenCardSubmittedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            CitizenCardNumberHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(card))),
+            CitizenCardReviewStatus = KycReviewStatus.Approved
+        };
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        return (user.Id, card);
+    }
+
+    [Fact]
+    public async Task AnUnreadableCitizenCard_IsStillComparedByItsHash()
+    {
+        var (userId, card) = await OwnerWithUnreadableCitizenCardAsync();
+        var other = card[..11] + (card[11] == '9' ? '0' : (char)(card[11] + 1));
+
+        var refused = await DeclareHouseholdAsync(userId, other);
+        ((int)refused.StatusCode).Should().Be(422, "an unreadable card must not turn the check off");
+
+        var accepted = await DeclareHouseholdAsync(userId, card);
+        accepted.StatusCode.Should().Be(HttpStatusCode.NoContent, await accepted.Content.ReadAsStringAsync());
+    }
+
     private Task<HttpResponseMessage> DeclareHouseholdAsync(Guid userId, string taxCode)
         => _factory.CreateAuthenticatedClient(userId, "Owner").PutAsJsonAsync("/api/v1/me/tax-profile",
             new { BusinessType = "HouseholdOrIndividual", TaxCode = taxCode });
