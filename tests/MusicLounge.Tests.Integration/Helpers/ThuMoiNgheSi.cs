@@ -24,6 +24,9 @@ public static class ThuMoiNgheSi
     }
 
     /// <summary>Gửi mọi thư mời đang xếp hàng (theo thứ tự xếp).</summary>
+    /// <summary>MLACP-673: các job thư mời đang chờ, để bài test kiểm phương thức + tham số đã xếp.</summary>
+    public static IReadOnlyList<Job> DangCho() { lock (Loc.Jobs) return [.. Loc.Jobs]; }
+
     public static void GuiHet(IServiceProvider services)
     {
         List<Job> ds;
@@ -32,9 +35,8 @@ public static class ThuMoiNgheSi
         {
             using var scope = services.CreateScope();
             var job = scope.ServiceProvider.GetRequiredService<SendPerformerConfirmationEmailJob>();
-            var a = j.Args;
-            job.ExecuteAsync((string)a[0]!, (string)a[1]!, (string)a[2]!, (string)a[3]!, (string)a[4]!, (string)a[5]!,
-                (string)a[6]!, (DateTimeOffset)a[7]!, CancellationToken.None).GetAwaiter().GetResult();
+            // MLACP-673: gọi ĐÚNG phương thức đã xếp (thư thường hay thư kèm chứng từ) với đúng tham số — như Hangfire.
+            ((Task)j.Method.Invoke(job, [.. j.Args])!).GetAwaiter().GetResult();
         }
     }
 

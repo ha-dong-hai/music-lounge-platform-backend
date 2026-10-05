@@ -82,6 +82,44 @@ public sealed class EmailHtmlTests
     }
 
     [Fact]
+    public void ThuNgheSi_KemChungTu_CoTepDinhKem_VaCauChiToiTep_ChiKhiCoTep()
+    {
+        var thu = new ThuEmail
+        {
+            NgonNgu = NgonNgu.Viet, TieuDe = "t", XemTruoc = "x", TenNguoiNhan = "Thiên Di", LyDoNhan = "l",
+        };
+        var anh = new EmailAttachment("chung-tu-chuyen-khoan.png", "image/png", [0x89, 0x50, 0x4E, 0x47]);
+        var caiDat = new EmailSettings { FromAddress = "gui@example.com" };
+
+        using (var co = SmtpEmailService.TaoThu(caiDat, "b@example.com", "Thiên Di", "s", thu, anh))
+        {
+            var tep = co.Attachments.Should().ContainSingle().Subject;
+            tep.Name.Should().Be("chung-tu-chuyen-khoan.png");
+            tep.ContentType.MediaType.Should().Be("image/png");
+            co.AlternateViews.Should().HaveCount(2, "vẫn đủ hai phần chữ trơn + HTML");
+        }
+        using (var khong = SmtpEmailService.TaoThu(caiDat, "b@example.com", "Thiên Di", "s", thu))
+            khong.Attachments.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ThuNgheSi_CauChungTu_ChiInKhiThuThatSuCoTep()
+    {
+        var (dv, hop) = DichVu();
+        var anh = new EmailAttachment("chung-tu-chuyen-khoan.jpeg", "image/jpeg", [0xFF, 0xD8, 0xFF]);
+        await dv.SendPerformerConfirmationAsync("b@example.com", "Thiên Di", new SongNgu("Đã nhận?", "Received?"),
+            new SongNgu("Phòng trà báo đã chuyển.", "The venue reports a transfer."), "https://web.example/x?token=1",
+            DateTimeOffset.UtcNow.AddDays(3), anh);
+        await dv.SendPerformerConfirmationAsync("b@example.com", "Thiên Di", new SongNgu("Đã nhận?", "Received?"),
+            new SongNgu("Phòng trà báo đã chuyển.", "The venue reports a transfer."), "https://web.example/x?token=2",
+            DateTimeOffset.UtcNow.AddDays(3));
+
+        hop[0].ChuTron.Should().Contain("Ảnh chứng từ chuyển khoản phòng trà đã nộp được đính kèm thư này")
+            .And.Contain("The proof of transfer the venue submitted is attached");
+        hop[1].ChuTron.Should().NotContain("đính kèm", "không có tệp thì không được hứa có tệp");
+    }
+
+    [Fact]
     public async Task NguoiNhanTiengAnh_NhanThuTiengAnh()
     {
         var (dv, hop) = DichVu();
@@ -188,7 +226,7 @@ public sealed class EmailHtmlTests
         public Task SendTicketConfirmationAsync(TicketConfirmationEmail email, CancellationToken ct = default) { Thu.Add(email); return Task.CompletedTask; }
         public Task SendPasswordResetEmailAsync(string toEmail, string toName, string resetLink, string language, CancellationToken ct = default) => Task.CompletedTask;
         public Task SendEmailVerificationCodeAsync(string toEmail, string toName, string code, string language, CancellationToken ct = default) => Task.CompletedTask;
-        public Task SendPerformerConfirmationAsync(string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SendPerformerConfirmationAsync(string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt, EmailAttachment? attachment = null, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private async Task ChayJobAsync(Guid paymentId, IEmailService email)

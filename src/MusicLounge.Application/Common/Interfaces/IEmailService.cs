@@ -13,9 +13,10 @@ public interface IEmailService
 
     // MLACP-364: lien ket mot lan de nghe si tu xac nhan tai khoan nhan tien / da nhan donate.
     // MLACP-489: SongNgu vì nghệ sĩ không có tài khoản → không có ngôn ngữ ưa thích → thư gửi cả hai thứ tiếng.
+    // MLACP-673: attachment = ảnh chứng từ chuyển khoản phòng trà đã nộp (chỉ thư xác nhận đã nhận tiền ủng hộ).
     Task SendPerformerConfirmationAsync(
         string toEmail, string toName, SongNgu subject, SongNgu message, string link,
-        DateTimeOffset expiresAt, CancellationToken ct = default);
+        DateTimeOffset expiresAt, EmailAttachment? attachment = null, CancellationToken ct = default);
 
     // MLACP-635: thư xác nhận vé sau khi thanh toán online thành công. Trước đó người mua chỉ nhận thông báo trong ứng
     // dụng — mất máy hoặc chưa cài ứng dụng thì không có gì trong tay chứng minh đã mua.
@@ -39,3 +40,7 @@ public sealed record TicketConfirmationEmail(
     string? TicketUrl);
 
 public sealed record TicketConfirmationLine(string TierName, string? PriceName, int Quantity, decimal UnitPrice);
+
+/// <summary>MLACP-673. Tệp đính kèm thư. Đính kèm chứ không nhúng ảnh vào thân thư: khung thư chung cố ý không có ảnh
+/// (nhiều hộp thư chặn ảnh mặc định), còn tệp đính kèm thì hộp thư nào cũng hiện.</summary>
+public sealed record EmailAttachment(string FileName, string MimeType, byte[] Content);
