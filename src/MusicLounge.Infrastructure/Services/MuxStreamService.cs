@@ -21,13 +21,25 @@ public sealed class MuxStreamService : ILivestreamService
         _settings = settings.Value;
     }
 
-    public async Task<LivestreamProviderResult> CreateStreamAsync(string name, CancellationToken ct = default)
+    public Task<LivestreamProviderResult> CreateStreamAsync(string name, CancellationToken ct = default)
+        => CreateStreamAsync(name, paidViewing: false, ct);
+
+    /// <summary>
+    /// MLACP-647. Buổi phát CÓ PHÍ được tạo với playback policy "signed" khi đã cấu hình khoá ký (Mux:SigningKeyId +
+    /// Mux:SigningKeyPrivate). Trước đây mọi luồng đều "public": người có vé mở công cụ trình duyệt là chép được
+    /// https://stream.mux.com/{id}.m3u8, gửi cho ai cũng xem được, và giới hạn 2 thiết bị / vé chỉ chặn trên web.
+    /// <para>Chưa cấu hình khoá thì vẫn "public" như cũ — cấu hình là việc vận hành (tạo signing key trên Mux Dashboard).
+    /// Luồng "signed" được đánh dấu bằng <see cref="SignedMarker"/> ngay trên HlsUrl lưu trong DB: không cần cột mới, và
+    /// một HlsUrl bị lộ từ DB cũng không phát được vì thiếu token.</para>
+    /// </summary>
+    public async Task<LivestreamProviderResult> CreateStreamAsync(string name, bool paidViewing, CancellationToken ct = default)
     {
         var http = _httpFactory.CreateClient("mux");
+        var signed = paidViewing && SigningConfigured;
 
         var body = new
         {
-            playback_policy = new[] { "public" },
+            playback_policy = new[] { signed ? "signed" : "public" },
             // MLACP-510: KHÔNG gửi new_asset_settings — trường đó bảo Mux ghi lại cả buổi phát thành một Asset (bản ghi
             // VOD, tính phí lưu trữ). Hệ thống không có xem lại (chủ dự án chốt 16/09, "bỏ hẳn" 01/10).
             passthrough = name
@@ -66,7 +78,30 @@ public sealed class MuxStreamService : ILivestreamService
             result.Data.Id,
             RtmpIngestUrl,
             result.Data.StreamKey,
-            $"https://stream.mux.com/{playbackId}.m3u8");
+            $"https://stream.mux.com/{playbackId}.m3u8" + (signed ? SignedMarker : ""));
+    }
+
+    /// <summary>Đánh dấu luồng tạo với playback policy "signed" trên HlsUrl lưu trong DB (xem CreateStreamAsync).</summary>
+    public const string SignedMarker = "?signed=1";
+
+    private bool SigningConfigured =>
+        !string.IsNullOrWhiteSpace(_settings.SigningKeyId) && !string.IsNullOrWhiteSpace(_settings.SigningKeyPrivate);
+
+    /// <summary>
+    /// MLACP-647. Luồng có chữ ký: thay <see cref="SignedMarker"/> bằng token JWT RS256 theo tài liệu Mux "Secure video
+    /// playback" (header kid = signing key id; claims sub = playback id, aud = "v", exp). Token có hạn nên link chép đi chỉ
+    /// dùng được tới <paramref name="validUntil"/>. Luồng thường hoặc chưa cấu hình khoá: trả nguyên.
+    /// <para>Trần giới hạn: token gắn với luồng, không gắn với người xem — trong hạn token, link chép vẫn phát được. Chặn
+    /// triệt để cần DRM/watermark theo người xem — ngoài phạm vi.</para>
+    /// </summary>
+    public string ViewerPlaybackUrl(string storedHlsUrl, DateTimeOffset validUntil)
+    {
+        if (!storedHlsUrl.EndsWith(SignedMarker, StringComparison.Ordinal)) return storedHlsUrl;
+        var baseUrl = storedHlsUrl[..^SignedMarker.Length];
+        if (!SigningConfigured) return baseUrl; // khoá bị gỡ khỏi cấu hình: không có gì để ký — Mux sẽ từ chối, đúng như phải thế
+
+        var playbackId = baseUrl[(baseUrl.LastIndexOf('/') + 1)..].Replace(".m3u8", "", StringComparison.Ordinal);
+        return $"{baseUrl}?token={MuxPlaybackToken.Create(_settings.SigningKeyId, _settings.SigningKeyPrivate, playbackId, validUntil)}";
     }
 
     public async Task DeleteStreamAsync(string providerRef, CancellationToken ct = default)
