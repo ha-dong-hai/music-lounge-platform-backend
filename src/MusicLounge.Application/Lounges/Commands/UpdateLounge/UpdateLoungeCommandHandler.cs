@@ -62,6 +62,25 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         var pinMoved = oldAddress.Latitude != newAddress.Latitude
                        || oldAddress.Longitude != newAddress.Longitude;
 
+        // MLACP-636: gán MÃ hành chính lần đầu cho một địa chỉ cũ không phải là dời chỗ. Địa chỉ nhập trước MLACP-521 chỉ có
+        // tên phường/quận bằng chữ, nhiều tên đã không còn sau sáp nhập 07/2025 (vd "Phường Bến Nghé" → "Phường Sài Gòn");
+        // chủ phòng trà buộc phải chọn lại phường mới lưu được hồ sơ. Trước đây lần chọn lại đó bị coi là "đổi địa chỉ":
+        // đo 05/10 trên dữ liệu thật, một phòng trà gửi 11 thông báo "Phòng trà đã đổi địa chỉ" và mở lại quyền huỷ vé cho
+        // khán giả, trong khi số nhà, con đường và chỗ khách phải tới không đổi gì.
+        // Chỉ coi là dọn nhãn khi: cùng số nhà/đường, trước đó CHƯA có mã phường, cùng tỉnh (hoặc trước đó chưa có mã tỉnh),
+        // và ghim bản đồ không dời. Đổi giữa hai mã phường đã có vẫn là đổi địa chỉ — cùng tên đường "12 Lê Lợi" có ở nhiều
+        // phường khác nhau, không có gì chứng minh đó không phải một chỗ khác.
+        if (addressChanged && !pinMoved
+            && SameText(oldAddress.Street, newAddress.Street)
+            && oldAddress.WardCode is null && newAddress.WardCode is not null
+            && (oldAddress.ProvinceCode is null || oldAddress.ProvinceCode == newAddress.ProvinceCode))
+        {
+            _logger.LogInformation(
+                "Phong tra {LoungeId} gan ma hanh chinh lan dau ({OldWard} -> {NewWard}, ma {WardCode}) — khong coi la doi dia chi",
+                lounge.Id, oldAddress.Ward, newAddress.Ward, newAddress.WardCode);
+            addressChanged = false;
+        }
+
         var oldFullAddress = oldAddress.FullAddress;
 
         lounge.Name = request.Name;
