@@ -16,4 +16,26 @@ public interface IEmailService
     Task SendPerformerConfirmationAsync(
         string toEmail, string toName, SongNgu subject, SongNgu message, string link,
         DateTimeOffset expiresAt, CancellationToken ct = default);
+
+    // MLACP-635: thư xác nhận vé sau khi thanh toán online thành công. Trước đó người mua chỉ nhận thông báo trong ứng
+    // dụng — mất máy hoặc chưa cài ứng dụng thì không có gì trong tay chứng minh đã mua.
+    Task SendTicketConfirmationAsync(TicketConfirmationEmail email, CancellationToken ct = default);
 }
+
+/// <summary>MLACP-635. Dữ liệu thư xác nhận vé — một thư cho MỘT lần thanh toán (có thể nhiều vé, nhiều hạng).</summary>
+public sealed record TicketConfirmationEmail(
+    string ToEmail,
+    string ToName,
+    string Language,
+    string OrderCode,
+    string ShowName,
+    DateTimeOffset Start,
+    DateTimeOffset End,
+    string LoungeName,
+    string? LoungeAddress,
+    bool Online,
+    IReadOnlyList<TicketConfirmationLine> Lines,
+    decimal Total,
+    string? TicketUrl);
+
+public sealed record TicketConfirmationLine(string TierName, string? PriceName, int Quantity, decimal UnitPrice);
