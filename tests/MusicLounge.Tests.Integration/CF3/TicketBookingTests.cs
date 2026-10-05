@@ -287,7 +287,7 @@ public sealed class TicketBookingTests
     /// <summary>Creates a Confirmed ticket (with an attached Payment) for AudienceId on a fresh show.</summary>
     private async Task<Guid> CreateConfirmedTicketWithPaymentAsync(
         bool cancellationAllowed = true, decimal? refundPercentage = null,
-        LoungeShowStatus showStatus = LoungeShowStatus.Published)
+        LoungeShowStatus showStatus = LoungeShowStatus.Published, decimal giaVe = 100_000m)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -316,7 +316,7 @@ public sealed class TicketBookingTests
 
         var price = new TicketPrice
         {
-            TierId = tier.Id, Name = "Standard", Price = 100_000m,
+            TierId = tier.Id, Name = "Standard", Price = giaVe,
             PurchaseChannel = PurchaseChannel.Both,
             SaleStart = DateTimeOffset.UtcNow.AddDays(-1), SaleEnd = DateTimeOffset.UtcNow.AddDays(4)
         };
@@ -326,7 +326,7 @@ public sealed class TicketBookingTests
         var payment = new Payment
         {
             OrderId = $"T-{Guid.NewGuid():N}"[..30],
-            GrossAmount = 100_000m,
+            GrossAmount = giaVe,
             Status = PaymentStatus.Confirmed,
             ReferenceType = "TicketHold",
             ReferenceId = "0",
@@ -364,6 +364,27 @@ public sealed class TicketBookingTests
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await res.Content.ReadAsStringAsync();
         body.Should().Contain("\"success\":true");
+    }
+
+    /// <summary>
+    /// MLACP-615: so tien yeu cau hoan = gia ve x ti le hoan. Gia 100.001d hoan 50% ra 50.000,5d — so do di thang sang
+    /// VNPay khi Admin duyet ma khong sua so. VND khong co don vi le, nen phai lam tron ve dong nguyen ngay tai day.
+    /// Ly do hien cho Admin va nguoi mua phai la tieng Viet (truoc day lot chu "Audience").
+    /// </summary>
+    [Fact]
+    public async Task CancelTicket_TiLeHoanRaSoLe_YeuCauHoanLaDongNguyen_LyDoTiengViet()
+    {
+        var ticketId = await CreateConfirmedTicketWithPaymentAsync(refundPercentage: 50m, giaVe: 100_001m);
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
+
+        (await client.PostAsync($"/api/v1/tickets/{ticketId}/cancel", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var paymentId = (await db.Tickets.AsNoTracking().SingleAsync(t => t.Id == ticketId)).PaymentId;
+        var refund = await db.RefundRequests.AsNoTracking().SingleAsync(r => r.PaymentId == paymentId);
+        refund.AmountRequested.Should().Be(50_001m, "50.000,5đ làm tròn về đồng nguyên");
+        refund.Reason.Should().NotContain("Audience");
     }
 
     /// <summary>MLACP-261: RefundRequest was BaseEntity-only (no CreatedBy/UpdatedAt/UpdatedBy) —

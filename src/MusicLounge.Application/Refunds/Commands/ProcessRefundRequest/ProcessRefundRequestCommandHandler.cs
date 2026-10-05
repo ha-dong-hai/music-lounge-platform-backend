@@ -292,9 +292,21 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
             && (isGatewayPayment
                 || await _uow.Repository<LedgerEntry, Guid>().AnyAsync(e => e.PaymentId == payment.Id, ct));
 
-        // Ti le nay dung cho ca hai viec: dao but toan (chi khi co but toan de dao) va co gian cac
+        // Phan bo nay dung cho ca hai viec: dao but toan (chi khi co but toan de dao) va co gian cac
         // tranche quyet toan chua giai ngan (luon chay). Nen no nam ngoai khoi duoi.
-        var ratio = amountApproved / payment.GrossAmount;
+        // MLACP-615: mot thanh toan co the bi hoan nhieu lan (mua nhieu ve, huy tung ve). Moi khoan dao duoi day tinh
+        // theo LUY KE — "tong phai dao sau lan nay" tru "tong da dao truoc lan nay" — chu khong lay ti le lan nay nhan
+        // thang. Hai ly do ke toan:
+        //   - lam tron ve dong nguyen o tung lan thi sai so cong don qua nhieu lan; tinh luy ke thi sai so khong bao
+        //     gio vuot 1 dong va tu bu o lan sau;
+        //   - lan hoan cuoi (luy ke = 100%) nhan dung PHAN CON LAI, nen moi tai khoan dong ve dung so da ghi luc mua,
+        //     ke ca khi so luc mua co le (xem PaymentFeeCalculator, van lam tron 2 chu so).
+        // Dong nguyen vi VND khong co don vi le (Luat Ke toan 2015 Dieu 11: don vi tinh la Dong Viet Nam).
+        var previouslyApproved = totalApproved - amountApproved;
+        decimal LuyKe(decimal goc, decimal daHoan) => daHoan >= payment.GrossAmount
+            ? goc
+            : Math.Round(goc * daHoan / payment.GrossAmount, 0, MidpointRounding.AwayFromZero);
+        decimal PhanLanNay(decimal goc) => LuyKe(goc, totalApproved) - LuyKe(goc, previouslyApproved);
 
         if (shouldReverseJournal && isPlatformRevenue)
         {
@@ -317,17 +329,18 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         else if (shouldReverseJournal)
         {
         // Proportional reversal of the original purchase journal (D8 — reverse via offsetting
-        // lines, never mutate the original). Owner's share is the remainder rather than its own
-        // rounded ratio so debit/credit balance exactly regardless of rounding.
-        var refundPlatformFee = Math.Round(payment.PlatformFee * ratio, 2);
-        var refundTax = Math.Round(payment.TaxWithheld * ratio, 2);
+        // lines, never mutate the original), allocated cumulatively (MLACP-615, see PhanLanNay above).
+        // Owner's share is the remainder rather than its own allocation so debit/credit balance
+        // exactly regardless of rounding.
+        var refundPlatformFee = PhanLanNay(payment.PlatformFee);
+        var refundTax = PhanLanNay(payment.TaxWithheld);
         // Withheld personal income tax is given back on the same proportional basis as VAT. Both
         // are reversed from the amounts SNAPSHOTTED ON THE PAYMENT, never recomputed from today's
         // rates or today's classification of the seller — the money to give back is the money that
         // was actually taken. NĐ 117/2025 provides for offsetting withheld tax against cancelled
         // and returned transactions, so a refund that kept the tax would be wrong twice over: the
         // buyer is short, and the platform holds a withholding for revenue that no longer exists.
-        var refundPersonalIncomeTax = Math.Round(payment.PersonalIncomeTaxWithheld * ratio, 2);
+        var refundPersonalIncomeTax = PhanLanNay(payment.PersonalIncomeTaxWithheld);
         var refundOwnerNet = amountApproved - refundPlatformFee - refundTax - refundPersonalIncomeTax;
 
         // The owner's share was credited to Platform (held in trust) at purchase, then moved to the
@@ -420,9 +433,22 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         var pendingSettlements = await settlementRepo.FindAsync(
             s => s.PaymentId == payment.Id
                  && (s.Status == SettlementStatus.Scheduled || s.Status == SettlementStatus.PendingReview), ct);
+        //
+        // MLACP-615: ti le phai tinh tren phan tien CHUA hoan (gross tru cac lan hoan truoc), vi NetAmount cua dot luc
+        // nay da bi cac lan truoc giam roi. Truoc day lay (lan nay / gross goc) nhan vao so da giam: mua 2 ve 200.000d,
+        // hoan lan luot ca 2 thi phong tra van con 45.000d cho nhan cho hai ve da tra lai tien cho khach — tien do lay
+        // tu tai khoan nen tang, noi khong con giu dong nao cua don nay.
+        // Dot ve 0d thi HUY (SettlementStatus.Cancelled ghi ro "refunded"): de Scheduled thi SettlementReleaseJob se
+        // ghi mot but toan 0d, danh Released va bao chu phong tra "khoan 0d da duoc giai ngan".
+        var grossChuaHoanTruocLanNay = payment.GrossAmount - previouslyApproved;
         foreach (var settlement in pendingSettlements)
         {
-            settlement.NetAmount -= Math.Round(settlement.NetAmount * ratio, 2);
+            var giam = totalApproved >= payment.GrossAmount || grossChuaHoanTruocLanNay <= 0m
+                ? settlement.NetAmount
+                : Math.Round(settlement.NetAmount * amountApproved / grossChuaHoanTruocLanNay, 0, MidpointRounding.AwayFromZero);
+            settlement.NetAmount = Math.Max(0m, settlement.NetAmount - giam);
+            if (settlement.NetAmount == 0m)
+                settlement.Status = SettlementStatus.Cancelled;
             settlementRepo.Update(settlement);
         }
 
