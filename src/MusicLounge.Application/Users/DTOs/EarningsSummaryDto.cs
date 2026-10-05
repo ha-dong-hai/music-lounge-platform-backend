@@ -5,7 +5,15 @@ public sealed record EarningsSummaryDto(
     decimal PendingSettlement,
     decimal CompletedSettlement,
     int PendingSettlementCount,
-    IReadOnlyList<RecentSettlementDto> RecentSettlements);
+    IReadOnlyList<RecentSettlementDto> RecentSettlements)
+{
+    /// <summary>MLACP-671: hạng uy tín của từng phòng trà mà người này sở hữu — quyết định phần tiền vé chuyển trước ở đợt 1.
+    /// Rỗng với người không sở hữu phòng trà nào.</summary>
+    public IReadOnlyList<MusicLounge.Application.Settlements.VenueStanding> Standings { get; init; } = [];
+
+    /// <summary>Tên phòng trà theo mã — Standings chỉ mang mã.</summary>
+    public IReadOnlyDictionary<Guid, string> LoungeNames { get; init; } = new Dictionary<Guid, string>();
+}
 
 public sealed record RecentSettlementDto(
     Guid Id,

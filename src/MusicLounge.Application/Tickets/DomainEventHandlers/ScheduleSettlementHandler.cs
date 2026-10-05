@@ -1,7 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Settlements;
 using MusicLounge.Application.Tickets.Events;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -160,30 +161,17 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
 
     private async Task<decimal> ResolveTierPreRateAsync(MusicLoungeEntity lounge, CancellationToken ct)
     {
-        var ratings = await _uow.Repository<LoungeShowRating, Guid>().FindAsync(
-            r => !r.IsRemoved && r.LoungeShow.LoungeId == lounge.Id, ct);
-        var score = ratings.Count > 0 ? (decimal)ratings.Average(r => r.Score) : 0m;
+        // MLACP-671: cách tính điểm/hạng nằm ở VenueReputation — cùng một chỗ với màn "Tiền và quyết toán" của chủ phòng
+        // trà và bảng xếp hạng của Admin, để con số chủ phòng trà đọc đúng là con số quyết định tiền của họ.
+        var standing = (await VenueReputation.ComputeAsync(_uow, _config, [lounge.Id], ct))[lounge.Id];
 
-        var completedShows = await _uow.Repository<LoungeShow, Guid>().CountAsync(
-            s => s.LoungeId == lounge.Id && s.Status == LoungeShowStatus.Ended, ct);
-
-        var standardMinScore = await _config.GetDecimalAsync(ConfigKeys.SettlementTierStandardMinScore, 3.5m, ct);
-        var premiumMinScore = await _config.GetDecimalAsync(ConfigKeys.SettlementTierPremiumMinScore, 4.2m, ct);
-        var premiumMinShows = await _config.GetIntAsync(ConfigKeys.SettlementTierPremiumMinShows, 10, ct);
-
-        // Keep the display-facing cached score in sync now that it's actually being computed —
-        // it was never written anywhere before this handler, so it always read 0 regardless of a
-        // venue's real standing.
-        if (lounge.ReputationScore != score)
+        // Giữ cột đệm MusicLounge.ReputationScore khớp lần tính gần nhất (D3 cũ). Nơi hiển thị nay tính trực tiếp, nên cột
+        // này chỉ còn là bản ghi lịch sử — không ai đọc nó để quyết định gì.
+        if (lounge.ReputationScore != standing.Score)
         {
-            lounge.ReputationScore = score;
+            lounge.ReputationScore = standing.Score;
             _uow.Repository<MusicLoungeEntity, Guid>().Update(lounge);
         }
-
-        if (score >= premiumMinScore && completedShows >= premiumMinShows)
-            return await _config.GetDecimalAsync(ConfigKeys.SettlementTierPremiumPreRate, 0.80m, ct);
-        if (score >= standardMinScore)
-            return await _config.GetDecimalAsync(ConfigKeys.SettlementTierStandardPreRate, 0.70m, ct);
-        return await _config.GetDecimalAsync(ConfigKeys.SettlementTierNewPreRate, 0.50m, ct);
+        return standing.PreRate;
     }
 }
