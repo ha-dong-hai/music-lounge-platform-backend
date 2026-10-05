@@ -16,4 +16,7 @@ public sealed record MySubscriptionDto(
     int AiPostersUsedThisMonth,
     int AiPostersRemainingThisMonth,
     int MaxTourScenesSnapshot,
-    DateTimeOffset? CancelledAt); // MLACP-371: đã huỷ — gói vẫn dùng tới ExpiresAt, không gia hạn nữa
+    DateTimeOffset? CancelledAt, // MLACP-371: đã huỷ — gói vẫn dùng tới ExpiresAt, không gia hạn nữa
+    // MLACP-677: false = Admin đã ngừng mở bán gói này. Quyền lợi vẫn đủ tới ExpiresAt (đã trả tiền cho kỳ đó), nhưng
+    // không gia hạn được gói này nữa — màn hình phải nói trước, thay cho nút "Gia hạn" bấm vào mới báo lỗi.
+    bool PackageOnSale = true);

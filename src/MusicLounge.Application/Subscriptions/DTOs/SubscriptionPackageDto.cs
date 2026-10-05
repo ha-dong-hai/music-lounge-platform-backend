@@ -10,4 +10,7 @@ public sealed record SubscriptionPackageDto(
     bool HasAiPoster,
     int MaxAiPostersPerMonth,
     int MaxTourScenes,
-    bool IsActive);
+    bool IsActive,
+    // MLACP-677: số chủ phòng trà đang dùng gói (còn hạn) — chỉ trả cho Admin (null với người khác), để Admin thấy trước
+    // ẩn gói thì ảnh hưởng ai.
+    int? ActiveSubscriberCount = null);
