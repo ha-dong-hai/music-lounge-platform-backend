@@ -1,9 +1,6 @@
-﻿using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
-using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Domain.Exceptions;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
@@ -31,95 +28,23 @@ internal sealed class IssuePenaltyCommandHandler : IRequestHandler<IssuePenaltyC
 
     public async Task<Guid> Handle(IssuePenaltyCommand request, CancellationToken ct)
     {
-        var loungeRepo = _uow.Repository<MusicLoungeEntity, Guid>();
-        var lounge = await loungeRepo.GetByIdAsync(request.LoungeId, ct)
+        var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(request.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), request.LoungeId);
 
         var penaltyType = Enum.Parse<PenaltyType>(request.PenaltyType, ignoreCase: true);
-        var now = DateTimeOffset.UtcNow;
 
-        // §6.8 — each severity takes effect on its own delay, giving the Owner notice before it
-        // bites: warning is immediate, suspension +notice hours, ban +notice days.
-        // ApplyDuePenaltiesJob applies the venue-status change and subscription compensation once
-        // EffectiveAt arrives.
-        var suspensionNoticeHours = await _config.GetIntAsync(ConfigKeys.PenaltySuspensionNoticeHours, 24, ct);
-        var banNoticeDays = await _config.GetIntAsync(ConfigKeys.PenaltyBanNoticeDays, 7, ct);
-        var effectiveAt = penaltyType switch
-        {
-            PenaltyType.Warning => now,
-            PenaltyType.Suspension => now.AddHours(suspensionNoticeHours),
-            PenaltyType.Ban => now.AddDays(banNoticeDays),
-            _ => now
-        };
-
-        var penalty = new VenuePenalty
-        {
-            LoungeId = request.LoungeId,
-            PenaltyType = penaltyType,
-            Reason = request.Reason,
-            EvidenceRef = request.EvidenceRef,
-            IssuedBy = _currentUser.UserId,
-            IssuedAt = now,
-            EffectiveAt = effectiveAt,
-            SuspensionDays = penaltyType == PenaltyType.Suspension ? request.SuspensionDays : null,
-            Status = PenaltyStatus.Active
-        };
-        _uow.Repository<VenuePenalty, Guid>().Add(penalty);
-
-        // Warning has no delay and no venue-status/subscription effect (§6.8: "venue vẫn hoạt
-        // động, subscription không đổi") — apply it here rather than waiting for the job.
-        //
-        // MLACP-367: truoc day dat thang Warned — ke ca khi phong tra dang bi tam khoa/khoa vinh vien (Warned
-        // van duoc hoat dong, nen canh cao vo tinh mo khoa) hoac chua duoc duyet ho so.
-        if (penaltyType == PenaltyType.Warning
-            && PenaltyLifecycle.StatusAfterImposing(lounge.Status, penaltyType) is { } warnedStatus)
-        {
-            lounge.Status = warnedStatus;
-            loungeRepo.Update(lounge);
-        }
-
-        await _uow.SaveChangesAsync(ct);
-
-        await _notifications.NotifyAsync(
-            lounge.OwnerId,
-            NotificationType.PenaltyIssued,
-            new SongNgu(
-                penaltyType == PenaltyType.Warning ? "Phòng trà bị cảnh cáo" : "Phòng trà bị xử phạt",
-                penaltyType == PenaltyType.Warning
-                    ? "Your music lounge has received a warning"
-                    : "Your music lounge has been penalised"),
-            new SongNgu(
-                penaltyType switch
-                {
-                    PenaltyType.Warning => $"\"{lounge.Name}\" nhận cảnh cáo: {request.Reason}",
-                    PenaltyType.Suspension => $"\"{lounge.Name}\" sẽ bị tạm khoá {request.SuspensionDays} ngày " +
-                        $"kể từ {VietnamTime.Format(effectiveAt)}. Lý do: {request.Reason}. Bạn có thể kháng cáo.",
-                    PenaltyType.Ban => $"\"{lounge.Name}\" sẽ bị khoá vĩnh viễn kể từ {VietnamTime.Format(effectiveAt)}. " +
-                        $"Lý do: {request.Reason}. Bạn có thể kháng cáo.",
-                    _ => request.Reason
-                },
-                penaltyType switch
-                {
-                    PenaltyType.Warning => $"\"{lounge.Name}\" has received a warning: {request.Reason}",
-                    PenaltyType.Suspension => $"\"{lounge.Name}\" will be suspended for {request.SuspensionDays} days " +
-                        $"from {VietnamTime.Format(effectiveAt)}. Reason: {request.Reason}. You can appeal.",
-                    PenaltyType.Ban => $"\"{lounge.Name}\" will be permanently banned from {VietnamTime.Format(effectiveAt)}. " +
-                        $"Reason: {request.Reason}. You can appeal.",
-                    _ => request.Reason
-                }),
-            referenceType: "venue_penalty",
-            referenceId: penalty.Id.ToString(),
-            ct: ct);
+        // MLACP-676: luật ra án (độ trễ hiệu lực, trạng thái phòng trà, thông báo cho chủ) nằm ở VenuePenaltyIssuer — dùng
+        // chung với lệnh Admin xét lý do huỷ buổi.
+        var penalty = await VenuePenaltyIssuer.IssueAsync(_uow, _notifications, _config, lounge, penaltyType,
+            request.Reason, request.EvidenceRef, request.SuspensionDays, _currentUser.UserId, ct);
 
         _logger.LogWarning(
             "Venue penalty issued: PenaltyId={PenaltyId} LoungeId={LoungeId} Type={PenaltyType} EffectiveAt={EffectiveAt} by AdminUserId={AdminUserId} at {At}",
-            penalty.Id, penalty.LoungeId, penaltyType, effectiveAt, _currentUser.UserId, now);
+            penalty.Id, penalty.LoungeId, penaltyType, penalty.EffectiveAt, _currentUser.UserId, penalty.IssuedAt);
 
-
-        // Luu SAU khi gui thong bao. NotificationService chi Add() dong thong bao vao change
-        // tracker — hop dong ghi ro nguoi goi phai luu — va TransactionBehavior chi Begin/Commit,
-        // CommitTransactionAsync cung khong goi SaveChanges. Luu truoc roi moi Notify nghia la
-        // dong thong bao duoc them vao bo nho roi bien mat, khong bao loi gi ca.
+        // NotificationService chi Add() dong thong bao vao change tracker — hop dong ghi ro nguoi goi phai luu — va
+        // TransactionBehavior chi Begin/Commit, CommitTransactionAsync cung khong goi SaveChanges. Mot lan luu sau cung ghi ca
+        // an phat lan thong bao.
         await _uow.SaveChangesAsync(ct);
 
         return penalty.Id;

@@ -121,7 +121,7 @@ public sealed class LocksHeldUntilCommitTests
 
         var seen = await HeldAtEachCommitAsync(
             () => KeyedLockIsHeldAsync($"show-status-change:{venue.ShowId}"),
-            async () => (await Owner(venue).PostAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", null))
+            async () => (await Owner(venue).PostAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", HuyBuoi.LyDo))
                 .StatusCode.Should().Be(HttpStatusCode.NoContent));
 
         seen.Should().NotBeEmpty();
@@ -148,7 +148,7 @@ public sealed class LocksHeldUntilCommitTests
     {
         var venue = await PublishedShowAsync();
 
-        (await Owner(venue).PostAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", null))
+        (await Owner(venue).PostAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", HuyBuoi.LyDo))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await KeyedLockIsHeldAsync($"show-status-change:{venue.ShowId}"))
@@ -159,10 +159,10 @@ public sealed class LocksHeldUntilCommitTests
     public async Task TheLock_IsReleasedWhenTheCommandFails()
     {
         var venue = await PublishedShowAsync();
-        (await Owner(venue).PostAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", null))
+        (await Owner(venue).PostAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", HuyBuoi.LyDo))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await Owner(venue).PostAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", null))
+        (await Owner(venue).PostAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", HuyBuoi.LyDo))
             .IsSuccessStatusCode.Should().BeFalse("a cancelled show cannot be cancelled again");
 
         (await KeyedLockIsHeldAsync($"show-status-change:{venue.ShowId}"))
