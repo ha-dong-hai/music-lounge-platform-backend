@@ -249,7 +249,7 @@ public sealed class PerformerSelfConfirmationTests
             var show = new LoungeShow
             {
                 LoungeId = lounge.Id, Name = $"ReceiptShow-{Guid.NewGuid():N}", Description = "test",
-                Format = LoungeShowFormat.Offline, Status = LoungeShowStatus.Ongoing,
+                Format = LoungeShowFormat.Online, Status = LoungeShowStatus.Ongoing,
                 ScheduledStart = start, ScheduledEnd = start.AddHours(3), VcpmcRoyaltyReference = "VCPMC-TEST"
             };
             var performer = new Performer
@@ -271,6 +271,8 @@ public sealed class PerformerSelfConfirmationTests
                 AccountNumber = pii.Encrypt("0000000365"), AccountHolder = "Receipt Artist", IsDefault = true
             });
             var performance = new Performance { LoungeShowId = show.Id, PerformerId = performer.Id };
+            // MLACP-641: ủng hộ chỉ dành cho người xem buổi phát — buổi có một phiên phát miễn phí đang Live.
+            db.Add(new Livestream { LoungeShowId = show.Id, Status = LivestreamStatus.Live, StartedAt = start, IsFree = true });
             db.Add(performance);
             await db.SaveChangesAsync();
             (ownerId, loungeId, performanceId) = (owner.Id, lounge.Id, performance.Id);

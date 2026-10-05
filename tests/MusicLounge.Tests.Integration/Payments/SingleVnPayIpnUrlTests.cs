@@ -202,7 +202,7 @@ public sealed class SingleVnPayIpnUrlTests
             var show = new LoungeShow
             {
                 LoungeId = loungeId, Name = $"Donate394-{Guid.NewGuid():N}"[..20], Description = "MLACP-394",
-                Format = LoungeShowFormat.Offline, Status = LoungeShowStatus.Ongoing,
+                Format = LoungeShowFormat.Online, Status = LoungeShowStatus.Ongoing,
                 ScheduledStart = start, ScheduledEnd = start.AddHours(3), VcpmcRoyaltyReference = "VCPMC-TEST"
             };
             var performer = new Performer { Name = $"Artist394-{Guid.NewGuid():N}"[..20], CreatedByUserId = ownerId };
@@ -210,6 +210,8 @@ public sealed class SingleVnPayIpnUrlTests
             db.Add(performer);
             await db.SaveChangesAsync();
             var performance = new Performance { LoungeShowId = show.Id, PerformerId = performer.Id };
+            // MLACP-641: ủng hộ chỉ dành cho người xem buổi phát — buổi có một phiên phát miễn phí đang Live.
+            db.Add(new Livestream { LoungeShowId = show.Id, Status = LivestreamStatus.Live, StartedAt = start, IsFree = true });
             db.Add(performance);
             await db.SaveChangesAsync();
             performanceId = performance.Id;

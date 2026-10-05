@@ -277,7 +277,12 @@ internal sealed class ProcessDonationPaymentCommandHandler
             if (livestream?.Status != LivestreamStatus.Live) return;
 
             var donorName = donation.IsAnonymous ? "Ẩn danh" : (donation.DisplayName ?? "Khán giả");
-            var message = await DonationMessageFilter.MessageForBroadcastAsync(donation, _config, ct);
+            // MLACP-641: lời nhắn ủng hộ hiện trong khung chat, nên tuân theo nút "Tắt khung chat" của chủ phòng trà — trước
+            // đây lời nhắn vẫn lên sóng khi chat đã tắt (đường vòng qua lệnh tắt chat). Tên và số tiền vẫn được xướng: tiền
+            // là thật, chỉ phần chữ là thứ chủ phòng trà muốn tạm ngưng.
+            var message = livestream.ChatEnabled
+                ? await DonationMessageFilter.MessageForBroadcastAsync(donation, _config, ct)
+                : null;
             var performerName = await PerformerNameAsync(donation.PerformanceId, ct);
             await _hub.BroadcastDonationAlertAsync(
                 livestream.Id,
