@@ -43,8 +43,14 @@ internal sealed class GetOwnerArtistDonationStatsQueryHandler
         // chuyển cho nghệ sĩ (chặng 2) hay chưa — cùng định nghĩa "donate nhận" đã dùng ở
         // GetOwnerRevenueReportQueryHandler (MLACP-162), tránh 2 báo cáo cho ra 2 con số khác nhau
         // cho cùng 1 khái niệm.
-        var donations = await _uow.Repository<Donation, Guid>().FindAsync(
-            d => performanceIds.Contains(d.PerformanceId) && d.PaymentConfirmedAt != null, ct);
+        // MLACP-659: lọc theo kỳ bằng lúc VNPay xác nhận — cùng mốc OwnerRevenueReportBuilder dùng cho tiền ủng hộ, nên ô
+        // "Thu hộ nghệ sĩ" và bảng theo nghệ sĩ ra cùng một số cho cùng một kỳ. Lọc sau khi nạp: so sánh khoảng
+        // DateTimeOffset không dịch ổn định trên SQLite của bộ test (cùng giới hạn ghi ở các repository khác).
+        var donations = (await _uow.Repository<Donation, Guid>().FindAsync(
+                d => performanceIds.Contains(d.PerformanceId) && d.PaymentConfirmedAt != null, ct))
+            .Where(d => (!request.From.HasValue || d.PaymentConfirmedAt >= request.From.Value)
+                        && (!request.To.HasValue || d.PaymentConfirmedAt <= request.To.Value))
+            .ToList();
 
         var performerIds = performances.Select(p => p.PerformerId).Distinct().ToList();
         var performers = await _uow.Repository<Performer, Guid>()
