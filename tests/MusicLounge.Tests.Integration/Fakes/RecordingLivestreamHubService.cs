@@ -55,4 +55,7 @@ public sealed class RecordingLivestreamHubService : ILivestreamHubService
 
     public Task BroadcastLivestreamEndedAsync(Guid livestreamId, CancellationToken ct = default)
         => Record(livestreamId, "LivestreamEnded", null);
+
+    public Task BroadcastChatEnabledChangedAsync(Guid livestreamId, bool enabled, CancellationToken ct = default)
+        => Record(livestreamId, "ChatEnabledChanged", enabled);
 }

@@ -97,15 +97,21 @@ public static class PerformerConfirmations
     }
 
     /// <summary>
-    /// Ghi một liên kết mới vào unit of work của người gọi và gửi nó tới email của nghệ sĩ. Nghệ sĩ chưa
-    /// có email thì không làm gì (false). Gửi thư thất bại chỉ được ghi log: đây là việc phụ của một thao
-    /// tác tiền (vd phòng trà báo đã chuyển) — để nó huỷ thao tác chính thì bản ghi tiền cũng mất theo.
+    /// Ghi một liên kết mới vào unit of work của người gọi và XẾP HÀNG thư gửi nó tới email của nghệ sĩ. Nghệ sĩ chưa
+    /// có email thì không làm gì (false). Gửi thư là việc phụ của một thao tác tiền (vd phòng trà báo đã chuyển) — để nó
+    /// huỷ thao tác chính thì bản ghi tiền cũng mất theo.
+    /// <para>MLACP-642: trước đây thư được gửi NGAY ở đây, bên trong giao dịch của lệnh gọi và với token huỷ của request —
+    /// gửi qua Gmail mất 4–5 giây, người dùng đóng tab là cả lời báo đã trả nghệ sĩ quay lui (đo 05/10/2026). Nay chỉ xếp
+    /// hàng (<see cref="Jobs.SendPerformerConfirmationEmailJob"/>); Hangfire gửi sau, có thử lại.
+    /// Trần giới hạn: job được xếp ngay khi gọi, trước khi giao dịch của lệnh commit — lệnh quay lui vì lỗi khác thì thư vẫn
+    /// đi với một liên kết không tồn tại (trang xác nhận báo liên kết không hợp lệ, không có tiền nào bị đụng). Đường nâng
+    /// cấp: hàng đợi outbox ghi cùng giao dịch.</para>
     /// </summary>
-    public static async Task<bool> InviteAsync(
-        IUnitOfWork uow, IEmailService email, BusinessSettings settings, ILogger logger,
+    public static Task<bool> InviteAsync(
+        IUnitOfWork uow, IBackgroundJobService jobs, BusinessSettings settings, ILogger logger,
         Performer performer, Invitation invitation, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(performer.ContactEmail)) return false;
+        if (string.IsNullOrWhiteSpace(performer.ContactEmail)) return Task.FromResult(false);
 
         var now = DateTimeOffset.UtcNow;
         var token = Base64Url(RandomNumberGenerator.GetBytes(32));
@@ -128,21 +134,21 @@ public static class PerformerConfirmations
             logger.LogError(
                 "Business:PerformerConfirmationUrl chưa cấu hình — không gửi được liên kết xác nhận cho nghệ sĩ #{PerformerId}",
                 performer.Id);
-            return true;
+            return Task.FromResult(true);
         }
 
         var link = $"{settings.PerformerConfirmationUrl}?token={Uri.EscapeDataString(token)}";
         try
         {
-            await email.SendPerformerConfirmationAsync(
-                performer.ContactEmail, performer.Name, invitation.Subject, invitation.Message, link,
-                confirmation.ExpiresAt, ct);
+            jobs.EnqueuePerformerConfirmationEmail(
+                performer.ContactEmail, performer.Name, invitation.Subject, invitation.Message, link, confirmation.ExpiresAt);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
         {
-            logger.LogError(ex, "Gửi liên kết xác nhận cho nghệ sĩ #{PerformerId} thất bại", performer.Id);
+            // Hàng đợi không nhận (kho Hangfire lỗi) cũng chỉ ghi log — cùng lý do như khi gửi thư hỏng ở bản cũ.
+            logger.LogError(ex, "Không xếp hàng được thư xác nhận cho nghệ sĩ #{PerformerId}", performer.Id);
         }
-        return true;
+        return Task.FromResult(true);
     }
 
     private static string Base64Url(byte[] bytes)

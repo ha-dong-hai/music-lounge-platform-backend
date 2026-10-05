@@ -166,7 +166,7 @@ public static class PaymentIncident
                     "Thanh toán được xác nhận sau khi đơn đã đóng",
                     "Payment confirmed after the order was closed"),
                 new SongNgu(
-                    $"VNPay báo thành công {amount:N0}đ cho {what.Vi} (mã giao dịch {txnRef}), nhưng bản ghi " +
+                    $"VNPay báo thành công {VietnamMoney.Format(amount)} cho {what.Vi} (mã giao dịch {txnRef}), nhưng bản ghi " +
                     $"đã bị đóng trước đó nên hệ thống không cấp được gì. {whatToDo}",
                     $"VNPay reported a successful payment of {amount:N0} VND for {whatEn} (transaction reference {txnRef}), " +
                     $"but the record had already been closed, so nothing was issued. {whatToDoEn}"),

@@ -1,4 +1,5 @@
 ﻿using MusicLounge.Domain.Enums;
+using MusicLounge.Domain.ValueObjects;
 
 namespace MusicLounge.Application.Common.Interfaces;
 
@@ -26,6 +27,11 @@ public interface IBackgroundJobService
     // request nào để đọc Accept-Language.
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language);
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language);
+
+    /// <summary>MLACP-642. Xếp hàng thư mời nghệ sĩ tự xác nhận — gửi ngoài giao dịch của lệnh tạo ra nó
+    /// (xem <c>SendPerformerConfirmationEmailJob</c>). Liên kết được mã hoá trước khi vào kho job.</summary>
+    void EnqueuePerformerConfirmationEmail(
+        string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt);
     void EnqueuePhoneVerificationCode(string toPhone, string code, string language);
 
     // Runs AI moderation scoring for a freshly-created EventModeration row in the background, so a
@@ -35,6 +41,10 @@ public interface IBackgroundJobService
     /// <summary>MLACP-574: AI chấm lời bình của một đánh giá vừa gửi (ScoreRatingWithAiJob) — rủi ro cao thì ẩn tạm,
     /// chờ Admin quyết. Chạy nền để AI chậm/hỏng không ảnh hưởng việc gửi đánh giá.</summary>
     void EnqueueRatingAiScoring(Guid ratingId);
+
+    /// <summary>MLACP-635: thư xác nhận vé cho một lần thanh toán online (SendTicketConfirmationEmailJob). Chạy nền: gửi thư
+    /// hỏng hay chậm không được làm hỏng luồng thanh toán, và Hangfire thử lại khi SMTP lỗi tạm thời.</summary>
+    void EnqueueTicketConfirmationEmail(Guid paymentId);
 
     // Panorama stitching can take 15-30+ seconds (sometimes brushing the panorama-stitcher
     // HttpClient's 120s timeout on harder photo sets) - running it inline would block the Owner's

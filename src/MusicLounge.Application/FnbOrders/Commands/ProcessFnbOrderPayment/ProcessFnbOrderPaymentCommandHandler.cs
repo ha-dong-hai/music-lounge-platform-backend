@@ -172,8 +172,8 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                     "Food & drink payment successful"),
                 new SongNgu(
                     closesOrder
-                        ? $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ."
-                        : $"Đơn #{order.Id} của bạn đã thanh toán thành công {payment.GrossAmount:N0}đ. " +
+                        ? $"Đơn #{order.Id} của bạn đã thanh toán thành công {VietnamMoney.Format(payment.GrossAmount)}."
+                        : $"Đơn #{order.Id} của bạn đã thanh toán thành công {VietnamMoney.Format(payment.GrossAmount)}. " +
                           "Phòng trà vẫn đang chuẩn bị món — bạn sẽ được báo khi món được phục vụ.",
                     closesOrder
                         ? $"Your order #{order.Id} was paid successfully: {payment.GrossAmount:N0} VND."
@@ -251,10 +251,10 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                     "Payment not applied to your order"),
                 new SongNgu(
                     (paidElsewhere
-                        ? $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
+                        ? $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {callbackResult.TransactionId}) cho đơn " +
                           $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã được thanh toán trước đó nên đây là " +
                           "khoản trả trùng và không được ghi vào đơn. "
-                        : $"Giao dịch {payment.GrossAmount:N0}đ (mã {callbackResult.TransactionId}) cho đơn " +
+                        : $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {callbackResult.TransactionId}) cho đơn " +
                           $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã bị huỷ trước đó nên không được ghi " +
                           "nhận. ") +
                     "Chúng tôi đã tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — " +

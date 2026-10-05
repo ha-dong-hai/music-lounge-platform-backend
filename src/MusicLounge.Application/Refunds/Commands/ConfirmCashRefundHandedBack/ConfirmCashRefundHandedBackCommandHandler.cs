@@ -81,7 +81,7 @@ internal sealed class ConfirmCashRefundHandedBackCommandHandler
                     "Phòng trà xác nhận đã hoàn tiền mặt",
                     "The music lounge confirmed your cash refund"),
                 new SongNgu(
-                    $"Phòng trà xác nhận đã trả lại {refund.AmountApproved ?? refund.AmountRequested:N0}đ " +
+                    $"Phòng trà xác nhận đã trả lại {VietnamMoney.Format(refund.AmountApproved ?? refund.AmountRequested)} " +
                     "tiền mặt cho bạn. Nếu bạn chưa nhận được, hãy gửi khiếu nại để chúng tôi xử lý.",
                     $"The music lounge confirmed it has returned {refund.AmountApproved ?? refund.AmountRequested:N0} VND " +
                     "in cash to you. If you have not received it, please file a complaint so we can look into it."),

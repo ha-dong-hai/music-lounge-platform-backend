@@ -1,8 +1,10 @@
-﻿using Hangfire;
+using Hangfire;
 using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Livestreams.Jobs;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
+using MusicLounge.Application.Performers.Jobs;
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Tickets.Commands.CheckInLivestreamViewer;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Jobs;
@@ -57,6 +59,14 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
             j => j.ExecuteAsync(toEmail, toName, protectedCode, language, CancellationToken.None));
     }
 
+    public void EnqueuePerformerConfirmationEmail(
+        string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt)
+    {
+        var protectedLink = _secretProtector.Protect(link);
+        BackgroundJob.Enqueue<SendPerformerConfirmationEmailJob>(j => j.ExecuteAsync(
+            toEmail, toName, subject.Vi, subject.En, message.Vi, message.En, protectedLink, expiresAt, CancellationToken.None));
+    }
+
     public void EnqueuePhoneVerificationCode(string toPhone, string code, string language)
     {
         var protectedCode = _secretProtector.Protect(code);
@@ -72,6 +82,10 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     public void EnqueueRatingAiScoring(Guid ratingId)
         => BackgroundJob.Enqueue<ScoreRatingWithAiJob>(
             j => j.ExecuteAsync(ratingId, JobCancellationToken.Null));
+
+    public void EnqueueTicketConfirmationEmail(Guid paymentId)
+        => BackgroundJob.Enqueue<SendTicketConfirmationEmailJob>(
+            j => j.ExecuteAsync(paymentId, JobCancellationToken.Null));
 
     public void EnqueueStitchVenueTourScene(Guid attemptId, Guid loungeId, IReadOnlyList<string> sourceImageUrls, string? name)
         => BackgroundJob.Enqueue<StitchVenueTourSceneJob>(

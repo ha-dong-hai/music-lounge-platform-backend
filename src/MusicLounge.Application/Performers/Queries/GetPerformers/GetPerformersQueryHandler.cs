@@ -37,7 +37,7 @@ internal sealed class GetPerformersQueryHandler
             p => p.Id,
             page, size, ct);
 
-        var dtos = await PerformerDtoMapper.MapAsync(_uow, performers, ct);
+        var dtos = await PerformerDtoMapper.MapAsync(_uow, performers, _currentUser, ct);
         return new PaginatedResult<PerformerDto>(dtos, page, size, total);
     }
 }

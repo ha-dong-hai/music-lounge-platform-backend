@@ -8,6 +8,11 @@ public interface ILivestreamRepository : IRepository<Livestream, Guid>
     Task<Livestream?> GetByShowIdAsync(Guid showId, CancellationToken ct = default);
     Task<bool> HasViewerAccessAsync(Guid livestreamId, Guid userId, CancellationToken ct = default);
 
+    /// <summary>MLACP-641. Cùng quy tắc vé với <see cref="HasViewerAccessAsync"/> (vé hạng Livestream, Confirmed hoặc
+    /// Used, đúng người mua) nhưng xét theo BUỔI DIỄN — dùng được cả khi buổi chưa có phiên phát. Không xét phát miễn
+    /// phí (IsFree): đó là thuộc tính của phiên phát, người gọi tự xét.</summary>
+    Task<bool> HoldsLivestreamTicketAsync(Guid showId, Guid userId, CancellationToken ct = default);
+
     /// <summary>
     /// Ghi nhận một người xem vừa vào: tăng số đang xem, cộng một lượt xem, và nâng đỉnh nếu số
     /// hiện tại vượt đỉnh cũ. Trả về số người đang xem sau khi cộng.

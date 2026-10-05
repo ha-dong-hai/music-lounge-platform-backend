@@ -17,7 +17,8 @@ namespace MusicLounge.Application.Donations;
 /// donate và giữ phần của phòng trà ở Platform; một tranche <see cref="SettlementReleaseType.Full"/>
 /// được lên lịch giải ngân ở lần chạy kế tiếp của <c>SettlementReleaseJob</c> — "tức thì" theo §6.5,
 /// vì donate không phụ thuộc buổi diễn có giao đủ hay không. Phòng trà chưa có tài khoản mặc định thì
-/// khoản quyết toán vẫn được ghi, và job hoãn giải ngân cho tới khi có — không mất khoản nào.</para>
+/// khoản quyết toán vẫn được ghi, và job hoãn giải ngân cho tới khi có — không mất khoản nào. (Từ MLACP-640 job tự gán
+/// tài khoản mặc định lúc giải ngân qua <see cref="Settlements.SettlementPayoutAccount"/>; trước đó khoản như vậy kẹt mãi.)</para>
 ///
 /// <para>Donate có từ trước thay đổi này đã được ghi Có thẳng cho chủ và không có <see cref="Payment"/>
 /// nào; chúng giữ nguyên luồng cũ, vì lên lịch chi trả cho chúng bây giờ là ghi Có chủ lần thứ hai.</para>

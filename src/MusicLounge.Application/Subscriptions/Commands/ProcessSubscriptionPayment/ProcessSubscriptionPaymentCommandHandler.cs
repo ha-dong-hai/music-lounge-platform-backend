@@ -239,7 +239,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                     "Phát hiện thanh toán trùng",
                     "Duplicate payment detected"),
                 new SongNgu(
-                    $"Bạn vừa thanh toán {payment.GrossAmount:N0}đ cho gói subscription trong khi đã có gói đang hoạt động. " +
+                    $"Bạn vừa thanh toán {VietnamMoney.Format(payment.GrossAmount)} cho gói subscription trong khi đã có gói đang hoạt động. " +
                     "Khoản này sẽ được xem xét hoàn lại — yêu cầu hoàn tiền đã được tạo tự động và sẽ được xử lý theo đúng thời hạn cam kết.",
                     $"You just paid {payment.GrossAmount:N0} VND for a subscription while you already have an active one. " +
                     "This amount will be reviewed for a refund — a refund request has been created automatically and will be " +
@@ -393,7 +393,7 @@ internal sealed class ProcessSubscriptionPaymentCommandHandler
                 "Gói dịch vụ chưa được kích hoạt — bạn sẽ được hoàn tiền",
                 "Subscription not activated — you will be refunded"),
             new SongNgu(
-                $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) đã bị trừ tiền, nhưng phòng trà của bạn " +
+                $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {result.TransactionId}) đã bị trừ tiền, nhưng phòng trà của bạn " +
                 $"đang {why} nên gói không được kích hoạt, gia hạn hay đổi. Chúng tôi đã tự động tạo yêu cầu hoàn 100% " +
                 "khoản này — bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
                 $"A payment of {payment.GrossAmount:N0} VND (reference {result.TransactionId}) was charged, but your music " +

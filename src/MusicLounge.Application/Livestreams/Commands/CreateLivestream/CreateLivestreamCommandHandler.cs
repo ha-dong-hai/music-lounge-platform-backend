@@ -66,7 +66,8 @@ internal sealed class CreateLivestreamCommandHandler : IRequestHandler<CreateLiv
             throw new ConflictException($"A livestream already exists for show {request.ShowId}.");
 
         var provider = _factory.GetProvider();
-        var result = await provider.CreateStreamAsync(show.Name, ct);
+        // MLACP-647: buổi có phí → luồng chỉ phát được bằng link có chữ ký (nếu nhà cung cấp và cấu hình hỗ trợ).
+        var result = await provider.CreateStreamAsync(show.Name, paidViewing: !request.IsFree, ct);
 
         var livestream = new Livestream
         {
