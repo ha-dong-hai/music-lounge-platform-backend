@@ -18,10 +18,16 @@ namespace MusicLounge.Application.Admin.Queries.GetPayoutAccountReviewQueue;
 /// <c>false</c> (mặc định) là phần việc đang chờ. <c>true</c> để tra lại những tài khoản đã xác minh — cần khi
 /// có khiếu nại về một khoản chi trả.
 /// </param>
+/// <param name="Rejected">
+/// MLACP-668. <c>true</c> để xem lại những tài khoản đã bị từ chối mà chủ phòng trà chưa sửa (bỏ qua
+/// <paramref name="Verified"/>, vì xác minh thì xoá dấu từ chối). Mặc định <c>false</c>: tài khoản bị từ chối KHÔNG
+/// nằm trong hàng chờ — việc tiếp theo là của chủ phòng trà, không phải của Admin.
+/// </param>
 public sealed record GetPayoutAccountReviewQueueQuery(
     bool Verified = false,
     int Page = 1,
-    int PageSize = 20) : IQuery<PaginatedResult<PayoutAccountReviewItemDto>>;
+    int PageSize = 20,
+    bool Rejected = false) : IQuery<PaginatedResult<PayoutAccountReviewItemDto>>;
 
 /// <param name="AccountNumberMasked">
 /// Chỉ bốn số cuối. Quyết định xác minh dựa vào TÊN chủ tài khoản đối chiếu với hồ sơ định danh, không dựa
@@ -66,4 +72,7 @@ public sealed record PayoutAccountReviewItemDto(
     /// PHƯƠNG, nên ở Việt Nam mọi mốc hiện sớm/muộn đúng 7 tiếng. Toàn bộ 137 trường thời gian khác của
     /// hệ thống đều đã là <c>DateTimeOffset</c>; đây là một trong hai chỗ sót. (MLACP-475)
     /// </summary>
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    /// <summary>MLACP-668. Lúc Admin từ chối; null khi tài khoản chưa bị từ chối (hoặc đã được sửa lại).</summary>
+    DateTimeOffset? RejectedAt = null,
+    string? RejectionNote = null);

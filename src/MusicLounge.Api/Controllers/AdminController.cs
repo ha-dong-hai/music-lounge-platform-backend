@@ -587,6 +587,8 @@ public sealed class AdminController : ControllerBase
     /// cho tới khi có người tra tay trong cơ sở dữ liệu. Danh sách trả kèm ba điều kiện mà chính lệnh duyệt
     /// sẽ kiểm (tên chủ tài khoản có khớp hồ sơ không, CCCD của chủ phòng trà đã duyệt chưa, số tài khoản
     /// còn đọc được không), để người duyệt thấy trước thay vì bấm rồi nhận lỗi.</para>
+    /// <para>MLACP-668: tài khoản đã bị từ chối không nằm trong hàng chờ cho tới khi chủ phòng trà sửa lại;
+    /// <c>?rejected=true</c> để xem lại chúng (kèm lý do đã ghi).</para>
     /// </summary>
     [HttpGet("bank-accounts")]
     [ProducesResponseType<ApiResponse<PaginatedResult<PayoutAccountReviewItemDto>>>(StatusCodes.Status200OK)]
@@ -594,9 +596,10 @@ public sealed class AdminController : ControllerBase
         [FromQuery] bool verified = false,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] bool rejected = false,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetPayoutAccountReviewQueueQuery(verified, page, pageSize), ct);
+        var result = await _sender.Send(new GetPayoutAccountReviewQueueQuery(verified, page, pageSize, rejected), ct);
         return Ok(ApiResponse<PaginatedResult<PayoutAccountReviewItemDto>>.Ok(result));
     }
 

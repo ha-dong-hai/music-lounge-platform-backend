@@ -66,6 +66,9 @@ internal sealed class UpdateBankAccountCommandHandler : IRequestHandler<UpdateBa
         // not something this command can assert. MLACP-364: for a performer's account, the
         // performer re-confirms through a fresh one-time link below; the old link stops working.
         account.IsVerified = false;
+        // MLACP-668. Sửa sau khi bị từ chối = nộp lại: bỏ dấu từ chối để tài khoản quay về hàng chờ của Admin.
+        account.RejectedAt = null;
+        account.RejectionNote = null;
         repo.Update(account);
 
         await _uow.SaveChangesAsync(ct);

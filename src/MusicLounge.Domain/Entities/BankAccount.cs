@@ -15,4 +15,11 @@ public sealed class BankAccount : Common.AuditableEntity<Guid>
     public string AccountHolder { get; set; } = string.Empty;
     public bool IsDefault { get; set; } = true;
     public bool IsVerified { get; set; } = false;
+
+    // MLACP-668. Admin TỪ CHỐI tài khoản nhận tiền của phòng trà. Trước đây từ chối chỉ ghi IsVerified=false — giá trị
+    // tài khoản đang chờ vốn đã có — nên không gì đổi: tài khoản nằm lại hàng chờ của Admin, chủ phòng trà vẫn thấy
+    // "Chờ Admin duyệt" và lý do từ chối chỉ nằm trong một thông báo. Có giá trị = đã bị từ chối và CHƯA sửa lại;
+    // chủ phòng trà sửa tài khoản (UpdateBankAccount) hoặc Admin xác minh thì xoá về null — quay lại hàng chờ.
+    public DateTimeOffset? RejectedAt { get; set; }
+    public string? RejectionNote { get; set; }
 }
