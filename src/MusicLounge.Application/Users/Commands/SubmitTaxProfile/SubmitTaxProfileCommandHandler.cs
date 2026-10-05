@@ -50,6 +50,24 @@ internal sealed class SubmitTaxProfileCommandHandler : IRequestHandler<SubmitTax
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 
         var declared = Enum.Parse<PayeeBusinessType>(request.BusinessType, ignoreCase: true);
+
+        // MLACP-660. Với hộ/cá nhân, mã số thuế CHÍNH LÀ số định danh của chủ tài khoản (người đại diện hộ kinh doanh là
+        // chủ tài khoản — giả định đã nêu ở MLACP-398). Đã nộp CCCD 12 số thì số khai phải trùng: khác là gõ nhầm, hoặc
+        // khai số của người khác để tiền thuế khấu trừ ghi vào tên họ. CMND 9 số cũ không có số định danh nên không đối chiếu.
+        // Số CCCD không giải mã được (khoá mã hoá cũ đã mất, MLACP-401) thì so bằng MÃ BĂM SHA256 — mã băm không phụ thuộc
+        // khoá. Bản đầu bỏ qua việc đối chiếu khi không giải mã được, và đo trên DB cục bộ 05/10/2026 đã lưu một số bịa
+        // cho đúng tài khoản như vậy. Trần giới hạn: CMND 9 số mà không giải mã được thì băm cũng khác → bị từ chối; người
+        // đó vốn đã phải nộp lại CCCD (trang Định danh báo "không đọc được số").
+        if (declared == PayeeBusinessType.HouseholdOrIndividual && user.CitizenCardNumber is not null)
+        {
+            var soCccd = _piiEncryption.TryDecrypt(user.CitizenCardNumber);
+            var khacCccd = soCccd is not null
+                ? soCccd.Length == 12 && soCccd != taxCode
+                : user.CitizenCardNumberHash is not null && user.CitizenCardNumberHash != taxCodeHash;
+            if (khacCccd)
+                throw new DomainException(
+                    "Số định danh khai ở hồ sơ thuế phải trùng số CCCD bạn đã nộp ở mục Định danh. Kiểm tra lại số, hoặc nộp lại CCCD nếu số đó sai.");
+        }
         // MLACP-398. Tên doanh nghiệp chỉ có nghĩa với doanh nghiệp — khai lại là hộ/cá nhân thì không giữ tên cũ.
         var legalName = declared == PayeeBusinessType.Enterprise ? request.LegalName?.Trim() : null;
 

@@ -87,6 +87,9 @@ public sealed class KycReviewTests
     /// <summary>A random valid-format tax code, so parallel seeds cannot collide on the unique index.</summary>
     private static string NewTaxCode() => Random.Shared.NextInt64(1_000_000_000L, 9_999_999_999L).ToString();
 
+    /// <summary>MLACP-660: hộ/cá nhân khai bằng số định danh cá nhân 12 chữ số (TT 86/2024/TT-BTC), không còn mã 10 số.</summary>
+    private static string NewPersonalId() => Random.Shared.NextInt64(100_000_000_000L, 999_999_999_999L).ToString();
+
     [Fact]
     public async Task ApprovingAnEnterpriseTaxProfile_IsWhatActuallyStopsWithholding()
     {
@@ -134,7 +137,7 @@ public sealed class KycReviewTests
     public async Task RejectionWithoutAReason_IsRefused()
     {
         var userId = await SeedSellerAsync();
-        await DeclareTaxProfileAsync(userId, "HouseholdOrIndividual", NewTaxCode());
+        await DeclareTaxProfileAsync(userId, "HouseholdOrIndividual", NewPersonalId());
 
         var res = await Admin().PostAsJsonAsync($"/api/v1/admin/kyc-reviews/{userId}/TaxProfile",
             new { Approve = false, Note = "" });
@@ -191,7 +194,7 @@ public sealed class KycReviewTests
     {
         var householdId = await SeedSellerAsync();
         var enterpriseId = await SeedSellerAsync();
-        await DeclareTaxProfileAsync(householdId, "HouseholdOrIndividual", NewTaxCode());
+        await DeclareTaxProfileAsync(householdId, "HouseholdOrIndividual", NewPersonalId());
         await DeclareTaxProfileAsync(enterpriseId, "Enterprise", NewTaxCode());
 
         var res = await Admin().GetAsync("/api/v1/admin/kyc-reviews?status=Pending&pageSize=100");
@@ -266,7 +269,7 @@ public sealed class KycReviewTests
         (await ReadUserAsync(userId)).LegalName.Should().Be(EnterpriseName);
 
         var res = await _factory.CreateAuthenticatedClient(userId, "Owner").PutAsJsonAsync("/api/v1/me/tax-profile",
-            new { BusinessType = "HouseholdOrIndividual", TaxCode = taxCode, LegalName = EnterpriseName });
+            new { BusinessType = "HouseholdOrIndividual", TaxCode = NewPersonalId(), LegalName = EnterpriseName });
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await ReadUserAsync(userId)).LegalName.Should().BeNull("tên doanh nghiệp chỉ có nghĩa với doanh nghiệp");
@@ -346,7 +349,7 @@ public sealed class KycReviewTests
     public async Task ApprovingAHousehold_NeedsNeitherTheLicenceNorTheRepresentativeCheck()
     {
         var userId = await SeedSellerAsync();
-        await DeclareTaxProfileAsync(userId, "HouseholdOrIndividual", NewTaxCode());
+        await DeclareTaxProfileAsync(userId, "HouseholdOrIndividual", NewPersonalId());
 
         var res = await Admin().PostAsJsonAsync($"/api/v1/admin/kyc-reviews/{userId}/TaxProfile", new { Approve = true, Note = (string?)null });
 
