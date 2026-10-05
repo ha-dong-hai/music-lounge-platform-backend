@@ -105,19 +105,24 @@ public sealed class SettlementReleaseJob
             // so it records the debt with a null destination instead. Writing the payout journal now
             // would credit the owner's ledger account for money no bank transfer can follow, and the
             // ledger is append-only. Hold it until an account exists; the next daily run pays it.
-            if (settlement.BankAccountId is null)
+            // MLACP-640: "the next daily run pays it" was a promise with no mechanism — nothing ever filled the null in,
+            // so a tranche created before the venue had an account stayed deferred forever even after the account was
+            // added and verified. The account is now resolved HERE, at release time (SettlementPayoutAccount), and the
+            // owner is told why their money is held instead of the reason living only in a log line.
+            if (await SettlementPayoutAccount.EnsureAsync(_uow, settlement, ct) is not { } payoutAccountId)
             {
                 _logger.LogError(
                     "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} has no " +
                     "payout account. The venue must register a default BankAccount before this can be " +
                     "released at {At}",
                     settlement.Id, settlement.OwnerId, now);
+                (held ??= []).Add((settlement.OwnerId, PayoutBlocker.NoPayoutAccount, settlement.NetAmount));
                 continue;
             }
 
             // MLACP-395: chi chuyen tien cho nguoi nhan da xac minh danh tinh, vao tai khoan da xac minh — xem
             // PayeeVerification. Hoan chu khong huy: khoan nay van Scheduled, lan chay sau tu chuyen khi du dieu kien.
-            if (await PayeeVerification.BlockerAsync(_uow, _pii, settlement.OwnerId, settlement.BankAccountId.Value, ct) is { } blocker)
+            if (await PayeeVerification.BlockerAsync(_uow, _pii, settlement.OwnerId, payoutAccountId, ct) is { } blocker)
             {
                 _logger.LogWarning(
                     "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} payee not verified " +
@@ -378,6 +383,13 @@ public sealed class SettlementReleaseJob
                         $"The platform is holding {total:N0} VND of your settlements because your payout account number " +
                         "can no longer be read by the system. Please re-enter your payout account; once an Admin verifies " +
                         "it, this amount is paid out in the next payout run."),
+                    // MLACP-640: trước đây lý do này chỉ nằm trong log — chủ phòng trà không biết tiền đang chờ họ khai tài khoản.
+                    PayoutBlocker.NoPayoutAccount => new SongNgu(
+                        $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì phòng trà chưa có tài khoản nhận tiền mặc định. " +
+                        "Hãy thêm tài khoản ở mục Tài khoản nhận tiền; sau khi Admin xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
+                        $"The platform is holding {total:N0} VND of your settlements because your music lounge has no default payout " +
+                        "account. Please add one under Payout accounts; once an Admin verifies it, this amount is paid out in the " +
+                        "next payout run."),
                     _ => new SongNgu(
                         $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì tài khoản chưa xác minh danh tính. Hãy nộp " +
                         "CCCD/CMND trong mục Hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
