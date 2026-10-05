@@ -17,7 +17,13 @@ internal sealed class GetAdminContentOverviewQueryHandler
 
     private readonly IUnitOfWork _uow;
 
-    public GetAdminContentOverviewQueryHandler(IUnitOfWork uow) => _uow = uow;
+    private readonly ISystemConfigService _config;
+
+    public GetAdminContentOverviewQueryHandler(IUnitOfWork uow, ISystemConfigService config)
+    {
+        _uow = uow;
+        _config = config;
+    }
 
     public async Task<AdminContentOverviewDto> Handle(
         GetAdminContentOverviewQuery request, CancellationToken ct)
@@ -42,10 +48,14 @@ internal sealed class GetAdminContentOverviewQueryHandler
         var violationsThisMonthCount = penaltiesThisMonth.Count(p => p.IssuedAt <= monthEnd);
 
         var lounges = await _uow.Repository<MusicLoungeEntity, Guid>().FindAsync(_ => true, ct);
+        // MLACP-671: tính trực tiếp từ đánh giá còn hiệu lực (VenueReputation) — cột MusicLounge.ReputationScore chỉ được
+        // ghi lại khi bán vé nên đánh giá mới/bị gỡ không làm bảng này đổi.
+        var standings = await MusicLounge.Application.Settlements.VenueReputation.ComputeAsync(
+            _uow, _config, lounges.Select(l => l.Id).ToList(), ct);
         var topVenuesByReputation = lounges
-            .OrderByDescending(l => l.ReputationScore)
+            .Select(l => new VenueReputationRankDto(l.Id, l.Name, standings[l.Id].Score))
+            .OrderByDescending(v => v.ReputationScore)
             .Take(TopVenuesCount)
-            .Select(l => new VenueReputationRankDto(l.Id, l.Name, l.ReputationScore))
             .ToList();
 
         return new AdminContentOverviewDto(

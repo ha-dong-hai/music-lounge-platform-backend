@@ -5,6 +5,8 @@ using MusicLounge.Application.Users.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
+using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
+
 namespace MusicLounge.Application.Users.Queries.GetMyEarnings;
 
 internal sealed class GetMyEarningsQueryHandler : IRequestHandler<GetMyEarningsQuery, EarningsSummaryDto>
@@ -12,10 +14,13 @@ internal sealed class GetMyEarningsQueryHandler : IRequestHandler<GetMyEarningsQ
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
 
-    public GetMyEarningsQueryHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    private readonly ISystemConfigService _config;
+
+    public GetMyEarningsQueryHandler(IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _config = config;
     }
 
     public async Task<EarningsSummaryDto> Handle(GetMyEarningsQuery request, CancellationToken ct)
@@ -64,11 +69,19 @@ internal sealed class GetMyEarningsQueryHandler : IRequestHandler<GetMyEarningsQ
             })
             .ToList();
 
+        // MLACP-671: hạng uy tín của các phòng trà người này sở hữu (nhân viên không sở hữu phòng trà nào → rỗng).
+        var myLounges = await _uow.Repository<MusicLoungeEntity, Guid>().FindAsync(l => l.OwnerId == _currentUser.UserId, ct);
+        var standings = await VenueReputation.ComputeAsync(_uow, _config, myLounges.Select(l => l.Id).ToList(), ct);
+
         return new EarningsSummaryDto(
             TotalEarned: completed.Sum(s => s.NetAmount) + pending.Sum(s => s.NetAmount),
             PendingSettlement: pending.Sum(s => s.NetAmount),
             CompletedSettlement: completed.Sum(s => s.NetAmount),
             PendingSettlementCount: pending.Count,
-            RecentSettlements: recent);
+            RecentSettlements: recent)
+        {
+            Standings = standings.Values.ToList(),
+            LoungeNames = myLounges.ToDictionary(l => l.Id, l => l.Name),
+        };
     }
 }
