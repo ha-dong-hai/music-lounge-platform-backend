@@ -47,7 +47,9 @@ public sealed class LivestreamHub : Hub
         // to GetLivestreamDetailQueryHandler/GetChatHistoryQueryHandler: Admin bypasses fully,
         // Staff/Owner must operate the SAME venue as this livestream, everyone else falls back to
         // the real ticket-based viewer check.
-        var hasAccess = _currentUser.Role == Roles.Admin;
+        var isAdmin = _currentUser.Role == Roles.Admin;
+        var isVenueOperator = false;
+        var hasAccess = isAdmin;
         if (!hasAccess)
         {
             var venue = await _ctx.Livestreams
@@ -57,13 +59,23 @@ public sealed class LivestreamHub : Hub
             // MLACP-117: livestream mien phi khong yeu cau ve — phai dong bo voi
             // GetLivestreamDetailQueryHandler, neu khong nguoi xem se thay duoc HlsUrl qua REST
             // nhung bi Context.Abort() ngay khi hub co gang join group cua chinh stream do.
-            hasAccess = (venue is not null && VenueOperatorAccess.CanOperate(_currentUser, venue.LoungeId, venue.OwnerId))
+            isVenueOperator = venue is not null && VenueOperatorAccess.CanOperate(_currentUser, venue.LoungeId, venue.OwnerId);
+            hasAccess = isVenueOperator
                 || (venue is not null && venue.IsFree)
                 || await _livestreamRepo.HasViewerAccessAsync(livestreamId.Value, _currentUser.UserId);
         }
         if (!hasAccess) { Context.Abort(); return; }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(livestreamId.Value));
+
+        // MLACP-646: Admin và người vận hành phòng trà vào để GIÁM SÁT — vẫn nhận chat/sự kiện như mọi người xem, nhưng
+        // không tính vào số người xem (đo 05/10/2026: 5 khán giả mà đỉnh ghi 7, tổng lượt 8 — số liệu chủ phòng trà đọc ở
+        // trang thống kê và khán giả thấy "N người đang xem"). Không đánh dấu JoinedMarker nên lúc rời cũng không trừ.
+        if (!CountsAsAudience(isAdmin, isVenueOperator))
+        {
+            await base.OnConnectedAsync();
+            return;
+        }
 
         // Dem nguoi xem nam trong repository chu khong o day: PeakViewerCount va TotalViews truoc
         // MLACP-303 khong ai ghi — trang thong ke cua chu phong tra luon hien 0 nguoi xem cho moi
@@ -124,6 +136,9 @@ public sealed class LivestreamHub : Hub
         var value = Context.GetHttpContext()?.Request.Query["livestreamId"].ToString();
         return Guid.TryParse(value, out var id) ? id : null;
     }
+
+    /// <summary>MLACP-646: chỉ khán giả mới được đếm — Admin và chủ/nhân viên của chính phòng trà vào để giám sát.</summary>
+    public static bool CountsAsAudience(bool isAdmin, bool isVenueOperator) => !isAdmin && !isVenueOperator;
 
     public static string GroupName(Guid livestreamId) => $"livestream-{livestreamId}";
     public static string StaffGroupName(Guid livestreamId) => $"livestream-staff-{livestreamId}";
