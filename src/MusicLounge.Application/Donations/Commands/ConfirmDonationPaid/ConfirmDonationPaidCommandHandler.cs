@@ -139,7 +139,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.VenueReportedPaid,
             _currentUser.UserId, amount: split.PerformerAmount, reference: request.PaymentRef,
             evidenceUrl: request.PaymentEvidenceUrl, evidenceSha256: evidenceSha256,
-            detail: $"Phòng trà báo đã chuyển vào tài khoản ngân hàng #{bankAccountId} của nghệ sĩ." +
+            detail: "Phòng trà báo đã chuyển vào tài khoản ngân hàng mặc định của nghệ sĩ." +
                     (!string.IsNullOrWhiteSpace(request.PaymentEvidenceUrl) && !evidenceIsOurs
                         ? " Bằng chứng là liên kết bên ngoài hệ thống — không lưu được bản băm nội dung."
                         : ""),

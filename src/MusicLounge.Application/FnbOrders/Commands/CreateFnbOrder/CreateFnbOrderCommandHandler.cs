@@ -111,7 +111,7 @@ internal sealed class CreateFnbOrderCommandHandler : IRequestHandler<CreateFnbOr
             if (!menuItemsById.TryGetValue(id, out var item))
                 throw new NotFoundException(nameof(FnbMenuItem), id);
             if (!menusById.TryGetValue(item.MenuId, out var menu) || menu.LoungeId != request.LoungeId)
-                throw new DomainException($"Món #{id} không thuộc venue này.");
+                throw new DomainException("Có món không thuộc thực đơn của phòng trà này — hãy tải lại thực đơn rồi đặt lại.");
             if (!item.IsAvailable)
                 throw new DomainException($"Món '{item.Name}' hiện không có sẵn.");
         }

@@ -128,13 +128,13 @@ public sealed class ApplyDuePenaltiesJob
                         ? "Your music lounge has been suspended"
                         : "Your music lounge has been permanently banned"),
                 new SongNgu(
-                    $"\"{lounge.Name}\" hiện đã ở trạng thái {lounge.Status} theo phạt #{penalty.Id}." +
+                    $"\"{lounge.Name}\" {(penalty.PenaltyType == PenaltyType.Suspension ? "đã bị tạm khoá" : "đã bị khoá vĩnh viễn")} theo {TenDoiTuong.An(penalty).Vi}." +
                     (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
                         ? " Gói dịch vụ đã dừng; phí gói không được hoàn khi phòng trà bị khoá vĩnh viễn do vi phạm. " +
                           "Nếu lệnh khoá được huỷ, gói được kích hoạt lại với đúng số ngày còn lại."
                         : "") +
                     DescribeCancelled(penalty.PenaltyType, cancelled) + DescribeVenueFnb(venueFnbOrders),
-                    $"\"{lounge.Name}\" is now {lounge.Status} under penalty #{penalty.Id}." +
+                    $"\"{lounge.Name}\" is now {(penalty.PenaltyType == PenaltyType.Suspension ? "suspended" : "permanently banned")} under {TenDoiTuong.An(penalty).En}." +
                     (penalty.PenaltyType == PenaltyType.Ban && subscription is not null
                         ? " Your subscription has stopped; subscription fees are not refunded when a music lounge is permanently " +
                           "banned for a violation. If the ban is lifted, the subscription is reactivated with exactly the days remaining."

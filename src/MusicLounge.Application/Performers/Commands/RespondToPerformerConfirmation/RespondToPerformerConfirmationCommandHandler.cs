@@ -1,5 +1,6 @@
 using MusicLounge.Domain.ValueObjects;
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Donations;
 using MusicLounge.Domain.Entities;
@@ -110,6 +111,9 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
             ? PerformerConfirmations.MaskAccountNumber(plainNumber)
             : PerformerConfirmations.UnreadableAccountNumber;
         var admins = await _uow.Repository<User, Guid>().FindAsync(u => u.Role == UserRole.Admin, ct);
+        // MLACP-679: người đã nhập tài khoản — tên + email để Admin liên hệ, thay cho "người dùng #<GUID>".
+        var nhap = performer.CreatedByUserId is Guid nhapId ? await _uow.Repository<User, Guid>().GetByIdAsync(nhapId, ct) : null;
+        var nguoiNhap = nhap is null ? "một tài khoản đã bị xoá" : $"{nhap.FullName} ({nhap.Email})";
         foreach (var admin in admins)
         {
             await _notifications.NotifyAsync(
@@ -119,11 +123,11 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
                     "Nghệ sĩ báo tài khoản nhận tiền không phải của họ",
                     "A performer reports that a payout account is not theirs"),
                 new SongNgu(
-                    $"Nghệ sĩ \"{performer.Name}\" báo tài khoản {account.BankName} {masked} (tài khoản #{account.Id}) " +
-                    $"không phải của họ. Tài khoản do người dùng #{performer.CreatedByUserId} nhập." +
+                    $"Nghệ sĩ \"{performer.Name}\" báo tài khoản {account.BankName} {masked} " +
+                    $"không phải của họ. Tài khoản do {nguoiNhap} nhập." +
                     (note is null ? "" : $" Ghi chú của nghệ sĩ: {note}"),
-                    $"Performer \"{performer.Name}\" reports that the account {account.BankName} {masked} (account #{account.Id}) " +
-                    $"is not theirs. The account was entered by user #{performer.CreatedByUserId}." +
+                    $"Performer \"{performer.Name}\" reports that the account {account.BankName} {masked} " +
+                    $"is not theirs. The account was entered by {nguoiNhap}." +
                     (note is null ? "" : $" Performer's note: {note}")),
                 referenceType: "bank_account",
                 referenceId: account.Id.ToString(),
@@ -158,7 +162,7 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
             TargetType = "donation",
             TargetId = donationId,
             Category = ComplaintCategory.DonationNotPaid,
-            Description = $"Nghệ sĩ \"{performer.Name}\" báo chưa nhận được khoản donate #{donationId} mà phòng trà " +
+            Description = $"Nghệ sĩ \"{performer.Name}\" báo chưa nhận được khoản ủng hộ {VietnamMoney.Format(donation.Gross)} mà phòng trà " +
                           $"đã báo chuyển (mã chuyển khoản {donation.PaymentRef})." +
                           (note is null ? "" : $" Ghi chú của nghệ sĩ: {note}"),
             Status = ComplaintStatus.Open,

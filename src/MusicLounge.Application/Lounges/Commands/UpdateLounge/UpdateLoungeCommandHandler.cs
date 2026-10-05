@@ -216,13 +216,13 @@ internal sealed class UpdateLoungeCommandHandler : IRequestHandler<UpdateLoungeC
         }
 
         var body = new SongNgu(
-            $"Phòng trà #{lounge.Id} vừa đổi {string.Join("; ", changes.Select(c => c.Vi))}. " +
+            $"Phòng trà \"{lounge.Name}\" vừa đổi {string.Join("; ", changes.Select(c => c.Vi))}. " +
             (ticketHoldersTold > 0
                 ? $"Đã gửi {ticketHoldersTold} lượt báo tới người giữ vé vào cửa của các buổi diễn sắp tới. "
                 : "") +
             "Hồ sơ phòng trà đã được duyệt dựa trên thông tin cũ — cần xem lại nếu thay đổi không " +
             "khớp giấy phép kinh doanh.",
-            $"Music lounge #{lounge.Id} just changed its {string.Join("; ", changes.Select(c => c.En))}. " +
+            $"Music lounge \"{lounge.Name}\" just changed its {string.Join("; ", changes.Select(c => c.En))}. " +
             (ticketHoldersTold > 0
                 ? $"{ticketHoldersTold} notice(s) were sent to in-venue ticket holders of upcoming shows. "
                 : "") +

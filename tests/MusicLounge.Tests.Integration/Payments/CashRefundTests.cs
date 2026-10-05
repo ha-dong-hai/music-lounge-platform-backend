@@ -151,7 +151,7 @@ public sealed class CashRefundTests
             && n.Type == NotificationType.RefundOwedByVenue
             && n.ReferenceId == refundId.ToString()
             && n.Title == "Cần hoàn tiền mặt cho khách"
-            && n.Body.Contains("được mua tại quầy bằng tiền mặt")));
+            && n.Body.Contains("là vé mua tại quầy bằng tiền mặt") && !n.Body.Contains("#")));
 
         told.Should().BeTrue(
             "nền tảng chưa bao giờ giữ khoản này nên không trả thay được — phòng trà phải biết " +

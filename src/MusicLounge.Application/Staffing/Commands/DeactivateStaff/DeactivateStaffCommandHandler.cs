@@ -67,7 +67,7 @@ internal sealed class DeactivateStaffCommandHandler : IRequestHandler<Deactivate
         }
 
         // MLACP-391: cung ly do voi AssignStaff — chu phong tra phai biet ai vua mat quyen soat ve/ban quay cua ho.
-        var staffName = user?.FullName ?? $"tài khoản #{assignment.UserId}";
+        var staffName = user?.FullName ?? user?.Email ?? "một nhân viên (tài khoản đã xoá)";
         if (_currentUser.UserId != lounge.OwnerId)
             await _notifications.NotifyAsync(
                 lounge.OwnerId,

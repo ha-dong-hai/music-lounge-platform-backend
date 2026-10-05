@@ -45,7 +45,7 @@ internal sealed class SetEventCustomValuesCommandHandler : IRequestHandler<SetEv
                 throw new NotFoundException(nameof(CustomCriteriaEntity), criteriaId);
             if (c.LoungeId != lounge.Id)
                 throw new DomainException(
-                    $"Tiêu chí #{criteriaId} không thuộc venue này.");
+                    "Có tiêu chí không thuộc phòng trà này — hãy tải lại trang rồi lưu lại.");
         }
 
         // Giá trị phải khớp KIỂU DỮ LIỆU mà chính tiêu chí đó khai. Trước đây máy chủ nhận mọi chuỗi:

@@ -53,7 +53,7 @@ internal sealed class CancelMyFnbOrderCommandHandler(
 
         var refundAmount = await FnbOrderCancellation.CancelOneAsync(
             uow, order, isPaid, currentUser.UserId, Reason,
-            $"Khách tự huỷ đơn F&B #{order.Id} khi quầy chưa nhận — hoàn 100%", now, ct);
+            $"Khách tự huỷ {TenDoiTuong.DonDoUong(order).Vi} khi quầy chưa nhận — hoàn 100%", now, ct);
         await uow.SaveChangesAsync(ct);
 
         // Khách tự bấm nên không cần báo "đơn đã huỷ"; chỉ báo khi có tiền hoàn — khách cần biết tiền về đâu, bao giờ.
@@ -63,9 +63,9 @@ internal sealed class CancelMyFnbOrderCommandHandler(
                 currentUser.UserId, NotificationType.FnbOrderUpdate,
                 new SongNgu("Đã huỷ đơn — bạn sẽ được hoàn tiền", "Order cancelled — you will be refunded"),
                 new SongNgu(
-                    $"Đơn #{order.Id} đã huỷ. Chúng tôi đã tạo yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã " +
+                    $"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} đã huỷ. Chúng tôi đã tạo yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã " +
                     "thanh toán và sẽ báo khi yêu cầu được xử lý.",
-                    $"Order #{order.Id} has been cancelled. We have created a 100% refund request ({amount:N0} VND) to " +
+                    $"Your {TenDoiTuong.DonDoUong(order).En} has been cancelled. We have created a 100% refund request ({amount:N0} VND) to " +
                     "your original payment method and will notify you when it is processed."),
                 referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
             await uow.SaveChangesAsync(ct);

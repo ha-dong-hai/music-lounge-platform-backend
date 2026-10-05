@@ -1,4 +1,5 @@
 using MusicLounge.Domain.ValueObjects;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Tickets;
@@ -164,8 +165,8 @@ public static class ShowCancellation
                 o.AudienceUserId!.Value, NotificationType.FnbOrderUpdate,
                 new SongNgu("Đơn đồ uống của bạn vẫn được giữ", "Your food & drink order is kept"),
                 new SongNgu(
-                    $"{what.Vi} Đơn đồ uống #{o.Id} của bạn vẫn được giữ. {vi}",
-                    $"{what.En} Your food & drink order #{o.Id} is kept. {en}"),
+                    $"{what.Vi} {TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(o).Vi)} của bạn vẫn được giữ. {vi}",
+                    $"{what.En} Your {TenDoiTuong.DonDoUong(o).En} is kept. {en}"),
                 referenceType: "fnb_order", referenceId: o.Id.ToString(), ct: ct);
         }
     }
