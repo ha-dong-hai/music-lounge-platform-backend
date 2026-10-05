@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Refunds.DTOs;
@@ -56,6 +56,8 @@ internal sealed class GetMyRefundRequestsQueryHandler
                 RefundGatewayWindow.NeedsPayoutAccount(r, payments.GetValueOrDefault(r.PaymentId), windowDays, now),
                 r.PayoutBankName, r.PayoutAccountNumber, r.PayoutAccountHolder, r.PayoutConsentAt))
             .ToList();
+        // MLACP-672: tên người yêu cầu + buổi diễn thay cho mã.
+        items = await RefundRequestNames.EnrichAsync(_uow, items, ct);
 
         return new PaginatedResult<RefundRequestDto>(items, page, size, ordered.Count);
     }

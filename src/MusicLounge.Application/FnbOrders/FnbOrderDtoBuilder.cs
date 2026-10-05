@@ -34,8 +34,9 @@ internal static class FnbOrderDtoBuilder
             ? new Dictionary<Guid, string>()
             : (await uow.Repository<SeatingZone, Guid>().FindAsync(z => zoneIds.Contains(z.Id), ct))
                 .ToDictionary(z => z.Id, z => z.Name);
+        // MLACP-672: tên khách đặt cũng tra ở đây (chỉ phía phòng trà) — cùng một truy vấn với tên nhân viên.
         var staffIds = forVenue
-            ? orders.SelectMany(o => new[] { o.CancelledBy, o.CashCollectedBy }).Where(id => id.HasValue)
+            ? orders.SelectMany(o => new[] { o.CancelledBy, o.CashCollectedBy, o.AudienceUserId }).Where(id => id.HasValue)
                 .Select(id => id!.Value).Distinct().ToList()
             : [];
         var staffNames = staffIds.Count == 0
@@ -63,6 +64,8 @@ internal static class FnbOrderDtoBuilder
             o.CancelledAt, o.CancelReason,
             forVenue ? Name(o.CancelledBy) : null,
             forVenue ? Name(o.CashCollectedBy) : null)
-        ).ToList();
+        {
+            CustomerName = forVenue ? Name(o.AudienceUserId) : null,
+        }).ToList();
     }
 }
