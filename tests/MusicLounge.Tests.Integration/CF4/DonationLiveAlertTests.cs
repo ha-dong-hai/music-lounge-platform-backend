@@ -173,6 +173,13 @@ public sealed class DonationLiveAlertTests
 
         AlertsOn(venue.LivestreamId).Should().ContainSingle().Subject
             .PerformerName.Should().Be(tenNgheSi);
+
+        // MLACP-645: thông báo gửi chủ phòng trà lúc VNPay xác nhận cũng phải nói cho nghệ sĩ nào — trước đây "Có donate
+        // 50,000đ cho nghệ sĩ" (buổi nhiều nghệ sĩ thì không phân biệt được), và tiền in theo culture máy chủ.
+        using var verify = _factory.Services.CreateScope();
+        var notice = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+            .SingleAsync(n => n.UserId == venue.OwnerId && n.Type == NotificationType.DonationReceived);
+        notice.Body.Should().Contain($"cho nghệ sĩ {tenNgheSi}").And.Contain("100.000đ");
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
@@ -76,7 +77,7 @@ internal sealed class ProvideRefundPayoutAccountCommandHandler : IRequestHandler
                     "Người mua đã khai tài khoản nhận hoàn",
                     "The buyer has provided a refund account"),
                 new SongNgu(
-                    $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ): người mua đã đồng ý nhận hoàn bằng chuyển " +
+                    $"Yêu cầu hoàn tiền #{refund.Id} ({VietnamMoney.Format(refund.AmountRequested)}): người mua đã đồng ý nhận hoàn bằng chuyển " +
                     $"khoản vào {refund.PayoutBankName} {RefundGatewayWindow.Masked(refund.PayoutAccountNumber)}. Chuyển khoản " +
                     "rồi duyệt yêu cầu kèm mã chuyển khoản.",
                     $"Refund request #{refund.Id} ({refund.AmountRequested:N0} VND): the buyer agreed to receive the refund by bank " +

@@ -445,7 +445,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 refund,
                 RefundApprovedTitle,
                 new SongNgu(
-                    $"{amountApproved:N0}đ đã được chuyển khoản trực tiếp tới tài khoản {refund.PayoutBankName} " +
+                    $"{VietnamMoney.Format(amountApproved)} đã được chuyển khoản trực tiếp tới tài khoản {refund.PayoutBankName} " +
                     $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} của bạn (mã giao dịch {manualTransferRef}), vì " +
                     "giao dịch gốc đã quá thời hạn hoàn qua VNPay. Nếu chưa nhận được, hãy gửi khiếu nại kèm mã này.",
                     $"{amountApproved:N0} VND has been transferred directly to your {refund.PayoutBankName} account " +
@@ -460,7 +460,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 refund,
                 RefundApprovedTitle,
                 new SongNgu(
-                    $"{amountApproved:N0}đ sẽ được hoàn về phương thức thanh toán bạn đã dùng. Thời gian " +
+                    $"{VietnamMoney.Format(amountApproved)} sẽ được hoàn về phương thức thanh toán bạn đã dùng. Thời gian " +
                     "tiền về tài khoản phụ thuộc ngân hàng phát hành.",
                     $"{amountApproved:N0} VND will be refunded to the payment method you used. How long it takes to " +
                     "reach your account depends on your card-issuing bank."),
@@ -472,7 +472,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                 refund,
                 RefundApprovedTitle,
                 new SongNgu(
-                    $"{amountApproved:N0}đ sẽ được phòng trà hoàn trực tiếp cho bạn, vì vé này được mua " +
+                    $"{VietnamMoney.Format(amountApproved)} sẽ được phòng trà hoàn trực tiếp cho bạn, vì vé này được mua " +
                     "tại quầy. Chúng tôi đã thông báo cho phòng trà. Nếu chưa nhận được, hãy gửi khiếu nại.",
                     $"{amountApproved:N0} VND will be refunded to you directly by the music lounge, because this " +
                     "ticket was bought at the box office. We have notified the music lounge. If you have not " +
@@ -487,7 +487,7 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                     "Cash refund needed for a customer"),
                 new SongNgu(
                     $"Vé #{refund.PaymentId} được mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
-                    $"này. Phòng trà cần hoàn {amountApproved:N0}đ trực tiếp cho khách.",
+                    $"này. Phòng trà cần hoàn {VietnamMoney.Format(amountApproved)} trực tiếp cho khách.",
                     $"The ticket with payment #{refund.PaymentId} was bought at the box office in cash, so the platform does not " +
                     $"hold this amount. The music lounge needs to refund {amountApproved:N0} VND directly to the customer."),
                 referenceType: "refund_request",

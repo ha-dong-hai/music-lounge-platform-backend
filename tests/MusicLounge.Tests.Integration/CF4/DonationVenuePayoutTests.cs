@@ -201,8 +201,12 @@ public sealed class DonationVenuePayoutTests
             var notice = await db.Notifications.SingleAsync(n =>
                 n.UserId == venue.OwnerId && n.Type == NotificationType.SettlementReleased
                 && n.ReferenceId == settlement.Id.ToString());
-            notice.Body.Should().Contain($"donate #{donationId}",
-                "chủ phòng trà phải biết đây là tiền donate — một phần phải chuyển tiếp cho nghệ sĩ");
+            // MLACP-645: ghi người ủng hộ + nghệ sĩ + buổi thay cho mã khoản ("donate #<GUID>") — vẫn phải nói rõ đây là
+            // tiền ủng hộ, và tiền số kiểu Việt.
+            notice.Body.Should().Contain("tiền ủng hộ của",
+                "chủ phòng trà phải biết đây là tiền ủng hộ — một phần phải chuyển tiếp cho nghệ sĩ");
+            notice.Body.Should().Contain("cho nghệ sĩ ").And.NotContain(donationId.ToString(), "a GUID tells the owner nothing");
+            notice.Body.Should().MatchRegex(@"\d{1,3}(\.\d{3})+đ", "Vietnamese thousands separator, e.g. 90.000đ");
         }
 
         (await AcknowledgeAsync(venue, donationId)).StatusCode.Should().Be(HttpStatusCode.NoContent);
