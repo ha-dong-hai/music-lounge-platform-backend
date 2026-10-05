@@ -369,6 +369,13 @@ public sealed class PerformerSelfConfirmationTests
         evidence.ChainIntact.Should().BeTrue();
         evidence.Events.Last().EventType.Should().Be("PerformerConfirmedReceipt",
             "lời xác nhận của chính nghệ sĩ là mắt xích thiếu nhất của bằng chứng \"đã trả\"");
+
+        // MLACP-674: chủ phòng trà — người vừa chuyển tiền — được báo khoản đã khép lại.
+        using var scope = _factory.Services.CreateScope();
+        var bao = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+            .SingleAsync(n => n.Type == NotificationType.DonationReceived && n.ReferenceType == "donation"
+                              && n.ReferenceId == donationId.ToString() && n.Title.Contains("đã xác nhận nhận tiền ủng hộ"));
+        bao.Body.Should().Contain("CK-364").And.Contain("đã hoàn tất");
     }
 
     [Fact]
@@ -386,5 +393,11 @@ public sealed class PerformerSelfConfirmationTests
                 c.TargetType == "donation" && c.TargetId == donationId
                 && c.Category == ComplaintCategory.DonationNotPaid && c.Status == ComplaintStatus.Open))
             .Should().BeTrue("một bên nói đã chuyển, một bên nói chưa nhận — phải có người xử lý");
+
+        // MLACP-674: chủ phòng trà biết mình đang bị khiếu nại, kèm ghi chú của nghệ sĩ.
+        var bao = await db.Notifications.AsNoTracking().SingleAsync(n =>
+            n.Type == NotificationType.DonationPending && n.ReferenceType == "donation" && n.ReferenceId == donationId.ToString());
+        bao.Title.Should().Contain("báo chưa nhận tiền ủng hộ");
+        bao.Body.Should().Contain("CK-364").And.Contain("Tôi chưa nhận được tiền");
     }
 }
