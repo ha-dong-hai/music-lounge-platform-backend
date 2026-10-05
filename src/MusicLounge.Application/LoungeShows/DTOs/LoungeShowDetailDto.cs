@@ -43,7 +43,13 @@ public sealed record LoungeShowDetailDto(
     // MLACP-450: chi tra cho nguoi van hanh phong tra (chu, nhan vien duoc phan cong, Admin — dung
     // VenueOperatorAccess.CanOperate). Endpoint nay cong khai, nen ly do bi tu choi va ma VCPMC khong duoc lo
     // cho khan gia: nguoi ngoai nhan null.
-    OperatorShowInfoDto? OperatorInfo = null);
+    OperatorShowInfoDto? OperatorInfo = null,
+    // MLACP-622: lần gần nhất danh sách biểu diễn thay đổi bất lợi sau khi mở bán, và lý do phòng trà ghi. Công khai cho
+    // cả khán giả: người đang cân nhắc mua cũng phải biết nghệ sĩ đã công bố không còn diễn (minh bạch thông tin — Luật
+    // BVQLNTD 2023). null = chưa từng đổi.
+    LineupChangeInfoDto? LineupChange = null);
+
+public sealed record LineupChangeInfoDto(DateTimeOffset ChangedAt, string? Reason);
 
 /// <summary>
 /// MLACP-450. Những gì người vận hành phòng trà cần biết về buổi hòa nhạc của mình mà khán giả không cần.
