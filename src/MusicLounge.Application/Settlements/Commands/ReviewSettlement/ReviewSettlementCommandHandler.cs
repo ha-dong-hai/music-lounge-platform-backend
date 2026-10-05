@@ -69,7 +69,7 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
                     "Khoản quyết toán bị giữ lại",
                     "Settlement withheld"),
                 new SongNgu(
-                    $"Khoản {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) không được chi trả. " +
+                    $"Khoản {VietnamMoney.Format(settlement.NetAmount)} ({settlement.ReleaseType}) không được chi trả. " +
                     $"Lý do: {request.Note}",
                     $"The settlement of {settlement.NetAmount:N0} VND ({settlement.ReleaseType}) will not be paid out. " +
                     $"Reason: {request.Note}"),
@@ -86,7 +86,9 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
         // lặp chứ không bỏ: đây là một đường giải ngân thứ hai, và một đường giải ngân không có
         // chốt thì chính nó là lỗ hổng.
 
-        if (settlement.BankAccountId is null)
+        // MLACP-640: cùng cách chọn tài khoản với job — khoản tạo khi phòng trà chưa có tài khoản được gán tài khoản mặc
+        // định hiện tại; trước đây Admin duyệt chi trả cho khoản như vậy luôn bị từ chối dù phòng trà đã thêm tài khoản.
+        if (await SettlementPayoutAccount.EnsureAsync(_uow, settlement, ct) is null)
             throw new DomainException(
                 "Phòng trà chưa đăng ký tài khoản nhận tiền — ghi bút toán chi trả bây giờ sẽ ghi có " +
                 "cho một khoản không lệnh chuyển khoản nào đi theo được.");
@@ -125,7 +127,7 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
                 "Khoản quyết toán đã được giải ngân",
                 "Settlement paid out"),
             new SongNgu(
-                $"Khoản thanh toán {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) đã được giải ngân.",
+                $"Khoản thanh toán {VietnamMoney.Format(settlement.NetAmount)} ({settlement.ReleaseType}) đã được giải ngân.",
                 $"The payment of {settlement.NetAmount:N0} VND ({settlement.ReleaseType}) has been paid out."),
             referenceType: "settlement",
             referenceId: settlement.Id.ToString(),

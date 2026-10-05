@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MediatR;
 using MusicLounge.Application.Common.Abstractions;
 using MusicLounge.Application.Common.Interfaces;
@@ -62,7 +63,7 @@ internal sealed class CancelMyFnbOrderCommandHandler(
                 currentUser.UserId, NotificationType.FnbOrderUpdate,
                 new SongNgu("Đã huỷ đơn — bạn sẽ được hoàn tiền", "Order cancelled — you will be refunded"),
                 new SongNgu(
-                    $"Đơn #{order.Id} đã huỷ. Chúng tôi đã tạo yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã " +
+                    $"Đơn #{order.Id} đã huỷ. Chúng tôi đã tạo yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã " +
                     "thanh toán và sẽ báo khi yêu cầu được xử lý.",
                     $"Order #{order.Id} has been cancelled. We have created a 100% refund request ({amount:N0} VND) to " +
                     "your original payment method and will notify you when it is processed."),

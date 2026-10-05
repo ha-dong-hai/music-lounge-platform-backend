@@ -98,6 +98,8 @@ internal sealed class GetLoungeShowDetailQueryHandler
 
         var dto = show.ToDetailDto(
             wishlisted, userHasTicket, userHasRated, soldAndHeld, galleryDtos, lastEntryMinutes);
+        if (show.LineupChangedAt is DateTimeOffset doiLuc)
+            dto = dto with { LineupChange = new LineupChangeInfoDto(doiLuc, show.LineupChangeNote) };
 
         // MLACP-450: cung mot phep kiem voi cho chan ban nhap o tren — ai thay duoc ban nhap thi thay duoc ly do bi tu
         // choi va ma VCPMC; khan gia thi khong.

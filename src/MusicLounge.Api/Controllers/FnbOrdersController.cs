@@ -7,6 +7,7 @@ using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
+using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.FnbOrders.Commands.CancelMyFnbOrder;
 using MusicLounge.Application.FnbOrders.Commands.CreateFnbOrder;
 using MusicLounge.Application.FnbOrders.Commands.InitiateFnbOrderPayment;
@@ -15,6 +16,7 @@ using MusicLounge.Application.FnbOrders.Commands.UpdateFnbOrderStatus;
 using MusicLounge.Application.FnbOrders.DTOs;
 using MusicLounge.Application.FnbOrders.Queries.GetFnbOrders;
 using MusicLounge.Application.FnbOrders.Queries.GetMyFnbOrders;
+using MusicLounge.Application.FnbOrders.Queries.GetMyGuestSeat;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -59,6 +61,19 @@ public sealed class FnbOrdersController : ControllerBase
     {
         var result = await _sender.Send(new GetMyFnbOrdersQuery(page, pageSize, loungeId), ct);
         return Ok(ApiResponse<PaginatedResult<FnbOrderDto>>.Ok(result));
+    }
+
+    /// <summary>MLACP-630: khu mà người đang đăng nhập ngồi ở phòng trà này, suy từ vé vào cửa còn hiệu lực của họ cho
+    /// buổi đang diễn (hoặc mở cửa trong 3 giờ tới). `data` là null khi không suy ra được (không có vé đêm đó, vé xem
+    /// trực tuyến, hạng vé chưa gắn khu). Đơn khách tự tạo qua POST /fnb-orders mà không gửi `zoneId` sẽ được ghi đúng
+    /// khu này — client gọi endpoint này để CHO KHÁCH XEM trước khi gửi đơn.</summary>
+    [HttpGet("my-seat")]
+    [ProducesResponseType<ApiResponse<GuestSeatDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMySeat([FromQuery] Guid loungeId, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetMyGuestSeatQuery(loungeId), ct);
+        return Ok(ApiResponse<GuestSeatDto?>.Ok(result));
     }
 
     /// <summary>Staff/Owner — hàng đợi đơn F&B của venue, lọc theo trạng thái. Sắp **mới nhất trước**

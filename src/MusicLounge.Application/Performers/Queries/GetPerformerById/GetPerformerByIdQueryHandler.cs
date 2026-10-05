@@ -10,14 +10,20 @@ internal sealed class GetPerformerByIdQueryHandler : IRequestHandler<GetPerforme
 {
     private readonly IUnitOfWork _uow;
 
-    public GetPerformerByIdQueryHandler(IUnitOfWork uow) => _uow = uow;
+    private readonly ICurrentUserService _currentUser;
+
+    public GetPerformerByIdQueryHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    {
+        _uow = uow;
+        _currentUser = currentUser;
+    }
 
     public async Task<PerformerDto> Handle(GetPerformerByIdQuery request, CancellationToken ct)
     {
         var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(request.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), request.PerformerId);
 
-        var dtos = await PerformerDtoMapper.MapAsync(_uow, [performer], ct);
+        var dtos = await PerformerDtoMapper.MapAsync(_uow, [performer], _currentUser, ct);
         return dtos[0];
     }
 }

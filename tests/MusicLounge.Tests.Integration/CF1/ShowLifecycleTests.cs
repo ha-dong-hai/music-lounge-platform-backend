@@ -125,6 +125,25 @@ public sealed class ShowLifecycleTests
         notif.Should().NotBeNull();
     }
 
+    /// <summary>
+    /// MLACP-621. NĐ 144/2020 Điều 10 khoản 4 điểm đ: dời giờ diễn của buổi đã chấp thuận chỉ cần báo trước 02 ngày làm
+    /// việc. Trước đây hệ thống ép 7 ngày làm việc (mốc của hồ sơ xin chấp thuận lần đầu) nên chặn mất việc dời lịch hợp lệ.
+    /// Mốc +4 ngày 7 giờ: luôn >= 2 ngày làm việc (kể cả hôm nay là thứ Sáu) và luôn &lt; 7; lệch giờ để không trùng khung
+    /// giờ các lớp test khác dựng ở +5 ngày tại cùng phòng trà.
+    /// </summary>
+    [Fact]
+    public async Task Reschedule_HaiDenSauNgayLamViec_DuocPhep()
+    {
+        var showId = await SeedPublishedShowAsync();
+        var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
+
+        var res = await client.PostAsJsonAsync(
+            $"/api/v1/lounge-shows/{showId}/reschedule",
+            new { NewScheduledStart = DateTimeOffset.UtcNow.AddDays(4).AddHours(7) });
+
+        res.StatusCode.Should().Be(HttpStatusCode.NoContent, await res.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task Reschedule_ToTooSoonDate_Returns422()
     {

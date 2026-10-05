@@ -95,5 +95,7 @@ public enum NotificationType
     // MLACP-458: poster AI chay o che do hang doi nen chu phong tra khong con ngoi cho ket qua — phai bao khi xong hoac
     // khi khong tao duoc. Mot loai dung chung cho ca hai ket cuc: noi dung thong bao noi ro ket qua, con FE chi can mot
     // luat dieu huong (mo buoi hoa nhac).
-    PosterGenerationResult
+    PosterGenerationResult,
+    // MLACP-622: danh sách biểu diễn thay đổi bất lợi sau khi đã mở bán — báo người giữ vé kèm cửa sổ hoàn 100%.
+    LineupChanged
 }

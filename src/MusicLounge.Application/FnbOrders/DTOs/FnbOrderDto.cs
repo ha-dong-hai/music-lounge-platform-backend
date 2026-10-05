@@ -28,6 +28,10 @@ public sealed record FnbOrderDto(
     // MLACP-349: khach dang co mot link VNPay con tra duoc cho toi thoi diem nay — trong luc do he thong
     // tu choi thu tien mat va huy don, va man hinh nhan vien can thay vi sao.
     DateTimeOffset? OnlinePaymentLiveUntil,
+    // MLACP-630: khu khách ngồi (theo vé của họ hoặc do client gửi) — bảng đơn của nhân viên in cùng TableNote để biết
+    // "Bàn góc" là góc của khu nào. Null: đơn không gắn khu (khách không có vé đêm đó, hoặc đơn tạo trước MLACP-630).
+    Guid? ZoneId = null,
+    string? ZoneName = null,
     // MLACP-631: dấu vết huỷ. CancelledByName chỉ trả cho phía phòng trà; khách chỉ thấy lý do và thời điểm.
     DateTimeOffset? CancelledAt = null,
     string? CancelReason = null,

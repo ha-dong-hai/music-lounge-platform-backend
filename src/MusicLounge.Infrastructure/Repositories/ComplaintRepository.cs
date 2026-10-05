@@ -104,7 +104,8 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
                 c.Resolution,
                 c.ResolvedAction,
                 c.ResolvedAt,
-                c.CreatedAt))
+                c.CreatedAt,
+                c.SlaDeadline))
             .ToListAsync(ct);
 
         return new PaginatedResult<ComplaintDto>(items, page, pageSize, total);

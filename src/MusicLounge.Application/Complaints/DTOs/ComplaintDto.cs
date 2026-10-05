@@ -16,4 +16,8 @@ public sealed record ComplaintDto(
     string? Resolution,
     ComplaintResolvedAction? ResolvedAction,
     DateTimeOffset? ResolvedAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    // MLACP-617: hạn xử lý (cột SlaDeadline) — trước đây không trả ra, nên danh sách của Admin chỉ ghi được "Đã chờ 3 ngày"
+    // mà không biết dòng nào đã QUÁ HẠN; huy hiệu menu thì đã biết. Người gửi khiếu nại cũng thấy hạn này (minh bạch thời
+    // hạn xử lý — Luật BVQLNTD 2023).
+    DateTimeOffset? SlaDeadline = null);

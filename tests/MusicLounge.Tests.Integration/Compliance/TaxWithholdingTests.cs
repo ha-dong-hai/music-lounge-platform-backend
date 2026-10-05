@@ -384,8 +384,10 @@ public sealed class TaxWithholdingTests
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
         try
         {
-            await client.PutAsJsonAsync("/api/v1/me/tax-profile",
-                new { BusinessType = "HouseholdOrIndividual", TaxCode = "8012345678" });
+            // MLACP-660: hộ/cá nhân khai bằng số định danh 12 chữ số.
+            (await client.PutAsJsonAsync("/api/v1/me/tax-profile",
+                new { BusinessType = "HouseholdOrIndividual", TaxCode = "080123456789" }))
+                .StatusCode.Should().Be(HttpStatusCode.NoContent, "test premise: the household declaration is accepted");
             await SetOwnerTaxProfileAsync(PayeeBusinessType.HouseholdOrIndividual, verified: true);
 
             // Approved as a household, now claiming to be a company. Carrying the old approval over
@@ -422,6 +424,9 @@ public sealed class TaxWithholdingTests
     [InlineData("Enterprise", "12345", "10 chữ số")]
     [InlineData("Enterprise", "0101243150-01", "10 chữ số")]
     [InlineData("HoKinhDoanh", "0101243150", "Loại hình kinh doanh")]
+    // MLACP-660: hộ/cá nhân dùng số định danh 12 chữ số — mã 10 số kiểu cũ và số sai độ dài đều bị từ chối.
+    [InlineData("HouseholdOrIndividual", "0101243150", "12 chữ số")]
+    [InlineData("HouseholdOrIndividual", "08012345678", "12 chữ số")]
     public async Task MalformedDeclaration_IsRejected(string businessType, string taxCode, string hint)
     {
         var res = await _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner")

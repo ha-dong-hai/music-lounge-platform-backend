@@ -55,5 +55,11 @@ public enum PayoutBlocker
     PayoutAccountUnverified,
 
     /// <summary>MLACP-401. Số tài khoản nhận tiền không còn giải mã được — chủ phòng trà cần nhập lại.</summary>
-    PayoutAccountUnreadable
+    PayoutAccountUnreadable,
+
+    /// <summary>MLACP-640. Phòng trà chưa có tài khoản nhận tiền mặc định — chỉ chủ phòng trà gỡ được (thêm tài khoản).
+    /// Không do <see cref="PayeeVerification.BlockerAsync"/> trả ra (hàm đó cần một tài khoản để xét); job giải ngân gán
+    /// khi <see cref="SettlementPayoutAccount.EnsureAsync"/> không tìm được tài khoản nào. Thêm ở CUỐI để không đổi giá trị
+    /// số của các thành viên có sẵn.</summary>
+    NoPayoutAccount
 }

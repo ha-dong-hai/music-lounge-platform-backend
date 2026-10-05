@@ -14,15 +14,15 @@ internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBa
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IPiiEncryptionService _piiEncryption;
-    private readonly IEmailService _email;
+    private readonly IBackgroundJobService _jobs;
     private readonly BusinessSettings _settings;
     private readonly ILogger<CreateBankAccountCommandHandler> _logger;
 
     public CreateBankAccountCommandHandler(
         IUnitOfWork uow, ICurrentUserService currentUser, IPiiEncryptionService piiEncryption,
-        IEmailService email, IOptions<BusinessSettings> settings, ILogger<CreateBankAccountCommandHandler> logger)
+        IBackgroundJobService jobs, IOptions<BusinessSettings> settings, ILogger<CreateBankAccountCommandHandler> logger)
     {
-        _email = email;
+        _jobs = jobs;
         _settings = settings.Value;
         _logger = logger;
         _uow = uow;
@@ -74,7 +74,7 @@ internal sealed class CreateBankAccountCommandHandler : IRequestHandler<CreateBa
         // MLACP-364: tai khoan cua nghe si do nguoi khac nhap thay — moi chinh nghe si xac nhan.
         if (account.OwnerType == BankAccountOwnerType.Performer
             && await _uow.Repository<Performer, Guid>().GetByIdAsync(account.OwnerId, ct) is { } performer
-            && await PerformerConfirmations.InviteAsync(_uow, _email, _settings, _logger, performer,
+            && await PerformerConfirmations.InviteAsync(_uow, _jobs, _settings, _logger, performer,
                 PerformerConfirmations.ForBankAccount(account, request.AccountNumber), ct))
             await _uow.SaveChangesAsync(ct);
 

@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Application.FnbOrders;
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
@@ -35,8 +36,17 @@ internal sealed class GetOwnerAnalyticsQueryHandler
         var showIds = shows.Select(s => s.Id).ToHashSet();
         var now = DateTimeOffset.UtcNow;
 
-        var tickets = await _uow.Repository<Ticket, Guid>()
-            .FindAsync(t => showIds.Contains(t.ShowId) && t.Status == TicketStatus.Confirmed, ct);
+        // MLACP-659: lọc theo kỳ bằng THỜI ĐIỂM PHÁT SINH (vé: lúc mua; gọi món: lúc tạo đơn) — cùng quy tắc với
+        // OwnerRevenueReportBuilder, nên các ô số liệu và báo cáo doanh thu cùng trang ra cùng một số cho cùng một kỳ.
+        // Lọc sau khi nạp vì so sánh khoảng DateTimeOffset không dịch ổn định trên SQLite của bộ test.
+        // Không truyền kỳ thì giữ nguyên hành vi cũ: mọi thời gian. Trạng thái vé tính doanh thu theo TicketRevenue (MLACP-616).
+        bool InRange(DateTimeOffset d) =>
+            (!request.From.HasValue || d >= request.From.Value) && (!request.To.HasValue || d <= request.To.Value);
+
+        var tickets = (await _uow.Repository<Ticket, Guid>()
+                .FindAsync(t => showIds.Contains(t.ShowId) && TicketRevenue.DaThuTien.Contains(t.Status), ct))
+            .Where(t => InRange(t.CreatedAt))
+            .ToList();
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();
         var prices = await _uow.Repository<TicketPrice, Guid>()
@@ -63,8 +73,10 @@ internal sealed class GetOwnerAnalyticsQueryHandler
             .FindAsync(o => o.LoungeId == request.LoungeId && o.Status != FnbOrderStatus.Cancelled, ct);
         var paidFnbOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(
             _uow, loungeFnbOrders.Select(o => o.Id).ToList(), ct);
+        // FnbOrder.CreatedAt là DateTime lưu UTC — đổi tường minh, không để phép đổi ngầm lấy múi giờ máy chủ.
         var fnbOrders = loungeFnbOrders
             .Where(o => FnbOrderPayments.IsPaid(o, paidFnbOrderIds.Contains(o.Id)))
+            .Where(o => InRange(new DateTimeOffset(DateTime.SpecifyKind(o.CreatedAt, DateTimeKind.Utc))))
             .ToList();
 
         var performances = await _uow.Repository<Performance, Guid>()
@@ -82,7 +94,10 @@ internal sealed class GetOwnerAnalyticsQueryHandler
             .FindAsync(d => performanceIds.Contains(d.PerformanceId) && d.Status == DonationStatus.OwnerReceived, ct))
             .ToList();
 
+        // Có kỳ thì chỉ xếp hạng buổi có bán được vé trong kỳ — bản không lọc sẽ chen buổi 0đ vào top khi kỳ ngắn.
+        var hasRange = request.From.HasValue || request.To.HasValue;
         var topShows = showIds
+            .Where(id => !hasRange || ticketsByShow[id].Any())
             .Select(id =>
             {
                 var showTickets = ticketsByShow[id].ToList();
@@ -110,10 +125,14 @@ internal sealed class GetOwnerAnalyticsQueryHandler
         // instead of February). Convert to VN local (UTC+7, same offset VnPayService uses) before
         // extracting the calendar month.
         var vnOffset = TimeSpan.FromHours(7);
-        var nowVn = now.ToOffset(vnOffset);
-
-        var trendMonths = Enumerable.Range(0, 6)
-            .Select(i => nowVn.AddMonths(-i))
+        
+        // MLACP-659: có kỳ thì vẽ đúng các tháng của kỳ (cuối kỳ mặc định là hôm nay). Trần 24 tháng: kỳ dài hơn chỉ vẽ 24
+        // tháng cuối — cột hẹp tới mức không đọc được. Nâng cấp khi cần: gom theo quý cho kỳ dài.
+        var endVn = (request.To ?? now).ToOffset(vnOffset);
+        var startVn = request.From?.ToOffset(vnOffset) ?? endVn.AddMonths(-5);
+        var monthSpan = Math.Clamp((endVn.Year - startVn.Year) * 12 + endVn.Month - startVn.Month + 1, 1, 24);
+        var trendMonths = Enumerable.Range(0, monthSpan)
+            .Select(i => endVn.AddMonths(-i))
             .Select(d => (d.Year, d.Month))
             .Reverse()
             .ToList();

@@ -41,8 +41,13 @@ internal sealed class LedgerEntryRepository : Repository<LedgerEntry, Guid>, ILe
         Guid ownerId, string? referenceType, DateTimeOffset? from, DateTimeOffset? to,
         int page, int pageSize, CancellationToken ct = default)
     {
+        // MLACP-616: day la so chi tiet tai khoan rieng cua chu phong tra, nen phai co ca phat sinh No lan Co. Truoc day
+        // chi lay dong ghi Co (!IsDebit): khi mot ve da giai ngan roi moi bi hoan, ProcessRefundRequest thu hoi tien tu
+        // tai khoan nay (ghi No) va khoan do bien mat khoi lich su — sao ke luon cao hon so chu that su con giu.
+        // Khoan giam mang so am, theo quy uoc sao ke ngan hang. Tien con "giu ho" o Platform (ve da ban, chua toi han
+        // quyet toan) KHONG nam o tai khoan nay nen khong hien o day — xem GetMyEarnings cho phan dang cho tra.
         var query = _ctx.LedgerEntries.AsNoTracking()
-            .Where(e => e.Account.OwnerType == AccountType.User && e.Account.OwnerId == ownerId && !e.IsDebit);
+            .Where(e => e.Account.OwnerType == AccountType.User && e.Account.OwnerId == ownerId);
 
         if (referenceType is not null)
             query = query.Where(e => e.ReferenceType == referenceType);
@@ -52,7 +57,8 @@ internal sealed class LedgerEntryRepository : Repository<LedgerEntry, Guid>, ILe
         // comparison in one Where does not reliably translate under the SQLite provider used in
         // tests, same class of limitation documented throughout this codebase's other repositories.
         var rows = await query
-            .Select(e => new OwnerTransactionDto(e.Id, e.ReferenceType, e.ReferenceId, e.Amount, e.Description, e.CreatedAt))
+            .Select(e => new OwnerTransactionDto(
+                e.Id, e.ReferenceType, e.ReferenceId, e.IsDebit ? -e.Amount : e.Amount, e.Description, e.CreatedAt))
             .ToListAsync(ct);
 
         var filtered = rows

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MusicLounge.Application.Common;
+using Microsoft.EntityFrameworkCore;
 using MusicLounge.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Hangfire;
@@ -137,7 +138,7 @@ public sealed class RefundSlaBreachAlertJob
                 NotificationType.RefundUpdate,
                 new SongNgu(PayoutRequestTitle, PayoutRequestTitleEn),
                 new SongNgu(
-                    $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ): giao dịch gốc đã quá thời hạn VNPay nhận " +
+                    $"Yêu cầu hoàn tiền #{refund.Id} ({VietnamMoney.Format(refund.AmountRequested)}): giao dịch gốc đã quá thời hạn VNPay nhận " +
                     "lệnh hoàn về phương thức bạn đã thanh toán. Để nhận lại tiền, hãy khai tài khoản ngân hàng nhận hoàn và " +
                     "xác nhận đồng ý nhận bằng chuyển khoản trong mục Yêu cầu hoàn tiền. Chúng tôi chỉ chuyển khoản khi có " +
                     "sự đồng ý của bạn.",
@@ -198,7 +199,7 @@ public sealed class RefundSlaBreachAlertJob
                     NotificationType.RefundSlaBreached,
                     new SongNgu(OverdueTitle, OverdueTitleEn),
                     new SongNgu(
-                        $"Yêu cầu hoàn tiền #{refund.Id} ({refund.AmountRequested:N0}đ) đã quá hạn " +
+                        $"Yêu cầu hoàn tiền #{refund.Id} ({VietnamMoney.Format(refund.AmountRequested)}) đã quá hạn " +
                         $"{hoursOverdue}h so với cam kết {slaHours}h. Người mua đang chờ tiền về. Nếu vẫn " +
                         $"chưa được xử lý khi đã quá hạn thêm {graceHours}h, hệ thống sẽ tự duyệt theo đúng " +
                         "số tiền đã yêu cầu — muốn từ chối thì phải xử lý trước mốc đó.",
@@ -332,7 +333,7 @@ public sealed class RefundSlaBreachAlertJob
                     owner, NotificationType.RefundOwedByVenue, refund.Id,
                     new SongNgu("Chưa xác nhận trả tiền mặt cho khách", "Cash refund not yet confirmed"),
                     new SongNgu(
-                        $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ) đã được duyệt quá {slaHours} giờ mà phòng trà " +
+                        $"Yêu cầu hoàn #{refund.Id} ({VietnamMoney.Format(amount)}) đã được duyệt quá {slaHours} giờ mà phòng trà " +
                         "chưa xác nhận đã trả tiền mặt cho khách. Khách vẫn đang chờ.",
                         $"Refund request #{refund.Id} ({amount:N0} VND) was approved more than {slaHours} hours ago, but " +
                         "your music lounge has not confirmed paying the cash back to the guest. The guest is still waiting."),
@@ -345,7 +346,7 @@ public sealed class RefundSlaBreachAlertJob
                         "Phòng trà chưa trả tiền mặt hoàn cho khách",
                         "A music lounge has not paid a cash refund to a guest"),
                     new SongNgu(
-                        $"Yêu cầu hoàn #{refund.Id} ({amount:N0}đ, vé bán tại quầy) đã được duyệt quá " +
+                        $"Yêu cầu hoàn #{refund.Id} ({VietnamMoney.Format(amount)}, vé bán tại quầy) đã được duyệt quá " +
                         $"{slaHours} giờ mà phòng trà chưa xác nhận đã trả. Nền tảng không giữ khoản này nên " +
                         "không tự hoàn thay được — cần liên hệ phòng trà.",
                         $"Refund request #{refund.Id} ({amount:N0} VND, box-office ticket) was approved more than " +

@@ -84,8 +84,9 @@ public sealed class SettlementReleaseJob
             .ToHashSet();
 
         // Nap mot lan, va chi khi thuc su co khoan bi giu — phan lon lan chay khong park cai nao.
-        List<User>? admins = null;
         List<(Guid OwnerId, PayoutBlocker Blocker, decimal Amount)>? held = null;
+        List<(Settlement Settlement, LoungeShow? Show, bool Undelivered)>? parked = null;
+        List<Settlement>? released = null;
 
         foreach (var settlement in due)
         {
@@ -104,19 +105,24 @@ public sealed class SettlementReleaseJob
             // so it records the debt with a null destination instead. Writing the payout journal now
             // would credit the owner's ledger account for money no bank transfer can follow, and the
             // ledger is append-only. Hold it until an account exists; the next daily run pays it.
-            if (settlement.BankAccountId is null)
+            // MLACP-640: "the next daily run pays it" was a promise with no mechanism — nothing ever filled the null in,
+            // so a tranche created before the venue had an account stayed deferred forever even after the account was
+            // added and verified. The account is now resolved HERE, at release time (SettlementPayoutAccount), and the
+            // owner is told why their money is held instead of the reason living only in a log line.
+            if (await SettlementPayoutAccount.EnsureAsync(_uow, settlement, ct) is not { } payoutAccountId)
             {
                 _logger.LogError(
                     "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} has no " +
                     "payout account. The venue must register a default BankAccount before this can be " +
                     "released at {At}",
                     settlement.Id, settlement.OwnerId, now);
+                (held ??= []).Add((settlement.OwnerId, PayoutBlocker.NoPayoutAccount, settlement.NetAmount));
                 continue;
             }
 
             // MLACP-395: chi chuyen tien cho nguoi nhan da xac minh danh tinh, vao tai khoan da xac minh — xem
             // PayeeVerification. Hoan chu khong huy: khoan nay van Scheduled, lan chay sau tu chuyen khi du dieu kien.
-            if (await PayeeVerification.BlockerAsync(_uow, _pii, settlement.OwnerId, settlement.BankAccountId.Value, ct) is { } blocker)
+            if (await PayeeVerification.BlockerAsync(_uow, _pii, settlement.OwnerId, payoutAccountId, ct) is { } blocker)
             {
                 _logger.LogWarning(
                     "Settlement release deferred — SettlementId={SettlementId} OwnerId={OwnerId} payee not verified " +
@@ -166,35 +172,10 @@ public sealed class SettlementReleaseJob
                     settlement.Id, settlement.OwnerId, settlement.PaymentId,
                     settlement.NetAmount, reason, now);
 
-                admins ??= await _ctx.Users
-                    .Where(u => u.Role == UserRole.Admin)
-                    .ToListAsync(ct);
-
-                var body = undelivered
-                    ? new SongNgu(
-                        $"Khoản {settlement.NetAmount:N0}đ của phòng trà bị giữ lại vì buổi diễn chưa " +
-                        "từng được đánh dấu bắt đầu — có thể nó đã không diễn ra. Cần kiểm chứng: nếu " +
-                        "buổi diễn thật sự không diễn ra thì người mua vé cần được hoàn tiền.",
-                        $"A music lounge's {settlement.NetAmount:N0} VND is being held because the show was never " +
-                        "marked as started — it may not have taken place. Please verify: if the show really did not " +
-                        "take place, the ticket buyers need to be refunded.")
-                    : new SongNgu(
-                        $"Khoản {settlement.NetAmount:N0}đ của phòng trà bị giữ lại vì buổi diễn " +
-                        "không chạy đủ thời lượng đã bán. Cần kiểm chứng rồi quyết định chi trả hay giữ lại.",
-                        $"A music lounge's {settlement.NetAmount:N0} VND is being held because the show did not run " +
-                        "for the duration that was sold. Please verify, then decide whether to pay out or withhold.");
-
-                foreach (var admin in admins)
-                {
-                    await _notifications.NotifyAsync(
-                        admin.Id,
-                        NotificationType.SettlementPendingReview,
-                        new SongNgu("Khoản quyết toán cần duyệt", "Settlement needs review"),
-                        body,
-                        referenceType: "settlement",
-                        referenceId: settlement.Id.ToString(),
-                        ct: ct);
-                }
+                // MLACP-645: báo Admin GOM theo buổi diễn ở cuối lần chạy (NotifyParkedAsync) — trước đây mỗi khoản một
+                // thông báo không ghi tên buổi: một buổi 6 vé là 6 thông báo "Khoản 32,400đ của phòng trà bị giữ lại…"
+                // giống hệt nhau (đo 05/10/2026), Admin không biết buổi nào.
+                (parked ??= []).Add((settlement, show, undelivered));
 
                 await _ctx.SaveChangesAsync(ct);
                 continue;
@@ -238,15 +219,19 @@ public sealed class SettlementReleaseJob
             // and the loop safely resumable.
             await _ctx.SaveChangesAsync(ct);
 
-            var (noticeTitle, noticeBody) = await ReleaseNoticeAsync(settlement, ct);
-            await _notifications.NotifyAsync(
-                settlement.OwnerId,
-                NotificationType.SettlementReleased,
-                noticeTitle,
-                noticeBody,
-                referenceType: "settlement",
-                referenceId: settlement.Id.ToString(),
-                ct: ct);
+            // MLACP-645: khoản ủng hộ báo riêng (chủ phải xác nhận + chuyển cho nghệ sĩ từng khoản); tiền vé / đồ uống gom
+            // theo chủ ở cuối lần chạy (NotifyReleasedAsync) — trước đây một lần chạy gửi 37 thông báo rời cho một chủ.
+            if (await ReleaseNoticeAsync(settlement, ct) is { } notice)
+                await _notifications.NotifyAsync(
+                    settlement.OwnerId,
+                    NotificationType.SettlementReleased,
+                    notice.Title,
+                    notice.Body,
+                    referenceType: "settlement",
+                    referenceId: settlement.Id.ToString(),
+                    ct: ct);
+            else
+                (released ??= []).Add(settlement);
 
             // NotifyAsync only staged a Notification row (Add()) — flush that too before moving on,
             // so it isn't silently rolled into whatever the NEXT settlement's SaveChangesAsync
@@ -258,6 +243,84 @@ public sealed class SettlementReleaseJob
         // MLACP-395: bao sau vong lap, gop theo chu phong tra — mot thong bao cho moi khoan dang bi giu cua ho.
         if (held is not null)
             await NotifyHeldPayoutsAsync(held, now, ct);
+        if (parked is not null)
+            await NotifyParkedAsync(parked, ct);
+        if (released is not null)
+            await NotifyReleasedAsync(released, ct);
+    }
+
+    /// <summary>MLACP-645: một thông báo cho mỗi chủ phòng trà, mỗi lần chạy — số khoản, tổng tiền, chia theo đợt.</summary>
+    private async Task NotifyReleasedAsync(List<Settlement> released, CancellationToken ct)
+    {
+        foreach (var nhom in released.GroupBy(s => s.OwnerId))
+        {
+            var ds = nhom.ToList();
+            var tong = ds.Sum(s => s.NetAmount);
+            SongNgu body;
+            if (ds.Count == 1)
+                body = new SongNgu(
+                    $"Khoản thanh toán {VietnamMoney.Format(tong)} ({TenDot(ds[0].ReleaseType).Vi}) đã được giải ngân.",
+                    $"The payment of {tong:N0} VND ({TenDot(ds[0].ReleaseType).En}) has been paid out.");
+            else
+            {
+                var theoDot = ds.GroupBy(s => s.ReleaseType).OrderBy(g => g.Key).ToList();
+                body = new SongNgu(
+                    $"Nền tảng đã giải ngân {ds.Count} khoản, tổng {VietnamMoney.Format(tong)} vào tài khoản của phòng trà (" +
+                    string.Join(", ", theoDot.Select(g => $"{TenDot(g.Key).Vi}: {g.Count()} khoản")) + ").",
+                    $"The platform paid out {ds.Count} settlements totalling {tong:N0} VND to your music lounge's account (" +
+                    string.Join(", ", theoDot.Select(g => $"{TenDot(g.Key).En}: {g.Count()}")) + ").");
+            }
+            await _notifications.NotifyAsync(
+                nhom.Key, NotificationType.SettlementReleased,
+                new SongNgu("Đã nhận thanh toán", "Payment received"), body,
+                referenceType: "settlement", referenceId: ds[0].Id.ToString(), ct: ct);
+        }
+        await _ctx.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// MLACP-645: một thông báo cho mỗi Admin, mỗi BUỔI DIỄN, mỗi lý do — có tên buổi, tên phòng trà, số khoản và tổng
+    /// tiền. Liên kết trỏ khoản đầu tiên (trang duyệt quyết toán liệt kê đủ các khoản đang chờ).
+    /// </summary>
+    private async Task NotifyParkedAsync(
+        List<(Settlement Settlement, LoungeShow? Show, bool Undelivered)> parked, CancellationToken ct)
+    {
+        var admins = await _ctx.Users.Where(u => u.Role == UserRole.Admin).Select(u => u.Id).ToListAsync(ct);
+        foreach (var nhom in parked.GroupBy(p => (ShowId: p.Show?.Id, p.Undelivered)))
+        {
+            var dau = nhom.First();
+            var tong = nhom.Sum(p => p.Settlement.NetAmount);
+            var soKhoan = nhom.Count();
+            var loungeName = dau.Show is null ? null
+                : await _ctx.Lounges.AsNoTracking().Where(l => l.Id == dau.Show.LoungeId).Select(l => l.Name).FirstOrDefaultAsync(ct);
+            var buoiVi = dau.Show is null ? "một buổi diễn" : $"buổi \"{dau.Show.Name}\"" + (loungeName is null ? "" : $" ({loungeName})");
+            var buoiEn = dau.Show is null ? "a show" : $"the show \"{dau.Show.Name}\"" + (loungeName is null ? "" : $" ({loungeName})");
+            var khoanVi = soKhoan == 1 ? $"Khoản {VietnamMoney.Format(tong)}" : $"{soKhoan} khoản, tổng {VietnamMoney.Format(tong)},";
+            var khoanEn = soKhoan == 1 ? $"A settlement of {tong:N0} VND" : $"{soKhoan} settlements totalling {tong:N0} VND";
+
+            var body = nhom.Key.Undelivered
+                ? new SongNgu(
+                    $"{khoanVi} của {buoiVi} bị giữ lại vì buổi diễn chưa từng được đánh dấu bắt đầu — có thể nó đã " +
+                    "không diễn ra. Cần kiểm chứng: nếu buổi diễn thật sự không diễn ra thì người mua vé cần được hoàn tiền.",
+                    $"{khoanEn} for {buoiEn} is being held because the show was never marked as started — it may not " +
+                    "have taken place. Please verify: if the show really did not take place, the ticket buyers need to be refunded.")
+                : new SongNgu(
+                    $"{khoanVi} của {buoiVi} bị giữ lại vì buổi diễn không chạy đủ thời lượng đã bán. Cần kiểm chứng rồi " +
+                    "quyết định chi trả hay giữ lại.",
+                    $"{khoanEn} for {buoiEn} is being held because the show did not run for the duration that was sold. " +
+                    "Please verify, then decide whether to pay out or withhold.");
+
+            foreach (var admin in admins)
+                await _notifications.NotifyAsync(
+                    admin,
+                    NotificationType.SettlementPendingReview,
+                    new SongNgu("Khoản quyết toán cần duyệt", "Settlement needs review"),
+                    body,
+                    referenceType: "settlement",
+                    referenceId: dau.Settlement.Id.ToString(),
+                    ct: ct);
+        }
+        await _ctx.SaveChangesAsync(ct);
     }
 
     /// <summary>
@@ -276,6 +339,8 @@ public sealed class SettlementReleaseJob
             var blocker = group.First().Blocker;
             var total = group.Sum(h => h.Amount);
             var reference = ownerId.ToString();
+            // MLACP-645: Admin đọc tên người và phòng trà, không phải một mã GUID (đo 05/10/2026).
+            var (ownerVi, ownerEn) = await OwnerLabelAsync(ownerId, ct);
 
             List<Guid> recipients;
             SongNgu title, body;
@@ -287,14 +352,14 @@ public sealed class SettlementReleaseJob
                     "Payout waiting for recipient verification");
                 body = blocker == PayoutBlocker.IdentityAwaitingReview
                     ? new SongNgu(
-                        $"Chủ phòng trà #{ownerId} có {total:N0}đ tiền quyết toán đang bị giữ vì hồ sơ CCCD/CMND chờ duyệt. " +
+                        $"{ownerVi} có {VietnamMoney.Format(total)} tiền quyết toán đang bị giữ vì hồ sơ CCCD/CMND chờ duyệt. " +
                         "Duyệt hồ sơ ở mục KYC để khoản này được chuyển ở lần giải ngân kế tiếp.",
-                        $"Music lounge owner #{ownerId} has {total:N0} VND in settlements on hold because their ID card " +
+                        $"{ownerEn} has {total:N0} VND in settlements on hold because their ID card " +
                         "is awaiting review. Review it under KYC so this amount is paid out in the next payout run.")
                     : new SongNgu(
-                        $"Chủ phòng trà #{ownerId} có {total:N0}đ tiền quyết toán đang bị giữ vì tài khoản nhận tiền chưa được " +
+                        $"{ownerVi} có {VietnamMoney.Format(total)} tiền quyết toán đang bị giữ vì tài khoản nhận tiền chưa được " +
                         "xác minh. Đối chiếu chủ tài khoản với CCCD/CMND đã duyệt rồi xác minh tài khoản.",
-                        $"Music lounge owner #{ownerId} has {total:N0} VND in settlements on hold because their payout " +
+                        $"{ownerEn} has {total:N0} VND in settlements on hold because their payout " +
                         "account is not verified. Match the account holder against the approved ID card, then verify the account.");
             }
             else
@@ -306,20 +371,27 @@ public sealed class SettlementReleaseJob
                 body = blocker switch
                 {
                     PayoutBlocker.IdentityRejected => new SongNgu(
-                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì hồ sơ CCCD/CMND chưa được chấp nhận. Hãy " +
+                        $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì hồ sơ CCCD/CMND chưa được chấp nhận. Hãy " +
                         "nộp lại hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
                         $"The platform is holding {total:N0} VND of your settlements because your ID card was not accepted. " +
                         "Please resubmit it; once it is approved and your payout account is verified, this amount is paid " +
                         "out in the next payout run."),
                     // MLACP-401: chỉ chủ phòng trà sửa được — số tài khoản của họ không còn đọc được trên hệ thống.
                     PayoutBlocker.PayoutAccountUnreadable => new SongNgu(
-                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì số tài khoản nhận tiền không còn đọc được trên " +
+                        $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì số tài khoản nhận tiền không còn đọc được trên " +
                         "hệ thống. Hãy nhập lại tài khoản nhận tiền; sau khi Admin xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
                         $"The platform is holding {total:N0} VND of your settlements because your payout account number " +
                         "can no longer be read by the system. Please re-enter your payout account; once an Admin verifies " +
                         "it, this amount is paid out in the next payout run."),
+                    // MLACP-640: trước đây lý do này chỉ nằm trong log — chủ phòng trà không biết tiền đang chờ họ khai tài khoản.
+                    PayoutBlocker.NoPayoutAccount => new SongNgu(
+                        $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì phòng trà chưa có tài khoản nhận tiền mặc định. " +
+                        "Hãy thêm tài khoản ở mục Tài khoản nhận tiền; sau khi Admin xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
+                        $"The platform is holding {total:N0} VND of your settlements because your music lounge has no default payout " +
+                        "account. Please add one under Payout accounts; once an Admin verifies it, this amount is paid out in the " +
+                        "next payout run."),
                     _ => new SongNgu(
-                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì tài khoản chưa xác minh danh tính. Hãy nộp " +
+                        $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì tài khoản chưa xác minh danh tính. Hãy nộp " +
                         "CCCD/CMND trong mục Hồ sơ; khi được duyệt và tài khoản nhận tiền được xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
                         $"The platform is holding {total:N0} VND of your settlements because your identity is not verified. " +
                         "Please submit your ID card under Profile; once it is approved and your payout account is verified, " +
@@ -350,6 +422,16 @@ public sealed class SettlementReleaseJob
     /// si. Thong bao phai noi dieu do va noi so tien — "khoan thanh toan da duoc giai ngan" chung chung
     /// thi chu phong tra khong biet minh con mot viec phai lam.
     /// </summary>
+    /// <summary>MLACP-645: "Chủ phòng trà Hà Đông Hải (Phòng trà Ánh Dương)".</summary>
+    private async Task<(string Vi, string En)> OwnerLabelAsync(Guid ownerId, CancellationToken ct)
+    {
+        var name = await _ctx.Users.AsNoTracking().Where(u => u.Id == ownerId).Select(u => u.FullName).FirstOrDefaultAsync(ct);
+        var lounge = await _ctx.Lounges.AsNoTracking().Where(l => l.OwnerId == ownerId).Select(l => l.Name).FirstOrDefaultAsync(ct);
+        var ten = string.IsNullOrWhiteSpace(name) ? $"#{ownerId}" : name;
+        var kem = lounge is null ? "" : $" ({lounge})";
+        return ($"Chủ phòng trà {ten}{kem}", $"Music lounge owner {ten}{kem}");
+    }
+
     private async Task<Guid?> DonationIdOfAsync(Guid paymentId, CancellationToken ct)
     {
         var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == paymentId, ct);
@@ -359,7 +441,8 @@ public sealed class SettlementReleaseJob
             : null;
     }
 
-    private async Task<(SongNgu Title, SongNgu Body)> ReleaseNoticeAsync(Settlement settlement, CancellationToken ct)
+    /// <summary>Thông báo riêng cho khoản ỦNG HỘ; null với tiền vé / đồ uống (được gom ở NotifyReleasedAsync).</summary>
+    private async Task<(SongNgu Title, SongNgu Body)?> ReleaseNoticeAsync(Settlement settlement, CancellationToken ct)
     {
         var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == settlement.PaymentId, ct);
         if (payment?.ReferenceType == DonationPayouts.PaymentReferenceType
@@ -369,21 +452,35 @@ public sealed class SettlementReleaseJob
             var rate = donation.PerformerShareRateSnapshot
                 ?? await _config.GetDecimalAsync(ConfigKeys.DonationPerformerShareRate, 0.88m, ct);
             var forPerformer = PaymentFeeCalculator.SplitDonationPayout(donation.Gross, donation.Net, rate).PerformerAmount;
+            // MLACP-645: trước đây ghi "tiền donate #<GUID>" — chủ phòng trà có 5 khoản thì nhận 5 thông báo không phân
+            // biệt được (đo 05/10/2026). Nay ghi ai ủng hộ, cho nghệ sĩ nào, ở buổi nào.
+            var nguon = await _ctx.Donations.AsNoTracking().Where(d => d.Id == donation.Id)
+                .Select(d => new { Performer = d.Performance.Performer.Name, Show = d.Performance.LoungeShow.Name })
+                .FirstOrDefaultAsync(ct);
+            var nguoi = donation.IsAnonymous ? "khán giả ẩn danh" : (donation.DisplayName ?? "một khán giả");
+            var person = donation.IsAnonymous ? "an anonymous viewer" : (donation.DisplayName ?? "a viewer");
+            var choAi = nguon is null ? "" : $" cho nghệ sĩ {nguon.Performer} (buổi \"{nguon.Show}\")";
+            var toWhom = nguon is null ? "" : $" to {nguon.Performer} (\"{nguon.Show}\")";
             return (
-                new SongNgu("Đã nhận tiền donate", "Donation received"),
+                new SongNgu("Đã nhận tiền ủng hộ", "Donation received"),
                 new SongNgu(
-                    $"Nền tảng đã chuyển {settlement.NetAmount:N0}đ tiền donate #{donation.Id} vào tài khoản của phòng trà. " +
-                    $"Hãy xác nhận đã nhận, rồi chuyển {forPerformer:N0}đ cho nghệ sĩ.",
-                    $"The platform has transferred {settlement.NetAmount:N0} VND from donation #{donation.Id} to your music " +
+                    $"Nền tảng đã chuyển {VietnamMoney.Format(settlement.NetAmount)} tiền ủng hộ của {nguoi}{choAi} vào tài khoản " +
+                    $"của phòng trà. Hãy xác nhận đã nhận, rồi chuyển {VietnamMoney.Format(forPerformer)} cho nghệ sĩ.",
+                    $"The platform has transferred {settlement.NetAmount:N0} VND from {person}'s donation{toWhom} to your music " +
                     $"lounge's account. Please confirm you received it, then transfer {forPerformer:N0} VND to the performer."));
         }
 
-        return (
-            new SongNgu("Đã nhận thanh toán", "Payment received"),
-            new SongNgu(
-                $"Khoản thanh toán {settlement.NetAmount:N0}đ ({settlement.ReleaseType}) đã được giải ngân.",
-                $"The payment of {settlement.NetAmount:N0} VND ({settlement.ReleaseType}) has been paid out."));
+        return null;
     }
+
+    /// <summary>MLACP-645: tên đợt cho người đọc — trước đây in thẳng tên kỹ thuật "Partial70"/"Final30".</summary>
+    private static (string Vi, string En) TenDot(SettlementReleaseType t) => t switch
+    {
+        SettlementReleaseType.Partial70 => ("đợt 70%", "70% instalment"),
+        SettlementReleaseType.Final30 => ("đợt 30% còn lại", "final 30% instalment"),
+        SettlementReleaseType.Full => ("toàn bộ", "in full"),
+        _ => (t.ToString(), t.ToString())
+    };
 
     /// <summary>
     /// Buoi dien dung sau giao dich nay. Khong tim thay thi tra null — day la thieu du lieu that

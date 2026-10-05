@@ -43,6 +43,9 @@ public sealed class EditableFieldsAreReadableTests
         ["UpdateSystemConfigCommand.Note"] =
             "lý do của LẦN thay đổi này, không phải trạng thái của tham số; nó đi vào SystemConfigHistory " +
             "và mỗi lần sửa phải nhập lại — trả về giá trị cũ mới là sai.",
+        ["UpdatePerformanceCommand.ChangeReason"] =
+            "lý do của LẦN đổi nghệ sĩ này (MLACP-622), không phải thuộc tính của tiết mục — cùng bản chất với " +
+            "UpdateSystemConfigCommand.Note ở trên. Lý do gần nhất đọc được qua LoungeShowDetailDto.LineupChange.Reason.",
         ["UpdateSystemConfigCommand.Value"] =
             "giá trị mới do người sửa nhập; giá trị hiện tại đọc qua GET /admin/system-config, không phải " +
             "qua DTO cùng tên lệnh.",

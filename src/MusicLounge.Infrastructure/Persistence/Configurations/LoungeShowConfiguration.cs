@@ -21,6 +21,7 @@ internal sealed class LoungeShowConfiguration : IEntityTypeConfiguration<LoungeS
             .HasDefaultValue(LivestreamPlaybackMode.TwoD);
         b.Property(s => s.Status).HasDefaultValue(LoungeShowStatus.Draft);
         b.Property(s => s.RefundPercentage).HasPrecision(5, 2);
+        b.Property(s => s.LineupChangeNote).HasMaxLength(500);   // MLACP-622 — LineupChange.MaxReasonLength
         b.Property(s => s.CancellationAllowed).HasDefaultValue(true);
         b.Property(s => s.IsPublic).HasDefaultValue(true);
         b.Property(s => s.PosterByAi).HasDefaultValue(false);

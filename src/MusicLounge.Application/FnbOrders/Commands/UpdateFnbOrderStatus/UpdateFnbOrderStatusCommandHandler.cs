@@ -202,7 +202,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                     "Food & drink order cancelled — you will be refunded"),
                 new SongNgu(
                     $"Đơn #{order.Id} của bạn đã bị phòng trà huỷ trước khi phục vụ. Chúng tôi đã tự động tạo " +
-                    $"yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần làm gì " +
+                    $"yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã thanh toán — bạn không cần làm gì " +
                     "thêm và sẽ được báo khi yêu cầu được xử lý.",
                     $"Your order #{order.Id} was cancelled by the music lounge before it was served. We have " +
                     $"automatically created a 100% refund request ({amount:N0} VND) to your original payment method " +

@@ -1460,6 +1460,13 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("LineupChangeNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("LineupChangedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<Guid>("LoungeId")
                         .HasColumnType("uniqueidentifier");
 

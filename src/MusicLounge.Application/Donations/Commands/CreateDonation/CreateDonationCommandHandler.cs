@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.Donations.DTOs;
 using MusicLounge.Domain.Entities;
@@ -18,14 +19,17 @@ internal sealed class CreateDonationCommandHandler
     private readonly IVnPayService _vnPay;
     private readonly ISystemConfigService _config;
     private readonly BusinessSettings _settings;
+    private readonly ILivestreamRepository _livestreamRepo;
 
     public CreateDonationCommandHandler(
         IUnitOfWork uow,
         ICurrentUserService currentUser,
         IVnPayService vnPay,
         ISystemConfigService config,
-        IOptions<BusinessSettings> settings)
+        IOptions<BusinessSettings> settings,
+        ILivestreamRepository livestreamRepo)
     {
+        _livestreamRepo = livestreamRepo;
         _uow = uow;
         _currentUser = currentUser;
         _vnPay = vnPay;
@@ -53,6 +57,18 @@ internal sealed class CreateDonationCommandHandler
         if (await VenueLifecycle.StatusOfAsync(_uow, show.LoungeId, ct) is not { } venueStatus
             || !VenueLifecycle.CanOperate(venueStatus))
             throw new DomainException(VenueLifecycle.TradingPausedForBuyers);
+
+        // MLACP-641: ủng hộ nghệ sĩ là việc của người ĐANG XEM buổi phát (chủ dự án chốt 05/10/2026: ủng hộ chỉ ở khung
+        // chat của màn xem trực tuyến). Trước đây mọi tài khoản đăng nhập đều tạo được khoản ủng hộ cho buổi đang diễn —
+        // kể cả người không có vé — và khi trả xong, lời nhắn của họ được phát vào khung chat của buổi TRẢ PHÍ: một đường
+        // vòng qua cổng vé của LivestreamHub (đo 05/10: tài khoản không vé và tài khoản chỉ có vé tại chỗ đều nhận 201).
+        // Cùng quy tắc quyền xem với GetLivestreamDetailQueryHandler: phát miễn phí thì ai đăng nhập cũng được, có phí thì
+        // phải giữ vé hạng Livestream của đúng buổi. Chủ/nhân viên/Admin vào xem để giám sát không tính là khán giả.
+        var livestream = await _livestreamRepo.GetByShowIdAsync(show.Id, ct);
+        var watchesForFree = livestream is { IsFree: true };
+        if (!watchesForFree && !await _livestreamRepo.HoldsLivestreamTicketAsync(show.Id, _currentUser.UserId, ct))
+            throw new DomainException(
+                "Ủng hộ nghệ sĩ dành cho khán giả đang xem buổi phát trực tuyến — bạn cần vé xem trực tuyến của buổi diễn này.");
 
 
         // Load donor display name from profile (only if not anonymous)

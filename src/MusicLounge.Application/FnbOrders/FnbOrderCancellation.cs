@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Domain.ValueObjects;
 using System.Linq.Expressions;
 using MusicLounge.Application.Common.Interfaces;
@@ -109,7 +110,7 @@ public static class FnbOrderCancellation
                            "Food & drink order cancelled — you will be refunded"),
                        new SongNgu(
                            $"Đơn #{current.Id} của bạn đã bị hủy vì {why.Vi}. Chúng tôi đã tự động " +
-                           $"tạo yêu cầu hoàn 100% ({amount:N0}đ) về phương thức bạn đã thanh toán — bạn không cần " +
+                           $"tạo yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã thanh toán — bạn không cần " +
                            "làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
                            $"Your order #{current.Id} has been cancelled because {why.En}. We have automatically " +
                            $"created a 100% refund request ({amount:N0} VND) to your original payment method — you do " +

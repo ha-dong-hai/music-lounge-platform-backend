@@ -81,7 +81,7 @@ public sealed class DonationVenuePayoutTests
         var show = new LoungeShow
         {
             LoungeId = lounge.Id, Name = $"PayoutShow-{Guid.NewGuid():N}", Description = "test",
-            Format = LoungeShowFormat.Offline, Status = LoungeShowStatus.Ongoing,
+            Format = LoungeShowFormat.Online, Status = LoungeShowStatus.Ongoing,
             ScheduledStart = start, ScheduledEnd = start.AddHours(3), VcpmcRoyaltyReference = "VCPMC-TEST"
         };
         var performer = new Performer { Name = $"PayoutArtist-{Guid.NewGuid():N}"[..25], CreatedByUserId = owner.Id };
@@ -90,6 +90,8 @@ public sealed class DonationVenuePayoutTests
         await db.SaveChangesAsync();
 
         var performance = new Performance { LoungeShowId = show.Id, PerformerId = performer.Id };
+        // MLACP-641: ủng hộ chỉ dành cho người xem buổi phát — buổi có một phiên phát miễn phí đang Live.
+        db.Add(new Livestream { LoungeShowId = show.Id, Status = LivestreamStatus.Live, StartedAt = start, IsFree = true });
         db.Add(performance);
         await db.SaveChangesAsync();
 
@@ -201,8 +203,12 @@ public sealed class DonationVenuePayoutTests
             var notice = await db.Notifications.SingleAsync(n =>
                 n.UserId == venue.OwnerId && n.Type == NotificationType.SettlementReleased
                 && n.ReferenceId == settlement.Id.ToString());
-            notice.Body.Should().Contain($"donate #{donationId}",
-                "chủ phòng trà phải biết đây là tiền donate — một phần phải chuyển tiếp cho nghệ sĩ");
+            // MLACP-645: ghi người ủng hộ + nghệ sĩ + buổi thay cho mã khoản ("donate #<GUID>") — vẫn phải nói rõ đây là
+            // tiền ủng hộ, và tiền số kiểu Việt.
+            notice.Body.Should().Contain("tiền ủng hộ của",
+                "chủ phòng trà phải biết đây là tiền ủng hộ — một phần phải chuyển tiếp cho nghệ sĩ");
+            notice.Body.Should().Contain("cho nghệ sĩ ").And.NotContain(donationId.ToString(), "a GUID tells the owner nothing");
+            notice.Body.Should().MatchRegex(@"\d{1,3}(\.\d{3})+đ", "Vietnamese thousands separator, e.g. 90.000đ");
         }
 
         (await AcknowledgeAsync(venue, donationId)).StatusCode.Should().Be(HttpStatusCode.NoContent);

@@ -60,11 +60,10 @@ internal sealed class GetAdminPlatformOverviewQueryHandler
         // Cộng cả hai làm con số phồng lên gần bằng tổng tiền người mua trả — tức là báo cáo rằng nền tảng ăn gần trọn
         // mỗi tấm vé. Nay dùng định nghĩa chung ở PlatformRevenue, cùng con số với /analytics/admin-dashboard nên hai
         // màn hình không bao giờ lệch nhau.
-        var thanhToanDaXacNhan = await _uow.Repository<Payment, Guid>().FindAsync(
-            p => p.Status == PaymentStatus.Confirmed, ct);
-        var platformRevenueInPeriod = thanhToanDaXacNhan
-            .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= from && p.PaidAt.Value <= to)
-            .Sum(PlatformRevenue.CuaThanhToan);
+        // MLACP-616: đọc biến động (bán + hoàn đúng kỳ) thay vì chỉ thanh toán Confirmed — cùng hàm với bảng điều khiển.
+        var platformRevenueInPeriod = (await PlatformRevenue.BienDongAsync(_uow, ct))
+            .Where(b => b.Luc >= from && b.Luc <= to)
+            .Sum(b => b.ThucNhan);
 
         // User.CreatedAt (AuditableEntity) is a plain DateTime — always written as
         // DateTime.UtcNow (ApplicationDbContext.SaveChangesAsync) — so compare against the UTC
