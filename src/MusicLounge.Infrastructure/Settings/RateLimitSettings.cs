@@ -10,16 +10,16 @@ namespace MusicLounge.Infrastructure.Settings;
 // gặp 429 mà không hiểu vì sao. Môi trường trình diễn cần nâng được ngưỡng mà không sửa mã.
 //
 // MẶC ĐỊNH GIỮ NGUYÊN (100 và 10): không khai gì trong appsettings thì hành vi y như trước.
-// TRẦN GIỚI HẠN + ĐƯỜNG NÂNG CẤP: vẫn chia theo IP. Cách đúng hơn cho lưu lượng thật sau NAT là chia theo tài khoản
-// khi đã đăng nhập (đưa UseRateLimiter xuống sau UseAuthentication) — chưa làm vì đổi thứ tự middleware cần rà lại
-// toàn bộ đường xác thực; làm khi có lưu lượng thật từ mạng dùng chung.
+// MLACP-670 (05/10/2026): ngưỡng chung nay chia theo TÀI KHOẢN khi đã đăng nhập, theo IP khi chưa (RateLimitPartitionKey);
+// UseRateLimiter đã xuống sau UseAuthentication. Ngưỡng đăng nhập/đăng ký vẫn theo IP. Nên ngưỡng auth vẫn là ngưỡng
+// của cả phòng khi trình diễn — nâng AuthPermitPerMinute cho môi trường đó nếu cần.
 public sealed class RateLimitSettings
 {
     public const string SectionName = "RateLimiting";
     public const int DefaultGlobalPermitPerMinute = 100;
     public const int DefaultAuthPermitPerMinute = 10;
 
-    /// <summary>Số yêu cầu mỗi phút cho mỗi IP, áp dụng toàn API.</summary>
+    /// <summary>Số yêu cầu mỗi phút, áp dụng toàn API — cho mỗi tài khoản đã đăng nhập, hoặc mỗi IP khi chưa (MLACP-670).</summary>
     public int GlobalPermitPerMinute { get; init; } = DefaultGlobalPermitPerMinute;
 
     /// <summary>Số yêu cầu mỗi phút cho mỗi IP ở nhóm đăng nhập/đăng ký (cộng dồn với ngưỡng chung).</summary>
