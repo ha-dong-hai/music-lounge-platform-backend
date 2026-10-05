@@ -76,6 +76,11 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
         }
 
         account.IsVerified = request.Approve;
+        // MLACP-668. Chỉ ghi IsVerified thì từ chối một tài khoản đang chờ là ghi false đè false: tài khoản nằm lại
+        // hàng chờ, chủ phòng trà vẫn thấy "chờ duyệt", lý do mất theo thông báo. Lưu dấu từ chối + lý do trên chính
+        // tài khoản; xác minh thì xoá dấu đó.
+        account.RejectedAt = request.Approve ? null : DateTimeOffset.UtcNow;
+        account.RejectionNote = request.Approve ? null : request.Note?.Trim();
         repo.Update(account);
 
         await _notifications.NotifyAsync(
@@ -88,12 +93,12 @@ internal sealed class ReviewPayoutBankAccountCommandHandler : IRequestHandler<Re
                 request.Approve
                     ? $"Tài khoản {account.BankName} của \"{lounge.Name}\" đã được xác minh. Các khoản quyết toán đang giữ sẽ " +
                       "được chuyển ở lần giải ngân kế tiếp."
-                    : $"Tài khoản {account.BankName} của \"{lounge.Name}\" chưa được chấp nhận. Lý do: {request.Note} " +
+                    : $"Tài khoản {account.BankName} của \"{lounge.Name}\" chưa được chấp nhận. Lý do: “{account.RejectionNote}”. " +
                       "Hãy cập nhật tài khoản rồi chờ xác minh lại.",
                 request.Approve
                     ? $"The {account.BankName} account of \"{lounge.Name}\" has been verified. Settlements on hold will be " +
                       "paid out in the next payout run."
-                    : $"The {account.BankName} account of \"{lounge.Name}\" was not accepted. Reason: {request.Note} " +
+                    : $"The {account.BankName} account of \"{lounge.Name}\" was not accepted. Reason: “{account.RejectionNote}”. " +
                       "Please update the account and wait for it to be verified again."),
             referenceType: "bank_account",
             referenceId: account.Id.ToString(),

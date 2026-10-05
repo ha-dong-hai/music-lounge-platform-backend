@@ -25,8 +25,13 @@ internal sealed class GetPayoutAccountReviewQueueQueryHandler
     {
         // Chỉ tài khoản của phòng trà: lệnh duyệt từ chối tài khoản của nghệ sĩ ("do chính nghệ sĩ xác
         // nhận qua liên kết gửi email"), nên đưa chúng vào hàng đợi chỉ tạo ra những dòng bấm vào là lỗi.
+        // MLACP-668: tài khoản bị từ chối rời hàng chờ (kể cả số đếm ở hàng việc chờ của Admin, vốn gọi chính truy
+        // vấn này) cho tới khi chủ phòng trà sửa lại; xem riêng bằng Rejected=true.
         var accounts = (await _uow.Repository<BankAccount, Guid>().FindAsync(
-                b => b.OwnerType == BankAccountOwnerType.Lounge && b.IsVerified == request.Verified, ct))
+                b => b.OwnerType == BankAccountOwnerType.Lounge
+                    && (request.Rejected
+                        ? b.RejectedAt != null
+                        : b.IsVerified == request.Verified && b.RejectedAt == null), ct))
             .OrderBy(b => b.CreatedAt)   // cũ nhất trước, như mọi hàng đợi duyệt khác của hệ thống
             .ToList();
 
@@ -75,7 +80,9 @@ internal sealed class GetPayoutAccountReviewQueueQueryHandler
                 owner?.CitizenCardReviewStatus == KycReviewStatus.Approved,
                 account.IsDefault,
                 account.IsVerified,
-                account.CreatedAt));
+                account.CreatedAt,
+                account.RejectedAt,
+                account.RejectionNote));
         }
 
         return new PaginatedResult<PayoutAccountReviewItemDto>(

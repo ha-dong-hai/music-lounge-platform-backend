@@ -19,6 +19,8 @@ internal sealed class BankAccountConfiguration : IEntityTypeConfiguration<BankAc
         b.Property(x => x.AccountHolder).HasMaxLength(255).IsRequired();
         b.Property(x => x.IsDefault).HasDefaultValue(true);
         b.Property(x => x.IsVerified).HasDefaultValue(false);
+        // MLACP-668. Cùng độ dài với User.CitizenCardReviewNote — lý do từ chối của cùng một màn duyệt.
+        b.Property(x => x.RejectionNote).HasMaxLength(1000);
         // Polymorphic — no FK constraint. OwnerId refers to lounge.id or performer.id.
         b.HasIndex(x => new { x.OwnerType, x.OwnerId });
         // App-level "unset others" in Create/UpdateBankAccountCommandHandler is read-then-write with

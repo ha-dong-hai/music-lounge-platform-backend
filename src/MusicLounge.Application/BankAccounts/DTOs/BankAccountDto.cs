@@ -17,7 +17,12 @@ public sealed record BankAccountDto(
     bool IsDefault,
     bool IsVerified,
     /// <summary>MLACP-401. Số tài khoản không còn giải mã được (khoá mã hoá cũ đã mất) — cần nhập lại.</summary>
-    bool AccountNumberUnreadable)
+    bool AccountNumberUnreadable,
+    /// <summary>MLACP-668. Có giá trị = Admin đã từ chối và chủ tài khoản chưa sửa lại. <c>IsVerified=false</c> mà trường
+    /// này null mới là "đang chờ duyệt"; sửa tài khoản thì trường này về null.</summary>
+    DateTimeOffset? RejectedAt = null,
+    /// <summary>MLACP-668. Lý do Admin ghi khi từ chối — chủ phòng trà cần biết phải sửa gì.</summary>
+    string? RejectionNote = null)
 {
     /// <summary>MLACP-454: có giá trị khi đây là tài khoản nhận tiền của phòng trà. Suy ra từ OwnerType + OwnerId nên
     /// không thể lệch với dữ liệu gốc.</summary>
