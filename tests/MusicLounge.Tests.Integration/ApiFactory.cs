@@ -116,6 +116,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<ILivestreamHubService>();
             services.AddSingleton<ILivestreamHubService, RecordingLivestreamHubService>();
 
+            // MLACP-669: ghi lại sự kiện thời gian thực (thông báo, hàng việc chờ Admin) thay vì gửi qua SignalR.
+            services.RemoveAll<IRealtimeNotifier>();
+            services.AddSingleton<IRealtimeNotifier, RecordingRealtimeNotifier>();
+
             // ── 4. Replace JWT auth with test header-based auth ───────────────────
             services.AddAuthentication(opts =>
             {
