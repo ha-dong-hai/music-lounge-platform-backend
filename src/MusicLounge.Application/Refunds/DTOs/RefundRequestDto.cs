@@ -25,4 +25,14 @@ public sealed record RefundRequestDto(
     string? PayoutBankName = null,
     string? PayoutAccountNumber = null,
     string? PayoutAccountHolder = null,
-    DateTimeOffset? PayoutConsentAt = null);
+    DateTimeOffset? PayoutConsentAt = null)
+{
+    /// <summary>MLACP-672: tên người gửi yêu cầu (họ tên trên tài khoản) — thay cho mã người dùng.</summary>
+    public string? RequesterName { get; init; }
+
+    /// <summary>MLACP-672: buổi diễn của các vé trong khoản thanh toán này — thay cho mã thanh toán.</summary>
+    public string? ShowName { get; init; }
+
+    /// <summary>MLACP-672: số vé trong khoản thanh toán này.</summary>
+    public int TicketCount { get; init; }
+}
