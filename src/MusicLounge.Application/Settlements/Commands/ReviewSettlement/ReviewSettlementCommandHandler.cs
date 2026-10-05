@@ -86,7 +86,9 @@ internal sealed class ReviewSettlementCommandHandler : IRequestHandler<ReviewSet
         // lặp chứ không bỏ: đây là một đường giải ngân thứ hai, và một đường giải ngân không có
         // chốt thì chính nó là lỗ hổng.
 
-        if (settlement.BankAccountId is null)
+        // MLACP-640: cùng cách chọn tài khoản với job — khoản tạo khi phòng trà chưa có tài khoản được gán tài khoản mặc
+        // định hiện tại; trước đây Admin duyệt chi trả cho khoản như vậy luôn bị từ chối dù phòng trà đã thêm tài khoản.
+        if (await SettlementPayoutAccount.EnsureAsync(_uow, settlement, ct) is null)
             throw new DomainException(
                 "Phòng trà chưa đăng ký tài khoản nhận tiền — ghi bút toán chi trả bây giờ sẽ ghi có " +
                 "cho một khoản không lệnh chuyển khoản nào đi theo được.");
