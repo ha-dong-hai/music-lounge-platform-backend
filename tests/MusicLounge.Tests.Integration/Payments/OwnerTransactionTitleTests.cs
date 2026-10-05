@@ -27,8 +27,9 @@ public sealed class OwnerTransactionTitleTests
 
     public OwnerTransactionTitleTests(ApiFactory factory) => _factory = factory;
 
-    [Fact]
-    public async Task ATicketPayout_IsTitledWithTheShowTrancheAndTicketCount()
+    /// <summary>Chủ phòng trà có tài khoản đã xác minh, một khoản thanh toán 2 vé của một buổi đã diễn, và đợt 70% đã tới hạn.
+    /// Chạy job giải ngân để có bút toán thật trên sổ của chủ.</summary>
+    private async Task<(Guid OwnerId, string ShowName)> ReleasedTicketTrancheAsync()
     {
         Guid ownerId;
         string showName = $"Đêm nhạc 655 {Guid.NewGuid():N}"[..20];
@@ -90,6 +91,13 @@ public sealed class OwnerTransactionTitleTests
         }
         using (var scope = _factory.Services.CreateScope())
             await scope.ServiceProvider.GetRequiredService<SettlementReleaseJob>().ExecuteAsync(new JobCancellationToken(false));
+        return (ownerId, showName);
+    }
+
+    [Fact]
+    public async Task ATicketPayout_IsTitledWithTheShowTrancheAndTicketCount()
+    {
+        var (ownerId, showName) = await ReleasedTicketTrancheAsync();
 
         var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner").GetAsync("/api/v1/me/transactions");
         var body = await res.Content.ReadAsStringAsync();
@@ -102,5 +110,21 @@ public sealed class OwnerTransactionTitleTests
         Guidish.IsMatch(row.GetProperty("title").GetString()!).Should().BeFalse("chủ phòng trà không đọc được mã GUID");
         row.GetProperty("description").GetString().Should().StartWith("Settlement #",
             "the ledger's own reconciliation text is kept unchanged alongside the readable title");
+    }
+
+    /// <summary>MLACP-658. "Các đợt quyết toán gần đây" trên trang tài chính trước đây chỉ có số tiền và ngày.</summary>
+    [Fact]
+    public async Task RecentSettlements_SayWhichShowAndTrancheEachAmountIsFor()
+    {
+        var (ownerId, showName) = await ReleasedTicketTrancheAsync();
+
+        var res = await _factory.CreateAuthenticatedClient(ownerId, "Owner").GetAsync("/api/v1/me/earnings");
+        var body = await res.Content.ReadAsStringAsync();
+        res.IsSuccessStatusCode.Should().BeTrue(body);
+
+        var recent = JsonDocument.Parse(body).RootElement.GetProperty("data").GetProperty("recentSettlements")
+            .EnumerateArray().ToList();
+        recent.Should().ContainSingle("test premise: one tranche for this owner");
+        recent[0].GetProperty("title").GetString().Should().Be($"Tiền vé đợt 70% — {showName} · 2 vé");
     }
 }
