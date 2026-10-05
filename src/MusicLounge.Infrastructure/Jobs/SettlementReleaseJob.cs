@@ -385,7 +385,7 @@ public sealed class SettlementReleaseJob
                         "it, this amount is paid out in the next payout run."),
                     // MLACP-640: trước đây lý do này chỉ nằm trong log — chủ phòng trà không biết tiền đang chờ họ khai tài khoản.
                     PayoutBlocker.NoPayoutAccount => new SongNgu(
-                        $"Nền tảng đang giữ {total:N0}đ tiền quyết toán của bạn vì phòng trà chưa có tài khoản nhận tiền mặc định. " +
+                        $"Nền tảng đang giữ {VietnamMoney.Format(total)} tiền quyết toán của bạn vì phòng trà chưa có tài khoản nhận tiền mặc định. " +
                         "Hãy thêm tài khoản ở mục Tài khoản nhận tiền; sau khi Admin xác minh, khoản này được chuyển ở lần giải ngân kế tiếp.",
                         $"The platform is holding {total:N0} VND of your settlements because your music lounge has no default payout " +
                         "account. Please add one under Payout accounts; once an Admin verifies it, this amount is paid out in the " +
