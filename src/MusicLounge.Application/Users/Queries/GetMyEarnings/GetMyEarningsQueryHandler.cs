@@ -1,5 +1,6 @@
 using MediatR;
 using MusicLounge.Application.Common.Interfaces;
+using MusicLounge.Application.Settlements;
 using MusicLounge.Application.Users.DTOs;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -34,15 +35,18 @@ internal sealed class GetMyEarningsQueryHandler : IRequestHandler<GetMyEarningsQ
             .Where(s => s.Status == SettlementStatus.Released)
             .ToList();
 
-        var recent = settlements
+        var recentRows = settlements
             .OrderByDescending(s => s.Id)
             .Take(10)
+            .ToList();
+        var titles = await OwnerMoneyTitles.LoadAsync(_uow, recentRows.Select(s => s.Id).ToList(), [], ct);
+        var recent = recentRows
             .Select(s => new RecentSettlementDto(
                 s.Id,
                 s.NetAmount,
                 s.Status.ToString(),
                 s.ScheduledAt,
-                s.ReleasedAt))
+                s.ReleasedAt) { Title = titles.Settlement(s.Id) })
             .ToList();
 
         return new EarningsSummaryDto(
