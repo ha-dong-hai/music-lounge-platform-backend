@@ -18,7 +18,7 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
         Guid userId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = _ctx.Complaints.AsNoTracking().Where(c => c.ComplainantUserId == userId);
-        return await ProjectPageAsync(query, page, pageSize, ct);
+        return await ProjectPageAsync(_ctx, query, page, pageSize, ct);
     }
 
     public async Task<PaginatedResult<ComplaintDto>> GetPendingAsync(
@@ -26,7 +26,7 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
     {
         var query = _ctx.Complaints.AsNoTracking()
             .Where(c => c.Status == ComplaintStatus.Open || c.Status == ComplaintStatus.Investigating);
-        return await ProjectPageAsync(query, page, pageSize, ct, cuNhatTruoc: true);
+        return await ProjectPageAsync(_ctx, query, page, pageSize, ct, cuNhatTruoc: true);
     }
 
     /// <summary>
@@ -77,14 +77,14 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
         // khiếu nại chờ lâu nhất bị đẩy xuống trang sau. Có lẫn trạng thái đã xong hoặc không lọc → vẫn mới nhất trước.
         var chiViecChuaXong = statuses.Count > 0
             && statuses.All(s => s is ComplaintStatus.Open or ComplaintStatus.Investigating);
-        return await ProjectPageAsync(query, page, pageSize, ct, cuNhatTruoc: chiViecChuaXong);
+        return await ProjectPageAsync(_ctx, query, page, pageSize, ct, cuNhatTruoc: chiViecChuaXong);
     }
 
     /// <param name="cuNhatTruoc">Hàng chờ → cũ nhất trước. Mặc định mới nhất trước (lịch sử, "khiếu nại của tôi").
     /// Xếp theo Id: khoá chính là GUID có thứ tự thời gian (OrderedGuid) nên trùng thứ tự tạo, và tránh được việc so
     /// <c>DateTimeOffset</c> mà provider SQLite của bộ test không dịch được.</param>
     private static async Task<PaginatedResult<ComplaintDto>> ProjectPageAsync(
-        IQueryable<Complaint> query, int page, int pageSize, CancellationToken ct, bool cuNhatTruoc = false)
+        ApplicationDbContext db, IQueryable<Complaint> query, int page, int pageSize, CancellationToken ct, bool cuNhatTruoc = false)
     {
         var total = await query.CountAsync(ct);
         var items = await (cuNhatTruoc ? query.OrderBy(c => c.Id) : query.OrderByDescending(c => c.Id))
@@ -107,6 +107,10 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
                 c.CreatedAt,
                 c.SlaDeadline))
             .ToListAsync(ct);
+
+        // MLACP-672: tên đối tượng bị khiếu nại — trước đây web chỉ có loại + mã nên in "Buổi diễn #01A10C82".
+        var names = await ReferenceNames.ResolveAsync(db, items.Select(i => (i.TargetType, i.TargetId)), ct);
+        items = items.Select(i => i with { TargetName = names.GetValueOrDefault((i.TargetType.ToLowerInvariant(), i.TargetId)) }).ToList();
 
         return new PaginatedResult<ComplaintDto>(items, page, pageSize, total);
     }

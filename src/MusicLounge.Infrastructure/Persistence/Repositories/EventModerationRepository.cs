@@ -52,6 +52,10 @@ internal sealed class EventModerationRepository
                 m.ReviewedAt))
             .ToListAsync(ct);
 
+        // MLACP-672: tên thứ đang chờ duyệt — trước đây hộp duyệt ghi "Buổi diễn #01A10C82".
+        var names = await ReferenceNames.ResolveAsync(_ctx, items.Select(i => (i.TargetType, i.TargetId)), ct);
+        items = items.Select(i => i with { TargetName = names.GetValueOrDefault((i.TargetType.ToLowerInvariant(), i.TargetId)) }).ToList();
+
         return new PaginatedResult<EventModerationDto>(items, page, pageSize, total);
     }
 

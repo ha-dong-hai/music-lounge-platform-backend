@@ -37,4 +37,9 @@ public sealed record FnbOrderDto(
     string? CancelReason = null,
     string? CancelledByName = null,
     // MLACP-631: nhân viên đã cầm tiền mặt — chỉ trả cho phía phòng trà, để đối chiếu tiền mặt cuối ca.
-    string? CashCollectedByName = null);
+    string? CashCollectedByName = null)
+{
+    /// <summary>MLACP-672: tên khách đặt — chỉ trả cho phía phòng trà (forVenue), để nhân viên gọi đúng người thay vì đọc
+    /// mã đơn "#00000008". Null với đơn của khách vãng lai hoặc khi khán giả xem đơn của chính mình.</summary>
+    public string? CustomerName { get; init; }
+}
