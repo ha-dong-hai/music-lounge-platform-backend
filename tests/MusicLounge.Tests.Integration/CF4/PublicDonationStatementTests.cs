@@ -182,8 +182,10 @@ public sealed class PublicDonationStatementTests
     }
 
     /// <summary>Token của liên kết mới nhất đã gửi tới hộp thư này (SMTP không cấu hình → ghi log).</summary>
-    private static string LatestTokenSentTo(string email)
+    private string LatestTokenSentTo(string email)
     {
+        // MLACP-642: thư mời nay được xếp hàng (Hangfire) — gửi hết thư đang chờ như máy chủ job sẽ làm.
+        ThuMoiNgheSi.GuiHet(_factory.Services);
         var sent = CapturingLogSink.Snapshot()
             .Where(e => e.Properties.TryGetValue("ConfirmationLink", out _)
                         && e.Properties.TryGetValue("Email", out var to)

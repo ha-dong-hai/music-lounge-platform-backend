@@ -55,6 +55,9 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
         public void EnqueueFcmNotification(Guid userId, string title, string body, string? referenceType = null, string? referenceId = null) { }
         public void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language) { }
         public void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language) { }
+        public void EnqueuePerformerConfirmationEmail(
+            string toEmail, string toName, MusicLounge.Domain.ValueObjects.SongNgu subject,
+            MusicLounge.Domain.ValueObjects.SongNgu message, string link, DateTimeOffset expiresAt) { }
         public void EnqueuePhoneVerificationCode(string toPhone, string code, string language) { }
         public void EnqueueModerationAiScoring(Guid moderationId) { }
         public void EnqueueRatingAiScoring(Guid ratingId) { }
