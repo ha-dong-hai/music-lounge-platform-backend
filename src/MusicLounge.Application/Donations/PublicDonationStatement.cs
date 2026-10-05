@@ -2,6 +2,7 @@ using System.Globalization;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Donations.DTOs;
+using MusicLounge.Application.Settlements;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 
@@ -71,6 +72,32 @@ public static class PublicDonationStatement
             .Select(c => c.DonationId!.Value)
             .ToHashSet();
 
+        // MLACP-664: khoản nền tảng còn giữ — tính lúc dự kiến chuyển cho phòng trà và có đang bị giữ không. Điều kiện giữ
+        // lặp đúng ba chốt SettlementReleaseJob áp (PayeeVerification + SettlementPayoutAccount): CCCD chủ phòng trà chưa được
+        // duyệt, phòng trà chưa có tài khoản nhận tiền mặc định, hoặc tài khoản đó chưa được xác minh. (Chốt "số tài khoản
+        // không giải mã được" cần khoá mã hoá nên không xét ở trang công khai — trường hợp hiếm, khi đó trang báo sớm hơn thực tế.)
+        var chuaChuyenPaymentIds = paymentByDonation.Values.Select(p => p.Id).ToList();
+        var settlementByPayment = chuaChuyenPaymentIds.Count == 0
+            ? new Dictionary<Guid, Settlement>()
+            : (await uow.Repository<Settlement, Guid>().FindAsync(
+                    s => chuaChuyenPaymentIds.Contains(s.PaymentId) && s.Status == SettlementStatus.Scheduled, ct))
+                .GroupBy(s => s.PaymentId).ToDictionary(g => g.Key, g => g.First());
+        var ownerIds = settlementByPayment.Values.Select(s => s.OwnerId).Distinct().ToList();
+        var duocNhanTien = new HashSet<Guid>();
+        if (ownerIds.Count > 0)
+        {
+            var owners = await uow.Repository<User, Guid>().FindAsync(u => ownerIds.Contains(u.Id), ct);
+            var lounges = await uow.Repository<MusicLounge.Domain.Entities.MusicLounge, Guid>()
+                .FindAsync(l => ownerIds.Contains(l.OwnerId), ct);
+            var loungeIds = lounges.Select(l => l.Id).ToList();
+            var taiKhoanDaXacMinh = (await uow.Repository<BankAccount, Guid>().FindAsync(
+                    a => a.OwnerType == BankAccountOwnerType.Lounge && loungeIds.Contains(a.OwnerId) && a.IsDefault && a.IsVerified, ct))
+                .Select(a => a.OwnerId).ToHashSet();
+            foreach (var o in owners.Where(o => o.CitizenCardReviewStatus == KycReviewStatus.Approved))
+                if (lounges.Any(l => l.OwnerId == o.Id && taiKhoanDaXacMinh.Contains(l.Id)))
+                    duocNhanTien.Add(o.Id);
+        }
+
         return rows.Select(row =>
         {
             var receivedAt = DonationPayoutDeadline.ReceivedAt(
@@ -105,6 +132,17 @@ public static class PublicDonationStatement
                 }
             }
 
+            DateTimeOffset? duKienChuyen = null;
+            var biGiu = false;
+            // releaseTimes có mặt mọi khoản có thanh toán, giá trị null = chưa chuyển.
+            if (releaseTimes.GetValueOrDefault(row.Id) is null
+                && paymentByDonation.TryGetValue(row.Id, out var thanhToan)
+                && settlementByPayment.TryGetValue(thanhToan.Id, out var quyetToan))
+            {
+                biGiu = !duocNhanTien.Contains(quyetToan.OwnerId);
+                if (!biGiu) duKienChuyen = SettlementReleaseSchedule.NextRunAt(quyetToan.ScheduledAt, now);
+            }
+
             return new PublicDonationDto(
                 row.Id,
                 row.ShowName,
@@ -134,7 +172,11 @@ public static class PublicDonationStatement
                     : response.EventType == DonationEventType.PerformerConfirmedReceipt ? "Confirmed" : "Disputed",
                 response?.OccurredAt,
                 stage,
-                LabelOf(stage, overdue, asked));
+                LabelOf(stage, overdue, asked))
+            {
+                PlatformPayoutExpectedAt = duKienChuyen,
+                PlatformPayoutHeld = biGiu,
+            };
         }).ToList();
     }
 

@@ -374,11 +374,12 @@ public static class DependencyInjection
             j => j.ExecuteAsync(JobCancellationToken.Null),
             Cron.Hourly());
 
+        // MLACP-664: lịch đọc từ SettlementReleaseSchedule — sao kê công khai dùng cùng hằng này để báo ngày dự kiến chuyển.
         Recurring<SettlementReleaseJob>(
             manager,
             "release-due-settlements",
             j => j.ExecuteAsync(JobCancellationToken.Null),
-            Cron.Daily());
+            MusicLounge.Application.Settlements.SettlementReleaseSchedule.Cron);
 
         // Hourly, not daily: this is what closes the cancellation window and opens the rating
         // window, so a whole day of drift is a whole day of tickets still refundable for a show
