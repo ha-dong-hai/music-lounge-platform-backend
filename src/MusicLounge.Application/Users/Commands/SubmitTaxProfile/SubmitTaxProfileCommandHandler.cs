@@ -50,6 +50,14 @@ internal sealed class SubmitTaxProfileCommandHandler : IRequestHandler<SubmitTax
             ?? throw new NotFoundException(nameof(User), _currentUser.UserId);
 
         var declared = Enum.Parse<PayeeBusinessType>(request.BusinessType, ignoreCase: true);
+
+        // MLACP-660. Với hộ/cá nhân, mã số thuế CHÍNH LÀ số định danh của chủ tài khoản (người đại diện hộ kinh doanh là
+        // chủ tài khoản — giả định đã nêu ở MLACP-398). Đã nộp CCCD 12 số thì số khai phải trùng: khác là gõ nhầm, hoặc
+        // khai số của người khác để tiền thuế khấu trừ ghi vào tên họ. CMND 9 số cũ không có số định danh nên không đối chiếu.
+        if (declared == PayeeBusinessType.HouseholdOrIndividual && user.CitizenCardNumber is not null
+            && _piiEncryption.TryDecrypt(user.CitizenCardNumber) is { Length: 12 } soCccd && soCccd != taxCode)
+            throw new DomainException(
+                "Số định danh khai ở hồ sơ thuế phải trùng số CCCD bạn đã nộp ở mục Định danh. Kiểm tra lại số, hoặc nộp lại CCCD nếu số đó sai.");
         // MLACP-398. Tên doanh nghiệp chỉ có nghĩa với doanh nghiệp — khai lại là hộ/cá nhân thì không giữ tên cũ.
         var legalName = declared == PayeeBusinessType.Enterprise ? request.LegalName?.Trim() : null;
 
