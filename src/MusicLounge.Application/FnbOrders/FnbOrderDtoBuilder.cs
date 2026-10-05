@@ -27,6 +27,12 @@ internal static class FnbOrderDtoBuilder
         var menuItemsById = menuItems.ToDictionary(m => m.Id);
         var itemsByOrder = items.ToLookup(i => i.FnbOrderId);
 
+        var zoneIds = orders.Where(o => o.ZoneId.HasValue).Select(o => o.ZoneId!.Value).Distinct().ToList();
+        var zoneNames = zoneIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : (await uow.Repository<SeatingZone, Guid>().FindAsync(z => zoneIds.Contains(z.Id), ct))
+                .ToDictionary(z => z.Id, z => z.Name);
+
         var paidOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(uow, orderIds, ct);
         var liveUntil = await FnbOrderPayments.LiveOnlinePaymentDeadlinesAsync(
             uow, orderIds, DateTimeOffset.UtcNow, ct);
@@ -40,7 +46,9 @@ internal static class FnbOrderDtoBuilder
                 i.Quantity, i.UnitPrice, i.Cancelled, i.Note))
             .ToList(),
             FnbOrderPayments.IsPaid(o, paidOrderIds.Contains(o.Id)),
-            liveUntil.TryGetValue(o.Id, out var until) ? until : null)
+            liveUntil.TryGetValue(o.Id, out var until) ? until : null,
+            o.ZoneId,
+            o.ZoneId.HasValue && zoneNames.TryGetValue(o.ZoneId.Value, out var zoneName) ? zoneName : null)
         ).ToList();
     }
 }
