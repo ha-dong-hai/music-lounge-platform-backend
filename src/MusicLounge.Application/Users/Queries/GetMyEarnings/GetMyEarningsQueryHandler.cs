@@ -40,13 +40,28 @@ internal sealed class GetMyEarningsQueryHandler : IRequestHandler<GetMyEarningsQ
             .Take(10)
             .ToList();
         var titles = await OwnerMoneyTitles.LoadAsync(_uow, recentRows.Select(s => s.Id).ToList(), [], ct);
+
+        // Cùng điều kiện SettlementReleaseJob dùng để hoãn: còn RefundRequest Pending cho khoản thanh toán gốc.
+        var openPaymentIds = recentRows
+            .Where(s => s.Status is SettlementStatus.Scheduled or SettlementStatus.PendingReview)
+            .Select(s => s.PaymentId).Distinct().ToList();
+        var awaitingRefund = openPaymentIds.Count == 0
+            ? new HashSet<Guid>()
+            : (await _uow.Repository<RefundRequest, Guid>().FindAsync(
+                    r => openPaymentIds.Contains(r.PaymentId) && r.Status == RefundRequestStatus.Pending, ct))
+                .Select(r => r.PaymentId).ToHashSet();
         var recent = recentRows
             .Select(s => new RecentSettlementDto(
                 s.Id,
                 s.NetAmount,
                 s.Status.ToString(),
                 s.ScheduledAt,
-                s.ReleasedAt) { Title = titles.Settlement(s.Id) })
+                s.ReleasedAt)
+            {
+                Title = titles.Settlement(s.Id),
+                HeldForRefund = s.Status is SettlementStatus.Scheduled or SettlementStatus.PendingReview
+                                && awaitingRefund.Contains(s.PaymentId),
+            })
             .ToList();
 
         return new EarningsSummaryDto(
