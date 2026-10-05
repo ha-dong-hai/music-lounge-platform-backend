@@ -44,9 +44,14 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMyLounge([FromQuery] Guid loungeId, CancellationToken ct = default)
+    public async Task<IActionResult> GetMyLounge(
+        [FromQuery] Guid loungeId,
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetOwnerAnalyticsQuery(loungeId), ct);
+        // MLACP-659: from/to tuỳ chọn — trang "Báo cáo doanh thu" lọc theo kỳ; bỏ trống = mọi thời gian như trước.
+        var result = await _sender.Send(new GetOwnerAnalyticsQuery(loungeId, from, to), ct);
         return Ok(ApiResponse<OwnerAnalyticsDto>.Ok(result));
     }
 
@@ -219,9 +224,12 @@ public sealed class AnalyticsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetArtistDonationStats(
-        [FromQuery] Guid loungeId, CancellationToken ct = default)
+        [FromQuery] Guid loungeId,
+        [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] DateTimeOffset? to = null,
+        CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetOwnerArtistDonationStatsQuery(loungeId), ct);
+        var result = await _sender.Send(new GetOwnerArtistDonationStatsQuery(loungeId, from, to), ct);
         return Ok(ApiResponse<OwnerArtistDonationReportDto>.Ok(result));
     }
 
