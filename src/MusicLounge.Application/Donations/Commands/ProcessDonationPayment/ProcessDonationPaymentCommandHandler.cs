@@ -226,18 +226,24 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 var forPerformer = PaymentFeeCalculator.SplitDonationPayout(
                     donation.Gross, fees.OwnerNet, performerShareRate).PerformerAmount;
 
+                // MLACP-645: ghi AI ủng hộ và cho NGHỆ SĨ NÀO — câu cũ chỉ nói có donate cho nghệ sĩ: buổi ba nghệ sĩ,
+                // năm khoản ủng hộ là năm thông báo không phân biệt được (đo 05/10/2026). Hai giá trị tách ra biến (và chú
+                // thích này nằm NGOÀI new SongNgu): SongNguThongBaoTests tách tham số theo dấu phẩy và ngoặc kép.
+                var nguoiUngHo = donation.IsAnonymous ? "khán giả ẩn danh" : donation.DisplayName ?? "một khán giả";
+                var tenNgheSi = await PerformerNameAsync(donation.PerformanceId, ct) ?? "";
                 await _notifications.NotifyAsync(
                     info.OwnerId,
                     NotificationType.DonationReceived,
                     new SongNgu(
-                        "Bạn vừa nhận donate!",
+                        "Bạn vừa nhận tiền ủng hộ!",
                         "You just received a donation!"),
                     new SongNgu(
                         // MLACP-361: noi dung phai dung voi dong tien that — truoc day bao chu "xac nhan da
                         // nhan tien" trong khi nen tang chua chuyen dong nao.
-                        $"Có donate {donation.Gross:N0}đ cho nghệ sĩ. Sau phí nền tảng và thuế, " +
-                        $"{fees.OwnerNet:N0}đ sẽ được chuyển vào tài khoản ngân hàng của phòng trà ở lần giải " +
-                        $"ngân tới. Khi nhận được, hãy xác nhận và chuyển {forPerformer:N0}đ cho nghệ sĩ.",
+                        $"Có khoản ủng hộ {VietnamMoney.Format(donation.Gross)} của {nguoiUngHo} " +
+                        $"cho nghệ sĩ {tenNgheSi}. Sau phí nền tảng và thuế, " +
+                        $"{VietnamMoney.Format(fees.OwnerNet)} sẽ được chuyển vào tài khoản ngân hàng của phòng trà ở lần giải " +
+                        $"ngân tới. Khi nhận được, hãy xác nhận và chuyển {VietnamMoney.Format(forPerformer)} cho nghệ sĩ.",
                         $"A donation of {donation.Gross:N0} VND was made to a performer. After platform fees and tax, " +
                         $"{fees.OwnerNet:N0} VND will be transferred to your music lounge's bank account in the next payout. " +
                         $"Once you receive it, please confirm and transfer {forPerformer:N0} VND to the performer."),

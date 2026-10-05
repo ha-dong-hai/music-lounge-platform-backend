@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -109,7 +110,7 @@ public static class SubscriptionTerms
             : TimeSpan.FromTicks((long)(newCycle.Ticks * (value / newPrice)));
 
     public static string DescribeCredit(decimal credit, TimeSpan extra)
-        => $"{credit:N0}đ ≈ {extra.TotalDays:0.#} ngày";
+        => $"{VietnamMoney.Format(credit)} ≈ {extra.TotalDays:0.#} ngày";
 
     /// <summary>MLACP-489: bản tiếng Anh của <see cref="DescribeCredit"/> — cùng con số, cùng cách làm tròn.</summary>
     public static string DescribeCreditEn(decimal credit, TimeSpan extra)
