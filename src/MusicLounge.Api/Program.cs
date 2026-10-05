@@ -427,6 +427,8 @@ try
     app.UseAuthorization();
     app.MapControllers();
     app.MapHub<LivestreamHub>("/hubs/livestream");
+    // MLACP-669: web nghe "dữ liệu của bạn vừa đổi" (thông báo mới, hàng việc chờ của Admin) để cập nhật không cần F5.
+    app.MapHub<NotificationHub>("/hubs/notifications");
     app.MapHealthChecks("/health");
 
     // Configured (appsettings.json DashboardPath) but never actually mounted before this fix — see

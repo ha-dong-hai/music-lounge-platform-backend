@@ -12,11 +12,16 @@ public sealed class ApplicationDbContext : DbContext
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        ICurrentUserService? currentUser = null)
+        ICurrentUserService? currentUser = null,
+        Realtime.RealtimeOutbox? realtime = null)
         : base(options)
     {
         _currentUser = currentUser;
+        _realtime = realtime;
     }
+
+    // MLACP-669: null khi DbContext được tạo ngoài DI (thiết kế migration, test dựng tay) — khi đó không phát gì.
+    private readonly Realtime.RealtimeOutbox? _realtime;
 
     public DbSet<User> Users => Set<User>();
     public DbSet<MusicLoungeVenue> Lounges => Set<MusicLoungeVenue>();
@@ -144,7 +149,7 @@ public sealed class ApplicationDbContext : DbContext
         }
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
         var userId = _currentUser?.IsAuthenticated == true ? _currentUser.UserId : (Guid?)null;
@@ -163,6 +168,17 @@ public sealed class ApplicationDbContext : DbContext
             }
         }
 
-        return base.SaveChangesAsync(ct);
+        // MLACP-669: đọc ChangeTracker TRƯỚC khi lưu (lưu xong mọi entry về Unchanged), nhưng chỉ nhận sự kiện khi lưu
+        // thành công. Đang trong transaction thì giữ tới lúc UnitOfWork commit — phát sớm hơn thì trình duyệt tải lại
+        // đúng lúc dữ liệu chưa commit và vẫn thấy bản cũ.
+        var realtime = _realtime is null ? null : Realtime.RealtimeOutbox.Collect(ChangeTracker);
+        var saved = await base.SaveChangesAsync(ct);
+        if (realtime is { Count: > 0 })
+        {
+            _realtime!.Stage(realtime);
+            if (Database.CurrentTransaction is null)
+                await _realtime.FlushAsync(ct);
+        }
+        return saved;
     }
 }

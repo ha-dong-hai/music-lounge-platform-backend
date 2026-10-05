@@ -8,8 +8,13 @@ internal sealed class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _ctx;
     private IDbContextTransaction? _transaction;
+    private readonly Realtime.RealtimeOutbox? _realtime;
 
-    public UnitOfWork(ApplicationDbContext ctx) => _ctx = ctx;
+    public UnitOfWork(ApplicationDbContext ctx, Realtime.RealtimeOutbox? realtime = null)
+    {
+        _ctx = ctx;
+        _realtime = realtime;
+    }
 
     public IRepository<T, TKey> Repository<T, TKey>() where T : BaseEntity<TKey>
         => new Repository<T, TKey>(_ctx);
@@ -26,6 +31,8 @@ internal sealed class UnitOfWork : IUnitOfWork
         await _transaction.CommitAsync(ct);
         await _transaction.DisposeAsync();
         _transaction = null;
+        // MLACP-669: sự kiện của những lần lưu bên trong transaction chỉ được phát khi dữ liệu đã commit.
+        if (_realtime is not null) await _realtime.FlushAsync(ct);
     }
 
     public Task<T> ExecuteWithRetryAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken ct = default)
@@ -42,6 +49,8 @@ internal sealed class UnitOfWork : IUnitOfWork
         await _transaction.RollbackAsync(ct);
         await _transaction.DisposeAsync();
         _transaction = null;
+        // Không có gì được lưu thì không ai cần tải lại.
+        _realtime?.Discard();
     }
 
     // ApplicationDbContext is independently registered (AddDbContext, Scoped) and never

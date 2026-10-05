@@ -69,6 +69,9 @@ public static class DependencyInjection
         // Generic Repository + UnitOfWork
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // MLACP-669: sự kiện thời gian thực cho web, phát sau khi commit (xem RealtimeOutbox).
+        services.AddScoped<Realtime.RealtimeOutbox>();
+        services.AddScoped<IRealtimeNotifier, Realtime.SignalRRealtimeNotifier>();
 
         // Specific Repositories
         services.AddScoped<ILoungeShowRepository, LoungeShowRepository>();
