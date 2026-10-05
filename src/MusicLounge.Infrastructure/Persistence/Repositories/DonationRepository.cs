@@ -58,7 +58,8 @@ internal sealed class DonationRepository : Repository<Donation, Guid>, IDonation
                 d.PaymentConfirmedAt,
                 // MLACP-362: han tu xac nhan do handler dien theo DonationPayoutDeadline — truoc day la
                 // +24h hardcode trong khi job that su cho donation_hold_days.
-                null, null, null))
+                null, null, null,
+                d.Performance.PerformerId, false))
             .ToListAsync(ct);
 
         return new PaginatedResult<PendingDonationDto>(items, page, pageSize, total);
@@ -94,7 +95,8 @@ internal sealed class DonationRepository : Repository<Donation, Guid>, IDonation
                 d.IsMessagePublic ? d.Message : null,
                 // MLACP-362: truoc day o nay chua OwnerAckAt du ten truong la PaymentConfirmedAt.
                 d.PaymentConfirmedAt,
-                null, null, null))
+                null, null, null,
+                d.Performance.PerformerId, false))
             .ToListAsync(ct);
 
         var items = all

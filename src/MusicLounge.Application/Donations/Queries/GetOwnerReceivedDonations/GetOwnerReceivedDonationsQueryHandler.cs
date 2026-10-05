@@ -3,6 +3,8 @@ using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Interfaces.Repositories;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Donations.DTOs;
+using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Donations.Queries.GetOwnerReceivedDonations;
 
@@ -35,10 +37,20 @@ internal sealed class GetOwnerReceivedDonationsQueryHandler
         var holdDays = await DonationPayoutDeadline.HoldDaysAsync(_config, ct);
         var releaseTimes = await DonationPayoutDeadline.PayoutReleaseTimesAsync(
             _uow, result.Items.Select(i => i.Id).ToList(), ct);
+        // MLACP-644: nghệ sĩ đã có tài khoản nhận tiền mặc định chưa — cùng điều kiện ConfirmDonationPaidCommandHandler.
+        var performerIds = result.Items.Where(i => i.PerformerId is not null).Select(i => i.PerformerId!.Value).Distinct().ToList();
+        var withAccount = (await _uow.Repository<BankAccount, Guid>().FindAsync(
+                a => a.OwnerType == BankAccountOwnerType.Performer && performerIds.Contains(a.OwnerId) && a.IsDefault, ct))
+            .Select(a => a.OwnerId).ToHashSet();
+
         var items = result.Items.Select(i =>
         {
             var receivedAt = DonationPayoutDeadline.ReceivedAt(i.Id, i.PaymentConfirmedAt, null, releaseTimes);
-            return i with { PayoutReceivedAt = receivedAt, PayoutDueAt = DonationPayoutDeadline.DueAt(receivedAt, holdDays) };
+            return i with
+            {
+                PayoutReceivedAt = receivedAt, PayoutDueAt = DonationPayoutDeadline.DueAt(receivedAt, holdDays),
+                PerformerHasPayoutAccount = i.PerformerId is { } pid && withAccount.Contains(pid)
+            };
         }).ToList();
         return new PaginatedResult<PendingDonationDto>(items, result.Page, result.PageSize, result.TotalCount);
     }
