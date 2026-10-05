@@ -162,7 +162,8 @@ public sealed class CashRefundTests
             n.UserId == SeedHelper.AudienceId
             && n.Type == NotificationType.RefundUpdate
             && n.ReferenceId == refundId.ToString()
-            && n.Title == "Yêu cầu hoàn tiền đã được duyệt"
+            // MLACP-675: tiêu đề nêu tên buổi diễn ("Đã duyệt hoàn tiền vé \"<tên>\"") thay cho câu chung.
+            && n.Title.StartsWith("Đã duyệt hoàn tiền vé \"")
             && n.Body.Contains("phòng trà hoàn trực tiếp cho bạn")));
 
         buyerTold.Should().BeTrue("người mua vé tại quầy phải biết ai là người trả lại tiền cho họ");
