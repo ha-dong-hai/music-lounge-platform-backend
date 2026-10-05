@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
@@ -11,11 +12,16 @@ internal sealed class SetChatEnabledCommandHandler : IRequestHandler<SetChatEnab
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILivestreamHubService _hub;
+    private readonly ILogger<SetChatEnabledCommandHandler> _logger;
 
-    public SetChatEnabledCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public SetChatEnabledCommandHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ILivestreamHubService hub, ILogger<SetChatEnabledCommandHandler> logger)
     {
         _uow = uow;
         _currentUser = currentUser;
+        _hub = hub;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(SetChatEnabledCommand request, CancellationToken ct)
@@ -33,6 +39,14 @@ internal sealed class SetChatEnabledCommandHandler : IRequestHandler<SetChatEnab
         livestream.ChatEnabled = request.Enabled;
         _uow.Repository<Livestream, Guid>().Update(livestream);
         await _uow.SaveChangesAsync(ct);
+
+        // MLACP-643: báo người đang xem ngay. Gọi sau SaveChanges, cùng cách các lệnh livestream khác phát sự kiện; lỗi
+        // phát (mất kết nối hub) không được làm hỏng lệnh — chặn ở máy chủ vẫn đúng vì SendChatMessage đọc lại ChatEnabled.
+        try { await _hub.BroadcastChatEnabledChangedAsync(livestream.Id, request.Enabled, ct); }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Không phát được sự kiện bật/tắt chat cho livestream {LivestreamId}", livestream.Id);
+        }
 
         return Unit.Value;
     }

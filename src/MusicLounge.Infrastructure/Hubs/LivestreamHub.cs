@@ -102,10 +102,11 @@ public sealed class LivestreamHub : Hub
         var livestreamId = GetLivestreamId();
         if (livestreamId is null) return;
 
-        await _mediator.Send(new SendChatMessageCommand(
+        // MLACP-643: lỗi nghiệp vụ (gửi quá nhanh, chat đã tắt, buổi phát đã dừng) tới người gửi bằng đúng câu của máy chủ.
+        await LivestreamHubErrors.RunAsync(() => _mediator.Send(new SendChatMessageCommand(
             livestreamId.Value,
             _currentUser.UserId,
-            message));
+            message)));
     }
 
     private static readonly HashSet<string> _allowedReactions = ["like", "heart", "fire", "wow"];
