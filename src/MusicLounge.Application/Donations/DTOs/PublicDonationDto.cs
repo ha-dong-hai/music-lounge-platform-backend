@@ -34,4 +34,10 @@ public sealed record PublicDonationDto(
     DateTimeOffset? PerformerRespondedAt,
     string Stage,                       // PlatformHolding | VenueHolding | VenueReportedPaid | PerformerConfirmed | PerformerDisputed
     string StageLabel
-);
+)
+{
+    // MLACP-664: khi tiền còn ở nền tảng — lúc job giải ngân dự kiến chuyển cho phòng trà (SettlementReleaseSchedule), và
+    // khoản đó có đang bị giữ vì phòng trà chưa đủ điều kiện nhận tiền không. Đã chuyển rồi thì cả hai để trống / false.
+    public DateTimeOffset? PlatformPayoutExpectedAt { get; init; }
+    public bool PlatformPayoutHeld { get; init; }
+}
