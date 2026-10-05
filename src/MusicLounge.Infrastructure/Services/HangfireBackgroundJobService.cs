@@ -3,6 +3,8 @@ using MusicLounge.Application.Auth.Jobs;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Livestreams.Jobs;
 using MusicLounge.Application.LoungeShows.Commands.LogUserBehaviour;
+using MusicLounge.Application.Performers.Jobs;
+using MusicLounge.Domain.ValueObjects;
 using MusicLounge.Application.Tickets.Commands.CheckInLivestreamViewer;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Jobs;
@@ -55,6 +57,14 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
         var protectedCode = _secretProtector.Protect(code);
         BackgroundJob.Enqueue<SendEmailVerificationCodeJob>(
             j => j.ExecuteAsync(toEmail, toName, protectedCode, language, CancellationToken.None));
+    }
+
+    public void EnqueuePerformerConfirmationEmail(
+        string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt)
+    {
+        var protectedLink = _secretProtector.Protect(link);
+        BackgroundJob.Enqueue<SendPerformerConfirmationEmailJob>(j => j.ExecuteAsync(
+            toEmail, toName, subject.Vi, subject.En, message.Vi, message.En, protectedLink, expiresAt, CancellationToken.None));
     }
 
     public void EnqueuePhoneVerificationCode(string toPhone, string code, string language)
