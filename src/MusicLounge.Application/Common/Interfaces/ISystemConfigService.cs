@@ -175,6 +175,10 @@ public static class ConfigKeys
     // hardcode") — the statutory minimum itself (7 business days) is unchanged, only how it's stored.
     public const string PublishMinBusinessDaysLeadTime = "publish_min_business_days_lead_time";
 
+    // MLACP-621 (NĐ 144/2020 Điều 10 khoản 4 điểm đ): dời giờ diễn của buổi ĐÃ chấp thuận chỉ cần báo trước 02 ngày làm
+    // việc — khác mốc 7 ngày ở trên (hồ sơ xin chấp thuận lần đầu). Không seed; mặc định ở ShowRescheduleNotice.
+    public const string RescheduleMinBusinessDaysNotice = "reschedule_min_business_days_notice";
+
     // §6.8 — notice window before a Suspension/Ban penalty actually takes effect (venue status
     // change + subscription compensation), giving the Owner time to see the notification and
     // appeal before it bites. Warning has no delay (applied immediately, not config-gated).
