@@ -39,7 +39,7 @@ internal sealed class OwnerRevenueReportBuilder : IOwnerRevenueReportBuilder
 
         // ---- Tickets ----
         var allTickets = await _uow.Repository<Ticket, Guid>()
-            .FindAsync(t => showIds.Contains(t.ShowId) && t.Status == TicketStatus.Confirmed, ct);
+            .FindAsync(t => showIds.Contains(t.ShowId) && TicketRevenue.DaThuTien.Contains(t.Status), ct);
         var tickets = allTickets.Where(t => InRange(t.CreatedAt)).ToList();
 
         var priceIds = tickets.Select(t => t.PriceId).Distinct().ToList();

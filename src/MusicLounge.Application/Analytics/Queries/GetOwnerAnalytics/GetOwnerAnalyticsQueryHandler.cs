@@ -1,3 +1,4 @@
+using MusicLounge.Application.Common;
 using MusicLounge.Application.FnbOrders;
 using MediatR;
 using MusicLounge.Application.Analytics.DTOs;
@@ -38,12 +39,12 @@ internal sealed class GetOwnerAnalyticsQueryHandler
         // MLACP-659: lọc theo kỳ bằng THỜI ĐIỂM PHÁT SINH (vé: lúc mua; gọi món: lúc tạo đơn) — cùng quy tắc với
         // OwnerRevenueReportBuilder, nên các ô số liệu và báo cáo doanh thu cùng trang ra cùng một số cho cùng một kỳ.
         // Lọc sau khi nạp vì so sánh khoảng DateTimeOffset không dịch ổn định trên SQLite của bộ test.
-        // Không truyền kỳ thì giữ nguyên hành vi cũ: mọi thời gian.
+        // Không truyền kỳ thì giữ nguyên hành vi cũ: mọi thời gian. Trạng thái vé tính doanh thu theo TicketRevenue (MLACP-616).
         bool InRange(DateTimeOffset d) =>
             (!request.From.HasValue || d >= request.From.Value) && (!request.To.HasValue || d <= request.To.Value);
 
         var tickets = (await _uow.Repository<Ticket, Guid>()
-                .FindAsync(t => showIds.Contains(t.ShowId) && t.Status == TicketStatus.Confirmed, ct))
+                .FindAsync(t => showIds.Contains(t.ShowId) && TicketRevenue.DaThuTien.Contains(t.Status), ct))
             .Where(t => InRange(t.CreatedAt))
             .ToList();
 

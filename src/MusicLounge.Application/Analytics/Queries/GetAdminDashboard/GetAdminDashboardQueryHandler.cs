@@ -12,11 +12,13 @@ namespace MusicLounge.Application.Analytics.Queries.GetAdminDashboard;
 ///
 /// <b>Hai con số tiền, cố ý tách riêng chứ không gộp thành một chữ "doanh thu":</b>
 /// <list type="bullet">
-/// <item><b>GMV</b> = tổng tiền người mua trả, lấy từ các khoản thanh toán đã xác nhận.</item>
-/// <item><b>Phần nền tảng thực nhận</b> = bút toán ghi CÓ vào tài khoản nền tảng trong SỔ CÁI — không tính lại từ tỉ lệ
-/// hoa hồng, vì tỉ lệ đổi theo thời gian còn sổ cái ghi đúng thứ đã xảy ra. Cùng cách <c>/analytics/admin-overview</c>
-/// đang tính, nên hai màn hình không bao giờ lệch nhau.</item>
+/// <item><b>GMV</b> = tổng tiền người mua trả, trừ tiền đã hoàn.</item>
+/// <item><b>Phần nền tảng thực nhận</b> = phần nền tảng hưởng của từng thanh toán theo <see cref="PlatformRevenue"/>
+/// (đọc phí đã CHỐT trên thanh toán lúc mua, không tính lại từ tỉ lệ hoa hồng hiện tại), trừ phần phí của tiền đã hoàn.
+/// MLACP-616 sửa câu cũ ghi "lấy từ bút toán sổ cái" — mã chưa bao giờ đọc sổ cái ở đây.</item>
 /// </list>
+/// <b>Hoàn tiền (MLACP-616):</b> doanh số ghi ở ngày bán, khoản hoàn ghi giảm trừ ở ngày duyệt hoàn — xem
+/// <see cref="PlatformRevenue.BienDongAsync"/>.
 /// Gộp hai con số này làm một là chỗ dễ nói dối nhất của mọi trang tổng quan: bán 100 triệu tiền vé không có nghĩa nền
 /// tảng thu 100 triệu.
 ///
@@ -98,15 +100,11 @@ internal sealed class GetAdminDashboardQueryHandler
         DateTimeOffset from, DateTimeOffset to, CancellationToken ct)
     {
         var donVi = DonViCho(from, to);
-        var thanhToan = (await _uow.Repository<Payment, Guid>()
-                .FindAsync(p => p.Status == PaymentStatus.Confirmed, ct))
-            .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= from && p.PaidAt.Value <= to && NguonCua(p) is not null)
-            .ToList();
+        var bienDong = (await BienDongTienAsync(ct)).Where(b => b.Luc >= from && b.Luc <= to);
 
-        var theoNhom = thanhToan
-            .GroupBy(p => (Dau: DauNhom(p.PaidAt!.Value, donVi), Nguon: NguonCua(p)!))
-            .ToDictionary(g => g.Key, g => new RevenueBySourceDto(
-                g.Sum(p => p.GrossAmount), g.Sum(PlatformRevenue.CuaThanhToan)));
+        var theoNhom = bienDong
+            .GroupBy(b => (Dau: DauNhom(b.Luc, donVi), b.Nguon))
+            .ToDictionary(g => g.Key, g => new RevenueBySourceDto(g.Sum(b => b.Gmv), g.Sum(b => b.ThucNhan)));
         RevenueBySourceDto Khoi(DateTimeOffset dau, string nguon) =>
             theoNhom.GetValueOrDefault((dau, nguon)) ?? new RevenueBySourceDto(0m, 0m);
 
@@ -126,27 +124,22 @@ internal sealed class GetAdminDashboardQueryHandler
         var thangDau = new DateTimeOffset(nowVn.Year, nowVn.Month, 1, 0, 0, 0, VnOffset)
             .AddMonths(-(SoThangHienThi - 1));
 
-        var thanhToan = (await _uow.Repository<Payment, Guid>()
-                .FindAsync(p => p.Status == PaymentStatus.Confirmed, ct))
-            .Where(p => p.PaidAt.HasValue && p.PaidAt.Value >= thangDau)
-            .ToList();
+        var bienDong = (await BienDongTienAsync(ct)).Where(b => b.Luc >= thangDau).ToList();
 
 
 
         string Thang(DateTimeOffset luc) => luc.ToOffset(VnOffset).ToString("yyyy-MM");
 
-        var gmv = thanhToan
-            .Where(p => NguonCua(p) is not null)
-            .GroupBy(p => (Thang: Thang(p.PaidAt!.Value), Nguon: NguonCua(p)!))
-            .ToDictionary(g => g.Key, g => g.Sum(p => p.GrossAmount));
+        var gmv = bienDong
+            .GroupBy(b => (Thang: Thang(b.Luc), b.Nguon))
+            .ToDictionary(g => g.Key, g => g.Sum(b => b.Gmv));
 
         // Phần nền tảng THỰC NHẬN, theo định nghĩa dùng chung ở PlatformRevenue: hoa hồng, KHÔNG gồm tiền giữ hộ chủ
         // phòng trà đang nằm tạm ở tài khoản nền tảng chờ quyết toán. Cộng cả tiền giữ hộ vào đây sẽ nói với người đọc
         // rằng nền tảng ăn gần trọn mỗi vé.
-        var thucNhan = thanhToan
-            .Where(p => NguonCua(p) is not null)
-            .GroupBy(p => (Thang: Thang(p.PaidAt!.Value), Nguon: NguonCua(p)!))
-            .ToDictionary(g => g.Key, g => g.Sum(PlatformRevenue.CuaThanhToan));
+        var thucNhan = bienDong
+            .GroupBy(b => (Thang: Thang(b.Luc), b.Nguon))
+            .ToDictionary(g => g.Key, g => g.Sum(b => b.ThucNhan));
 
         RevenueBySourceDto Khoi(string thang, string nguon) => new(
             gmv.GetValueOrDefault((thang, nguon)),
@@ -163,6 +156,15 @@ internal sealed class GetAdminDashboardQueryHandler
                 Khoi(thang, NguonDonate)))
             .ToList();
     }
+
+    /// <summary>MLACP-616: biến động tiền của ba nguồn trang này hiển thị — đọc từ định nghĩa dùng chung
+    /// <see cref="PlatformRevenue.BienDongAsync"/>, cùng nguồn với thẻ tổng quan.</summary>
+    private async Task<IReadOnlyList<(DateTimeOffset Luc, string Nguon, decimal Gmv, decimal ThucNhan)>> BienDongTienAsync(
+        CancellationToken ct)
+        => (await PlatformRevenue.BienDongAsync(_uow, ct))
+            .Where(b => NguonCua(b.ThanhToan) is not null)
+            .Select(b => (b.Luc, NguonCua(b.ThanhToan)!, b.Gmv, b.ThucNhan))
+            .ToList();
 
     /// <summary>
     /// Nguồn của một khoản thanh toán. <c>null</c> = không thuộc ba nguồn trang này hiển thị (hiện chỉ có đơn gọi món —

@@ -1,4 +1,6 @@
+using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 
 namespace MusicLounge.Application.Common;
 
@@ -38,4 +40,49 @@ public static class PlatformRevenue
         "TicketHold" or "WalkIn" or "Donation" => thanhToan.PlatformFee,
         _ => 0m
     };
+
+    /// <summary>Một biến động tiền: dương ở ngày bán, âm ở ngày duyệt hoàn.</summary>
+    public sealed record BienDong(DateTimeOffset Luc, Payment ThanhToan, decimal Gmv, decimal ThucNhan);
+
+    /// <summary>
+    /// MLACP-616: mọi biến động doanh thu theo thời gian — một định nghĩa cho MỌI màn hình quản trị (bảng điều khiển,
+    /// thẻ tổng quan), để hai con số cùng tên không bao giờ lệch nhau.
+    ///
+    /// <para>Doanh số ghi ở NGÀY BÁN, gồm cả thanh toán về sau bị hoàn toàn bộ (Refunded); mỗi khoản hoàn đã duyệt ghi
+    /// số ÂM ở NGÀY DUYỆT HOÀN. Căn cứ VAS 14 — hàng bán bị trả lại ghi giảm trừ doanh thu ở kỳ phát sinh, không sửa kỳ đã
+    /// bán. Trước đây các màn hình chỉ lấy thanh toán Confirmed: hoàn một phần thì vẫn tính đủ phí, hoàn toàn bộ thì
+    /// thanh toán biến khỏi tháng bán (số liệu tháng cũ tự đổi).</para>
+    ///
+    /// <para>Phần phí của khoản hoàn = <see cref="CuaThanhToan"/> × (tiền hoàn / tiền gốc), làm tròn về đồng — để hiển
+    /// thị; số đảo chính xác tới từng đồng nằm ở sổ cái (ProcessRefundRequest phân bổ lũy kế).</para>
+    ///
+    /// <para>Trần giới hạn: nạp toàn bộ thanh toán đã bán và khoản hoàn đã duyệt rồi lọc ở ứng dụng (giới hạn SQLite của
+    /// bộ test với so sánh DateTimeOffset). Đường nâng cấp: bảng tổng hợp theo ngày do job định kỳ ghi.</para>
+    /// </summary>
+    public static async Task<IReadOnlyList<BienDong>> BienDongAsync(IUnitOfWork uow, CancellationToken ct)
+    {
+        var thanhToan = (await uow.Repository<Payment, Guid>()
+                .FindAsync(p => p.Status == PaymentStatus.Confirmed || p.Status == PaymentStatus.Refunded, ct))
+            .Where(p => p.PaidAt.HasValue)
+            .ToDictionary(p => p.Id);
+
+        var maThanhToan = thanhToan.Keys.ToList();
+        var hoan = (await uow.Repository<RefundRequest, Guid>().FindAsync(
+                r => r.Status == RefundRequestStatus.Approved && maThanhToan.Contains(r.PaymentId), ct))
+            .Where(r => r.ResolvedAt.HasValue && r.AmountApproved is > 0m);
+
+        var ketQua = thanhToan.Values
+            .Select(p => new BienDong(p.PaidAt!.Value, p, p.GrossAmount, CuaThanhToan(p)))
+            .ToList();
+        foreach (var r in hoan)
+        {
+            var p = thanhToan[r.PaymentId];
+            var soHoan = r.AmountApproved!.Value;
+            var phiHoan = p.GrossAmount > 0m
+                ? Math.Round(CuaThanhToan(p) * soHoan / p.GrossAmount, 0, MidpointRounding.AwayFromZero)
+                : 0m;
+            ketQua.Add(new BienDong(r.ResolvedAt!.Value, p, -soHoan, -phiHoan));
+        }
+        return ketQua;
+    }
 }
