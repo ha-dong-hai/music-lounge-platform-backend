@@ -83,8 +83,10 @@ public sealed class PerformerSelfConfirmationTests
     }
 
     /// <summary>Token của liên kết mới nhất đã gửi tới hộp thư này.</summary>
-    private static string LatestTokenSentTo(string email)
+    private string LatestTokenSentTo(string email)
     {
+        // MLACP-642: thư mời nay được xếp hàng (Hangfire) — gửi hết thư đang chờ như máy chủ job sẽ làm.
+        ThuMoiNgheSi.GuiHet(_factory.Services);
         var sent = CapturingLogSink.Snapshot()
             .Where(e => e.Properties.TryGetValue("ConfirmationLink", out _)
                         && e.Properties.TryGetValue("Email", out var to)
@@ -111,6 +113,45 @@ public sealed class PerformerSelfConfirmationTests
         using var scope = _factory.Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
             .Set<BankAccount>().AsNoTracking().SingleAsync(a => a.Id == accountId);
+    }
+
+    private sealed class GhiJob : Hangfire.Client.IClientFilter
+    {
+        public readonly List<Hangfire.Common.Job> Jobs = [];
+        public void OnCreating(Hangfire.Client.CreatingContext filterContext) { lock (Jobs) Jobs.Add(filterContext.Job); }
+        public void OnCreated(Hangfire.Client.CreatedContext filterContext) { }
+    }
+
+    // ─── MLACP-642: thư mời đi NGOÀI lệnh ─────────────────────────────────────
+
+    [Fact]
+    public async Task TheInvitation_IsQueued_NotSentInsideTheRequest_AndTheQueuedLinkIsEncrypted()
+    {
+        var ghi = new GhiJob();
+        GlobalJobFilters.Filters.Add(ghi);
+        try
+        {
+            var owner = Owner(await FreshOwnerAsync());
+            var email = NewEmail();
+            var performerId = await CreatePerformerAsync(owner, email);
+            await CreatePerformerAccountAsync(owner, performerId, "0123456780");
+
+            CapturingLogSink.Snapshot().Any(e => e.Properties.TryGetValue("ConfirmationLink", out _)
+                    && e.Properties.TryGetValue("Email", out var to) && to is ScalarValue { Value: string a } && a == email)
+                .Should().BeFalse("the mail is sent by the job, after the request — a slow mail server or a closed tab " +
+                                  "must not roll back the command that created the invitation (05/10/2026: 499 + rollback)");
+            var job = ghi.Jobs.Should().ContainSingle(j =>
+                    j.Type == typeof(MusicLounge.Application.Performers.Jobs.SendPerformerConfirmationEmailJob)
+                    && (string)j.Args[0]! == email).Subject;
+            ((string)job.Args[6]!).Should().NotContain("token=",
+                "the one-time link lets anyone answer for the performer — it must not sit in plain text in the job store");
+
+            LatestTokenSentTo(email).Should().NotBeNullOrEmpty("running the queued job sends the real link");
+        }
+        finally
+        {
+            GlobalJobFilters.Filters.Remove(ghi);
+        }
     }
 
     // ─── Tài khoản nhận tiền ──────────────────────────────────────────────────
@@ -249,7 +290,7 @@ public sealed class PerformerSelfConfirmationTests
             var show = new LoungeShow
             {
                 LoungeId = lounge.Id, Name = $"ReceiptShow-{Guid.NewGuid():N}", Description = "test",
-                Format = LoungeShowFormat.Offline, Status = LoungeShowStatus.Ongoing,
+                Format = LoungeShowFormat.Online, Status = LoungeShowStatus.Ongoing,
                 ScheduledStart = start, ScheduledEnd = start.AddHours(3), VcpmcRoyaltyReference = "VCPMC-TEST"
             };
             var performer = new Performer
@@ -271,6 +312,8 @@ public sealed class PerformerSelfConfirmationTests
                 AccountNumber = pii.Encrypt("0000000365"), AccountHolder = "Receipt Artist", IsDefault = true
             });
             var performance = new Performance { LoungeShowId = show.Id, PerformerId = performer.Id };
+            // MLACP-641: ủng hộ chỉ dành cho người xem buổi phát — buổi có một phiên phát miễn phí đang Live.
+            db.Add(new Livestream { LoungeShowId = show.Id, Status = LivestreamStatus.Live, StartedAt = start, IsFree = true });
             db.Add(performance);
             await db.SaveChangesAsync();
             (ownerId, loungeId, performanceId) = (owner.Id, lounge.Id, performance.Id);

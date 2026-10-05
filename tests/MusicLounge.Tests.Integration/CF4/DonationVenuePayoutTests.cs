@@ -81,7 +81,7 @@ public sealed class DonationVenuePayoutTests
         var show = new LoungeShow
         {
             LoungeId = lounge.Id, Name = $"PayoutShow-{Guid.NewGuid():N}", Description = "test",
-            Format = LoungeShowFormat.Offline, Status = LoungeShowStatus.Ongoing,
+            Format = LoungeShowFormat.Online, Status = LoungeShowStatus.Ongoing,
             ScheduledStart = start, ScheduledEnd = start.AddHours(3), VcpmcRoyaltyReference = "VCPMC-TEST"
         };
         var performer = new Performer { Name = $"PayoutArtist-{Guid.NewGuid():N}"[..25], CreatedByUserId = owner.Id };
@@ -90,6 +90,8 @@ public sealed class DonationVenuePayoutTests
         await db.SaveChangesAsync();
 
         var performance = new Performance { LoungeShowId = show.Id, PerformerId = performer.Id };
+        // MLACP-641: ủng hộ chỉ dành cho người xem buổi phát — buổi có một phiên phát miễn phí đang Live.
+        db.Add(new Livestream { LoungeShowId = show.Id, Status = LivestreamStatus.Live, StartedAt = start, IsFree = true });
         db.Add(performance);
         await db.SaveChangesAsync();
 

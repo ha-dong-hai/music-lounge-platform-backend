@@ -13,6 +13,11 @@ public sealed class FakeLivestreamService : ILivestreamService
 
     public Task DeleteStreamAsync(string providerRef, CancellationToken ct = default)
         => Task.CompletedTask;
+
+    // MLACP-647: luồng đánh dấu "signed" (MuxStreamService.SignedMarker) → link xem kèm token giả, để bài test thấy
+    // truy vấn chi tiết thật sự đi qua nhà cung cấp chứ không trả nguyên HlsUrl lưu trong DB.
+    public string ViewerPlaybackUrl(string storedHlsUrl, DateTimeOffset validUntil)
+        => storedHlsUrl.EndsWith("?signed=1", StringComparison.Ordinal) ? storedHlsUrl[..^"?signed=1".Length] + "?token=fake" : storedHlsUrl;
 }
 
 public sealed class FakeLivestreamServiceFactory : ILivestreamServiceFactory

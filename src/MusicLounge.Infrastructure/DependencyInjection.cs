@@ -194,6 +194,7 @@ public static class DependencyInjection
         services.AddScoped<LogUserBehaviourJob>();
         services.AddScoped<SendPasswordResetEmailJob>();
         services.AddScoped<SendEmailVerificationCodeJob>();
+        services.AddScoped<MusicLounge.Application.Performers.Jobs.SendPerformerConfirmationEmailJob>(); // MLACP-642
         // Same registration discipline as the two jobs above — see comment there.
         services.AddScoped<SendPhoneVerificationCodeJob>();
         services.AddScoped<PhoneVerificationSmsJob>();
