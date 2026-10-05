@@ -65,4 +65,9 @@ public sealed class LivestreamHubService : ILivestreamHubService
         => _hubContext.Clients
             .Group(LivestreamHub.GroupName(livestreamId))
             .SendAsync("LivestreamEnded", new { }, ct);
+
+    public Task BroadcastChatEnabledChangedAsync(Guid livestreamId, bool enabled, CancellationToken ct = default)
+        => _hubContext.Clients
+            .Group(LivestreamHub.GroupName(livestreamId))
+            .SendAsync("ChatEnabledChanged", new { enabled }, ct);
 }
