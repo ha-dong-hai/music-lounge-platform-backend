@@ -270,11 +270,13 @@ try
                 errors = (object?)null
             }, ct);
         };
-        // Mac dinh: 100 request/phut theo IP (RateLimiting:GlobalPermitPerMinute), ap dung toan API. Cac endpoint
+        // Mac dinh: 100 request/phut (RateLimiting:GlobalPermitPerMinute), ap dung toan API. Cac endpoint
         // dung tien (purchase/subscribe) da tu co idempotency/hold-based guard rieng o tang Application.
+        // MLACP-670: chia theo TAI KHOAN khi da dang nhap, theo IP khi chua (xem RateLimitPartitionKey) — can
+        // UseRateLimiter dung SAU UseAuthentication ben duoi.
         opt.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
             System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-                ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                MusicLounge.Api.RateLimiting.RateLimitPartitionKey.For(ctx),
                 _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
                 {
                     PermitLimit = rateLimit.GlobalPermitPerMinute,
@@ -421,9 +423,11 @@ try
     app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = uploadContentTypeProvider });
     // Testing host chay hang loat request lien tuc trong 1 suite (khong phai traffic that) —
     // rate limiter theo IP se tu chan chinh no. Chi bat o Development/Production.
+    // MLACP-670: xac thuc TRUOC gioi han tan suat de bo gioi han biet nguoi dang goi (chia han muc theo tai khoan). Xac
+    // thuc chi doc va kiem JWT, khong tu choi request nao — tu choi la viec cua UseAuthorization.
+    app.UseAuthentication();
     if (!app.Environment.IsEnvironment("Testing"))
         app.UseRateLimiter();
-    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
     app.MapHub<LivestreamHub>("/hubs/livestream");
