@@ -1,4 +1,5 @@
-using MusicLounge.Domain.Enums;
+﻿using MusicLounge.Domain.Enums;
+using MusicLounge.Domain.ValueObjects;
 
 namespace MusicLounge.Application.Common.Interfaces;
 
@@ -26,6 +27,11 @@ public interface IBackgroundJobService
     // request nào để đọc Accept-Language.
     void EnqueuePasswordResetEmail(string toEmail, string toName, string resetLink, string language);
     void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language);
+
+    /// <summary>MLACP-642. Xếp hàng thư mời nghệ sĩ tự xác nhận — gửi ngoài giao dịch của lệnh tạo ra nó
+    /// (xem <c>SendPerformerConfirmationEmailJob</c>). Liên kết được mã hoá trước khi vào kho job.</summary>
+    void EnqueuePerformerConfirmationEmail(
+        string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt);
     void EnqueuePhoneVerificationCode(string toPhone, string code, string language);
 
     // Runs AI moderation scoring for a freshly-created EventModeration row in the background, so a

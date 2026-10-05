@@ -64,7 +64,7 @@ public static class FnbSettlements
 
         // Không có tài khoản mặc định thì vẫn ghi nhận khoản nợ với đích đến rỗng —
         // SettlementReleaseJob hoãn giải ngân cho tới khi phòng trà đăng ký tài khoản, cùng cách
-        // ScheduleSettlementHandler xử lý với vé.
+        // ScheduleSettlementHandler xử lý với vé. Job chọn tài khoản lúc giải ngân (SettlementPayoutAccount, MLACP-640).
         var bankAccountId = (await uow.Repository<BankAccount, Guid>().FindAsync(
                 a => a.OwnerType == BankAccountOwnerType.Lounge && a.OwnerId == lounge.Id && a.IsDefault, ct))
             .FirstOrDefault()?.Id;

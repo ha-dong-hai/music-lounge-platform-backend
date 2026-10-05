@@ -69,6 +69,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
             services.AddHangfire(cfg => cfg.UseInMemoryStorage(new InMemoryStorageOptions()));
             // Do NOT add AddHangfireServer() — no background processing in tests
+            // MLACP-642: thư mời nghệ sĩ được xếp hàng — bắt lại để bài test tự gửi khi cần (Helpers/ThuMoiNgheSi).
+            ThuMoiNgheSi.DangKy();
 
             // ── 2b. Bat log de test khang dinh duoc tren no ───────────────────────
             // Program.cs cau hinh Serilog bang ReadFrom.Services(services), nghia la no lay moi

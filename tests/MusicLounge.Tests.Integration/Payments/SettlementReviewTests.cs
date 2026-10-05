@@ -54,6 +54,7 @@ public sealed class SettlementReviewTests
         await db.SaveChangesAsync();
 
         Guid? payoutAccountId = null;
+        var ownerId = SeedHelper.OwnerId;
         if (withBankAccount)
         {
             payoutAccountId = await db.Set<BankAccount>()
@@ -61,10 +62,25 @@ public sealed class SettlementReviewTests
                 .Select(a => (Guid?)a.Id)
                 .FirstAsync();
         }
+        else
+        {
+            // MLACP-640: khoản trống tài khoản giờ được gán tài khoản mặc định HIỆN TẠI của phòng trà lúc chi trả — phòng
+            // trà mẫu có sẵn tài khoản nên không còn là "chưa có tài khoản". Dùng một chủ phòng trà riêng thật sự không có
+            // tài khoản nào để giữ đúng ý định của bài test.
+            var owner = new User { Email = $"nobank335-{Guid.NewGuid():N}@test.com", FullName = "Chu khong tai khoan", Role = UserRole.Owner };
+            db.Users.Add(owner);
+            await db.SaveChangesAsync();
+            db.Add(new MusicLounge.Domain.Entities.MusicLounge
+            {
+                OwnerId = owner.Id, Name = $"NoBank335-{Guid.NewGuid():N}"[..30], Status = LoungeStatus.Approved
+            });
+            await db.SaveChangesAsync();
+            ownerId = owner.Id;
+        }
 
         var settlement = new Settlement
         {
-            OwnerId = SeedHelper.OwnerId,
+            OwnerId = ownerId,
             PaymentId = payment.Id,
             BankAccountId = payoutAccountId,
             ReleaseType = SettlementReleaseType.Final30,

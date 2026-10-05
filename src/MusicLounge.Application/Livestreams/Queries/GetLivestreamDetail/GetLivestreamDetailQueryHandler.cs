@@ -18,14 +18,17 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
     private readonly ICurrentUserService _currentUser;
     private readonly IBackgroundJobService _backgroundJobs;
     private readonly ISystemConfigService _systemConfig;
+    private readonly ILivestreamServiceFactory _streams;
 
     public GetLivestreamDetailQueryHandler(
         IUnitOfWork uow,
         ILivestreamRepository livestreamRepo,
         ICurrentUserService currentUser,
         IBackgroundJobService backgroundJobs,
-        ISystemConfigService systemConfig)
+        ISystemConfigService systemConfig,
+        ILivestreamServiceFactory streams)
     {
+        _streams = streams;
         _uow = uow;
         _livestreamRepo = livestreamRepo;
         _currentUser = currentUser;
@@ -91,12 +94,23 @@ internal sealed class GetLivestreamDetailQueryHandler : IRequestHandler<GetLives
                 viewingSessionId = await OpenViewingSessionAsync(request.LivestreamId, request.ViewingSessionId, now, ct);
         }
 
+        // MLACP-647: người có quyền nhận link có hạn (luồng có chữ ký thì kèm token) — đủ dài để xem trọn buổi kể cả kéo
+        // giờ, nhưng không quá một ngày: link chép đi hết hạn chứ không sống mãi như link "public" trước đây.
+        string? hlsUrl = null;
+        if (userHasAccess && livestream.HlsUrl is { } stored)
+        {
+            var end = livestream.LoungeShow.ScheduledEnd ?? now.AddHours(3);
+            var validUntil = end.AddHours(2) > now.AddHours(2) ? end.AddHours(2) : now.AddHours(2);
+            if (validUntil > now.AddHours(24)) validUntil = now.AddHours(24);
+            hlsUrl = _streams.GetProvider(livestream.Provider).ViewerPlaybackUrl(stored, validUntil);
+        }
+
         return new LivestreamDetailDto(
             livestream.Id,
             livestream.LoungeShowId,
             livestream.LoungeShow.Name,
             livestream.Status,
-            userHasAccess ? livestream.HlsUrl : null,
+            hlsUrl,
             livestream.ViewerCount,
             livestream.StartedAt,
             livestream.EndedAt,

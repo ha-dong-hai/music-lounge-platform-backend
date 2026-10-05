@@ -5,6 +5,7 @@ using FluentAssertions;
 using Hangfire;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
 using MusicLounge.Infrastructure.Jobs;
 using MusicLounge.Tests.Integration.Helpers;
@@ -582,6 +583,47 @@ public sealed class DonationTests
 
         res.StatusCode.Should().Be(HttpStatusCode.OK);
         (await res.Content.ReadAsStringAsync()).Should().Contain($"\"id\":\"{id}\"");
+    }
+
+    /// <summary>MLACP-644: danh sách "chờ chuyển cho nghệ sĩ" cho chủ phòng trà biết TRƯỚC nghệ sĩ nào chưa có tài khoản
+    /// nhận tiền mặc định — đúng điều kiện lệnh báo đã trả từ chối (422). Trước đây chủ chỉ biết sau khi đã chuyển tiền và
+    /// gõ mã giao dịch. Tạm tắt "mặc định" của tài khoản nghệ sĩ mẫu, trả lại trong finally (dữ liệu mẫu dùng chung).</summary>
+    [Fact]
+    public async Task GetAwaitingPayout_SaysWhetherThePerformerHasAPayoutAccount()
+    {
+        var (id, orderId) = await CreateDonationAsync();
+        await SimulateVnPayCallbackAsync(orderId, success: true);
+        await ReleaseVenuePayoutsAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner");
+        await ownerClient.PostAsync($"/api/v1/donations/{id}/acknowledge", null);
+
+        async Task<System.Text.Json.JsonElement> DongCuaKhoan()
+        {
+            var doc = System.Text.Json.JsonDocument.Parse(await ownerClient.GetStringAsync("/api/v1/donations/awaiting-payout?pageSize=50"));
+            return doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray()
+                .Single(e => e.GetProperty("id").GetGuid() == id);
+        }
+
+        var coTaiKhoan = await DongCuaKhoan();
+        coTaiKhoan.GetProperty("performerId").GetGuid().Should().Be(SeedHelper.PerformerId);
+        coTaiKhoan.GetProperty("performerHasPayoutAccount").GetBoolean().Should().BeTrue("the seeded performer has a default account");
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var account = await db.Set<BankAccount>().SingleAsync(a =>
+            a.OwnerType == BankAccountOwnerType.Performer && a.OwnerId == SeedHelper.PerformerId && a.IsDefault);
+        account.IsDefault = false;
+        await db.SaveChangesAsync();
+        try
+        {
+            (await DongCuaKhoan()).GetProperty("performerHasPayoutAccount").GetBoolean()
+                .Should().BeFalse("without a default account the owner's 'paid' report would be refused — say so up front");
+        }
+        finally
+        {
+            account.IsDefault = true;
+            await db.SaveChangesAsync();
+        }
     }
 
     // ─── D17 Public donation history ──────────────────────────────────────────

@@ -74,6 +74,14 @@ internal sealed class LivestreamRepository : Repository<Livestream, Guid>, ILive
                 t.Tier.AccessType == AccessType.Livestream,
                 ct);
 
+    public async Task<bool> HoldsLivestreamTicketAsync(Guid showId, Guid userId, CancellationToken ct = default)
+        => await _db.Tickets.AnyAsync(t =>
+                t.ShowId == showId &&
+                t.BuyerId == userId &&
+                (t.Status == TicketStatus.Confirmed || t.Status == TicketStatus.Used) &&
+                t.Tier.AccessType == AccessType.Livestream,
+            ct);
+
     public async Task<Ticket?> GetViewerTicketAsync(Guid livestreamId, Guid userId, CancellationToken ct = default)
     {
         var livestream = await _db.Livestreams.AsNoTracking()

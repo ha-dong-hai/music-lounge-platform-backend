@@ -25,4 +25,8 @@ public interface ILivestreamHubService
     /// <summary>MLACP-508: buổi phát đã KẾT THÚC bình thường (chủ phòng trà bấm Kết thúc, hoặc encoder ngừng hẳn) —
     /// người đang xem chuyển sang màn "đã kết thúc" thay vì trình phát đứng im tới khi tải lại trang. Không có xem lại.</summary>
     Task BroadcastLivestreamEndedAsync(Guid livestreamId, CancellationToken ct = default);
+
+    /// <summary>MLACP-643: chủ phòng trà vừa bật/tắt khung chat — người đang xem đổi ô nhập ngay (khoá + câu báo) thay vì
+    /// gõ xong mới biết bị chặn. Trước đây không có sự kiện nào: ô nhập vẫn mở, người gửi chỉ nhận câu lỗi chung.</summary>
+    Task BroadcastChatEnabledChangedAsync(Guid livestreamId, bool enabled, CancellationToken ct = default);
 }

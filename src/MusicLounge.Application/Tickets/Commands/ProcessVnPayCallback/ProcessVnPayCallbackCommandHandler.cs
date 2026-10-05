@@ -369,7 +369,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                 noticeType,
                 noticeTitle,
                 new SongNgu(
-                    $"Giao dịch {payment.GrossAmount:N0}đ (mã {result.TransactionId}) cho vé \"{show.Name}\" đã bị trừ " +
+                    $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {result.TransactionId}) cho vé \"{show.Name}\" đã bị trừ " +
                     $"tiền, nhưng {whatHappened.Vi}. Chúng tôi đã " +
                     "tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — bạn không cần làm gì " +
                     "thêm và sẽ được báo khi yêu cầu được xử lý.",

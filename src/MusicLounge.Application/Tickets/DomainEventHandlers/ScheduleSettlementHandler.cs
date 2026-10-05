@@ -65,6 +65,9 @@ internal sealed class ScheduleSettlementHandler : INotificationHandler<TicketPay
         // BankAccountId is null — the same "defer, don't pre-judge" rule it already applies to a
         // pending refund — so the money resolves itself the moment the Owner registers an account
         // again, and the Owner meanwhile sees it in GetMyEarnings as pending.
+        // MLACP-640: that "resolves itself" only became true with SettlementPayoutAccount — until then nothing filled
+        // the null in, and these tranches stayed deferred forever. The job now picks the venue's CURRENT default account
+        // at release time and tells the owner while there is none.
         var bankAccountId = lounge is not null
             ? await ResolveDefaultBankAccountIdAsync(BankAccountOwnerType.Lounge, lounge.Id, ct)
             : null;

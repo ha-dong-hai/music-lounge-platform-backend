@@ -22,7 +22,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
     private readonly ISystemConfigService _config;
     private readonly IAsyncKeyedLock _lock;
     private readonly IFileStorageService _fileStorage;
-    private readonly IEmailService _email;
+    private readonly IBackgroundJobService _jobs;
     private readonly BusinessSettings _settings;
     private readonly ILogger<ConfirmDonationPaidCommandHandler> _logger;
 
@@ -34,7 +34,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         ISystemConfigService config,
         IAsyncKeyedLock @lock,
         IFileStorageService fileStorage,
-        IEmailService email,
+        IBackgroundJobService jobs,
         IOptions<BusinessSettings> settings,
         ILogger<ConfirmDonationPaidCommandHandler> logger)
     {
@@ -45,7 +45,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         _config = config;
         _lock = @lock;
         _fileStorage = fileStorage;
-        _email = email;
+        _jobs = jobs;
         _settings = settings.Value;
         _logger = logger;
     }
@@ -148,7 +148,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         // MLACP-364: moi nghe si tu xac nhan da nhan — hoac bao chua nhan. Chu phong tra khong the xac
         // nhan thay nghe si; truoc day "da tra nghe si" chi co loi khai cua mot phia.
         if (await _uow.Repository<Performer, Guid>().GetByIdAsync(ownership.PerformerId, ct) is { } performer)
-            await PerformerConfirmations.InviteAsync(_uow, _email, _settings, _logger, performer,
+            await PerformerConfirmations.InviteAsync(_uow, _jobs, _settings, _logger, performer,
                 PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef), ct);
 
         await _uow.SaveChangesAsync(ct);
