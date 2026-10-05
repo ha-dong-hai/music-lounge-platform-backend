@@ -159,6 +159,7 @@ internal static class ThongDiepSongNgu
             ["Chỉ chủ phòng trà, nhân viên của phòng trà này hoặc Admin mới gỡ được lời nhắn."] = "Only the lounge owner, this lounge's staff or an administrator can remove a message.",
             ["Chỉ có thể bán vé vật lý tại quầy."] = "Only physical tickets can be sold at the door.",
             ["Chỉ có thể bắt đầu show đang ở trạng thái Published."] = "Only a concert in the Published state can be started.",
+            ["Buổi diễn đã qua giờ kết thúc theo lịch nên không thể bắt đầu nữa."] = "This concert is already past its scheduled end time, so it can no longer be started.",
             ["Chỉ có thể check-in khi buổi diễn đang diễn ra."] = "Tickets can only be checked in while the concert is running.",
             ["Chỉ có thể chuyển nhượng vé đã xác nhận."] = "Only confirmed tickets can be transferred.",
             ["Chỉ có thể donate khi show đang diễn ra."] = "Donations are only accepted while the concert is running.",

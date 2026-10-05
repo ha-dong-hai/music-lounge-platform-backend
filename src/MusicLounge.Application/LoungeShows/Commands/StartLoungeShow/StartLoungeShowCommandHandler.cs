@@ -41,6 +41,10 @@ internal sealed class StartLoungeShowCommandHandler : IRequestHandler<StartLoung
         if (show.Status != LoungeShowStatus.Published)
             throw new DomainException("Chỉ có thể bắt đầu show đang ở trạng thái Published.");
 
+        var now = DateTimeOffset.UtcNow;
+        if (ShowSchedule.IsPastEnd(show, now))
+            throw new DomainException("Buổi diễn đã qua giờ kết thúc theo lịch nên không thể bắt đầu nữa.");
+
         var livestream = await _livestreamRepo.GetByShowIdAsync(show.Id, ct);
         if (livestream is not null)
             throw new DomainException(
@@ -52,7 +56,7 @@ internal sealed class StartLoungeShowCommandHandler : IRequestHandler<StartLoung
                 "Cần khai báo đã thanh toán tác quyền VCPMC trước khi bắt đầu show.");
 
         show.Status = LoungeShowStatus.Ongoing;
-        show.ActualStart = DateTimeOffset.UtcNow;
+        show.ActualStart = now;
         showRepo.Update(show);
 
         await _uow.SaveChangesAsync(ct);

@@ -40,7 +40,8 @@ internal static class LoungeShowMappingExtensions
             show.Performances.OrderBy(p => p.OrderIndex).Select(p => p.Performer.Name).ToList(),
             show.OfflineQuota,
             show.OnlineQuota,
-            isWishlisted);
+            isWishlisted,
+            ShowSchedule.EffectiveEnd(show));
     }
 
     /// <param name="lastEntryMinutes">
@@ -88,7 +89,8 @@ internal static class LoungeShowMappingExtensions
                show.TicketSaleClosesAt,
                show.CategoryId,
                show.OfflineQuota,
-               show.OnlineQuota);
+               show.OnlineQuota,
+               ShowSchedule.EffectiveEnd(show));
 
     /// <summary>
     /// Built from TicketRefundPolicy, the same resolver CancelTicket uses to decide what a buyer
@@ -136,7 +138,7 @@ internal static class LoungeShowMappingExtensions
             prices.Count > 0 ? prices.Max(p => p.Price) : null,
             show.Genres.Select(g => new GenreDto(g.Genre.Id, g.Genre.Name)).ToList(),
             show.Performances.OrderBy(p => p.OrderIndex).Select(p => p.Performer.Name).ToList(),
-            score, reason, source);
+            score, reason, source, ShowSchedule.EffectiveEnd(show));
     }
 
     internal static PerformerDetailDto ToDetailDto(

@@ -18,4 +18,8 @@ public sealed record LoungeShowListItemDto(
     IReadOnlyList<string> PerformerNames,
     int? OfflineQuota,
     int? OnlineQuota,
-    bool? IsWishlisted);
+    bool? IsWishlisted,
+    // MLACP-633: giờ kết thúc mà hệ thống thật sự dùng (ShowSchedule.EffectiveEnd — không khai giờ kết thúc thì
+    // bắt đầu + 4 tiếng). Mọi danh sách phải hiện rõ "bắt đầu – kết thúc"; trả mốc hiệu lực chứ không trả cột
+    // ScheduledEnd có thể rỗng, để giao diện không phải tự viết lại quy tắc 4 tiếng.
+    DateTimeOffset EffectiveEnd);
