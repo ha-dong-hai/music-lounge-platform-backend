@@ -312,6 +312,82 @@ public sealed class VenueIdentityChangeTests
         (await ShowAsync(showId)).CancellationAllowed.Should().BeFalse("không có gì thay đổi để mở quyền huỷ");
     }
 
+    // ── MLACP-636: gán mã hành chính lần đầu cho địa chỉ cũ không phải đổi địa chỉ ──
+
+    private async Task<Venue> CreateLegacyVenueAsync()
+    {
+        // Địa chỉ nhập trước MLACP-521: có mã tỉnh nhưng chưa có mã phường, tên phường theo địa giới cũ.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var owner = new User { Email = $"v636-{Guid.NewGuid():N}@test.com", FullName = "Chủ phòng trà" };
+        db.Users.Add(owner);
+        await db.SaveChangesAsync();
+        var lounge = new MusicLoungeEntity
+        {
+            OwnerId = owner.Id, Name = $"Phòng trà {Guid.NewGuid():N}"[..20], Status = LoungeStatus.Approved,
+            Address = new VenueAddress { Street = "128 Nguyễn Văn Bình", Ward = "Phường Bến Nghé", City = "TP. Hồ Chí Minh", ProvinceCode = "79" },
+        };
+        db.Add(lounge);
+        await db.SaveChangesAsync();
+        return new Venue(lounge.Id, lounge.Name, owner.Id);
+    }
+
+    private Task<HttpResponseMessage> UpdateWithCodesAsync(Venue venue, string street, string wardCode)
+        => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner")
+            .PutAsJsonAsync($"/api/v1/lounges/{venue.LoungeId}", new
+            {
+                Name = venue.Name, Description = (string?)null, AtmosphereId = (Guid?)null,
+                Street = street, ProvinceCode = "79", WardCode = wardCode,
+                Latitude = (double?)null, Longitude = (double?)null,
+            });
+
+    [Fact]
+    public async Task GanMaPhuongLanDauChoDiaChiCu_KhongBaoAiVaKhongMoQuyenHuy()
+    {
+        var venue = await CreateLegacyVenueAsync();
+        var showId = await CreateShowAsync(venue.LoungeId);
+        await AddTicketAsync(showId, SeedHelper.AudienceId);
+
+        // 26740 = Phường Sài Gòn (gộp từ Bến Nghé sau 07/2025). Cùng số nhà, cùng đường.
+        (await UpdateWithCodesAsync(venue, "128 Nguyễn Văn Bình", "26740")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        (await NoticesAsync(NotificationType.EventVenueChanged, "show", showId)).Should().BeEmpty(
+            "chủ phòng trà chỉ chọn lại phường theo địa giới mới — khách vẫn tới đúng chỗ cũ");
+        (await NoticesAsync(NotificationType.VenueIdentityChanged, "lounge", venue.LoungeId)).Should().BeEmpty();
+        (await ShowAsync(showId)).CancellationAllowed.Should().BeFalse("không có gì đổi để mở quyền huỷ");
+
+        using var scope = _factory.Services.CreateScope();
+        var saved = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Lounges.AsNoTracking().SingleAsync(l => l.Id == venue.LoungeId);
+        saved.Address.WardCode.Should().Be("26740", "vẫn phải lưu mã và tên phường mới");
+    }
+
+    [Fact]
+    public async Task GanMaPhuongMaDoiCaSoNhaDuong_VanLaDoiDiaChi()
+    {
+        var venue = await CreateLegacyVenueAsync();
+        var showId = await CreateShowAsync(venue.LoungeId);
+        await AddTicketAsync(showId, SeedHelper.AudienceId);
+
+        (await UpdateWithCodesAsync(venue, "45 Lê Lợi", "26740")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        (await NoticesAsync(NotificationType.EventVenueChanged, "show", showId)).Should().ContainSingle(
+            "gán mã không được che một lần dời chỗ thật");
+    }
+
+    [Fact]
+    public async Task DoiGiuaHaiMaPhuongDaCo_VanLaDoiDiaChi()
+    {
+        var venue = await CreateLegacyVenueAsync();
+        var showId = await CreateShowAsync(venue.LoungeId);
+        (await UpdateWithCodesAsync(venue, "128 Nguyễn Văn Bình", "26740")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await AddTicketAsync(showId, SeedHelper.AudienceId);
+
+        // Cùng tên đường nhưng sang một phường khác (đã có mã cả hai bên) — có thể là một chỗ khác hẳn.
+        (await UpdateWithCodesAsync(venue, "128 Nguyễn Văn Bình", "26743")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        (await NoticesAsync(NotificationType.EventVenueChanged, "show", showId)).Should().ContainSingle();
+    }
+
     [Fact]
     public async Task ChiDoiToaDoThiChiBaoAdmin()
     {
