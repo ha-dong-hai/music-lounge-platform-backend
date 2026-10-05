@@ -1,6 +1,5 @@
 using MusicLounge.Domain.ValueObjects;
 using MediatR;
-using MusicLounge.Application.FnbOrders;
 using MusicLounge.Application.Tickets;
 using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
@@ -113,12 +112,12 @@ internal sealed class ChangeLoungeShowFormatCommandHandler : IRequestHandler<Cha
             }
         }
 
-        // MLACP-390: khong con khan gia tai cho — don F&B chua phuc vu gan voi buoi dien nay bi huy, tien tra truoc
-        // hoan 100%. Mon da mang ra (Served) la hang da giao, phong tra van thu. Cung thu tu khoa voi ShowCancellation:
-        // show-status-change (dang giu o tren) roi moi toi fnb-order:{id}.
-        await FnbOrderCancellation.CancelOpenOrdersAsync(
-            _uow, _notifications, _lock, o => o.ShowId == show.Id, servedToo: false,
-            new SongNgu("buổi diễn chuyển sang online", "the show moved online"), ct);
+        // MLACP-632 (chủ dự án chốt 04/10/2026): đơn đồ uống GIỮ NGUYÊN, khách được báo và tự quyết — cùng nguyên tắc với
+        // khi chủ phòng trà huỷ buổi diễn. Thay cho MLACP-390 (tự huỷ đơn chưa mang ra, hoàn tiền trả trước): phòng trà vẫn
+        // mở cửa, khách đang ngồi đó có thể vẫn muốn món. Khách tự huỷ được khi quầy chưa nhận; đã làm thì trao đổi với
+        // nhân viên.
+        await ShowCancellation.NotifyOpenFnbOrdersKeptAsync(_uow, _notifications, show,
+            new SongNgu($"\"{show.Name}\" đã chuyển sang chỉ phát trực tuyến.", $"\"{show.Name}\" has moved online only."), ct);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;

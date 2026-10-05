@@ -187,7 +187,7 @@ public sealed class ApplyDuePenaltiesJob
             if (show is null || show.Status != LoungeShowStatus.Published) continue;
 
             total += await ShowCancellation.CancelAsync(
-                _uow, _notifications, _lock, show, ShowCancellation.VenueStoppedTrading, ct);
+                _uow, _notifications, _lock, show, ShowCancellation.VenueStoppedTrading, cancelFnbOrders: true, ct);
             await _uow.SaveChangesAsync(ct);
         }
 

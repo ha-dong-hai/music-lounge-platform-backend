@@ -150,7 +150,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
     // ── Đơn đang có khi buổi diễn chuyển sang online ─────────────────────────
 
     [Fact]
-    public async Task GoingOnline_AnUnpaidOrderNotYetServed_IsCancelled_AndTheGuestIsTold()
+    public async Task GoingOnline_AnUnpaidOrderNotYetServed_IsKept_AndTheGuestIsTold()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -160,13 +160,15 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         await GoOnlineAsync(venue, showId);
 
         var (order, items, _) = await StateAsync(orderId, null);
-        order.Status.Should().Be(FnbOrderStatus.Cancelled, "no one will be at the venue to serve");
-        items.Should().OnlyContain(i => i.Cancelled);
-        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("chuyển sang online"));
+        // MLACP-632: khách tự quyết — hệ thống không huỷ thay.
+        order.Status.Should().Be(FnbOrderStatus.Pending);
+        items.Should().OnlyContain(i => !i.Cancelled);
+        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n =>
+            n.Body.Contains("chỉ phát trực tuyến") && n.Body.Contains("vẫn được giữ") && n.Body.Contains("tự huỷ"));
     }
 
     [Fact]
-    public async Task GoingOnline_APrepaidOrderStillInTheKitchen_IsCancelled_AndRefundedInFull()
+    public async Task GoingOnline_APrepaidOrderStillInTheKitchen_IsKept_NoAutomaticRefund()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -176,12 +178,9 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         await GoOnlineAsync(venue, showId);
 
         var (order, _, refunds) = await StateAsync(orderId, paymentId);
-        order.Status.Should().Be(FnbOrderStatus.Cancelled);
-        var refund = refunds.Should().ContainSingle().Subject;
-        refund.RefundPercentage.Should().Be(100m);
-        refund.AmountRequested.Should().Be(100_000m);
-        refund.RequestedBy.Should().Be(buyer);
-        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("hoàn 100%"));
+        order.Status.Should().Be(FnbOrderStatus.Preparing);
+        refunds.Should().BeEmpty("đơn vẫn được giữ — không tự hoàn");
+        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("trao đổi với nhân viên"));
     }
 
     [Fact]
@@ -228,9 +227,10 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         (await StateAsync(otherOrderId, null)).Order.Status.Should().Be(FnbOrderStatus.Pending);
     }
 
-    /// <summary>Đường huỷ buổi diễn dùng chung phần huỷ đơn đã tách ra — hành vi MLACP-380 phải giữ nguyên.</summary>
+    /// <summary>MLACP-632: chủ phòng trà huỷ buổi thì đơn đồ uống GIỮ NGUYÊN (khác chuyển sang online) — món đã mang
+    /// ra bàn vẫn là món đã giao, phòng trà tự thu.</summary>
     [Fact]
-    public async Task CancellingTheShow_StillCancelsAServedUnpaidOrder_AsBefore()
+    public async Task CancellingTheShow_KeepsAServedUnpaidOrder_AndTellsTheCustomer()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -241,8 +241,8 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
                 .PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await StateAsync(orderId, null)).Order.Status.Should().Be(FnbOrderStatus.Cancelled);
-        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("buổi diễn bị huỷ"));
+        (await StateAsync(orderId, null)).Order.Status.Should().Be(FnbOrderStatus.Served);
+        (await OrderNoticesAsync(buyer, orderId)).Should().Contain(n => n.Body.Contains("vẫn được giữ"));
     }
 
     // ── Đơn mới gắn với buổi diễn ────────────────────────────────────────────

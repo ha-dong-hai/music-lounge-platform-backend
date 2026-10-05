@@ -13,7 +13,7 @@ using MusicLoungeVenue = MusicLounge.Domain.Entities.MusicLounge;
 namespace MusicLounge.Tests.Integration.Compliance;
 
 /// <summary>
-/// MLACP-380. <c>ShowCancellation.CancelAsync</c> (MLACP-373) hoàn 100% mọi vé khi một buổi diễn bị huỷ — chủ động
+/// MLACP-380, sửa ở MLACP-632 (chủ phòng trà huỷ buổi thì đơn đồ uống giữ nguyên). <c>ShowCancellation.CancelAsync</c> (MLACP-373) hoàn 100% mọi vé khi một buổi diễn bị huỷ — chủ động
 /// bởi chủ phòng trà (<c>CancelLoungeShowCommandHandler</c>) hay tự động khi phòng trà bị khoá/tạm khoá
 /// (<c>ApplyDuePenaltiesJob</c>) — nhưng trước task này không đụng gì tới các <see cref="FnbOrder"/> gắn với show đó
 /// (ShowId). Đơn khách đã đặt/đã trả trước cho một buổi diễn không còn tổ chức treo nguyên, tiền trả trước không ai
@@ -192,10 +192,37 @@ public sealed class FnbOrdersCancelledWithShowTests
             .Where(n => n.UserId == userId && n.Type == type).ToListAsync();
     }
 
-    // ── Huỷ show do chủ phòng trà chủ động ───────────────────────────────────
+    // ── Huỷ show do chủ phòng trà chủ động — MLACP-632: đơn đồ uống GIỮ NGUYÊN, khách chỉ được báo ─────────
+
+    private Task<HttpResponseMessage> OwnerCancelsAsync(Venue venue, Guid showId)
+        => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
+            .PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null);
+
+    /// <summary>Vé vào cửa của khách cho buổi diễn — để biết họ là khách của buổi đó khi đơn đặt qua app không mang ShowId.</summary>
+    private async Task TicketAsync(Guid showId, Guid buyer)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var tier = new TicketTier { LoungeShowId = showId, Name = "Phổ thông", AccessType = AccessType.Physical, TotalCapacity = 10 };
+        db.Add(tier);
+        await db.SaveChangesAsync();
+        var price = new TicketPrice
+        {
+            TierId = tier.Id, Name = "Giá chuẩn", Price = 150_000m, Quota = 10, IsActive = true,
+            SaleStart = DateTimeOffset.UtcNow.AddDays(-1), PurchaseChannel = PurchaseChannel.Online
+        };
+        db.Add(price);
+        await db.SaveChangesAsync();
+        db.Add(new Ticket
+        {
+            BuyerId = buyer, PriceId = price.Id, TierId = tier.Id, ShowId = showId, Status = TicketStatus.Confirmed,
+            QrCode = Guid.NewGuid().ToString("N"), PurchaseChannel = PurchaseChannel.Online, CreatedAt = DateTimeOffset.UtcNow
+        });
+        await db.SaveChangesAsync();
+    }
 
     [Fact]
-    public async Task OwnerCancelsShow_UnpaidFnbOrder_IsCancelledOutright_NoRefundNeeded()
+    public async Task OwnerCancelsShow_UnpaidOrderStillWaiting_IsKept_AndCustomerToldTheyCanCancelThemselves()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -203,18 +230,16 @@ public sealed class FnbOrdersCancelledWithShowTests
         var menuItemId = await MenuItemAsync(venue.LoungeId);
         var (orderId, _) = await FnbOrderAsync(venue.LoungeId, showId, menuItemId, buyer, FnbOrderStatus.Pending);
 
-        var client = _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId);
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null);
-        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await OwnerCancelsAsync(venue, showId)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Cancelled);
-        (await ItemsAsync(orderId)).Should().OnlyContain(i => i.Cancelled);
-        (await NoticesAsync(buyer, NotificationType.FnbOrderUpdate))
-            .Should().Contain(n => n.ReferenceId == orderId.ToString() && n.Body.Contains("buổi diễn bị huỷ"));
+        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Pending, "khách tự quyết, hệ thống không huỷ thay");
+        (await ItemsAsync(orderId)).Should().OnlyContain(i => !i.Cancelled);
+        (await NoticesAsync(buyer, NotificationType.FnbOrderUpdate)).Should().Contain(n =>
+            n.ReferenceId == orderId.ToString() && n.Body.Contains("vẫn được giữ") && n.Body.Contains("tự huỷ"));
     }
 
     [Fact]
-    public async Task OwnerCancelsShow_PrepaidFnbOrderNotYetServed_IsCancelled_AndRefunded100Percent()
+    public async Task OwnerCancelsShow_PrepaidOrderBeingMade_IsKept_NoAutomaticRefund_CustomerToldToTalkToStaff()
     {
         var venue = await VenueAsync();
         var buyer = await BuyerAsync();
@@ -223,18 +248,41 @@ public sealed class FnbOrdersCancelledWithShowTests
         var (orderId, paymentId) = await FnbOrderAsync(
             venue.LoungeId, showId, menuItemId, buyer, FnbOrderStatus.Preparing, gatewayConfirmed: true);
 
-        var client = _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId);
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null);
-        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await OwnerCancelsAsync(venue, showId)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Cancelled);
-        (await ItemsAsync(orderId)).Should().OnlyContain(i => i.Cancelled);
-        var refund = (await RefundsAsync(paymentId!.Value)).Should().ContainSingle().Subject;
-        refund.RefundPercentage.Should().Be(100m);
-        refund.AmountRequested.Should().Be(100_000m);
-        refund.RequestedBy.Should().Be(buyer);
+        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Preparing);
+        (await RefundsAsync(paymentId!.Value)).Should().BeEmpty("không tự hoàn — đơn vẫn được giữ");
+        (await NoticesAsync(buyer, NotificationType.FnbOrderUpdate)).Should().Contain(n =>
+            n.ReferenceId == orderId.ToString() && n.Body.Contains("trao đổi với nhân viên"));
+    }
+
+    [Fact]
+    public async Task OwnerCancelsShow_AppOrderWithoutShow_OfATicketHolder_IsKept_AndCustomerIsTold()
+    {
+        // Đơn khách đặt qua app không mang ShowId — vẫn phải báo nếu khách có vé buổi bị huỷ.
+        var venue = await VenueAsync();
+        var buyer = await BuyerAsync();
+        var stranger = await BuyerAsync();
+        var showId = await ShowAsync(venue.LoungeId, DateTimeOffset.UtcNow.AddDays(3));
+        await TicketAsync(showId, buyer);
+        var menuItemId = await MenuItemAsync(venue.LoungeId);
+        var (orderId, _) = await FnbOrderAsync(venue.LoungeId, showId, menuItemId, buyer, FnbOrderStatus.Pending);
+        var (strangerOrder, _) = await FnbOrderAsync(venue.LoungeId, showId, menuItemId, stranger, FnbOrderStatus.Pending);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            foreach (var o in await db.Set<FnbOrder>().Where(o => o.Id == orderId || o.Id == strangerOrder).ToListAsync())
+                o.ShowId = null;
+            await db.SaveChangesAsync();
+        }
+
+        (await OwnerCancelsAsync(venue, showId)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Pending);
         (await NoticesAsync(buyer, NotificationType.FnbOrderUpdate))
-            .Should().Contain(n => n.ReferenceId == orderId.ToString() && n.Body.Contains("hoàn 100%"));
+            .Should().Contain(n => n.ReferenceId == orderId.ToString() && n.Body.Contains("vẫn được giữ"));
+        (await NoticesAsync(stranger, NotificationType.FnbOrderUpdate))
+            .Should().BeEmpty("khách không có vé buổi này và đơn không gắn buổi này — không liên quan");
     }
 
     [Fact]
@@ -246,14 +294,11 @@ public sealed class FnbOrdersCancelledWithShowTests
         var menuItemId = await MenuItemAsync(venue.LoungeId);
         var (orderId, paymentId) = await FnbOrderAsync(venue.LoungeId, showId, menuItemId, buyer, FnbOrderStatus.Paid);
 
-        var client = _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId);
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null);
-        res.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await OwnerCancelsAsync(venue, showId)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Paid,
-            "giao dịch tiền mặt đã xong trước khi show bị huỷ — không liên quan");
-        (await ItemsAsync(orderId)).Should().OnlyContain(i => !i.Cancelled);
+        (await OrderStateAsync(orderId)).Status.Should().Be(FnbOrderStatus.Paid);
         (await RefundsAsync(paymentId!.Value)).Should().BeEmpty();
+        (await NoticesAsync(buyer, NotificationType.FnbOrderUpdate)).Should().BeEmpty("đơn đã xong, không có gì để báo");
     }
 
     // ── Huỷ show tự động khi phòng trà bị khoá (ApplyDuePenaltiesJob) ────────
