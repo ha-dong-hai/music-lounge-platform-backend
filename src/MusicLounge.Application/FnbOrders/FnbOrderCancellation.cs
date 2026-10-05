@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
+using MusicLounge.Domain.Exceptions;
 
 namespace MusicLounge.Application.FnbOrders;
 
@@ -69,6 +70,10 @@ public static class FnbOrderCancellation
             if (prepaidOnly && gatewayPayment is null) continue;
 
             current.Status = FnbOrderStatus.Cancelled;
+            // MLACP-631: hệ thống huỷ — không có người huỷ, lý do là lý do của cả đợt.
+            current.CancelledAt = DateTimeOffset.UtcNow;
+            current.CancelledBy = null;
+            current.CancelReason = reason;
             orderRepo.Update(current);
 
             var items = await itemRepo.FindAsync(i => i.FnbOrderId == current.Id, ct);
@@ -122,6 +127,68 @@ public static class FnbOrderCancellation
         }
 
         return affected;
+    }
+
+    /// <summary>
+    /// MLACP-631 — huỷ MỘT đơn theo yêu cầu của người (nhân viên, chủ phòng trà, hoặc chính khách). Một nguồn cho hai
+    /// đường: <c>UpdateFnbOrderStatusCommandHandler</c> (phía phòng trà) và <c>CancelMyFnbOrderCommandHandler</c> (khách tự
+    /// huỷ) — để luật hoàn tiền và dấu vết huỷ không lệch nhau. Nơi gọi đã giữ khoá <c>fnb-order:{id}</c>, đã kiểm quyền
+    /// và trạng thái, tự lưu và tự gửi thông báo.
+    /// </summary>
+    /// <param name="isPaid">Đơn đã có khoản thanh toán xác nhận (FnbOrderPayments.IsPaid).</param>
+    /// <param name="refundReason">Lý do ghi trên yêu cầu hoàn tiền nếu khách đã trả trước.</param>
+    /// <returns>Số tiền đã tạo yêu cầu hoàn 100%, hoặc null nếu không có gì để hoàn.</returns>
+    public static async Task<decimal?> CancelOneAsync(
+        IUnitOfWork uow, FnbOrder order, bool isPaid, Guid? cancelledBy, string reason, string refundReason,
+        DateTimeOffset now, CancellationToken ct)
+    {
+        // MLACP-351: đơn khách đã trả trước mà không phục vụ được thì phải hoàn — huỷ mà không hoàn là giữ tiền của
+        // khách mà không giao món.
+        Payment? toRefund = null;
+        if (isPaid)
+        {
+            var referenceId = order.Id.ToString();
+            toRefund = (await uow.Repository<Payment, Guid>().FindAsync(
+                    p => p.ReferenceType == FnbOrderPayments.ReferenceType
+                         && p.ReferenceId == referenceId
+                         && p.Status == PaymentStatus.Confirmed
+                         && p.Method == PaymentMethod.Gateway, ct))
+                .FirstOrDefault()
+                ?? throw new DomainException(
+                    "Không tìm thấy khoản thanh toán online của đơn này để hoàn — không thể huỷ.");
+        }
+
+        var live = await FnbOrderPayments.LiveOnlinePaymentAsync(uow, order.Id, now, ct);
+        if (live is not null)
+            throw new ConflictException(
+                "Khách đang thanh toán online cho đơn này (link VNPay còn hiệu lực khoảng " +
+                $"{FnbOrderPayments.MinutesLeft(live, now)} phút). Huỷ lúc này thì khách vẫn có thể " +
+                "trả tiền cho một đơn đã huỷ — hãy chờ giao dịch kết thúc rồi huỷ.");
+
+        order.Status = FnbOrderStatus.Cancelled;
+        order.CancelledAt = now;
+        order.CancelledBy = cancelledBy;
+        order.CancelReason = reason.Trim();
+        uow.Repository<FnbOrder, Guid>().Update(order);
+
+        var itemRepo = uow.Repository<OrderItem, Guid>();
+        foreach (var item in await itemRepo.FindAsync(i => i.FnbOrderId == order.Id, ct))
+        {
+            item.Cancelled = true;
+            itemRepo.Update(item);
+        }
+
+        if (toRefund is null) return null;
+        uow.Repository<RefundRequest, Guid>().Add(new RefundRequest
+        {
+            PaymentId = toRefund.Id,
+            RequestedBy = order.AudienceUserId ?? toRefund.PayerId,
+            Reason = refundReason,
+            AmountRequested = toRefund.GrossAmount,
+            RefundPercentage = 100m,
+            Status = RefundRequestStatus.Pending
+        });
+        return toRefund.GrossAmount;
     }
 
     /// <summary>Chưa đóng: chưa trả xong và chưa huỷ. Đơn đã phục vụ chỉ tính khi nơi gọi yêu cầu.</summary>

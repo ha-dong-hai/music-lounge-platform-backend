@@ -31,4 +31,10 @@ public sealed record FnbOrderDto(
     // MLACP-630: khu khách ngồi (theo vé của họ hoặc do client gửi) — bảng đơn của nhân viên in cùng TableNote để biết
     // "Bàn góc" là góc của khu nào. Null: đơn không gắn khu (khách không có vé đêm đó, hoặc đơn tạo trước MLACP-630).
     Guid? ZoneId = null,
-    string? ZoneName = null);
+    string? ZoneName = null,
+    // MLACP-631: dấu vết huỷ. CancelledByName chỉ trả cho phía phòng trà; khách chỉ thấy lý do và thời điểm.
+    DateTimeOffset? CancelledAt = null,
+    string? CancelReason = null,
+    string? CancelledByName = null,
+    // MLACP-631: nhân viên đã cầm tiền mặt — chỉ trả cho phía phòng trà, để đối chiếu tiền mặt cuối ca.
+    string? CashCollectedByName = null);

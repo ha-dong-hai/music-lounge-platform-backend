@@ -15,8 +15,10 @@ namespace MusicLounge.Application.FnbOrders;
 /// </summary>
 internal static class FnbOrderDtoBuilder
 {
+    /// <param name="forVenue">MLACP-631: true = màn của phòng trà, trả thêm TÊN người huỷ và người thu tiền mặt. Khách
+    /// (đơn của tôi) không thấy tên nhân viên.</param>
     public static async Task<List<FnbOrderDto>> BuildAsync(
-        IUnitOfWork uow, IReadOnlyList<FnbOrder> orders, CancellationToken ct)
+        IUnitOfWork uow, IReadOnlyList<FnbOrder> orders, CancellationToken ct, bool forVenue = false)
     {
         if (orders.Count == 0) return [];
 
@@ -32,6 +34,15 @@ internal static class FnbOrderDtoBuilder
             ? new Dictionary<Guid, string>()
             : (await uow.Repository<SeatingZone, Guid>().FindAsync(z => zoneIds.Contains(z.Id), ct))
                 .ToDictionary(z => z.Id, z => z.Name);
+        var staffIds = forVenue
+            ? orders.SelectMany(o => new[] { o.CancelledBy, o.CashCollectedBy }).Where(id => id.HasValue)
+                .Select(id => id!.Value).Distinct().ToList()
+            : [];
+        var staffNames = staffIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : (await uow.Repository<User, Guid>().FindAsync(u => staffIds.Contains(u.Id), ct))
+                .ToDictionary(u => u.Id, u => u.FullName);
+        string? Name(Guid? id) => id.HasValue && staffNames.TryGetValue(id.Value, out var n) ? n : null;
 
         var paidOrderIds = await FnbOrderPayments.ConfirmedOrderIdsAsync(uow, orderIds, ct);
         var liveUntil = await FnbOrderPayments.LiveOnlinePaymentDeadlinesAsync(
@@ -48,7 +59,10 @@ internal static class FnbOrderDtoBuilder
             FnbOrderPayments.IsPaid(o, paidOrderIds.Contains(o.Id)),
             liveUntil.TryGetValue(o.Id, out var until) ? until : null,
             o.ZoneId,
-            o.ZoneId.HasValue && zoneNames.TryGetValue(o.ZoneId.Value, out var zoneName) ? zoneName : null)
+            o.ZoneId.HasValue && zoneNames.TryGetValue(o.ZoneId.Value, out var zoneName) ? zoneName : null,
+            o.CancelledAt, o.CancelReason,
+            forVenue ? Name(o.CancelledBy) : null,
+            forVenue ? Name(o.CashCollectedBy) : null)
         ).ToList();
     }
 }

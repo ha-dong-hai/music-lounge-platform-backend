@@ -54,7 +54,7 @@ internal sealed class GetFnbOrdersQueryHandler
 
         // MLACP-357: dung chung voi GET /fnb-orders/my — hai man phai tra loi cung mot cau hoi
         // (dac biet IsPaid) theo cung mot cach. Xem FnbOrderDtoBuilder.
-        var dtos = await FnbOrderDtoBuilder.BuildAsync(_uow, pageItems, ct);
+        var dtos = await FnbOrderDtoBuilder.BuildAsync(_uow, pageItems, ct, forVenue: true);
 
         return new PaginatedResult<FnbOrderDto>(dtos, page, pageSize, total);
     }

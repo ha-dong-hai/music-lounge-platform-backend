@@ -99,8 +99,9 @@ public sealed class FnbOnlinePaymentTests
         return (await res.Content.ReadFromJsonAsync<IpnBody>())!.RspCode;
     }
 
+    // MLACP-631: huỷ bắt buộc lý do — gửi kèm một lý do thật cho mọi lần đổi trạng thái (bước khác bỏ qua trường này).
     private Task<HttpResponseMessage> StaffSetAsync(Guid orderId, string status)
-        => Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status });
+        => Staff().PutAsJsonAsync($"/api/v1/fnb-orders/{orderId}/status", new { Status = status, Reason = "Khách đổi ý" });
 
     private static string NewTransactionNo() => $"T{Guid.NewGuid():N}"[..14];
 

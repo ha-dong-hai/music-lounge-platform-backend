@@ -8,6 +8,7 @@ using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Common.Settings;
 using MusicLounge.Application.FnbOrders;
+using MusicLounge.Application.FnbOrders.Commands.CancelMyFnbOrder;
 using MusicLounge.Application.FnbOrders.Commands.CreateFnbOrder;
 using MusicLounge.Application.FnbOrders.Commands.InitiateFnbOrderPayment;
 using MusicLounge.Application.FnbOrders.Commands.ProcessFnbOrderPayment;
@@ -89,7 +90,9 @@ public sealed class FnbOrdersController : ControllerBase
     }
 
     /// <summary>Staff cập nhật trạng thái đơn: Pending → Preparing → Served → Paid (tuần tự),
-    /// hoặc Cancelled (huỷ ngang, chỉ khi chưa Paid).</summary>
+    /// hoặc Cancelled (huỷ ngang, chỉ khi chưa Paid).
+    /// MLACP-631: huỷ bắt buộc `reason`; đơn đã Preparing/Served chỉ Owner huỷ được (403); Admin không đổi được trạng
+    /// thái (403).</summary>
     [HttpPut("{id:guid}/status")]
     [Authorize(Policy = Policies.RequireVenueOperator)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -99,11 +102,25 @@ public sealed class FnbOrdersController : ControllerBase
     public async Task<IActionResult> UpdateStatus(
         Guid id, [FromBody] UpdateFnbOrderStatusRequest body, CancellationToken ct = default)
     {
-        await _sender.Send(new UpdateFnbOrderStatusCommand(id, body.Status), ct);
+        await _sender.Send(new UpdateFnbOrderStatusCommand(id, body.Status, body.Reason), ct);
         return NoContent();
     }
 
     /// <summary>Khán giả — khởi tạo thanh toán online qua VNPay cho đơn F&B của chính mình.</summary>
+    /// <summary>MLACP-631: khán giả tự huỷ đơn của chính mình — CHỈ khi quầy chưa nhận (Pending). Quầy đã bắt đầu làm thì
+    /// 422 (nói với nhân viên; chỉ chủ phòng trà huỷ được đơn đã làm). Đơn đã trả trước qua VNPay thì tự tạo yêu cầu hoàn
+    /// 100%. Đang có link VNPay còn hiệu lực thì 409. Đơn của người khác: 404.</summary>
+    [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CancelMine(Guid id, CancellationToken ct = default)
+    {
+        await _sender.Send(new CancelMyFnbOrderCommand(id), ct);
+        return NoContent();
+    }
+
     [HttpPost("{id:guid}/pay")]
     [ProducesResponseType<ApiResponse<FnbOrderPaymentInitiationDto>>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -146,4 +163,4 @@ public sealed class FnbOrdersController : ControllerBase
     }
 }
 
-public sealed record UpdateFnbOrderStatusRequest(string Status);
+public sealed record UpdateFnbOrderStatusRequest(string Status, string? Reason = null);

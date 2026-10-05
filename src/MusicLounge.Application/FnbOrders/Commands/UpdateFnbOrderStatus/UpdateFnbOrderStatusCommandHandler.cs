@@ -1,6 +1,7 @@
 using MusicLounge.Domain.ValueObjects;
 using MediatR;
 using MusicLounge.Application.Common;
+using MusicLounge.Application.Common.Constants;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Domain.Entities;
 using MusicLounge.Domain.Enums;
@@ -43,6 +44,11 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
         var lounge = await _uow.Repository<MusicLoungeEntity, Guid>().GetByIdAsync(order.LoungeId, ct)
             ?? throw new NotFoundException(nameof(MusicLoungeEntity), order.LoungeId);
+        // MLACP-631: nền tảng là trung gian, quầy bar là việc của phòng trà — quản trị viên không bấm thay phòng trà.
+        // Bấm thay là ghi "đã thu tiền mặt" hay "đã huỷ" cho một việc mình không chứng kiến. (Danh sách đơn của phòng
+        // trà — GetFnbOrdersQueryHandler — vốn đã chỉ cho chủ và nhân viên của phòng trà đó xem.) Huỷ hàng loạt khi phòng trà bị khoá đi đường riêng (FnbOrderCancellation), không qua đây.
+        if (_currentUser.Role == Roles.Admin)
+            throw new ForbiddenException("Đơn đồ uống do phòng trà xử lý — quản trị viên nền tảng không đổi trạng thái thay phòng trà.");
         if (!VenueOperatorAccess.CanOperate(_currentUser, order.LoungeId, lounge.OwnerId))
             throw new ForbiddenException("Bạn không có quyền cập nhật order F&B của venue này.");
 
@@ -56,6 +62,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         // Cancelled is a side-exit, not the next step in the Pending->Preparing->Served->Paid
         // sequence — allowed from any state before the order is actually paid, since there was
         // previously no way to void an order at all (customer changed mind / walked out).
+        // MLACP-631: from Preparing on, only the venue Owner may cancel, and every cancel carries a reason.
         if (newStatus == FnbOrderStatus.Cancelled)
         {
             if (order.Status is FnbOrderStatus.Paid or FnbOrderStatus.Cancelled)
@@ -65,53 +72,20 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
             // MLACP-349 tam chan viec nay (422) vi luc do chua co duong hoan — huy ma khong hoan la giu tien
             // cua khach ma khong giao mon. Nay huy duoc, kem yeu cau hoan 100%: mon chua giao thi tien phai
             // ve lai khach. Don da phuc vu xong thi da dong o Paid va bi chan o tren.
-            Payment? toRefund = null;
-            if (isPaid)
-            {
-                var referenceId = order.Id.ToString();
-                toRefund = (await _uow.Repository<Payment, Guid>().FindAsync(
-                        p => p.ReferenceType == FnbOrderPayments.ReferenceType
-                             && p.ReferenceId == referenceId
-                             && p.Status == PaymentStatus.Confirmed
-                             && p.Method == PaymentMethod.Gateway, ct))
-                    .FirstOrDefault()
-                    ?? throw new DomainException(
-                        "Không tìm thấy khoản thanh toán online của đơn này để hoàn — không thể huỷ.");
-            }
+            // MLACP-631: món đã bắt đầu làm là hàng đã xuất — huỷ lúc này là ghi nhận một khoản mất, nên chỉ chủ phòng
+            // trà quyết (Toast: huỷ cần quyền riêng hoặc quản lý duyệt; KiotViet: quyền "Xóa món đã gọi" gán riêng).
+            // Nhân viên huỷ được đơn còn chờ quầy nhận (khách đổi ý, gọi nhầm, hết món).
+            if (order.Status is FnbOrderStatus.Preparing or FnbOrderStatus.Served && _currentUser.Role != Roles.Owner)
+                throw new ForbiddenException(
+                    "Đơn đã bắt đầu làm — chỉ chủ phòng trà được huỷ, vì món làm ra rồi là một khoản mất cần người " +
+                    "chịu trách nhiệm ký nhận. Nhờ chủ phòng trà huỷ trên trang quản lý.");
 
-            var live = await FnbOrderPayments.LiveOnlinePaymentAsync(_uow, order.Id, now, ct);
-            if (live is not null)
-                throw new ConflictException(
-                    "Khách đang thanh toán online cho đơn này (link VNPay còn hiệu lực khoảng " +
-                    $"{FnbOrderPayments.MinutesLeft(live, now)} phút). Huỷ lúc này thì khách vẫn có thể " +
-                    "trả tiền cho một đơn đã huỷ — hãy chờ giao dịch kết thúc rồi huỷ.");
-
-            order.Status = FnbOrderStatus.Cancelled;
-            orderRepo.Update(order);
-
-            var itemRepo = _uow.Repository<OrderItem, Guid>();
-            var items = await itemRepo.FindAsync(i => i.FnbOrderId == order.Id, ct);
-            foreach (var item in items)
-            {
-                item.Cancelled = true;
-                itemRepo.Update(item);
-            }
-
-            if (toRefund is not null)
-            {
-                _uow.Repository<RefundRequest, Guid>().Add(new RefundRequest
-                {
-                    PaymentId = toRefund.Id,
-                    RequestedBy = order.AudienceUserId ?? toRefund.PayerId,
-                    Reason = $"Phòng trà huỷ đơn F&B #{order.Id} trước khi phục vụ — hoàn 100%",
-                    AmountRequested = toRefund.GrossAmount,
-                    RefundPercentage = 100m,
-                    Status = RefundRequestStatus.Pending
-                });
-            }
+            var refundAmount = await FnbOrderCancellation.CancelOneAsync(
+                _uow, order, isPaid, _currentUser.UserId, request.Reason!,
+                $"Phòng trà huỷ đơn F&B #{order.Id} trước khi phục vụ — hoàn 100%", now, ct);
 
             await _uow.SaveChangesAsync(ct);
-            await NotifyAudienceAsync(order, FnbOrderStatus.Cancelled, ct, refundAmount: toRefund?.GrossAmount);
+            await NotifyAudienceAsync(order, FnbOrderStatus.Cancelled, ct, refundAmount: refundAmount);
             // Luu lai SAU khi gui thong bao — xem ghi chu o nhanh duoi.
             await _uow.SaveChangesAsync(ct);
             return Unit.Value;
@@ -129,8 +103,9 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         // GetOwnerAnalyticsQueryHandler's FnbRevenue), or collect real money and never flag it
         // Paid (skims cash with nothing to reconcile against). This Payment row doesn't feed the
         // ledger/settlement pipeline (F&B isn't a platform-commission product, same as walk-in
-        // ticket sales) — it exists purely so "who marked what order Paid, for how much, when" is
-        // an auditable record instead of a single mutable status field only Staff can see/edit.
+        // ticket sales) — it exists so "what order was closed in cash, for how much, when" is a
+        // record instead of a single mutable status field. "Who" was NOT recorded until MLACP-631:
+        // Payment has no recorder column — it lives on FnbOrder.CashCollectedBy (set below).
         if (newStatus == FnbOrderStatus.Paid && !isPaid)
         {
             // MLACP-349: khach dang co mot link VNPay con tra duoc. Thu tien mat luc nay thi neu khach
@@ -165,6 +140,9 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                 CreatedAt = now
             });
             order.PaymentMethod = PaymentMethod.Cash;
+            // MLACP-631: người cầm tiền. Payment không có cột người ghi, và UpdatedBy của đơn bị ghi đè ở mỗi bước — thiếu
+            // dòng này thì "ai thu tiền mặt" không trả lời được, dù chú thích ở trên hứa là có.
+            order.CashCollectedBy = _currentUser.UserId;
         }
 
         order.Status = newStatus;
