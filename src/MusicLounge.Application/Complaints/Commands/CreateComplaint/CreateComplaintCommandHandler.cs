@@ -40,12 +40,23 @@ internal sealed class CreateComplaintCommandHandler
             ? null
             : Convert.ToHexString(RandomNumberGenerator.GetBytes(12));
 
+        // MLACP-680: khiếu nại "livestream" có thể mang mã BUỔI DIỄN (dán từ đường dẫn /livestream/<mã buổi diễn>) —
+        // validator đã nhận. Lưu về Livestream.Id để mọi nơi đọc TargetId (ReferenceNames, hàng đợi Admin) hiểu đúng
+        // một nghĩa duy nhất của loại này.
+        var targetId = request.TargetId;
+        if (request.TargetType == "livestream")
+        {
+            var theoBuoi = await _uow.Repository<Livestream, Guid>()
+                .FindAsync(l => l.LoungeShowId == request.TargetId, ct);
+            if (theoBuoi.Count > 0) targetId = theoBuoi[0].Id;
+        }
+
         var complaint = new Complaint
         {
             ComplainantUserId = _currentUser.IsAuthenticated ? _currentUser.UserId : null,
             LookupReference = lookupReference,
             TargetType = request.TargetType,
-            TargetId = request.TargetId,
+            TargetId = targetId,
             Category = Enum.Parse<ComplaintCategory>(request.Category, ignoreCase: true),
             Description = request.Description,
             EvidenceUrls = request.EvidenceUrls,
