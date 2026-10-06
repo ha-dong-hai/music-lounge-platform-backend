@@ -92,6 +92,7 @@ public class NotFoundException : Exception
         ["User"] = "người dùng",
         ["Notification"] = "thông báo",
         ["Complaint"] = "khiếu nại",
+        ["ShowCancellationReview"] = "lý do huỷ buổi hòa nhạc", // MLACP-676
         ["CustomCriteriaEntity"] = "tiêu chí tuỳ chỉnh",
         ["SystemConfig"] = "khoá cấu hình",
         ["Wishlist entry"] = "mục trong danh sách yêu thích",
@@ -184,6 +185,7 @@ public class NotFoundException : Exception
         ["User"] = "user",
         ["Notification"] = "notification",
         ["Complaint"] = "complaint",
+        ["ShowCancellationReview"] = "concert cancellation reason", // MLACP-676
         ["CustomCriteriaEntity"] = "custom criterion",
         ["SystemConfig"] = "configuration key",
         ["Wishlist entry"] = "wishlist entry",

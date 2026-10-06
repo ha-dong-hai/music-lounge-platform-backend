@@ -464,11 +464,18 @@ public sealed class LoungeShowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct = default)
+    public async Task<IActionResult> Cancel(
+        Guid id,
+        [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] CancelShowBody? body = null,
+        CancellationToken ct = default)
     {
-        await _sender.Send(new CancelLoungeShowCommand(id), ct);
+        // MLACP-676: buổi đã mở bán thì chủ phòng trà phải gửi lý do (reason + detail, tuỳ chọn evidenceUrl).
+        await _sender.Send(new CancelLoungeShowCommand(id, body?.Reason, body?.Detail, body?.EvidenceUrl), ct);
         return NoContent();
     }
+
+    /// <param name="Reason">ForceMajeure | PerformerUnavailable | AuthorityRequest | VenueIncident | LowSales | Other.</param>
+    public sealed record CancelShowBody(string? Reason, string? Detail, string? EvidenceUrl);
 
     [HttpPost("{id:guid}/reschedule")]
     [Authorize(Policy = Policies.RequireOwner)]

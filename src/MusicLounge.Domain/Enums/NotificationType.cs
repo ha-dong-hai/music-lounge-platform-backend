@@ -97,5 +97,7 @@ public enum NotificationType
     // luat dieu huong (mo buoi hoa nhac).
     PosterGenerationResult,
     // MLACP-622: danh sách biểu diễn thay đổi bất lợi sau khi đã mở bán — báo người giữ vé kèm cửa sổ hoàn 100%.
-    LineupChanged
+    LineupChanged,
+    // MLACP-676: chủ phòng trà huỷ buổi đã mở bán — báo Admin có lý do huỷ cần xét; báo chủ phòng trà kết quả xét.
+    ShowCancellationReview
 }

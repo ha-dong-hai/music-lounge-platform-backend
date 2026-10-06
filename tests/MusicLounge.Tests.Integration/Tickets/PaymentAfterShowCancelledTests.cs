@@ -105,7 +105,7 @@ public sealed class PaymentAfterShowCancelledTests
     private async Task CancelShowAsOwnerAsync(Venue venue)
     {
         var res = await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
-            .PostAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", null);
+            .PostAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", HuyBuoi.LyDo);
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
