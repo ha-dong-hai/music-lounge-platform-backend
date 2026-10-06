@@ -29,6 +29,14 @@ public sealed class RateLimitSettingsTests
     }
 
     [Fact]
+    public void NguoiDaDangNhap_CoNguongRieng_MacDinh300_GhiDeDuoc()
+    {
+        // MLACP-686: tài khoản đã đăng nhập không còn chung ngưỡng 100 của khách.
+        RateLimitSettings.From(CauHinh()).UserPermitPerMinute.Should().Be(300);
+        RateLimitSettings.From(CauHinh(("RateLimiting:UserPermitPerMinute", "600"))).UserPermitPerMinute.Should().Be(600);
+    }
+
+    [Fact]
     public void KhaiTrongCauHinh_ThiDungGiaTriDo()
     {
         var s = RateLimitSettings.From(CauHinh(
@@ -53,6 +61,7 @@ public sealed class RateLimitSettingsTests
     [InlineData("RateLimiting:GlobalPermitPerMinute", "-5")]
     [InlineData("RateLimiting:AuthPermitPerMinute", "0")]
     [InlineData("RateLimiting:AuthPermitPerMinute", "-1")]
+    [InlineData("RateLimiting:UserPermitPerMinute", "0")]
     public void GiaTriTuKhongTroXuong_DungLucKhoiDong_KhongLangLeDungMacDinh(string khoa, string giaTri)
     {
         var goi = () => RateLimitSettings.From(CauHinh((khoa, giaTri)));
@@ -70,6 +79,7 @@ public sealed class RateLimitSettingsTests
 
         s.GlobalPermitPerMinute.Should().Be(RateLimitSettings.DefaultGlobalPermitPerMinute);
         s.AuthPermitPerMinute.Should().Be(RateLimitSettings.DefaultAuthPermitPerMinute);
+        s.UserPermitPerMinute.Should().Be(RateLimitSettings.DefaultUserPermitPerMinute);
     }
 
     [Fact]
@@ -78,11 +88,13 @@ public sealed class RateLimitSettingsTests
         var ma = File.ReadAllText(Path.Combine(ThuMucGoc(), "src", "MusicLounge.Api", "Program.cs"));
 
         // Chặn "quét trúng số không": phải thấy đúng hai chỗ gán PermitLimit thì bài quét mới có nghĩa.
-        var cacChoGan = Regex.Matches(ma, @"PermitLimit\s*=\s*([^,\r\n]+)");
+        // Lấy tới cuối dòng (bỏ dấu phẩy cuối dòng của khởi tạo đối tượng) — giá trị có thể là lời gọi nhiều tham số.
+        var cacChoGan = Regex.Matches(ma, @"PermitLimit\s*=\s*(.+?),?\s*$", RegexOptions.Multiline);
         cacChoGan.Count.Should().Be(2, "Program.cs có đúng hai bộ giới hạn: chung và nhóm auth");
 
+        // MLACP-686: bộ giới hạn chung chọn ngưỡng theo ngăn (khách / tài khoản) qua RateLimitPartitionKey.PermitFor.
         cacChoGan.Select(m => m.Groups[1].Value.Trim()).Should().BeEquivalentTo(
-            ["rateLimit.GlobalPermitPerMinute", "rateLimit.AuthPermitPerMinute"]);
+            ["MusicLounge.Api.RateLimiting.RateLimitPartitionKey.PermitFor(khoa, rateLimit)", "rateLimit.AuthPermitPerMinute"]);
     }
 
     private static string ThuMucGoc()
