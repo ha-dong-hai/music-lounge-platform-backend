@@ -340,7 +340,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
         await TicketAsync(show, buyer);
 
         (await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
-                .PostAsync($"/api/v1/lounge-shows/{show}/cancel", null))
+                .PostAsJsonAsync($"/api/v1/lounge-shows/{show}/cancel", HuyBuoi.LyDo))
             .IsSuccessStatusCode.Should().BeTrue();
 
         var bao = (await NoticesAsync(buyer, NotificationType.EventCancelled)).Should()
@@ -363,7 +363,7 @@ public sealed class PenaltyCancelsUpcomingShowsTests
                 .SingleAsync(s => s.Id == show)).Name;
 
         await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
-            .PostAsync($"/api/v1/lounge-shows/{show}/cancel", null);
+            .PostAsJsonAsync($"/api/v1/lounge-shows/{show}/cancel", HuyBuoi.LyDo);
         var refund = (await RefundsAsync(payment)).Single();
         refund.Reason.Should().StartWith("Buổi hòa nhạc bị huỷ", "lý do hiện cho khán giả — không phải \"Event bị hủy\"");
 
