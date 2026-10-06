@@ -64,7 +64,10 @@ internal sealed class CreateComplaintCommandValidator : AbstractValidator<Create
         // là GUID — kiểm như các loại khác. (Khiếu nại "ticket" cũ mang số int không trỏ được vé nào; migration giữ
         // nguyên-giá-trị-đã-đổi-dạng cho chúng, xem Mlacp515GuidKeys.)
         "ticket" => uow.Repository<Ticket, Guid>().AnyAsync(t => t.Id == targetId, ct),
-        "livestream" => uow.Repository<Livestream, Guid>().AnyAsync(l => l.Id == targetId, ct),
+        // MLACP-680: trang xem là /livestream/<mã BUỔI DIỄN>, nên người dán đường dẫn trang xem mang mã buổi diễn chứ
+        // không phải Livestream.Id — trước đây bị báo "không tồn tại". Nhận cả hai; handler đổi về Livestream.Id
+        // (một buổi diễn có tối đa một livestream — chỉ mục duy nhất LoungeShowId, nên không mơ hồ).
+        "livestream" => uow.Repository<Livestream, Guid>().AnyAsync(l => l.Id == targetId || l.LoungeShowId == targetId, ct),
         _ => Task.FromResult(false)
     };
 
