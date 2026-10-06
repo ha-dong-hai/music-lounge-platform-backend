@@ -31,7 +31,8 @@ internal sealed class LookupPerformerConfirmationQueryHandler
         var performer = await _uow.Repository<Performer, Guid>().GetByIdAsync(confirmation.PerformerId, ct)
             ?? throw new NotFoundException(nameof(Performer), confirmation.PerformerId);
 
-        string? bankName = null, masked = null, holder = null, paymentRef = null, showName = null, venueName = null;
+        string? bankName = null, masked = null, holder = null, paymentRef = null, showName = null, venueName = null,
+            evidenceUrl = null;
         decimal? amount = null;
         var outdated = false;
 
@@ -58,6 +59,7 @@ internal sealed class LookupPerformerConfirmationQueryHandler
                  && await _uow.Repository<Donation, Guid>().GetByIdAsync(donationId, ct) is { } donation)
         {
             paymentRef = donation.PaymentRef;
+            evidenceUrl = donation.PaymentEvidenceUrl;
             // Đúng số tiền phòng trà đã báo chuyển, lấy từ nhật ký bằng chứng — không tính lại.
             amount = (await _uow.Repository<DonationEvent, Guid>().FindAsync(
                     e => e.DonationId == donationId && e.EventType == DonationEventType.VenueReportedPaid, ct))
@@ -80,6 +82,6 @@ internal sealed class LookupPerformerConfirmationQueryHandler
 
         return new PerformerConfirmationDto(
             confirmation.Purpose.ToString(), performer.Name, confirmation.ExpiresAt, state,
-            confirmation.Outcome?.ToString(), bankName, masked, holder, amount, paymentRef, showName, venueName);
+            confirmation.Outcome?.ToString(), bankName, masked, holder, amount, paymentRef, showName, venueName, evidenceUrl);
     }
 }

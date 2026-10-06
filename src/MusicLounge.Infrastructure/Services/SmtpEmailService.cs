@@ -115,7 +115,7 @@ internal sealed class SmtpEmailService : IEmailService
 
     public Task SendPerformerConfirmationAsync(
         string toEmail, string toName, SongNgu subject, SongNgu message, string link,
-        DateTimeOffset expiresAt, CancellationToken ct = default)
+        DateTimeOffset expiresAt, EmailAttachment? attachment = null, CancellationToken ct = default)
     {
         if (!CoCachGui)
         {
@@ -132,6 +132,11 @@ internal sealed class SmtpEmailService : IEmailService
         // Thông lệ khi không biết ngôn ngữ người nhận: gửi cả hai trong một thư, tiếng Việt trước. Liên kết chỉ xuất
         // hiện MỘT lần (ở nút) — hai liên kết giống hệt nhau trong một thư dễ bị bộ lọc thư rác đánh dấu.
         var expires = VietnamTime.Format(expiresAt, "HH:mm dd/MM/yyyy");
+        // MLACP-673: câu chỉ tới tệp đính kèm chỉ in khi thư THẬT SỰ có tệp — không hứa thứ không có trong thư.
+        string[] chungTuVi = attachment is null ? [] :
+            [$"Ảnh chứng từ chuyển khoản phòng trà đã nộp được đính kèm thư này ({attachment.FileName}). Hãy đối chiếu với sao kê tài khoản của bạn trước khi trả lời."];
+        string[] chungTuEn = attachment is null ? [] :
+            [$"The proof of transfer the venue submitted is attached to this email ({attachment.FileName}). Please check it against your bank statement before replying."];
         var thu = new ThuEmail
         {
             NgonNgu = NgonNgu.Viet,
@@ -141,6 +146,7 @@ internal sealed class SmtpEmailService : IEmailService
             DoanMo =
             [
                 message.Vi,
+                .. chungTuVi,
                 $"Liên kết chỉ dùng được một lần và hết hạn lúc {expires} (giờ Việt Nam). Bạn không cần tạo tài khoản MusicLounge để trả lời.",
             ],
             Nut = new NutThu("Xem và trả lời / View and reply", link),
@@ -149,11 +155,12 @@ internal sealed class SmtpEmailService : IEmailService
                 "——— English ———",
                 $"Hello {toName},",
                 message.En,
+                .. chungTuEn,
                 $"Use the button above. It works only once and expires at {expires} (Vietnam time). You do not need a MusicLounge account to reply.",
             ],
             LyDoNhan = "Bạn nhận thư này vì một phòng trà trên MusicLounge ghi địa chỉ email này là liên hệ của bạn. / A venue on MusicLounge listed this address as your contact.",
         };
-        return GuiAsync(toEmail, toName, $"{subject.Vi} / {subject.En}", thu, ct);
+        return GuiAsync(toEmail, toName, $"{subject.Vi} / {subject.En}", thu, ct, attachment);
     }
 
     public Task SendTicketConfirmationAsync(TicketConfirmationEmail e, CancellationToken ct = default)
@@ -216,9 +223,10 @@ internal sealed class SmtpEmailService : IEmailService
     /// MLACP-635: dựng thư HAI phần (chữ trơn trước, HTML sau — RFC 2046: phần cuối là phần ưu tiên hiển thị) rồi gửi.
     /// Tách riêng <see cref="TaoThu"/> để test kiểm nội dung thư mà không cần máy chủ SMTP.
     /// </summary>
-    private async Task GuiAsync(string toEmail, string toName, string subject, ThuEmail thu, CancellationToken ct)
+    private async Task GuiAsync(
+        string toEmail, string toName, string subject, ThuEmail thu, CancellationToken ct, EmailAttachment? attachment = null)
     {
-        using var message = TaoThu(_settings, toEmail, toName, subject, thu);
+        using var message = TaoThu(_settings, toEmail, toName, subject, thu, attachment);
         if (BatThu is not null) { await BatThu(message); return; }
         using var client = new SmtpClient(_settings.Host, _settings.Port)
         {
@@ -236,7 +244,8 @@ internal sealed class SmtpEmailService : IEmailService
 
     private bool CoCachGui => !string.IsNullOrWhiteSpace(_settings.Host) || BatThu is not null;
 
-    internal static MailMessage TaoThu(EmailSettings settings, string toEmail, string toName, string subject, ThuEmail thu)
+    internal static MailMessage TaoThu(
+        EmailSettings settings, string toEmail, string toName, string subject, ThuEmail thu, EmailAttachment? attachment = null)
     {
         var (html, chuTron) = KhungThu.Dung(thu);
         var message = new MailMessage
@@ -249,6 +258,10 @@ internal sealed class SmtpEmailService : IEmailService
         message.To.Add(new MailAddress(toEmail, toName));
         message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(chuTron, Encoding.UTF8, MediaTypeNames.Text.Plain));
         message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(html, Encoding.UTF8, MediaTypeNames.Text.Html));
+        // MLACP-673: MailMessage tự chuyển thành multipart/mixed (hai phần chữ + tệp) khi có đính kèm. Luồng nhớ được
+        // MailMessage.Dispose giải phóng cùng thư.
+        if (attachment is not null)
+            message.Attachments.Add(new Attachment(new MemoryStream(attachment.Content), attachment.FileName, attachment.MimeType));
         return message;
     }
 
