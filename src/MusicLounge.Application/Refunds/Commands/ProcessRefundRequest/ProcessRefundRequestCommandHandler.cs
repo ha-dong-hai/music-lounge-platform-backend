@@ -467,9 +467,8 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         if (manualTransferRef is not null)
         {
             // MLACP-384: noi dung su that — tien khong di qua VNPay ma da duoc chuyen khoan truc tiep.
-            await NotifyBuyerAsync(
+            await NotifyApprovedAsync(
                 refund,
-                RefundApprovedTitle,
                 new SongNgu(
                     $"{VietnamMoney.Format(amountApproved)} đã được chuyển khoản trực tiếp tới tài khoản {refund.PayoutBankName} " +
                     $"{RefundGatewayWindow.Masked(refund.PayoutAccountNumber)} của bạn (mã giao dịch {manualTransferRef}), vì " +
@@ -482,9 +481,8 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         }
         else if (isGatewayPayment)
         {
-            await NotifyBuyerAsync(
+            await NotifyApprovedAsync(
                 refund,
-                RefundApprovedTitle,
                 new SongNgu(
                     $"{VietnamMoney.Format(amountApproved)} sẽ được hoàn về phương thức thanh toán bạn đã dùng. Thời gian " +
                     "tiền về tài khoản phụ thuộc ngân hàng phát hành.",
@@ -494,9 +492,8 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
         }
         else
         {
-            await NotifyBuyerAsync(
+            await NotifyApprovedAsync(
                 refund,
-                RefundApprovedTitle,
                 new SongNgu(
                     $"{VietnamMoney.Format(amountApproved)} sẽ được phòng trà hoàn trực tiếp cho bạn, vì vé này được mua " +
                     "tại quầy. Chúng tôi đã thông báo cho phòng trà. Nếu chưa nhận được, hãy gửi khiếu nại.",
@@ -535,6 +532,28 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
     /// de bao, nen bo qua la dung.
     /// </summary>
     private static readonly SongNgu RefundApprovedTitle = new("Yêu cầu hoàn tiền đã được duyệt", "Refund request approved");
+
+    /// <summary>
+    /// MLACP-675. Thông báo duyệt hoàn trước đây giống hệt nhau cho mọi nguồn: "Yêu cầu hoàn tiền đã được duyệt" — kể cả khi
+    /// khán giả KHÔNG hề yêu cầu (buổi diễn bị huỷ, buổi phát không đủ thời lượng), và không nói tiền của vé nào. Nay tiêu đề
+    /// nêu tên buổi diễn; khoản hoàn do buổi diễn bị huỷ thì nói đúng như vậy; thân thư mở đầu bằng lý do hoàn.
+    /// </summary>
+    private async Task NotifyApprovedAsync(RefundRequest refund, SongNgu body, CancellationToken ct)
+    {
+        var showId = (await _uow.Repository<Ticket, Guid>().FindAsync(t => t.PaymentId == refund.PaymentId, ct))
+            .Select(t => (Guid?)t.ShowId).FirstOrDefault();
+        var showName = showId is Guid id ? (await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(id, ct))?.Name : null;
+
+        var doHuyBuoi = refund.Reason.StartsWith(LoungeShows.ShowCancellation.RefundReasonShowCancelled, StringComparison.Ordinal)
+                        // Yêu cầu tạo trước MLACP-675 mang câu cũ.
+                        || refund.Reason.StartsWith("Event bị hủy", StringComparison.Ordinal);
+        var title = showName is null ? RefundApprovedTitle
+            : doHuyBuoi
+                ? new SongNgu($"Đang hoàn tiền vé buổi \"{showName}\" đã bị huỷ", $"Refunding your tickets for cancelled \"{showName}\"")
+                : new SongNgu($"Đã duyệt hoàn tiền vé \"{showName}\"", $"Ticket refund approved: \"{showName}\"");
+        var lyDo = string.IsNullOrWhiteSpace(refund.Reason) ? "" : $"Lý do hoàn: {refund.Reason.Replace("Event bị hủy", "Buổi hòa nhạc bị huỷ")}. ";
+        await NotifyBuyerAsync(refund, title, new SongNgu(lyDo + body.Vi, body.En), ct);
+    }
 
     private async Task NotifyBuyerAsync(
         RefundRequest refund, SongNgu title, SongNgu body, CancellationToken ct)

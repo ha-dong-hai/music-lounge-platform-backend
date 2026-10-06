@@ -117,7 +117,7 @@ public sealed class AutoApproveOverdueRefundsTests
         return await db.Notifications.CountAsync(n =>
             n.UserId == userId && n.Type == type
             && n.ReferenceType == referenceType && n.ReferenceId == refundId.ToString()
-            && (title == null || n.Title == title));
+            && (title == null || n.Title.StartsWith(title)));
     }
 
     // ── Quá SLA và hết ân hạn thì tự duyệt ──────────────────────────────────
@@ -136,7 +136,8 @@ public sealed class AutoApproveOverdueRefundsTests
         refund.ResolutionNote.Should().Contain("Tự động duyệt");
 
         (await CountAsync(SeedHelper.AudienceId, NotificationType.RefundUpdate, "refund_request", refundId,
-                title: "Yêu cầu hoàn tiền đã được duyệt"))
+                // MLACP-675: tiêu đề nêu tên buổi diễn — "Đã duyệt hoàn tiền vé \"<tên>\"".
+                title: "Đã duyệt hoàn tiền vé \""))
             .Should().Be(1, "người mua được báo như khi Admin duyệt tay — cùng một handler");
         using (var wording = _factory.Services.CreateScope())
             (await wording.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AnyAsync(n =>
