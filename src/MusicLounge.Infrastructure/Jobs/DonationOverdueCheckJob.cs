@@ -65,6 +65,14 @@ public sealed class DonationOverdueCheckJob
             var info = await GetOwnershipAsync(donation.Id, ct);
             if (info is null) continue;
 
+            // MLACP-674: trước đây in "donate #<mã GUID>" — chủ phòng trà không biết khoản nào để đi chuyển tiền (cùng lỗi
+            // MLACP-645 đã sửa ở thông báo lúc thanh toán). Nay ghi số tiền, ai ủng hộ, cho nghệ sĩ nào, ở buổi nào.
+            var nguoi = donation.IsAnonymous ? "khán giả ẩn danh" : donation.DisplayName ?? "một khán giả";
+            var person = donation.IsAnonymous ? "an anonymous viewer" : donation.DisplayName ?? "a viewer";
+            var khoanVi = $"khoản ủng hộ {VietnamMoney.Format(donation.Gross)} của {nguoi} cho nghệ sĩ {info.Value.Performer} " +
+                          $"(buổi \"{info.Value.Show}\")";
+            var khoanEn = $"the {donation.Gross:N0} VND donation from {person} to {info.Value.Performer} (\"{info.Value.Show}\")";
+
             if (now >= DonationPayoutDeadline.WarningAt(receivedAt, holdDays))
             {
                 var evidenceRef = $"donation:{donation.Id}";
@@ -84,8 +92,8 @@ public sealed class DonationOverdueCheckJob
                         {
                             LoungeId = info.Value.LoungeId,
                             PenaltyType = PenaltyType.Warning,
-                            Reason = $"Donate #{donation.Id} quá {2 * holdDays} ngày kể từ khi phòng trà nhận tiền " +
-                                     "vẫn chưa trả nghệ sĩ.",
+                            Reason = $"Quá {2 * holdDays} ngày kể từ khi phòng trà nhận tiền mà {khoanVi} vẫn chưa được " +
+                                     "chuyển cho nghệ sĩ.",
                             EvidenceRef = evidenceRef,
                             IssuedBy = adminId,
                             IssuedAt = now,
@@ -100,9 +108,9 @@ public sealed class DonationOverdueCheckJob
                                 "Cảnh báo vi phạm",
                                 "Violation warning"),
                             new SongNgu(
-                                $"Phòng trà của bạn bị cảnh báo vì donate #{donation.Id} đã quá {2 * holdDays} ngày " +
-                                "kể từ khi nhận tiền mà chưa chuyển cho nghệ sĩ.",
-                                $"Your music lounge has received a warning because donation #{donation.Id} is more than {2 * holdDays} days " +
+                                $"Phòng trà của bạn bị cảnh báo vì {khoanVi} đã quá {2 * holdDays} ngày kể từ khi nhận " +
+                                "tiền mà chưa chuyển cho nghệ sĩ.",
+                                $"Your music lounge has received a warning because {khoanEn} is more than {2 * holdDays} days " +
                                 "past receipt and has not been passed on to the performer."),
                             referenceType: "donation",
                             referenceId: donation.Id.ToString(),
@@ -126,10 +134,10 @@ public sealed class DonationOverdueCheckJob
                         "Nhắc nhở: chưa trả nghệ sĩ",
                         "Reminder: performer not yet paid"),
                     new SongNgu(
-                        $"Donate #{donation.Id} đã tới hạn chuyển cho nghệ sĩ ({VietnamTime.Format(dueAt)}) — " +
-                        "vui lòng chuyển khoản cho nghệ sĩ.",
-                        $"Donation #{donation.Id} is due to be transferred to the performer ({VietnamTime.Format(dueAt)}) — " +
-                        "please make the transfer to the performer."),
+                        $"Đã tới hạn chuyển {khoanVi} cho nghệ sĩ (hạn {VietnamTime.Format(dueAt)}). Hãy chuyển khoản rồi " +
+                        "bấm Xác nhận đã trả nghệ sĩ.",
+                        $"{char.ToUpper(khoanEn[0])}{khoanEn[1..]} is due to be passed on to the performer (due " +
+                        $"{VietnamTime.Format(dueAt)}). Please make the transfer, then confirm it."),
                     referenceType: "donation",
                     referenceId: donation.Id.ToString(),
                     ct: ct);
@@ -139,13 +147,18 @@ public sealed class DonationOverdueCheckJob
         await _ctx.SaveChangesAsync(ct);
     }
 
-    private async Task<(Guid OwnerId, Guid LoungeId)?> GetOwnershipAsync(Guid donationId, CancellationToken ct)
+    private async Task<(Guid OwnerId, Guid LoungeId, string Performer, string Show)?> GetOwnershipAsync(
+        Guid donationId, CancellationToken ct)
     {
         var row = await _ctx.Donations
             .Where(d => d.Id == donationId)
-            .Select(d => new { d.Performance.LoungeShow.Lounge.OwnerId, d.Performance.LoungeShow.LoungeId })
+            .Select(d => new
+            {
+                d.Performance.LoungeShow.Lounge.OwnerId, d.Performance.LoungeShow.LoungeId,
+                Performer = d.Performance.Performer.Name, Show = d.Performance.LoungeShow.Name
+            })
             .FirstOrDefaultAsync(ct);
 
-        return row is null ? null : (row.OwnerId, row.LoungeId);
+        return row is null ? null : (row.OwnerId, row.LoungeId, row.Performer, row.Show);
     }
 }

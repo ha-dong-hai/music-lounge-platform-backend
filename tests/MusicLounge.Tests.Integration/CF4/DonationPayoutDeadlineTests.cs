@@ -197,6 +197,13 @@ public sealed class DonationPayoutDeadlineTests
         var (reminded, warned) = await OutcomeAsync(venue, id);
         reminded.Should().BeTrue("hạn tính từ lúc tiền về phòng trà — bấm muộn không lùi được hạn");
         warned.Should().BeFalse("chưa tới mốc cảnh cáo (gấp đôi hạn)");
+
+        // MLACP-674: chủ phải nhận ra khoản nào mà đi chuyển tiền — không phải "Donate #<mã GUID>".
+        using var scope = _factory.Services.CreateScope();
+        var nhac = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+            .SingleAsync(n => n.UserId == venue.OwnerId && n.Type == NotificationType.DonationPending && n.ReferenceId == id.ToString());
+        nhac.Body.Should().NotContain(id.ToString()).And.Contain("cho nghệ sĩ ").And.MatchRegex(@"\d{1,3}(\.\d{3})+đ");
+        nhac.BodyEn.Should().NotContain(id.ToString());
     }
 
     [Fact]
@@ -210,6 +217,15 @@ public sealed class DonationPayoutDeadlineTests
         await RunOverdueJobAsync();
 
         (await OutcomeAsync(venue, id)).Warned.Should().BeTrue();
+
+        // MLACP-674: lý do án phạt và thông báo cảnh cáo đọc được — không có mã GUID.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.VenuePenalties.AsNoTracking().SingleAsync(p => p.EvidenceRef == $"donation:{id}"))
+            .Reason.Should().NotContain(id.ToString()).And.Contain("cho nghệ sĩ ");
+        (await db.Notifications.AsNoTracking().SingleAsync(n =>
+                n.UserId == venue.OwnerId && n.Type == NotificationType.PenaltyWarning && n.ReferenceId == id.ToString()))
+            .Body.Should().NotContain(id.ToString());
     }
 
     [Fact]

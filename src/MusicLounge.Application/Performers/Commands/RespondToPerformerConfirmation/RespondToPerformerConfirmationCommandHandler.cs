@@ -1,5 +1,6 @@
 using MusicLounge.Domain.ValueObjects;
 using MediatR;
+using MusicLounge.Application.Common;
 using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Donations;
 using MusicLounge.Domain.Entities;
@@ -149,6 +150,8 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
             dispute ? DonationEventType.PerformerDisputedReceipt : DonationEventType.PerformerConfirmedReceipt,
             actorUserId: null, reference: donation.PaymentRef, detail: detail, ct: ct);
 
+        await NotifyOwnerAsync(donation, performer, dispute, note, ct);
+
         if (!dispute) return;
 
         var slaHours = await _config.GetIntAsync(ConfigKeys.ComplaintSlaHours, 72, ct);
@@ -165,5 +168,46 @@ internal sealed class RespondToPerformerConfirmationCommandHandler
             CreatedAt = now,
             SlaDeadline = now.AddHours(slaHours)
         });
+    }
+
+    /// <summary>
+    /// MLACP-674. Trước đây câu trả lời của nghệ sĩ chỉ vào nhật ký bằng chứng (và khiếu nại cho Admin khi báo chưa nhận) —
+    /// chủ phòng trà, người vừa chuyển tiền, không được báo gì: không biết khoản đã khép lại, cũng không biết đang bị khiếu
+    /// nại. Nay báo cả hai trường hợp, kèm mã chuyển khoản để chủ đối chiếu.
+    /// </summary>
+    private async Task NotifyOwnerAsync(Donation donation, Performer performer, bool dispute, string? note, CancellationToken ct)
+    {
+        var performance = await _uow.Repository<Performance, Guid>().GetByIdAsync(donation.PerformanceId, ct);
+        var show = performance is null ? null : await _uow.Repository<LoungeShow, Guid>().GetByIdAsync(performance.LoungeShowId, ct);
+        var lounge = show is null ? null
+            : await _uow.Repository<Domain.Entities.MusicLounge, Guid>().GetByIdAsync(show.LoungeId, ct);
+        if (lounge is null) return;
+
+        var buoi = show!.Name;
+        var ma = donation.PaymentRef ?? "";
+        var ghiChuVi = note is null ? "" : $" Ghi chú của nghệ sĩ: {note}";
+        var ghiChuEn = note is null ? "" : $" Performer's note: {note}";
+        if (dispute)
+            await _notifications.NotifyAsync(
+                lounge.OwnerId, NotificationType.DonationPending,
+                new SongNgu($"{performer.Name} báo chưa nhận tiền ủng hộ", $"{performer.Name} reports not receiving a donation"),
+                new SongNgu(
+                    $"Nghệ sĩ {performer.Name} báo chưa nhận được khoản ủng hộ {VietnamMoney.Format(donation.Gross)} (buổi " +
+                    $"\"{buoi}\") mà phòng trà đã báo chuyển với mã {ma}. Nền tảng đã mở khiếu nại để kiểm tra — hãy chuẩn bị " +
+                    $"chứng từ chuyển khoản.{ghiChuVi}",
+                    $"Performer {performer.Name} reports not receiving the {donation.Gross:N0} VND donation (\"{buoi}\") that your " +
+                    $"music lounge reported transferring with reference {ma}. The platform has opened a complaint to check — " +
+                    $"please have your transfer receipt ready.{ghiChuEn}"),
+                referenceType: "donation", referenceId: donation.Id.ToString(), ct: ct);
+        else
+            await _notifications.NotifyAsync(
+                lounge.OwnerId, NotificationType.DonationReceived,
+                new SongNgu($"{performer.Name} đã xác nhận nhận tiền ủng hộ", $"{performer.Name} confirmed receiving a donation"),
+                new SongNgu(
+                    $"Nghệ sĩ {performer.Name} xác nhận đã nhận khoản ủng hộ {VietnamMoney.Format(donation.Gross)} (buổi " +
+                    $"\"{buoi}\", mã chuyển khoản {ma}). Khoản này đã hoàn tất.",
+                    $"Performer {performer.Name} confirmed receiving the {donation.Gross:N0} VND donation (\"{buoi}\", transfer " +
+                    $"reference {ma}). This donation is complete."),
+                referenceType: "donation", referenceId: donation.Id.ToString(), ct: ct);
     }
 }

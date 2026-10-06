@@ -180,6 +180,13 @@ public sealed class DonationLiveAlertTests
         var notice = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
             .SingleAsync(n => n.UserId == venue.OwnerId && n.Type == NotificationType.DonationReceived);
         notice.Body.Should().Contain($"cho nghệ sĩ {tenNgheSi}").And.Contain("100.000đ");
+
+        // MLACP-674: lúc này phòng trà CHƯA nhận đồng nào — tiêu đề không được nói "Bạn vừa nhận"; thân thư nói ngày giờ
+        // nền tảng dự kiến chuyển (cùng nguồn lịch với job giải ngân), bản tiếng Anh cũng có tên nghệ sĩ.
+        notice.Title.Should().Be($"Có khoản ủng hộ mới cho {tenNgheSi}");
+        var duKien = MusicLounge.Application.Settlements.SettlementReleaseSchedule.NextRunAt(notice.CreatedAt, notice.CreatedAt);
+        notice.Body.Should().Contain($"dự kiến chuyển vào tài khoản phòng trà lúc {MusicLounge.Application.Common.VietnamTime.Format(duKien, "HH:mm 'ngày' dd/MM/yyyy")}");
+        notice.BodyEn.Should().Contain(tenNgheSi).And.NotContain("a performer");
     }
 
     [Fact]
