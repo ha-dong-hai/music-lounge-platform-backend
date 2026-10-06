@@ -30,39 +30,9 @@ internal sealed class RemoveVenueTourSceneCommandHandler : IRequestHandler<Remov
         if (scene is null || scene.LoungeId != request.LoungeId)
             throw new NotFoundException(nameof(VenueTourScene), request.SceneId);
 
-        // VenueTourHotspot.TargetSceneId is Restrict (not Cascade — two cascade paths into the
-        // same table from the same row isn't allowed by SQL Server), so any hotspot elsewhere in
-        // this tour that navigates TO this scene must be cleaned up explicitly first, or the
-        // delete below would fail with an FK violation. Hotspots physically INSIDE this scene
-        // don't need handling here — those cascade via the Scene FK automatically.
-        var hotspotRepo = _uow.Repository<VenueTourHotspot, Guid>();
-        var incomingHotspots = await hotspotRepo.FindAsync(h => h.TargetSceneId == request.SceneId, ct);
-        foreach (var hotspot in incomingHotspots)
-            hotspotRepo.Remove(hotspot);
-
-        // Same reasoning as the hotspot cleanup above — VenueTourStitchAttempt.ResultSceneId is
-        // NoAction (not Cascade/SetNull, to avoid a second cascade path from MusicLounge into that
-        // table), so any attempt log pointing at this scene needs its reference cleared explicitly
-        // before the scene is deleted. The log ROW itself stays (it's an audit trail), just its
-        // link to a now-gone scene is nulled.
-        var attemptRepo = _uow.Repository<VenueTourStitchAttempt, Guid>();
-        var referencingAttempts = await attemptRepo.FindAsync(a => a.ResultSceneId == request.SceneId, ct);
-        foreach (var attempt in referencingAttempts)
-        {
-            attempt.ResultSceneId = null;
-            attemptRepo.Update(attempt);
-        }
-
-        // MLACP-543: LƯU phần gỡ liên kết TRƯỚC, rồi mới xoá scene. FindAsync đọc AsNoTracking, nên Update() gắn lại
-        // attempt với ResultSceneId = null mà EF KHÔNG biết giá trị cũ là scene này → không xếp UPDATE trước DELETE.
-        // Azure SQL 03/10/2026 chạy DELETE trước: "conflicted with the REFERENCE constraint
-        // FK_venue_tour_stitch_attempts_venue_tour_scenes_ResultSceneId" → 409, mọi scene do ghép ảnh tạo ra không xoá
-        // được. Hai lần lưu vẫn nằm trong MỘT transaction (TransactionBehavior bọc mọi ICommand) — lỗi ở bước nào cũng
-        // hoàn tác cả hai.
-        await _uow.SaveChangesAsync(ct);
-
-        sceneRepo.Remove(scene);
-        await _uow.SaveChangesAsync(ct);
+        // MLACP-692: cách gỡ (điểm bấm trỏ tới, lượt ghép ảnh, thứ tự lưu MLACP-543) nằm ở LoungeMediaRemoval — dùng chung với
+        // đường Admin từ chối cảnh bị AI gắn cờ.
+        await LoungeMediaRemoval.RemoveTourSceneAsync(_uow, scene, ct);
         return Unit.Value;
     }
 }

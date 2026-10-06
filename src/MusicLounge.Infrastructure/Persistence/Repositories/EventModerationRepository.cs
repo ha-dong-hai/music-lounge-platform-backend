@@ -56,6 +56,16 @@ internal sealed class EventModerationRepository
         var names = await ReferenceNames.ResolveAsync(_ctx, items.Select(i => (i.TargetType, i.TargetId)), ct);
         items = items.Select(i => i with { TargetName = names.GetValueOrDefault((i.TargetType.ToLowerInvariant(), i.TargetId)) }).ToList();
 
+        // MLACP-692: ảnh + tên phòng trà cho ảnh thư viện / cảnh 360 — Admin duyệt ảnh mà không thấy ảnh thì không duyệt được.
+        var idAnh = items.Where(i => i.TargetType == nameof(ModerationTargetType.GalleryImage)).Select(i => i.TargetId).ToList();
+        var idCanh = items.Where(i => i.TargetType == nameof(ModerationTargetType.TourScene)).Select(i => i.TargetId).ToList();
+        var anh = idAnh.Count == 0 ? [] : await _ctx.Set<LoungeGalleryImage>().AsNoTracking().Where(g => idAnh.Contains(g.Id))
+            .Select(g => new { g.Id, g.ImageUrl, Ten = g.Lounge.Name }).ToListAsync(ct);
+        var canh = idCanh.Count == 0 ? [] : await _ctx.Set<VenueTourScene>().AsNoTracking().Where(s => idCanh.Contains(s.Id))
+            .Select(s => new { s.Id, s.ImageUrl, Ten = s.Lounge.Name }).ToListAsync(ct);
+        var theoId = anh.Concat(canh).ToDictionary(x => x.Id);
+        items = items.Select(i => theoId.TryGetValue(i.TargetId, out var x) ? i with { TargetImageUrl = x.ImageUrl, LoungeName = x.Ten } : i).ToList();
+
         return new PaginatedResult<EventModerationDto>(items, page, pageSize, total);
     }
 
