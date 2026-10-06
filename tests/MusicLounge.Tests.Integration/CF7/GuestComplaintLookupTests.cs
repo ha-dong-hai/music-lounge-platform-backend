@@ -101,8 +101,13 @@ public sealed class GuestComplaintLookupTests
             "would turn it into a probe");
     }
 
+    /// <summary>
+    /// MLACP-690 (chủ dự án 06/10/2026): người đã đăng nhập CŨNG nhận mã — trước đây null, người dùng gửi xong đi tìm mã mà
+    /// không thấy. Mã hiện lại trong "Khiếu nại của tôi" và tra cứu được như mã của khách. Đánh đổi đã chấp nhận: mã là một
+    /// thứ chia sẻ được, nhưng 96 bit ngẫu nhiên và trang tra cứu không trả dữ liệu cá nhân (ComplaintLookupDto).
+    /// </summary>
     [Fact]
-    public async Task AuthenticatedComplainant_GetsNoReference_BecauseTheyHaveTheirOwnList()
+    public async Task AuthenticatedComplainant_AlsoGetsAReference_SeenInTheirListAndUsableForLookup()
     {
         var showId = await SeedShowAsync();
         var client = _factory.CreateAuthenticatedClient(SeedHelper.AudienceId, "Audience");
@@ -119,15 +124,23 @@ public sealed class GuestComplaintLookupTests
         res.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var created = await res.Content.ReadFromJsonAsync<Envelope<Created>>();
-        created!.Data.LookupReference.Should().BeNull(
-            "a signed-in user reads their complaints through /complaints/my; handing out a second, " +
-            "shareable credential for the same data would only widen the exposure");
+        var ma = created!.Data.LookupReference;
+        ma.Should().MatchRegex("^[0-9A-F]{24}$", "người đã đăng nhập cũng nhận mã, cùng dạng với mã của khách");
 
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        (await db.Set<Complaint>().SingleAsync(c => c.Id == created.Data.Id))
-            .LookupReference.Should().BeNull();
+        using (var scope = _factory.Services.CreateScope())
+            (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<Complaint>().SingleAsync(c => c.Id == created.Data.Id))
+                .LookupReference.Should().Be(ma);
+
+        // Mã hiện lại trong "Khiếu nại của tôi".
+        var cuaToi = await client.GetFromJsonAsync<Envelope<Trang>>("/api/v1/complaints/my?page=1&pageSize=50");
+        cuaToi!.Data.Items.Single(x => x.Id == created.Data.Id).LookupReference.Should().Be(ma);
+
+        // Và tra cứu được bằng mã như của khách.
+        (await _factory.CreateClient().GetAsync($"/api/v1/complaints/lookup/{ma}")).StatusCode.Should().Be(HttpStatusCode.OK);
     }
+
+    private sealed record Trang(List<DongCuaToi> Items);
+    private sealed record DongCuaToi(Guid Id, string? LookupReference);
 
     private sealed record Envelope<T>(bool Success, T Data);
     private sealed record Created(Guid Id, string? LookupReference);

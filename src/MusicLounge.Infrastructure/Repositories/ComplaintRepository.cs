@@ -105,7 +105,7 @@ internal sealed class ComplaintRepository : Repository<Complaint, Guid>, ICompla
                 c.ResolvedAction,
                 c.ResolvedAt,
                 c.CreatedAt,
-                c.SlaDeadline))
+                c.SlaDeadline) { LookupReference = c.LookupReference })
             .ToListAsync(ct);
 
         // MLACP-672: tên đối tượng bị khiếu nại — trước đây web chỉ có loại + mã nên in "Buổi diễn #01A10C82".

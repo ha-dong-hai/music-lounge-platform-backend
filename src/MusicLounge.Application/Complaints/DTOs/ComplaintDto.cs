@@ -24,4 +24,7 @@ public sealed record ComplaintDto(
 {
     /// <summary>MLACP-672: tên đọc được của đối tượng (buổi diễn, vé, phòng trà, khoản ủng hộ…) thay cho mã — null khi đối tượng không còn tồn tại.</summary>
     public string? TargetName { get; init; }
+
+    /// <summary>MLACP-690: mã tra cứu của khiếu nại — người gửi thấy lại mã của mình trong "Khiếu nại của tôi".</summary>
+    public string? LookupReference { get; init; }
 }

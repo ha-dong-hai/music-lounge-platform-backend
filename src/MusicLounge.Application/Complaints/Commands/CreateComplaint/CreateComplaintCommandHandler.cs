@@ -32,13 +32,14 @@ internal sealed class CreateComplaintCommandHandler
         var now = DateTimeOffset.UtcNow;
         var slaHours = await _config.GetIntAsync(ConfigKeys.ComplaintSlaHours, 72, ct);
 
-        // Người có tài khoản xem lại được qua GET /complaints/my, nên chỉ khách vãng lai mới cần mã
-        // tra cứu. Chuỗi ngẫu nhiên bằng RandomNumberGenerator chứ không phải Guid tuần tự hay id
-        // tăng dần — endpoint tra cứu là công khai, nên mã đoán được nghĩa là đọc được khiếu nại của
-        // người khác.
-        var lookupReference = _currentUser.IsAuthenticated
-            ? null
-            : Convert.ToHexString(RandomNumberGenerator.GetBytes(12));
+        // MLACP-690 (chủ dự án 06/10/2026: "tôi gửi khiếu nại như không thấy mã để tra cứu"): MỌI khiếu nại đều có mã, kể
+        // cả người đã đăng nhập. Bản trước chỉ cấp cho khách vãng lai (lý do: người có tài khoản xem được qua
+        // GET /complaints/my) — nhưng người dùng quen với "số hồ sơ" và đi tìm nó, và mã còn để nói với hỗ trợ / tra trên máy
+        // khác. Tra bằng mã không lộ thêm gì: ComplaintLookupDto không có dữ liệu cá nhân. Khiếu nại cũ được bù mã bằng
+        // migration MLACP690_BackfillComplaintLookupReference.
+        // Chuỗi ngẫu nhiên bằng RandomNumberGenerator chứ không phải Guid tuần tự hay id tăng dần — endpoint tra cứu là
+        // công khai, nên mã đoán được nghĩa là đọc được khiếu nại của người khác.
+        var lookupReference = Convert.ToHexString(RandomNumberGenerator.GetBytes(12));
 
         // MLACP-680: khiếu nại "livestream" có thể mang mã BUỔI DIỄN (dán từ đường dẫn /livestream/<mã buổi diễn>) —
         // validator đã nhận. Lưu về Livestream.Id để mọi nơi đọc TargetId (ReferenceNames, hàng đợi Admin) hiểu đúng
