@@ -37,6 +37,22 @@ public static class SystemConfigValidation
     ];
 
     /// <summary>
+    /// MLACP-698. Khoá số nguyên được phép đặt 0 — với các khoá này 0 nghĩa là "không yêu cầu", không phải làm hỏng một
+    /// phép tính (mọi khoá số nguyên khác vẫn phải lớn hơn 0).
+    ///
+    /// <para><c>publish_min_business_days_lead_time</c>: chủ dự án yêu cầu 06/10/2026 để dựng và trình diễn một buổi hòa nhạc
+    /// trong ngày trên sandbox — với mốc 7 ngày làm việc của NĐ 144/2020 Điều 10 thì không thể tạo buổi diễn "tối nay" để
+    /// thử trọn luồng bán vé → soát vé → quyết toán. Nơi đọc duy nhất (PublishLoungeShowCommandHandler) so
+    /// <c>số ngày làm việc tới buổi diễn &lt; mốc</c>, nên 0 chỉ làm phép so luôn qua; các cổng khác của việc nộp duyệt
+    /// (văn bản chấp thuận, Admin duyệt) không đổi. Chạy thật thì phải để lại 7 — mỗi lần đổi đều ghi lý do và lưu
+    /// SystemConfigHistory nên luôn tra được ai hạ mốc, lúc nào.</para>
+    /// </summary>
+    private static readonly HashSet<string> ZeroAllowedKeys =
+    [
+        ConfigKeys.PublishMinBusinessDaysLeadTime,
+    ];
+
+    /// <summary>
     /// True when the key is a proportion of money. Surfaced to the Admin UI so a rate can be shown
     /// as a percentage and flagged before editing — "0.05" on its own gives no hint that it is the
     /// platform's entire commission.
@@ -76,8 +92,9 @@ public static class SystemConfigValidation
                     return $"\"{proposedValue}\" không phải số nguyên hợp lệ.";
                 // Every integer key in this system is a count or a duration; zero or negative would
                 // silently disable the thing it configures rather than tighten it.
-                if (i <= 0)
-                    return "Giá trị phải lớn hơn 0.";
+                // MLACP-698: ngoại lệ có tên cho khoá mà 0 là một lựa chọn CÓ NGHĨA và người sửa chủ ý chọn (xem ZeroAllowedKeys).
+                if (i < 0 || (i == 0 && !ZeroAllowedKeys.Contains(key)))
+                    return ZeroAllowedKeys.Contains(key) ? "Giá trị không được âm." : "Giá trị phải lớn hơn 0.";
                 return null;
 
             case ConfigDataType.Boolean:
