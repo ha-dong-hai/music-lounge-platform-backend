@@ -1,8 +1,7 @@
 namespace MusicLounge.Application.Complaints.DTOs;
 
 /// <param name="LookupReference">
-/// Chỉ có với khiếu nại của người KHÔNG đăng nhập. Giao diện phải hiển thị mã này ngay và nhắc lưu
-/// lại — đây là cách duy nhất họ tra được kết quả về sau. Null với người đã có tài khoản, vì họ xem
-/// được qua GET /complaints/my.
+/// MLACP-690: có với MỌI khiếu nại (trước đây chỉ khách không đăng nhập). Giao diện hiển thị ngay; với khách vãng lai đây
+/// là cách duy nhất tra được kết quả về sau, với người có tài khoản thì mã cũng hiện lại trong GET /complaints/my.
 /// </param>
 public sealed record ComplaintCreatedDto(Guid Id, string? LookupReference);
