@@ -149,7 +149,8 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         // nhan thay nghe si; truoc day "da tra nghe si" chi co loi khai cua mot phia.
         if (await _uow.Repository<Performer, Guid>().GetByIdAsync(ownership.PerformerId, ct) is { } performer)
             await PerformerConfirmations.InviteAsync(_uow, _jobs, _settings, _logger, performer,
-                PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef), ct);
+                PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef,
+                    request.PaymentEvidenceUrl), ct);
 
         await _uow.SaveChangesAsync(ct);
 

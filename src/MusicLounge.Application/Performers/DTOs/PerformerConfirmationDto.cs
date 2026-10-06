@@ -17,4 +17,6 @@ public sealed record PerformerConfirmationDto(
     decimal? Amount,
     string? PaymentRef,
     string? ShowName,
-    string? VenueName);
+    string? VenueName,
+    // MLACP-673: ảnh chứng từ chuyển khoản phòng trà đã nộp — nghệ sĩ xem ngay trên trang trước khi xác nhận.
+    string? PaymentEvidenceUrl = null);
