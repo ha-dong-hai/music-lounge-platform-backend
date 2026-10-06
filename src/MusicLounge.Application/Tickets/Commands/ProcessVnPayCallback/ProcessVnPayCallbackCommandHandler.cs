@@ -282,7 +282,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
         var (refundReason, noticeType, noticeTitle, whatHappened, incidentLabel) = why switch
         {
             NotIssued.WentOnline => (
-                $"Tiền về cho vé vào cửa của buổi diễn #{show.Id} đã chuyển sang online — hoàn 100% (D13)",
+                $"Tiền về cho vé vào cửa của buổi diễn \"{show.Name}\" đã chuyển sang online — hoàn 100% (D13)",
                 NotificationType.EventFormatChanged,
                 new SongNgu(
                     "Buổi diễn đã chuyển sang online — bạn sẽ được hoàn tiền",
@@ -294,7 +294,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                     "vé vào cửa của buổi diễn đã chuyển sang online",
                     "an in-venue ticket for a show that moved online")),
             NotIssued.ShowEnded => (
-                $"Tiền về sau khi buổi diễn #{show.Id} đã kết thúc — vé không được cấp, hoàn 100%",
+                $"Tiền về sau khi buổi diễn \"{show.Name}\" đã kết thúc — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
                 new SongNgu(
                     "Buổi diễn đã kết thúc — bạn sẽ được hoàn tiền",
@@ -306,7 +306,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                     "vé của buổi diễn đã kết thúc",
                     "a ticket for a show that has ended")),
             NotIssued.OrderClosed => (
-                $"Tiền về sau khi đơn vé của buổi diễn #{show.Id} đã đóng (khách huỷ hoặc quá hạn thanh toán) — vé không được cấp, hoàn 100%",
+                $"Tiền về sau khi đơn vé của buổi diễn \"{show.Name}\" đã đóng (khách huỷ hoặc quá hạn thanh toán) — vé không được cấp, hoàn 100%",
                 NotificationType.RefundUpdate,
                 new SongNgu(
                     "Vé không được cấp — bạn sẽ được hoàn tiền",
@@ -318,7 +318,7 @@ internal sealed class ProcessVnPayCallbackCommandHandler
                     "đơn mua vé (đã đóng trước khi tiền về)",
                     "a ticket order (closed before the money arrived)")),
             _ => (
-                $"Tiền về cho vé của buổi diễn #{show.Id} đã bị huỷ trước đó — hoàn 100%",
+                $"Tiền về cho vé của buổi diễn \"{show.Name}\" đã bị huỷ trước đó — hoàn 100%",
                 NotificationType.EventCancelled,
                 new SongNgu(
                     "Buổi diễn đã bị huỷ — bạn sẽ được hoàn tiền",

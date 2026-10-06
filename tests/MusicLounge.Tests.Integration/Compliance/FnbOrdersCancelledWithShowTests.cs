@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Net;
 using FluentAssertions;
 using Hangfire;
@@ -196,7 +197,7 @@ public sealed class FnbOrdersCancelledWithShowTests
 
     private Task<HttpResponseMessage> OwnerCancelsAsync(Venue venue, Guid showId)
         => _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
-            .PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null);
+            .PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/cancel", HuyBuoi.LyDo);
 
     /// <summary>Vé vào cửa của khách cho buổi diễn — để biết họ là khách của buổi đó khi đơn đặt qua app không mang ShowId.</summary>
     private async Task TicketAsync(Guid showId, Guid buyer)

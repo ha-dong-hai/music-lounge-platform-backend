@@ -33,7 +33,7 @@ public static class PerformerConfirmations
     // MLACP-489: Subject/Message song ngữ — nghệ sĩ không có tài khoản nên không có ngôn ngữ ưa thích, thư gửi cả hai.
     public sealed record Invitation(
         PerformerConfirmationPurpose Purpose, Guid? BankAccountId, string? BankAccountFingerprint,
-        Guid? DonationId, SongNgu Subject, SongNgu Message);
+        Guid? DonationId, SongNgu Subject, SongNgu Message, string? EvidenceUrl = null);
 
     public static Invitation ForBankAccount(BankAccount account, string plainAccountNumber)
     {
@@ -52,7 +52,8 @@ public static class PerformerConfirmations
                 "account — or tell us if it is not."));
     }
 
-    public static Invitation ForDonationReceipt(Guid donationId, decimal amount, string paymentRef)
+    /// <param name="evidenceUrl">MLACP-673: ảnh chứng từ phòng trà đã nộp — đính kèm vào thư để nghệ sĩ tự đối chiếu.</param>
+    public static Invitation ForDonationReceipt(Guid donationId, decimal amount, string paymentRef, string? evidenceUrl = null)
     {
         var money = amount.ToString("#,0", CultureInfo.InvariantCulture);
         return new(
@@ -66,7 +67,8 @@ public static class PerformerConfirmations
                 "bạn chưa nhận được.",
                 $"The music lounge reports that it transferred {money} VND in donations to your account " +
                 $"(transfer reference {paymentRef}). Open the link to confirm you received it — or tell us if " +
-                "you did not."));
+                "you did not."),
+            evidenceUrl);
     }
 
     public static string HashToken(string token)
@@ -141,7 +143,8 @@ public static class PerformerConfirmations
         try
         {
             jobs.EnqueuePerformerConfirmationEmail(
-                performer.ContactEmail, performer.Name, invitation.Subject, invitation.Message, link, confirmation.ExpiresAt);
+                performer.ContactEmail, performer.Name, invitation.Subject, invitation.Message, link, confirmation.ExpiresAt,
+                invitation.EvidenceUrl);
         }
         catch (Exception ex)
         {

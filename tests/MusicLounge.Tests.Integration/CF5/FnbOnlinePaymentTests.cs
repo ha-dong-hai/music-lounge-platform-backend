@@ -206,7 +206,7 @@ public sealed class FnbOnlinePaymentTests
                 n.UserId == SeedHelper.AdminId
                 && n.Type == NotificationType.PaymentConfirmedAfterExpiry
                 && n.ReferenceType == "payment" && n.ReferenceId == duplicate.Id.ToString()
-                && n.Body.Contains($"yêu cầu hoàn 100% #{refundId}")))
+                && n.Body.Contains("tự tạo yêu cầu hoàn 100% cho khách (yêu cầu hoàn ") && !n.Body.Contains(refundId.ToString())))
             .Should().BeTrue("khoản trả trùng đã có yêu cầu hoàn tự tạo — Admin phải được chỉ tới đúng yêu cầu đó (MLACP-392)");
         (await db.Notifications.AnyAsync(n =>
                 n.UserId == SeedHelper.AudienceId

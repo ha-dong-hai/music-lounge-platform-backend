@@ -2754,6 +2754,76 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.ToTable("settlements", (string)null);
                 });
 
+            modelBuilder.Entity("MusicLounge.Domain.Entities.ShowCancellationReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AmountRefunded")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CancelledBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DecisionNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EvidenceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("LoungeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PenaltyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ShowId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("SlaDeadline")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("TicketsRefunded")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShowId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("show_cancellation_reviews", (string)null);
+                });
+
             modelBuilder.Entity("MusicLounge.Domain.Entities.ShowWishlist", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4903,6 +4973,17 @@ namespace MusicLounge.Infrastructure.Persistence.Migrations
                     b.Navigation("BankAccount");
 
                     b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("MusicLounge.Domain.Entities.ShowCancellationReview", b =>
+                {
+                    b.HasOne("MusicLounge.Domain.Entities.LoungeShow", "Show")
+                        .WithMany()
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Show");
                 });
 
             modelBuilder.Entity("MusicLounge.Domain.Entities.ShowWishlist", b =>

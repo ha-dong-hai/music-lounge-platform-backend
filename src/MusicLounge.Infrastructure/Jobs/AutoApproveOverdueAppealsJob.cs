@@ -107,10 +107,10 @@ public sealed class AutoApproveOverdueAppealsJob
                     "Kháng cáo tự động được chấp thuận",
                     "Appeal automatically accepted"),
                 new SongNgu(
-                    $"Admin không xử lý kháng cáo cho phạt #{current.Id} trong thời hạn SLA — kháng cáo được " +
+                    $"Admin không xử lý kháng cáo cho {TenDoiTuong.An(current).Vi} trong thời hạn SLA — kháng cáo được " +
                     $"tự động chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
                     (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}."),
-                    $"The Admin did not handle the appeal against penalty #{current.Id} within the SLA — the appeal has been " +
+                    $"The Admin did not handle the appeal against {TenDoiTuong.An(current).En} within the SLA — the appeal has been " +
                     $"accepted automatically. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd() +
                     (restoredPlan is null
                         ? ""

@@ -146,7 +146,7 @@ public sealed class TransferredTicketRefundTests
     {
         var seeded = await SeedTransferredTicketAsync(UpcomingShow());
 
-        (await Owner.PostAsync($"/api/v1/lounge-shows/{seeded.ShowId}/cancel", null))
+        (await Owner.PostAsJsonAsync($"/api/v1/lounge-shows/{seeded.ShowId}/cancel", HuyBuoi.LyDo))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         await ShouldRefundTheOriginalBuyer_AndTellBothAsync(seeded);

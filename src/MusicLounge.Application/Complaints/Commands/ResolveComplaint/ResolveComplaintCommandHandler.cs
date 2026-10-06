@@ -214,7 +214,7 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
         {
             LoungeId = loungeId,
             PenaltyType = PenaltyType.Warning,
-            Reason = $"Xử lý theo khiếu nại #{complaint.Id}: {complaint.Description}",
+            Reason = $"Xử lý theo {TenDoiTuong.KhieuNai(complaint).Vi}: {complaint.Description}",
             IssuedBy = _currentUser.UserId,
             IssuedAt = now,
             EffectiveAt = now,
@@ -236,8 +236,8 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                 "Phòng trà bị cảnh cáo",
                 "Your music lounge has received a warning"),
             new SongNgu(
-                $"\"{lounge.Name}\" nhận cảnh cáo theo khiếu nại #{complaint.Id}: {complaint.Description}",
-                $"\"{lounge.Name}\" received a warning following complaint #{complaint.Id}: {complaint.Description}"),
+                $"\"{lounge.Name}\" nhận cảnh cáo theo {TenDoiTuong.KhieuNai(complaint).Vi}: {complaint.Description}",
+                $"\"{lounge.Name}\" received a warning following {TenDoiTuong.KhieuNai(complaint).En}: {complaint.Description}"),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
             ct: ct);
@@ -327,13 +327,13 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
 
             await TicketRefundRecipients.NotifyOriginalBuyerAsync(_notifications, ticket, payers,
                 NotificationType.RefundUpdate, showName, complaint.TargetId,
-                new SongNgu($"xử lý khiếu nại #{complaint.Id}", $"resolving complaint #{complaint.Id}"), ct);
+                new SongNgu($"xử lý {TenDoiTuong.KhieuNai(complaint).Vi}", $"resolving {TenDoiTuong.KhieuNai(complaint).En}"), ct);
 
             refundRepo.Add(new RefundRequest
             {
                 PaymentId = ticket.PaymentId!.Value,
                 RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
-                Reason = $"Xử lý theo khiếu nại #{complaint.Id}: {complaint.Description}",
+                Reason = $"Xử lý theo {TenDoiTuong.KhieuNai(complaint).Vi}: {complaint.Description}",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
                 Status = RefundRequestStatus.Pending
@@ -349,8 +349,8 @@ internal sealed class ResolveComplaintCommandHandler : IRequestHandler<ResolveCo
                     "Tiền hoàn về người mua vé ban đầu",
                     "Refund goes to the original ticket buyer"),
                 new SongNgu(
-                    $"Khiếu nại #{complaint.Id} được xử lý bằng hoàn tiền.{TicketRefundRecipients.TransferredHolderNote}",
-                    $"Complaint #{complaint.Id} was resolved with a refund.{TicketRefundRecipients.TransferredHolderNoteEn}"),
+                    $"{TenDoiTuong.HoaDau(TenDoiTuong.KhieuNai(complaint).Vi)} được xử lý bằng hoàn tiền.{TicketRefundRecipients.TransferredHolderNote}",
+                    $"{TenDoiTuong.HoaDau(TenDoiTuong.KhieuNai(complaint).En)} was resolved with a refund.{TicketRefundRecipients.TransferredHolderNoteEn}"),
                 referenceType: "complaint",
                 referenceId: complaint.Id.ToString(),
                 ct: ct);

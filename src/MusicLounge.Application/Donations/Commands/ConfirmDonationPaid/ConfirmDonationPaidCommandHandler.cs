@@ -139,7 +139,7 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         await DonationEvidence.AppendAsync(_uow, donation.Id, DonationEventType.VenueReportedPaid,
             _currentUser.UserId, amount: split.PerformerAmount, reference: request.PaymentRef,
             evidenceUrl: request.PaymentEvidenceUrl, evidenceSha256: evidenceSha256,
-            detail: $"Phòng trà báo đã chuyển vào tài khoản ngân hàng #{bankAccountId} của nghệ sĩ." +
+            detail: "Phòng trà báo đã chuyển vào tài khoản ngân hàng mặc định của nghệ sĩ." +
                     (!string.IsNullOrWhiteSpace(request.PaymentEvidenceUrl) && !evidenceIsOurs
                         ? " Bằng chứng là liên kết bên ngoài hệ thống — không lưu được bản băm nội dung."
                         : ""),
@@ -149,7 +149,8 @@ internal sealed class ConfirmDonationPaidCommandHandler : IRequestHandler<Confir
         // nhan thay nghe si; truoc day "da tra nghe si" chi co loi khai cua mot phia.
         if (await _uow.Repository<Performer, Guid>().GetByIdAsync(ownership.PerformerId, ct) is { } performer)
             await PerformerConfirmations.InviteAsync(_uow, _jobs, _settings, _logger, performer,
-                PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef), ct);
+                PerformerConfirmations.ForDonationReceipt(donation.Id, split.PerformerAmount, request.PaymentRef,
+                    request.PaymentEvidenceUrl), ct);
 
         await _uow.SaveChangesAsync(ct);
 

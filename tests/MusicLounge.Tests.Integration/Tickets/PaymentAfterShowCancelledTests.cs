@@ -105,7 +105,7 @@ public sealed class PaymentAfterShowCancelledTests
     private async Task CancelShowAsOwnerAsync(Venue venue)
     {
         var res = await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
-            .PostAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", null);
+            .PostAsJsonAsync($"/api/v1/lounge-shows/{venue.ShowId}/cancel", HuyBuoi.LyDo);
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
@@ -218,7 +218,7 @@ public sealed class PaymentAfterShowCancelledTests
             .ToListAsync();
         alerts.Should().NotBeEmpty("Admins are told once that money arrived for a cancelled show");
         var refundId = (await db.RefundRequests.AsNoTracking().SingleAsync(r => r.PaymentId == purchase.PaymentId)).Id;
-        alerts.Should().OnlyContain(n => n.Body.Contains($"yêu cầu hoàn 100% #{refundId}"),
+        alerts.Should().OnlyContain(n => n.Body.Contains("tự tạo yêu cầu hoàn 100% cho khách (yêu cầu hoàn ") && !n.Body.Contains(refundId.ToString()),
             "the refund already exists — Admins must be sent to approve it, not to re-issue or refund by hand (MLACP-392)");
         alerts.GroupBy(n => n.UserId).Should().OnlyContain(g => g.Count() == 1,
             "a replay of an already-recorded incident must not page every Admin again");

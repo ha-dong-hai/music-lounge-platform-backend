@@ -1,5 +1,7 @@
 ﻿using MusicLounge.Domain.ValueObjects;
 using Hangfire;
+using MusicLounge.Application.Common;
+using MusicLounge.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -147,6 +149,12 @@ public sealed class AutoApproveOverdueRefundsJob
             .Select(u => u.Id)
             .ToListAsync(ct);
 
+        // MLACP-679: gọi yêu cầu bằng số tiền + người mua + buổi diễn, không bằng mã GUID.
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var ten = await uow.Repository<RefundRequest, Guid>().GetByIdAsync(refundId, ct) is { } yc
+            ? await TenDoiTuong.YeuCauHoanAsync(uow, yc, ct)
+            : new SongNgu("yêu cầu hoàn tiền", "the refund request");
+
         foreach (var adminId in admins)
         {
             await notifications.NotifyAsync(
@@ -156,9 +164,9 @@ public sealed class AutoApproveOverdueRefundsJob
                     "Đã tự động duyệt hoàn tiền",
                     "Refund approved automatically"),
                 new SongNgu(
-                    $"Yêu cầu hoàn tiền #{refundId} đã được hệ thống tự duyệt vì chờ quá {slaHours}h cam " +
+                    $"{TenDoiTuong.HoaDau(ten.Vi)} đã được hệ thống tự duyệt vì chờ quá {slaHours}h cam " +
                     $"kết và thêm {graceHours}h ân hạn mà chưa ai xử lý.",
-                    $"Refund request #{refundId} was approved automatically because it waited longer than the committed " +
+                    $"{TenDoiTuong.HoaDau(ten.En)} was approved automatically because it waited longer than the committed " +
                     $"{slaHours}h plus a {graceHours}h grace period without being handled."),
                 referenceType: "refund_request",
                 referenceId: refundId.ToString(),

@@ -233,6 +233,54 @@ public sealed class SubscriptionTests
     }
 
     /// <summary>
+    /// MLACP-677. Admin ẩn gói khi còn chủ phòng trà đang dùng: chủ vẫn dùng tới hết hạn (đã trả tiền cho kỳ đó), nhưng phải
+    /// được BÁO ngay, màn hình của họ biết gói đã ngừng bán (thay cho nút Gia hạn bấm vào mới báo lỗi), và Admin thấy trước
+    /// gói đang có bao nhiêu người dùng.
+    /// </summary>
+    [Fact]
+    public async Task AnGoiConNguoiDung_ChuVanDungToiHetHan_DuocBao_VaManHinhBietGoiNgungBan()
+    {
+        var packageId = await CreatePackageAsync();
+        var ownerId = await CreateFreshOwnerAsync();
+        var ownerClient = _factory.CreateAuthenticatedClient(ownerId, "Owner");
+        var initiation = await (await ownerClient.PostAsJsonAsync("/api/v1/subscriptions/subscribe", new { PackageId = packageId }))
+            .Content.ReadFromJsonAsync<SubscriptionInitiationResponse>();
+        await ownerClient.GetAsync(
+            $"/api/v1/subscriptions/vnpay-return?vnp_TxnRef={initiation!.Data.OrderId}" +
+            $"&vnp_ResponseCode=00&vnp_Amount={(long)(initiation.Data.Amount * 100)}");
+
+        var adminClient = _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin");
+        var dsAdmin = await adminClient.GetFromJsonAsync<PackageListResponse>("/api/v1/subscriptions/packages?activeOnly=false");
+        dsAdmin!.Data.Single(p => p.Id == packageId).ActiveSubscriberCount.Should().Be(1, "Admin thấy trước ẩn gói thì ảnh hưởng ai");
+        (await ownerClient.GetFromJsonAsync<PackageListResponse>("/api/v1/subscriptions/packages"))!
+            .Data.Should().OnlyContain(p => p.ActiveSubscriberCount == null, "con số kinh doanh này chỉ dành cho Admin");
+
+        (await adminClient.PutAsJsonAsync($"/api/v1/subscriptions/packages/{packageId}", new
+        {
+            Description = "Test package", Price = 500_000m, MaxTicketsPerEvent = 100, HasAiPoster = true,
+            MaxAiPostersPerMonth = 10, IsActive = false
+        })).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var cuaToi = await ownerClient.GetFromJsonAsync<MySubResponse>("/api/v1/subscriptions/my");
+        cuaToi!.Data.Status.Should().Be("Active", "đã trả tiền cho kỳ này — ẩn gói không cắt ngang");
+        cuaToi.Data.PackageOnSale.Should().BeFalse();
+
+        using var scope = _factory.Services.CreateScope();
+        var bao = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+            .SingleAsync(n => n.UserId == ownerId && n.Type == NotificationType.SubscriptionUpdated);
+        bao.Title.Should().EndWith("đã ngừng mở bán");
+        bao.Body.Should().Contain("tới hết ngày").And.Contain("chọn một gói khác");
+
+        (await ownerClient.PostAsJsonAsync("/api/v1/subscriptions/renew", new { }))
+            .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity, "gói ngừng bán không gia hạn được (đã chặn từ trước)");
+    }
+
+    private sealed record PackageItem(Guid Id, int? ActiveSubscriberCount);
+    private sealed record PackageListResponse(List<PackageItem> Data);
+    private sealed record MySub(string Status, bool PackageOnSale);
+    private sealed record MySubResponse(MySub Data);
+
+    /// <summary>
     /// Regression test for the OwnerSubscription double-active race (B6/S4, fixed 2026-08-09):
     /// ProcessSubscriptionPaymentCommandHandler used to lock by txnRef, which does nothing when an
     /// owner double-submits Subscribe and ends up with two DIFFERENT Payment rows (two different

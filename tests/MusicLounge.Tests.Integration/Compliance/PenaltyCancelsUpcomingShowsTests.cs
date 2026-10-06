@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using FluentAssertions;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
@@ -325,5 +326,54 @@ public sealed class PenaltyCancelsUpcomingShowsTests
         (await NoticesAsync(payer, NotificationType.EventCancelled)).Should().ContainSingle();
         (await NoticesAsync(holder, NotificationType.EventCancelled))
             .Should().Contain(n => n.Body.Contains("hoàn về người đã mua vé ban đầu"));
+    }
+
+    // ── MLACP-675: thông báo hoàn tiền đúng ngữ cảnh ─────────────────────────
+
+    [Fact]
+    public async Task ChuHuyBuoi_NguoiMuaNhieuVe_NhanMotThongBao_NoiRoHoanBaoNhieuVaKhongCanLamGi()
+    {
+        var venue = await VenueAsync();
+        var buyer = await UserAsync();
+        var show = await ShowAsync(venue.LoungeId, DateTimeOffset.UtcNow.AddDays(5));
+        await TicketAsync(show, buyer);
+        await TicketAsync(show, buyer);
+
+        (await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
+                .PostAsJsonAsync($"/api/v1/lounge-shows/{show}/cancel", HuyBuoi.LyDo))
+            .IsSuccessStatusCode.Should().BeTrue();
+
+        var bao = (await NoticesAsync(buyer, NotificationType.EventCancelled)).Should()
+            .ContainSingle("một người mua 2 vé nhận MỘT thông báo, không phải hai thông báo giống hệt").Subject;
+        bao.Title.Should().StartWith("Buổi hòa nhạc \"").And.EndWith("\" đã bị huỷ");
+        bao.Body.Should().Contain("2 vé của bạn được hoàn 100%").And.Contain("300.000đ")
+            .And.Contain("bạn không cần làm gì thêm").And.NotContain("tạo yêu cầu");
+    }
+
+    [Fact]
+    public async Task DuyetHoanTienDoHuyBuoi_ThongBaoNoiTenBuoi_VaLyDo_KhongNoiYeuCauCuaBan()
+    {
+        var venue = await VenueAsync();
+        var buyer = await UserAsync();
+        var show = await ShowAsync(venue.LoungeId, DateTimeOffset.UtcNow.AddDays(5));
+        var (_, payment) = await TicketAsync(show, buyer);
+        string tenBuoi;
+        using (var scope = _factory.Services.CreateScope())
+            tenBuoi = (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoungeShows.AsNoTracking()
+                .SingleAsync(s => s.Id == show)).Name;
+
+        await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
+            .PostAsJsonAsync($"/api/v1/lounge-shows/{show}/cancel", HuyBuoi.LyDo);
+        var refund = (await RefundsAsync(payment)).Single();
+        refund.Reason.Should().StartWith("Buổi hòa nhạc bị huỷ", "lý do hiện cho khán giả — không phải \"Event bị hủy\"");
+
+        (await _factory.CreateAuthenticatedClient(SeedHelper.AdminId, "Admin").PostAsJsonAsync(
+                $"/api/v1/admin/refund-requests/{refund.Id}/process", new { Decision = "Approved", ApprovedAmount = (decimal?)null }))
+            .IsSuccessStatusCode.Should().BeTrue();
+
+        var duyet = (await NoticesAsync(buyer, NotificationType.RefundUpdate)).Should().ContainSingle().Subject;
+        duyet.Title.Should().Be($"Đang hoàn tiền vé buổi \"{tenBuoi}\" đã bị huỷ",
+            "khán giả không hề yêu cầu — \"Yêu cầu hoàn tiền đã được duyệt\" là sai ngữ cảnh");
+        duyet.Body.Should().StartWith("Lý do hoàn: Buổi hòa nhạc bị huỷ");
     }
 }

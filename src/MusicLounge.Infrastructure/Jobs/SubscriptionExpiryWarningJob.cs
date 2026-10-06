@@ -39,6 +39,12 @@ public sealed class SubscriptionExpiryWarningJob
 
         if (activeSubs.Count == 0) return;
 
+        // MLACP-677: gói đã ngừng mở bán thì "Gia hạn để tiếp tục" là lời khuyên không làm được (RenewSubscription từ chối).
+        var packageIds = activeSubs.Select(s => s.PackageId).Distinct().ToList();
+        var dangBan = await _ctx.SubscriptionPackages.AsNoTracking()
+            .Where(p => packageIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.IsActive, ct);
+
         foreach (var sub in activeSubs)
         {
             var daysLeft = (sub.ExpiresAt - now).TotalDays;
@@ -65,9 +71,15 @@ public sealed class SubscriptionExpiryWarningJob
                         "Your subscription is about to expire"),
                     new SongNgu(
                         $"Gói subscription của bạn sẽ hết hạn trong {milestone} ngày nữa " +
-                        $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). Gia hạn để tiếp tục tạo buổi hòa nhạc mới.",
+                        $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). " +
+                        (dangBan.GetValueOrDefault(sub.PackageId)
+                            ? "Gia hạn để tiếp tục tạo buổi hòa nhạc mới."
+                            : "Gói này đã ngừng mở bán nên không gia hạn được — hãy chọn một gói khác để tiếp tục tạo buổi hòa nhạc mới."),
                         $"Your subscription expires in {milestone} days " +
-                        $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). Renew it to keep creating new concerts."),
+                        $"({VietnamTime.Format(sub.ExpiresAt, "dd/MM/yyyy")}). " +
+                        (dangBan.GetValueOrDefault(sub.PackageId)
+                            ? "Renew it to keep creating new concerts."
+                            : "This plan is no longer sold and cannot be renewed — pick another plan to keep creating new concerts.")),
                     referenceType: "subscription",
                     referenceId: referenceId,
                     ct: ct);

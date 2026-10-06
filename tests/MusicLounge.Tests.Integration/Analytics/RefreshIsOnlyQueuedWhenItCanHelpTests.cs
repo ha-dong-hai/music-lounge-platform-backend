@@ -58,7 +58,8 @@ public sealed class RefreshIsOnlyQueuedWhenItCanHelpTests
         public void EnqueueEmailVerificationCode(string toEmail, string toName, string code, string language) { }
         public void EnqueuePerformerConfirmationEmail(
             string toEmail, string toName, MusicLounge.Domain.ValueObjects.SongNgu subject,
-            MusicLounge.Domain.ValueObjects.SongNgu message, string link, DateTimeOffset expiresAt) { }
+            MusicLounge.Domain.ValueObjects.SongNgu message, string link, DateTimeOffset expiresAt,
+            string? evidenceUrl = null) { }
         public void EnqueuePhoneVerificationCode(string toPhone, string code, string language) { }
         public void EnqueueModerationAiScoring(Guid moderationId) { }
         public void EnqueueRatingAiScoring(Guid ratingId) { }

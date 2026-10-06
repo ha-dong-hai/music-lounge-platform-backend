@@ -212,7 +212,7 @@ public sealed class SubscriptionPaidWhileVenuePenalizedTests
         alerts.Should().NotBeEmpty();
         alerts.Should().OnlyContain(n => n.Body.Contains("gói dịch vụ của phòng trà đang bị khoá/tạm khoá"));
         var refundId = (await db.RefundRequests.AsNoTracking().SingleAsync(r => r.PaymentId == paid.PaymentId)).Id;
-        alerts.Should().OnlyContain(n => n.Body.Contains($"yêu cầu hoàn 100% #{refundId}"),
+        alerts.Should().OnlyContain(n => n.Body.Contains("tự tạo yêu cầu hoàn 100% cho khách (yêu cầu hoàn ") && !n.Body.Contains(refundId.ToString()),
             "the refund already exists — Admins must be sent to approve it (MLACP-392)");
         alerts.GroupBy(n => n.UserId).Should().OnlyContain(g => g.Count() == 1,
             "a replay of an already-recorded incident must not page every Admin again");

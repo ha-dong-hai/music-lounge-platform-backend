@@ -82,7 +82,7 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
 
             var refundAmount = await FnbOrderCancellation.CancelOneAsync(
                 _uow, order, isPaid, _currentUser.UserId, request.Reason!,
-                $"Phòng trà huỷ đơn F&B #{order.Id} trước khi phục vụ — hoàn 100%", now, ct);
+                $"Phòng trà huỷ {TenDoiTuong.DonDoUong(order).Vi} trước khi phục vụ — hoàn 100%", now, ct);
 
             await _uow.SaveChangesAsync(ct);
             await NotifyAudienceAsync(order, FnbOrderStatus.Cancelled, ct, refundAmount: refundAmount);
@@ -186,13 +186,13 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
         {
             FnbOrderStatus.Preparing => (
                 new SongNgu("Đơn F&B đang được chuẩn bị", "Your food & drink order is being prepared"),
-                new SongNgu($"Đơn #{order.Id} của bạn đang được chuẩn bị.", $"Your order #{order.Id} is being prepared.")),
+                new SongNgu($"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} của bạn đang được chuẩn bị.", $"Your {TenDoiTuong.DonDoUong(order).En} is being prepared.")),
             FnbOrderStatus.Served => (
                 new SongNgu("Đơn F&B đã phục vụ", "Your food & drink order has been served"),
-                new SongNgu($"Đơn #{order.Id} của bạn đã được phục vụ.", $"Your order #{order.Id} has been served.")),
+                new SongNgu($"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} của bạn đã được phục vụ.", $"Your {TenDoiTuong.DonDoUong(order).En} has been served.")),
             FnbOrderStatus.Cancelled => (
                 new SongNgu("Đơn F&B đã bị hủy", "Food & drink order cancelled"),
-                new SongNgu($"Đơn #{order.Id} của bạn đã bị hủy.", $"Your order #{order.Id} has been cancelled.")),
+                new SongNgu($"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} của bạn đã bị hủy.", $"Your {TenDoiTuong.DonDoUong(order).En} has been cancelled.")),
             _ => (null, null)
         };
         if (step == FnbOrderStatus.Cancelled && refundAmount is { } amount)
@@ -201,10 +201,10 @@ internal sealed class UpdateFnbOrderStatusCommandHandler : IRequestHandler<Updat
                     "Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
                     "Food & drink order cancelled — you will be refunded"),
                 new SongNgu(
-                    $"Đơn #{order.Id} của bạn đã bị phòng trà huỷ trước khi phục vụ. Chúng tôi đã tự động tạo " +
+                    $"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} của bạn đã bị phòng trà huỷ trước khi phục vụ. Chúng tôi đã tự động tạo " +
                     $"yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã thanh toán — bạn không cần làm gì " +
                     "thêm và sẽ được báo khi yêu cầu được xử lý.",
-                    $"Your order #{order.Id} was cancelled by the music lounge before it was served. We have " +
+                    $"Your {TenDoiTuong.DonDoUong(order).En} was cancelled by the music lounge before it was served. We have " +
                     $"automatically created a 100% refund request ({amount:N0} VND) to your original payment method " +
                     "— you do not need to do anything, and we will notify you when it is processed."));
         if (title is null) return Task.CompletedTask;

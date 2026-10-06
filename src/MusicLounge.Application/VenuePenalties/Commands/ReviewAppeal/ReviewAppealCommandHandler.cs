@@ -107,15 +107,16 @@ internal sealed class ReviewAppealCommandHandler : IRequestHandler<ReviewAppealC
                 decision == PenaltyStatus.Overturned ? "Appeal accepted" : "Appeal rejected"),
             new SongNgu(
                 decision == PenaltyStatus.Overturned
-                    ? $"Kháng cáo của bạn cho phạt #{penalty.Id} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
+                    // MLACP-679: gọi án bằng loại + ngày ra án thay cho mã GUID.
+                    ? $"Kháng cáo của bạn cho {TenDoiTuong.An(penalty).Vi} đã được chấp thuận. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd() +
                       (restoredPlan is null ? "" : $" Gói dịch vụ đã được kích hoạt lại, hết hạn {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")
-                    : $"Kháng cáo của bạn cho phạt #{penalty.Id} bị từ chối. {request.ReviewNote ?? ""}".Trim(),
+                    : $"Kháng cáo của bạn cho {TenDoiTuong.An(penalty).Vi} bị từ chối. {request.ReviewNote ?? ""}".Trim(),
                 decision == PenaltyStatus.Overturned
-                    ? $"Your appeal against penalty #{penalty.Id} has been accepted. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd() +
+                    ? $"Your appeal against {TenDoiTuong.An(penalty).En} has been accepted. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd() +
                       (restoredPlan is null
                           ? ""
                           : $" Your subscription has been reactivated and expires on {VietnamTime.Format(restoredPlan.ExpiresAt, "dd/MM/yyyy")}.")
-                    : $"Your appeal against penalty #{penalty.Id} was rejected. {request.ReviewNote ?? ""}".Trim()),
+                    : $"Your appeal against {TenDoiTuong.An(penalty).En} was rejected. {request.ReviewNote ?? ""}".Trim()),
             referenceType: "venue_penalty",
             referenceId: penalty.Id.ToString(),
             ct: ct);

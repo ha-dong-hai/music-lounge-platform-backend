@@ -94,7 +94,7 @@ internal sealed class GetContentReportQueueQueryHandler
             var showNameById = relatedShows.ToDictionary(s => s.Id, s => s.Name);
             foreach (var l in livestreams)
                 result[(ReportTargetType.Livestream, l.Id)] = new MucTieu(
-                    showNameById.GetValueOrDefault(l.LoungeShowId, $"Livestream #{l.Id}"), l.LoungeShowId);
+                    showNameById.GetValueOrDefault(l.LoungeShowId, "Buổi phát trực tuyến (buổi diễn đã bị xoá)"), l.LoungeShowId);
         }
 
         if (ratingIds.Count > 0)
@@ -127,7 +127,7 @@ internal sealed class GetContentReportQueueQueryHandler
 
             foreach (var m in messages)
             {
-                var nguoiGui = senderNameById.GetValueOrDefault(m.UserId, $"Người dùng #{m.UserId}");
+                var nguoiGui = senderNameById.GetValueOrDefault(m.UserId, "Người dùng (tài khoản đã xoá)");
                 var luc = VietnamTime.Format(m.SentAt, "HH:mm dd/MM/yyyy");
                 result[(ReportTargetType.ChatMessage, m.Id)] = new MucTieu(
                     $"\"{m.Message}\" — {nguoiGui}, {luc}",

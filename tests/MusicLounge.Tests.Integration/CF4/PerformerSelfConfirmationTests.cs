@@ -265,7 +265,7 @@ public sealed class PerformerSelfConfirmationTests
 
     // ─── Đã nhận tiền donate ──────────────────────────────────────────────────
 
-    private async Task<(Guid DonationId, string Email)> DonationReportedPaidAsync()
+    private async Task<(Guid DonationId, string Email)> DonationReportedPaidAsync(string? evidenceUrl = null)
     {
         Guid ownerId, loungeId, performanceId;
         var email = NewEmail();
@@ -338,7 +338,7 @@ public sealed class PerformerSelfConfirmationTests
         (await ownerClient.PostAsync($"/api/v1/donations/{init.DonationId}/acknowledge", null))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await ownerClient.PostAsJsonAsync($"/api/v1/donations/{init.DonationId}/confirm-paid",
-                new { PaymentRef = "CK-364", PaymentEvidenceUrl = (string?)null }))
+                new { PaymentRef = "CK-364", PaymentEvidenceUrl = evidenceUrl }))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         return (init.DonationId, email);
@@ -369,6 +369,13 @@ public sealed class PerformerSelfConfirmationTests
         evidence.ChainIntact.Should().BeTrue();
         evidence.Events.Last().EventType.Should().Be("PerformerConfirmedReceipt",
             "lời xác nhận của chính nghệ sĩ là mắt xích thiếu nhất của bằng chứng \"đã trả\"");
+
+        // MLACP-674: chủ phòng trà — người vừa chuyển tiền — được báo khoản đã khép lại.
+        using var scope = _factory.Services.CreateScope();
+        var bao = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+            .SingleAsync(n => n.Type == NotificationType.DonationReceived && n.ReferenceType == "donation"
+                              && n.ReferenceId == donationId.ToString() && n.Title.Contains("đã xác nhận nhận tiền ủng hộ"));
+        bao.Body.Should().Contain("CK-364").And.Contain("đã hoàn tất");
     }
 
     [Fact]
@@ -386,5 +393,93 @@ public sealed class PerformerSelfConfirmationTests
                 c.TargetType == "donation" && c.TargetId == donationId
                 && c.Category == ComplaintCategory.DonationNotPaid && c.Status == ComplaintStatus.Open))
             .Should().BeTrue("một bên nói đã chuyển, một bên nói chưa nhận — phải có người xử lý");
+
+        // MLACP-674: chủ phòng trà biết mình đang bị khiếu nại, kèm ghi chú của nghệ sĩ.
+        var bao = await db.Notifications.AsNoTracking().SingleAsync(n =>
+            n.Type == NotificationType.DonationPending && n.ReferenceType == "donation" && n.ReferenceId == donationId.ToString());
+        bao.Title.Should().Contain("báo chưa nhận tiền ủng hộ");
+        bao.Body.Should().Contain("CK-364").And.Contain("Tôi chưa nhận được tiền");
+    }
+
+    // ─── MLACP-673: thư và trang xác nhận kèm ảnh chứng từ ─────────────────────
+
+    /// <summary>Ảnh PNG 1×1 thật (chữ ký tệp hợp lệ) — kho tệp kiểm chữ ký lúc lưu.</summary>
+    private static readonly byte[] AnhChungTu = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+
+    private sealed class GhiThuNgheSi : IEmailService
+    {
+        public readonly List<(SongNgu Message, EmailAttachment? DinhKem)> Thu = [];
+        public Task SendPerformerConfirmationAsync(string toEmail, string toName, SongNgu subject, SongNgu message, string link,
+            DateTimeOffset expiresAt, EmailAttachment? attachment = null, CancellationToken ct = default)
+        { Thu.Add((message, attachment)); return Task.CompletedTask; }
+        public Task SendPasswordResetEmailAsync(string toEmail, string toName, string resetLink, string language, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SendEmailVerificationCodeAsync(string toEmail, string toName, string code, string language, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SendTicketConfirmationAsync(TicketConfirmationEmail email, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    /// <summary>Chạy job thư mời đang chờ của đúng hộp thư này, với dịch vụ thư bắt thư thay cho SMTP.</summary>
+    private GhiThuNgheSi GuiThuCuaVoiBatThu(string email)
+    {
+        var job = ThuMoiNgheSi.DangCho().Last(j => (string)j.Args[0]! == email);
+        var ghi = new GhiThuNgheSi();
+        using var scope = _factory.Services.CreateScope();
+        var sp = scope.ServiceProvider;
+        var thucThi = new MusicLounge.Application.Performers.Jobs.SendPerformerConfirmationEmailJob(
+            ghi, sp.GetRequiredService<ISecretProtector>(), sp.GetRequiredService<IFileStorageService>(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<MusicLounge.Application.Performers.Jobs.SendPerformerConfirmationEmailJob>.Instance);
+        ((Task)job.Method.Invoke(thucThi, [.. job.Args])!).GetAwaiter().GetResult();
+        return ghi;
+    }
+
+    private async Task<string> LuuAnhChungTuAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        await using var luong = new MemoryStream(AnhChungTu);
+        return await scope.ServiceProvider.GetRequiredService<IFileStorageService>().SaveImageAsync(luong, "chung-tu.png");
+    }
+
+    [Fact]
+    public async Task ChungTuTaiLenHeThong_DuocDinhKemVaoThu_VaHienTrenTrangXacNhan()
+    {
+        var url = await LuuAnhChungTuAsync();
+        var (_, email) = await DonationReportedPaidAsync(url);
+
+        var job = ThuMoiNgheSi.DangCho().Last(j => (string)j.Args[0]! == email);
+        job.Method.Name.Should().Be("ExecuteWithEvidenceAsync", "báo đã chuyển kèm chứng từ thì thư phải mang chứng từ");
+
+        var thu = GuiThuCuaVoiBatThu(email).Thu.Should().ContainSingle().Subject;
+        thu.DinhKem.Should().NotBeNull();
+        thu.DinhKem!.Content.Should().Equal(AnhChungTu, "đính kèm đúng nội dung ảnh phòng trà đã nộp");
+        thu.DinhKem.MimeType.Should().Be("image/png");
+        thu.DinhKem.FileName.Should().Be("chung-tu-chuyen-khoan.png");
+
+        var token = LatestTokenSentTo(email);
+        var res = await _factory.CreateClient().PostAsJsonAsync("/api/v1/performer-confirmations/lookup", new { Token = token });
+        (await res.Content.ReadFromJsonAsync<Wrapped<ChungTuView>>())!.Data.PaymentEvidenceUrl.Should().Be(url);
+    }
+
+    private sealed record ChungTuView(string? PaymentEvidenceUrl);
+
+    [Fact]
+    public async Task ChungTuLaLienKetNgoai_KhongTaiVe_ThuInLienKet()
+    {
+        const string ngoai = "https://drive.example.com/chung-tu-364.png";
+        var (_, email) = await DonationReportedPaidAsync(ngoai);
+
+        var thu = GuiThuCuaVoiBatThu(email).Thu.Should().ContainSingle().Subject;
+        thu.DinhKem.Should().BeNull("liên kết ngoài hệ thống không được tải về (SSRF)");
+        thu.Message.Vi.Should().Contain(ngoai);
+        thu.Message.En.Should().Contain(ngoai);
+        ThuMoiNgheSi.GuiHet(_factory.Services);
+    }
+
+    [Fact]
+    public async Task KhongCoChungTu_XepThuThuongNhuCu()
+    {
+        var (_, email) = await DonationReportedPaidAsync();
+        ThuMoiNgheSi.DangCho().Last(j => (string)j.Args[0]! == email).Method.Name.Should().Be("ExecuteAsync",
+            "không chứng từ thì giữ đúng phương thức cũ — job xếp trước khi deploy vẫn chạy được");
+        ThuMoiNgheSi.GuiHet(_factory.Services);
     }
 }

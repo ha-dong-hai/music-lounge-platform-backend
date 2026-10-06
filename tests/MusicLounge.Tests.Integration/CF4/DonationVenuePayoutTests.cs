@@ -200,9 +200,12 @@ public sealed class DonationVenuePayoutTests
             payout.IsDebit.Should().BeFalse();
             payout.Amount.Should().Be(settlement.NetAmount);
 
+            // MLACP-674: trỏ về chính khoản ủng hộ — việc chủ làm tiếp nằm ở trang Tiền ủng hộ nghệ sĩ, và chuông của chủ
+            // không mở được gì với "settlement".
             var notice = await db.Notifications.SingleAsync(n =>
                 n.UserId == venue.OwnerId && n.Type == NotificationType.SettlementReleased
-                && n.ReferenceId == settlement.Id.ToString());
+                && n.ReferenceType == "donation" && n.ReferenceId == donationId.ToString());
+            notice.Title.Should().Be("Tiền ủng hộ đã về tài khoản phòng trà");
             // MLACP-645: ghi người ủng hộ + nghệ sĩ + buổi thay cho mã khoản ("donate #<GUID>") — vẫn phải nói rõ đây là
             // tiền ủng hộ, và tiền số kiểu Việt.
             notice.Body.Should().Contain("tiền ủng hộ của",

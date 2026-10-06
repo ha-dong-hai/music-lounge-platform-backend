@@ -65,6 +65,12 @@ public sealed class ModerationSlaBreachAlertJob
             .Select(n => (n.UserId, n.ReferenceId))
             .ToHashSet();
 
+        // MLACP-679: gọi mục cần duyệt bằng TÊN (buổi diễn, hạng vé, ảnh của phòng trà nào…) — trước đây in "Show #<GUID>":
+        // tên enum tiếng Anh cộng một mã không ai tra được.
+        var tenDich = await ReferenceNames.ResolveAsync(_ctx, breached.Select(m => (m.TargetType.ToString(), m.TargetId)), ct);
+        string Ten(Domain.Entities.EventModeration m)
+            => tenDich.GetValueOrDefault((m.TargetType.ToString().ToLowerInvariant(), m.TargetId)) ?? "Một mục chờ duyệt (đã bị xoá)";
+
         foreach (var moderation in breached)
         {
             var hoursOverdue = (int)(now - moderation.SlaDeadline!.Value).TotalHours;
@@ -79,9 +85,9 @@ public sealed class ModerationSlaBreachAlertJob
                         "Quá hạn duyệt nội dung (NĐ 147/2024)",
                         "Content review overdue (Decree 147/2024)"),
                     new SongNgu(
-                        $"{moderation.TargetType} #{moderation.TargetId} đã quá hạn SLA duyệt {hoursOverdue}h " +
+                        $"\"{Ten(moderation)}\" đã quá hạn duyệt {hoursOverdue}h " +
                         "mà chưa có quyết định. Vui lòng xử lý ngay.",
-                        $"{moderation.TargetType} #{moderation.TargetId} is {hoursOverdue}h past its review SLA " +
+                        $"\"{Ten(moderation)}\" is {hoursOverdue}h past its review SLA " +
                         "without a decision. Please handle it now."),
                     referenceType: "event_moderation",
                     referenceId: moderation.Id.ToString(),
