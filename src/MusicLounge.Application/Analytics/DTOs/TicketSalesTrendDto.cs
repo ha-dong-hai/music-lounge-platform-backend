@@ -18,4 +18,7 @@ public sealed record TicketSalesTrendDto(
     int TotalTicketsSold,
     decimal TotalRevenue,
     IReadOnlyList<DailyTicketSalesDto> DailySales,
-    IReadOnlyList<TicketTierSalesDto> ByTier);
+    IReadOnlyList<TicketTierSalesDto> ByTier,
+    // MLACP-689: vé đã bán rồi được hoàn tiền / khách đã huỷ — KHÔNG nằm trong TotalTicketsSold, chỉ để giải thích con số.
+    int TicketsRefunded = 0,
+    int TicketsCancelled = 0);
