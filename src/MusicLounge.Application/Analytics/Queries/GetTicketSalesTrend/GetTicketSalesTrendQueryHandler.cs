@@ -72,12 +72,22 @@ internal sealed class GetTicketSalesTrendQueryHandler
             .OrderByDescending(t => t.TicketsSold)
             .ToList();
 
+        // MLACP-689 (chủ dự án 06/10/2026, ảnh "Tiến độ bán vé 0đ · 0 vé"): buổi có vé đã bán rồi được HOÀN (vd. buổi phát bị
+        // cắt ngang — UndeliveredShow) hoặc khách tự HUỶ thì doanh số đúng là 0, nhưng màn hình chỉ nói "chưa có ngày nào bán
+        // được vé" — chủ phòng trà tưởng không ai mua. Trả thêm hai số này để giao diện nói rõ vì sao bằng 0.
+        var soVeHoan = await _uow.Repository<Ticket, Guid>()
+            .CountAsync(t => t.ShowId == request.ShowId && t.Status == TicketStatus.Refunded, ct);
+        var soVeHuy = await _uow.Repository<Ticket, Guid>()
+            .CountAsync(t => t.ShowId == request.ShowId && t.Status == TicketStatus.Cancelled, ct);
+
         return new TicketSalesTrendDto(
             ShowId: show.Id,
             ShowName: show.Name,
             TotalTicketsSold: tickets.Count,
             TotalRevenue: tickets.Sum(TicketAmount),
             DailySales: dailySales,
-            ByTier: byTier);
+            ByTier: byTier,
+            TicketsRefunded: soVeHoan,
+            TicketsCancelled: soVeHuy);
     }
 }
