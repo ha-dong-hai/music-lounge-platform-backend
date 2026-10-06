@@ -30,20 +30,9 @@ internal sealed class RemoveLoungeGalleryImageCommandHandler : IRequestHandler<R
         if (image is null || image.LoungeId != request.LoungeId)
             throw new NotFoundException(nameof(LoungeGalleryImage), request.ImageId);
 
-        imageRepo.Remove(image);
-
-        // MLACP-506. Chiều ngược của MLACP-33 ("ảnh gallery đầu tiên tự là ảnh đại diện"): xoá đúng ảnh đang làm đại diện
-        // thì ảnh đại diện phải đi theo — trước đây nó vẫn trỏ vào ảnh vừa xoá (file đã mất thì thành ô ảnh vỡ trên thẻ
-        // phòng trà), và không có đường nào để gỡ. Chuyển sang ảnh gallery kế tiếp theo thứ tự hiển thị; hết ảnh thì để
-        // trống. Ảnh đại diện đặt riêng (PUT /image, không thuộc gallery) không bị đụng tới.
-        if (lounge.PrimaryImageUrl == image.ImageUrl)
-        {
-            var conLai = (await imageRepo.FindAsync(g => g.LoungeId == request.LoungeId && g.Id != image.Id, ct))
-                .OrderBy(g => g.OrderIndex).ThenBy(g => g.Id)
-                .FirstOrDefault();
-            lounge.PrimaryImageUrl = conLai?.ImageUrl;
-            _uow.Repository<MusicLoungeEntity, Guid>().Update(lounge);
-        }
+        // MLACP-692: cách gỡ (kể cả chuyển ảnh đại diện — MLACP-506) nằm ở LoungeMediaRemoval — dùng chung với đường Admin
+        // từ chối ảnh bị AI gắn cờ.
+        await LoungeMediaRemoval.RemoveGalleryImageAsync(_uow, lounge, image, ct);
 
         await _uow.SaveChangesAsync(ct);
         return Unit.Value;

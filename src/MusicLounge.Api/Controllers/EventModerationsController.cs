@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicLounge.Api.Authorization;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.Moderations.Commands.ReviewLivestream;
+using MusicLounge.Application.Moderations.Commands.ReviewLoungeMedia;
 using MusicLounge.Application.Moderations.Commands.ReviewShow;
 using MusicLounge.Application.Moderations.Commands.ReviewTicketTier;
 using MusicLounge.Application.Moderations.DTOs;
@@ -76,6 +77,34 @@ public sealed class EventModerationsController : ControllerBase
         CancellationToken ct = default)
     {
         await _sender.Send(new ReviewTicketTierCommand(tierId, body.Decision, body.ReviewNote), ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-692: duyệt ảnh thư viện bị AI gắn cờ. Approved giữ ảnh; Rejected (bắt buộc lý do) gỡ ảnh và báo chủ
+    /// phòng trà. Chỉ duyệt được một lần (409).</summary>
+    [HttpPost("gallery-images/{imageId:guid}/review")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReviewGalleryImage(
+        Guid imageId, [FromBody] ReviewLivestreamRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewLoungeMediaCommand("GalleryImage", imageId, body.Decision, body.ReviewNote), ct);
+        return NoContent();
+    }
+
+    /// <summary>MLACP-692: duyệt cảnh tour 360 bị AI gắn cờ. Approved giữ cảnh; Rejected (bắt buộc lý do) gỡ cảnh và báo
+    /// chủ phòng trà. Chỉ duyệt được một lần (409).</summary>
+    [HttpPost("tour-scenes/{sceneId:guid}/review")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReviewTourScene(
+        Guid sceneId, [FromBody] ReviewLivestreamRequest body, CancellationToken ct = default)
+    {
+        await _sender.Send(new ReviewLoungeMediaCommand("TourScene", sceneId, body.Decision, body.ReviewNote), ct);
         return NoContent();
     }
 }
