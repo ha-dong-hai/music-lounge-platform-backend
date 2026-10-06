@@ -11,6 +11,7 @@ using MusicLounge.Application.Performers.Commands.UpdatePerformer;
 using MusicLounge.Application.Performers.DTOs;
 using MusicLounge.Application.Performers.Queries.GetPerformerById;
 using MusicLounge.Application.Performers.Queries.GetPerformers;
+using MusicLounge.Application.Performers.Queries.GetPerformerSuggestions;
 
 namespace MusicLounge.Api.Controllers;
 
@@ -35,6 +36,20 @@ public sealed class PerformersController : ControllerBase
     {
         var result = await _sender.Send(new GetPerformersQuery(search, page, pageSize, createdByMe), ct);
         return Ok(ApiResponse<PaginatedResult<PerformerDto>>.Ok(result));
+    }
+
+    /// <summary>
+    /// MLACP-682. Ô tìm kiếm chung của trang công khai — mở cho khách (AllowAnonymous vượt chính sách RequireOwner của
+    /// lớp). Chỉ trả tên + ảnh của nghệ sĩ đã có buổi diễn công khai; xem chú thích ở handler.
+    /// </summary>
+    [HttpGet("suggestions")]
+    [AllowAnonymous]
+    [ProducesResponseType<ApiResponse<IReadOnlyList<PerformerSuggestionItem>>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSuggestions(
+        [FromQuery] string? q = null, [FromQuery] int limit = 5, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetPerformerSuggestionsQuery(q ?? string.Empty, limit), ct);
+        return Ok(ApiResponse<IReadOnlyList<PerformerSuggestionItem>>.Ok(result));
     }
 
     [HttpGet("{id:guid}")]
