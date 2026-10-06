@@ -221,14 +221,17 @@ public sealed class SettlementReleaseJob
 
             // MLACP-645: khoản ủng hộ báo riêng (chủ phải xác nhận + chuyển cho nghệ sĩ từng khoản); tiền vé / đồ uống gom
             // theo chủ ở cuối lần chạy (NotifyReleasedAsync) — trước đây một lần chạy gửi 37 thông báo rời cho một chủ.
+            // MLACP-674: thông báo khoản ủng hộ trỏ về CHÍNH khoản ủng hộ (referenceType "donation") — việc chủ phải làm tiếp
+            // (xác nhận đã nhận, chuyển cho nghệ sĩ) nằm ở trang Tiền ủng hộ nghệ sĩ, không ở trang quyết toán. Trước đây trỏ
+            // "settlement" nên bấm vào chuông không mở được trang nào cho chủ phòng trà.
             if (await ReleaseNoticeAsync(settlement, ct) is { } notice)
                 await _notifications.NotifyAsync(
                     settlement.OwnerId,
                     NotificationType.SettlementReleased,
                     notice.Title,
                     notice.Body,
-                    referenceType: "settlement",
-                    referenceId: settlement.Id.ToString(),
+                    referenceType: "donation",
+                    referenceId: notice.DonationId.ToString(),
                     ct: ct);
             else
                 (released ??= []).Add(settlement);
@@ -442,7 +445,7 @@ public sealed class SettlementReleaseJob
     }
 
     /// <summary>Thông báo riêng cho khoản ỦNG HỘ; null với tiền vé / đồ uống (được gom ở NotifyReleasedAsync).</summary>
-    private async Task<(SongNgu Title, SongNgu Body)?> ReleaseNoticeAsync(Settlement settlement, CancellationToken ct)
+    private async Task<(SongNgu Title, SongNgu Body, Guid DonationId)?> ReleaseNoticeAsync(Settlement settlement, CancellationToken ct)
     {
         var payment = await _ctx.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == settlement.PaymentId, ct);
         if (payment?.ReferenceType == DonationPayouts.PaymentReferenceType
@@ -461,13 +464,15 @@ public sealed class SettlementReleaseJob
             var person = donation.IsAnonymous ? "an anonymous viewer" : (donation.DisplayName ?? "a viewer");
             var choAi = nguon is null ? "" : $" cho nghệ sĩ {nguon.Performer} (buổi \"{nguon.Show}\")";
             var toWhom = nguon is null ? "" : $" to {nguon.Performer} (\"{nguon.Show}\")";
+            // MLACP-674: "Đã nhận tiền ủng hộ" không nói ai nhận, nhận từ đâu — nay nói đúng: tiền đã về tài khoản phòng trà.
             return (
-                new SongNgu("Đã nhận tiền ủng hộ", "Donation received"),
+                new SongNgu("Tiền ủng hộ đã về tài khoản phòng trà", "Donation paid out to your music lounge"),
                 new SongNgu(
                     $"Nền tảng đã chuyển {VietnamMoney.Format(settlement.NetAmount)} tiền ủng hộ của {nguoi}{choAi} vào tài khoản " +
                     $"của phòng trà. Hãy xác nhận đã nhận, rồi chuyển {VietnamMoney.Format(forPerformer)} cho nghệ sĩ.",
                     $"The platform has transferred {settlement.NetAmount:N0} VND from {person}'s donation{toWhom} to your music " +
-                    $"lounge's account. Please confirm you received it, then transfer {forPerformer:N0} VND to the performer."));
+                    $"lounge's account. Please confirm you received it, then transfer {forPerformer:N0} VND to the performer."),
+                donation.Id);
         }
 
         return null;

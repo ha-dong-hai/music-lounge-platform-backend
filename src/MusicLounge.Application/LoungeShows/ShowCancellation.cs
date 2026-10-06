@@ -104,32 +104,52 @@ public static class ShowCancellation
             {
                 PaymentId = ticket.PaymentId.Value,
                 RequestedBy = TicketRefundRecipients.RefundedTo(ticket, payers),
-                Reason = $"Event bị hủy{because.Vi} — hoàn 100% tiền vé",
+                // MLACP-675: lý do này hiện cho khán giả (trang Hoàn tiền, thông báo duyệt hoàn) — viết bằng ngôn ngữ nghiệp
+                // vụ, không phải "Event bị hủy".
+                Reason = $"{RefundReasonShowCancelled}{because.Vi} — hoàn 100% tiền vé",
                 AmountRequested = priceById.GetValueOrDefault(ticket.PriceId),
                 RefundPercentage = 100m,
                 Status = RefundRequestStatus.Pending
             });
+        }
 
-            if (ticket.BuyerId is Guid buyerId)
-                await notifications.NotifyAsync(
-                    buyerId,
-                    NotificationType.EventCancelled,
-                    new SongNgu(
-                        "Buổi hòa nhạc đã bị hủy",
-                        "Concert cancelled"),
-                    new SongNgu(
-                        $"\"{show.Name}\" đã bị hủy{because.Vi}. Vé của bạn đã được hủy và tự động tạo yêu cầu " +
-                        "hoàn 100% tiền vé." + (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNote : ""),
-                        $"\"{show.Name}\" has been cancelled{because.En}. Your ticket has been cancelled and a 100% refund " +
-                        "request has been created automatically." +
-                        (TicketRefundRecipients.WasTransferred(ticket, payers) ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
-                    referenceType: "show",
-                    referenceId: show.Id.ToString(),
-                    ct: ct);
+        // MLACP-675: MỘT thông báo cho mỗi người giữ vé, không phải một thông báo cho mỗi vé — trước đây người mua 4 vé nhận 4
+        // thông báo giống hệt nhau. Câu cũ "đã tự động tạo yêu cầu hoàn 100%" là ngôn ngữ của hệ thống: không nói hoàn bao
+        // nhiêu, về đâu, có phải làm gì không. Nay nói tên buổi, giờ diễn, số vé, số tiền, về đâu, và rằng không cần làm gì.
+        var gioDien = VietnamTime.Format(show.ScheduledStart, "HH:mm dd/MM/yyyy");
+        foreach (var nhom in confirmedTickets.Where(t => t.PaymentId is not null && t.BuyerId is not null).GroupBy(t => t.BuyerId!.Value))
+        {
+            var cuaMinh = nhom.Where(t => !TicketRefundRecipients.WasTransferred(t, payers)).ToList();
+            var duocChuyen = nhom.Count() - cuaMinh.Count;
+            var tong = cuaMinh.Sum(t => priceById.GetValueOrDefault(t.PriceId));
+
+            var hoanVi = cuaMinh.Count == 0 ? ""
+                : $" {cuaMinh.Count} vé của bạn được hoàn 100% ({VietnamMoney.Format(tong)}) về đúng phương thức bạn đã thanh " +
+                  "toán — bạn không cần làm gì thêm. Theo dõi tiến độ ở Vé của tôi → Hoàn tiền.";
+            var hoanEn = cuaMinh.Count == 0 ? ""
+                : $" Your {cuaMinh.Count} ticket(s) will be refunded in full ({tong:N0} VND) to the payment method you used — you " +
+                  "do not need to do anything. Track it under My tickets → Refunds.";
+            var tenTieuDe = new SongNgu($"Buổi hòa nhạc \"{show.Name}\" đã bị huỷ", $"\"{show.Name}\" has been cancelled");
+            await notifications.NotifyAsync(
+                nhom.Key,
+                NotificationType.EventCancelled,
+                tenTieuDe,
+                new SongNgu(
+                    $"Buổi hòa nhạc \"{show.Name}\" lúc {gioDien} đã bị huỷ{because.Vi}.{hoanVi}" +
+                    (duocChuyen > 0 ? TicketRefundRecipients.TransferredHolderNote : ""),
+                    $"\"{show.Name}\" at {gioDien} (Vietnam time) has been cancelled{because.En}.{hoanEn}" +
+                    (duocChuyen > 0 ? TicketRefundRecipients.TransferredHolderNoteEn : "")),
+                referenceType: "show",
+                referenceId: show.Id.ToString(),
+                ct: ct);
         }
 
         return new Outcome(1, confirmedTickets.Count(t => t.BuyerId is null));
     }
+
+    /// <summary>MLACP-675. Đầu câu lý do của yêu cầu hoàn tạo ra khi buổi diễn bị huỷ — thông báo duyệt hoàn nhận ra nguồn
+    /// gốc của khoản hoàn qua chính câu này (RefundRequest chưa có cột nguồn gốc; đường nâng cấp: thêm cột Origin).</summary>
+    public const string RefundReasonShowCancelled = "Buổi hòa nhạc bị huỷ";
 
     /// <summary>
     /// MLACP-380: trước task này, huỷ show không đụng gì tới các <see cref="FnbOrder"/> gắn với nó (ShowId) — đơn

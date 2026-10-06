@@ -230,23 +230,32 @@ internal sealed class ProcessDonationPaymentCommandHandler
                 // năm khoản ủng hộ là năm thông báo không phân biệt được (đo 05/10/2026). Hai giá trị tách ra biến (và chú
                 // thích này nằm NGOÀI new SongNgu): SongNguThongBaoTests tách tham số theo dấu phẩy và ngoặc kép.
                 var nguoiUngHo = donation.IsAnonymous ? "khán giả ẩn danh" : donation.DisplayName ?? "một khán giả";
+                var donor = donation.IsAnonymous ? "An anonymous viewer" : donation.DisplayName ?? "A viewer";
                 var tenNgheSi = await PerformerNameAsync(donation.PerformanceId, ct) ?? "";
+                // MLACP-674: tiêu đề cũ "Bạn vừa nhận tiền ủng hộ!" — lúc này phòng trà CHƯA nhận đồng nào (tiền nằm ở nền tảng
+                // tới lần giải ngân), và "lần giải ngân tới" không cho biết khi nào. Nay nói đúng việc vừa xảy ra (có khoản ủng hộ
+                // mới cho nghệ sĩ nào) và ngày giờ nền tảng dự kiến chuyển — cùng một nguồn lịch với sao kê công khai
+                // (SettlementReleaseSchedule). "Dự kiến": phòng trà chưa đủ điều kiện nhận tiền (CCCD, tài khoản) thì khoản bị giữ.
+                // Bản tiếng Anh trước đây không có tên người ủng hộ lẫn nghệ sĩ (MLACP-645 chỉ sửa bản tiếng Việt).
+                var duKien = Settlements.SettlementReleaseSchedule.NextRunAt(now, now);
+                var ngayVi = VietnamTime.Format(duKien, "HH:mm 'ngày' dd/MM/yyyy");
+                var ngayEn = VietnamTime.Format(duKien, "HH:mm, dd/MM/yyyy");
+                var tieuDeVi = $"Có khoản ủng hộ mới cho {tenNgheSi}";
+                var tieuDeEn = $"New donation for {tenNgheSi}";
                 await _notifications.NotifyAsync(
                     info.OwnerId,
                     NotificationType.DonationReceived,
-                    new SongNgu(
-                        "Bạn vừa nhận tiền ủng hộ!",
-                        "You just received a donation!"),
+                    new SongNgu(tieuDeVi, tieuDeEn),
                     new SongNgu(
                         // MLACP-361: noi dung phai dung voi dong tien that — truoc day bao chu "xac nhan da
                         // nhan tien" trong khi nen tang chua chuyen dong nao.
-                        $"Có khoản ủng hộ {VietnamMoney.Format(donation.Gross)} của {nguoiUngHo} " +
-                        $"cho nghệ sĩ {tenNgheSi}. Sau phí nền tảng và thuế, " +
-                        $"{VietnamMoney.Format(fees.OwnerNet)} sẽ được chuyển vào tài khoản ngân hàng của phòng trà ở lần giải " +
-                        $"ngân tới. Khi nhận được, hãy xác nhận và chuyển {VietnamMoney.Format(forPerformer)} cho nghệ sĩ.",
-                        $"A donation of {donation.Gross:N0} VND was made to a performer. After platform fees and tax, " +
-                        $"{fees.OwnerNet:N0} VND will be transferred to your music lounge's bank account in the next payout. " +
-                        $"Once you receive it, please confirm and transfer {forPerformer:N0} VND to the performer."),
+                        $"{char.ToUpper(nguoiUngHo[0])}{nguoiUngHo[1..]} vừa ủng hộ {VietnamMoney.Format(donation.Gross)} cho nghệ sĩ {tenNgheSi}. Sau phí nền " +
+                        $"tảng và thuế, phòng trà nhận {VietnamMoney.Format(fees.OwnerNet)}; nền tảng dự kiến chuyển vào tài " +
+                        $"khoản phòng trà lúc {ngayVi} (giờ Việt Nam). Khi tiền về, hãy xác nhận đã nhận rồi chuyển " +
+                        $"{VietnamMoney.Format(forPerformer)} cho nghệ sĩ.",
+                        $"{donor} just donated {donation.Gross:N0} VND to {tenNgheSi}. After platform fees and tax, your music " +
+                        $"lounge receives {fees.OwnerNet:N0} VND; the platform expects to transfer it to your account at {ngayEn} " +
+                        $"(Vietnam time). Once it arrives, confirm you received it, then transfer {forPerformer:N0} VND to the performer."),
                     referenceType: "donation",
                     referenceId: donation.Id.ToString(),
                     ct: ct);

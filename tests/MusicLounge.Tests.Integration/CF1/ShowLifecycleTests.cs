@@ -191,7 +191,7 @@ public sealed class ShowLifecycleTests
         var ticketId = await SeedConfirmedPhysicalTicketAsync(showId);
         var client = _factory.CreateAuthenticatedClient(SeedHelper.OwnerId, "Owner", SeedHelper.LoungeId);
 
-        var res = await client.PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null);
+        var res = await client.PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/cancel", HuyBuoi.LyDo);
 
         res.StatusCode.Should().Be(HttpStatusCode.NoContent);
 

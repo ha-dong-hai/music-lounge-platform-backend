@@ -80,6 +80,7 @@ public sealed class ApplicationDbContext : DbContext
 
     // --- N4: Subscription ---
     public DbSet<SubscriptionPackage> SubscriptionPackages => Set<SubscriptionPackage>();
+    public DbSet<ShowCancellationReview> ShowCancellationReviews => Set<ShowCancellationReview>();
     public DbSet<OwnerSubscription> OwnerSubscriptions => Set<OwnerSubscription>();
 
     // --- N10: Refunds ---

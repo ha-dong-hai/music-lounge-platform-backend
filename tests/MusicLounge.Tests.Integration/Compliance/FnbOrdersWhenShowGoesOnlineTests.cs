@@ -238,7 +238,7 @@ public sealed class FnbOrdersWhenShowGoesOnlineTests
         var (orderId, _) = await OrderAsync(venue, showId, buyer, FnbOrderStatus.Served);
 
         (await _factory.CreateAuthenticatedClient(venue.OwnerId, "Owner", venue.LoungeId)
-                .PostAsync($"/api/v1/lounge-shows/{showId}/cancel", null))
+                .PostAsJsonAsync($"/api/v1/lounge-shows/{showId}/cancel", HuyBuoi.LyDo))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await StateAsync(orderId, null)).Order.Status.Should().Be(FnbOrderStatus.Served);

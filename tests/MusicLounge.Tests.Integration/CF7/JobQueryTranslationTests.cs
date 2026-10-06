@@ -180,6 +180,43 @@ public sealed class JobQueryTranslationTests
         await act.Should().NotThrowAsync();
     }
 
+    /// <summary>MLACP-677: gói đã ngừng mở bán thì lời nhắc sắp hết hạn không được khuyên "Gia hạn" — gia hạn bị từ chối.</summary>
+    [Fact]
+    public async Task SubscriptionExpiryWarning_GoiNgungBan_KhongKhuyenGiaHan()
+    {
+        Guid ownerId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var package = new SubscriptionPackage
+            {
+                Name = $"Retired-{Guid.NewGuid():N}"[..20], Price = 200_000m,
+                BillingCycle = SubscriptionBillingCycle.Monthly, MaxTicketsPerEvent = 50,
+                HasAiPoster = false, IsActive = false
+            };
+            db.Add(package);
+            var owner = new User { Email = $"retired-{Guid.NewGuid():N}@test.com", FullName = "Retired Owner" };
+            db.Add(owner);
+            await db.SaveChangesAsync();
+            db.Add(new OwnerSubscription
+            {
+                OwnerId = owner.Id, PackageId = package.Id,
+                StartedAt = DateTimeOffset.UtcNow.AddDays(-23), ExpiresAt = DateTimeOffset.UtcNow.AddDays(6.5),
+                Status = SubscriptionStatus.Active, MaxTicketsPerEventSnapshot = 50, HasAiPosterSnapshot = false
+            });
+            await db.SaveChangesAsync();
+            ownerId = owner.Id;
+        }
+
+        using (var jobScope = _factory.Services.CreateScope())
+            await jobScope.ServiceProvider.GetRequiredService<SubscriptionExpiryWarningJob>().ExecuteAsync(new JobCancellationToken(false));
+
+        using var verify = _factory.Services.CreateScope();
+        var nhac = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Notifications.AsNoTracking()
+            .SingleAsync(n => n.UserId == ownerId && n.Type == NotificationType.SubscriptionExpiring);
+        nhac.Body.Should().Contain("đã ngừng mở bán").And.NotContain("Gia hạn để tiếp tục");
+    }
+
     [Fact]
     public async Task AutoConfirmDonationsJob_RunsWithoutThrowing_AndAutoConfirmsOverdueDonation()
     {

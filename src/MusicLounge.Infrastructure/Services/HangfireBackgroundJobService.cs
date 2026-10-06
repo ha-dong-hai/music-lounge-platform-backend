@@ -60,11 +60,19 @@ internal sealed class HangfireBackgroundJobService : IBackgroundJobService
     }
 
     public void EnqueuePerformerConfirmationEmail(
-        string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt)
+        string toEmail, string toName, SongNgu subject, SongNgu message, string link, DateTimeOffset expiresAt,
+        string? evidenceUrl = null)
     {
         var protectedLink = _secretProtector.Protect(link);
-        BackgroundJob.Enqueue<SendPerformerConfirmationEmailJob>(j => j.ExecuteAsync(
-            toEmail, toName, subject.Vi, subject.En, message.Vi, message.En, protectedLink, expiresAt, CancellationToken.None));
+        // MLACP-673: phương thức RIÊNG khi có chứng từ — job đang nằm trong hàng đợi lúc deploy được lưu theo chữ ký
+        // phương thức cũ; thêm tham số vào phương thức cũ thì Hangfire không tìm lại được chúng.
+        if (string.IsNullOrWhiteSpace(evidenceUrl))
+            BackgroundJob.Enqueue<SendPerformerConfirmationEmailJob>(j => j.ExecuteAsync(
+                toEmail, toName, subject.Vi, subject.En, message.Vi, message.En, protectedLink, expiresAt, CancellationToken.None));
+        else
+            BackgroundJob.Enqueue<SendPerformerConfirmationEmailJob>(j => j.ExecuteWithEvidenceAsync(
+                toEmail, toName, subject.Vi, subject.En, message.Vi, message.En, protectedLink, expiresAt, evidenceUrl,
+                CancellationToken.None));
     }
 
     public void EnqueuePhoneVerificationCode(string toPhone, string code, string language)

@@ -31,11 +31,25 @@ internal sealed class GetSubscriptionPackagesQueryHandler
             ? await _uow.Repository<SubscriptionPackage, Guid>().FindAsync(p => p.IsActive, ct)
             : await _uow.Repository<SubscriptionPackage, Guid>().GetAllAsync(ct);
 
+        // MLACP-677: Admin thấy mỗi gói đang có bao nhiêu chủ phòng trà dùng (còn hạn). Người khác không cần — và không nên
+        // đọc được — con số kinh doanh này.
+        Dictionary<Guid, int>? dangDung = null;
+        if (_currentUser.Role == Roles.Admin)
+        {
+            var now = DateTimeOffset.UtcNow;
+            dangDung = (await _uow.Repository<OwnerSubscription, Guid>().FindAsync(
+                    s => s.Status == Domain.Enums.SubscriptionStatus.Active, ct))
+                .Where(s => s.ExpiresAt > now)
+                .GroupBy(s => s.PackageId)
+                .ToDictionary(g => g.Key, g => g.Select(s => s.OwnerId).Distinct().Count());
+        }
+
         return packages
             .OrderBy(p => p.Price)
             .Select(p => new SubscriptionPackageDto(
                 p.Id, p.Name, p.Description, p.Price, p.BillingCycle.ToString(),
-                p.MaxTicketsPerEvent, p.HasAiPoster, p.MaxAiPostersPerMonth, p.MaxTourScenes, p.IsActive))
+                p.MaxTicketsPerEvent, p.HasAiPoster, p.MaxAiPostersPerMonth, p.MaxTourScenes, p.IsActive,
+                dangDung is null ? null : dangDung.GetValueOrDefault(p.Id)))
             .ToList();
     }
 }

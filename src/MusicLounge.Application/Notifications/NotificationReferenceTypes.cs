@@ -86,4 +86,7 @@ public static class NotificationReferenceTypes
 
     /// <summary>Cảnh báo an ninh theo địa chỉ IP — <c>ReferenceId</c> là chính địa chỉ IP, không phải mã bản ghi.</summary>
     public const string SecurityIp = "security_ip";
+
+    /// <summary>MLACP-676. Lý do huỷ buổi hòa nhạc chờ Admin xét — <c>ShowCancellationReview.Id</c>.</summary>
+    public const string ShowCancellationReview = "show_cancellation_review";
 }
