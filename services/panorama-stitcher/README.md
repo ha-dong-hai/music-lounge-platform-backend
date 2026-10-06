@@ -34,7 +34,15 @@ The service is reachable over HTTP and downloads the image URLs it is given, so 
 | Variable | Meaning |
 |---|---|
 | `STITCHER_API_KEY` | Shared secret. `/stitch` requires header `X-Stitcher-Key` with this exact value (constant-time compare). The backend sends it from `PanoramaStitcher:ApiKey`. |
-| `ALLOWED_IMAGE_ORIGINS` | Comma-separated origins (`scheme://host[:port]`) images may be downloaded from — normally just the backend's public URL, e.g. `https://musiclounge-api.azurewebsites.net`. Compared as parsed origins, so look-alike hosts (`…net.evil.com`), `user@host` tricks, wrong scheme or wrong port are all rejected. |
+| `ALLOWED_IMAGE_ORIGINS` | Comma-separated origins (`scheme://host[:port]`) images may be downloaded from — **every place the backend's file storage can hand out an upload URL**. In production that is both the backend's public URL (`https://musiclounge-api.azurewebsites.net`, older uploads) and Firebase Storage (`https://firebasestorage.googleapis.com`, where uploads go now). Compared as parsed origins, so look-alike hosts (`…net.evil.com`), `user@host` tricks, wrong scheme or wrong port are all rejected. |
+
+**Keep this list in step with the backend's storage (MLACP-684).** When uploads moved to Firebase Storage the
+list still held only the API host, so every `/stitch` call was refused with 400 "Có ảnh không đến từ nguồn được phép."
+— the backend recorded each attempt as a *system* failure (not counted against the venue's limit), so nobody saw it:
+on 2026-10-06 the last successful stitch on Azure was 2026-09-17. If file storage moves again, update this variable in
+the same change. `firebasestorage.googleapis.com` is shared by every Firebase project, so this origin alone does not pin
+our bucket — the bucket is pinned upstream: the backend only forwards URLs its own storage issued
+(`IFileStorageService.IsOwnUploadUrl` in the stitch validator), and only the backend holds `STITCHER_API_KEY`.
 
 Redirects are never followed: an allowed host could otherwise bounce the download to an internal
 address. `/health` stays open for platform health probes and for the backend's warm-up call.
@@ -118,7 +126,14 @@ az containerapp create -n musiclounge-stitcher -g $RG --environment musiclounge-
   --min-replicas 0 --max-replicas 1 --cpu 2 --memory 4Gi \
   --secrets stitcher-key=$KEY \
   --env-vars STITCHER_API_KEY=secretref:stitcher-key \
-             ALLOWED_IMAGE_ORIGINS=https://musiclounge-api.azurewebsites.net
+             ALLOWED_IMAGE_ORIGINS=https://musiclounge-api.azurewebsites.net,https://firebasestorage.googleapis.com
+```
+
+To change the allowlist on an existing app (creates a new revision; old value is the rollback):
+
+```bash
+az containerapp update -g $RG -n musiclounge-stitcher \
+  --set-env-vars "ALLOWED_IMAGE_ORIGINS=https://musiclounge-api.azurewebsites.net,https://firebasestorage.googleapis.com"
 ```
 
 Then point the backend at it (App Service → Environment variables):
