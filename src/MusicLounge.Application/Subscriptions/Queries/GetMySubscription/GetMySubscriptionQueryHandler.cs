@@ -40,6 +40,6 @@ internal sealed class GetMySubscriptionQueryHandler
             latest.StartedAt, latest.ExpiresAt, latest.Status.ToString(),
             latest.MaxTicketsPerEventSnapshot, latest.HasAiPosterSnapshot, latest.MaxAiPostersPerMonthSnapshot,
             daDung, AiPosterQuota.ConLai(latest.MaxAiPostersPerMonthSnapshot, daDung),
-            latest.MaxTourScenesSnapshot, latest.CancelledAt);
+            latest.MaxTourScenesSnapshot, latest.CancelledAt, package?.IsActive ?? false);
     }
 }
