@@ -37,6 +37,28 @@ public sealed class RateLimitPartitionKeyTests
     }
 
     [Fact]
+    public void SignedInAccount_GetsTheUserAllowance_GuestIpKeepsTheGuestAllowance()
+    {
+        // MLACP-686: ngăn tài khoản dùng UserPermitPerMinute (300), ngăn IP của khách vẫn GlobalPermitPerMinute (100).
+        var s = new MusicLounge.Infrastructure.Settings.RateLimitSettings();
+        var nguoiDung = RateLimitPartitionKey.For(Ctx("203.0.113.7", SignedIn(Guid.NewGuid())));
+        var khach = RateLimitPartitionKey.For(Ctx("203.0.113.7"));
+
+        RateLimitPartitionKey.PermitFor(nguoiDung, s).Should().Be(300);
+        RateLimitPartitionKey.PermitFor(khach, s).Should().Be(100);
+    }
+
+    [Fact]
+    public void ForgedIdClaim_DoesNotEarnTheUserAllowance()
+    {
+        // Claim không qua xác thực rơi về ngăn IP (xem bài dưới) → cũng không được hưởng ngưỡng 300.
+        var forged = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())]));
+        var khoa = RateLimitPartitionKey.For(Ctx("203.0.113.7", forged));
+
+        RateLimitPartitionKey.PermitFor(khoa, new MusicLounge.Infrastructure.Settings.RateLimitSettings()).Should().Be(100);
+    }
+
+    [Fact]
     public void AnonymousRequests_StillShareTheirIpsAllowance()
     {
         RateLimitPartitionKey.For(Ctx("203.0.113.7")).Should().Be("ip:203.0.113.7");

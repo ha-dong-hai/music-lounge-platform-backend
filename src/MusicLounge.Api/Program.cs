@@ -274,12 +274,14 @@ try
         // dung tien (purchase/subscribe) da tu co idempotency/hold-based guard rieng o tang Application.
         // MLACP-670: chia theo TAI KHOAN khi da dang nhap, theo IP khi chua (xem RateLimitPartitionKey) — can
         // UseRateLimiter dung SAU UseAuthentication ben duoi.
+        // MLACP-686: tài khoản đã đăng nhập có ngưỡng riêng (RateLimiting:UserPermitPerMinute, mặc định 300) — xem
+        // RateLimitSettings.UserPermitPerMinute; khách theo IP vẫn GlobalPermitPerMinute.
         opt.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
             System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
                 MusicLounge.Api.RateLimiting.RateLimitPartitionKey.For(ctx),
-                _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+                khoa => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = rateLimit.GlobalPermitPerMinute,
+                    PermitLimit = MusicLounge.Api.RateLimiting.RateLimitPartitionKey.PermitFor(khoa, rateLimit),
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0
                 }));
