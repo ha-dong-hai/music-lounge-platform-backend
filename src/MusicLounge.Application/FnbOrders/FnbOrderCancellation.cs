@@ -91,7 +91,7 @@ public static class FnbOrderCancellation
                 {
                     PaymentId = gatewayPayment.Id,
                     RequestedBy = current.AudienceUserId ?? gatewayPayment.PayerId,
-                    Reason = $"{reason} — đơn F&B #{current.Id} chưa phục vụ xong, hoàn 100%",
+                    Reason = $"{reason} — {TenDoiTuong.DonDoUong(current).Vi} chưa phục vụ xong, hoàn 100%",
                     AmountRequested = gatewayPayment.GrossAmount,
                     RefundPercentage = 100m,
                     Status = RefundRequestStatus.Pending
@@ -109,16 +109,16 @@ public static class FnbOrderCancellation
                            "Đơn F&B đã bị hủy — bạn sẽ được hoàn tiền",
                            "Food & drink order cancelled — you will be refunded"),
                        new SongNgu(
-                           $"Đơn #{current.Id} của bạn đã bị hủy vì {why.Vi}. Chúng tôi đã tự động " +
+                           $"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(current).Vi)} của bạn đã bị hủy vì {why.Vi}. Chúng tôi đã tự động " +
                            $"tạo yêu cầu hoàn 100% ({VietnamMoney.Format(amount)}) về phương thức bạn đã thanh toán — bạn không cần " +
                            "làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
-                           $"Your order #{current.Id} has been cancelled because {why.En}. We have automatically " +
+                           $"Your {TenDoiTuong.DonDoUong(current).En} has been cancelled because {why.En}. We have automatically " +
                            $"created a 100% refund request ({amount:N0} VND) to your original payment method — you do " +
                            "not need to do anything, and we will notify you when it is processed."))
                     : (new SongNgu("Đơn F&B đã bị hủy", "Food & drink order cancelled"),
                        new SongNgu(
-                           $"Đơn #{current.Id} của bạn đã bị hủy vì {why.Vi}.",
-                           $"Your order #{current.Id} has been cancelled because {why.En}."));
+                           $"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(current).Vi)} của bạn đã bị hủy vì {why.Vi}.",
+                           $"Your {TenDoiTuong.DonDoUong(current).En} has been cancelled because {why.En}."));
 
                 await notifications.NotifyAsync(
                     audienceUserId, NotificationType.FnbOrderUpdate, title, body,

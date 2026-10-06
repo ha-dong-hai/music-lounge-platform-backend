@@ -81,10 +81,11 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
                 new SongNgu(
                     "Có kháng cáo mới cần xử lý",
                     "New appeal to review"),
+                // MLACP-679: gọi án bằng loại + ngày ra án, không bằng mã GUID và tên enum tiếng Anh.
                 new SongNgu(
-                    $"\"{lounge.Name}\" đã kháng cáo phạt #{penalty.Id} ({penalty.PenaltyType}). " +
+                    $"\"{lounge.Name}\" đã kháng cáo {TenDoiTuong.An(penalty).Vi}. " +
                     $"Hạn xử lý: {VietnamTime.Format(penalty.AppealDeadline!.Value)}.",
-                    $"\"{lounge.Name}\" has appealed penalty #{penalty.Id} ({penalty.PenaltyType}). " +
+                    $"\"{lounge.Name}\" has appealed {TenDoiTuong.An(penalty).En}. " +
                     $"Deadline: {VietnamTime.Format(penalty.AppealDeadline!.Value)}."),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),

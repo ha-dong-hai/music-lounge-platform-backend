@@ -146,12 +146,17 @@ public static class PaymentIncident
         // MLACP-392: tu MLACP-351/382/383/385/386/389, cac duong "tien ve nhung khong cap/khong ap duoc" da TU TAO yeu
         // cau hoan 100% truoc khi goi toi day. Bao Admin "cap lai hoac hoan tien" luc do la chi sai viec: Admin co the cap
         // lai tay hoac tao them mot yeu cau hoan trung. Co ma yeu cau hoan thi noi thang viec can lam la duyet no.
-        var whatToDo = refundRequestId is { } refundId
-            ? $"Hệ thống đã tự tạo yêu cầu hoàn 100% #{refundId} cho khách — việc cần làm là duyệt yêu cầu đó " +
+        // MLACP-679: chỉ tới đúng yêu cầu bằng TÊN (số tiền, người mua, buổi diễn/đơn) thay cho mã GUID; mã giao dịch VNPay
+        // ở trên vẫn giữ để đối soát với cổng thanh toán.
+        var yc = refundRequestId is Guid rid && await uow.Repository<RefundRequest, Guid>().GetByIdAsync(rid, ct) is { } r
+            ? await TenDoiTuong.YeuCauHoanAsync(uow, r, ct)
+            : new SongNgu("yêu cầu hoàn", "refund request");
+        var whatToDo = refundRequestId is not null
+            ? $"Hệ thống đã tự tạo yêu cầu hoàn 100% cho khách ({yc.Vi}) — việc cần làm là duyệt yêu cầu đó trong mục Hoàn tiền " +
               "(hoàn qua VNPay theo mã giao dịch trên), không cấp lại bằng tay và không tạo thêm yêu cầu hoàn."
             : "Cần đối soát với VNPay rồi cấp lại hoặc hoàn tiền cho khách.";
-        var whatToDoEn = refundRequestId is { } refundIdEn
-            ? $"The system has automatically created 100% refund request #{refundIdEn} for the customer — what you " +
+        var whatToDoEn = refundRequestId is not null
+            ? $"The system has automatically created a 100% refund request for the customer ({yc.En}) — what you " +
               "need to do is approve that request (refund via VNPay using the transaction reference above); do not " +
               "reissue anything by hand and do not create another refund request."
             : "Reconcile with VNPay, then reissue or refund the customer.";

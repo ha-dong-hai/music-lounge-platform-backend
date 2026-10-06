@@ -205,7 +205,7 @@ public sealed class SettlementReleaseJob
             if (await DonationIdOfAsync(settlement.PaymentId, ct) is Guid releasedDonationId)
                 await DonationEvidence.AppendAsync(_uow, releasedDonationId, DonationEventType.PayoutReleased,
                     actorUserId: null, amount: settlement.NetAmount, reference: $"settlement:{settlement.Id}",
-                    detail: $"Nền tảng chuyển phần của phòng trà vào tài khoản ngân hàng #{settlement.BankAccountId}.",
+                    detail: "Nền tảng chuyển phần của phòng trà vào tài khoản ngân hàng đã xác minh của phòng trà.",
                     ct: ct);
 
             // Commit THIS settlement's own release before enqueuing its notification, not once at
@@ -430,7 +430,7 @@ public sealed class SettlementReleaseJob
     {
         var name = await _ctx.Users.AsNoTracking().Where(u => u.Id == ownerId).Select(u => u.FullName).FirstOrDefaultAsync(ct);
         var lounge = await _ctx.Lounges.AsNoTracking().Where(l => l.OwnerId == ownerId).Select(l => l.Name).FirstOrDefaultAsync(ct);
-        var ten = string.IsNullOrWhiteSpace(name) ? $"#{ownerId}" : name;
+        var ten = string.IsNullOrWhiteSpace(name) ? "(chưa có tên)" : name;
         var kem = lounge is null ? "" : $" ({lounge})";
         return ($"Chủ phòng trà {ten}{kem}", $"Music lounge owner {ten}{kem}");
     }

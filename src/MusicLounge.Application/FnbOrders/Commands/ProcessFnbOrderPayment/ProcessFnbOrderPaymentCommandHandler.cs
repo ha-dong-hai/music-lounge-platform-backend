@@ -172,12 +172,12 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                     "Food & drink payment successful"),
                 new SongNgu(
                     closesOrder
-                        ? $"Đơn #{order.Id} của bạn đã thanh toán thành công {VietnamMoney.Format(payment.GrossAmount)}."
-                        : $"Đơn #{order.Id} của bạn đã thanh toán thành công {VietnamMoney.Format(payment.GrossAmount)}. " +
+                        ? $"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} của bạn đã thanh toán thành công {VietnamMoney.Format(payment.GrossAmount)}."
+                        : $"{TenDoiTuong.HoaDau(TenDoiTuong.DonDoUong(order).Vi)} của bạn đã thanh toán thành công {VietnamMoney.Format(payment.GrossAmount)}. " +
                           "Phòng trà vẫn đang chuẩn bị món — bạn sẽ được báo khi món được phục vụ.",
                     closesOrder
-                        ? $"Your order #{order.Id} was paid successfully: {payment.GrossAmount:N0} VND."
-                        : $"Your order #{order.Id} was paid successfully: {payment.GrossAmount:N0} VND. " +
+                        ? $"Your {TenDoiTuong.DonDoUong(order).En} was paid successfully: {payment.GrossAmount:N0} VND."
+                        : $"Your {TenDoiTuong.DonDoUong(order).En} was paid successfully: {payment.GrossAmount:N0} VND. " +
                           "The music lounge is still preparing your items — we will let you know when they are served."),
                 referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);
         }
@@ -234,8 +234,8 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
             PaymentId = payment.Id,
             RequestedBy = payment.PayerId,
             Reason = paidElsewhere
-                ? $"Khoản trả trùng cho đơn F&B #{order.Id} — hoàn 100%"
-                : $"Tiền về cho đơn F&B #{order.Id} đã bị huỷ — hoàn 100%",
+                ? $"Khoản trả trùng cho {TenDoiTuong.DonDoUong(order).Vi} — hoàn 100%"
+                : $"Tiền về cho {TenDoiTuong.DonDoUong(order).Vi} đã bị huỷ — hoàn 100%",
             AmountRequested = payment.GrossAmount,
             RefundPercentage = 100m,
             Status = RefundRequestStatus.Pending
@@ -251,20 +251,20 @@ internal sealed class ProcessFnbOrderPaymentCommandHandler
                     "Payment not applied to your order"),
                 new SongNgu(
                     (paidElsewhere
-                        ? $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {callbackResult.TransactionId}) cho đơn " +
-                          $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã được thanh toán trước đó nên đây là " +
+                        ? $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {callbackResult.TransactionId}) cho " +
+                          $"{TenDoiTuong.DonDoUong(order).Vi} đã bị trừ tiền, nhưng đơn này đã được thanh toán trước đó nên đây là " +
                           "khoản trả trùng và không được ghi vào đơn. "
-                        : $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {callbackResult.TransactionId}) cho đơn " +
-                          $"#{order.Id} đã bị trừ tiền, nhưng đơn này đã bị huỷ trước đó nên không được ghi " +
+                        : $"Giao dịch {VietnamMoney.Format(payment.GrossAmount)} (mã {callbackResult.TransactionId}) cho " +
+                          $"{TenDoiTuong.DonDoUong(order).Vi} đã bị trừ tiền, nhưng đơn này đã bị huỷ trước đó nên không được ghi " +
                           "nhận. ") +
                     "Chúng tôi đã tự động tạo yêu cầu hoàn 100% khoản này về phương thức bạn đã thanh toán — " +
                     "bạn không cần làm gì thêm và sẽ được báo khi yêu cầu được xử lý.",
                     (paidElsewhere
-                        ? $"A payment of {payment.GrossAmount:N0} VND (reference {callbackResult.TransactionId}) for order " +
-                          $"#{order.Id} was charged, but this order had already been paid, so this is a duplicate payment and " +
+                        ? $"A payment of {payment.GrossAmount:N0} VND (reference {callbackResult.TransactionId}) for the " +
+                          $"{TenDoiTuong.DonDoUong(order).En} was charged, but this order had already been paid, so this is a duplicate payment and " +
                           "was not applied to the order. "
-                        : $"A payment of {payment.GrossAmount:N0} VND (reference {callbackResult.TransactionId}) for order " +
-                          $"#{order.Id} was charged, but this order had already been cancelled, so it was not recorded. ") +
+                        : $"A payment of {payment.GrossAmount:N0} VND (reference {callbackResult.TransactionId}) for the " +
+                          $"{TenDoiTuong.DonDoUong(order).En} was charged, but this order had already been cancelled, so it was not recorded. ") +
                     "We have automatically created a request to refund 100% of this amount to your original payment method — " +
                     "you do not need to do anything, and we will notify you when it is processed."),
                 referenceType: "fnb_order", referenceId: order.Id.ToString(), ct: ct);

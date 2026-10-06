@@ -110,11 +110,11 @@ public sealed class ExpireServedSuspensionsJob
                     restored ? "Your music lounge has been unlocked" : "Suspension has expired"),
                 new SongNgu(
                     restored
-                        ? $"\"{lounge.Name}\" đã hết hạn tạm khoá theo phạt #{penalty.Id}. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
-                        : $"Lệnh tạm khoá theo phạt #{penalty.Id} đã hết hạn, nhưng \"{lounge.Name}\" chưa được mở khoá. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
+                        ? $"\"{lounge.Name}\" đã hết hạn tạm khoá theo {TenDoiTuong.An(penalty).Vi}. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd()
+                        : $"Lệnh tạm khoá theo {TenDoiTuong.An(penalty).Vi} đã hết hạn, nhưng \"{lounge.Name}\" chưa được mở khoá. {PenaltyLifecycle.DescribeForOwner(lounge.Status)}".TrimEnd(),
                     restored
-                        ? $"The suspension of \"{lounge.Name}\" under penalty #{penalty.Id} has ended. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd()
-                        : $"The suspension under penalty #{penalty.Id} has expired, but \"{lounge.Name}\" has not been unlocked yet. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd()),
+                        ? $"The suspension of \"{lounge.Name}\" under {TenDoiTuong.An(penalty).En} has ended. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd()
+                        : $"The suspension under {TenDoiTuong.An(penalty).En} has expired, but \"{lounge.Name}\" has not been unlocked yet. {PenaltyLifecycle.DescribeForOwnerEn(lounge.Status)}".TrimEnd()),
                 referenceType: "venue_penalty",
                 referenceId: penalty.Id.ToString(),
                 ct: ct);

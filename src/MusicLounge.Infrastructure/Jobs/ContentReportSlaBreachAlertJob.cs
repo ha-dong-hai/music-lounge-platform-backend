@@ -72,6 +72,19 @@ public sealed class ContentReportSlaBreachAlertJob
                 .ToListAsync(ct))
             .ToList();
 
+        // MLACP-679: gọi nội dung bị báo cáo bằng tên (buổi diễn/buổi phát) hoặc loại ("một lời bình", "một tin nhắn chat")
+        // thay cho "Rating #<GUID>". Lời bình và tin nhắn không có tên riêng — trang Báo cáo vi phạm hiện nguyên văn.
+        var tenDich = await ReferenceNames.ResolveAsync(_ctx, breachedGroups.Select(g => (g.TargetType.ToString(), g.TargetId)), ct);
+        string Ten(Domain.Enums.ReportTargetType loai, Guid id)
+            => tenDich.GetValueOrDefault((loai.ToString().ToLowerInvariant(), id)) is { } ten ? $"\"{ten}\""
+                : loai switch
+                {
+                    Domain.Enums.ReportTargetType.Rating => "Một lời bình",
+                    Domain.Enums.ReportTargetType.Show => "Một buổi diễn",
+                    Domain.Enums.ReportTargetType.Livestream => "Một buổi phát trực tuyến",
+                    _ => "Một nội dung",
+                };
+
         foreach (var group in breachedGroups)
         {
             var reference = $"{group.TargetType}:{group.TargetId}";
@@ -89,9 +102,9 @@ public sealed class ContentReportSlaBreachAlertJob
                         "Quá hạn xử lý báo cáo vi phạm (NĐ 147/2024)",
                         "Violation report overdue (Decree 147/2024)"),
                     new SongNgu(
-                        $"{group.TargetType} #{group.TargetId} có {group.ReportCount} báo cáo, đã quá hạn " +
+                        $"{Ten(group.TargetType, group.TargetId)} có {group.ReportCount} báo cáo, đã quá hạn " +
                         $"{hoursOverdue}h mà chưa được xử lý. Vui lòng xử lý ngay.",
-                        $"{group.TargetType} #{group.TargetId} has {group.ReportCount} reports and is " +
+                        $"{Ten(group.TargetType, group.TargetId)} has {group.ReportCount} reports and is " +
                         $"{hoursOverdue}h overdue without being handled. Please handle it now."),
                     referenceType: "content_report_target",
                     referenceId: $"{group.TargetType}:{group.TargetId}",

@@ -1,4 +1,5 @@
 using MusicLounge.Domain.ValueObjects;
+using MusicLounge.Application.Common;
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using MusicLounge.Application.Common.Interfaces;
@@ -76,9 +77,10 @@ public sealed class ComplaintSlaBreachAlertJob
                     NotificationType.ComplaintUpdate,
                     new SongNgu(OverdueTitle, OverdueTitleEn),
                     new SongNgu(
-                        $"Khiếu nại #{complaint.Id} ({complaint.Category}) đã quá hạn xử lý {hoursOverdue}h " +
-                        "mà chưa có kết luận. Vui lòng xử lý ngay.",
-                        $"Complaint #{complaint.Id} ({complaint.Category}) is {hoursOverdue}h overdue " +
+                        // MLACP-679: mã tra cứu + loại khiếu nại tiếng Việt thay cho mã GUID và tên enum.
+                        $"{TenDoiTuong.HoaDau(TenDoiTuong.KhieuNai(complaint).Vi)} ({TenDoiTuong.LoaiKhieuNai(complaint.Category).Vi}) " +
+                        $"đã quá hạn xử lý {hoursOverdue}h mà chưa có kết luận. Vui lòng xử lý ngay.",
+                        $"{TenDoiTuong.HoaDau(TenDoiTuong.KhieuNai(complaint).En)} ({TenDoiTuong.LoaiKhieuNai(complaint.Category).En}) is {hoursOverdue}h overdue " +
                         "without a conclusion. Please handle it now."),
                     referenceType: "complaint",
                     referenceId: complaint.Id.ToString(),

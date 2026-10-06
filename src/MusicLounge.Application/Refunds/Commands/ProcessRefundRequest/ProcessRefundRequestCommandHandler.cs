@@ -509,9 +509,9 @@ internal sealed class ProcessRefundRequestCommandHandler : IRequestHandler<Proce
                     "Cần hoàn tiền mặt cho khách",
                     "Cash refund needed for a customer"),
                 new SongNgu(
-                    $"Vé #{refund.PaymentId} được mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
+                    $"{TenDoiTuong.HoaDau((await TenDoiTuong.YeuCauHoanAsync(_uow, refund, ct)).Vi)} là vé mua tại quầy bằng tiền mặt nên nền tảng không giữ khoản " +
                     $"này. Phòng trà cần hoàn {VietnamMoney.Format(amountApproved)} trực tiếp cho khách.",
-                    $"The ticket with payment #{refund.PaymentId} was bought at the box office in cash, so the platform does not " +
+                    $"{TenDoiTuong.HoaDau((await TenDoiTuong.YeuCauHoanAsync(_uow, refund, ct)).En)} is for a ticket bought at the box office in cash, so the platform does not " +
                     $"hold this amount. The music lounge needs to refund {amountApproved:N0} VND directly to the customer."),
                 referenceType: "refund_request",
                 referenceId: refund.Id.ToString(),
