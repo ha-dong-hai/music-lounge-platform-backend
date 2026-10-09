@@ -520,4 +520,33 @@ public sealed class VenuePenaltyTests
 
         res.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    // MLACP-702: web chỉ hiện nút khiếu nại khi biết hạn gửi. Trước đây chỉ có AppealDeadline (hạn Admin xử lý,
+    // chỉ gán SAU khi khiếu nại) nên nút không bao giờ hiện với án đang Active.
+    [Fact]
+    public async Task GetMine_ActivePenalty_ReturnsAppealWindowEndsAtFromIssuedAt_ThenNullAfterAppeal()
+    {
+        var (ownerId, loungeId, _) = await CreateFreshOwnerLoungeSubscriptionAsync();
+        var penaltyId = await SeedPenaltyAsync(loungeId, PenaltyType.Warning, DateTimeOffset.UtcNow);
+        var client = _factory.CreateAuthenticatedClient(ownerId, "Owner", loungeId);
+
+        async Task<System.Text.Json.JsonElement> DocAsync()
+        {
+            var doc = await client.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/v1/venue-penalties/mine");
+            return doc.GetProperty("data").GetProperty("items").EnumerateArray()
+                .Single(i => i.GetProperty("id").GetGuid() == penaltyId);
+        }
+
+        var truoc = await DocAsync();
+        truoc.GetProperty("appealWindowEndsAt").GetDateTimeOffset()
+            .Should().BeCloseTo(DateTimeOffset.UtcNow.AddDays(7), TimeSpan.FromMinutes(1),
+                "án vừa ra thì còn đủ 7 ngày (mặc định penalty_appeal_window_days) để khiếu nại");
+
+        (await client.PostAsJsonAsync($"/api/v1/venue-penalties/{penaltyId}/appeal",
+            new { AppealReason = "Chúng tôi không vi phạm" })).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var sau = await DocAsync();
+        sau.GetProperty("appealWindowEndsAt").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null,
+            "đã khiếu nại rồi thì không còn hạn gửi nữa");
+    }
 }

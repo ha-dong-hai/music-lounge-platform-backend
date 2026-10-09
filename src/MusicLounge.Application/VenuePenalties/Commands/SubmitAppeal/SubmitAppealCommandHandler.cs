@@ -52,8 +52,8 @@ internal sealed class SubmitAppealCommandHandler : IRequestHandler<SubmitAppealC
         // MLACP-199: Owner chi duoc khang cao trong mot khoang thoi gian nhat dinh sau khi phat
         // duoc ban hanh — khong the de ngo mai mai, vi Status van la Active (van anh huong den
         // venue) cho toi khi khang cao that su duoc gui.
-        var appealWindowDays = await _config.GetIntAsync(ConfigKeys.PenaltyAppealWindowDays, 7, ct);
-        if (now > penalty.IssuedAt.AddDays(appealWindowDays))
+        var appealWindowDays = await PenaltyAppealWindow.DaysAsync(_config, ct);
+        if (now > PenaltyAppealWindow.EndsAt(penalty.IssuedAt, appealWindowDays))
             throw new DomainException(
                 $"Đã quá thời hạn kháng cáo ({appealWindowDays} ngày kể từ khi phạt được ban hành).");
 
