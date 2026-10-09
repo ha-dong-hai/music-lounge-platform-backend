@@ -3,6 +3,7 @@ using MusicLounge.Application.Common.Interfaces;
 using MusicLounge.Application.Common.Models;
 using MusicLounge.Application.VenuePenalties.DTOs;
 using MusicLounge.Domain.Entities;
+using MusicLounge.Domain.Enums;
 using MusicLoungeEntity = MusicLounge.Domain.Entities.MusicLounge;
 
 namespace MusicLounge.Application.VenuePenalties.Queries.GetMyVenuePenalties;
@@ -12,10 +13,13 @@ internal sealed class GetMyVenuePenaltiesQueryHandler
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISystemConfigService _config;
 
-    public GetMyVenuePenaltiesQueryHandler(IUnitOfWork uow, ICurrentUserService currentUser)
+    public GetMyVenuePenaltiesQueryHandler(
+        IUnitOfWork uow, ICurrentUserService currentUser, ISystemConfigService config)
     {
         _uow = uow;
+        _config = config;
         _currentUser = currentUser;
     }
 
@@ -43,12 +47,17 @@ internal sealed class GetMyVenuePenaltiesQueryHandler
             .FindAsync(l => loungeIds.Contains(l.Id), ct);
         var loungeNames = lounges.ToDictionary(l => l.Id, l => l.Name);
 
+        var appealWindowDays = await PenaltyAppealWindow.DaysAsync(_config, ct);
+
         var items = pageItems
             .Select(p => new VenuePenaltyDto(
                 p.Id, p.LoungeId, loungeNames.GetValueOrDefault(p.LoungeId, string.Empty),
                 p.PenaltyType, p.Reason, p.EvidenceRef,
                 p.IssuedAt, p.EffectiveAt, p.SuspensionDays, p.SuspensionEnd, p.Status,
-                p.AppealDeadline, p.AppealedAt, p.AppealReason, p.AppealResult, p.ReviewedAt))
+                p.AppealDeadline, p.AppealedAt, p.AppealReason, p.AppealResult, p.ReviewedAt,
+                p.Status == PenaltyStatus.Active && p.AppealedAt is null
+                    ? PenaltyAppealWindow.EndsAt(p.IssuedAt, appealWindowDays)
+                    : null))
             .ToList();
 
         return new PaginatedResult<VenuePenaltyDto>(items, page, size, totalCount);

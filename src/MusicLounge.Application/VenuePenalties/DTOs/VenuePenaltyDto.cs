@@ -18,4 +18,8 @@ public sealed record VenuePenaltyDto(
     DateTimeOffset? AppealedAt,
     string? AppealReason,
     string? AppealResult,
-    DateTimeOffset? ReviewedAt);
+    DateTimeOffset? ReviewedAt,
+    // MLACP-702: hạn cuối để chủ phòng trà GỬI khiếu nại (IssuedAt + penalty_appeal_window_days). Khác
+    // AppealDeadline là hạn Admin xử lý, chỉ có sau khi khiếu nại. Null khi không còn khiếu nại được
+    // (đã khiếu nại, hoặc án không còn Active) và ở danh sách của Admin (không dùng).
+    DateTimeOffset? AppealWindowEndsAt = null);
